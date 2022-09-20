@@ -5,10 +5,10 @@ import {
   KeyboardEventModifier,
   CameraEventAggregator,
   CameraEventType,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createCanvas from "../createCanvas.js";
-import DomEventSimulator from "../DomEventSimulator.js";
+import createCanvas from "../../../../Specs/createCanvas.js";;
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";;
 
 describe("Scene/CameraEventAggregator", function () {
   let usePointerEvents;

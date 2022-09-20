@@ -2,7 +2,7 @@ import {
   AttributeType,
   PrimitiveLoadPlan,
   ModelComponents,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import createContext from "../../createContext.js";
 
 describe(

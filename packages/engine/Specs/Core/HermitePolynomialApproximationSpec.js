@@ -1,4 +1,4 @@
-import { HermitePolynomialApproximation } from "../../Source/Cesium.js";
+import { HermitePolynomialApproximation } from "../../index.js";
 
 describe("Core/HermitePolynomialApproximation", function () {
   //The results of these specs were validated against STK Components

@@ -6,7 +6,7 @@ import {
   CreditDisplay,
   FrameState,
   JobScheduler,
-} from "../../Source/Cesium.js";
+} from "../packages/engine/index.js";
 
 function createFrameState(context, camera, frameNumber, time) {
   // Mock frame-state for testing.

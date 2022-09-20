@@ -12,12 +12,12 @@ import {
   QuadtreeTileLoadState,
   TerrainState,
   TileProviderError,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import MockImageryProvider from "../MockImageryProvider.js";
 import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
 
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 
 describe("Scene/GlobeSurfaceTile", function () {
   let frameState;

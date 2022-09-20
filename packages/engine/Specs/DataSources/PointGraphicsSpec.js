@@ -5,7 +5,7 @@ import {
   ConstantProperty,
   PointGraphics,
   HeightReference,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/PointGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

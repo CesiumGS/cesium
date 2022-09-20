@@ -1,4 +1,4 @@
-import { JsonMetadataTable } from "../../Source/Cesium.js";
+import { JsonMetadataTable } from "../../index.js";
 
 describe("Scene/JsonMetadataTable", function () {
   const properties = {

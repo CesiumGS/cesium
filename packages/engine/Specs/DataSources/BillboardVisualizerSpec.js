@@ -17,11 +17,11 @@ import {
   HeightReference,
   HorizontalOrigin,
   VerticalOrigin,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 import createGlobe from "../createGlobe.js";
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "DataSources/BillboardVisualizer",

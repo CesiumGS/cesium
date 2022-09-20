@@ -1,4 +1,4 @@
-import { ShaderStruct } from "../../Source/Cesium.js";
+import { ShaderStruct } from "../../index.js";
 
 describe("Renderer/ShaderStruct", function () {
   it("constructs", function () {

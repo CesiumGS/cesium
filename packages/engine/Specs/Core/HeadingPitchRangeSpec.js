@@ -1,4 +1,4 @@
-import { HeadingPitchRange } from "../../Source/Cesium.js";
+import { HeadingPitchRange } from "../../index.js";
 
 describe("Core/HeadingPitchRange", function () {
   it("construct with default values", function () {

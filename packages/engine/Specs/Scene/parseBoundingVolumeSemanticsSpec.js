@@ -3,7 +3,7 @@ import {
   Math,
   MetadataClass,
   parseBoundingVolumeSemantics,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/parseBoundingVolumeSemantics", function () {
   const boundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];

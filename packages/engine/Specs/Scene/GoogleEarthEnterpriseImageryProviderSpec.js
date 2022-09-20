@@ -16,9 +16,9 @@ import {
   Request,
   RequestScheduler,
   Resource,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
   beforeEach(function () {

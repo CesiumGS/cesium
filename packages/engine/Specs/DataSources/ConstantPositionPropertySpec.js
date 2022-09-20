@@ -4,7 +4,7 @@ import {
   ReferenceFrame,
   ConstantPositionProperty,
   PositionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/ConstantPositionProperty", function () {
   const time = JulianDate.now();

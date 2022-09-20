@@ -7,7 +7,7 @@ import {
   Resource,
   ResourceCache,
   _shadersSelectedFeatureIdStageCommon,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";

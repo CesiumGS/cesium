@@ -2,7 +2,7 @@ import {
   Resource,
   TextureManager,
   TextureUniform,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import TextureMinificationFilter from "../../../Source/Renderer/TextureMinificationFilter.js";
 import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";

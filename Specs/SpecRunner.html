@@ -11,17 +11,13 @@
     <script src="./jasmine/boot0.js"></script>
   </head>
   <body>
-    <script>
-      if (window.location.search.indexOf("release") !== -1) {
-        document.write('<script src="../Build/Cesium/Cesium.js"><\/script>');
-      } else {
-        document.write(
-          '<script src="../Build/CesiumUnminified/Cesium.js"><\/script>'
-        );
-      }
-    </script>
-    <script type="module" src="../Build/Specs/spec-main.js"></script>
-    <script src="./jasmine/boot1.js"></script>
-    <script type="module" src="../Build/Specs/SpecList.js"></script>
+    <!-- <script
+      type="module"
+      src="../packages/engine/Build/Specs/Specs/spec-main.js"
+    ></script>
+    <script
+      type="module"
+      src="../packages/engine/Build/Specs/packages/engine/Specs/SpecList.js"
+    ></script> -->
   </body>
 </html>

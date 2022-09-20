@@ -3,7 +3,7 @@ import {
   HermiteSpline,
   Spline,
   Quaternion,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/Spline", function () {
   it("contructor throws", function () {

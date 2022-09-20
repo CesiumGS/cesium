@@ -36,11 +36,11 @@ import {
   TextureWrap,
   VertexAttributeSemantic,
   Quaternion,
-} from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
+} from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";;
 import generateJsonBuffer from "../generateJsonBuffer.js";
 import loaderProcess from "../loaderProcess.js";
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(

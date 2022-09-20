@@ -1,4 +1,4 @@
-import { ManagedArray } from "../../Source/Cesium.js";
+import { ManagedArray } from "../../index.js";
 
 describe("Core/ManagedArray", function () {
   function expectTrailingReferenceToBeRemoved(managedArray) {

@@ -1,7 +1,10 @@
 import {
-  Fullscreen,
+  Fullscreen
+} from "../../../engine/index.js";
+
+import {
   FullscreenButtonViewModel,
-} from "../../../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Widgets/FullscreenButton/FullscreenButtonViewModel", function () {
   it("constructor sets default values", function () {

@@ -43,7 +43,6 @@ ApproximateTerrainHeights.initialize = function () {
   if (defined(initPromise)) {
     return initPromise;
   }
-
   initPromise = Resource.fetchJson(
     buildModuleUrl("Assets/approximateTerrainHeights.json")
   ).then(function (json) {

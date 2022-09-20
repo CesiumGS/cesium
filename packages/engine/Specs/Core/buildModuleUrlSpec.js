@@ -1,5 +1,5 @@
 import Uri from "urijs";
-import { buildModuleUrl, Resource } from "../../../Source/Cesium.js";
+import { buildModuleUrl, Resource } from "../../index.js";;
 
 describe("Core/buildModuleUrl", function () {
   it("produces an absolute URL for a module", function () {

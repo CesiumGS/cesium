@@ -3,7 +3,7 @@ import {
   GltfBufferViewLoader,
   Resource,
   ResourceCache,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/GltfBufferViewLoader", function () {
   const gltfEmbedded = {

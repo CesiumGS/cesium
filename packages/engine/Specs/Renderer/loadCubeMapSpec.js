@@ -7,9 +7,9 @@ import {
   loadCubeMap,
   ShaderProgram,
   VertexArray,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createContext from "../createContext.js";
+import createContext from "../../../../Specs/createContext.js";;
 
 describe(
   "Renderer/loadCubeMap",

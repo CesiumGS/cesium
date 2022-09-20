@@ -4,9 +4,9 @@ import {
   JulianDate,
   Matrix3,
   TimeStandard,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/IauOrientationAxes", function () {
   it("compute ICRF to Moon Fixed", function () {

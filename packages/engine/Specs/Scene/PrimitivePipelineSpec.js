@@ -8,7 +8,7 @@ import {
   GeometryAttributes,
   PrimitiveType,
   PrimitivePipeline,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe(
   "Scene/PrimitivePipeline",

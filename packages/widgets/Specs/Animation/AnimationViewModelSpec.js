@@ -1,10 +1,13 @@
 import {
   ClockRange,
   ClockStep,
-  JulianDate,
+  JulianDate
+} from "../../../engine/index.js";
+
+import {
   AnimationViewModel,
-  ClockViewModel,
-} from "../../../../Source/Cesium.js";
+  ClockViewModel
+} from "../../index.js";
 
 describe("Widgets/Animation/AnimationViewModel", function () {
   let clockViewModel;

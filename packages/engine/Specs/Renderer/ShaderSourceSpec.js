@@ -1,4 +1,4 @@
-import { ShaderSource } from "../../Source/Cesium.js";
+import { ShaderSource } from "../../index.js";
 
 describe("Renderer/ShaderSource", function () {
   const mockContext = {

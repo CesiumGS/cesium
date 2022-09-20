@@ -1,6 +1,6 @@
-import { Cartesian3, TridiagonalSystemSolver } from "../../../Source/Cesium.js";
+import { Cartesian3, TridiagonalSystemSolver } from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/TridiagonalSystemSolver", function () {
   it("solve throws exception without lower diagonal", function () {

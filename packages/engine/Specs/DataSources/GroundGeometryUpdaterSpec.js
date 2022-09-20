@@ -3,7 +3,7 @@ import {
   GeometryOffsetAttribute,
   GroundGeometryUpdater,
   HeightReference,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/GroundGeometryUpdater", function () {
   beforeAll(function () {

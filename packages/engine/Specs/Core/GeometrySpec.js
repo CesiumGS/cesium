@@ -8,9 +8,9 @@ import {
   GeometryType,
   PrimitiveType,
   Rectangle,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Geometry", function () {
   it("constructor", function () {

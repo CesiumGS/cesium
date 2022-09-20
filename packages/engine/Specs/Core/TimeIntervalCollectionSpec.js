@@ -5,7 +5,7 @@ import {
   TimeInterval,
   TimeIntervalCollection,
   TimeStandard,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/TimeIntervalCollection", function () {
   function defaultDataCallback(interval, index) {

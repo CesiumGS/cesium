@@ -11,7 +11,7 @@ import {
   RequestErrorEvent,
   RuntimeError,
   VerticalOrigin,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/GpxDataSource", function () {
   const parser = new DOMParser();

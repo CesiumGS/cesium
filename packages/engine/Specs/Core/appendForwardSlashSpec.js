@@ -1,4 +1,4 @@
-import { appendForwardSlash } from "../../Source/Cesium.js";
+import { appendForwardSlash } from "../../index.js";
 
 describe("Core/appendForwardSlash", function () {
   it("Appends to a url", function () {

@@ -1,10 +1,11 @@
 import {
   Cartesian2,
-  Cartesian3,
-  SelectionIndicatorViewModel,
-} from "../../../../Source/Cesium.js";
+  Cartesian3
+} from "../../../engine/index.js";
 
-import createScene from "../../createScene.js";
+import { SelectionIndicatorViewModel } from "../../index.js";
+
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Widgets/SelectionIndicator/SelectionIndicatorViewModel",

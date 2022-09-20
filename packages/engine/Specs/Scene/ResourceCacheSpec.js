@@ -7,9 +7,9 @@ import {
   ResourceCache,
   ResourceCacheKey,
   SupportedImageFormats,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import concatTypedArrays from "../concatTypedArrays.js";
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 import generateJsonBuffer from "../generateJsonBuffer.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 

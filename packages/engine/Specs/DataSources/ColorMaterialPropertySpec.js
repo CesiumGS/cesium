@@ -5,7 +5,7 @@ import {
   ColorMaterialProperty,
   ConstantProperty,
   TimeIntervalCollectionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/ColorMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

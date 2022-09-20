@@ -7,9 +7,9 @@ import {
   Resource,
   TerrainProvider,
   VRTheWorldTerrainProvider,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/VRTheWorldTerrainProvider", function () {
   const imageUrl = "Data/Images/Red16x16.png";

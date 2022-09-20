@@ -1,4 +1,4 @@
-import { loadImageFromTypedArray, Resource } from "../../../Source/Cesium.js";
+import { loadImageFromTypedArray, Resource } from "../../index.js";;
 
 describe("Core/loadImageFromTypedArray", function () {
   let supportsImageBitmapOptions;

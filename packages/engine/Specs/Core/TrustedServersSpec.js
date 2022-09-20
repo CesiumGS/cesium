@@ -1,4 +1,4 @@
-import { TrustedServers } from "../../Source/Cesium.js";
+import { TrustedServers } from "../../index.js";
 
 describe("Core/TrustedServers", function () {
   afterEach(function () {

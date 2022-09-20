@@ -1,4 +1,4 @@
-import { DeveloperError } from "../../Source/Cesium.js";
+import { DeveloperError } from "../../index.js";
 
 describe("Core/DeveloperError", function () {
   const name = "DeveloperError";

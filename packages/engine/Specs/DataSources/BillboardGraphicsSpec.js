@@ -9,7 +9,7 @@ import {
   HeightReference,
   HorizontalOrigin,
   VerticalOrigin,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/BillboardGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

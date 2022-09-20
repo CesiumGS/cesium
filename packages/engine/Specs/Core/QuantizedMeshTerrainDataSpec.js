@@ -6,9 +6,9 @@ import {
   QuantizedMeshTerrainData,
   TerrainData,
   TerrainMesh,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/QuantizedMeshTerrainData", function () {
   it("conforms to TerrainData interface", function () {

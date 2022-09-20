@@ -7,8 +7,8 @@ import {
   Resource,
   ResourceCache,
   SupportedImageFormats,
-} from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
+} from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";;
 import loaderProcess from "../loaderProcess.js";
 import MetadataTester from "../MetadataTester.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";

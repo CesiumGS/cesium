@@ -2,7 +2,7 @@ import {
   Color,
   EasingFunction,
   TweenCollection,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe(
   "Scene/TweenCollection",

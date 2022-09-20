@@ -1,4 +1,4 @@
-import { ComponentDatatype } from "../../Source/Cesium.js";
+import { ComponentDatatype } from "../../index.js";
 
 describe("Core/ComponentDatatype", function () {
   it("fromTypedArray works", function () {

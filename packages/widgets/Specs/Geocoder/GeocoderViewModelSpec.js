@@ -1,10 +1,10 @@
 import {
   Cartesian3,
-  GeocoderViewModel,
   Rectangle,
-} from "../../../Source/Cesium.js";
-import createScene from "../../createScene.js";
-import pollToPromise from "../../pollToPromise.js";
+} from "../../../engine/index.js";
+import { GeocoderViewModel } from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Widgets/Geocoder/GeocoderViewModel",

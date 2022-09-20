@@ -5,9 +5,9 @@ import {
   Occluder,
   Rectangle,
   Visibility,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Occluder", function () {
   it("throws an exception during construction (1 of 3)", function () {

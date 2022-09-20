@@ -1,4 +1,4 @@
-import { Intersections2D } from "../../Source/Cesium.js";
+import { Intersections2D } from "../../index.js";
 
 describe("Core/Intersections2D", function () {
   describe("clipTriangleAtAxisAlignedThreshold", function () {

@@ -7,7 +7,7 @@ import {
   RequestScheduler,
   Resource,
   sampleTerrain,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/sampleTerrain", function () {
   let worldTerrain;

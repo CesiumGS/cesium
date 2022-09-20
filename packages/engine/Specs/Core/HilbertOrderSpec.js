@@ -1,4 +1,4 @@
-import { FeatureDetection, HilbertOrder } from "../../../Source/Cesium.js";
+import { FeatureDetection, HilbertOrder } from "../../index.js";;
 
 describe("Core/HilbertOrder", function () {
   /* eslint-disable no-undef */

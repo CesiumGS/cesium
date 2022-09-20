@@ -5,7 +5,7 @@ import {
   Matrix3,
   Matrix4,
   ModelArticulationStage,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Model/ModelArticulationStage", function () {
   const scratchCartesian3 = new Cartesian3();

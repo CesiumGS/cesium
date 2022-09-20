@@ -21,10 +21,10 @@ import {
   Resource,
   TileBoundingSphere,
   TileBoundingS2Cell,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 
 describe(
   "Scene/Implicit3DTileContent",

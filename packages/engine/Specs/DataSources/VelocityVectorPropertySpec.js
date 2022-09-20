@@ -7,9 +7,9 @@ import {
   ConstantPositionProperty,
   SampledPositionProperty,
   VelocityVectorProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("DataSources/VelocityVectorProperty", function () {
   const time = JulianDate.now();

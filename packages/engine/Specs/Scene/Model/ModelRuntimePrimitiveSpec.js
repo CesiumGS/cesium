@@ -28,7 +28,7 @@ import {
   VertexAttributeSemantic,
   WireframePipelineStage,
   ClassificationType,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import ClassificationPipelineStage from "../../../Source/Scene/Model/ClassificationPipelineStage.js";
 
 describe("Scene/Model/ModelRuntimePrimitive", function () {

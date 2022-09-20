@@ -1,4 +1,4 @@
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Math", function () {
   it("sign of -2", function () {

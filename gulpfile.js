@@ -1,5 +1,11 @@
 /*eslint-env node*/
-import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
+import {
+  writeFileSync,
+  copyFileSync,
+  readFileSync,
+  existsSync,
+  mkdirSync,
+} from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, relative, extname, resolve } from "path";
 import { cpus, EOL } from "os";
@@ -42,6 +48,7 @@ import {
   createJsHintOptions,
   esbuildBaseConfig,
 } from "./build.js";
+import { cwd } from "process";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
@@ -162,6 +169,35 @@ function getVersionFromPackageJson(json) {
   return version;
 }
 
+const workspaceSpecFiles = {
+  "@cesium/engine": [
+    "Specs/Core/*Spec.js",
+    "!Specs/Core/TaskProcessorSpec.js", // TODO: Fix
+  ],
+  "@cesium/widgets": ["Specs/**/*.js"],
+};
+
+/**
+ * Creates a single entry point file by importing all individual spec files.
+ * @param {Array.<String>} files The individual spec files.
+ * @param {String} outputPath The path the file is written to.
+ */
+async function createSpecListJs(files, outputPath) {
+  let contents = "";
+  files.forEach(function (file) {
+    contents += `import './${filePathToModuleId(file).replace(
+      "Specs/",
+      ""
+    )}.js';\n`;
+  });
+
+  await writeFile(outputPath, contents, {
+    encoding: "utf-8",
+  });
+
+  return contents;
+}
+
 async function createIndexJs(workspace) {
   // Read package.json from current working directory.
 
@@ -277,10 +313,15 @@ export const buildEngine = async () => {
   mkdirp.sync("Build");
 
   // Convert GLSL files to JavaScript modules.
-  await glslToJavaScript(false, "Build/minifyShaders.state");
+  //await glslToJavaScript(false, "Build/minifyShaders.state");
 
   // Create index.js
   await createIndexJs("@cesium/engine");
+
+  // Create SpecList.js
+  const specFiles = await globby(workspaceSpecFiles["@cesium/engine"]);
+  const specListFile = join("Specs", "SpecList.js");
+  await createSpecListJs(specFiles, specListFile);
 
   // Generate bundle using esbuild.
   const esBuildOptions = defaultESBuildOptions();
@@ -330,6 +371,8 @@ export const buildEngine = async () => {
       outfile: join(`Build`, `index.cjs`),
     });
   }
+
+  await bundleSpecs(specListFile, join("Build", "Specs"));
 };
 
 function prepareWorkspacePaths(workspacePath, paths) {
@@ -365,12 +408,78 @@ async function bundleCSS(options) {
   await esbuild(esBuildOptions);
 }
 
+
+const widgetsResolvePlugin = {
+  name: "external-cesium-engine",
+  setup: (build) => {
+    build.onResolve({
+      filter: new RegExp(`engine\/index\.js$`)
+    }, () => {
+
+    })
+  },
+};
+
+const externalResolvePlugin = {
+  name: "external-cesium",
+  setup: (build) => {
+    build.onResolve({ filter: new RegExp(`Cesium\.js$`) }, () => {
+      return {
+        path: "CesiumEngine",
+        namespace: "external-cesium",
+      };
+    });
+
+    build.onLoad(
+      {
+        filter: new RegExp(`^CesiumEngine$`),
+        namespace: "external-cesium",
+      },
+      () => {
+        const contents = `module.exports = CesiumEngine`;
+        return {
+          contents,
+        };
+      }
+    );
+  },
+};
+
+/**
+ * Bundles spec files for testing in the browser.
+ */
+async function bundleSpecs(specListFile, outputPath) {
+  return esbuild({
+    entryPoints: [
+      "../../Specs/spec-main.js",
+      "../../Specs/karma-main.js",
+      specListFile,
+    ],
+    bundle: true,
+    format: "esm",
+    sourcemap: true,
+    target: "es2020",
+    outdir: outputPath,
+    //plugins: [externalResolvePlugin],
+    external: ["https", "http", "url", "zlib"],
+    incremental: false,
+    write: true,
+  });
+}
+
 export const buildWidgets = async () => {
   // Generate Build folder to place build artifacts.
   mkdirp.sync("Build");
 
   // Create index.js
   await createIndexJs("@cesium/widgets");
+
+  // Create SpecList.js
+  const specFiles = await globby(workspaceSpecFiles["@cesium/widgets"]);
+  const specListFile = join("Specs", "SpecList.js");
+  await createSpecListJs(specFiles, specListFile);
+
+  await bundleSpecs(specListFile, join("Build", "Specs"));
 };
 
 function copyFiles(from, to, base) {
@@ -1499,6 +1608,162 @@ export async function coverage() {
     server.start();
   });
 }
+
+const workspaceTestFiles = {
+  "@cesium/engine": [
+    { pattern: "Specs/Data/**", included: false },
+    { pattern: "packages/engine/Specs/TestWorkers/**/*.wasm", included: false },
+    { pattern: "packages/engine/Build/CesiumEngine.js", included: true },
+    { pattern: "packages/engine/Build/CesiumEngine.js.map", included: false },
+    {
+      pattern: "packages/engine/Build/Specs/Specs/karma-main.js",
+      included: true,
+      type: "module",
+    },
+    {
+      pattern: "packages/engine/Build/Specs/packages/engine/Specs/SpecList.js",
+      included: true,
+      type: "module",
+    }, // TODO: Fix
+    { pattern: "packages/engine/Specs/TestWorkers/**", included: false },
+    { pattern: "packages/engine/Build/Assets/**/*", included: false },
+    { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
+    { pattern: "packages/engine/Build/Workers/**/*", included: false },
+  ],
+  "@cesium/widgets": [
+    { pattern: "Specs/Data/**", included: false },
+    {
+      pattern: "packages/widgets/Build/Specs/Specs/karma-main.js",
+      included: true,
+      type: "module",
+    },
+    {
+      pattern:
+        "packages/widgets/Build/Specs/packages/widgets/Specs/SpecList.js",
+      included: true,
+      type: "module",
+    }, // TODO: Fix
+    { pattern: "packages/engine/Build/Assets/**/*", included: false },
+    { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
+    { pattern: "packages/engine/Build/Workers/**/*", included: false },
+  ],
+};
+
+export async function testEngine() {
+  const enableAllBrowsers = argv.all ? true : false;
+  const includeCategory = argv.include ? argv.include : "";
+  const excludeCategory = argv.exclude ? argv.exclude : "";
+  const webglValidation = argv.webglValidation ? argv.webglValidation : false;
+  const webglStub = argv.webglStub ? argv.webglStub : false;
+  const release = argv.release ? argv.release : false;
+  const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
+  const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+  const debug = argv.debug ? false : true;
+  const debugCanvasWidth = argv.debugCanvasWidth;
+  const debugCanvasHeight = argv.debugCanvasHeight;
+  const includeName = argv.includeName ? argv.includeName : "";
+
+  const config = await karma.config.parseConfig(
+    karmaConfigFile,
+    {
+      port: 9876,
+      singleRun: debug,
+      browsers: ["Chrome"],
+      specReporter: {
+        suppressErrorSummary: false,
+        suppressFailed: false,
+        suppressPassed: suppressPassed,
+        suppressSkipped: true,
+      },
+      detectBrowsers: {
+        enabled: enableAllBrowsers,
+      },
+      logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
+      files: workspaceTestFiles["@cesium/engine"],
+      client: {
+        captureConsole: verbose,
+        args: [
+          includeCategory,
+          excludeCategory,
+          "--grep",
+          includeName,
+          webglValidation,
+          webglStub,
+          release,
+          debugCanvasWidth,
+          debugCanvasHeight,
+        ],
+      },
+    },
+    { promiseConfig: true, throwErrors: true }
+  );
+
+  return new Promise((resolve) => {
+    const server = new karma.Server(config, function doneCallback(exitCode) {
+      resolve(failTaskOnError ? exitCode : undefined);
+    });
+    server.start();
+  });
+}
+
+export async function testWidgets() {
+  const enableAllBrowsers = argv.all ? true : false;
+  const includeCategory = argv.include ? argv.include : "";
+  const excludeCategory = argv.exclude ? argv.exclude : "";
+  const webglValidation = argv.webglValidation ? argv.webglValidation : false;
+  const webglStub = argv.webglStub ? argv.webglStub : false;
+  const release = argv.release ? argv.release : false;
+  const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
+  const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+  const debug = argv.debug ? false : true;
+  const debugCanvasWidth = argv.debugCanvasWidth;
+  const debugCanvasHeight = argv.debugCanvasHeight;
+  const includeName = argv.includeName ? argv.includeName : "";
+
+  const config = await karma.config.parseConfig(
+    karmaConfigFile,
+    {
+      port: 9876,
+      singleRun: debug,
+      browsers: ["Chrome"],
+      specReporter: {
+        suppressErrorSummary: false,
+        suppressFailed: false,
+        suppressPassed: suppressPassed,
+        suppressSkipped: true,
+      },
+      detectBrowsers: {
+        enabled: enableAllBrowsers,
+      },
+      logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
+      files: workspaceTestFiles["@cesium/widgets"],
+      client: {
+        captureConsole: verbose,
+        args: [
+          includeCategory,
+          excludeCategory,
+          "--grep",
+          includeName,
+          webglValidation,
+          webglStub,
+          release,
+          debugCanvasWidth,
+          debugCanvasHeight,
+        ],
+      },
+    },
+    { promiseConfig: true, throwErrors: true }
+  );
+
+  return new Promise((resolve) => {
+    const server = new karma.Server(config, function doneCallback(exitCode) {
+      resolve(failTaskOnError ? exitCode : undefined);
+    });
+    server.start();
+  });
+}
+
+
 
 export async function test() {
   const enableAllBrowsers = argv.all ? true : false;

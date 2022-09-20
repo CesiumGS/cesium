@@ -2,7 +2,7 @@ import {
   knockout,
   ProviderViewModel,
   createCommand,
-} from "../../../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Widgets/BaseLayerPicker/ProviderViewModel", function () {
   let spyCreationFunction;

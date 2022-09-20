@@ -3,7 +3,7 @@ import {
   Cartesian3,
   Color,
   Particle,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Particle", function () {
   it("default constructor", function () {

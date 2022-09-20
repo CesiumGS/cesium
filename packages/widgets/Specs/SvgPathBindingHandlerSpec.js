@@ -1,4 +1,4 @@
-import { knockout } from "../../Source/Cesium.js";
+import { knockout } from "../index.js";
 
 describe("ThirdParty/knockout", function () {
   it("check binding with constants", function () {

@@ -6,9 +6,9 @@ import {
   Request,
   Resource,
   RuntimeError,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/GoogleEarthEnterpriseMetadata", function () {
   it("tileXYToQuadKey", function () {

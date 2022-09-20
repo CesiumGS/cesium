@@ -9,7 +9,7 @@ import {
   GroundPrimitive,
   HeightReference,
   PrimitiveCollection,
-} from "../../Source/Cesium.js";
+} from "../packages/engine/index.js";
 
 function createGeometryUpdaterGroundGeometrySpecs(
   Updater,

@@ -10,12 +10,12 @@ import {
   PlaneGeometryUpdater,
   PlaneGraphics,
   PrimitiveCollection,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 import createDynamicGeometryUpdaterSpecs from "../createDynamicGeometryUpdaterSpecs.js";
 import createDynamicProperty from "../createDynamicProperty.js";
 import createGeometryUpdaterSpecs from "../createGeometryUpdaterSpecs.js";
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 
 describe(
   "DataSources/PlaneGeometryUpdater",

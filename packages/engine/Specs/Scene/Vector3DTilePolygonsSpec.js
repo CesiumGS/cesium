@@ -17,13 +17,13 @@ import {
   Primitive,
   StencilConstants,
   Vector3DTilePolygons,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
-import createContext from "../createContext.js";
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createContext from "../../../../Specs/createContext.js";;
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 // Testing of this feature in WebGL is currently disabled due to test
 // failures that started in https://github.com/CesiumGS/cesium/pull/8600.

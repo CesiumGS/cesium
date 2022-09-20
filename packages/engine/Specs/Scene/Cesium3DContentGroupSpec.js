@@ -1,4 +1,4 @@
-import { Cesium3DContentGroup } from "../../Source/Cesium.js";
+import { Cesium3DContentGroup } from "../../index.js";
 
 describe("Scene/Cesium3DContentGroup", function () {
   const mockMetadata = {};

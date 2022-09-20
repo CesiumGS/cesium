@@ -38,7 +38,7 @@ import {
   StyleCommandsNeeded,
   Transforms,
   WireframeIndexGenerator,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";

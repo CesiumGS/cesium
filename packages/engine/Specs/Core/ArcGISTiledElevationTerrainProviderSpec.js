@@ -9,11 +9,10 @@ import {
   RuntimeError,
   TerrainProvider,
   WebMercatorTilingScheme,
-} from "../../../Source/Cesium.js";
+  Math as CesiumMath
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/ArcGISTiledElevationTerrainProvider", function () {
   const lercTileUrl = "Data/Images/Red16x16.png";

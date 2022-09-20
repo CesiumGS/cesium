@@ -1,11 +1,14 @@
 import {
   EllipsoidTerrainProvider,
   FeatureDetection,
-  ImageryLayerCollection,
-  BaseLayerPicker,
-} from "../../../../Source/Cesium.js";
+  ImageryLayerCollection
+} from "../../../engine/index.js";
 
-import DomEventSimulator from "../../DomEventSimulator.js";
+import {
+  BaseLayerPicker
+} from "../../index.js"
+
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 
 describe("Widgets/BaseLayerPicker/BaseLayerPicker", function () {
   function MockGlobe() {

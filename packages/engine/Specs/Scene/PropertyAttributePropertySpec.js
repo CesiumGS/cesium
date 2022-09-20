@@ -3,7 +3,7 @@ import {
   PropertyAttributeProperty,
   Matrix2,
   MetadataClassProperty,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/PropertyAttributeProperty", function () {
   let classProperty;

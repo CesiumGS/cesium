@@ -7,7 +7,7 @@ import {
   RequestType,
   TimeIntervalCollection,
   TimeDynamicImagery,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/TimeDynamicImagery", function () {
   const clock = new Clock({

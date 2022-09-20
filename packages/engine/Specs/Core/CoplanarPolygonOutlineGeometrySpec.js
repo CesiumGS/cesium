@@ -1,9 +1,9 @@
 import {
   Cartesian3,
   CoplanarPolygonOutlineGeometry,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/CoplanarPolygonOutlineGeometry", function () {
   it("throws with no hierarchy", function () {

@@ -9,11 +9,11 @@ import {
   Entity,
   EntityCluster,
   SceneTransforms,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createCanvas from "../createCanvas.js";
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createCanvas from "../../../../Specs/createCanvas.js";;
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "DataSources/EntityCluster",

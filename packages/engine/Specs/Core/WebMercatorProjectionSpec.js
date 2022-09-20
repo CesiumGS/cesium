@@ -4,9 +4,9 @@ import {
   Cartographic,
   Ellipsoid,
   WebMercatorProjection,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/WebMercatorProjection", function () {
   it("construct0", function () {

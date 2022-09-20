@@ -2,11 +2,11 @@ import {
   JulianDate,
   Rotation,
   SampledProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("DataSources/Rotation", function () {
   it("Interpolates towards the closest angle.", function () {

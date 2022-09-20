@@ -1,8 +1,8 @@
-import { Cartesian3, Cartographic, Ellipsoid } from "../../../Source/Cesium.js";
+import { Cartesian3, Cartographic, Ellipsoid } from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-import createPackableArraySpecs from "../createPackableArraySpecs.js";
-import createPackableSpecs from "../createPackableSpecs.js";
+import { Math as CesiumMath } from "../../index.js";
+import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/Cartesian3", function () {
   it("construct with default values", function () {

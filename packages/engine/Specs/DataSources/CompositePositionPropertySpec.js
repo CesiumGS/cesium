@@ -7,7 +7,7 @@ import {
   CompositePositionProperty,
   ConstantPositionProperty,
   PositionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/CompositePositionProperty", function () {
   it("default constructor has expected values", function () {

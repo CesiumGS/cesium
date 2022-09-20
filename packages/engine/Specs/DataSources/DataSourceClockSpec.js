@@ -3,7 +3,7 @@ import {
   ClockStep,
   JulianDate,
   DataSourceClock,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/DataSourceClock", function () {
   it("merge assigns unassigned properties", function () {

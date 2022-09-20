@@ -3,7 +3,7 @@ import {
   Cartesian2,
   clone,
   RuntimeError,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/BatchTableHierarchy", function () {
   const hierarchyExtension = {

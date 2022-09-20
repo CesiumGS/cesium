@@ -1,4 +1,4 @@
-import { Matrix4, ModelSkin } from "../../../Source/Cesium.js";
+import { Matrix4, ModelSkin } from "../../index.js";;
 
 describe("Scene/Model/ModelSkin", function () {
   const mockNodes = [{ index: 0 }, { index: 1 }, { index: 2 }];

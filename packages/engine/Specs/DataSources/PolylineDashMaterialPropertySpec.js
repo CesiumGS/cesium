@@ -5,7 +5,7 @@ import {
   ConstantProperty,
   PolylineDashMaterialProperty,
   TimeIntervalCollectionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/PolylineDashMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

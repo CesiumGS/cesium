@@ -9,7 +9,7 @@ import {
   ModelMatrixUpdateStage,
   NodeStatisticsPipelineStage,
   Quaternion,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Model/ModelRuntimeNode", function () {
   const mockNode = {

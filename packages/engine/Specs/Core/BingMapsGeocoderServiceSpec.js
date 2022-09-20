@@ -2,7 +2,7 @@ import {
   BingMapsGeocoderService,
   Rectangle,
   Resource,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/BingMapsGeocoderService", function () {
   afterAll(function () {

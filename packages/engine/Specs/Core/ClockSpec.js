@@ -4,7 +4,7 @@ import {
   ClockStep,
   defined,
   JulianDate,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/Clock", function () {
   it("sets default parameters when constructed", function () {

@@ -9,13 +9,16 @@ import {
   Scene,
   SceneMode,
   SkyBox,
-  TileCoordinatesImageryProvider,
-  CesiumWidget,
-} from "../../../../Source/Cesium.js";
+  TileCoordinatesImageryProvider
+} from "../../../engine/index.js";
 
-import DomEventSimulator from "../../DomEventSimulator.js";
-import getWebGLStub from "../../getWebGLStub.js";
-import pollToPromise from "../../pollToPromise.js";
+import {
+  CesiumWidget
+} from "../../index.js";
+
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
+import getWebGLStub from "../../../../Specs/getWebGLStub.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Widgets/CesiumWidget/CesiumWidget",

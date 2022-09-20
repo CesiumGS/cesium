@@ -1,4 +1,4 @@
-import { clone } from "../../Source/Cesium.js";
+import { clone } from "../../index.js";
 
 describe("Core/clone", function () {
   it("can make shallow clones", function () {

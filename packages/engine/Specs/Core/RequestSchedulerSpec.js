@@ -3,7 +3,7 @@ import {
   Request,
   RequestScheduler,
   RequestState,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Core/RequestScheduler", function () {
   let originalMaximumRequests;

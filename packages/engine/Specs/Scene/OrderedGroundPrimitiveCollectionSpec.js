@@ -1,7 +1,7 @@
 import {
   destroyObject,
   OrderedGroundPrimitiveCollection,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/OrderedGroundPrimitiveCollection", function () {
   let updateCallOrder;

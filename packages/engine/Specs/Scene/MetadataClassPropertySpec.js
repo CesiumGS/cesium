@@ -11,7 +11,7 @@ import {
   MetadataComponentType,
   MetadataEnum,
   MetadataType,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/MetadataClassProperty", function () {
   it("creates property with default values", function () {

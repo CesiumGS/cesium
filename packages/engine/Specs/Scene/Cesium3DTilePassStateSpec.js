@@ -1,7 +1,7 @@
 import {
   Cesium3DTilePass,
   Cesium3DTilePassState,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Cesium3DTilePassState", function () {
   it("sets default values", function () {

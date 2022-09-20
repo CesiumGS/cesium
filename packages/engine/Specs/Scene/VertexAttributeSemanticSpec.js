@@ -1,4 +1,4 @@
-import { VertexAttributeSemantic } from "../../Source/Cesium.js";
+import { VertexAttributeSemantic } from "../../index.js";
 
 describe("Scene/VertexAttributeSemantic", function () {
   it("hasSetIndex", function () {

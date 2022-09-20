@@ -6,7 +6,7 @@ import {
   CheckerboardMaterialProperty,
   ConstantProperty,
   TimeIntervalCollectionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 import testDefinitionChanged from "../testDefinitionChanged.js";
 

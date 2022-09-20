@@ -1,4 +1,4 @@
-import { getImageFromTypedArray } from "../../Source/Cesium.js";
+import { getImageFromTypedArray } from "../../index.js";
 
 describe("Core/getImageFromTypedArray", function () {
   const pixelArray3x2 = Array(6).fill([0, 255, 0, 255]);

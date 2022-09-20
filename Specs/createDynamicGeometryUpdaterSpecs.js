@@ -4,7 +4,7 @@ import {
   BoundingSphereState,
   EllipsoidGeometryUpdater,
   PrimitiveCollection,
-} from "../../Source/Cesium.js";
+} from "../packages/engine/index.js";
 
 import { Math as CesiumMath } from "../Source/Cesium.js";
 

@@ -6,7 +6,7 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/MetadataType", function () {
   it("isVectorType works", function () {

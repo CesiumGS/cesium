@@ -29,11 +29,11 @@ import {
   Globe,
   GroundPolylinePrimitive,
   ShadowMode,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 import createDynamicProperty from "../createDynamicProperty.js";
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "DataSources/PolylineGeometryUpdater",

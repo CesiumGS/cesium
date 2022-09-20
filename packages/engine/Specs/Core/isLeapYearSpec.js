@@ -1,4 +1,4 @@
-import { isLeapYear } from "../../Source/Cesium.js";
+import { isLeapYear } from "../../index.js";
 
 describe("Core/isLeapYear", function () {
   it("Check for valid leap years", function () {

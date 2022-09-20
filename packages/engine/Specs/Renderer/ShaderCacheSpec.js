@@ -1,5 +1,5 @@
-import { ShaderCache, ShaderSource } from "../../Source/Cesium.js";
-import createContext from "../createContext.js";
+import { ShaderCache, ShaderSource } from "../../index.js";
+import createContext from "../../../../Specs/createContext.js";;
 
 describe(
   "Renderer/ShaderCache",

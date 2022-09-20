@@ -4,9 +4,9 @@ import {
   Matrix3,
   Matrix4,
   Plane,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Plane", function () {
   it("constructs", function () {

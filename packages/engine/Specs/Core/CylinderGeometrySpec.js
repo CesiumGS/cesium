@@ -2,9 +2,9 @@ import {
   CylinderGeometry,
   GeometryOffsetAttribute,
   VertexFormat,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/CylinderGeometry", function () {
   it("constructor throws with no length", function () {

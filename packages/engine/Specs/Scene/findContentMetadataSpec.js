@@ -2,7 +2,7 @@ import {
   Cartesian3,
   findContentMetadata,
   MetadataClass,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/findContentMetadata", function () {
   let contentClass;

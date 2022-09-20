@@ -1,6 +1,6 @@
-import { Texture, TextureCache } from "../../../Source/Cesium.js";
+import { Texture, TextureCache } from "../../index.js";;
 
-import createContext from "../createContext.js";
+import createContext from "../../../../Specs/createContext.js";;
 
 describe(
   "Renderer/TextureCache",

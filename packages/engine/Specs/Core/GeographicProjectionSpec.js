@@ -3,9 +3,9 @@ import {
   Cartographic,
   Ellipsoid,
   GeographicProjection,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/GeographicProjection", function () {
   it("construct0", function () {

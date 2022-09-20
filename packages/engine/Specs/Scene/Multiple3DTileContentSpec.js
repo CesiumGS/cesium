@@ -9,9 +9,9 @@ import {
   GroupMetadata,
   RequestScheduler,
   Resource,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 import generateJsonBuffer from "../generateJsonBuffer.js";
 
 describe(

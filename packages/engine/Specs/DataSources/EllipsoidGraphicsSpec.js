@@ -6,7 +6,7 @@ import {
   ConstantProperty,
   EllipsoidGraphics,
   ShadowMode,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 import testDefinitionChanged from "../testDefinitionChanged.js";
 import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";

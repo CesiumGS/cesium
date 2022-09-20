@@ -3,10 +3,10 @@ import {
   Cartesian3,
   Cartesian4,
   EncodedCartesian3,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 import createCamera from "../createCamera.js";
-import createContext from "../createContext.js";
+import createContext from "../../../../Specs/createContext.js";;
 import createFrameState from "../createFrameState.js";
 
 describe(

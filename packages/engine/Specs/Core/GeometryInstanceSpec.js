@@ -8,7 +8,7 @@ import {
   GeometryInstanceAttribute,
   Matrix4,
   PrimitiveType,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/GeometryInstance", function () {
   it("constructor", function () {

@@ -2,12 +2,12 @@ import {
   ComputeEngine,
   Pass,
   OctahedralProjectedCubeMap,
-} from "../../../Source/Cesium.js";
-import { Cartesian3, defined } from "../../Source/Cesium.js";
+} from "../../index.js";;
+import { Cartesian3, defined } from "../../index.js";
 
-import createContext from "../createContext.js";
+import createContext from "../../../../Specs/createContext.js";;
 import createFrameState from "../createFrameState.js";
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/OctahedralProjectedCubeMap",

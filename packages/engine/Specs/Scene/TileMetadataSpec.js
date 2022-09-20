@@ -1,4 +1,4 @@
-import { MetadataClass, TileMetadata } from "../../Source/Cesium.js";
+import { MetadataClass, TileMetadata } from "../../index.js";
 
 describe("Scene/TileMetadata", function () {
   const tileClassWithNoProperties = new MetadataClass({

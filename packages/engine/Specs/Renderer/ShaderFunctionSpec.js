@@ -1,4 +1,4 @@
-import { ShaderFunction } from "../../Source/Cesium.js";
+import { ShaderFunction } from "../../index.js";
 
 describe("Renderer/ShaderFunction", function () {
   const signature = "vec3 testFunction(vec3 position)";

@@ -1,4 +1,4 @@
-import { Interval } from "../../Source/Cesium.js";
+import { Interval } from "../../index.js";
 
 describe("Core/Interval", function () {
   it("constructs without arguments", function () {

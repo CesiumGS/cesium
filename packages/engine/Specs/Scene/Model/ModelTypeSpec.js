@@ -1,4 +1,4 @@
-import { ModelType } from "../../../Source/Cesium.js";
+import { ModelType } from "../../index.js";;
 
 describe("Scene/Model/ModelType", function () {
   it("is3DTiles works", function () {

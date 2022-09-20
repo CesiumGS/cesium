@@ -11,10 +11,9 @@ import {
   DrawCommand,
   ShaderProgram,
   VertexArray,
-} from "../../Source/Cesium.js";
+  Math as CesiumMath
+} from "../packages/engine/index.js";
 import equals from "./equals.js";
-
-import { Math as CesiumMath } from "../Source/Cesium.js";
 
 function createMissingFunctionMessageFunction(
   item,

@@ -1,4 +1,4 @@
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import {
   Cartesian3,
@@ -20,7 +20,7 @@ import {
   RectangleGeometry,
   RenderState,
   StencilConstants,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe(
   "Scene/Vector3DTileContent",

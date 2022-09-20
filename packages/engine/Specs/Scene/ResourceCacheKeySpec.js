@@ -2,7 +2,7 @@ import {
   Resource,
   ResourceCacheKey,
   SupportedImageFormats,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("ResourceCacheKey", function () {
   const schemaUri = "https://example.com/schema.json";

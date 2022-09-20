@@ -27,7 +27,8 @@
   "type": "module",
   "devDependencies": {},
   "scripts": {
-    "build": "gulp buildEngine --cwd ."
+    "build": "gulp buildEngine --cwd .",
+    "test": "gulp testEngine"
   },
   "repository": {
     "type": "git",

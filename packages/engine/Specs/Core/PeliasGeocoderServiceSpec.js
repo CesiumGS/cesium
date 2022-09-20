@@ -3,7 +3,7 @@ import {
   GeocodeType,
   PeliasGeocoderService,
   Resource,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/PeliasGeocoderService", function () {
   it("constructor throws without url", function () {

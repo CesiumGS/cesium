@@ -1,4 +1,4 @@
-import { parseResponseHeaders } from "../../Source/Cesium.js";
+import { parseResponseHeaders } from "../../index.js";
 
 describe("Core/parseResponseHeaders", function () {
   it("returns an empty object literal when given falsy input", function () {

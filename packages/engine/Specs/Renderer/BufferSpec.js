@@ -1,6 +1,6 @@
-import { IndexDatatype, Buffer, BufferUsage } from "../../../Source/Cesium.js";
+import { IndexDatatype, Buffer, BufferUsage } from "../../index.js";;
 
-import createContext from "../createContext.js";
+import createContext from "../../../../Specs/createContext.js";;
 
 describe(
   "Renderer/Buffer",

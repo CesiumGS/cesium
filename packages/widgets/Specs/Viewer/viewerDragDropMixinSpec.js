@@ -1,12 +1,13 @@
 import {
   defined,
-  TimeInterval,
-  viewerDragDropMixin,
-} from "../../../../Source/Cesium.js";
+  TimeInterval
+} from "../../../engine/index.js";
 
-import createViewer from "../../createViewer.js";
-import DomEventSimulator from "../../DomEventSimulator.js";
-import pollToPromise from "../../pollToPromise.js";
+import {viewerDragDropMixin} from "../../index.js";
+
+import createViewer from "../../../../Specs/createViewer.js";
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Widgets/Viewer/viewerDragDropMixin",

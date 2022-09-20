@@ -4,7 +4,7 @@ import {
   Math as CesiumMath,
   MetadataClass,
   MetadataEntity,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/MetadataEntity", function () {
   let classWithNoPropertiesDefinition;

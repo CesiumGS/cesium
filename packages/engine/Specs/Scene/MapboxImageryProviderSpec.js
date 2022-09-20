@@ -9,10 +9,10 @@ import {
   ImageryProvider,
   ImageryState,
   MapboxImageryProvider,
-} from "../../../Source/Cesium.js";
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+} from "../../index.js";;
+import { Math as CesiumMath } from "../../index.js";
 
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/MapboxImageryProvider", function () {
   beforeEach(function () {

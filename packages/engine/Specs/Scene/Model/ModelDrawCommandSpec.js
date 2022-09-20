@@ -24,7 +24,7 @@ import {
   StyleCommandsNeeded,
   Transforms,
   WebGLConstants,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe(
   "Scene/Model/ModelDrawCommand",

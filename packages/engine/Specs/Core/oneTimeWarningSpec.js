@@ -1,4 +1,4 @@
-import { oneTimeWarning } from "../../Source/Cesium.js";
+import { oneTimeWarning } from "../../index.js";
 
 describe("Core/oneTimeWarning", function () {
   it("logs a warning", function () {

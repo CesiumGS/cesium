@@ -3,7 +3,7 @@ import {
   SplitDirection,
   ShaderBuilder,
   _shadersModelSplitterStageFS,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/Model/ModelSplitterPipelineStage", function () {

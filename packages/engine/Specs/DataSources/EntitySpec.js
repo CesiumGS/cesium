@@ -26,7 +26,7 @@ import {
   PolylineVolumeGraphics,
   RectangleGraphics,
   WallGraphics,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/Entity", function () {
   it("constructor sets expected properties.", function () {

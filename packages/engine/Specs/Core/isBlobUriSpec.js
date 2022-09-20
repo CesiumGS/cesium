@@ -1,4 +1,4 @@
-import { isBlobUri } from "../../Source/Cesium.js";
+import { isBlobUri } from "../../index.js";
 
 describe("Core/isBlobUri", function () {
   it("Throws if url is undefined", function () {

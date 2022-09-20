@@ -1,6 +1,7 @@
-import { Fullscreen, VRButtonViewModel } from "../../../../Source/Cesium.js";
+import { Fullscreen } from "../../../engine/index.js";
+import { VRButtonViewModel } from "../../index.js";
 
-import createScene from "../../createScene.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe("Widgets/VRButton/VRButtonViewModel", function () {
   let scene;

@@ -12,7 +12,7 @@ import {
   SelectedFeatureIdPipelineStage,
   ShaderBuilder,
   VertexAttributeSemantic,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";

@@ -4,9 +4,9 @@ import {
   WebMercatorTilingScheme,
   ImageryProvider,
   TileCoordinatesImageryProvider,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/TileCoordinatesImageryProvider", function () {
   it("conforms to ImageryProvider interface", function () {

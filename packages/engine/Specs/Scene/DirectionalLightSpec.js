@@ -1,4 +1,4 @@
-import { Cartesian3, Color, DirectionalLight } from "../../Source/Cesium.js";
+import { Cartesian3, Color, DirectionalLight } from "../../index.js";
 
 describe("Scene/DirectionalLight", function () {
   it("constructs with default options", function () {

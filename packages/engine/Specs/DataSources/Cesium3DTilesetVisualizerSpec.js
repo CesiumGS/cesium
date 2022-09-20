@@ -12,10 +12,10 @@ import {
   Cesium3DTilesetGraphics,
   Cesium3DTilesetVisualizer,
   Globe,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "DataSources/Cesium3DTilesetVisualizer",

@@ -3,12 +3,12 @@ import {
   HeadingPitchRoll,
   Matrix3,
   Quaternion,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../createPackableSpecs.js";
-import createPackableArraySpecs from "../createPackableArraySpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableArraySpecs from "../../../../Specs/createPackableArraySpecs.js";;
 
 describe("Core/Matrix3", function () {
   it("default constructor creates values array with all zeros.", function () {

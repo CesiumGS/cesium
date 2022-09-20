@@ -1,4 +1,4 @@
-import { StyleExpression } from "../../Source/Cesium.js";
+import { StyleExpression } from "../../index.js";
 
 describe("Scene/StyleExpression", function () {
   function MockFeature() {}

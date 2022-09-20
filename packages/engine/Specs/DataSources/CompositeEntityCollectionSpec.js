@@ -10,7 +10,7 @@ import {
   ConstantProperty,
   Entity,
   EntityCollection,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/CompositeEntityCollection", function () {
   function CollectionListener() {

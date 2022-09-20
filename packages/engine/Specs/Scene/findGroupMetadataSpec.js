@@ -2,7 +2,7 @@ import {
   findGroupMetadata,
   MetadataClass,
   GroupMetadata,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/findGroupMetadata", function () {
   let layerClass;

@@ -1,5 +1,5 @@
-import { PointCloudShading } from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
+import { PointCloudShading } from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";;
 
 describe("Scene/PointCloudShading", function () {
   it("creates expected instance from raw assignment and construction", function () {

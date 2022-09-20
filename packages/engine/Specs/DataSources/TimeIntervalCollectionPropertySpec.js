@@ -4,7 +4,7 @@ import {
   TimeInterval,
   TimeIntervalCollection,
   TimeIntervalCollectionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/TimeIntervalCollectionProperty", function () {
   it("default constructor has expected values", function () {

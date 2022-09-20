@@ -1,13 +1,13 @@
 import {
   Cartesian3,
   DeviceOrientationCameraController,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 import createCamera from "../createCamera.js";
-import createCanvas from "../createCanvas.js";
-import DomEventSimulator from "../DomEventSimulator.js";
+import createCanvas from "../../../../Specs/createCanvas.js";;
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";;
 
 describe("Scene/DeviceOrientationCameraController", function () {
   let scene;

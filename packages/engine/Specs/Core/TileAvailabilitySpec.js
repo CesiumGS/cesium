@@ -5,7 +5,7 @@ import {
   TileAvailability,
   WebMercatorTilingScheme,
   defined,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/TileAvailability", function () {
   const webMercator = new WebMercatorTilingScheme();

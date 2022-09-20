@@ -4,11 +4,11 @@ import {
   Cartesian4,
   Matrix4,
   OrthographicFrustum,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/OrthographicFrustum", function () {
   let frustum, planes;

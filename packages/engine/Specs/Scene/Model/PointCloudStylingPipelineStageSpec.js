@@ -15,7 +15,7 @@ import {
   ShaderBuilder,
   _shadersPointCloudStylingStageVS,
   VertexAttributeSemantic,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import createScene from "../../createScene.js";
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 

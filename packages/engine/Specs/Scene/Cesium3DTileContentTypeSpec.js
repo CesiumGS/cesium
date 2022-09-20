@@ -1,4 +1,4 @@
-import { Cesium3DTileContentType } from "../../Source/Cesium.js";
+import { Cesium3DTileContentType } from "../../index.js";
 
 describe("Scene/Cesium3DTileContentType", function () {
   it("isBinaryFormat correctly identifies binary contents", function () {

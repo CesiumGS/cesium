@@ -7,9 +7,9 @@ import {
   KeyboardEventModifier,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import DomEventSimulator from "../DomEventSimulator.js";
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";;
 
 describe("Core/ScreenSpaceEventHandler", function () {
   let usePointerEvents;

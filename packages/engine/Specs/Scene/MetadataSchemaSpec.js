@@ -1,4 +1,4 @@
-import { MetadataSchema } from "../../Source/Cesium.js";
+import { MetadataSchema } from "../../index.js";
 
 describe("Scene/MetadataSchema", function () {
   it("creates schema with default values", function () {

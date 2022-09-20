@@ -1,4 +1,4 @@
-import { Model } from "../../../Source/Cesium.js";
+import { Model } from "../../index.js";;
 import pollToPromise from "../../pollToPromise.js";
 
 function loadAndZoomToModel(options, scene) {

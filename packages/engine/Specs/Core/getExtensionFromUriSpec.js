@@ -1,4 +1,4 @@
-import { getExtensionFromUri } from "../../Source/Cesium.js";
+import { getExtensionFromUri } from "../../index.js";
 
 describe("Core/getExtensionFromUri", function () {
   it("works as expected", function () {

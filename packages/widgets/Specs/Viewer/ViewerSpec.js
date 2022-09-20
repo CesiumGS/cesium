@@ -26,6 +26,9 @@ import {
   SceneMode,
   ShadowMode,
   TimeDynamicPointCloud,
+} from "../../../engine/index.js";
+
+import {
   Animation,
   BaseLayerPicker,
   ProviderViewModel,
@@ -38,12 +41,12 @@ import {
   SceneModePicker,
   SelectionIndicator,
   Timeline,
-} from "../../../../Source/Cesium.js";
+} from "../../index.js";
 
-import createViewer from "../../createViewer.js";
-import DomEventSimulator from "../../DomEventSimulator.js";
-import MockDataSource from "../../MockDataSource.js";
-import pollToPromise from "../../pollToPromise.js";
+import createViewer from "../../../../Specs/createViewer.js";
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
+import MockDataSource from "../../../../Specs/MockDataSource.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Widgets/Viewer/Viewer",

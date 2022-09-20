@@ -1,7 +1,7 @@
 import {
   Cesium3DTilesetMetadata,
   MetadataSchema,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/Cesium3DTilesetMetadata", function () {
   const schemaJson = {

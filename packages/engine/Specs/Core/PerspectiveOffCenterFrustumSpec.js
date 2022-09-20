@@ -4,9 +4,9 @@ import {
   Cartesian4,
   Matrix4,
   PerspectiveOffCenterFrustum,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/PerspectiveOffCenterFrustum", function () {
   let frustum, planes;

@@ -1,10 +1,10 @@
 import {
   Cesium3DTileset,
-  Cesium3DTilesInspectorViewModel,
   Cesium3DTileStyle,
   Globe,
-} from "../../../Source/Cesium.js";
-import createScene from "../../createScene.js";
+} from "../../../engine/index.js";
+import { Cesium3DTilesInspectorViewModel } from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel",

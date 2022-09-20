@@ -1,4 +1,4 @@
-import { SupportedImageFormats } from "../../Source/Cesium.js";
+import { SupportedImageFormats } from "../../index.js";
 
 describe("Scene/SupportedImageFormats", function () {
   it("constructs with options", function () {

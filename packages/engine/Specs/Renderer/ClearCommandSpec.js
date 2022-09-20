@@ -1,4 +1,4 @@
-import { Color, ClearCommand } from "../../../Source/Cesium.js";
+import { Color, ClearCommand } from "../../index.js";;
 
 describe("Renderer/ClearCommand", function () {
   it("constructs with defaults", function () {

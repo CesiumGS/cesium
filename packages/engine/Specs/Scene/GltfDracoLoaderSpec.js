@@ -6,10 +6,10 @@ import {
   Resource,
   ResourceCache,
   ResourceLoaderState,
-} from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
+} from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";;
 import loaderProcess from "../loaderProcess.js";
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 
 describe(

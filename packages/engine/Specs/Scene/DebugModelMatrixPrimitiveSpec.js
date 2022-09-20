@@ -2,9 +2,9 @@ import {
   Cartesian3,
   Matrix4,
   DebugModelMatrixPrimitive,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 
 describe(
   "Scene/DebugModelMatrixPrimitive",

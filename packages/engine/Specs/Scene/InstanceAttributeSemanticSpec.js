@@ -1,4 +1,4 @@
-import { InstanceAttributeSemantic } from "../../Source/Cesium.js";
+import { InstanceAttributeSemantic } from "../../index.js";
 
 describe("Scene/InstanceAttributeSemantic", function () {
   it("fromGltfSemantic", function () {

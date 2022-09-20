@@ -18,9 +18,9 @@ import {
   RectangleGeometry,
   RenderState,
   StencilConstants,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 
 describe(
   "Scene/Geometry3DTileContent",

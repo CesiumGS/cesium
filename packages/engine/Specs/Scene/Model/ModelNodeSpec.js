@@ -3,7 +3,7 @@ import {
   Matrix4,
   ModelNode,
   ModelRuntimeNode,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Model/ModelNode", function () {
   const mockNode = {

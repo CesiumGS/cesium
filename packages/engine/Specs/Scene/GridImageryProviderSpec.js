@@ -4,9 +4,9 @@ import {
   WebMercatorTilingScheme,
   GridImageryProvider,
   ImageryProvider,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/GridImageryProvider", function () {
   it("conforms to ImageryProvider interface", function () {

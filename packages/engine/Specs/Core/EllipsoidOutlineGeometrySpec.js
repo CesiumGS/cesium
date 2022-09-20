@@ -2,10 +2,10 @@ import {
   Cartesian3,
   EllipsoidOutlineGeometry,
   GeometryOffsetAttribute,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-import createPackableSpecs from "../createPackableSpecs.js";
+import { Math as CesiumMath } from "../../index.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/EllipsoidOutlineGeometry", function () {
   it("constructor throws if stackPartitions less than 1", function () {

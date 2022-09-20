@@ -5,7 +5,7 @@ import {
   ModelLightingOptions,
   ShaderBuilder,
   Cartesian3,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/Model/LightingPipelineStage", function () {

@@ -1,5 +1,5 @@
-import createScene from "../../createScene.js";
-import { VRButton } from "../../../Source/Cesium.js";
+import createScene from "../../../../Specs/createScene.js";
+import { VRButton } from "../../index.js";
 
 describe("Widgets/VRButton/VRButton", function () {
   let scene;

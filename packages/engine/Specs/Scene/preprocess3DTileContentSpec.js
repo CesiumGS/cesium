@@ -2,7 +2,7 @@ import {
   Cesium3DTileContentType,
   preprocess3DTileContent,
   RuntimeError,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/preprocess3DTileContent", function () {
   function makeBinaryFile(magic) {

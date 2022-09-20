@@ -2,7 +2,7 @@ import {
   CustomHeightmapTerrainProvider,
   TerrainProvider,
   WebMercatorTilingScheme,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/CustomHeightmapTerrainProvider", function () {
   it("conforms to TerrainProvider interface", function () {

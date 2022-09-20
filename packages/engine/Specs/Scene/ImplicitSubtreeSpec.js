@@ -8,7 +8,7 @@ import {
   Resource,
   ResourceCache,
   RuntimeError,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 import MetadataTester from "../MetadataTester.js";
 

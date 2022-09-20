@@ -5,8 +5,8 @@ import {
   PixelDatatype,
   PixelFormat,
   Texture,
-} from "../../Source/Cesium.js";
-import createContext from "../createContext.js";
+} from "../../index.js";
+import createContext from "../../../../Specs/createContext.js";;
 
 describe(
   "Scene/PropertyTextureProperty",

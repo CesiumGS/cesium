@@ -15,7 +15,7 @@ import {
   StencilConstants,
   StencilFunction,
   StencilOperation,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe(
   "Scene/Model/ClassificationModelDrawCommand",

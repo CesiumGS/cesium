@@ -1,4 +1,4 @@
-import { ShaderDestination } from "../../Source/Cesium.js";
+import { ShaderDestination } from "../../index.js";
 
 describe("Renderer/ShaderDestination", function () {
   it("includesVertexShader throws for undefined destination", function () {

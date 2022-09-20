@@ -12,7 +12,7 @@ import {
   VaryingType,
   _shadersCustomShaderStageVS,
   _shadersCustomShaderStageFS,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe(

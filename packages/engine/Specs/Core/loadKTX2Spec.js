@@ -4,7 +4,7 @@ import {
   PixelFormat,
   Resource,
   RuntimeError,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/loadKTX2", function () {
   it("throws with no url", function () {

@@ -8,7 +8,7 @@ import {
   FrameState,
   JobScheduler,
   PickFramebuffer,
-} from "../../Source/Cesium.js";
+} from "../packages/engine/index.js";
 
 function executeCommands(context, passState, commands) {
   const length = commands.length;

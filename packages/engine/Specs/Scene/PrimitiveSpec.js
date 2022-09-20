@@ -26,15 +26,15 @@ import {
   PerInstanceColorAppearance,
   Primitive,
   SceneMode,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 import BadGeometry from "../BadGeometry.js";
-import createContext from "../createContext.js";
+import createContext from "../../../../Specs/createContext.js";;
 import createFrameState from "../createFrameState.js";
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/Primitive",

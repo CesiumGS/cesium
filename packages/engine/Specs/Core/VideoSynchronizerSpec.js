@@ -4,11 +4,11 @@ import {
   Iso8601,
   JulianDate,
   VideoSynchronizer,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/VideoSynchronizer", function () {
   //Video textures do not work on Internet Explorer

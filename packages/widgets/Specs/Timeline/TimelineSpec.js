@@ -1,4 +1,6 @@
-import { Clock, Timeline } from "../../../../Source/Cesium.js";
+import { Clock } from "../../../engine/index.js";
+
+import { Timeline } from "../../index.js";
 
 describe("Widgets/Timeline/Timeline", function () {
   let container;

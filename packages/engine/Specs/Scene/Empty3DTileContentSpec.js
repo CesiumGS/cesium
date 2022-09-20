@@ -1,4 +1,4 @@
-import { Empty3DTileContent } from "../../Source/Cesium.js";
+import { Empty3DTileContent } from "../../index.js";
 
 describe("Scene/Empty3DTileContent", function () {
   it("destroys", function () {

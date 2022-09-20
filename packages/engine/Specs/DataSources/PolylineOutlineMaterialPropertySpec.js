@@ -5,7 +5,7 @@ import {
   ConstantProperty,
   PolylineOutlineMaterialProperty,
   TimeIntervalCollectionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/PolylineOutlineMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

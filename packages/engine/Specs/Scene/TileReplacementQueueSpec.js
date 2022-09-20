@@ -4,7 +4,7 @@ import {
   QuadtreeTile,
   QuadtreeTileLoadState,
   TileReplacementQueue,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/TileReplacementQueue", function () {
   function Tile(num, loadedState, upsampledState) {

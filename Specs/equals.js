@@ -1,4 +1,4 @@
-import { FeatureDetection } from "../Source/Cesium.js";
+import { FeatureDetection } from "../packages/engine/index.js";
 
 function isTypedArray(o) {
   return FeatureDetection.typedArrayTypes.some(function (type) {

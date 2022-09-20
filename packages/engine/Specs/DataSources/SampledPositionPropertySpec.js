@@ -8,7 +8,7 @@ import {
   TimeInterval,
   PositionProperty,
   SampledPositionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/SampledPositionProperty", function () {
   it("constructor sets expected defaults", function () {

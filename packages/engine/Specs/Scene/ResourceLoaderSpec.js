@@ -1,4 +1,4 @@
-import { ResourceLoader } from "../../Source/Cesium.js";
+import { ResourceLoader } from "../../index.js";
 
 describe("Scene/ResourceLoader", function () {
   it("throws when using ResourceLoader directly", function () {

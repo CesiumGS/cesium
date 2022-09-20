@@ -1,5 +1,5 @@
-import { knockout, createCommand } from "../../../Source/Cesium.js";
-import getArguments from "../getArguments.js";
+import { createCommand, knockout} from "../index.js";
+import getArguments from "../../../Specs/getArguments.js";
 
 describe("Widgets/createCommand", function () {
   let spyFunction;

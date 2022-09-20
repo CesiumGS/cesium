@@ -1,6 +1,6 @@
 import customizeJasmine from "./customizeJasmine.js";
-import defined from "../Source/Core/defined.js";
-import queryToObject from "../Source/Core/queryToObject.js";
+import defined from "../packages/engine/Source/Core/defined.js";
+import queryToObject from "../packages/engine/Source/Core/queryToObject.js";
 
 const queryString = queryToObject(window.location.search.substring(1));
 
@@ -31,7 +31,7 @@ if (defined(queryString.debugCanvasHeight)) {
 if (release) {
   window.CESIUM_BASE_URL = "../Build/Cesium";
 } else {
-  window.CESIUM_BASE_URL = "../Build/CesiumUnminified";
+  window.CESIUM_BASE_URL = "../packages/engine/Build/";
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;

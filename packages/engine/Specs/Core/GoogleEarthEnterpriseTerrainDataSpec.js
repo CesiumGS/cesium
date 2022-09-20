@@ -7,9 +7,9 @@ import {
   Rectangle,
   TerrainData,
   TerrainMesh,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/GoogleEarthEnterpriseTerrainData", function () {
   const sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;

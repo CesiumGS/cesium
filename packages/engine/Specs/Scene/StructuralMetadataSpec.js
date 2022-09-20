@@ -2,7 +2,7 @@ import {
   StructuralMetadata,
   MetadataSchema,
   PropertyAttribute,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/StructuralMetadata", function () {
   const propertyTablesSchema = {

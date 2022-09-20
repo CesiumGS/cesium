@@ -1,4 +1,4 @@
-import { getFilenameFromUri } from "../../Source/Cesium.js";
+import { getFilenameFromUri } from "../../index.js";
 
 describe("Core/getFilenameFromUri", function () {
   it("works as expected", function () {

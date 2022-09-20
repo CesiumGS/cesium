@@ -1,4 +1,4 @@
-import { Queue } from "../../Source/Cesium.js";
+import { Queue } from "../../index.js";
 
 describe("Core/Queue", function () {
   let queue;

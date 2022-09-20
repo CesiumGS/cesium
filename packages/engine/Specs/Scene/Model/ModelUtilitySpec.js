@@ -9,7 +9,7 @@ import {
   PrimitiveType,
   Quaternion,
   VertexAttributeSemantic,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Model/ModelUtility", function () {
   it("getNodeTransform works when node has a matrix", function () {

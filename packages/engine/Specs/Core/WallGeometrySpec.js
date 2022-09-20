@@ -3,11 +3,11 @@ import {
   Ellipsoid,
   VertexFormat,
   WallGeometry,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/WallGeometry", function () {
   const ellipsoid = Ellipsoid.WGS84;

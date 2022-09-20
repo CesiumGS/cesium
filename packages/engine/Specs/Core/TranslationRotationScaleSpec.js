@@ -2,7 +2,7 @@ import {
   Cartesian3,
   Quaternion,
   TranslationRotationScale,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/TranslationRotationScale", function () {
   it("sets correct values when constructed with no arguments", function () {

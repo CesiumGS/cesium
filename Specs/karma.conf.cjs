@@ -25,6 +25,7 @@ module.exports = function (config) {
       usePhantomJS: false,
     },
 
+
     // list of files / patterns to load in the browser
     files: [
       { pattern: "Specs/Data/**", included: false },
@@ -73,13 +74,17 @@ module.exports = function (config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ["Chrome"],
+
 
     //In Travis, we need to run with the no-sandbox flag
     customLaunchers: {
       ChromeCI: {
         base: "ChromeHeadless",
         flags: ["--no-sandbox"],
+      },
+      ChromeDebugging: {
+        base: 'Chrome',
+        flags: [ '--remote-debugging-port=9333' ]
       },
     },
 
@@ -92,6 +97,10 @@ module.exports = function (config) {
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: true,
+
+    browsers: [
+      'Chrome'
+    ],
   };
 
   config.set(options);

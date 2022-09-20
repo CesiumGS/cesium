@@ -15,9 +15,9 @@ import {
   RuntimeError,
   TimeInterval,
   Transforms,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Transforms", function () {
   const negativeX = new Cartesian4(-1, 0, 0, 0);

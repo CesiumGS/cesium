@@ -3,7 +3,7 @@ import {
   Appearance,
   BlendingState,
   Material,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Appearance", function () {
   it("constructor", function () {

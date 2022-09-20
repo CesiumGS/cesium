@@ -7,9 +7,9 @@ import {
   EllipsoidSurfaceAppearance,
   Material,
   Primitive,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 
 describe(
   "Scene/EllipsoidSurfaceAppearance",

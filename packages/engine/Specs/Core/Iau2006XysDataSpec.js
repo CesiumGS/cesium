@@ -3,9 +3,9 @@ import {
   defined,
   Iau2006XysData,
   Iau2006XysSample,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/Iau2006XysData", function () {
   let xys;

@@ -1,5 +1,5 @@
-import { PlaneOutlineGeometry } from "../../Source/Cesium.js";
-import createPackableSpecs from "../createPackableSpecs.js";
+import { PlaneOutlineGeometry } from "../../index.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/PlaneOutlineGeometry", function () {
   it("constructor creates positions", function () {

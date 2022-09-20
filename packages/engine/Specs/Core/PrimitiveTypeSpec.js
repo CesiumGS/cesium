@@ -1,4 +1,4 @@
-import { PrimitiveType } from "../../Source/Cesium.js";
+import { PrimitiveType } from "../../index.js";
 
 describe("Core/PrimitiveType", function () {
   it("validate works", function () {

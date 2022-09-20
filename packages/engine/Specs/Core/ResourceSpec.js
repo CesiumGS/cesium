@@ -9,10 +9,10 @@ import {
   RequestErrorEvent,
   RequestScheduler,
   Resource,
-} from "../../Source/Cesium.js";
-import createCanvas from "../createCanvas.js";
-import dataUriToBuffer from "../dataUriToBuffer.js";
-import pollToPromise from "../pollToPromise.js";
+} from "../../index.js";
+import createCanvas from "../../../../Specs/createCanvas.js";;
+import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Core/Resource", function () {
   const dataUri =

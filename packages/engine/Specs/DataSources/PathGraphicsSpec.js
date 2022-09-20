@@ -4,7 +4,7 @@ import {
   ColorMaterialProperty,
   ConstantProperty,
   PathGraphics,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/PathGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

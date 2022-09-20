@@ -4,7 +4,7 @@ import {
   GltfJsonLoader,
   Resource,
   ResourceCache,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import generateJsonBuffer from "../generateJsonBuffer.js";
 
 describe("Scene/GltfJsonLoader", function () {

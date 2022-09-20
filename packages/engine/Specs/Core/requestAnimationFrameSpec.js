@@ -1,7 +1,7 @@
 import {
   cancelAnimationFrame,
   requestAnimationFrame,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Core/requestAnimationFrame", function () {
   it("calls the callback", function () {

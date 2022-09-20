@@ -6,7 +6,7 @@ import {
   Cesium3DTileStyle,
   ConditionsExpression,
   Expression,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Cesium3DTileStyle", function () {
   function MockFeature() {

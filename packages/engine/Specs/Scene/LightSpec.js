@@ -1,4 +1,4 @@
-import { Light } from "../../Source/Cesium.js";
+import { Light } from "../../index.js";
 
 describe("Scene/Light", function () {
   it("throws", function () {

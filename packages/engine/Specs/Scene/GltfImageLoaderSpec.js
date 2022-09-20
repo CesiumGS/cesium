@@ -7,10 +7,10 @@ import {
   FeatureDetection,
   Resource,
   ResourceCache,
-} from "../../Source/Cesium.js";
-import createContext from "../createContext.js";
-import dataUriToBuffer from "../dataUriToBuffer.js";
-import pollToPromise from "../pollToPromise.js";
+} from "../../index.js";
+import createContext from "../../../../Specs/createContext.js";;
+import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/GltfImageLoader",

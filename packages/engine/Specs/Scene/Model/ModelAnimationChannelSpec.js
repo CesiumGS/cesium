@@ -14,7 +14,7 @@ import {
   SteppedSpline,
   Quaternion,
   QuaternionSpline,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Model/ModelAnimationChannel", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;

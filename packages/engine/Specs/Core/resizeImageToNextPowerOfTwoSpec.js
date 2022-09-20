@@ -1,4 +1,4 @@
-import { resizeImageToNextPowerOfTwo } from "../../Source/Cesium.js";
+import { resizeImageToNextPowerOfTwo } from "../../index.js";
 
 describe("Core/resizeImageToNextPowerOfTwo", function () {
   const canvas = document.createElement("canvas");

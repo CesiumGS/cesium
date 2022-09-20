@@ -2,9 +2,9 @@ import {
   FeatureDetection,
   TaskProcessor,
   RuntimeError,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import absolutize from "../absolutize.js";
+import absolutize from "../../../../Specs/absolutize.js";
 
 describe("Core/TaskProcessor", function () {
   let taskProcessor;

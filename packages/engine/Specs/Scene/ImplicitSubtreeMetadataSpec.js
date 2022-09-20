@@ -1,4 +1,4 @@
-import { MetadataClass, ImplicitSubtreeMetadata } from "../../Source/Cesium.js";
+import { MetadataClass, ImplicitSubtreeMetadata } from "../../index.js";
 
 describe("Scene/ImplicitSubtreeMetadata", function () {
   it("creates subtree metadata with default values", function () {

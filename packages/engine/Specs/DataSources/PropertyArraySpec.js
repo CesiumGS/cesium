@@ -3,7 +3,7 @@ import {
   ConstantProperty,
   PropertyArray,
   SampledProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/PropertyArray", function () {
   const time = JulianDate.now();

@@ -2,7 +2,7 @@ import {
   getStringFromTypedArray,
   I3dmParser,
   RuntimeError,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 
 describe(

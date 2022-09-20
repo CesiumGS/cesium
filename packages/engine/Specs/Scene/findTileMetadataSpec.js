@@ -2,7 +2,7 @@ import {
   Cartesian3,
   findTileMetadata,
   MetadataClass,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/findTileMetadata", function () {
   let tileClass;

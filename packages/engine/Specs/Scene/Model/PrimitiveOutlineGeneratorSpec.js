@@ -2,7 +2,7 @@ import {
   Cartesian3,
   defined,
   PrimitiveOutlineGenerator,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import createContext from "../../createContext.js";
 
 describe(

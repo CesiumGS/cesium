@@ -7,7 +7,7 @@ import {
   GridMaterialProperty,
   SampledProperty,
   TimeIntervalCollectionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/GridMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

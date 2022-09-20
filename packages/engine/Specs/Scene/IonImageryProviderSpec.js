@@ -15,7 +15,7 @@ import {
   UrlTemplateImageryProvider,
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/IonImageryProvider", function () {
   function createTestProvider(endpointData) {

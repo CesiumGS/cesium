@@ -1,6 +1,6 @@
-import { barycentricCoordinates, Cartesian3 } from "../../../Source/Cesium.js";
+import { barycentricCoordinates, Cartesian3 } from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/barycentricCoordinates", function () {
   const p0 = new Cartesian3(-1.0, 0.0, 0.0);

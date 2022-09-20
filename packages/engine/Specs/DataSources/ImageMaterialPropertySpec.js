@@ -6,7 +6,7 @@ import {
   ConstantProperty,
   ImageMaterialProperty,
   TimeIntervalCollectionProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/ImageMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

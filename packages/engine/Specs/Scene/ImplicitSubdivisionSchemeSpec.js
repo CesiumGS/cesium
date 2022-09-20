@@ -1,4 +1,4 @@
-import { ImplicitSubdivisionScheme } from "../../Source/Cesium.js";
+import { ImplicitSubdivisionScheme } from "../../index.js";
 
 describe("Scene/ImplicitSubdivisionScheme", function () {
   it("getBranchingFactor returns the right branching factor", function () {

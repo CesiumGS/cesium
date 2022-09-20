@@ -1,5 +1,5 @@
-import createScene from "../../createScene.js";
-import { HomeButton } from "../../../Source/Cesium.js";
+import createScene from "../../../../Specs/createScene.js";
+import { HomeButton } from "../../index.js";
 
 describe(
   "Widgets/HomeButton/HomeButton",

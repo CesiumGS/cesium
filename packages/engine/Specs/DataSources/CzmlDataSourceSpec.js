@@ -46,7 +46,7 @@ import {
   LabelStyle,
   ShadowMode,
   VerticalOrigin,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/CzmlDataSource", function () {
   function makeDocument(packet) {

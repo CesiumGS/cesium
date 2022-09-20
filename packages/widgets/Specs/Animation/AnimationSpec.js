@@ -1,11 +1,14 @@
 import {
   defined,
+} from "../../../engine/index.js";
+
+import {
   Animation,
   AnimationViewModel,
-  ClockViewModel,
-} from "../../../../Source/Cesium.js";
+  ClockViewModel
+} from "../../index.js";
 
-import pollToPromise from "../../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Widgets/Animation/Animation", function () {
   let container;

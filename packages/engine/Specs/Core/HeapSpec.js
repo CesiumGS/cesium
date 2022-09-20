@@ -1,4 +1,4 @@
-import { Heap } from "../../Source/Cesium.js";
+import { Heap } from "../../index.js";
 
 describe("Core/Heap", function () {
   const length = 100;

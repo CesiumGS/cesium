@@ -2,7 +2,7 @@ import {
   Cartesian4,
   Color,
   ConditionsExpression,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/ConditionsExpression", function () {
   function MockFeature(value) {

@@ -6,7 +6,7 @@ import {
   MetadataSchema,
   Resource,
   RuntimeError,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/ImplicitTileset", function () {
   const contentUriPattern = "https://example.com/{level}/{x}/{y}.b3dm";

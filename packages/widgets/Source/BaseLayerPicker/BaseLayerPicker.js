@@ -1,5 +1,6 @@
 import {
   defined,
+  destroyObject,
   DeveloperError,
   FeatureDetection,
   getElement

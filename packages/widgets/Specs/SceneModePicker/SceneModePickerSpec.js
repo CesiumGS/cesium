@@ -1,10 +1,11 @@
 import {
-  FeatureDetection,
-  SceneModePicker,
-} from "../../../../Source/Cesium.js";
+  FeatureDetection
+} from "../../../engine/index.js";
 
-import createScene from "../../createScene.js";
-import DomEventSimulator from "../../DomEventSimulator.js";
+import { SceneModePicker } from "../../index.js";
+
+import createScene from "../../../../Specs/createScene.js";
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 
 describe(
   "Widgets/SceneModePicker/SceneModePicker",

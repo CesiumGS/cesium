@@ -4,7 +4,7 @@ import {
   ColorMaterialProperty,
   createMaterialPropertyDescriptor,
   ImageMaterialProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/createMaterialPropertyDescriptor", function () {
   function MockGraphics() {

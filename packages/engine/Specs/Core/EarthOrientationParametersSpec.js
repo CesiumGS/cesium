@@ -3,7 +3,7 @@ import {
   EarthOrientationParameters,
   JulianDate,
   TimeStandard,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/EarthOrientationParameters", function () {
   let officialLeapSeconds;

@@ -39,11 +39,11 @@ import {
   Resource,
   ResourceCache,
   Transforms,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 import generateJsonBuffer from "../generateJsonBuffer.js";
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/Cesium3DTileset",

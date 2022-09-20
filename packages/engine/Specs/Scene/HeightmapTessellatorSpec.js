@@ -5,9 +5,9 @@ import {
   HeightmapTessellator,
   Rectangle,
   WebMercatorProjection,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/HeightmapTessellator", function () {
   it("throws when heightmap is not provided", function () {

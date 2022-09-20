@@ -2,7 +2,7 @@ import {
   Cartesian3,
   SteppedSpline,
   Quaternion,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/SteppedSpline", function () {
   let times;

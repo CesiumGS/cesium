@@ -1,4 +1,4 @@
-import { MetadataClass, ContentMetadata } from "../../Source/Cesium.js";
+import { MetadataClass, ContentMetadata } from "../../index.js";
 
 describe("Scene/ContentMetadata", function () {
   const contentClassWithNoProperties = new MetadataClass({

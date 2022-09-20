@@ -7,7 +7,7 @@ import {
   ModelClippingPlanesPipelineStage,
   ShaderBuilder,
   _shadersModelClippingPlanesStageFS,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import ShaderBuilderTester from "../../ShaderBuilderTester.js";
 
 describe("Scene/Model/ModelClippingPlanesPipelineStage", function () {

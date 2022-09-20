@@ -4,9 +4,9 @@ import {
   Cartesian3,
   GeometryOffsetAttribute,
   VertexFormat,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/BoxGeometry", function () {
   it("constructor throws without maximum corner", function () {

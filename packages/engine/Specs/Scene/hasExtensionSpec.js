@@ -1,4 +1,4 @@
-import { hasExtension } from "../../Source/Cesium.js";
+import { hasExtension } from "../../index.js";
 
 describe("Scene/hasExtension", function () {
   it("detects the presence of an extension", function () {

@@ -10,7 +10,8 @@
     "nosleep.js": "^0.12.0"
   },
   "scripts": {
-    "build": "gulp buildWidgets --cwd ."
+    "build": "gulp buildWidgets --cwd .",
+    "test": "gulp testWidgets"
   },
   "repository": {
     "type": "git",

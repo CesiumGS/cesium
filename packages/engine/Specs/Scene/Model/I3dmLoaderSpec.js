@@ -7,7 +7,7 @@ import {
   Resource,
   ResourceCache,
   RuntimeError,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
 import createScene from "../../createScene.js";
 import waitForLoaderProcess from "../../waitForLoaderProcess.js";

@@ -20,11 +20,11 @@ import {
   Primitive,
   StencilConstants,
   Vector3DTileGeometry,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createContext from "../createContext.js";
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createContext from "../../../../Specs/createContext.js";;
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/Vector3DTileGeometry",

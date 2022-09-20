@@ -2,9 +2,9 @@ import {
   arrayRemoveDuplicates,
   Cartesian3,
   Spherical,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/arrayRemoveDuplicates", function () {
   it("removeDuplicates returns positions if none removed - length === 1", function () {

@@ -5,7 +5,7 @@ import {
   GeographicProjection,
   Matrix4,
   Camera,
-} from "../../Source/Cesium.js";
+} from "../packages/engine/index.js";
 
 function MockScene(canvas) {
   canvas = defaultValue(canvas, {

@@ -3,7 +3,7 @@ import {
   ResourceCache,
   ResourceLoaderState,
   MetadataSchemaLoader,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/MetadataSchemaLoader", function () {
   const schemaJson = {

@@ -1,4 +1,4 @@
-import { JulianDate, CallbackProperty } from "../../../Source/Cesium.js";
+import { JulianDate, CallbackProperty } from "../../index.js";;
 
 describe("DataSources/CallbackProperty", function () {
   const time = JulianDate.now();

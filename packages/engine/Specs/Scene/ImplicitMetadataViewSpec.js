@@ -7,7 +7,7 @@ import {
   MetadataClass,
   MetadataSchema,
   Resource,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 
 describe("Scene/ImplicitMetadataView", function () {

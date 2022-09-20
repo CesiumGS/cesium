@@ -2,7 +2,7 @@ import {
   defaultValue,
   ImplicitSubdivisionScheme,
   ImplicitTileCoordinates,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/ImplicitTileCoordinates", function () {
   /**

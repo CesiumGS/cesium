@@ -8,7 +8,7 @@ import {
   MetadataClassProperty,
   MetadataComponentType,
   MetadataTableProperty,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/MetadataTableProperty", function () {

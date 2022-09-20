@@ -1,4 +1,4 @@
-import { PropertyAttribute, MetadataClass } from "../../Source/Cesium.js";
+import { PropertyAttribute, MetadataClass } from "../../index.js";
 
 describe("Scene/PropertyAttribute", function () {
   let classDefinition;

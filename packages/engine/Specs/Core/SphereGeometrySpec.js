@@ -2,11 +2,11 @@ import {
   Cartesian3,
   SphereGeometry,
   VertexFormat,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/SphereGeometry", function () {
   it("constructor throws with invalid stackPartitions", function () {

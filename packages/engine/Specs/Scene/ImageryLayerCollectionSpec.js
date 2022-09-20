@@ -13,10 +13,10 @@ import {
   ImageryLayerCollection,
   ImageryLayerFeatureInfo,
   ImageryProvider,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/ImageryLayerCollection",

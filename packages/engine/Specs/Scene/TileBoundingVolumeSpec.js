@@ -1,4 +1,4 @@
-import { TileBoundingVolume } from "../../Source/Cesium.js";
+import { TileBoundingVolume } from "../../index.js";
 
 describe("Scene/TileBoundingVolume", function () {
   it("throws", function () {

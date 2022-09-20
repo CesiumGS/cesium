@@ -3,9 +3,9 @@ import {
   computeFlyToLocationForRectangle,
   Globe,
   SceneMode,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 import MockTerrainProvider from "../MockTerrainProvider.js";
 
 describe("Scene/computeFlyToLocationForRectangle", function () {

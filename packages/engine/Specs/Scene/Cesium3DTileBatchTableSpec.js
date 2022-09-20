@@ -12,9 +12,9 @@ import {
   Cesium3DTileBatchTable,
   Cesium3DTileStyle,
   RuntimeError,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 import concatTypedArrays from "../concatTypedArrays.js";
 
 // Since b3dm tilesets now use ModelFeatureTable, disabling these tests until Cesium3DTileBatchTable and

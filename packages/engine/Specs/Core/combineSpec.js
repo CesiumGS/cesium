@@ -1,4 +1,4 @@
-import { combine } from "../../Source/Cesium.js";
+import { combine } from "../../index.js";
 
 describe("Core/combine", function () {
   it("can combine shallow references", function () {

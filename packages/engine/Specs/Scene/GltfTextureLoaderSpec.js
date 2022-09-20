@@ -9,8 +9,8 @@ import {
   SupportedImageFormats,
   Texture,
   TextureMinificationFilter,
-} from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
+} from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";;
 import loaderProcess from "../loaderProcess.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 

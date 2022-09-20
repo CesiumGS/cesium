@@ -8,8 +8,8 @@ import {
   TextureWrap,
   TextureMagnificationFilter,
   TextureMinificationFilter,
-} from "../../Source/Cesium.js";
-import createContext from "../createContext.js";
+} from "../../index.js";
+import createContext from "../../../../Specs/createContext.js";;
 
 describe(
   "Scene/GltfLoaderUtil",

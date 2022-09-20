@@ -4,9 +4,9 @@ import {
   CorridorOutlineGeometry,
   Ellipsoid,
   GeometryOffsetAttribute,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/CorridorOutlineGeometry", function () {
   it("throws without positions", function () {

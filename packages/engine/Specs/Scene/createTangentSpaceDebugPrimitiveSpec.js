@@ -5,7 +5,7 @@ import {
   PrimitiveType,
   VertexFormat,
   createTangentSpaceDebugPrimitive,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/createTangentSpaceDebugPrimitive", function () {
   it("computes all attributes", function () {

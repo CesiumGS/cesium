@@ -1,4 +1,4 @@
-import { PixelDatatype, PixelFormat } from "../../../Source/Cesium.js";
+import { PixelDatatype, PixelFormat } from "../../index.js";;
 
 describe("Core/PixelFormat", function () {
   it("flipY works", function () {

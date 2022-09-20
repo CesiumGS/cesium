@@ -2,7 +2,7 @@ import {
   AssociativeArray,
   BatchTexture,
   ModelStatistics,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Model/ModelStatistics", function () {
   const emptyMap = new AssociativeArray();

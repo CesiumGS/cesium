@@ -1,6 +1,7 @@
-import { defined, InfoBox } from "../../../../Source/Cesium.js";
+import { defined } from "../../../engine/index.js";
+import { InfoBox } from "../../index.js";
 
-import pollToPromise from "../../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Widgets/InfoBox/InfoBox", function () {
   let testContainer;

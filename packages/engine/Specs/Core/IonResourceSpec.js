@@ -5,7 +5,7 @@ import {
   RequestErrorEvent,
   Resource,
   RuntimeError,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/IonResource", function () {
   const assetId = 123890213;

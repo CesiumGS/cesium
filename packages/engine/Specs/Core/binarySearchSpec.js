@@ -1,4 +1,4 @@
-import { binarySearch } from "../../Source/Cesium.js";
+import { binarySearch } from "../../index.js";
 
 describe("Core/binarySearch", function () {
   it("can perform a binary search for 0", function () {

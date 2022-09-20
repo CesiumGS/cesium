@@ -5,7 +5,7 @@ import {
   TimeIntervalCollection,
   CompositeProperty,
   ConstantProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/CompositeProperty", function () {
   it("default constructor has expected values", function () {

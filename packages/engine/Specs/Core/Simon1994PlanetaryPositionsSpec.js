@@ -6,7 +6,7 @@ import {
   TimeStandard,
   Transforms,
   Simon1994PlanetaryPositions as PlanetaryPositions,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/Simon1994PlanetaryPositions", function () {
   // Values for the X Y and Z were found using the STK Components GeometryTransformer on the position of the

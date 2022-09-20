@@ -1,6 +1,6 @@
-import { Cartesian3, Spherical } from "../../../Source/Cesium.js";
+import { Cartesian3, Spherical } from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/Spherical", function () {
   //Mock object to make sure methods take non-sphericals.

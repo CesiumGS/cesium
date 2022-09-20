@@ -7,7 +7,7 @@ import {
   TextureMinificationFilter,
   TextureUniform,
   TextureWrap,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Model/TextureUniform", function () {
   const exampleUrl = "https://example.com/url";

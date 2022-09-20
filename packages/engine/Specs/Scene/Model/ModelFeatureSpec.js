@@ -3,7 +3,7 @@ import {
   ModelType,
   ModelFeature,
   ModelFeatureTable,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import MetadataTester from "../../MetadataTester.js";
 
 describe("Scene/Model/ModelFeature", function () {

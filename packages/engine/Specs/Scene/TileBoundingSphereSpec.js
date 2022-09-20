@@ -4,9 +4,9 @@ import {
   Intersect,
   Plane,
   TileBoundingSphere,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 import createFrameState from "../createFrameState.js";
 

@@ -1,7 +1,7 @@
 import {
   FeatureDetection,
   MetadataComponentType,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/MetadataComponentType", function () {
   it("getMinimum", function () {

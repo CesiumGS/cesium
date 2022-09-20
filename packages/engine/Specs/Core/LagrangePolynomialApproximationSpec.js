@@ -1,4 +1,4 @@
-import { LagrangePolynomialApproximation } from "../../Source/Cesium.js";
+import { LagrangePolynomialApproximation } from "../../index.js";
 
 describe("Core/LagrangePolynomialApproximation", function () {
   //The results of these specs were validated against STK Components

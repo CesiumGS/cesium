@@ -1,10 +1,13 @@
 import {
   Ellipsoid,
-  Globe,
-  Cesium3DTilesInspector,
-} from "../../../../Source/Cesium.js";
+  Globe
+} from "../../../engine/index.js";
 
-import createScene from "../../createScene.js";
+import {
+  Cesium3DTilesInspector
+} from "../../index.js";
+
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector",

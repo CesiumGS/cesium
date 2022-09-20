@@ -1,4 +1,4 @@
-import { freezeRenderState } from "../../Source/Cesium.js";
+import { freezeRenderState } from "../../index.js";
 
 describe("Renderer/freezeRenderState", function () {
   it("works as expected", function () {

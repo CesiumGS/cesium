@@ -13,10 +13,10 @@ import {
   Pass,
   Texture,
   SceneMode,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 import createCamera from "../createCamera.js";
-import createContext from "../createContext.js";
+import createContext from "../../../../Specs/createContext.js";;
 import createFrameState from "../createFrameState.js";
 
 describe(

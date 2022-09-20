@@ -16,12 +16,12 @@ import {
   QuadtreePrimitive,
   QuadtreeTileLoadState,
   SceneMode,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
 
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createScene from "../../../../Specs/createScene.js";;
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/QuadtreePrimitive", function () {
   describe("selectTilesForRendering", function () {

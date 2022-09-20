@@ -2,7 +2,7 @@ import {
   Iau2000Orientation,
   JulianDate,
   TimeStandard,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Core/Iau2000Orientation", function () {
   it("compute moon", function () {

@@ -3,11 +3,11 @@ import {
   Cartographic,
   Ellipsoid,
   Rectangle,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../createPackableSpecs.js";
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
 
 describe("Core/Ellipsoid", function () {
   const radii = new Cartesian3(1.0, 2.0, 3.0);

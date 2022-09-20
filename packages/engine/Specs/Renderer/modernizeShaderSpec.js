@@ -1,4 +1,4 @@
-import { modernizeShader } from "../../Source/Cesium.js";
+import { modernizeShader } from "../../index.js";
 
 describe("Renderer/modernizeShader", function () {
   it("adds version string", function () {

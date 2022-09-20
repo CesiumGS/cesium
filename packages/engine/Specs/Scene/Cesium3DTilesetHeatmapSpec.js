@@ -5,9 +5,9 @@ import {
   Cesium3DTile,
   Cesium3DTileContentState,
   Cesium3DTilesetHeatmap,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 
 describe("Scene/Cesium3DTilesetHeatmap", function () {
   const tileWithBoundingSphere = {

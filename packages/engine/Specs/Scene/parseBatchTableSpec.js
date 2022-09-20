@@ -8,7 +8,7 @@ import {
   MetadataComponentType,
   MetadataType,
   RuntimeError,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/parseBatchTable", function () {
   const batchTableJson = {};

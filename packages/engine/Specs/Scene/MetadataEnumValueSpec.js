@@ -1,4 +1,4 @@
-import { MetadataEnumValue } from "../../Source/Cesium.js";
+import { MetadataEnumValue } from "../../index.js";
 
 describe("Scene/MetadataEnumValue", function () {
   it("creates enum value", function () {

@@ -9,9 +9,9 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import concatTypedArrays from "../concatTypedArrays.js";
-import createScene from "../createScene.js";
+import createScene from "../../../../Specs/createScene.js";;
 import loaderProcess from "../loaderProcess.js";
 import waitForLoaderProcess from "../waitForLoaderProcess.js";
 

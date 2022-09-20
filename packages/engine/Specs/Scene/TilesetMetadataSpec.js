@@ -2,7 +2,7 @@ import {
   Cartesian3,
   MetadataClass,
   TilesetMetadata,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/TilesetMetadata", function () {
   it("creates tileset metadata with default values", function () {

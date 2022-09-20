@@ -11,7 +11,7 @@ import {
   EntityCollection,
   GeoJsonDataSource,
   HeightReference,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("DataSources/GeoJsonDataSource", function () {
   let defaultMarkerSize;

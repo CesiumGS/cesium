@@ -9,9 +9,9 @@ import {
   Quaternion,
   TimeInterval,
   SampledProperty,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../index.js";
 
 describe("DataSources/SampledProperty", function () {
   it("constructor sets expected defaults", function () {

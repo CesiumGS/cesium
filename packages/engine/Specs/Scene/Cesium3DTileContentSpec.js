@@ -1,4 +1,4 @@
-import { Cesium3DTileContent } from "../../Source/Cesium.js";
+import { Cesium3DTileContent } from "../../index.js";
 
 describe("Scene/Cesium3DTileContent", function () {
   it("throws", function () {

@@ -1,7 +1,7 @@
 import {
   ComponentDatatype,
   Cesium3DTileFeatureTable,
-} from "../../../Source/Cesium.js";
+} from "../../index.js";;
 
 describe("Scene/Cesium3DTileFeatureTable", function () {
   it("loads from JSON", function () {
