@@ -112,6 +112,30 @@ export function esbuildBaseConfig() {
   };
 }
 
+const workspaceWorkerFiles = {
+  "@cesium/engine": ["Build/Workers/*.js", "Build/ThirdParty/Workers/*.js"],
+  "@cesium/widgets": [""],
+};
+
+export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
+  let files = [];
+  // Iterate over each workspace and generate declarations for each file.
+  for (const workspace of Object.keys(workspaceGlobs)) {
+    // Since workspace source files are provided relative to the workspace,
+    // the workspace path needs to be prepended.
+    const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+    const filesPaths = workspaceGlobs[workspace].map((glob) => {
+      if (glob.indexOf(`!`) === 0) {
+        return `!`.concat(workspacePath, `/`, glob.replace(`!`, ``));
+      }
+      return workspacePath.concat("/", glob);
+    });
+
+    files = files.concat(await globby(filesPaths));
+  }
+  return files;
+}
+
 /**
  * Bundles all individual modules, optionally minifying and stripping out debug pragmas.
  * @param {Object} options
@@ -154,7 +178,7 @@ export async function buildCesiumJs(options) {
   // Copy and minify non-bundled CSS and JS
   const cssAndThirdPartyConfig = esbuildBaseConfig();
   cssAndThirdPartyConfig.entryPoints = [
-    "Source/ThirdParty/google-earth-dbroot-parser.js",
+    "packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     ...css, // Load and optionally minify css
   ];
   cssAndThirdPartyConfig.bundle = true;
@@ -281,6 +305,43 @@ export async function createCesiumJs() {
   return contents;
 }
 
+const workspaceSpecFiles = {
+  "@cesium/engine": [
+    "Specs/Core/*Spec.js",
+    "!Specs/Core/TaskProcessorSpec.js", // TODO: Fix
+  ],
+  "@cesium/widgets": ["Specs/**/*Spec.js"],
+};
+
+export async function createCombinedSpecList() {
+  let contents = `export const VERSION = '${version}';\n`;
+
+  // Iterate over each workspace and generate declarations for each file.
+  for (const workspace of Object.keys(workspaceSpecFiles)) {
+    // Since workspace source files are provided relative to the workspace,
+    // the workspace path needs to be prepended.
+    const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+    const filesPaths = workspaceSpecFiles[workspace].map((glob) => {
+      if (glob.indexOf(`!`) === 0) {
+        return `!`.concat(workspacePath, `/`, glob.replace(`!`, ``));
+      }
+      return workspacePath.concat("/", glob);
+    });
+
+    const files = await globby(filesPaths);
+
+    for (const file of files) {
+      contents += `import '../${file}';\n`;
+    }
+  }
+
+  await writeFile(path.join("Specs", "SpecList.js"), contents, {
+    encoding: "utf-8",
+  });
+
+  return contents;
+}
+
 /**
  * Creates a single entry point file, SpecList.js, which imports all individual spec files.
  * @returns {Buffer} contents
@@ -322,23 +383,26 @@ function rollupWarning(message) {
  * @returns {Promise.<*>}
  */
 export async function buildWorkers(options) {
+
+  const prefixPath = options.prefixPath ? options.prefixPath : '';
+
   // Copy existing workers
   const workers = await globby([
-    "Source/Workers/**",
-    "Source/ThirdParty/Workers/**",
+    `${prefixPath}/Source/Workers/**`,
+    `${prefixPath}/Source/ThirdParty/Workers/**`
   ]);
 
   const workerConfig = esbuildBaseConfig();
   workerConfig.entryPoints = workers;
   workerConfig.outdir = options.path;
-  workerConfig.outbase = "Source"; // Maintain existing file paths
+  workerConfig.outbase = `${prefixPath}/Source`; // Maintain existing file paths
   workerConfig.minify = options.minify;
   await esbuild.build(workerConfig);
 
   // Use rollup to build the workers:
   // 1) They can be built as AMD style modules
   // 2) They can be built using code-splitting, resulting in smaller modules
-  const files = await globby(["Source/WorkersES6/*.js"]);
+  const files = await globby([`${prefixPath}/SourceWorkersES6/*.js`]);
   const plugins = [rollupResolve({ preferBuiltins: true }), rollupCommonjs()];
 
   if (options.removePragmas) {
@@ -626,23 +690,13 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
  * @param {String} outputDirectory
  * @returns {Promise.<*>}
  */
-export function copyAssets(outputDirectory) {
-  const everythingElse = [
-    "Source/**",
-    "!Source/**/*.js",
-    "!Source/**/*.glsl",
-    "!Source/**/*.css",
-    "!Source/**/*.md"
-  ];
-
+export function copyAssets(files, outputDirectory) {
   const stream = gulp
-    .src(everythingElse, { nodir: true })
+    .src(files, { nodir: false })
     .pipe(gulp.dest(outputDirectory));
 
   return streamToPromise(stream);
 }
-
-
 
 /**
  * Creates .jshintrc for use in Sandcastle
@@ -688,6 +742,7 @@ export function buildSpecs(options) {
     sourcemap: true,
     target: "es2020",
     outdir: path.join("Build", "Specs"),
+    external: ["https", "http", "url", "zlib"],
     plugins: [externalResolvePlugin],
     incremental: options.incremental,
     write: options.write,

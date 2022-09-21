@@ -118,7 +118,7 @@
     "prepare": "gulp prepare && husky install",
     "start": "node server.js",
     "start-public": "node server.js --public",
-    "build": "npm run build -w @cesium/engine && npm run build -w @cesium/widgets && gulp build",
+    "build": "gulp build",
     "build-watch": "gulp buildWatch",
     "build-ts": "gulp buildTs",
     "build-third-party": "gulp buildThirdParty",

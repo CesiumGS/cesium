@@ -47,6 +47,8 @@ import {
   createGalleryList,
   createJsHintOptions,
   esbuildBaseConfig,
+  createCombinedSpecList,
+  getFilesFromWorkspaceGlobs
 } from "./build.js";
 import { cwd } from "process";
 
@@ -98,6 +100,17 @@ const workspaceSourceFiles = {
     "!Source/ThirdParty/_*",
   ],
   "@cesium/widgets": ["Source/**/*.js"],
+};
+
+const workspaceStaticFiles = {
+  "@cesium/engine": [
+    "Source/**",
+    "!Source/**/*.js",
+    "!Source/**/*.glsl",
+    "!Source/**/*.css",
+    "!Source/**/*.md",
+  ],
+  "@cesium/widgets": [],
 };
 
 const workspaceShaderFiles = {
@@ -374,7 +387,8 @@ export const buildEngine = async () => {
 
   await bundleSpecs(specListFile, join("Build", "Specs"));
 
-  return copyAssets(`Build`);
+  const staticFiles = await globby(workspaceStaticFiles["@cesium/engine"]);
+  return copyAssets(staticFiles, `Build`);
 };
 
 function prepareWorkspacePaths(workspacePath, paths) {
@@ -410,15 +424,15 @@ async function bundleCSS(options) {
   await esbuild(esBuildOptions);
 }
 
-
 const widgetsResolvePlugin = {
   name: "external-cesium-engine",
   setup: (build) => {
-    build.onResolve({
-      filter: new RegExp(`engine\/index\.js$`)
-    }, () => {
-
-    })
+    build.onResolve(
+      {
+        filter: new RegExp(`engine\/index\.js$`),
+      },
+      () => {}
+    );
   },
 };
 
@@ -491,70 +505,70 @@ function copyFiles(from, to, base) {
   return streamToPromise(stream);
 }
 
-const buildCesium = async (options) => {
-  const iife = true;
-  const node = true;
+// const buildCesium = async (options) => {
+//   const iife = true;
+//   const node = true;
 
-  // Generate Build folder to place build artifacts.
-  mkdirp.sync("Build");
+//   // Generate Build folder to place build artifacts.
+//   mkdirp.sync("Build");
 
-  // Create Cesium.js
-  await createCesiumJs();
+//   // Create Cesium.js
+//   await createCesiumJs();
 
-  // Generate bundle using esbuild.
-  const esBuildOptions = defaultESBuildOptions();
-  esBuildOptions.entryPoints = [`Source/Cesium.js`];
-  await esbuild({
-    ...esBuildOptions,
-    format: `esm`,
-    outfile: join(`Build`, "index.js"),
-  });
+//   // Generate bundle using esbuild.
+//   const esBuildOptions = defaultESBuildOptions();
+//   esBuildOptions.entryPoints = [`Source/Cesium.js`];
+//   await esbuild({
+//     ...esBuildOptions,
+//     format: `esm`,
+//     outfile: join(`Build`, "index.js"),
+//   });
 
-  // Bundle CSS files.
-  for (const workspace of Object.keys(workspaceCssFiles)) {
-    // Since workspace source files are provided relative to the workspace,
-    // the workspace path needs to be prepended.
-    const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
-    const filesPaths = prepareWorkspacePaths(
-      workspacePath,
-      workspaceCssFiles[workspace]
-    );
+//   // Bundle CSS files.
+//   for (const workspace of Object.keys(workspaceCssFiles)) {
+//     // Since workspace source files are provided relative to the workspace,
+//     // the workspace path needs to be prepended.
+//     const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+//     const filesPaths = prepareWorkspacePaths(
+//       workspacePath,
+//       workspaceCssFiles[workspace]
+//     );
 
-    await bundleCSS({
-      filePaths: filesPaths,
-      outbase: `${workspacePath}/Source`,
-      outdir: `Build/${workspace === "@cesium/widgets" ? `Widgets` : ``}`, // To ensure that we conform to how Cesium.js has previously been built.
-    });
+//     await bundleCSS({
+//       filePaths: filesPaths,
+//       outbase: `${workspacePath}/Source`,
+//       outdir: `Build/${workspace === "@cesium/widgets" ? `Widgets` : ``}`, // To ensure that we conform to how Cesium.js has previously been built.
+//     });
 
-    // Copy worker files.
-    const workerPaths = prepareWorkspacePaths(
-      workspacePath,
-      workspaceWorkerFiles[workspace]
-    );
-    await copyFiles(workerPaths, "Build", `${workspacePath}/Build`);
-  }
-  if (iife) {
-    await esbuild({
-      ...esBuildOptions,
-      format: "iife",
-      globalName: "Cesium",
-      outfile: join(`Build`, `Cesium.js`),
-    });
-  }
+//     // Copy worker files.
+//     const workerPaths = prepareWorkspacePaths(
+//       workspacePath,
+//       workspaceWorkerFiles[workspace]
+//     );
+//     await copyFiles(workerPaths, "Build", `${workspacePath}/Build`);
+//   }
+//   if (iife) {
+//     await esbuild({
+//       ...esBuildOptions,
+//       format: "iife",
+//       globalName: "Cesium",
+//       outfile: join(`Build`, `Cesium.js`),
+//     });
+//   }
 
-  if (node) {
-    await esbuild({
-      ...esBuildOptions,
-      format: "cjs",
-      define: {
-        TransformStream: "null",
-      },
-      outfile: join(`Build`, `index.cjs`),
-    });
-  }
+//   if (node) {
+//     await esbuild({
+//       ...esBuildOptions,
+//       format: "cjs",
+//       define: {
+//         TransformStream: "null",
+//       },
+//       outfile: join(`Build`, `index.cjs`),
+//     });
+//   }
 
-  return copyAssets(`Build`);
-};
+//   return copyAssets(`Build`);
+// };
 
 export async function esBuildWorkspace(workspace, options) {
   if (!workspace) {
@@ -592,49 +606,51 @@ export async function esBuildWorkspace(workspace, options) {
 }
 
 // TODO: This needs to be redone to avoid duplicating tasks.
-// async function buildCesium(options) {
-//   options = options || {};
-//   mkdirp.sync("Build");
+async function buildCesium(options) {
+  options = options || {};
+  mkdirp.sync("Build");
 
-//   const outputDirectory = join(
-//     "Build",
-//     `Cesium${!options.minify ? "Unminified" : ""}`
-//   );
-//   rimraf.sync(outputDirectory);
+  const outputDirectory = join(
+    "Build",
+    `Cesium${!options.minify ? "Unminified" : ""}`
+  );
+  rimraf.sync(outputDirectory);
 
-//   writeFileSync(
-//     "Build/package.json",
-//     JSON.stringify({
-//       type: "commonjs",
-//     }),
-//     "utf8"
-//   );
+  writeFileSync(
+    "Build/package.json",
+    JSON.stringify({
+      type: "commonjs",
+    }),
+    "utf8"
+  );
 
-//   await glslToJavaScript(options.minify, "Build/minifyShaders.state");
-//   await createCesiumJs();
-//   await createSpecList();
-//   await Promise.all([
-//     createJsHintOptions(),
-//     buildCesiumJs({
-//       minify: options.minify,
-//       iife: true,
-//       sourcemap: options.sourcemap,
-//       removePragmas: options.removePragmas,
-//       path: outputDirectory,
-//       node: options.node,
-//     }),
-//     buildWorkers({
-//       minify: options.minify,
-//       sourcemap: options.sourcemap,
-//       path: outputDirectory,
-//       removePragmas: options.removePragmas,
-//     }),
-//     createGalleryList(noDevelopmentGallery),
-//     buildSpecs(),
-//   ]);
+  await createCesiumJs();
+  await createCombinedSpecList();
 
-//   return copyAssets(outputDirectory);
-// }
+  await Promise.all([
+    createJsHintOptions(),
+    buildCesiumJs({
+      minify: options.minify,
+      iife: true,
+      sourcemap: options.sourcemap,
+      removePragmas: options.removePragmas,
+      path: outputDirectory,
+      node: options.node,
+    }),
+    // buildWorkers({
+    //   prefixPath: "packages/engine",
+    //   minify: options.minify,
+    //   sourcemap: options.sourcemap,
+    //   path: outputDirectory,
+    //   removePragmas: options.removePragmas,
+    // }),
+    createGalleryList(noDevelopmentGallery),
+    buildSpecs(),
+  ]);
+
+  const staticFiles = await getFilesFromWorkspaceGlobs(workspaceStaticFiles);
+  return copyAssets(staticFiles, outputDirectory);
+}
 
 export function build() {
   const minify = argv.minify ? argv.minify : false;
@@ -1764,8 +1780,6 @@ export async function testWidgets() {
     server.start();
   });
 }
-
-
 
 export async function test() {
   const enableAllBrowsers = argv.all ? true : false;
