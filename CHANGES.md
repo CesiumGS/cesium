@@ -17,6 +17,7 @@
 - Fixed a regression where `Cesium3DTileFeature.setProperty()` was not creating properties for unknown property IDs. [#10775](https://github.com/CesiumGS/cesium/pull/10775)
 - Fixed a regression where `pnts` tiles with `3DTILES_draco_point_compression` and <= 8 quantization bits were being rendered incorrectly. [#10794](https://github.com/CesiumGS/cesium/pull/10794)
 - Fixed a bug where KMLs with a NetworkLink with viewRefreshMode=='onRegion' would cause Cesium to make numerous resource requests and possibly trigger an out of memory error. [#10790](https://github.com/CesiumGS/cesium/pull/10790)
+- Fixed a bug where camera would not follow the `Viewer.trackedEntity` if it had a model with a `HeightReference` other than `NONE`. [#10805](https://github.com/CesiumGS/cesium/pull/10805)
 
 ### 1.97 - 2022-09-01
 
