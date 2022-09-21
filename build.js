@@ -380,14 +380,12 @@ function rollupWarning(message) {
  * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
  * @param {String} options.path output directory
  */
-export async function bundleCombinedWorkers(options)
-{
-  
+export async function bundleCombinedWorkers(options) {
   // Bundle non ES6 workers.
-  
+
   const workers = await globby([
     `packages/engine/Source/Workers/**`,
-    `packages/engine/Source/ThirdParty/Workers/**`
+    `packages/engine/Source/ThirdParty/Workers/**`,
   ]);
 
   const esBuildConfig = esbuildBaseConfig();
@@ -401,7 +399,7 @@ export async function bundleCombinedWorkers(options)
 
   const es6Workers = await globby([`packages/engine/Source/WorkersES6/*.js`]);
   const plugins = [rollupResolve({ preferBuiltins: true }), rollupCommonjs()];
-  
+
   if (options.removePragmas) {
     plugins.push(
       rollupPluginStripPragma({
@@ -439,11 +437,10 @@ export async function bundleCombinedWorkers(options)
  * @returns {Promise.<*>}
  */
 export async function buildWorkers(options) {
-
   // Copy existing workers
   const workers = await globby([
     `Source/Workers/**`,
-    `Source/ThirdParty/Workers/**`
+    `Source/ThirdParty/Workers/**`,
   ]);
 
   const workerConfig = esbuildBaseConfig();
@@ -746,37 +743,56 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
  * @returns {Promise.<*>}
  */
 export function copyAssets(outputDirectory, cwd) {
-
   const everythingElse = [
     "Source/**",
     "!Source/**/*.js",
     "!Source/**/*.glsl",
     "!Source/**/*.css",
-    "!Source/**/*.md"
+    "!Source/**/*.md",
   ];
-  const stream = gulp
-    .src(everythingElse, { nodir: false })
-    .pipe(gulp.dest(outputDirectory, {
-      cwd: cwd ?? process.cwd()
-    }));
+  const stream = gulp.src(everythingElse, { nodir: false }).pipe(
+    gulp.dest(outputDirectory, {
+      cwd: cwd ?? process.cwd(),
+    })
+  );
 
   return streamToPromise(stream);
 }
 
-export function copyAssets2(outputDirectory) {
+export async function copyAssets2(outputDirectory) {
+  // Copy static assets from @cesium/engine.
 
-  const everythingElse = [
+  const engineStaticAssets = [
     "packages/engine/Source/**",
     "!packages/engine/Source/**/*.js",
     "!packages/engine/Source/**/*.glsl",
     "!packages/engine/Source/**/*.css",
-    "!packages/engine/Source/**/*.md"
+    "!packages/engine/Source/**/*.md",
   ];
-  const stream = gulp
-    .src(everythingElse, { nodir: false, base: `packages/engine/Source` })
+
+  let stream = gulp
+    .src(engineStaticAssets, { nodir: false, base: `packages/engine/Source` })
     .pipe(gulp.dest(outputDirectory));
 
-  return streamToPromise(stream);
+  await streamToPromise(stream);
+
+  // Copy static assets from @cesium/widgets.
+
+  const widgetsStaticAssets = [
+    "packages/widgets/Source/**",
+    "!packages/widgets/Source/**/*.js",
+    "!packages/widgets/Source/**/*.glsl",
+    "!packages/widgets/Source/**/*.css",
+    "!packages/widgets/Source/**/*.md",
+  ];
+
+  stream = gulp
+    .src(widgetsStaticAssets, { nodir: false, base: `packages/widgets/Source` })
+    .pipe(gulp.dest(path.join(outputDirectory, "Widgets")));
+
+  await streamToPromise(stream);
+
+
 }
 
 /**

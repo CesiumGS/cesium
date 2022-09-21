@@ -112,7 +112,13 @@ const workspaceStaticFiles = {
     "!Source/**/*.css",
     "!Source/**/*.md",
   ],
-  "@cesium/widgets": [],
+  "@cesium/widgets": [
+    "Source/**",
+    "!Source/**/*.js",
+    "!Source/**/*.glsl",
+    "!Source/**/*.css",
+    "!Source/**/*.md"
+  ],
 };
 
 const workspaceShaderFiles = {
@@ -628,6 +634,23 @@ async function buildCesium(options) {
 
   await createCesiumJs();
   await createCombinedSpecList();
+
+  // Copy and minify non-bundled CSS and JS.
+  for (const workspace of Object.keys(workspaceCssFiles)) {
+    // Since workspace source files are provided relative to the workspace,
+    // the workspace path needs to be prepended.
+    const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+    const filesPaths = prepareWorkspacePaths(
+      workspacePath,
+      workspaceCssFiles[workspace]
+    );
+
+    await bundleCSS({
+      filePaths: filesPaths,
+      outbase: `${workspacePath}/Source`,
+      outdir: join(outputDirectory, workspace === "@cesium/widgets" ? "Widgets" : "") // To ensure that we conform to how Cesium.js has previously been built.
+    });
+  }
 
   await Promise.all([
     createJsHintOptions(),
