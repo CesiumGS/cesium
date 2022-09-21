@@ -39,8 +39,10 @@ import pLimit from "p-limit";
 import {
   createCesiumJs,
   copyAssets,
+  copyAssets2,
   buildCesiumJs,
   buildWorkers,
+  bundleCombinedWorkers,
   glslToJavaScript,
   createSpecList,
   buildSpecs,
@@ -637,19 +639,17 @@ async function buildCesium(options) {
       path: outputDirectory,
       node: options.node,
     }),
-    // buildWorkers({
-    //   prefixPath: "packages/engine",
-    //   minify: options.minify,
-    //   sourcemap: options.sourcemap,
-    //   path: outputDirectory,
-    //   removePragmas: options.removePragmas,
-    // }),
+    bundleCombinedWorkers({
+      minify: options.minify,
+      sourcemap: options.sourcemap,
+      path: outputDirectory,
+      removePragmas: options.removePragmas,
+    }),
     createGalleryList(noDevelopmentGallery),
     buildSpecs(),
   ]);
 
-  const staticFiles = await getFilesFromWorkspaceGlobs(workspaceStaticFiles);
-  return copyAssets(staticFiles, outputDirectory);
+  return copyAssets2(outputDirectory);
 }
 
 export function build() {
@@ -1809,6 +1809,9 @@ export async function test() {
     { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
     { pattern: "Specs/TestWorkers/**", included: false },
+    { pattern: "Build/CesiumUnminified/Assets/**/*", included: false },
+    { pattern: "Build/CesiumUnminified/ThirdParty/**/*", included: false },
+    { pattern: "Build/CesiumUnminified/Workers/**/*", included: false },
   ];
 
   if (release) {

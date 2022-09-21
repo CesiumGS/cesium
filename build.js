@@ -374,6 +374,62 @@ function rollupWarning(message) {
 }
 
 /**
+ * @param {Object} options
+ * @param {boolean} [options.minify=false] true if the worker output should be minified
+ * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
+ * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
+ * @param {String} options.path output directory
+ */
+export async function bundleCombinedWorkers(options)
+{
+  
+  // Bundle non ES6 workers.
+  
+  const workers = await globby([
+    `packages/engine/Source/Workers/**`,
+    `packages/engine/Source/ThirdParty/Workers/**`
+  ]);
+
+  const esBuildConfig = esbuildBaseConfig();
+  esBuildConfig.entryPoints = workers;
+  esBuildConfig.outdir = options.path;
+  esBuildConfig.minify = options.minify;
+
+  await esbuild.build(esBuildConfig);
+
+  // Bundle ES6 workers.
+
+  const es6Workers = await globby([`packages/engine/Source/WorkersES6/*.js`]);
+  const plugins = [rollupResolve({ preferBuiltins: true }), rollupCommonjs()];
+  
+  if (options.removePragmas) {
+    plugins.push(
+      rollupPluginStripPragma({
+        pragmas: ["debug"],
+      })
+    );
+  }
+
+  if (options.minify) {
+    plugins.push(terser());
+  }
+
+  const bundle = await rollup({
+    input: es6Workers,
+    plugins: plugins,
+    onwarn: rollupWarning,
+  });
+
+  return bundle.write({
+    dir: path.join(options.path, "Workers"),
+    format: "amd",
+    // Rollup cannot generate a sourcemap when pragmas are removed
+    sourcemap: options.sourcemap && !options.removePragmas,
+    // SAMTODO: Add copyrightBanner
+  });
+}
+
+/**
  * Bundles the workers and outputs the result to the specified directory
  * @param {Object} options
  * @param {boolean} [options.minify=false] true if the worker output should be minified
@@ -685,10 +741,12 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
 /**
  * Copies non-js assets to the output directory
  *
+ * @param {String} cwd
  * @param {String} outputDirectory
  * @returns {Promise.<*>}
  */
-export function copyAssets(globs, outputDirectory) {
+export function copyAssets(outputDirectory, cwd) {
+
   const everythingElse = [
     "Source/**",
     "!Source/**/*.js",
@@ -698,6 +756,24 @@ export function copyAssets(globs, outputDirectory) {
   ];
   const stream = gulp
     .src(everythingElse, { nodir: false })
+    .pipe(gulp.dest(outputDirectory, {
+      cwd: cwd ?? process.cwd()
+    }));
+
+  return streamToPromise(stream);
+}
+
+export function copyAssets2(outputDirectory) {
+
+  const everythingElse = [
+    "packages/engine/Source/**",
+    "!packages/engine/Source/**/*.js",
+    "!packages/engine/Source/**/*.glsl",
+    "!packages/engine/Source/**/*.css",
+    "!packages/engine/Source/**/*.md"
+  ];
+  const stream = gulp
+    .src(everythingElse, { nodir: false, base: `packages/engine/Source` })
     .pipe(gulp.dest(outputDirectory));
 
   return streamToPromise(stream);
