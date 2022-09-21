@@ -830,11 +830,11 @@ function Cesium3DTileset(options) {
    */
   this.debugWireframe = defaultValue(options.debugWireframe, false);
 
-  //Warning for improper setup of debug wireframe
+  // Warning for improper setup of debug wireframe
   if (this.debugWireframe === true && this._enableDebugWireframe === false) {
     oneTimeWarning(
-      "3DTileset debug wireframe not set properly.",
-      "Warning: Cesium3DTileset's enableDebugWireframe needs to be true for debugWireframe to have any effect!"
+      "tileset-debug-wireframe-ignored",
+      "enableDebugWireframe must be set to true in the Cesium3DTileset constructor, otherwise debugWireframe will be ignored."
     );
   }
 

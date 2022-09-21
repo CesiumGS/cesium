@@ -356,11 +356,15 @@ function Model(options) {
   this._enableShowOutline = defaultValue(options.enableShowOutline, true);
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
-  //Warning for improper setup of debug wireframe
-  if (this._debugWireframe === true && this._enableDebugWireframe === false) {
+  // Warning for improper setup of debug wireframe
+  if (
+    this._debugWireframe === true &&
+    this._enableDebugWireframe === false &&
+    this.type === Model.GLTF
+  ) {
     oneTimeWarning(
-      "Model debug wireframe not set properly.",
-      "Warning: Model's enableDebugWireframe needs to be set true for debugWireframe to have any effect!"
+      "model-debug-wireframe-ignored",
+      "enableDebugWireframe must be set to true in Model.Gltf, otherwise debugWireframe will be ignored."
     );
   }
 
@@ -1177,14 +1181,15 @@ Object.defineProperties(Model.prototype, {
       }
       this._debugWireframe = value;
 
-      //Warning for improper setup of debug wireframe
+      // Warning for improper setup of debug wireframe
       if (
         this._debugWireframe === true &&
-        this._enableDebugWireframe === false
+        this._enableDebugWireframe === false &&
+        this.type === ModelType.GLTF
       ) {
         oneTimeWarning(
-          "Model debug wireframe not set properly.",
-          "Warning: Model's enableDebugWireframe needs to be true for debugWireframe to have any effect!"
+          "model-debug-wireframe-ignored",
+          "enableDebugWireframe must be set to true in Model.Gltf, otherwise debugWireframe will be ignored."
         );
       }
     },
