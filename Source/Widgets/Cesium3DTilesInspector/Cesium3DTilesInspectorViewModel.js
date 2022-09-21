@@ -293,7 +293,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
   this.styleString = "{}";
 
   /**
-   * Gets or sets the JSON for the tileset style.  This property is observable.
+   * Gets or sets the JSON for the tileset enableDebugWireframe attribute.  This property is observable.
    *
    * @type {Boolean}
    * @default false
