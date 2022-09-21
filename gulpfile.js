@@ -313,7 +313,7 @@ export const buildEngine = async () => {
   mkdirp.sync("Build");
 
   // Convert GLSL files to JavaScript modules.
-  //await glslToJavaScript(false, "Build/minifyShaders.state");
+  await glslToJavaScript(false, "Build/minifyShaders.state");
 
   // Create index.js
   await createIndexJs("@cesium/engine");
@@ -373,6 +373,8 @@ export const buildEngine = async () => {
   }
 
   await bundleSpecs(specListFile, join("Build", "Specs"));
+
+  return copyAssets(`Build`);
 };
 
 function prepareWorkspacePaths(workspacePath, paths) {

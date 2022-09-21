@@ -628,11 +628,11 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
  */
 export function copyAssets(outputDirectory) {
   const everythingElse = [
-    "packages/engine/Source/**",
-    "!packages/**/*.js",
-    "!packages/**/*.glsl",
-    "!packages/**/*.css",
-    "!packages/**/*.md"
+    "Source/**",
+    "!Source/**/*.js",
+    "!Source/**/*.glsl",
+    "!Source/**/*.css",
+    "!Source/**/*.md"
   ];
 
   const stream = gulp
