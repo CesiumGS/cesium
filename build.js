@@ -384,25 +384,23 @@ function rollupWarning(message) {
  */
 export async function buildWorkers(options) {
 
-  const prefixPath = options.prefixPath ? options.prefixPath : '';
-
   // Copy existing workers
   const workers = await globby([
-    `${prefixPath}/Source/Workers/**`,
-    `${prefixPath}/Source/ThirdParty/Workers/**`
+    `Source/Workers/**`,
+    `Source/ThirdParty/Workers/**`
   ]);
 
   const workerConfig = esbuildBaseConfig();
   workerConfig.entryPoints = workers;
   workerConfig.outdir = options.path;
-  workerConfig.outbase = `${prefixPath}/Source`; // Maintain existing file paths
+  workerConfig.outbase = `Source`; // Maintain existing file paths
   workerConfig.minify = options.minify;
   await esbuild.build(workerConfig);
 
   // Use rollup to build the workers:
   // 1) They can be built as AMD style modules
   // 2) They can be built using code-splitting, resulting in smaller modules
-  const files = await globby([`${prefixPath}/SourceWorkersES6/*.js`]);
+  const files = await globby([`Source/WorkersES6/*.js`]);
   const plugins = [rollupResolve({ preferBuiltins: true }), rollupCommonjs()];
 
   if (options.removePragmas) {
@@ -690,9 +688,16 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
  * @param {String} outputDirectory
  * @returns {Promise.<*>}
  */
-export function copyAssets(files, outputDirectory) {
+export function copyAssets(globs, outputDirectory) {
+  const everythingElse = [
+    "Source/**",
+    "!Source/**/*.js",
+    "!Source/**/*.glsl",
+    "!Source/**/*.css",
+    "!Source/**/*.md"
+  ];
   const stream = gulp
-    .src(files, { nodir: false })
+    .src(everythingElse, { nodir: false })
     .pipe(gulp.dest(outputDirectory));
 
   return streamToPromise(stream);
