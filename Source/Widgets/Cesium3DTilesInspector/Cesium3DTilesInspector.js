@@ -118,14 +118,25 @@ function Cesium3DTilesInspector(container, scene) {
 
   displayPanelContents.appendChild(createCheckbox("Colorize", "colorize"));
   displayPanelContents.appendChild(
-    createCheckbox("Wireframe", "wireframe", "hasEnabledWireframe")
+    createCheckbox(
+      "Wireframe",
+      "wireframe",
+      "_tileset === undefined || hasEnabledWireframe"
+    )
   );
 
   //Create warning text when the Wireframe checkbox is disabled
   const warningText = document.createElement("p");
-  warningText.setAttribute("data-bind", `visible: !hasEnabledWireframe`);
-  warningText.setAttribute("style", "margin: 5px 0 0 0; padding: 0 0 0 20px");
-  warningText.innerText = "enableDebugWireframe must be true for this to work!";
+  warningText.setAttribute(
+    "data-bind",
+    "visible: _tileset !== undefined && !hasEnabledWireframe"
+  );
+  warningText.setAttribute(
+    "class",
+    "cesium-3DTilesInspector-disabledElementsInfo"
+  );
+  warningText.innerText =
+    "Set enableDebugWireframe to true in the tileset constructor to enable this option.";
   displayPanelContents.lastChild.appendChild(warningText);
 
   displayPanelContents.appendChild(

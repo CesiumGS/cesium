@@ -324,6 +324,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
     "styleString",
     "_feature",
     "_tile",
+    "_tileset",
     "hasEnabledWireframe",
   ]);
 
