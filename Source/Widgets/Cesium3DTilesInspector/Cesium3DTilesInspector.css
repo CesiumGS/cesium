@@ -68,8 +68,8 @@ ul.cesium-cesiumInspector-statistics + ul.cesium-cesiumInspector-statistics {
   font-size: 11px;
 }
 
-.cesium-3DTilesInspector-disabledElementsInfo  {
-  margin: 5px 0 0 0; 
+.cesium-3DTilesInspector-disabledElementsInfo {
+  margin: 5px 0 0 0;
   padding: 0 0 0 20px;
   color: #eed202;
 }
