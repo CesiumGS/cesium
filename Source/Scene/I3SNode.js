@@ -1,17 +1,17 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import Cesium3DTile from "../Scene/Cesium3DTile.js";
-import CesiumMath from "../Core/Math.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
-import I3SFeature from "../Scene/I3SFeature.js";
+import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
-import Transforms from "../Core/Transforms.js";
 import Quaternion from "../Core/Quaternion.js";
+import Transforms from "../Core/Transforms.js";
+import Cesium3DTile from "./Cesium3DTile.js";
+import I3SFeature from "./I3SFeature.js";
 
 /**
  * This class implements an I3S Node, in Cesium, each I3SNode
@@ -20,13 +20,13 @@ import Quaternion from "../Core/Quaternion.js";
  * Do not construct this directly, instead access tiles through {@link I3SDataProvider}.
  * </p>
  * @alias I3SNode
- * @constructor
+ * @internalConstructor
  */
 function I3SNode(parent, ref, isRoot) {
   this._parent = parent;
   this._dataProvider = parent._dataProvider;
-
   this._isRoot = isRoot;
+
   if (isRoot) {
     this._level = 0;
     this._layer = this._parent;
@@ -52,9 +52,10 @@ function I3SNode(parent, ref, isRoot) {
 
 Object.defineProperties(I3SNode.prototype, {
   /**
-   * Gets the resource for the node
+   * Gets the resource for the node.
    * @memberof I3SNode.prototype
    * @type {Resource}
+   * @readonly
    */
   resource: {
     get: function () {
@@ -62,9 +63,10 @@ Object.defineProperties(I3SNode.prototype, {
     },
   },
   /**
-   * Gets the parent layer
+   * Gets the parent layer.
    * @memberof I3SNode.prototype
-   * @type {Object}
+   * @type {I3SLayer}
+   * @readonly
    */
   layer: {
     get: function () {
@@ -72,19 +74,21 @@ Object.defineProperties(I3SNode.prototype, {
     },
   },
   /**
-   * Gets the parent node
+   * Gets the parent node.
    * @memberof I3SNode.prototype
-   * @type {Object}
+   * @type {I3SNode|undefined}
+   * @readonly
    */
   parent: {
     get: function () {
-      return this._parent;
+      return this._isRoot ? undefined : this._parent;
     },
   },
   /**
-   * Gets the children nodes
+   * Gets the children nodes.
    * @memberof I3SNode.prototype
-   * @type {Array}
+   * @type {I3SNode[]}
+   * @readonly
    */
   children: {
     get: function () {
@@ -92,9 +96,10 @@ Object.defineProperties(I3SNode.prototype, {
     },
   },
   /**
-   * Gets the collection of geometries
+   * Gets the collection of geometries.
    * @memberof I3SNode.prototype
    * @type {Array}
+   * @readonly
    */
   geometryData: {
     get: function () {
@@ -102,9 +107,10 @@ Object.defineProperties(I3SNode.prototype, {
     },
   },
   /**
-   * Gets the collection of features
+   * Gets the collection of features.
    * @memberof I3SNode.prototype
    * @type {Array}
+   * @readonly
    */
   featureData: {
     get: function () {
@@ -112,9 +118,10 @@ Object.defineProperties(I3SNode.prototype, {
     },
   },
   /**
-   * Gets the collection of fields
+   * Gets the collection of fields.
    * @memberof I3SNode.prototype
    * @type {Array}
+   * @readonly
    */
   fields: {
     get: function () {
@@ -122,9 +129,10 @@ Object.defineProperties(I3SNode.prototype, {
     },
   },
   /**
-   * Gets the Cesium3DTileSet for this layer.
+   * Gets the Cesium3DTile for this node.
    * @memberof I3SNode.prototype
-   * @type {I3SNode}
+   * @type {Cesium3DTile}
+   * @readonly
    */
   tile: {
     get: function () {
@@ -135,6 +143,7 @@ Object.defineProperties(I3SNode.prototype, {
    * Gets the I3S data for this object.
    * @memberof I3SNode.prototype
    * @type {Object}
+   * @readonly
    */
   data: {
     get: function () {
@@ -144,8 +153,7 @@ Object.defineProperties(I3SNode.prototype, {
 });
 
 /**
- * Loads the node definition.
- * @returns {Promise<void>} a promise that is resolved when the I3S Node data is loaded
+ * @private
  */
 I3SNode.prototype.load = function () {
   const that = this;
@@ -155,16 +163,9 @@ I3SNode.prototype.load = function () {
       // Create a new tile
       const tileDefinition = that._create3DTileDefinition();
 
-      const tileBlob = new Blob([JSON.stringify(tileDefinition)], {
-        type: "application/json",
-      });
-
-      const inPlaceTileURL = URL.createObjectURL(tileBlob);
-      const resource = Resource.createIfNeeded(inPlaceTileURL);
-
       that._tile = new Cesium3DTile(
         that._layer._tileset,
-        resource,
+        that._dataProvider.resource,
         tileDefinition,
         that._parent._tile
       );
@@ -183,29 +184,26 @@ I3SNode.prototype.load = function () {
     });
   }
 
-  return new Promise(function (resolve, reject) {
-    that._layer._getNodeInNodePages(that._nodeIndex).then(function (node) {
-      that._data = node;
-      let uri;
-      if (that._isRoot) {
-        uri = "nodes/root/";
-      } else if (defined(node.mesh)) {
-        const uriIndex = node.mesh.geometry.resource;
-        uri = `../${uriIndex}/`;
-      }
-      if (defined(uri)) {
-        that._resource = that._parent.resource.getDerivedResource({ url: uri });
-      }
+  return this._layer._getNodeInNodePages(this._nodeIndex).then(function (node) {
+    that._data = node;
+    let uri;
+    if (that._isRoot) {
+      uri = "nodes/root/";
+    } else if (defined(node.mesh)) {
+      const uriIndex = node.mesh.geometry.resource;
+      uri = `../${uriIndex}/`;
+    }
+    if (defined(uri)) {
+      that._resource = that._parent.resource.getDerivedResource({ url: uri });
+    }
 
-      processData();
-      resolve();
-    });
+    processData();
   });
 };
 
 /**
  * Loads the node fields.
- * @returns {Promise<void>} a promise that is resolved when the I3S Node fields are loaded
+ * @returns {Promise} A promise that is resolved when the I3S Node fields are loaded
  */
 I3SNode.prototype.loadFields = function () {
   // check if we must load fields

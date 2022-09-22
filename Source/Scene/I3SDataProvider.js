@@ -129,9 +129,7 @@ function I3SDataProvider(options) {
 Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * Gets a human-readable name for this dataset.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {String}
    * @readonly
    */
@@ -143,9 +141,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
   /**
    * Determines if the dataset will be shown.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {Boolean}
    */
   show: {
@@ -168,9 +164,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
   /**
    * Gets or sets debugging and tracing of I3S fetches.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {Boolean}
    */
   traceFetches: {
@@ -188,9 +182,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
   /**
    * The terrain provider referencing the GEOID service to be used for orthometric to ellipsoidal conversion.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {ArcGISTiledElevationTerrainProvider}
    * @readonly
    */
@@ -202,9 +194,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
   /**
    * Gets the collection of layers.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {I3SLayer[]}
    * @readonly
    */
@@ -224,9 +214,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
   /**
    * Gets the I3S data for this object.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {Object}
    * @readonly
    */
@@ -246,9 +234,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
   /**
    * Gets the extent covered by this I3S.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {Rectangle}
    * @readonly
    */
@@ -268,9 +254,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
   /**
    * Gets the promise that will be resolved when the I3S scene is loaded.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {Promise.<I3SDataProvider>}
    * @readonly
    */
@@ -283,9 +267,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * When <code>true</code>, the I3S scene is loaded.
    * This is set to <code>true</code> right before {@link I3SDataProvider#readyPromise} is resolved.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {Boolean}
    * @readonly
    */
@@ -297,9 +279,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
   /**
    * The resource used to fetch the I3S dataset.
-   *
    * @memberof I3SDataProvider.prototype
-   *
    * @type {Resource}
    * @readonly
    */

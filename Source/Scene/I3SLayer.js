@@ -55,9 +55,7 @@ function I3SLayer(dataProvider, layerData, index) {
 Object.defineProperties(I3SLayer.prototype, {
   /**
    * Gets the resource for the layer.
-   *
    * @memberof I3SLayer.prototype
-   *
    * @type {Resource}
    * @readonly
    */
@@ -69,9 +67,7 @@ Object.defineProperties(I3SLayer.prototype, {
 
   /**
    * Gets the root node of this layer.
-   *
    * @memberof I3SLayer.prototype
-   *
    * @type {I3SNode}
    * @readonly
    */
@@ -82,9 +78,7 @@ Object.defineProperties(I3SLayer.prototype, {
   },
   /**
    * Gets the Cesium3DTileset for this layer.
-   *
    * @memberof I3SLayer.prototype
-   *
    * @type {Cesium3DTileset}
    * @readonly
    */
@@ -95,9 +89,7 @@ Object.defineProperties(I3SLayer.prototype, {
   },
   /**
    * Gets the I3S data for this object.
-   *
    * @memberof I3SLayer.prototype
-   *
    * @type {Object}
    * @readonly
    */
