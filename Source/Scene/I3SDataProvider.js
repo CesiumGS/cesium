@@ -10,7 +10,7 @@
  * whose OGC equivalent are I3S Community Standard Version 1.1 & 1.2) in the CesiumJS viewer.
  * It enables the user to access an I3S layer via its URL and load it inside of the CesiumJS viewer.
  *
- * When a scene layer is initialized, and the I3SDataProvider.load function is invoked, it accomplishes the following:
+ * When a scene layer is initialized it accomplishes the following:
  *
  * It processes the 3D Scene Layer resource (https://github.com/Esri/i3s-spec/blob/master/docs/1.8/3DSceneLayer.cmn.md) of an I3S dataset
  * and loads the layers data. It does so by creating a Cesium 3D Tileset for the given i3s layer and loads the root node.
@@ -51,58 +51,63 @@ import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import Event from "../Core/Event.js";
+import destroyObject from "../Core/destroyObject.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
-import I3SLayer from "../Scene/I3SLayer.js";
-import Lerc from "lerc";
 import Resource from "../Core/Resource.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
+import I3SLayer from "./I3SLayer.js";
+import Lerc from "lerc";
 
 /**
  * This class implements an I3S Scene Layer. The URL
  * argument should return a scene object. Currently supported I3S
  * versions are 1.6 and 1.7/1.8 (OGC I3S 1.2). An I3SDataProvider is the main public class for I3S support.
- * I3SFeature and I3SNode classes implement the Object Model for I3S entities, with public interfaces
+ * I3SFeature and I3SNode classes implement the Object Model for I3S entities, with public interfaces.
+ *
  * @alias I3SDataProvider
  * @constructor
  *
- * @param {String} name The name of this data source.  If undefined, a name will be derived from the url.
  * @param {Object} options Object with the following properties:
- * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
+ * @param {Resource|String} options.url The url of the I3S dataset.
+ * @param {String} [options.name] The name of the I3S dataset.  If undefined, a name will be derived from the url.
+ * @param {Boolean} [options.show=true] Determines if the dataset will be shown.
  * @param {ArcGISTiledElevationTerrainProvider} [options.geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
  * @param {Boolean} [options.traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
  * @param {Object} [options.cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
  *
  * @example
- * let i3sData = new I3SDataProvider('', 'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0');
+ * const i3sData = new I3SDataProvider({
+ *   url: 'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0'
+ * });
  * i3sData.load();
  * viewer.scene.primitives.add(i3sData);
  *
  * @example
- * let geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
+ * const geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
  *   url: "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
  * });
- * let dataProvider = new I3SDataProvider('',
- *   'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0',
- *   { geoidTiledTerrainProvider: geoidService }
- * );
+ * let i3sData = new I3SDataProvider({
+ *   url: 'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0',
+ *   geoidTiledTerrainProvider: geoidService
+ * });
  * i3sData.load();
  * viewer.scene.primitives.add(i3sData);
  */
-function I3SDataProvider(name, url, options) {
+function I3SDataProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.url", options.url);
+  //>>includeEnd('debug');
 
   // All public configuration is defined as ES5 properties
   // These are just the "private" variables and their defaults.
-  this._name = name;
-  this._changed = new Event();
-  this._error = new Event();
-  this._isLoading = false;
-  this._loading = new Event();
-  this._traceFetches = false;
+  this._name = options.name;
+  this._traceFetches = defaultValue(options.traceFetches, false);
+  this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
 
-  this._resource = Resource.createIfNeeded(url);
+  this._resource = Resource.createIfNeeded(options.url);
 
   this._cesium3dTilesetOptions = defaultValue(
     options.cesium3dTilesetOptions,
@@ -110,29 +115,34 @@ function I3SDataProvider(name, url, options) {
   );
   this._show = defaultValue(options.show, true);
 
-  this._isDestroyed = false;
-  this._layerCollection = [];
-  this._data = {};
-
-  this._traceFetches = defaultValue(options.traceFetches, false);
-  this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
+  this._layers = [];
+  this._data = undefined;
+  this._decoderTaskProcessor = undefined;
+  this._extent = undefined;
+  this._readyPromise = undefined;
 }
 
 Object.defineProperties(I3SDataProvider.prototype, {
   /**
-   * Gets a human-readable name for this instance.
+   * Gets a human-readable name for this dataset.
+   *
    * @memberof I3SDataProvider.prototype
+   *
    * @type {String}
+   * @readonly
    */
   name: {
     get: function () {
       return this._name;
     },
   },
+
   /**
-   * Gets a human-readable name for this instance.
+   * Determines if the dataset will be shown.
+   *
    * @memberof I3SDataProvider.prototype
-   * @type {String}
+   *
+   * @type {Boolean}
    */
   show: {
     get: function () {
@@ -144,59 +154,19 @@ Object.defineProperties(I3SDataProvider.prototype, {
       //>>includeEnd('debug');
 
       this._show = value;
-      for (let i = 0; i < this._layerCollection.length; i++) {
-        if (defined(this._layerCollection[i]._tileset)) {
-          this._layerCollection[i]._tileset.show = this._show;
+      for (let i = 0; i < this._layers.length; i++) {
+        if (defined(this._layers[i]._tileset)) {
+          this._layers[i]._tileset.show = this._show;
         }
       }
-    },
-  },
-  /**
-   * Gets a value indicating if the data source is currently loading data.
-   * @memberof I3SDataProvider.prototype
-   * @type {Boolean}
-   */
-  isLoading: {
-    get: function () {
-      return this._isLoading;
-    },
-  },
-  /**
-   * Gets an event that will be raised when the underlying data changes.
-   * @memberof I3SDataProvider.prototype
-   * @type {Event}
-   */
-  changedEvent: {
-    get: function () {
-      return this._changed;
-    },
-  },
-  /**
-   * Gets an event that will be raised if an error is encountered during
-   * processing.
-   * @memberof I3SDataProvider.prototype
-   * @type {Event}
-   */
-  errorEvent: {
-    get: function () {
-      return this._error;
-    },
-  },
-  /**
-   * Gets an event that will be raised when the data source either starts or
-   * stops loading.
-   * @memberof I3SDataProvider.prototype
-   * @type {Event}
-   */
-  loadingEvent: {
-    get: function () {
-      return this._loading;
     },
   },
 
   /**
    * Gets or sets debugging and tracing of I3S fetches.
+   *
    * @memberof I3SDataProvider.prototype
+   *
    * @type {Boolean}
    */
   traceFetches: {
@@ -213,10 +183,12 @@ Object.defineProperties(I3SDataProvider.prototype, {
   },
 
   /**
-   * The terrain provider referencing the GEOID service to be used for orthometric to ellipsoidal conversion
+   * The terrain provider referencing the GEOID service to be used for orthometric to ellipsoidal conversion.
+   *
    * @memberof I3SDataProvider.prototype
    *
-   * @type {TerrainProvider}
+   * @type {ArcGISTiledElevationTerrainProvider}
+   * @readonly
    */
   geoidTiledTerrainProvider: {
     get: function () {
@@ -228,20 +200,26 @@ Object.defineProperties(I3SDataProvider.prototype, {
   },
 
   /**
-   * Gets the collection of Layers.
+   * Gets the collection of layers.
+   *
    * @memberof I3SDataProvider.prototype
-   * @type {Array}
+   *
+   * @type {I3SLayer[]}
+   * @readonly
    */
   layers: {
     get: function () {
-      return this._layerCollection;
+      return this._layers;
     },
   },
 
   /**
    * Gets the I3S data for this object.
+   *
    * @memberof I3SDataProvider.prototype
+   *
    * @type {Object}
+   * @readonly
    */
   data: {
     get: function () {
@@ -250,9 +228,12 @@ Object.defineProperties(I3SDataProvider.prototype, {
   },
 
   /**
-   * Gets the extent covered by this I3S
+   * Gets the extent covered by this I3S.
+   *
    * @memberof I3SDataProvider.prototype
-   * @type {Object}
+   *
+   * @type {Rectangle}
+   * @readonly
    */
   extent: {
     get: function () {
@@ -260,12 +241,28 @@ Object.defineProperties(I3SDataProvider.prototype, {
     },
   },
 
+  /**
+   * Gets the promise that will be resolved when the I3S scene is loaded.
+   *
+   * @memberof I3SDataProvider.prototype
+   *
+   * @type {Promise.<I3SDataProvider>}
+   * @readonly
+   */
   readyPromise: {
     get: function () {
       return this._readyPromise;
     },
   },
 
+  /**
+   * The resource used to fetch the I3S dataset.
+   *
+   * @memberof I3SDataProvider.prototype
+   *
+   * @type {Resource}
+   * @readonly
+   */
   resource: {
     get: function () {
       return this._resource;
@@ -275,7 +272,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
 /**
  * Asynchronously loads the I3S scene.
- * @returns {Promise<void>} a promise that will resolve when the I3S scene is loaded.
+ * @returns {Promise.<I3SDataProvider>} A promise that will resolve when the I3S scene is loaded.
  */
 I3SDataProvider.prototype.load = function () {
   if (defined(this._readyPromise)) {
@@ -285,36 +282,36 @@ I3SDataProvider.prototype.load = function () {
   const that = this;
   this._readyPromise = this._loadJson(this._resource).then(function (data) {
     // Success
-    return new Promise(function (resolve, reject) {
-      that._data = data;
-      if (that._data.layers) {
-        for (
-          let layerIndex = 0;
-          layerIndex < that._data.layers.length;
-          layerIndex++
-        ) {
-          const newLayer = new I3SLayer(
-            that,
-            that._data.layers[layerIndex],
-            layerIndex
-          );
-          that._layerCollection.push(newLayer);
-        }
-      } else {
-        const newLayer = new I3SLayer(that, that._data, that._data.id);
-        that._layerCollection.push(newLayer);
+    that._data = data;
+    if (that._data.layers) {
+      for (
+        let layerIndex = 0;
+        layerIndex < that._data.layers.length;
+        layerIndex++
+      ) {
+        const newLayer = new I3SLayer(
+          that,
+          that._data.layers[layerIndex],
+          layerIndex
+        );
+        that._layers.push(newLayer);
       }
+    } else {
+      const newLayer = new I3SLayer(that, that._data, that._data.id);
+      that._layers.push(newLayer);
+    }
 
-      that._computeExtent();
-      that.loadGeoidData();
+    that._computeExtent();
+    that.loadGeoidData();
 
-      //Start loading all of the tiles
-      const layerPromises = [];
-      for (let i = 0; i < that._layerCollection.length; i++) {
-        layerPromises.push(that._layerCollection[i].load());
-      }
+    // Start loading all of the tiles
+    const layerPromises = [];
+    for (let i = 0; i < that._layers.length; i++) {
+      layerPromises.push(that._layers[i].load());
+    }
 
-      resolve(Promise.all(layerPromises));
+    return Promise.all(layerPromises).then(function () {
+      return that;
     });
   });
 
@@ -335,12 +332,13 @@ I3SDataProvider.prototype.load = function () {
  * @see I3SDataProvider#isDestroyed
  */
 I3SDataProvider.prototype.destroy = function () {
-  this._isDestroyed = true;
-  for (let i = 0; i < this.layers.length; i++) {
-    if (defined(this.layers[i]._tileset)) {
-      this.layers[i]._tileset.destroy();
+  for (let i = 0; i < this._layers.length; i++) {
+    if (defined(this._layers[i]._tileset)) {
+      this._layers[i]._tileset.destroy();
     }
   }
+
+  return destroyObject();
 };
 
 /**
@@ -355,21 +353,18 @@ I3SDataProvider.prototype.destroy = function () {
  * @see I3SDataProvider#destroy
  */
 I3SDataProvider.prototype.isDestroyed = function () {
-  return this._isDestroyed;
+  return false;
 };
 
 /**
  * @private
  */
 I3SDataProvider.prototype.update = function (frameState) {
-  for (let i = 0; i < this.layers.length; i++) {
-    //reintroducig tileset.ready check to prevent random failures
-    //when intially loading the tileset
-    if (
-      defined(this._layerCollection[i]._tileset) &&
-      this.layers[i]._tileset.ready
-    ) {
-      this.layers[i]._tileset.update(frameState);
+  for (let i = 0; i < this._layers.length; i++) {
+    // Reintroducing tileset.ready check to prevent random failures
+    // when initially loading the tileset
+    if (defined(this._layers[i]._tileset) && this._layers[i]._tileset.ready) {
+      this._layers[i]._tileset.update(frameState);
     }
   }
 };
@@ -378,12 +373,9 @@ I3SDataProvider.prototype.update = function (frameState) {
  * @private
  */
 I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
-  for (let i = 0; i < this.layers.length; i++) {
-    if (
-      defined(this._layerCollection[i]._tileset) &&
-      this.layers[i]._tileset.ready
-    ) {
-      this.layers[i]._tileset.prePassesUpdate(frameState);
+  for (let i = 0; i < this._layers.length; i++) {
+    if (defined(this._layers[i]._tileset) && this._layers[i]._tileset.ready) {
+      this._layers[i]._tileset.prePassesUpdate(frameState);
     }
   }
 };
@@ -392,12 +384,9 @@ I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
  * @private
  */
 I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
-  for (let i = 0; i < this.layers.length; i++) {
-    if (
-      defined(this._layerCollection[i]._tileset) &&
-      this.layers[i]._tileset.ready
-    ) {
-      this.layers[i]._tileset.postPassesUpdate(frameState);
+  for (let i = 0; i < this._layers.length; i++) {
+    if (defined(this._layers[i]._tileset) && this._layers[i]._tileset.ready) {
+      this._layers[i]._tileset.postPassesUpdate(frameState);
     }
   }
 };
@@ -406,12 +395,9 @@ I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
  * @private
  */
 I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
-  for (let i = 0; i < this.layers.length; i++) {
-    if (
-      defined(this._layerCollection[i]._tileset) &&
-      this.layers[i]._tileset.ready
-    ) {
-      this.layers[i]._tileset.updateForPass(frameState, passState);
+  for (let i = 0; i < this._layers.length; i++) {
+    if (defined(this._layers[i]._tileset) && this._layers[i]._tileset.ready) {
+      this._layers[i]._tileset.updateForPass(frameState, passState);
     }
   }
 };
@@ -670,13 +656,9 @@ I3SDataProvider.prototype._computeExtent = function () {
   let maxLatitude = -Number.MAX_VALUE;
 
   // Compute the extent from all layers
-  for (
-    let layerIndex = 0;
-    layerIndex < this._layerCollection.length;
-    layerIndex++
-  ) {
-    if (this._layerCollection[layerIndex]._extent) {
-      const layerExtent = this._layerCollection[layerIndex]._extent;
+  for (let layerIndex = 0; layerIndex < this._layers.length; layerIndex++) {
+    if (this._layers[layerIndex]._extent) {
+      const layerExtent = this._layers[layerIndex]._extent;
       minLongitude = Math.min(minLongitude, layerExtent.minLongitude);
       minLatitude = Math.min(minLatitude, layerExtent.minLatitude);
       maxLongitude = Math.max(maxLongitude, layerExtent.maxLongitude);
