@@ -1,8 +1,8 @@
-import Cesium3DTileset from "../Scene/Cesium3DTileset.js";
 import defined from "../Core/defined.js";
-import I3SNode from "../Scene/I3SNode.js";
-import Resource from "../Core/Resource.js";
 import Rectangle from "../Core/Rectangle.js";
+import Resource from "../Core/Resource.js";
+import Cesium3DTileset from "./Cesium3DTileset.js";
+import I3SNode from "./I3SNode.js";
 
 /**
  * This class implements an I3S layer. Each I3SLayer creates a Cesium3DTileset.
@@ -10,10 +10,10 @@ import Rectangle from "../Core/Rectangle.js";
  * Do not construct this directly, instead access layers through {@link I3SDataProvider}.
  * </p>
  * @alias I3SLayer
- * @constructor
- * @param {I3SDataProvider} dataProvider The i3s data provider
- * @param {Object} layerData The layer data that is loaded from the scene layer
- * @param {Number} index The index of the layer to be reflected
+ * @internalConstructor
+ * @privateParam {I3SDataProvider} dataProvider The i3s data provider
+ * @privateParam {Object} layerData The layer data that is loaded from the scene layer
+ * @privateParam {Number} index The index of the layer to be reflected
  */
 function I3SLayer(dataProvider, layerData, index) {
   this._dataProvider = dataProvider;
@@ -44,6 +44,9 @@ function I3SLayer(dataProvider, layerData, index) {
   this._rootNode = undefined;
   this._nodePages = {};
   this._nodePageFetches = {};
+  this._extent = undefined;
+  this._tileset = undefined;
+  this._geometryDefinitions = undefined;
 
   this._computeGeometryDefinitions(true);
   this._computeExtent();
@@ -51,9 +54,12 @@ function I3SLayer(dataProvider, layerData, index) {
 
 Object.defineProperties(I3SLayer.prototype, {
   /**
-   * Gets the resource for the layer
+   * Gets the resource for the layer.
+   *
    * @memberof I3SLayer.prototype
+   *
    * @type {Resource}
+   * @readonly
    */
   resource: {
     get: function () {
@@ -63,8 +69,11 @@ Object.defineProperties(I3SLayer.prototype, {
 
   /**
    * Gets the root node of this layer.
+   *
    * @memberof I3SLayer.prototype
+   *
    * @type {I3SNode}
+   * @readonly
    */
   rootNode: {
     get: function () {
@@ -72,9 +81,12 @@ Object.defineProperties(I3SLayer.prototype, {
     },
   },
   /**
-   * Gets the Cesium3DTileSet for this layer.
+   * Gets the Cesium3DTileset for this layer.
+   *
    * @memberof I3SLayer.prototype
-   * @type {I3SNode}
+   *
+   * @type {Cesium3DTileset}
+   * @readonly
    */
   tileset: {
     get: function () {
@@ -83,8 +95,11 @@ Object.defineProperties(I3SLayer.prototype, {
   },
   /**
    * Gets the I3S data for this object.
+   *
    * @memberof I3SLayer.prototype
+   *
    * @type {Object}
+   * @readonly
    */
   data: {
     get: function () {
@@ -95,33 +110,28 @@ Object.defineProperties(I3SLayer.prototype, {
 
 /**
  * Loads the content, including the root node definition and its children
- * @returns {Promise<void>} a promise that is resolved when the layer data is loaded
+ * @returns {Promise<void>} A promise that is resolved when the layer data is loaded
+ * @private
  */
 I3SLayer.prototype.load = function () {
   const that = this;
-  return new Promise(function (resolve, reject) {
-    if (that._data.spatialReference.wkid !== 4326) {
-      console.log(
-        `Unsupported spatial reference: ${that._data.spatialReference.wkid}`
-      );
-      reject();
-      return;
-    }
 
-    that._dataProvider._geoidDataIsReadyPromise.then(function () {
-      that._loadRootNode().then(function () {
-        that._create3DTileSet();
-        that._tileset.readyPromise.then(function () {
-          that._rootNode._tile = that._tileset._root;
-          that._tileset._root._i3sNode = that._rootNode;
-          if (that._data.store.version === "1.6") {
-            that._rootNode._loadChildren().then(function () {
-              resolve();
-            });
-          } else {
-            resolve();
-          }
-        });
+  if (this._data.spatialReference.wkid !== 4326) {
+    console.log(
+      `Unsupported spatial reference: ${that._data.spatialReference.wkid}`
+    );
+    return Promise.reject();
+  }
+
+  return that._dataProvider._geoidDataIsReadyPromise.then(function () {
+    that._loadRootNode().then(function () {
+      that._create3DTileset();
+      that._tileset.readyPromise.then(function () {
+        that._rootNode._tile = that._tileset._root;
+        that._tileset._root._i3sNode = that._rootNode;
+        if (that._data.store.version === "1.6") {
+          return that._rootNode._loadChildren();
+        }
       });
     });
   });
@@ -247,13 +257,11 @@ I3SLayer.prototype._loadRootNode = function () {
  * @private
  */
 I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
-  const Index = Math.floor(nodeIndex / this._data.nodePages.nodesPerPage);
+  const index = Math.floor(nodeIndex / this._data.nodePages.nodesPerPage);
   const offsetInPage = nodeIndex % this._data.nodePages.nodesPerPage;
   const that = this;
-  return new Promise(function (resolve, reject) {
-    that._loadNodePage(Index).then(function () {
-      resolve(that._nodePages[Index][offsetInPage]);
-    });
+  return this._loadNodePage(index).then(function () {
+    return that._nodePages[index][offsetInPage];
   });
 };
 
@@ -262,28 +270,27 @@ I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
  */
 I3SLayer.prototype._loadNodePage = function (page) {
   const that = this;
-  return new Promise(function (resolve, reject) {
-    //If node page was already requested return the same promise
-    if (!defined(that._nodePageFetches[page])) {
-      const nodePageResource = that.resource.getDerivedResource({
-        url: `nodepages/${page}/`,
-      });
-      const fetchPromise = Resource.fetchJson(nodePageResource).then(function (
-        data
-      ) {
-        if (data.error && data.error.code !== 200) {
-          return Promise.reject(data.error);
-        }
 
-        that._nodePages[page] = data.nodes;
-        return Promise.resolve(data);
-      });
+  // If node page was already requested return the same promise
+  if (!defined(this._nodePageFetches[page])) {
+    const nodePageResource = this.resource.getDerivedResource({
+      url: `nodepages/${page}/`,
+    });
+    const fetchPromise = Resource.fetchJson(nodePageResource).then(function (
+      data
+    ) {
+      if (data.error && data.error.code !== 200) {
+        return Promise.reject(data.error);
+      }
 
-      that._nodePageFetches[page] = { _promise: fetchPromise };
-    }
+      that._nodePages[page] = data.nodes;
+      return data;
+    });
 
-    resolve(that._nodePageFetches[page]._promise);
-  });
+    this._nodePageFetches[page] = fetchPromise;
+  }
+
+  return this._nodePageFetches[page];
 };
 
 /**
@@ -310,7 +317,7 @@ I3SLayer.prototype._computeExtent = function () {
 /**
  * @private
  */
-I3SLayer.prototype._create3DTileSet = function () {
+I3SLayer.prototype._create3DTileset = function () {
   const inPlaceTileset = {
     asset: {
       version: "1.0",
@@ -342,8 +349,6 @@ I3SLayer.prototype._create3DTileSet = function () {
 
   const that = this;
   this._tileset.readyPromise.then(function () {
-    that._tileset.tileLoad.addEventListener(function (tile) {});
-
     that._tileset.tileUnload.addEventListener(function (tile) {
       tile._i3sNode._clearGeometryData();
       URL.revokeObjectURL(tile._contentResource._url);
@@ -351,7 +356,7 @@ I3SLayer.prototype._create3DTileSet = function () {
     });
 
     that._tileset.tileVisible.addEventListener(function (tile) {
-      if (tile._i3sNode) {
+      if (defined(tile._i3sNode)) {
         tile._i3sNode._loadChildren();
       }
     });
