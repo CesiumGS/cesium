@@ -104,6 +104,20 @@ const workspaceSourceFiles = {
   "@cesium/widgets": ["Source/**/*.js"],
 };
 
+const relativeWorkspaceSourceFiles = {
+  "@cesium/engine": [
+    "packages/engine/Source/**/*.js",
+    "!packages/engine/Source/*.js",
+    "!packages/engine/Source/Workers/**",
+    "!packages/engine/Source/WorkersES6/**",
+    "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
+    "!packages/engine/Source/ThirdParty/Workers/**",
+    "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
+    "!packages/engine/Source/ThirdParty/_*",
+  ],
+  "@cesium/widgets": ["packages/widgets/Source/**/*.js"],
+};
+
 const workspaceStaticFiles = {
   "@cesium/engine": [
     "Source/**",
@@ -326,15 +340,20 @@ const defaultESBuildOptions = () => {
 /**
  * Builds the @cesium/engine workspace.
  */
-export const buildEngine = async () => {
-  const iife = true;
-  const node = true;
+export const buildEngine = async (options) => {
+  
+  const iife = options.iife;
+  const node = options.node;
+  const minify = options.minify;
+  const incremental = options.incremental;
+  const write = options.write;
+  const sourcemap = options.sourcemap;
 
   // Create Build folder to place build artifacts.
   mkdirp.sync("Build");
 
   // Convert GLSL files to JavaScript modules.
-  await glslToJavaScript(false, "Build/minifyShaders.state");
+  //await glslToJavaScript(minify, "Build/minifyShaders.state");
 
   // Create index.js
   await createIndexJs("@cesium/engine");
@@ -366,6 +385,7 @@ export const buildEngine = async () => {
   await esbuild({
     ...cssESBuildOptions,
     outdir: "Build",
+    outbase: "Source"
   });
 
   // Build workers.
@@ -395,8 +415,8 @@ export const buildEngine = async () => {
 
   await bundleSpecs(specListFile, join("Build", "Specs"));
 
-  const staticFiles = await globby(workspaceStaticFiles["@cesium/engine"]);
-  return copyAssets(staticFiles, `Build`);
+  //const staticFiles = await globby(workspaceStaticFiles["@cesium/engine"]);
+  //return copyAssets(staticFiles, `Build`);
 };
 
 function prepareWorkspacePaths(workspacePath, paths) {
@@ -676,18 +696,28 @@ async function buildCesium(options) {
 }
 
 export function build() {
+
+  // Configure build options from command line arguments.
   const minify = argv.minify ? argv.minify : false;
   const removePragmas = argv.pragmas ? argv.pragmas : false;
   const sourcemap = argv.sourcemap ? argv.sourcemap : true;
   const node = argv.node ? argv.node : true;
-  const workspace = argv.workspace ? argv.workspace : undefined;
 
-  return buildCesium({
+  const buildOptions = {
     minify: minify,
     removePragmas: removePragmas,
     sourcemap: sourcemap,
     node: node,
-  });
+  };
+
+  // Configure build target.
+  const workspace = argv.workspace ? argv.workspace : undefined;
+
+  if (workspace === '@cesium/engine') {
+    return buildEngine(buildOptions);
+  }
+
+  return buildCesium(buildOptions);
 }
 export default build;
 
@@ -798,6 +828,26 @@ export const buildWatch = gulp.series(build, async function () {
 });
 
 export function buildTs() {
+
+  const workspace = argv.workspace ? argv.workspace : undefined;
+
+  if (workspace === "@cesium/engine") {
+    return generateTypeScriptDefinitions(
+      "engine",
+      "packages/engine/engine.d.ts",
+      "packages/engine/tsd-conf.json",
+      processEngineSource,
+      processEngineModules
+    );
+  } else if (workspace === "@cesium/widgets") {
+    return generateTypeScriptDefinitions(
+      "widgets",
+      "packages/widgets/widgets.d.ts",
+      "packages/widgets/tsd-conf.json"
+    );
+  }
+
+  
   return Promise.all([
     generateTypeScriptDefinitions(
       "engine",
@@ -811,6 +861,7 @@ export function buildTs() {
       "packages/widgets/widgets.d.ts",
       "packages/widgets/tsd-conf.json"
     ),
+    createTypeScriptDefinitions()
   ]);
 }
 
@@ -2046,11 +2097,11 @@ function processEngineSource(definitionsPath, source) {
 
 function createTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
-  execSync("npx jsdoc --configure packages/engine/tsd-conf.json", {
+  execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
     stdio: "inherit",
   });
 
-  let source = readFileSync("packages/engine/engine.d.ts").toString();
+  let source = readFileSync("Source/Cesium.d.ts").toString();
 
   // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
   // end up as enum strings instead of actually mapping values to WebGLConstants.
@@ -2060,7 +2111,7 @@ function createTypeScriptDefinitions() {
   // declaration, and then writes the file back out (in memory to source) with
   // WebGLConstants being the first module.
   const node = typeScript.createSourceFile(
-    "package/engine/Cesium.d.ts",
+    "Source/Cesium.d.ts",
     source,
     typeScript.ScriptTarget.Latest
   );
@@ -2143,7 +2194,7 @@ function createTypeScriptDefinitions() {
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
-  source = `declare module "@cesium/engine" {
+  source = `declare module "cesium" {
 ${source}
 }
 
@@ -2151,8 +2202,24 @@ ${source}
 
   // Map individual modules back to their source file so that TS still works
   // when importing individual files instead of the entire cesium module.
-  globbySync(sourceFiles).forEach(function (file) {
-    file = relative("package/engine/Source", file);
+
+  globbySync(relativeWorkspaceSourceFiles["@cesium/engine"]).forEach(function (file) {
+    file = relative("packages/engine/Source", file);
+
+    let moduleId = file;
+    moduleId = filePathToModuleId(moduleId);
+
+    const assignmentName = basename(file, extname(file));
+    console.log(`Module ID: ${moduleId}, Assignment Name: ${assignmentName}`);
+
+    if (publicModules.has(assignmentName)) {
+      publicModules.delete(assignmentName);
+      source += `declare module "cesium/packages/engine/Source/${moduleId}" { import { ${assignmentName} } from '@cesium/engine'; export default ${assignmentName}; }\n`;
+    }
+  });
+
+  globbySync(relativeWorkspaceSourceFiles["@cesium/widgets"]).forEach(function (file) {
+    file = relative("packages/widgets/Source", file);
 
     let moduleId = file;
     moduleId = filePathToModuleId(moduleId);
@@ -2160,22 +2227,22 @@ ${source}
     const assignmentName = basename(file, extname(file));
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "@cesium/engine/Source/${moduleId}" { import { ${assignmentName} } from 'cesium'; export default ${assignmentName}; }\n`;
+      source += `declare module "cesium/packages/widgets/Source/${moduleId}" { import { ${assignmentName} } from '@cesium/widgets'; export default ${assignmentName}; }\n`;
     }
   });
 
   // Write the final source file back out
-  writeFileSync("packages/engine/engine.d.ts", source);
+  writeFileSync("Source/Cesium.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid
-  // execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
-  //   stdio: "inherit",
-  // });
+  execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
+    stdio: "inherit",
+  });
 
   // Also compile our smokescreen to make sure interfaces work as expected.
-  // execSync("npx tsc -p Specs/TypeScript/tsconfig.json", {
-  //   stdio: "inherit",
-  // });
+  execSync("npx tsc -p Specs/TypeScript/tsconfig.json", {
+    stdio: "inherit",
+  });
 
   // Below is a sanity check to make sure we didn't leave anything out that
   // we don't already know about

@@ -737,12 +737,11 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
 
 /**
  * Copies non-js assets to the output directory
- *
- * @param {String} cwd
+ *=
  * @param {String} outputDirectory
  * @returns {Promise.<*>}
  */
-export function copyAssets(outputDirectory, cwd) {
+export function copyAssets(outputDirectory) {
   const everythingElse = [
     "Source/**",
     "!Source/**/*.js",
@@ -750,11 +749,9 @@ export function copyAssets(outputDirectory, cwd) {
     "!Source/**/*.css",
     "!Source/**/*.md",
   ];
-  const stream = gulp.src(everythingElse, { nodir: false }).pipe(
-    gulp.dest(outputDirectory, {
-      cwd: cwd ?? process.cwd(),
-    })
-  );
+  const stream = gulp
+    .src(everythingElse, { nodir: false })
+    .pipe(gulp.dest(outputDirectory));
 
   return streamToPromise(stream);
 }
@@ -791,8 +788,6 @@ export async function copyAssets2(outputDirectory) {
     .pipe(gulp.dest(path.join(outputDirectory, "Widgets")));
 
   await streamToPromise(stream);
-
-
 }
 
 /**

@@ -2,6 +2,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch build-ts via NPM",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "build-ts"
+            ],
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
             "name": "Launch via NPM",
             "request": "launch",
             "runtimeArgs": [
@@ -17,7 +30,7 @@
             "type": "node"
         },
         {
-            "name": "Launch buildEngine via NPM",
+            "name": "Launch build engine via NPM",
             "request": "launch",
             "runtimeArgs": [
                 "run-script",

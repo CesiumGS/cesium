@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { performance } from "perf_hooks";
 import request from "request";
-import { URL } from "url";
+import { URL, fileURLToPath } from "url";
 
 import chokidar from "chokidar";
 import compression from "compression";
@@ -69,6 +69,24 @@ const outputDirectory = path.join("Build", "CesiumUnminified");
 
 function formatTimeSinceInSeconds(start) {
   return Math.ceil((performance.now() - start) / 100) / 10;
+}
+
+
+/**
+ * 
+ * @returns 
+ */
+async function generateDevelopmentBuild() {
+
+  const startTime = performance.now();
+  const rootDirectory = path.dirname(fileURLToPath(import.meta.url));
+ 
+  // Build @cesium/engine
+  console.log("[1/3] Building @cesium/engine...");
+  process.chdir(path.join(rootDirectory, "packages/engine"));
+
+
+
 }
 
 async function buildDev() {
