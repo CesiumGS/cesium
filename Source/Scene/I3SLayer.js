@@ -2,6 +2,7 @@ import Cesium3DTileset from "../Scene/Cesium3DTileset.js";
 import defined from "../Core/defined.js";
 import I3SNode from "../Scene/I3SNode.js";
 import Resource from "../Core/Resource.js";
+import Rectangle from "../Core/Rectangle.js";
 
 /**
  * This class implements an I3S layer. Each I3SLayer creates a Cesium3DTileset.
@@ -107,7 +108,7 @@ I3SLayer.prototype.load = function () {
       return;
     }
 
-    that._dataProvider.geoidDataIsReadyPromise.then(function () {
+    that._dataProvider._geoidDataIsReadyPromise.then(function () {
       that._loadRootNode().then(function () {
         that._create3DTileSet();
         that._tileset.readyPromise.then(function () {
@@ -290,19 +291,19 @@ I3SLayer.prototype._loadNodePage = function (page) {
  */
 I3SLayer.prototype._computeExtent = function () {
   if (this._data.fullExtent) {
-    this._extent = {
-      minLongitude: this._data.fullExtent.xmin,
-      minLatitude: this._data.fullExtent.ymin,
-      maxLongitude: this._data.fullExtent.xmax,
-      maxLatitude: this._data.fullExtent.ymax,
-    };
+    this._extent = Rectangle.fromDegrees(
+      this._data.fullExtent.xmin,
+      this._data.fullExtent.ymin,
+      this._data.fullExtent.xmax,
+      this._data.fullExtent.ymax
+    );
   } else if (this._data.store.extent) {
-    this._extent = {
-      minLongitude: this._data.store.extent[0],
-      minLatitude: this._data.store.extent[1],
-      maxLongitude: this._data.store.extent[2],
-      maxLatitude: this._data.store.extent[3],
-    };
+    this._extent = Rectangle.fromDegrees(
+      this._data.store.extent[0],
+      this._data.store.extent[1],
+      this._data.store.extent[2],
+      this._data.store.extent[3]
+    );
   }
 };
 

@@ -52,12 +52,14 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
 import Resource from "../Core/Resource.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import I3SLayer from "./I3SLayer.js";
 import Lerc from "lerc";
+import Rectangle from "../Core/Rectangle.js";
 
 /**
  * This class implements an I3S Scene Layer. The URL
@@ -70,7 +72,7 @@ import Lerc from "lerc";
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource|String} options.url The url of the I3S dataset.
- * @param {String} [options.name] The name of the I3S dataset.  If undefined, a name will be derived from the url.
+ * @param {String} [options.name] The name of the I3S dataset.
  * @param {Boolean} [options.show=true] Determines if the dataset will be shown.
  * @param {ArcGISTiledElevationTerrainProvider} [options.geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
  * @param {Boolean} [options.traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
@@ -80,7 +82,6 @@ import Lerc from "lerc";
  * const i3sData = new I3SDataProvider({
  *   url: 'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0'
  * });
- * i3sData.load();
  * viewer.scene.primitives.add(i3sData);
  *
  * @example
@@ -91,7 +92,6 @@ import Lerc from "lerc";
  *   url: 'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0',
  *   geoidTiledTerrainProvider: geoidService
  * });
- * i3sData.load();
  * viewer.scene.primitives.add(i3sData);
  */
 function I3SDataProvider(options) {
@@ -103,23 +103,27 @@ function I3SDataProvider(options) {
 
   // All public configuration is defined as ES5 properties
   // These are just the "private" variables and their defaults.
-  this._name = options.name;
-  this._traceFetches = defaultValue(options.traceFetches, false);
-  this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
-
   this._resource = Resource.createIfNeeded(options.url);
+  this._name = options.name;
+  this._show = defaultValue(options.show, true);
+  this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
+  this._traceFetches = defaultValue(options.traceFetches, false);
 
   this._cesium3dTilesetOptions = defaultValue(
     options.cesium3dTilesetOptions,
     defaultValue.EMPTY_OBJECT
   );
-  this._show = defaultValue(options.show, true);
 
   this._layers = [];
   this._data = undefined;
-  this._decoderTaskProcessor = undefined;
   this._extent = undefined;
+  this._geoidDataIsReadyPromise = undefined;
+  this._geoidDataList = undefined;
+  this._decoderTaskProcessor = undefined;
   this._readyPromise = undefined;
+  this._ready = false;
+
+  this._load();
 }
 
 Object.defineProperties(I3SDataProvider.prototype, {
@@ -194,9 +198,6 @@ Object.defineProperties(I3SDataProvider.prototype, {
     get: function () {
       return this._geoidTiledTerrainProvider;
     },
-    set: function (value) {
-      this._geoidTiledTerrainProvider = value;
-    },
   },
 
   /**
@@ -209,6 +210,14 @@ Object.defineProperties(I3SDataProvider.prototype, {
    */
   layers: {
     get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this.ready) {
+        throw new DeveloperError(
+          "The dataset is not loaded. Use I3SDataProvider.readyPromise or wait for I3SDataProvider.ready to be true."
+        );
+      }
+      //>>includeEnd('debug');
+
       return this._layers;
     },
   },
@@ -223,6 +232,14 @@ Object.defineProperties(I3SDataProvider.prototype, {
    */
   data: {
     get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this.ready) {
+        throw new DeveloperError(
+          "The dataset is not loaded. Use I3SDataProvider.readyPromise or wait for I3SDataProvider.ready to be true."
+        );
+      }
+      //>>includeEnd('debug');
+
       return this._data;
     },
   },
@@ -237,6 +254,14 @@ Object.defineProperties(I3SDataProvider.prototype, {
    */
   extent: {
     get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this.ready) {
+        throw new DeveloperError(
+          "The dataset is not loaded. Use I3SDataProvider.readyPromise or wait for I3SDataProvider.ready to be true."
+        );
+      }
+      //>>includeEnd('debug');
+
       return this._extent;
     },
   },
@@ -256,6 +281,21 @@ Object.defineProperties(I3SDataProvider.prototype, {
   },
 
   /**
+   * When <code>true</code>, the I3S scene is loaded.
+   * This is set to <code>true</code> right before {@link I3SDataProvider#readyPromise} is resolved.
+   *
+   * @memberof I3SDataProvider.prototype
+   *
+   * @type {Boolean}
+   * @readonly
+   */
+  ready: {
+    get: function () {
+      return this._ready;
+    },
+  },
+
+  /**
    * The resource used to fetch the I3S dataset.
    *
    * @memberof I3SDataProvider.prototype
@@ -269,54 +309,6 @@ Object.defineProperties(I3SDataProvider.prototype, {
     },
   },
 });
-
-/**
- * Asynchronously loads the I3S scene.
- * @returns {Promise.<I3SDataProvider>} A promise that will resolve when the I3S scene is loaded.
- */
-I3SDataProvider.prototype.load = function () {
-  if (defined(this._readyPromise)) {
-    return this._readyPromise;
-  }
-
-  const that = this;
-  this._readyPromise = this._loadJson(this._resource).then(function (data) {
-    // Success
-    that._data = data;
-    if (that._data.layers) {
-      for (
-        let layerIndex = 0;
-        layerIndex < that._data.layers.length;
-        layerIndex++
-      ) {
-        const newLayer = new I3SLayer(
-          that,
-          that._data.layers[layerIndex],
-          layerIndex
-        );
-        that._layers.push(newLayer);
-      }
-    } else {
-      const newLayer = new I3SLayer(that, that._data, that._data.id);
-      that._layers.push(newLayer);
-    }
-
-    that._computeExtent();
-    that.loadGeoidData();
-
-    // Start loading all of the tiles
-    const layerPromises = [];
-    for (let i = 0; i < that._layers.length; i++) {
-      layerPromises.push(that._layers[i].load());
-    }
-
-    return Promise.all(layerPromises).then(function () {
-      return that;
-    });
-  });
-
-  return this._readyPromise;
-};
 
 /**
  * Destroys the WebGL resources held by this object. Destroying an object allows for deterministic
@@ -405,41 +397,67 @@ I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
 /**
  * @private
  */
+I3SDataProvider.prototype._load = function () {
+  const that = this;
+  this._readyPromise = this._loadJson(this._resource).then(function (data) {
+    // Success
+    that._data = data;
+    if (defined(that._data.layers)) {
+      for (
+        let layerIndex = 0;
+        layerIndex < that._data.layers.length;
+        layerIndex++
+      ) {
+        const newLayer = new I3SLayer(
+          that,
+          that._data.layers[layerIndex],
+          layerIndex
+        );
+        that._layers.push(newLayer);
+      }
+    } else {
+      const newLayer = new I3SLayer(that, that._data, that._data.id);
+      that._layers.push(newLayer);
+    }
+
+    that._computeExtent();
+    that._loadGeoidData();
+
+    // Start loading all of the tiles
+    const layerPromises = [];
+    for (let i = 0; i < that._layers.length; i++) {
+      layerPromises.push(that._layers[i].load());
+    }
+
+    return Promise.all(layerPromises).then(function () {
+      that._ready = true;
+      return that;
+    });
+  });
+};
+
+/**
+ * @private
+ */
 I3SDataProvider.prototype._loadJson = function (resource) {
-  let url;
-  if (resource instanceof Resource) {
-    url = resource.url;
-  } else {
-    url = resource;
+  if (this._traceFetches) {
+    console.log("I3S FETCH:", resource.url);
   }
 
-  const that = this;
-  return new Promise(function (resolve, reject) {
-    if (that._traceFetches) {
-      console.log("I3S FETCH:", url);
-    }
-    const request = Resource.fetchJson(url);
-    request.then(
-      function (data) {
-        if (data.error) {
-          console.error("Failed to fetch I3S ", url);
-          if (defined(data.error.message)) {
-            console.error(data.error.message);
-          }
-          if (defined(data.error.details)) {
-            for (let i = 0; i < data.error.details.length; i++) {
-              console.log(data.error.details[i]);
-            }
-          }
-          reject(data.error);
-        } else {
-          resolve(data);
-        }
-      },
-      function (reason) {
-        reject(reason);
+  return resource.fetchJson().then(function (data) {
+    if (data.error) {
+      console.error("Failed to fetch I3S ", resource.url);
+      if (defined(data.error.message)) {
+        console.error(data.error.message);
       }
-    );
+      if (defined(data.error.details)) {
+        for (let i = 0; i < data.error.details.length; i++) {
+          console.log(data.error.details[i]);
+        }
+      }
+      return Promise.reject(data.error);
+    }
+    return data;
   });
 };
 
@@ -447,18 +465,10 @@ I3SDataProvider.prototype._loadJson = function (resource) {
  * @private
  */
 I3SDataProvider.prototype._loadBinary = function (resource) {
-  const that = this;
-  let url;
-  if (resource instanceof Resource) {
-    url = resource.url;
-  } else {
-    url = resource;
+  if (this._traceFetches) {
+    console.log("I3S FETCH:", resource.url);
   }
-
-  if (that._traceFetches) {
-    console.log("I3S FETCH:", url);
-  }
-  return Resource.fetchArrayBuffer(url);
+  return resource.fetchArrayBuffer();
 };
 
 /**
@@ -512,13 +522,15 @@ I3SDataProvider.prototype._getDecoderTaskProcessor = function () {
   return this._decoderTaskProcessor;
 };
 
-function getCoveredTiles(terrainProvider, extents) {
+function getCoveredTiles(terrainProvider, extent) {
   return terrainProvider.readyPromise.then(function () {
-    return getTiles(terrainProvider, extents);
+    return getTiles(terrainProvider, extent);
   });
 }
 
-function getTiles(terrainProvider, extents) {
+const scratchCartesian2 = new Cartesian2();
+
+function getTiles(terrainProvider, extent) {
   const tilingScheme = terrainProvider.tilingScheme;
 
   // Sort points into a set of tiles
@@ -527,14 +539,8 @@ function getTiles(terrainProvider, extents) {
 
   const maxLevel = terrainProvider._lodCount;
 
-  const topLeftCorner = Cartographic.fromDegrees(
-    extents.minLongitude,
-    extents.maxLatitude
-  );
-  const bottomRightCorner = Cartographic.fromDegrees(
-    extents.maxLongitude,
-    extents.minLatitude
-  );
+  const topLeftCorner = Cartographic.fromRadians(extent.west, extent.north);
+  const bottomRightCorner = Cartographic.fromRadians(extent.east, extent.south);
   const minCornerXY = tilingScheme.positionToTileXY(topLeftCorner, maxLevel);
   const maxCornerXY = tilingScheme.positionToTileXY(
     bottomRightCorner,
@@ -544,7 +550,7 @@ function getTiles(terrainProvider, extents) {
   // Get all the tiles in between
   for (let x = minCornerXY.x; x <= maxCornerXY.x; x++) {
     for (let y = minCornerXY.y; y <= maxCornerXY.y; y++) {
-      const xy = new Cartesian2(x, y);
+      const xy = Cartesian2.fromElements(x, y, scratchCartesian2);
       const key = xy.toString();
       if (!tileRequestSet.hasOwnProperty(key)) {
         // When tile is requested for the first time
@@ -619,59 +625,50 @@ function getTiles(terrainProvider, extents) {
   });
 }
 
-I3SDataProvider.prototype.loadGeoidData = function () {
+I3SDataProvider.prototype._loadGeoidData = function () {
   // Load tiles from arcgis
   const that = this;
   const geoidTerrainProvider = this._geoidTiledTerrainProvider;
 
-  this.geoidDataIsReadyPromise = new Promise(function (resolve, reject) {
-    if (defined(geoidTerrainProvider)) {
-      geoidTerrainProvider.readyPromise.then(function () {
-        const tilesReadyPromise = getCoveredTiles(
-          geoidTerrainProvider,
-          that._extent
-        );
-        tilesReadyPromise.then(function (heightMaps) {
-          that._geoidDataList = heightMaps;
-          resolve();
-        });
-      });
-    } else {
-      console.log(
-        "No Geoid Terrain service provided - no geoid conversion will be performed."
+  if (!defined(geoidTerrainProvider)) {
+    console.log(
+      "No Geoid Terrain service provided - no geoid conversion will be performed."
+    );
+    return Promise.resolve();
+  }
+
+  this._geoidDataIsReadyPromise = geoidTerrainProvider.readyPromise.then(
+    function () {
+      const tilesReadyPromise = getCoveredTiles(
+        geoidTerrainProvider,
+        that._extent
       );
-      resolve();
+      return tilesReadyPromise.then(function (heightMaps) {
+        that._geoidDataList = heightMaps;
+      });
     }
-  });
-  return this.geoidDataIsReadyPromise;
+  );
 };
 
 /**
  * @private
  */
 I3SDataProvider.prototype._computeExtent = function () {
-  let minLongitude = Number.MAX_VALUE;
-  let maxLongitude = -Number.MAX_VALUE;
-  let minLatitude = Number.MAX_VALUE;
-  let maxLatitude = -Number.MAX_VALUE;
+  let rectangle;
 
   // Compute the extent from all layers
   for (let layerIndex = 0; layerIndex < this._layers.length; layerIndex++) {
     if (this._layers[layerIndex]._extent) {
       const layerExtent = this._layers[layerIndex]._extent;
-      minLongitude = Math.min(minLongitude, layerExtent.minLongitude);
-      minLatitude = Math.min(minLatitude, layerExtent.minLatitude);
-      maxLongitude = Math.max(maxLongitude, layerExtent.maxLongitude);
-      maxLatitude = Math.max(maxLatitude, layerExtent.maxLatitude);
+      if (!defined(rectangle)) {
+        rectangle = Rectangle.clone(layerExtent);
+      } else {
+        Rectangle.union(rectangle, layerExtent, rectangle);
+      }
     }
   }
 
-  this._extent = {
-    minLongitude: minLongitude,
-    minLatitude: minLatitude,
-    maxLongitude: maxLongitude,
-    maxLatitude: maxLatitude,
-  };
+  this._extent = rectangle;
 };
 
 export default I3SDataProvider;

@@ -63,36 +63,21 @@
           debugShowBoundingVolume: false,
         };
         const i3sOptions = {
+          url: tours["San Francisco"],
           traceFetches: false, // for tracing I3S fetches
           geoidTiledTerrainProvider: geoidService, // pass the geoid service
-          cesium3dTilesetOptions: cesium3dTilesetOptions, //options for internal Cesium3dTileset
+          cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
         };
 
         // Create I3S data provider
-        const i3sProvider = new Cesium.I3SDataProvider(
-          "",
-          tours["San Francisco"],
-          i3sOptions
-        );
-        i3sProvider.load();
+        const i3sProvider = new Cesium.I3SDataProvider(i3sOptions);
 
-        //Center camera on I3S once it's loaded
+        // Center camera on I3S once it's loaded
         i3sProvider.readyPromise.then(function () {
-          const midLon =
-            (i3sProvider.extent.minLongitude +
-              i3sProvider.extent.maxLongitude) /
-            2;
-          const midLat =
-            (i3sProvider.extent.minLatitude + i3sProvider.extent.maxLatitude) /
-            2;
+          const center = Cesium.Rectangle.center(i3sProvider.extent);
+          center.height = 10000.0;
           viewer.camera.setView({
-            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-              new Cesium.Cartographic(
-                Cesium.Math.toRadians(midLon),
-                Cesium.Math.toRadians(midLat),
-                10000.0
-              )
-            ),
+            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
           });
         });
 

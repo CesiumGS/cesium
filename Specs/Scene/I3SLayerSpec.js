@@ -8,7 +8,7 @@ describe(
       "mockProviderUrl?testQuery=test",
       {}
     );
-    mockI3SProvider.geoidDataIsReadyPromise = Promise.resolve();
+    mockI3SProvider._geoidDataIsReadyPromise = Promise.resolve();
 
     const rootNodePageEntry = {
       index: 0,
