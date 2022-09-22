@@ -595,7 +595,7 @@ function createInstances(loader, components, frameState) {
     } else {
       const buffer = Buffer.createVertexBuffer({
         context: frameState.context,
-        typedArray: translationTypedArray,
+        typedArray: scaleTypedArray,
         usage: BufferUsage.STATIC_DRAW,
       });
       // Destruction of resources is handled by I3dmLoader.unload().
