@@ -360,11 +360,11 @@ function Model(options) {
   if (
     this._debugWireframe === true &&
     this._enableDebugWireframe === false &&
-    this.type === Model.GLTF
+    this.type === ModelType.GLTF
   ) {
     oneTimeWarning(
       "model-debug-wireframe-ignored",
-      "enableDebugWireframe must be set to true in Model.Gltf, otherwise debugWireframe will be ignored."
+      "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
     );
   }
 
@@ -1189,7 +1189,7 @@ Object.defineProperties(Model.prototype, {
       ) {
         oneTimeWarning(
           "model-debug-wireframe-ignored",
-          "enableDebugWireframe must be set to true in Model.Gltf, otherwise debugWireframe will be ignored."
+          "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
         );
       }
     },
