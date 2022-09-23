@@ -227,26 +227,12 @@ function Cesium3DTilesVoxelProvider(options) {
   // 2. Load schema.json
   // 3. Load root glTF to get provider properties
   const resource = Resource.createIfNeeded(options.url);
-  const tilesetPromise = resource.fetchJson();
-  tilesetPromise
+  resource
+    .fetchJson()
     .then(function (tileset) {
       tilesetJson = tileset;
       tileJson = tilesetJson.root;
-
-      let metadataSchemaLoader;
-      if (defined(tilesetJson.schemaUri)) {
-        metadataSchemaLoader = ResourceCache.loadSchema({
-          resource: resource.getDerivedResource({
-            url: tilesetJson.schemaUri,
-            preserveQueryParameters: true,
-          }),
-        });
-      } else {
-        metadataSchemaLoader = ResourceCache.loadSchema({
-          schema: tilesetJson.schema,
-        });
-      }
-      return metadataSchemaLoader.promise;
+      return getMetadataSchemaLoader(tilesetJson, resource).promise;
     })
     .then(function (schemaLoader) {
       const metadataSchema = schemaLoader.schema;
@@ -271,90 +257,23 @@ function Cesium3DTilesVoxelProvider(options) {
     })
     .then(function (rootGltfLoader) {
       that._gltfLoaders.splice(that._gltfLoaders.indexOf(rootGltfLoader), 1);
+
+      addAttributeInfo(metadata, that);
+
       const gltfPrimitive = rootGltfLoader.components.nodes[0].primitives[0];
-      const voxel = gltfPrimitive.voxel;
-      const primitiveType = gltfPrimitive.primitiveType;
-      const attributes = gltfPrimitive.attributes;
-
-      const attributesLength = attributes.length;
-      const names = new Array(attributesLength);
-      const types = new Array(attributesLength);
-      const componentTypes = new Array(attributesLength);
-      let minimumValues = new Array(attributesLength);
-      let maximumValues = new Array(attributesLength);
-
-      const schema = metadata.schema;
-      const statistics = metadata.statistics;
-      const classNames = Object.keys(schema.classes);
-      const classNamesLength = classNames.length;
-      for (let i = 0; i < classNamesLength; i++) {
-        const className = classNames[i];
-        const classStatistics = statistics.classes[className];
-        const classInfo = schema.classes[className];
-        const properties = classInfo.properties;
-        const propertyNames = Object.keys(properties);
-        const propertyNamesLength = propertyNames.length;
-        for (let i = 0; i < propertyNamesLength; i++) {
-          const propertyName = propertyNames[i];
-          const property = properties[propertyName];
-
-          const metadataType = property.type;
-          const metadataComponentType = property.componentType;
-          const metadataComponentCount = MetadataType.getComponentCount(
-            metadataType
-          );
-
-          if (defined(classStatistics)) {
-            const propertyStatistics = classStatistics.properties[propertyName];
-            const propertyMin = Array.isArray(propertyStatistics.min)
-              ? propertyStatistics.min
-              : [propertyStatistics.min];
-            const propertyMax = Array.isArray(propertyStatistics.max)
-              ? propertyStatistics.max
-              : [propertyStatistics.max];
-
-            minimumValues[i] = new Array(metadataComponentCount);
-            maximumValues[i] = new Array(metadataComponentCount);
-
-            for (let j = 0; j < metadataComponentCount; j++) {
-              minimumValues[i][j] = propertyMin[j];
-              maximumValues[i][j] = propertyMax[j];
-            }
-          }
-
-          names[i] = propertyName;
-          types[i] = metadataType;
-          componentTypes[i] = metadataComponentType;
-        }
-      }
-
-      let hasMinimumMaximumValues = false;
-      for (let i = 0; i < attributesLength; i++) {
-        if (defined(minimumValues[i]) && defined(maximumValues[i])) {
-          hasMinimumMaximumValues = true;
-          break;
-        }
-      }
-      if (!hasMinimumMaximumValues) {
-        minimumValues = undefined;
-        maximumValues = undefined;
-      }
+      const { primitiveType, voxel } = gltfPrimitive;
 
       that.shape = VoxelShapeType.fromPrimitiveType(primitiveType);
+
       that.minBounds = Cartesian3.clone(voxel.minBounds);
       that.maxBounds = Cartesian3.clone(voxel.maxBounds);
       that.dimensions = Cartesian3.clone(voxel.dimensions);
       that.paddingBefore = Cartesian3.clone(voxel.paddingBefore);
       that.paddingAfter = Cartesian3.clone(voxel.paddingAfter);
-      that.maximumTileCount = defined(statistics.classes.tile)
-        ? statistics.classes.tile.count
-        : undefined;
+
+      that.maximumTileCount = metadata.statistics.classes.tile?.count;
+
       that.modelMatrix = Matrix4.clone(tileJson.transform);
-      that.names = names;
-      that.types = types;
-      that.componentTypes = componentTypes;
-      that.minimumValues = minimumValues;
-      that.maximumValues = maximumValues;
       that.ready = true;
       that._readyPromise.resolve(that);
       that._implicitTileset = implicitTileset;
@@ -362,6 +281,86 @@ function Cesium3DTilesVoxelProvider(options) {
     .catch(function (error) {
       that._readyPromise.reject(error);
     });
+}
+
+/**
+ * Get a schema loader to load the metadata schema referenced in a tileset JSON file
+ * @param {Object} tilesetJson A tileset JSON object describing a 3DTiles tileset
+ * @param {Resource} resource
+ * @returns {MetadataSchemaLoader}
+ * @private
+ */
+function getMetadataSchemaLoader(tilesetJson, resource) {
+  const { schemaUri, schema } = tilesetJson;
+  if (!defined(schemaUri)) {
+    return ResourceCache.loadSchema({ schema });
+  }
+  return ResourceCache.loadSchema({
+    resource: resource.getDerivedResource({
+      url: schemaUri,
+      preserveQueryParameters: true,
+    }),
+  });
+}
+
+/**
+ * Add info about metadata attributes to a VoxelPrimitive:
+ *  names, types, componentTypes, minimumValues, maximumValues
+ * @param {Cesium3DTilesetMetadata} metadata
+ * @param {VoxelPrimitive} primitive
+ * @private
+ */
+function addAttributeInfo(metadata, primitive) {
+  const { schema, statistics } = metadata;
+
+  // Collect a flattened array of info from all properties in all classes.
+  const propertyInfo = Object.entries(schema.classes).flatMap(getPropertyInfo);
+
+  function getPropertyInfo([className, classInfo]) {
+    const classStatistics = statistics.classes[className];
+    const { properties } = classInfo;
+    return Object.entries(properties).map(([name, property]) => {
+      const { type, componentType } = property;
+
+      const min = classStatistics?.properties[name].min;
+      const max = classStatistics?.properties[name].max;
+      const componentCount = MetadataType.getComponentCount(type);
+      const minValue = copyArray(min, componentCount);
+      const maxValue = copyArray(max, componentCount);
+
+      return { name, type, componentType, minValue, maxValue };
+    });
+  }
+
+  primitive.names = propertyInfo.map((info) => info.name);
+  primitive.types = propertyInfo.map((info) => info.type);
+  primitive.componentTypes = propertyInfo.map((info) => info.componentType);
+
+  const minimumValues = propertyInfo.map((info) => info.minValue);
+  const maximumValues = propertyInfo.map((info) => info.maxValue);
+  const hasMinimumValues = minimumValues.some(defined);
+
+  primitive.minimumValues = hasMinimumValues ? minimumValues : undefined;
+  primitive.maximumValues = hasMinimumValues ? maximumValues : undefined;
+}
+
+/**
+ * Copy input values into a new array of a specified length.
+ * If the input is not an array, its value will be copied into the first element
+ * of the returned array. If the input is an array shorter than the returned
+ * array, the extra elements in the returned array will be undefined. If the
+ * input is undefined, the return will be undefined.
+ * @param {*} values The values to copy
+ * @param {Number} length The length of the returned array
+ * @returns {Array} A new array filled with the supplied values
+ * @private
+ */
+function copyArray(values, length) {
+  if (!defined(values)) {
+    return;
+  }
+  const valuesArray = Array.isArray(values) ? values : [values];
+  return Array.from({ length }, (v, i) => valuesArray[i]);
 }
 
 /**
@@ -400,12 +399,9 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
   }
 
   // 1. Load the subtree that the tile belongs to (possibly from the subtree cache)
-  // 1a. If not in the cache, load the subtree resource
-  // 1b. If not in the cache, load the subtree object
   // 2. Load the glTF if available
 
   const implicitTileset = this._implicitTileset;
-  const subtreeCache = this._subtreeCache;
   const types = this.types;
   const componentTypes = this.componentTypes;
 
@@ -419,95 +415,39 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
     z: tileZ,
   });
 
-  // First load the subtree to check if the tile is available.
-  // If the subtree has been requested previously it might still be in the cache.
-  let subtreeCoord;
-
+  // TODO: is the first condition flipped? if isSubtreeRoot, level == 0
   const isSubtreeRoot =
     tileCoordinates.isSubtreeRoot() && tileCoordinates.level > 0;
 
-  if (isSubtreeRoot) {
-    // Check availability from the parent subtree so that we don't try fetching a non-existent subtree
-    subtreeCoord = tileCoordinates.getParentSubtreeCoordinates();
-  } else {
-    subtreeCoord = tileCoordinates.getSubtreeCoordinates();
-  }
-
-  let subtree = subtreeCache.find(subtreeCoord);
+  // TODO: are these switched? Root has no parent
+  const subtreeCoord = isSubtreeRoot
+    ? tileCoordinates.getParentSubtreeCoordinates()
+    : tileCoordinates.getSubtreeCoordinates();
 
   const that = this;
-  let subtreePromise;
-  if (defined(subtree)) {
-    subtreePromise = subtree.readyPromise;
-  } else {
-    const subtreeRelative = implicitTileset.subtreeUriTemplate.getDerivedResource(
-      {
-        templateValues: subtreeCoord.getTemplateValues(),
-      }
-    );
-    const subtreeResource = implicitTileset.baseResource.getDerivedResource({
-      url: subtreeRelative.url,
-    });
-    this._subtreeResourceLoaders.push(subtreeResource);
-    subtreePromise = subtreeResource
-      .fetchArrayBuffer()
-      .then(function (arrayBuffer) {
-        // Check one more time if the subtree is in the cache.
-        // This could happen if there are two in-flight tile requests from the same subtree and one finishes before the other.
-        subtree = subtreeCache.find(subtreeCoord);
-        if (!defined(subtree)) {
-          const bufferU8 = new Uint8Array(arrayBuffer);
-          subtree = new ImplicitSubtree(
-            subtreeResource,
-            undefined,
-            bufferU8,
-            implicitTileset,
-            subtreeCoord
-          );
-          subtreeCache.addSubtree(subtree);
-          that._subtreeLoaders.push(subtree);
-        }
-        that._subtreeResourceLoaders.splice(
-          that._subtreeResourceLoaders.indexOf(subtreeResource),
-          1
-        );
-        return subtree.readyPromise;
-      });
-  }
 
-  return subtreePromise
+  return getSubtreePromise(that, subtreeCoord)
     .then(function (subtree) {
+      const available = isSubtreeRoot
+        ? subtree.childSubtreeIsAvailableAtCoordinates(tileCoordinates)
+        : subtree.tileIsAvailableAtCoordinates(tileCoordinates);
+
       const subtreeLoaderIndex = that._subtreeLoaders.indexOf(subtree);
-
-      let available = false;
-      if (isSubtreeRoot) {
-        available = subtree.childSubtreeIsAvailableAtCoordinates(
-          tileCoordinates
-        );
-      } else {
-        available = subtree.tileIsAvailableAtCoordinates(tileCoordinates);
+      if (subtreeLoaderIndex !== -1) {
+        that._subtreeLoaders.splice(subtreeLoaderIndex, 1);
       }
-
       if (!available) {
-        if (subtreeLoaderIndex !== -1) {
-          that._subtreeLoaders.splice(subtreeLoaderIndex, 1);
-        }
         return Promise.reject("Tile is not available");
       }
 
       const gltfLoader = getGltfLoader(implicitTileset, tileCoordinates);
       that._gltfLoaders.push(gltfLoader);
 
-      if (subtreeLoaderIndex !== -1) {
-        that._subtreeLoaders.splice(subtreeLoaderIndex, 1);
-      }
-
       return gltfLoader.promise;
     })
     .then(function (gltfLoader) {
       const node = gltfLoader.components.scene.nodes[0];
-      const primitive = node.primitives[0];
-      const attributes = primitive.attributes;
+      const attributes = node.primitives[0].attributes;
       const attributesLength = attributes.length;
 
       const data = new Array(attributesLength);
@@ -529,9 +469,64 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
       }
 
       that._gltfLoaders.splice(that._gltfLoaders.indexOf(gltfLoader), 1);
-      return Promise.resolve(data);
+      return data;
     });
 };
+
+/**
+ *
+ * @param {VoxelPrimitive} primitive
+ * @param {ImplicitTileCoordinates} subtreeCoord
+ * @returns {Promise.<ImplicitSubtree>}
+ * @private
+ */
+function getSubtreePromise(primitive, subtreeCoord) {
+  const implicitTileset = primitive._implicitTileset;
+  const subtreeCache = primitive._subtreeCache;
+
+  // First load the subtree to check if the tile is available.
+  // If the subtree has been requested previously it might still be in the cache
+  const subtree = subtreeCache.find(subtreeCoord);
+  if (defined(subtree)) {
+    return subtree.readyPromise;
+  }
+
+  const { subtreeUriTemplate, baseResource } = implicitTileset;
+  const subtreeRelative = subtreeUriTemplate.getDerivedResource({
+    templateValues: subtreeCoord.getTemplateValues(),
+  });
+  const subtreeResource = baseResource.getDerivedResource({
+    url: subtreeRelative.url,
+  });
+  primitive._subtreeResourceLoaders.push(subtreeResource);
+
+  return subtreeResource.fetchArrayBuffer().then(addSubtree);
+
+  function addSubtree(arrayBuffer) {
+    // Check one more time if the subtree is in the cache.
+    // This could happen if there are two in-flight tile requests from the same
+    // subtree and one finishes before the other.
+    let subtree = subtreeCache.find(subtreeCoord);
+    if (defined(subtree)) {
+      return subtree.readyPromise;
+    }
+    const bufferU8 = new Uint8Array(arrayBuffer);
+    subtree = new ImplicitSubtree(
+      subtreeResource,
+      undefined,
+      bufferU8,
+      implicitTileset,
+      subtreeCoord
+    );
+    subtreeCache.addSubtree(subtree);
+    primitive._subtreeLoaders.push(subtree);
+    const subtreeResourceIndex = primitive._subtreeResourceLoaders.indexOf(
+      subtreeResource
+    );
+    primitive._subtreeResourceLoaders.splice(subtreeResourceIndex, 1);
+    return subtree.readyPromise;
+  }
+}
 
 /**
  * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
@@ -542,8 +537,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
  */
 Cesium3DTilesVoxelProvider.prototype.update = function (frameState) {
   const loaders = this._gltfLoaders;
-  const loaderLength = loaders.length;
-  for (let i = 0; i < loaderLength; i++) {
+  for (let i = 0; i < loaders.length; i++) {
     loaders[i].process(frameState);
   }
 };
@@ -565,21 +559,18 @@ Cesium3DTilesVoxelProvider.prototype.doneLoading = function () {
 };
 
 /**
- * @function
- *
- * @param {ArrayBuffer} gltfBuffer The buffer that comes when the promise from gltfResource.fetchArrayBuffer() resolves.
- * @param {Resource} gltfResource Resource derived from base that points to gltf.
- * @returns {GltfLoader}
- *
+ * Get a loader for a glTF tile from a tileset
+ * @param {ImplicitTileset} implicitTileset The tileset from which the loader will retrieve a glTF tile
+ * @param {ImplicitTileCoordinates} tileCoord The coordinates of the desired tile
+ * @returns {GltfLoader} A loader for the requested tile
  * @private
  */
 function getGltfLoader(implicitTileset, tileCoord) {
-  const gltfRelative = implicitTileset.contentUriTemplates[0].getDerivedResource(
-    {
-      templateValues: tileCoord.getTemplateValues(),
-    }
-  );
-  const gltfResource = implicitTileset.baseResource.getDerivedResource({
+  const { contentUriTemplates, baseResource } = implicitTileset;
+  const gltfRelative = contentUriTemplates[0].getDerivedResource({
+    templateValues: tileCoord.getTemplateValues(),
+  });
+  const gltfResource = baseResource.getDerivedResource({
     url: gltfRelative.url,
   });
 
