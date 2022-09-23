@@ -483,6 +483,13 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
+
+    // If a node in the model was unreachable from the scenegraph, there will
+    // be no corresponding runtime node and therefore should be skipped.
+    if (!defined(runtimeNode)) {
+      continue;
+    }
+
     runtimeNode.configurePipeline();
     const nodePipelineStages = runtimeNode.pipelineStages;
 
@@ -637,6 +644,12 @@ ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
+
+    // If a node in the model was unreachable from the scenegraph, there will
+    // be no corresponding runtime node and therefore should be skipped.
+    if (!defined(runtimeNode)) {
+      continue;
+    }
 
     for (j = 0; j < runtimeNode.updateStages.length; j++) {
       const nodeUpdateStage = runtimeNode.updateStages[j];
