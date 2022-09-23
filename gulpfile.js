@@ -337,87 +337,7 @@ const defaultESBuildOptions = () => {
   };
 };
 
-/**
- * Builds the @cesium/engine workspace.
- */
-export const buildEngine = async (options) => {
-  
-  const iife = options.iife;
-  const node = options.node;
-  const minify = options.minify;
-  const incremental = options.incremental;
-  const write = options.write;
-  const sourcemap = options.sourcemap;
 
-  // Create Build folder to place build artifacts.
-  mkdirp.sync("Build");
-
-  // Convert GLSL files to JavaScript modules.
-  //await glslToJavaScript(minify, "Build/minifyShaders.state");
-
-  // Create index.js
-  await createIndexJs("@cesium/engine");
-
-  // Create SpecList.js
-  const specFiles = await globby(workspaceSpecFiles["@cesium/engine"]);
-  const specListFile = join("Specs", "SpecList.js");
-  await createSpecListJs(specFiles, specListFile);
-
-  // Generate bundle using esbuild.
-  const esBuildOptions = defaultESBuildOptions();
-  await esbuild({
-    ...esBuildOptions,
-    format: `esm`,
-    outfile: join(`Build`, "index.js"),
-  });
-
-  // Generate bundle for CSS and ThirdParty using esbuild.
-  const css = await globby(workspaceCssFiles[`@cesium/engine`]);
-  const cssESBuildOptions = defaultESBuildOptions();
-  cssESBuildOptions.entryPoints = [
-    "Source/ThirdParty/google-earth-dbroot-parser.js",
-    ...css,
-  ];
-  cssESBuildOptions.loader = {
-    ".gif": "text",
-    ".png": "text",
-  };
-  await esbuild({
-    ...cssESBuildOptions,
-    outdir: "Build",
-    outbase: "Source"
-  });
-
-  // Build workers.
-  await buildWorkers({
-    path: "Build",
-  });
-
-  if (iife) {
-    await esbuild({
-      ...esBuildOptions,
-      format: "iife",
-      globalName: "CesiumEngine",
-      outfile: join(`Build`, `CesiumEngine.js`),
-    });
-  }
-
-  if (node) {
-    await esbuild({
-      ...esBuildOptions,
-      format: "cjs",
-      define: {
-        TransformStream: "null",
-      },
-      outfile: join(`Build`, `index.cjs`),
-    });
-  }
-
-  await bundleSpecs(specListFile, join("Build", "Specs"));
-
-  //const staticFiles = await globby(workspaceStaticFiles["@cesium/engine"]);
-  //return copyAssets(staticFiles, `Build`);
-};
 
 function prepareWorkspacePaths(workspacePath, paths) {
   return paths.map((glob) => {
@@ -437,8 +357,6 @@ function prepareWorkspacePaths(workspacePath, paths) {
  * @param {String} options.outbase The
  */
 async function bundleCSS(options) {
-  options = options || {};
-
   // Configure options for esbuild.
   const esBuildOptions = defaultESBuildOptions();
   esBuildOptions.entryPoints = await globby(options.filePaths);
