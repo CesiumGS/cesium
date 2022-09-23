@@ -33,6 +33,7 @@ import ModelSceneGraph from "./ModelSceneGraph.js";
 import ModelStatistics from "./ModelStatistics.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
@@ -354,6 +355,18 @@ function Model(options) {
   );
   this._enableShowOutline = defaultValue(options.enableShowOutline, true);
   this._debugWireframe = defaultValue(options.debugWireframe, false);
+
+  // Warning for improper setup of debug wireframe
+  if (
+    this._debugWireframe === true &&
+    this._enableDebugWireframe === false &&
+    this.type === ModelType.GLTF
+  ) {
+    oneTimeWarning(
+      "model-debug-wireframe-ignored",
+      "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
+    );
+  }
 
   // Credit specified by the user.
   let credit = options.credit;
@@ -1167,6 +1180,18 @@ Object.defineProperties(Model.prototype, {
         this.resetDrawCommands();
       }
       this._debugWireframe = value;
+
+      // Warning for improper setup of debug wireframe
+      if (
+        this._debugWireframe === true &&
+        this._enableDebugWireframe === false &&
+        this.type === ModelType.GLTF
+      ) {
+        oneTimeWarning(
+          "model-debug-wireframe-ignored",
+          "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
+        );
+      }
     },
   },
 
