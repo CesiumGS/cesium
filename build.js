@@ -139,6 +139,14 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
 }
 
 /**
+ * @typedef {Object} CesiumBundles
+ * @property {Object} esmBundle The ESM bundle.
+ * @property {Object} iifeBundle The IIFE bundle, for use in browsers.
+ * @property {Object} nodeBundle The CommonJS bundle, for use in NodeJS.
+ */
+
+
+/**
  * Bundles all individual modules, optionally minifying and stripping out debug pragmas.
  * @param {Object} options
  * @param {String} options.path Directory where build artifacts are output
@@ -149,7 +157,7 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
  * @param {Boolean} [options.node=false] true if a CJS style node module should be built
  * @param {Boolean} [options.incremental=false] true if build output should be cached for repeated builds
  * @param {Boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
- * @returns {Promise.<Array>}
+ * @returns {Promise.<CesiumBundles>}
  */
 export async function buildCesiumJs(options) {
 
@@ -165,33 +173,35 @@ export async function buildCesiumJs(options) {
   // print errors immediately, and collect warnings so we can filter out known ones
   buildConfig.logLevel = "error";
 
+  const bundles = {};
+
   // Build ESM
-  const result = await esbuild.build({
+  const esmBundle = await esbuild.build({
     ...buildConfig,
     format: "esm",
     outfile: path.join(options.path, "index.js"),
   });
 
-  handleBuildWarnings(result);
+  handleBuildWarnings(esmBundle);
 
-  const results = [result];
+  bundles.esmBundle = esmBundle;
 
   // Build IIFE
   if (options.iife) {
-    const result = await esbuild.build({
+    const iifeBundle = await esbuild.build({
       ...buildConfig,
       format: "iife",
       globalName: "Cesium",
       outfile: path.join(options.path, "Cesium.js"),
     });
 
-    handleBuildWarnings(result);
+    handleBuildWarnings(iifeBundle);
 
-    results.push(result);
+    bundles.iifeBundle = iifeBundle;
   }
 
   if (options.node) {
-    const result = await esbuild.build({
+    const nodeBundle = await esbuild.build({
       ...buildConfig,
       format: "cjs",
       platform: "node",
@@ -203,11 +213,11 @@ export async function buildCesiumJs(options) {
       outfile: path.join(options.path, "index.cjs"),
     });
 
-    handleBuildWarnings(result);
-    results.push(result);
+    handleBuildWarnings(nodeBundle);
+    bundles.nodeBundle = nodeBundle;
   }
 
-  return results;
+  return bundles;
 }
 
 function filePathToModuleId(moduleId) {
@@ -584,6 +594,7 @@ export default "${contents}";\n`;
     "\n"
   )}\n\nexport default {\n    ${contents.builtinLookup.join(",\n    ")}\n};\n`;
 
+  console.log(workspace);
   return writeFile(
     path.join(
       `packages/${workspace}/`,
@@ -953,6 +964,7 @@ const workspaceCssFiles = {
  * @param {string} specListFile The path to the SpecList.js file
  * @param {string} outbase The output base
  * @param {string} outputPath The path to place the output in.
+ * @returns {Object} The bundle generated from Specs.
  */
 async function bundleSpecs(specListFile, outbase, outputPath) {
   // When bundling specs for a workspace, the spec-main.js and karma-main.js
@@ -969,7 +981,7 @@ async function bundleSpecs(specListFile, outbase, outputPath) {
     write: true,
   });
 
-  await esbuild.build({
+  return await esbuild.build({
     entryPoints: [specListFile],
     bundle: true,
     format: "esm",
@@ -1108,11 +1120,16 @@ export const buildWidgets = async (options) => {
 };
 
 /**
- * Build Cesium
+ * Build CesiumJS.
  *
  * @param {Object} options
- * @param {Boolean} options.minify Whether or not to minify.
- * @param {Boolean} options.development Whether or not the build is targeted for development.
+ * @param {Boolean} options.development True if build is targeted for development.
+ * @param {Boolean} options.iife True if IIFE bundle should be generated.
+ * @param {Boolean} options.minify True if bundles should be minified.
+ * @param {Boolean} options.node True if CommonJS bundle should be generated.
+ * @param {Boolean} options.removePragmas True if debug pragmas should be removed.
+ * @param {Boolean} options.sourcemap True if sourcemap should be included in the generated bundles.
+ * @param {Boolean} options.write True if bundles generated are written to files instead of in-memory buffers.
  */
 export async function buildCesium(options) {
   // Generate Build folder to place build artifacts.
@@ -1160,6 +1177,7 @@ export async function buildCesium(options) {
     removePragmas: options.removePragmas,
     path: outputDirectory,
     node: options.node,
+    write: options.write
   });
 
   await Promise.all([
@@ -1171,10 +1189,14 @@ export async function buildCesium(options) {
       removePragmas: options.removePragmas,
     }),
     createGalleryList(options.development),
-    buildSpecs(),
   ]);
+
+  const specsBundle = await bundleSpecs("Specs/SpecList.js", '', outputDirectory);
 
   await copyAssets2(outputDirectory);
 
-  return bundles;
+  return {
+    ...bundles,
+    specsBundle: specsBundle
+  };
 }

@@ -28,7 +28,7 @@
   "devDependencies": {},
   "scripts": {
     "build": "gulp build --workspace @cesium/engine --cwd .",
-    "build-ts": "gulp build-ts --workspace @cesium/engine",
+    "build-ts": "gulp buildTs --workspace @cesium/engine",
     "test": "gulp testEngine"
   },
   "repository": {

@@ -50,7 +50,7 @@ import {
   createJsHintOptions,
   esbuildBaseConfig,
   createCombinedSpecList,
-  getFilesFromWorkspaceGlobs
+  getFilesFromWorkspaceGlobs,
 } from "./build.js";
 import { cwd } from "process";
 
@@ -131,7 +131,7 @@ const workspaceStaticFiles = {
     "!Source/**/*.js",
     "!Source/**/*.glsl",
     "!Source/**/*.css",
-    "!Source/**/*.md"
+    "!Source/**/*.md",
   ],
 };
 
@@ -336,8 +336,6 @@ const defaultESBuildOptions = () => {
     target: `es2020`,
   };
 };
-
-
 
 function prepareWorkspacePaths(workspacePath, paths) {
   return paths.map((glob) => {
@@ -586,7 +584,10 @@ async function buildCesium(options) {
     await bundleCSS({
       filePaths: filesPaths,
       outbase: `${workspacePath}/Source`,
-      outdir: join(outputDirectory, workspace === "@cesium/widgets" ? "Widgets" : "") // To ensure that we conform to how Cesium.js has previously been built.
+      outdir: join(
+        outputDirectory,
+        workspace === "@cesium/widgets" ? "Widgets" : ""
+      ), // To ensure that we conform to how Cesium.js has previously been built.
     });
   }
 
@@ -614,7 +615,6 @@ async function buildCesium(options) {
 }
 
 export function build() {
-
   // Configure build options from command line arguments.
   const minify = argv.minify ? argv.minify : false;
   const removePragmas = argv.pragmas ? argv.pragmas : false;
@@ -631,7 +631,7 @@ export function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === '@cesium/engine') {
+  if (workspace === "@cesium/engine") {
     return buildEngine(buildOptions);
   }
 
@@ -745,8 +745,7 @@ export const buildWatch = gulp.series(build, async function () {
   });
 });
 
-export function buildTs() {
-
+export async function buildTs() {
   const workspace = argv.workspace ? argv.workspace : undefined;
 
   if (workspace === "@cesium/engine") {
@@ -758,14 +757,27 @@ export function buildTs() {
       processEngineModules
     );
   } else if (workspace === "@cesium/widgets") {
+    const engineModules = await generateTypeScriptDefinitions(
+      "engine",
+      "packages/engine/engine.d.ts",
+      "packages/engine/tsd-conf.json",
+      processEngineSource,
+      processEngineModules
+    );
+
+    const importModules = {
+      engine: engineModules,
+    };
     return generateTypeScriptDefinitions(
       "widgets",
       "packages/widgets/widgets.d.ts",
-      "packages/widgets/tsd-conf.json"
+      "packages/widgets/tsd-conf.json",
+      undefined,
+      undefined,
+      importModules
     );
   }
 
-  
   return Promise.all([
     generateTypeScriptDefinitions(
       "engine",
@@ -779,7 +791,7 @@ export function buildTs() {
       "packages/widgets/widgets.d.ts",
       "packages/widgets/tsd-conf.json"
     ),
-    createTypeScriptDefinitions()
+    createTypeScriptDefinitions(),
   ]);
 }
 
@@ -1868,7 +1880,8 @@ function generateTypeScriptDefinitions(
   definitionsPath,
   configurationPath,
   processSourceFunc,
-  processModulesFunc
+  processModulesFunc,
+  importModules
 ) {
   // Run JSDoc with tsd-jsdoc to generate an initial definition file.
   execSync(`npx jsdoc --configure ${configurationPath}`, {
@@ -1917,6 +1930,19 @@ ${source}
 }
 `;
 
+  if (importModules) {
+    let imports = "";
+    Object.keys(importModules).forEach((workspace) => {
+      const workspaceModules = Array.from(importModules[workspace]);
+      imports += `import { ${workspaceModules.join(
+        ",\n"
+      )} } from @cesium/${workspace}\n`;
+    });
+    source = imports + source;
+  }
+
+  const allPublicModules = new Set(publicModules.values());
+
   // Map individual modules back to their source file so that TS still works
   // when importing individual files instead of the entire cesium module.
   globbySync(sourceFiles).forEach(function (file) {
@@ -1935,7 +1961,7 @@ ${source}
   // Write the final source file back out
   writeFileSync(definitionsPath, source);
 
-  return Promise.resolve();
+  return Promise.resolve(allPublicModules);
 }
 
 function processEngineModules(modules) {
@@ -2121,7 +2147,9 @@ ${source}
   // Map individual modules back to their source file so that TS still works
   // when importing individual files instead of the entire cesium module.
 
-  globbySync(relativeWorkspaceSourceFiles["@cesium/engine"]).forEach(function (file) {
+  globbySync(relativeWorkspaceSourceFiles["@cesium/engine"]).forEach(function (
+    file
+  ) {
     file = relative("packages/engine/Source", file);
 
     let moduleId = file;
@@ -2136,7 +2164,9 @@ ${source}
     }
   });
 
-  globbySync(relativeWorkspaceSourceFiles["@cesium/widgets"]).forEach(function (file) {
+  globbySync(relativeWorkspaceSourceFiles["@cesium/widgets"]).forEach(function (
+    file
+  ) {
     file = relative("packages/widgets/Source", file);
 
     let moduleId = file;

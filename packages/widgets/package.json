@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "gulp build --workspace @cesium/widgets --cwd .",
-    "build-ts": "gulp build-ts --workspace @cesium/engine",
+    "build-ts": "gulp buildTs --workspace @cesium/widgets",
     "test": "gulp testWidgets"
   },
   "repository": {
