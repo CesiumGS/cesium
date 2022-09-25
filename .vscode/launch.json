@@ -15,11 +15,11 @@
             "type": "node"
         },
         {
-            "name": "Launch build-ts via NPM",
+            "name": "Launch build widgets via NPM",
             "request": "launch",
             "runtimeArgs": [
                 "run-script",
-                "build-ts",
+                "build",
                 "-w",
                 "@cesium/widgets"
             ],

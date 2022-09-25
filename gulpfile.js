@@ -37,6 +37,11 @@ import { createInstrumenter } from "istanbul-lib-instrument";
 import pLimit from "p-limit";
 
 import {
+  buildCesium,
+  buildEngine,
+  buildWidgets,
+
+  
   createCesiumJs,
   copyAssets,
   copyAssets2,
@@ -427,21 +432,6 @@ async function bundleSpecs(specListFile, outputPath) {
   });
 }
 
-export const buildWidgets = async () => {
-  // Generate Build folder to place build artifacts.
-  mkdirp.sync("Build");
-
-  // Create index.js
-  await createIndexJs("@cesium/widgets");
-
-  // Create SpecList.js
-  const specFiles = await globby(workspaceSpecFiles["@cesium/widgets"]);
-  const specListFile = join("Specs", "SpecList.js");
-  await createSpecListJs(specFiles, specListFile);
-
-  await bundleSpecs(specListFile, join("Build", "Specs"));
-};
-
 function copyFiles(from, to, base) {
   const stream = gulp
     .src(from, { nodir: true, allowEmpty: true, base: base })
@@ -550,78 +540,18 @@ export async function esBuildWorkspace(workspace, options) {
 }
 
 // TODO: This needs to be redone to avoid duplicating tasks.
-async function buildCesium(options) {
-  options = options || {};
-  mkdirp.sync("Build");
 
-  const outputDirectory = join(
-    "Build",
-    `Cesium${!options.minify ? "Unminified" : ""}`
-  );
-  rimraf.sync(outputDirectory);
-
-  writeFileSync(
-    "Build/package.json",
-    JSON.stringify({
-      type: "commonjs",
-    }),
-    "utf8"
-  );
-
-  await createCesiumJs();
-  await createCombinedSpecList();
-
-  // Copy and minify non-bundled CSS and JS.
-  for (const workspace of Object.keys(workspaceCssFiles)) {
-    // Since workspace source files are provided relative to the workspace,
-    // the workspace path needs to be prepended.
-    const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
-    const filesPaths = prepareWorkspacePaths(
-      workspacePath,
-      workspaceCssFiles[workspace]
-    );
-
-    await bundleCSS({
-      filePaths: filesPaths,
-      outbase: `${workspacePath}/Source`,
-      outdir: join(
-        outputDirectory,
-        workspace === "@cesium/widgets" ? "Widgets" : ""
-      ), // To ensure that we conform to how Cesium.js has previously been built.
-    });
-  }
-
-  await Promise.all([
-    createJsHintOptions(),
-    buildCesiumJs({
-      minify: options.minify,
-      iife: true,
-      sourcemap: options.sourcemap,
-      removePragmas: options.removePragmas,
-      path: outputDirectory,
-      node: options.node,
-    }),
-    bundleCombinedWorkers({
-      minify: options.minify,
-      sourcemap: options.sourcemap,
-      path: outputDirectory,
-      removePragmas: options.removePragmas,
-    }),
-    createGalleryList(noDevelopmentGallery),
-    buildSpecs(),
-  ]);
-
-  return copyAssets2(outputDirectory);
-}
 
 export function build() {
   // Configure build options from command line arguments.
-  const minify = argv.minify ? argv.minify : false;
-  const removePragmas = argv.pragmas ? argv.pragmas : false;
-  const sourcemap = argv.sourcemap ? argv.sourcemap : true;
-  const node = argv.node ? argv.node : true;
+  const iife = argv.iife ?? false;
+  const minify = argv.minify ?? false;
+  const removePragmas = argv.pragmas ?? false;
+  const sourcemap = argv.sourcemap ?? true;
+  const node = argv.node ?? true;
 
   const buildOptions = {
+    iife: iife,
     minify: minify,
     removePragmas: removePragmas,
     sourcemap: sourcemap,
@@ -633,6 +563,8 @@ export function build() {
 
   if (workspace === "@cesium/engine") {
     return buildEngine(buildOptions);
+  } else if (workspace === "@cesium/widgets") {
+    return buildWidgets(buildOptions);
   }
 
   return buildCesium(buildOptions);
@@ -1631,43 +1563,42 @@ export async function coverage() {
   });
 }
 
-const workspaceTestFiles = {
+const workspaceKarmaFiles = {
   "@cesium/engine": [
-    { pattern: "Specs/Data/**", included: false },
-    { pattern: "packages/engine/Specs/TestWorkers/**/*.wasm", included: false },
+    { pattern: "packages/engine/Build/Assets/**/*", included: false },
+    { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
+    { pattern: "packages/engine/Build/Workers/**/*", included: false },
     { pattern: "packages/engine/Build/CesiumEngine.js", included: true },
     { pattern: "packages/engine/Build/CesiumEngine.js.map", included: false },
     {
-      pattern: "packages/engine/Build/Specs/Specs/karma-main.js",
+      pattern: "packages/engine/Build/Specs/karma-main.js",
       included: true,
       type: "module",
     },
     {
-      pattern: "packages/engine/Build/Specs/packages/engine/Specs/SpecList.js",
+      pattern: "packages/engine/Build/Specs/SpecList.js",
       included: true,
       type: "module",
-    }, // TODO: Fix
+    },
     { pattern: "packages/engine/Specs/TestWorkers/**", included: false },
-    { pattern: "packages/engine/Build/Assets/**/*", included: false },
-    { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
-    { pattern: "packages/engine/Build/Workers/**/*", included: false },
+    { pattern: "packages/engine/Specs/TestWorkers/**/*.wasm", included: false },
+    { pattern: "Specs/Data/**", included: false },
   ],
   "@cesium/widgets": [
-    { pattern: "Specs/Data/**", included: false },
+    { pattern: "packages/engine/Build/Assets/**/*", included: false },
+    { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
+    { pattern: "packages/engine/Build/Workers/**/*", included: false },
     {
-      pattern: "packages/widgets/Build/Specs/Specs/karma-main.js",
+      pattern: "packages/widgets/Build/Specs/karma-main.js",
       included: true,
       type: "module",
     },
     {
-      pattern:
-        "packages/widgets/Build/Specs/packages/widgets/Specs/SpecList.js",
+      pattern: "packages/widgets/Build/Specs/SpecList.js",
       included: true,
       type: "module",
-    }, // TODO: Fix
-    { pattern: "packages/engine/Build/Assets/**/*", included: false },
-    { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
-    { pattern: "packages/engine/Build/Workers/**/*", included: false },
+    },
+    { pattern: "Specs/Data/**", included: false },
   ],
 };
 
@@ -1701,7 +1632,7 @@ export async function testEngine() {
         enabled: enableAllBrowsers,
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
-      files: workspaceTestFiles["@cesium/engine"],
+      files: workspaceKarmaFiles["@cesium/engine"],
       client: {
         captureConsole: verbose,
         args: [
@@ -1714,6 +1645,7 @@ export async function testEngine() {
           release,
           debugCanvasWidth,
           debugCanvasHeight,
+          "engine",
         ],
       },
     },
@@ -1758,7 +1690,7 @@ export async function testWidgets() {
         enabled: enableAllBrowsers,
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
-      files: workspaceTestFiles["@cesium/widgets"],
+      files: workspaceKarmaFiles["@cesium/widgets"],
       client: {
         captureConsole: verbose,
         args: [
@@ -1771,6 +1703,7 @@ export async function testWidgets() {
           release,
           debugCanvasWidth,
           debugCanvasHeight,
+          "widgets",
         ],
       },
     },
@@ -1936,7 +1869,7 @@ ${source}
       const workspaceModules = Array.from(importModules[workspace]);
       imports += `import { ${workspaceModules.join(
         ",\n"
-      )} } from @cesium/${workspace}\n`;
+      )} } from "@cesium/${workspace}";\n`;
     });
     source = imports + source;
   }

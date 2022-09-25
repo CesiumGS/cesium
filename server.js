@@ -104,12 +104,14 @@ async function generateDevelopmentBuild() {
   // Build CesiumJS
   console.log("[3/3] Building CesiumJS...");
   const bundles = await buildCesium({
+    development: true,
     iife: true,
-    sourcemap: true,
-    path: outputDirectory,
     incremental: true,
-    write: false,
     minify: false,
+    node: false,
+    removePragmas: false,
+    sourcemap: true,
+    write: false,
   });
 
   console.log(`Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`);
