@@ -4,11 +4,10 @@ import {
   copyFileSync,
   readFileSync,
   existsSync,
-  mkdirSync,
 } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, relative, extname, resolve } from "path";
-import { cpus, EOL } from "os";
+import { cpus } from "os";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
 import { gzipSync } from "zlib";
@@ -21,7 +20,7 @@ import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
 import gulpReplace from "gulp-replace";
-import { globby, globbyStream, globbySync } from "globby";
+import { globby, globbySync } from "globby";
 import open from "open";
 import rimraf from "rimraf";
 import mkdirp from "mkdirp";
@@ -40,24 +39,14 @@ import {
   buildCesium,
   buildEngine,
   buildWidgets,
-
-  
-  createCesiumJs,
-  copyAssets,
-  copyAssets2,
   buildCesiumJs,
   buildWorkers,
-  bundleCombinedWorkers,
   glslToJavaScript,
   createSpecList,
   buildSpecs,
-  createGalleryList,
   createJsHintOptions,
   esbuildBaseConfig,
-  createCombinedSpecList,
-  getFilesFromWorkspaceGlobs,
 } from "./build.js";
-import { cwd } from "process";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
@@ -93,22 +82,6 @@ const sourceFiles = [
   "!Source/ThirdParty/_*",
 ];
 
-// Files and globs are relative to root of each workspace.
-
-const workspaceSourceFiles = {
-  "@cesium/engine": [
-    "Source/**/*.js",
-    "!Source/*.js",
-    "!Source/Workers/**",
-    "!Source/WorkersES6/**",
-    "Source/WorkersES6/createTaskProcessorWorker.js",
-    "!Source/ThirdParty/Workers/**",
-    "!Source/ThirdParty/google-earth-dbroot-parser.js",
-    "!Source/ThirdParty/_*",
-  ],
-  "@cesium/widgets": ["Source/**/*.js"],
-};
-
 const relativeWorkspaceSourceFiles = {
   "@cesium/engine": [
     "packages/engine/Source/**/*.js",
@@ -121,44 +94,6 @@ const relativeWorkspaceSourceFiles = {
     "!packages/engine/Source/ThirdParty/_*",
   ],
   "@cesium/widgets": ["packages/widgets/Source/**/*.js"],
-};
-
-const workspaceStaticFiles = {
-  "@cesium/engine": [
-    "Source/**",
-    "!Source/**/*.js",
-    "!Source/**/*.glsl",
-    "!Source/**/*.css",
-    "!Source/**/*.md",
-  ],
-  "@cesium/widgets": [
-    "Source/**",
-    "!Source/**/*.js",
-    "!Source/**/*.glsl",
-    "!Source/**/*.css",
-    "!Source/**/*.md",
-  ],
-};
-
-const workspaceShaderFiles = {
-  "@cesium/engine": [
-    "Source/Shaders/**/*.glsl",
-    "Source/ThirdParty/Shaders/*.glsl",
-  ],
-  "@cesium/widgets": [],
-};
-
-const workspaceCssFiles = {
-  "@cesium/engine": [
-    "Source/**/*.css",
-    "Source/ThirdParty/google-earth-dbroot-parser.js", // This file is bundled as is during the CSS bundling.
-  ],
-  "@cesium/widgets": ["Source/**/*.css"],
-};
-
-const workspaceWorkerFiles = {
-  "@cesium/engine": ["Build/Workers/*.js", "Build/ThirdParty/Workers/*.js"],
-  "@cesium/widgets": [""],
 };
 
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
@@ -201,347 +136,6 @@ function handleBuildWarnings(result) {
   }
 }
 
-function getVersionFromPackageJson(json) {
-  let version = json.version;
-  if (/\.0$/.test(version)) {
-    version = version.substring(0, version.length - 2);
-  }
-  return version;
-}
-
-const workspaceSpecFiles = {
-  "@cesium/engine": [
-    "Specs/Core/*Spec.js",
-    "!Specs/Core/TaskProcessorSpec.js", // TODO: Fix
-  ],
-  "@cesium/widgets": ["Specs/**/*.js"],
-};
-
-/**
- * Creates a single entry point file by importing all individual spec files.
- * @param {Array.<String>} files The individual spec files.
- * @param {String} outputPath The path the file is written to.
- */
-async function createSpecListJs(files, outputPath) {
-  let contents = "";
-  files.forEach(function (file) {
-    contents += `import './${filePathToModuleId(file).replace(
-      "Specs/",
-      ""
-    )}.js';\n`;
-  });
-
-  await writeFile(outputPath, contents, {
-    encoding: "utf-8",
-  });
-
-  return contents;
-}
-
-async function createIndexJs(workspace) {
-  // Read package.json from current working directory.
-
-  let workspacePackageJson;
-  try {
-    const workspacePackageJsonData = await readFile(`package.json`);
-    workspacePackageJson = JSON.parse(workspacePackageJsonData);
-  } catch (e) {
-    console.error(`Unable to read package.json from ${process.cwd()}: ${e}`);
-    process.exit(-1);
-  }
-
-  // Extract version from package.json and write it at the top of the index.js file.
-
-  const version = getVersionFromPackageJson(workspacePackageJson);
-  let contents = `export const VERSION = '${version}';\n`;
-
-  // Iterate over all provided source files for the workspace and export the assignment based on file name.
-
-  const workspaceSources = workspaceSourceFiles[workspace];
-  if (!workspaceSources) {
-    console.error(`Unable to find source files for workspace: ${workspace}`);
-    process.exit(-1);
-  }
-
-  const files = await globby(workspaceSources);
-  files.forEach(function (file) {
-    let moduleId = file;
-    moduleId = filePathToModuleId(moduleId);
-
-    // Rename shader files, such that ViewportQuadFS.glsl is exported as _shadersViewportQuadFS in JS.
-
-    let assignmentName = basename(file, extname(file));
-    if (moduleId.indexOf("Source/Shaders/") === 0) {
-      assignmentName = `_shaders${assignmentName}`;
-    }
-    assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-    contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
-  });
-
-  await writeFile("index.js", contents, { encoding: "utf-8" });
-
-  return contents;
-}
-
-async function buildWorkspace(options) {
-  // Extract the workspace name and path, and change working directory to root of workspace.
-
-  const workspace = options.workspace;
-
-  if (!workspace) {
-    console.error(`Workspace is undefined.`);
-    process.exit(-1);
-  }
-
-  const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
-
-  options = {
-    ...options,
-    path: join(workspacePath, `Build`),
-  };
-
-  try {
-    process.chdir(workspacePath);
-    console.log(`Changed working directory to: ${workspacePath}`);
-  } catch (e) {
-    console.error(`Unable to change directory to workspace: ${e}`);
-    process.exit(-1);
-  }
-
-  //const outputDirectory = join(process.cwd(), `Build`);
-  // TODO: Fix the minifyShaders.state hack
-  mkdirp.sync("Build");
-  //rimraf.sync(outputDirectory);
-
-  // Build shaders, if needed.
-
-  if (workspace === "@cesium/engine") {
-    // TODO: Use workspaceShaderFiles to make this more generic.
-    await glslToJavaScript(options.minify, "Build/minifyShaders.state");
-  }
-
-  // Create index.js for workspace.
-
-  await createIndexJs(workspace);
-
-  // Bundle ESM
-
-  await esBuildWorkspace(workspace, options);
-}
-
-const defaultESBuildOptions = () => {
-  return {
-    bundle: true,
-    color: true,
-    entryPoints: [`index.js`],
-    external: [`http`, `https`, `url`, `zlib`],
-    legalComments: `inline`,
-    logLevel: `info`,
-    logLimit: 0,
-    target: `es2020`,
-  };
-};
-
-function prepareWorkspacePaths(workspacePath, paths) {
-  return paths.map((glob) => {
-    if (glob.indexOf(`!`) === 0) {
-      return `!`.concat(workspacePath, `/`, glob.replace(`!`, ``));
-    }
-    return workspacePath.concat("/", glob);
-  });
-}
-
-/**
- * Bundles CSS files.
- *
- * @param {Object} options
- * @param {Array.<String>} options.filePaths The file paths to bundle.
- * @param {String} options.outdir The output directory.
- * @param {String} options.outbase The
- */
-async function bundleCSS(options) {
-  // Configure options for esbuild.
-  const esBuildOptions = defaultESBuildOptions();
-  esBuildOptions.entryPoints = await globby(options.filePaths);
-  esBuildOptions.loader = {
-    ".gif": "text",
-    ".png": "text",
-  };
-  esBuildOptions.outdir = options.outdir;
-  esBuildOptions.outbase = options.outbase;
-
-  await esbuild(esBuildOptions);
-}
-
-const widgetsResolvePlugin = {
-  name: "external-cesium-engine",
-  setup: (build) => {
-    build.onResolve(
-      {
-        filter: new RegExp(`engine\/index\.js$`),
-      },
-      () => {}
-    );
-  },
-};
-
-const externalResolvePlugin = {
-  name: "external-cesium",
-  setup: (build) => {
-    build.onResolve({ filter: new RegExp(`Cesium\.js$`) }, () => {
-      return {
-        path: "CesiumEngine",
-        namespace: "external-cesium",
-      };
-    });
-
-    build.onLoad(
-      {
-        filter: new RegExp(`^CesiumEngine$`),
-        namespace: "external-cesium",
-      },
-      () => {
-        const contents = `module.exports = CesiumEngine`;
-        return {
-          contents,
-        };
-      }
-    );
-  },
-};
-
-/**
- * Bundles spec files for testing in the browser.
- */
-async function bundleSpecs(specListFile, outputPath) {
-  return esbuild({
-    entryPoints: [
-      "../../Specs/spec-main.js",
-      "../../Specs/karma-main.js",
-      specListFile,
-    ],
-    bundle: true,
-    format: "esm",
-    sourcemap: true,
-    target: "es2020",
-    outdir: outputPath,
-    //plugins: [externalResolvePlugin],
-    external: ["https", "http", "url", "zlib"],
-    incremental: false,
-    write: true,
-  });
-}
-
-function copyFiles(from, to, base) {
-  const stream = gulp
-    .src(from, { nodir: true, allowEmpty: true, base: base })
-    .pipe(gulp.dest(to));
-  return streamToPromise(stream);
-}
-
-// const buildCesium = async (options) => {
-//   const iife = true;
-//   const node = true;
-
-//   // Generate Build folder to place build artifacts.
-//   mkdirp.sync("Build");
-
-//   // Create Cesium.js
-//   await createCesiumJs();
-
-//   // Generate bundle using esbuild.
-//   const esBuildOptions = defaultESBuildOptions();
-//   esBuildOptions.entryPoints = [`Source/Cesium.js`];
-//   await esbuild({
-//     ...esBuildOptions,
-//     format: `esm`,
-//     outfile: join(`Build`, "index.js"),
-//   });
-
-//   // Bundle CSS files.
-//   for (const workspace of Object.keys(workspaceCssFiles)) {
-//     // Since workspace source files are provided relative to the workspace,
-//     // the workspace path needs to be prepended.
-//     const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
-//     const filesPaths = prepareWorkspacePaths(
-//       workspacePath,
-//       workspaceCssFiles[workspace]
-//     );
-
-//     await bundleCSS({
-//       filePaths: filesPaths,
-//       outbase: `${workspacePath}/Source`,
-//       outdir: `Build/${workspace === "@cesium/widgets" ? `Widgets` : ``}`, // To ensure that we conform to how Cesium.js has previously been built.
-//     });
-
-//     // Copy worker files.
-//     const workerPaths = prepareWorkspacePaths(
-//       workspacePath,
-//       workspaceWorkerFiles[workspace]
-//     );
-//     await copyFiles(workerPaths, "Build", `${workspacePath}/Build`);
-//   }
-//   if (iife) {
-//     await esbuild({
-//       ...esBuildOptions,
-//       format: "iife",
-//       globalName: "Cesium",
-//       outfile: join(`Build`, `Cesium.js`),
-//     });
-//   }
-
-//   if (node) {
-//     await esbuild({
-//       ...esBuildOptions,
-//       format: "cjs",
-//       define: {
-//         TransformStream: "null",
-//       },
-//       outfile: join(`Build`, `index.cjs`),
-//     });
-//   }
-
-//   return copyAssets(`Build`);
-// };
-
-export async function esBuildWorkspace(workspace, options) {
-  if (!workspace) {
-    console.error(`Workspace is undefined.`);
-    process.exit(-1);
-  }
-
-  // TODO: Try analyze option
-  // TODO: Add banner
-
-  const buildConfig = {
-    bundle: true,
-    color: true,
-    entryPoints: [join(process.cwd(), `index.js`)],
-    external: [`https`, `http`, `url`, `zlib`, `@cesium/engine`],
-    legalComments: `inline`,
-    logLevel: `info`,
-    logLimit: 0, // TODO: Remove extra logging
-    metafile: true,
-    minify: options.minify,
-    sourcemap: options.sourcemap,
-    target: `es2020`,
-    write: options.write,
-  };
-
-  // ESM Build
-
-  const result = await esbuild({
-    ...buildConfig,
-    format: `esm`,
-    outfile: join(options.path, `index.js`),
-  });
-
-  return result;
-}
-
-// TODO: This needs to be redone to avoid duplicating tasks.
-
-
 export function build() {
   // Configure build options from command line arguments.
   const iife = argv.iife ?? false;
@@ -551,6 +145,7 @@ export function build() {
   const node = argv.node ?? true;
 
   const buildOptions = {
+    development: noDevelopmentGallery,
     iife: iife,
     minify: minify,
     removePragmas: removePragmas,

@@ -1,6 +1,6 @@
 /*eslint-env node*/
 import child_process from "child_process";
-import { readFileSync, existsSync, statSync } from "fs";
+import { existsSync, statSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { EOL } from "os";
 import path from "path";
@@ -103,7 +103,6 @@ function handleBuildWarnings(result) {
   }
 }
 
-const cssFiles = "Source/**/*.css";
 export function esbuildBaseConfig() {
   return {
     target: "es2020",
@@ -113,11 +112,6 @@ export function esbuildBaseConfig() {
     },
   };
 }
-
-const workspaceWorkerFiles = {
-  "@cesium/engine": ["Build/Workers/*.js", "Build/ThirdParty/Workers/*.js"],
-  "@cesium/widgets": [""],
-};
 
 export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
   let files = [];
@@ -221,17 +215,6 @@ export async function buildCesiumJs(options) {
 function filePathToModuleId(moduleId) {
   return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }
-
-const sourceFiles = [
-  "packages/engine/Source/**/*.js",
-  "!packages/engine/Source/*.js",
-  "!packages/engine/Source/Workers/**",
-  "!packages/engine/Source/WorkersES6/**",
-  "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
-  "!packages/engine/Source/ThirdParty/Workers/**",
-  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!packages/engine/Source/ThirdParty/_*",
-];
 
 const workspaceSourceFiles = {
   engine: [
