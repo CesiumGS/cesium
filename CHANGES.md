@@ -20,6 +20,7 @@
 - Fixed a regression where glTF models with unused nodes would crash [#10813](https://github.com/CesiumGS/cesium/pull/10813)
 - Fixed a bug where KMLs with a NetworkLink with viewRefreshMode=='onRegion' would cause Cesium to make numerous resource requests and possibly trigger an out of memory error. [#10790](https://github.com/CesiumGS/cesium/pull/10790)
 - Fixed a bug where camera would not follow the `Viewer.trackedEntity` if it had a model with a `HeightReference` other than `NONE`. [#10805](https://github.com/CesiumGS/cesium/pull/10805)
+- Fixed a bug where calling `Vector3DTileContent.getFeature` before a render update could result in no feature being returned. [#10819](https://github.com/CesiumGS/cesium/pull/10819)
 
 ### 1.97 - 2022-09-01
 
