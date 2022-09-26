@@ -404,6 +404,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
   const implicitTileset = this._implicitTileset;
   const types = this.types;
   const componentTypes = this.componentTypes;
+  const names = this.names;
 
   // Can't use a scratch variable here because the object is used inside the promise chain.
   const tileCoordinates = new ImplicitTileCoordinates({
@@ -452,7 +453,15 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
 
       const data = new Array(attributesLength);
       for (let i = 0; i < attributesLength; i++) {
-        const attribute = attributes[i];
+        // The attributes array from GltfLoader is not in the same order as
+        // names, types, etc. from the provider.
+        // A temporary fix: Look up the attribute based on its name
+        const name = `_${names[i]}`;
+        const attribute = attributes.find((a) => a.name === name);
+        if (!defined(attribute)) {
+          continue;
+        }
+
         const type = types[i];
         const componentType = componentTypes[i];
         const componentDatatype = MetadataComponentType.toComponentDatatype(
