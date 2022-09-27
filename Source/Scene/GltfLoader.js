@@ -901,6 +901,23 @@ function createAttribute(
     );
   }
 
+  if (attribute.semantic === VertexAttributeSemantic.NORMAL) {
+    if (attribute.type === AttributeType.VEC2) {
+      const quantizationBits =
+        ComponentDatatype.getSizeInBytes(accessor.componentType) * 8;
+      const quantization = new ModelComponents.Quantization();
+      quantization.type = accessor.type;
+      quantization.componentDatatype = accessor.componentType;
+      quantization.octEncoded = true;
+      quantization.normalizationRange = (1 << quantizationBits) - 1;
+      attribute.componentDatatype = ComponentDatatype.FLOAT;
+      attribute.type = AttributeType.VEC3;
+      attribute.quantization = quantization;
+      attribute.min = undefined;
+      attribute.max = undefined;
+    }
+  }
+
   const isQuantizable =
     attribute.semantic === VertexAttributeSemantic.POSITION ||
     attribute.semantic === VertexAttributeSemantic.NORMAL ||
