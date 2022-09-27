@@ -3767,11 +3767,9 @@ describe(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
           scene
         ).then(function (model) {
-          scene.renderForSpecs();
           verifyRender(model, false);
 
           model.clippingPlanes = undefined;
-          scene.renderForSpecs();
           verifyRender(model, true);
         });
       });
@@ -3789,7 +3787,6 @@ describe(
         return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             let modelColor;
-            scene.renderForSpecs();
             verifyRender(model, true);
             expect(scene).toRenderAndCall(function (rgba) {
               modelColor = rgba;
@@ -3798,18 +3795,48 @@ describe(
             // The clipping plane should cut the model in half such that
             // we see the back faces.
             model.clippingPlanes = clippingPlanes;
-            scene.renderForSpecs();
             expect(scene).toRenderAndCall(function (rgba) {
               expect(rgba).not.toEqual(modelColor);
             });
 
             plane.distance = 10.0; // Move the plane away from the model
-            scene.renderForSpecs();
             expect(scene).toRenderAndCall(function (rgba) {
               expect(rgba).toEqual(modelColor);
             });
           }
         );
+      });
+
+      it("removing clipping plane from collection works", function () {
+        const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [plane],
+        });
+        return loadAndZoomToModel(
+          { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+          scene
+        ).then(function (model) {
+          verifyRender(model, false);
+
+          clippingPlanes.removeAll();
+          verifyRender(model, true);
+        });
+      });
+
+      it("removing clipping planes collection works", function () {
+        const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [plane],
+        });
+        return loadAndZoomToModel(
+          { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+          scene
+        ).then(function (model) {
+          verifyRender(model, false);
+
+          model.clippingPlanes = undefined;
+          verifyRender(model, true);
+        });
       });
 
       it("clipping planes apply edge styling", function () {
@@ -3823,7 +3850,6 @@ describe(
         return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             let modelColor;
-            scene.renderForSpecs();
             verifyRender(model, true);
             expect(scene).toRenderAndCall(function (rgba) {
               modelColor = rgba;
@@ -3831,13 +3857,11 @@ describe(
 
             model.clippingPlanes = clippingPlanes;
 
-            scene.renderForSpecs();
             expect(scene).toRenderAndCall(function (rgba) {
               expect(rgba).toEqual([0, 0, 255, 255]);
             });
 
             clippingPlanes.edgeWidth = 0.0;
-            scene.renderForSpecs();
             expect(scene).toRenderAndCall(function (rgba) {
               expect(rgba).toEqual(modelColor);
             });
@@ -3855,16 +3879,13 @@ describe(
         });
         return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
-            scene.renderForSpecs();
             verifyRender(model, true);
 
             // These planes are defined such that the model is outside their union.
             model.clippingPlanes = clippingPlanes;
-            scene.renderForSpecs();
             verifyRender(model, false);
 
             model.clippingPlanes.unionClippingRegions = false;
-            scene.renderForSpecs();
             verifyRender(model, true);
           }
         );
