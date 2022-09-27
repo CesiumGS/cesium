@@ -2,10 +2,10 @@ import {
   Resource,
   TextureManager,
   TextureUniform,
-} from "../../index.js";;
+} from "../../../index.js";
 import TextureMinificationFilter from "../../../Source/Renderer/TextureMinificationFilter.js";
-import createScene from "../../createScene.js";
-import pollToPromise from "../../pollToPromise.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
+import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/Model/TextureManager",

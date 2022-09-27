@@ -5,10 +5,10 @@ import {
   ConstantProperty,
   CylinderGraphics,
   ShadowMode,
-} from "../../index.js";;
+} from "../../index.js";
 
-import testDefinitionChanged from "../testDefinitionChanged.js";
-import testMaterialDefinitionChanged from "../testMaterialDefinitionChanged.js";
+import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
+import testMaterialDefinitionChanged from "../../../../Specs/testMaterialDefinitionChanged.js";
 
 describe("DataSources/CylinderGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

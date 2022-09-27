@@ -3,7 +3,7 @@ import {
   EarthOrientationParameters,
   JulianDate,
   TimeStandard,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/EarthOrientationParameters", function () {
   let officialLeapSeconds;

@@ -2,8 +2,8 @@ import {
   Cartesian3,
   defined,
   PrimitiveOutlineGenerator,
-} from "../../index.js";;
-import createContext from "../../createContext.js";
+} from "../../../index.js";
+import createContext from "../../../../../Specs/createContext.js";
 
 describe(
   "Scene/Model/PrimitiveOutlineGenerator",

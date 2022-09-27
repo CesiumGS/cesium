@@ -29,10 +29,10 @@ import {
   Globe,
   GroundPolylinePrimitive,
   ShadowMode,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createDynamicProperty from "../createDynamicProperty.js";
-import createScene from "../../../../Specs/createScene.js";;
+import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
+import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(

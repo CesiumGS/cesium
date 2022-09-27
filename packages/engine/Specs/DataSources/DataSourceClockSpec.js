@@ -3,7 +3,7 @@ import {
   ClockStep,
   JulianDate,
   DataSourceClock,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/DataSourceClock", function () {
   it("merge assigns unassigned properties", function () {

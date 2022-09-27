@@ -16,13 +16,13 @@ import {
   MapMode2D,
   SceneMode,
   ScreenSpaceCameraController,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createCamera from "../createCamera.js";
-import createCanvas from "../../../../Specs/createCanvas.js";;
-import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";;
+import createCamera from "../../../../Specs/createCamera.js";
+import createCanvas from "../../../../Specs/createCanvas.js";
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 
 describe("Scene/ScreenSpaceCameraController", function () {
   let usePointerEvents;

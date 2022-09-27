@@ -4,7 +4,7 @@ import {
   QuadtreeTile,
   QuadtreeTileLoadState,
   TileReplacementQueue,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Scene/TileReplacementQueue", function () {
   function Tile(num, loadedState, upsampledState) {

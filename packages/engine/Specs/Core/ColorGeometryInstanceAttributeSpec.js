@@ -2,7 +2,7 @@ import {
   Color,
   ColorGeometryInstanceAttribute,
   ComponentDatatype,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/ColorGeometryInstanceAttribute", function () {
   it("constructor", function () {

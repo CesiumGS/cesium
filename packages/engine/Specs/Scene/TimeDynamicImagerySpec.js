@@ -7,7 +7,7 @@ import {
   RequestType,
   TimeIntervalCollection,
   TimeDynamicImagery,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Scene/TimeDynamicImagery", function () {
   const clock = new Clock({

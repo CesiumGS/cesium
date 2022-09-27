@@ -16,7 +16,7 @@ import {
   Request,
   RequestScheduler,
   Resource,
-} from "../../index.js";;
+} from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

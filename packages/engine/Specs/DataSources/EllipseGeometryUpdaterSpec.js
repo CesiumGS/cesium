@@ -11,13 +11,13 @@ import {
   SampledPositionProperty,
   SampledProperty,
   PrimitiveCollection,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createDynamicGeometryUpdaterSpecs from "../createDynamicGeometryUpdaterSpecs.js";
-import createDynamicProperty from "../createDynamicProperty.js";
-import createGeometryUpdaterGroundGeometrySpecs from "../createGeometryUpdaterGroundGeometrySpecs.js";
-import createGeometryUpdaterSpecs from "../createGeometryUpdaterSpecs.js";
-import createScene from "../../../../Specs/createScene.js";;
+import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
+import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
+import createGeometryUpdaterGroundGeometrySpecs from "../../../../Specs/createGeometryUpdaterGroundGeometrySpecs.js";
+import createGeometryUpdaterSpecs from "../../../../Specs/createGeometryUpdaterSpecs.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "DataSources/EllipseGeometryUpdater",

@@ -9,7 +9,7 @@ import {
   CallbackProperty,
   SampledPositionProperty,
   VelocityOrientationProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/VelocityOrientationProperty", function () {
   const time = JulianDate.now();

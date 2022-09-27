@@ -6,11 +6,11 @@ import {
   GeometryOffsetAttribute,
   Rectangle,
   VertexFormat,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/CorridorGeometry", function () {
   it("throws without positions", function () {

@@ -5,11 +5,11 @@ import {
   PixelFormat,
   Resource,
   TextureAtlas,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/TextureAtlas",

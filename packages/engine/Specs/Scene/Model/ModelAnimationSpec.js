@@ -8,7 +8,7 @@ import {
   ModelAnimation,
   ModelRuntimeNode,
   Quaternion,
-} from "../../index.js";;
+} from "../../../index.js";
 
 describe("Scene/Model/ModelAnimation", function () {
   const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;

@@ -2,7 +2,7 @@ import {
   Cartesian3,
   SteppedSpline,
   Quaternion,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/SteppedSpline", function () {
   let times;

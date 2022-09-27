@@ -12,9 +12,9 @@ import {
   SceneMode,
   ShaderProgram,
   ShaderSource,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 let scene;
 let globe;

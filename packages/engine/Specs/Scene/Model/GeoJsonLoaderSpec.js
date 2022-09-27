@@ -6,9 +6,9 @@ import {
   Resource,
   ResourceCache,
   VertexAttributeSemantic,
-} from "../../index.js";;
-import createScene from "../../createScene.js";
-import waitForLoaderProcess from "../../waitForLoaderProcess.js";
+} from "../../../index.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/Model/GeoJsonLoader",

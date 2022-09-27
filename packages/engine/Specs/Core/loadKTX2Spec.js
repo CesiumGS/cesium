@@ -4,7 +4,7 @@ import {
   PixelFormat,
   Resource,
   RuntimeError,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/loadKTX2", function () {
   it("throws with no url", function () {

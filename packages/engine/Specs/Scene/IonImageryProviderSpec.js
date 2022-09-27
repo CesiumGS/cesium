@@ -15,7 +15,7 @@ import {
   UrlTemplateImageryProvider,
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Scene/IonImageryProvider", function () {
   function createTestProvider(endpointData) {

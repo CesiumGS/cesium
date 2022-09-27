@@ -1,6 +1,6 @@
 import { BatchTexture, Color } from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/BatchTexture",

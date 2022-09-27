@@ -1,5 +1,5 @@
-import { Model } from "../../index.js";;
-import pollToPromise from "../../pollToPromise.js";
+import { Model } from "../../../index.js";
+import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
 function loadAndZoomToModel(options, scene) {
   return new Promise(function (resolve, reject) {

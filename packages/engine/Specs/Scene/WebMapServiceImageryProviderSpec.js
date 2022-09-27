@@ -21,7 +21,7 @@ import {
   TimeIntervalCollection,
   WebMapServiceImageryProvider,
   WebMercatorTilingScheme,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

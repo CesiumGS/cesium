@@ -1,4 +1,4 @@
-import { QuadraticRealPolynomial } from "../../index.js";;
+import { QuadraticRealPolynomial } from "../../index.js";
 import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/QuadraticRealPolynomial", function () {

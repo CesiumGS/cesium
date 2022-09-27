@@ -10,7 +10,7 @@ import {
   ConstantProperty,
   Entity,
   EntityCollection,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/CompositeEntityCollection", function () {
   function CollectionListener() {

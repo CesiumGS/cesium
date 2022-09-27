@@ -4,7 +4,7 @@ import {
   JulianDate,
   Matrix3,
   TimeStandard,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

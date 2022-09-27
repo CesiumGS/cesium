@@ -7,9 +7,9 @@ import {
   Simon1994PlanetaryPositions,
   Transforms,
   Moon,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/Moon",

@@ -8,8 +8,8 @@ import {
   ShaderBuilder,
   _shadersCPUStylingStageFS,
   _shadersCPUStylingStageVS,
-} from "../../index.js";;
-import ShaderBuilderTester from "../../ShaderBuilderTester.js";
+} from "../../../index.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/CPUStylingPipelineStage", function () {
   const defaultRenderResources = {

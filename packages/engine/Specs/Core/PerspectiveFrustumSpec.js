@@ -4,11 +4,11 @@ import {
   Cartesian4,
   Matrix4,
   PerspectiveFrustum,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/PerspectiveFrustum", function () {
   let frustum, planes;

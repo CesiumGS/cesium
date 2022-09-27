@@ -4,9 +4,9 @@ import {
   CornerType,
   Ellipsoid,
   PolylineVolumeOutlineGeometry,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/PolylineVolumeOutlineGeometry", function () {
   let shape;

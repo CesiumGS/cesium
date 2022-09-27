@@ -16,11 +16,11 @@ import {
   QuadtreePrimitive,
   QuadtreeTileLoadState,
   SceneMode,
-} from "../../index.js";;
-import MockTerrainProvider from "../MockTerrainProvider.js";
-import TerrainTileProcessor from "../TerrainTileProcessor.js";
+} from "../../index.js";
+import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
+import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/QuadtreePrimitive", function () {

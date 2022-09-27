@@ -13,7 +13,7 @@ import {
   RequestScheduler,
   Resource,
   WebMercatorTilingScheme,
-} from "../../index.js";;
+} from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

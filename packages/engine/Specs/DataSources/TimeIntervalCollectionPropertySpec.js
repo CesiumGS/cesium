@@ -4,7 +4,7 @@ import {
   TimeInterval,
   TimeIntervalCollection,
   TimeIntervalCollectionProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/TimeIntervalCollectionProperty", function () {
   it("default constructor has expected values", function () {

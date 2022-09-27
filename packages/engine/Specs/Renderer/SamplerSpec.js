@@ -2,9 +2,9 @@ import {
   Sampler,
   TextureMinificationFilter,
   TextureWrap,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createContext from "../../../../Specs/createContext.js";;
+import createContext from "../../../../Specs/createContext.js";
 
 describe(
   "Renderer/Sampler",

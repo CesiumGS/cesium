@@ -7,7 +7,7 @@ import {
   Cartesian4,
   defined,
   Math as CesiumMath,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/AttributeCompression", function () {
   const negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);

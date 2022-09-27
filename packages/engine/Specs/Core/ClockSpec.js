@@ -4,7 +4,7 @@ import {
   ClockStep,
   defined,
   JulianDate,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/Clock", function () {
   it("sets default parameters when constructed", function () {

@@ -4,7 +4,7 @@ import {
   Matrix3,
   Matrix4,
   Plane,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

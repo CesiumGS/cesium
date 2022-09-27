@@ -3,7 +3,7 @@ import {
   Cartographic,
   Ellipsoid,
   GeographicProjection,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

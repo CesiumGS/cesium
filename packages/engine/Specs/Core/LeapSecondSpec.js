@@ -1,4 +1,4 @@
-import { JulianDate, LeapSecond } from "../../index.js";;
+import { JulianDate, LeapSecond } from "../../index.js";
 
 describe("Core/LeapSecond", function () {
   it("default constructor sets expected values", function () {

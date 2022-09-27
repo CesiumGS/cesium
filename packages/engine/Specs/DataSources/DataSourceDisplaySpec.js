@@ -9,10 +9,10 @@ import {
   Entity,
   GroundPolylinePrimitive,
   GroundPrimitive,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
-import MockDataSource from "../MockDataSource.js";
+import createScene from "../../../../Specs/createScene.js";
+import MockDataSource from "../../../../Specs/MockDataSource.js";
 
 describe(
   "DataSources/DataSourceDisplay",

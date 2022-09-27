@@ -4,7 +4,7 @@ import {
   Ellipsoid,
   PolygonPipeline,
   WindingOrder,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

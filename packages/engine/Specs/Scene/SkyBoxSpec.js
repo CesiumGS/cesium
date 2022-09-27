@@ -1,6 +1,6 @@
-import { Resource, SceneMode, SkyBox } from "../../index.js";;
+import { Resource, SceneMode, SkyBox } from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/SkyBox",

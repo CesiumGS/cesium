@@ -8,11 +8,11 @@ import {
   Rectangle,
   RectangleGeometry,
   VertexFormat,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/RectangleGeometry", function () {
   it("computes positions", function () {

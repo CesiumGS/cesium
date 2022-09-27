@@ -17,9 +17,9 @@ import {
   BillboardCollection,
   HeightReference,
   PointPrimitiveCollection,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "DataSources/PointVisualizer",

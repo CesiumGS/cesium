@@ -3,7 +3,7 @@ import {
   HermiteSpline,
   Spline,
   Quaternion,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/Spline", function () {
   it("contructor throws", function () {

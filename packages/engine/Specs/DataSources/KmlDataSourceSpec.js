@@ -36,11 +36,11 @@ import {
   HorizontalOrigin,
   LabelStyle,
   SceneMode,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createCamera from "../createCamera.js";
+import createCamera from "../../../../Specs/createCamera.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("DataSources/KmlDataSource", function () {

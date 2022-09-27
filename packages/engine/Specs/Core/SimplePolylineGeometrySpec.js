@@ -6,11 +6,11 @@ import {
   Ellipsoid,
   PrimitiveType,
   SimplePolylineGeometry,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/SimplePolylineGeometry", function () {
   it("constructor throws with no positions", function () {

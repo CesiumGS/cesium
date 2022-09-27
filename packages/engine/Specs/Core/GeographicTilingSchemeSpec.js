@@ -5,7 +5,7 @@ import {
   GeographicTilingScheme,
   Rectangle,
   TilingScheme,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

@@ -8,8 +8,8 @@ import {
   Resource,
   ResourceCache,
 } from "../../index.js";
-import createContext from "../../../../Specs/createContext.js";;
-import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";;
+import createContext from "../../../../Specs/createContext.js";
+import dataUriToBuffer from "../../../../Specs/dataUriToBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(

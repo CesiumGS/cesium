@@ -40,9 +40,9 @@ import {
   ResourceCache,
   Transforms,
 } from "../../index.js";
-import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";;
-import generateJsonBuffer from "../generateJsonBuffer.js";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
+import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(

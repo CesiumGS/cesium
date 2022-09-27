@@ -6,9 +6,9 @@ import {
   Matrix2,
   Matrix3,
   Matrix4,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createContext from "../../../../Specs/createContext.js";;
+import createContext from "../../../../Specs/createContext.js";
 
 describe(
   "Renderer/Uniform",

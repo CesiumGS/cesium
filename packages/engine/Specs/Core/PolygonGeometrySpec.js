@@ -10,11 +10,11 @@ import {
   PolygonGeometry,
   Rectangle,
   VertexFormat,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/PolygonGeometry", function () {
   it("throws without hierarchy", function () {

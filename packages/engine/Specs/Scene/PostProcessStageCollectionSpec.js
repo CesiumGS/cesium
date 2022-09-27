@@ -2,10 +2,10 @@ import {
   PostProcessStage,
   PostProcessStageCollection,
   Tonemapper,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
-import ViewportPrimitive from "../ViewportPrimitive.js";
+import createScene from "../../../../Specs/createScene.js";
+import ViewportPrimitive from "../../../../Specs/ViewportPrimitive.js";
 
 describe(
   "Scene/PostProcessStageCollection",

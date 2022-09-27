@@ -10,7 +10,7 @@ import {
   Entity,
   EntityCollection,
   ReferenceProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/ReferenceProperty", function () {
   const time = JulianDate.now();

@@ -1,4 +1,4 @@
-import { JobScheduler, JobType } from "../../index.js";;
+import { JobScheduler, JobType } from "../../index.js";
 
 describe("Scene/JobScheduler", function () {
   let originalGetTimestamp;

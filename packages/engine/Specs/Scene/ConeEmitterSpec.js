@@ -1,4 +1,4 @@
-import { Cartesian3, ConeEmitter, Particle } from "../../index.js";;
+import { Cartesian3, ConeEmitter, Particle } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

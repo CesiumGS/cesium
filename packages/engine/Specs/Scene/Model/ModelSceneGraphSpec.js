@@ -11,8 +11,8 @@ import {
   ModelUtility,
   Pass,
   ResourceCache,
-} from "../../index.js";;
-import createScene from "../../createScene.js";
+} from "../../../index.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
 
 describe(

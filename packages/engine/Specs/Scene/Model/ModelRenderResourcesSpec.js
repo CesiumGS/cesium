@@ -2,8 +2,8 @@ import {
   DepthFunction,
   ModelRenderResources,
   RenderState,
-} from "../../index.js";;
-import ShaderBuilderTester from "../../ShaderBuilderTester.js";
+} from "../../../index.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/ModelRenderResources",

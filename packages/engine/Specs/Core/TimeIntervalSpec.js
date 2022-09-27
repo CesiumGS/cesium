@@ -1,4 +1,4 @@
-import { JulianDate, TimeInterval } from "../../index.js";;
+import { JulianDate, TimeInterval } from "../../index.js";
 
 describe("Core/TimeInterval", function () {
   function returnTrue() {

@@ -6,9 +6,9 @@ import {
   ConstantProperty,
   NodeTransformationProperty,
   TimeIntervalCollectionProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
-import testDefinitionChanged from "../testDefinitionChanged.js";
+import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 
 describe("DataSources/NodeTransformationProperty", function () {
   it("default constructor sets expected values", function () {

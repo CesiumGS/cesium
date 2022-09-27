@@ -12,9 +12,9 @@ import {
   TerrainFillMesh,
   TileBoundingRegion,
   TileSelectionResult,
-} from "../../index.js";;
-import MockTerrainProvider from "../MockTerrainProvider.js";
-import TerrainTileProcessor from "../TerrainTileProcessor.js";
+} from "../../index.js";
+import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
+import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

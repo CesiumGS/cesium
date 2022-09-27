@@ -1,7 +1,7 @@
 import { DepthPlane } from "../../index.js";
-import createCamera from "../createCamera.js";
-import createContext from "../../../../Specs/createContext.js";;
-import createFrameState from "../createFrameState.js";
+import createCamera from "../../../../Specs/createCamera.js";
+import createContext from "../../../../Specs/createContext.js";
+import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/DepthPlane", function () {
   let context;

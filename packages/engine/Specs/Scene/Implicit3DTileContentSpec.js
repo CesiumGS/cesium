@@ -22,9 +22,9 @@ import {
   TileBoundingSphere,
   TileBoundingS2Cell,
 } from "../../index.js";
-import ImplicitTilingTester from "../ImplicitTilingTester.js";
-import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";;
+import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/Implicit3DTileContent",

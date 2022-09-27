@@ -10,11 +10,11 @@ import {
   Rectangle,
   SceneMode,
   TileBoundingRegion,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createFrameState from "../createFrameState.js";
+import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/TileBoundingRegion", function () {
   const boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];

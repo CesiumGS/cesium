@@ -6,9 +6,9 @@ import {
   CheckerboardMaterialProperty,
   ConstantProperty,
   TimeIntervalCollectionProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
-import testDefinitionChanged from "../testDefinitionChanged.js";
+import testDefinitionChanged from "../../../../Specs/testDefinitionChanged.js";
 
 describe("DataSources/CheckerboardMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

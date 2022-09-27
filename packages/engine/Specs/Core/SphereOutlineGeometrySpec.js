@@ -1,6 +1,6 @@
-import { SphereOutlineGeometry } from "../../index.js";;
+import { SphereOutlineGeometry } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/SphereOutlineGeometry", function () {

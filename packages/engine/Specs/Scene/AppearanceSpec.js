@@ -3,7 +3,7 @@ import {
   Appearance,
   BlendingState,
   Material,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Scene/Appearance", function () {
   it("constructor", function () {

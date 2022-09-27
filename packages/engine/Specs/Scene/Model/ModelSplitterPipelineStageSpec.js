@@ -3,8 +3,8 @@ import {
   SplitDirection,
   ShaderBuilder,
   _shadersModelSplitterStageFS,
-} from "../../index.js";;
-import ShaderBuilderTester from "../../ShaderBuilderTester.js";
+} from "../../../index.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/ModelSplitterPipelineStage", function () {
   const mockFrameState = {};

@@ -4,7 +4,7 @@ import {
   ReferenceFrame,
   ConstantPositionProperty,
   PositionProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/ConstantPositionProperty", function () {
   const time = JulianDate.now();

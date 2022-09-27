@@ -5,7 +5,7 @@ import {
   MetadataTable,
   JsonMetadataTable,
 } from "../../index.js";
-import MetadataTester from "../MetadataTester.js";
+import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe("Scene/PropertyTable", function () {
   if (!MetadataTester.isSupported()) {

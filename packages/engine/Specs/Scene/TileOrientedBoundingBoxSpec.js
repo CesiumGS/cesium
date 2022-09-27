@@ -5,11 +5,11 @@ import {
   Matrix3,
   Plane,
   TileOrientedBoundingBox,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createFrameState from "../createFrameState.js";
+import createFrameState from "../../../../Specs/createFrameState.js";
 
 describe("Scene/TileOrientedBoundingBox", function () {
   const center = new Cartesian3(0.0, 0.0, 0.0);

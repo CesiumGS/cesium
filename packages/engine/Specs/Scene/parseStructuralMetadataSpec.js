@@ -5,8 +5,8 @@ import {
   PixelFormat,
   Texture,
 } from "../../index.js";
-import createContext from "../../../../Specs/createContext.js";;
-import MetadataTester from "../MetadataTester.js";
+import createContext from "../../../../Specs/createContext.js";
+import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe(
   "Scene/parseStructuralMetadata",

@@ -3,7 +3,7 @@ import {
   Cartesian3,
   Ellipsoid,
   EllipsoidTangentPlane,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/EllipsoidTangentPlane", function () {
   it("constructor defaults to WGS84", function () {

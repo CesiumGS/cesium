@@ -15,9 +15,9 @@ import {
   ShaderBuilder,
   _shadersPointCloudStylingStageVS,
   VertexAttributeSemantic,
-} from "../../index.js";;
-import createScene from "../../createScene.js";
-import ShaderBuilderTester from "../../ShaderBuilderTester.js";
+} from "../../../index.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/PointCloudStylingPipelineStage",

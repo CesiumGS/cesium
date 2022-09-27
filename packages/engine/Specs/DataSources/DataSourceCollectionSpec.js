@@ -1,5 +1,5 @@
 import { DataSourceCollection } from "../../index.js";
-import MockDataSource from "../MockDataSource.js";
+import MockDataSource from "../../../../Specs/MockDataSource.js";
 
 describe("DataSources/DataSourceCollection", function () {
   it("contains, get, getLength, and indexOf work", function () {

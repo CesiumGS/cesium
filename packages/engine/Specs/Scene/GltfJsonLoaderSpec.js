@@ -5,7 +5,7 @@ import {
   Resource,
   ResourceCache,
 } from "../../index.js";
-import generateJsonBuffer from "../generateJsonBuffer.js";
+import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 
 describe("Scene/GltfJsonLoader", function () {
   const gltfUri = "https://example.com/model.glb";

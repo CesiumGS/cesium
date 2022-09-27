@@ -6,7 +6,7 @@ import {
   Entity,
   EntityCollection,
   RuntimeError,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/EntityCollection", function () {
   function CollectionListener() {

@@ -4,10 +4,10 @@ import {
   Ellipsoid,
   PolylineGeometry,
   VertexFormat,
-} from "../../index.js";;
+} from "../../index.js";
 import { ArcType, defaultValue } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 import CesiumMath from "../../Source/Core/Math.js";
 
 describe("Core/PolylineGeometry", function () {

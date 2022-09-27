@@ -3,7 +3,7 @@ import {
   ShaderDestination,
   ShaderSource,
 } from "../../index.js";
-import createContext from "../../../../Specs/createContext.js";;
+import createContext from "../../../../Specs/createContext.js";
 
 describe(
   "Renderer/ShaderBuilder",

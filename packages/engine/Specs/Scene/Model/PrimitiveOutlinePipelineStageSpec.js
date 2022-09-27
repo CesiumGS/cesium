@@ -9,10 +9,10 @@ import {
   _shadersPrimitiveOutlineStageFS,
   Resource,
   ResourceCache,
-} from "../../index.js";;
-import createScene from "../../createScene.js";
-import ShaderBuilderTester from "../../ShaderBuilderTester.js";
-import waitForLoaderProcess from "../../waitForLoaderProcess.js";
+} from "../../../index.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/Model/PrimitiveOutlinePipelineStage",

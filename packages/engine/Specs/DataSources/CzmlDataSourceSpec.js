@@ -46,7 +46,7 @@ import {
   LabelStyle,
   ShadowMode,
   VerticalOrigin,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/CzmlDataSource", function () {
   function makeDocument(packet) {

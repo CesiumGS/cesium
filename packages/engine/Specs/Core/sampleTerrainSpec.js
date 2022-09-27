@@ -7,7 +7,7 @@ import {
   RequestScheduler,
   Resource,
   sampleTerrain,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/sampleTerrain", function () {
   let worldTerrain;

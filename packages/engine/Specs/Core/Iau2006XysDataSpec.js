@@ -3,7 +3,7 @@ import {
   defined,
   Iau2006XysData,
   Iau2006XysSample,
-} from "../../index.js";;
+} from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

@@ -7,9 +7,9 @@ import {
   Material,
   PolylineMaterialAppearance,
   Primitive,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/PolylineMaterialAppearance",

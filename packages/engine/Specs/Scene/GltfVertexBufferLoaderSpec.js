@@ -10,10 +10,10 @@ import {
   Resource,
   ResourceCache,
 } from "../../index.js";
-import concatTypedArrays from "../concatTypedArrays.js";
-import createScene from "../../../../Specs/createScene.js";;
-import loaderProcess from "../loaderProcess.js";
-import waitForLoaderProcess from "../waitForLoaderProcess.js";
+import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
+import createScene from "../../../../Specs/createScene.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfVertexBufferLoader",

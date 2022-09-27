@@ -19,10 +19,10 @@ import {
   PointCloudEyeDomeLighting,
   ShadowMode,
   TimeDynamicPointCloud,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createCanvas from "../../../../Specs/createCanvas.js";;
-import createScene from "../../../../Specs/createScene.js";;
+import createCanvas from "../../../../Specs/createCanvas.js";
+import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(

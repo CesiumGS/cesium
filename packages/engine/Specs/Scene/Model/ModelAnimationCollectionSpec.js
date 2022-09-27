@@ -4,11 +4,11 @@ import {
   Model,
   ResourceCache,
   Math as CesiumMath,
-} from "../../index.js";;
+} from "../../../index.js";
 
-import createScene from "../../createScene.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
-import pollToPromise from "../../pollToPromise.js";
+import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/Model/ModelAnimationCollection",

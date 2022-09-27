@@ -4,10 +4,10 @@ import {
   CallbackProperty,
   ConstantProperty,
   TerrainOffsetProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createGlobe from "../createGlobe.js";
-import createScene from "../../../../Specs/createScene.js";;
+import createGlobe from "../../../../Specs/createGlobe.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe("DataSources/TerrainOffsetProperty", function () {
   let scene;

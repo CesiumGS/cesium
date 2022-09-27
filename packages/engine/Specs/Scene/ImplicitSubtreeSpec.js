@@ -9,8 +9,8 @@ import {
   ResourceCache,
   RuntimeError,
 } from "../../index.js";
-import ImplicitTilingTester from "../ImplicitTilingTester.js";
-import MetadataTester from "../MetadataTester.js";
+import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
+import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe("Scene/ImplicitSubtree", function () {
   function availabilityToBooleanArray(availability) {

@@ -7,10 +7,10 @@ import {
   ResourceCache,
   ResourceLoaderState,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";;
-import loaderProcess from "../loaderProcess.js";
+import createScene from "../../../../Specs/createScene.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import waitForLoaderProcess from "../waitForLoaderProcess.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfDracoLoader",

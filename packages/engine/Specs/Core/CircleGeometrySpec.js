@@ -3,11 +3,11 @@ import {
   CircleGeometry,
   Ellipsoid,
   VertexFormat,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/CircleGeometry", function () {
   it("throws without a center", function () {

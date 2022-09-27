@@ -6,8 +6,8 @@ import {
   ContentMetadata,
   GroupMetadata,
 } from "../../index.js";
-import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
-import createScene from "../../../../Specs/createScene.js";;
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Scene/Tileset3DTileContent",

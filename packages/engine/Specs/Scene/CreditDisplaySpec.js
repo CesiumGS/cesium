@@ -1,4 +1,4 @@
-import { Credit, defined, CreditDisplay } from "../../index.js";;
+import { Credit, defined, CreditDisplay } from "../../index.js";
 
 import absolutize from "../../../../Specs/absolutize.js";
 

@@ -1,4 +1,4 @@
-import { IndexDatatype } from "../../index.js";;
+import { IndexDatatype } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

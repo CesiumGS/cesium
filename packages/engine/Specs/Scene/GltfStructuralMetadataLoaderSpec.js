@@ -8,10 +8,10 @@ import {
   ResourceCache,
   SupportedImageFormats,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";;
-import loaderProcess from "../loaderProcess.js";
-import MetadataTester from "../MetadataTester.js";
-import waitForLoaderProcess from "../waitForLoaderProcess.js";
+import createScene from "../../../../Specs/createScene.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
+import MetadataTester from "../../../../Specs/MetadataTester.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfStructuralMetadataLoader",

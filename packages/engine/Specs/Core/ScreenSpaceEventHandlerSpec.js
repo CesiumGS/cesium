@@ -7,9 +7,9 @@ import {
   KeyboardEventModifier,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
-} from "../../index.js";;
+} from "../../index.js";
 
-import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";;
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 
 describe("Core/ScreenSpaceEventHandler", function () {
   let usePointerEvents;

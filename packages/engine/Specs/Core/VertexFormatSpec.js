@@ -1,5 +1,5 @@
 import { VertexFormat } from "../../index.js";
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/VertexFormat", function () {
   it("clone", function () {

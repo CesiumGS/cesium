@@ -21,7 +21,7 @@ import {
   MapMode2D,
   SceneMode,
   TweenCollection,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

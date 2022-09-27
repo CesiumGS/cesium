@@ -5,7 +5,7 @@ import {
   Matrix3,
   Matrix4,
   ModelArticulation,
-} from "../../index.js";;
+} from "../../../index.js";
 
 describe("Scene/Model/ModelArticulation", function () {
   const mockSceneGraph = {};

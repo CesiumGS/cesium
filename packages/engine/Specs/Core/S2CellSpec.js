@@ -2,7 +2,7 @@ import {
   Cartesian3,
   FeatureDetection,
   S2Cell,
-} from "../../index.js";;
+} from "../../index.js";
 /* eslint-disable new-cap */
 /* eslint-disable no-undef */
 

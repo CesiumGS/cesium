@@ -8,9 +8,9 @@ import {
   DrawCommand,
   defined,
   PerspectiveFrustum,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

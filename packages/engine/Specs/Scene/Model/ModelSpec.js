@@ -38,9 +38,9 @@ import {
   StyleCommandsNeeded,
   Transforms,
   WireframeIndexGenerator,
-} from "../../index.js";;
-import createScene from "../../createScene.js";
-import pollToPromise from "../../pollToPromise.js";
+} from "../../../index.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
+import pollToPromise from "../../../../../Specs/pollToPromise.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
 
 describe(

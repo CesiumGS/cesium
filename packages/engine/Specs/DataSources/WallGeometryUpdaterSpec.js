@@ -13,12 +13,12 @@ import {
   WallGeometryUpdater,
   WallGraphics,
   PrimitiveCollection,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createDynamicGeometryUpdaterSpecs from "../createDynamicGeometryUpdaterSpecs.js";
-import createDynamicProperty from "../createDynamicProperty.js";
-import createGeometryUpdaterSpecs from "../createGeometryUpdaterSpecs.js";
-import createScene from "../../../../Specs/createScene.js";;
+import createDynamicGeometryUpdaterSpecs from "../../../../Specs/createDynamicGeometryUpdaterSpecs.js";
+import createDynamicProperty from "../../../../Specs/createDynamicProperty.js";
+import createGeometryUpdaterSpecs from "../../../../Specs/createGeometryUpdaterSpecs.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "DataSources/WallGeometryUpdater",

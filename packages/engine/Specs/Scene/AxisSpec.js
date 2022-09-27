@@ -1,4 +1,4 @@
-import { Cartesian4, Matrix4, Axis } from "../../index.js";;
+import { Cartesian4, Matrix4, Axis } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

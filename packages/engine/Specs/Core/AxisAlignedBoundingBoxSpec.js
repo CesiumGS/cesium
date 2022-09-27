@@ -3,7 +3,7 @@ import {
   Cartesian3,
   Intersect,
   Plane,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/AxisAlignedBoundingBox", function () {
   const positions = [

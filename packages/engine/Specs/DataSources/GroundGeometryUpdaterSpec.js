@@ -3,7 +3,7 @@ import {
   GeometryOffsetAttribute,
   GroundGeometryUpdater,
   HeightReference,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/GroundGeometryUpdater", function () {
   beforeAll(function () {

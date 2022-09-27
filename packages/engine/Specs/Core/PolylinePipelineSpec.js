@@ -3,7 +3,7 @@ import {
   Ellipsoid,
   PolylinePipeline,
   Transforms,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

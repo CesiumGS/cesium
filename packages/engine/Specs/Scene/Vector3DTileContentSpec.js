@@ -1,5 +1,5 @@
-import createScene from "../../../../Specs/createScene.js";;
-import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import {
   Cartesian3,
   Cesium3DTileFeature,

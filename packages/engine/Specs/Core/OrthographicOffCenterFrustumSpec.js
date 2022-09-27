@@ -4,7 +4,7 @@ import {
   Cartesian4,
   Matrix4,
   OrthographicOffCenterFrustum,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

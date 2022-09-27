@@ -3,10 +3,10 @@ import {
   computeFlyToLocationForRectangle,
   Globe,
   SceneMode,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
-import MockTerrainProvider from "../MockTerrainProvider.js";
+import createScene from "../../../../Specs/createScene.js";
+import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
 
 describe("Scene/computeFlyToLocationForRectangle", function () {
   let scene;

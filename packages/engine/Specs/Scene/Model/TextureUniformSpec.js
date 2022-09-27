@@ -7,7 +7,7 @@ import {
   TextureMinificationFilter,
   TextureUniform,
   TextureWrap,
-} from "../../index.js";;
+} from "../../../index.js";
 
 describe("Scene/Model/TextureUniform", function () {
   const exampleUrl = "https://example.com/url";

@@ -5,7 +5,7 @@ import {
   KmlCamera,
   KmlLookAt,
   KmlTourFlyTo,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

@@ -5,7 +5,7 @@ import {
   Occluder,
   Rectangle,
   Visibility,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

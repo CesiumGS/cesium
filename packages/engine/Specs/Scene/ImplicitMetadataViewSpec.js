@@ -8,7 +8,7 @@ import {
   MetadataSchema,
   Resource,
 } from "../../index.js";
-import ImplicitTilingTester from "../ImplicitTilingTester.js";
+import ImplicitTilingTester from "../../../../Specs/ImplicitTilingTester.js";
 
 describe("Scene/ImplicitMetadataView", function () {
   const highlightColors = [

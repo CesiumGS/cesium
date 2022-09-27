@@ -5,7 +5,7 @@ import {
   PrimitiveType,
   VertexFormat,
   createTangentSpaceDebugPrimitive,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Scene/createTangentSpaceDebugPrimitive", function () {
   it("computes all attributes", function () {

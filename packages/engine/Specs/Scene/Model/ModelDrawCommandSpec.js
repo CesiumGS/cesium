@@ -24,7 +24,7 @@ import {
   StyleCommandsNeeded,
   Transforms,
   WebGLConstants,
-} from "../../index.js";;
+} from "../../../index.js";
 
 describe(
   "Scene/Model/ModelDrawCommand",

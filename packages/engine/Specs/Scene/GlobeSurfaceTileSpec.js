@@ -12,12 +12,12 @@ import {
   QuadtreeTileLoadState,
   TerrainState,
   TileProviderError,
-} from "../../index.js";;
-import MockImageryProvider from "../MockImageryProvider.js";
-import MockTerrainProvider from "../MockTerrainProvider.js";
-import TerrainTileProcessor from "../TerrainTileProcessor.js";
+} from "../../index.js";
+import MockImageryProvider from "../../../../Specs/MockImageryProvider.js";
+import MockTerrainProvider from "../../../../Specs/MockTerrainProvider.js";
+import TerrainTileProcessor from "../../../../Specs/TerrainTileProcessor.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/GlobeSurfaceTile", function () {
   let frameState;

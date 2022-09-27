@@ -3,9 +3,9 @@ import {
   BoxOutlineGeometry,
   Cartesian3,
   GeometryOffsetAttribute,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/BoxOutlineGeometry", function () {
   it("constructor throws without maximum corner", function () {

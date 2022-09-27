@@ -18,7 +18,7 @@ import {
   TimeIntervalCollection,
   WebMapTileServiceImageryProvider,
   WebMercatorTilingScheme,
-} from "../../index.js";;
+} from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

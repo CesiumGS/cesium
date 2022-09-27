@@ -9,7 +9,7 @@ import {
   HorizontalOrigin,
   LabelStyle,
   VerticalOrigin,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/LabelGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

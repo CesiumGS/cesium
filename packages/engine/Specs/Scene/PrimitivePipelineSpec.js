@@ -8,7 +8,7 @@ import {
   GeometryAttributes,
   PrimitiveType,
   PrimitivePipeline,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe(
   "Scene/PrimitivePipeline",

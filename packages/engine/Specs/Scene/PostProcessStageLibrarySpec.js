@@ -4,12 +4,12 @@ import {
   HeadingPitchRange,
   Transforms,
   PostProcessStageLibrary,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createCanvas from "../../../../Specs/createCanvas.js";;
-import createScene from "../../../../Specs/createScene.js";;
+import createCanvas from "../../../../Specs/createCanvas.js";
+import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import ViewportPrimitive from "../ViewportPrimitive.js";
+import ViewportPrimitive from "../../../../Specs/ViewportPrimitive.js";
 import loadAndZoomToModel from "./Model/loadAndZoomToModel.js";
 
 describe(

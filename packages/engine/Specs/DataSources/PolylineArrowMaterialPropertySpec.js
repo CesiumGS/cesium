@@ -5,7 +5,7 @@ import {
   ConstantProperty,
   PolylineArrowMaterialProperty,
   TimeIntervalCollectionProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/PolylineArrowMaterialProperty", function () {
   it("constructor provides the expected defaults", function () {

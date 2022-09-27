@@ -2,7 +2,7 @@ import {
   FeatureDetection,
   TaskProcessor,
   RuntimeError,
-} from "../../index.js";;
+} from "../../index.js";
 
 import absolutize from "../../../../Specs/absolutize.js";
 

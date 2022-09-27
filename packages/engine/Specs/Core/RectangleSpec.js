@@ -3,11 +3,11 @@ import {
   Cartographic,
   Ellipsoid,
   Rectangle,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/Rectangle", function () {
   const west = -0.9;

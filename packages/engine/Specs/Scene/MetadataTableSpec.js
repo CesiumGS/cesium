@@ -1,5 +1,5 @@
 import { Cartesian3, MetadataTable } from "../../index.js";
-import MetadataTester from "../MetadataTester.js";
+import MetadataTester from "../../../../Specs/MetadataTester.js";
 
 describe("Scene/MetadataTable", function () {
   if (!MetadataTester.isSupported()) {

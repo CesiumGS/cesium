@@ -5,10 +5,10 @@ import {
   KeyboardEventModifier,
   CameraEventAggregator,
   CameraEventType,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createCanvas from "../../../../Specs/createCanvas.js";;
-import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";;
+import createCanvas from "../../../../Specs/createCanvas.js";
+import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 
 describe("Scene/CameraEventAggregator", function () {
   let usePointerEvents;

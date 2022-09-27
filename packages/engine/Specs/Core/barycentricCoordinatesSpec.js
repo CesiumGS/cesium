@@ -1,4 +1,4 @@
-import { barycentricCoordinates, Cartesian3 } from "../../index.js";;
+import { barycentricCoordinates, Cartesian3 } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

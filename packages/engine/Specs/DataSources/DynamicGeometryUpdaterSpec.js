@@ -3,9 +3,9 @@ import {
   Entity,
   GeometryUpdater,
   PrimitiveCollection,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe("DataSources/DynamicGeometryUpdater", function () {
   let scene;

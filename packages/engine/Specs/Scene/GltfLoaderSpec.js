@@ -37,11 +37,11 @@ import {
   VertexAttributeSemantic,
   Quaternion,
 } from "../../index.js";
-import createScene from "../../../../Specs/createScene.js";;
-import generateJsonBuffer from "../generateJsonBuffer.js";
-import loaderProcess from "../loaderProcess.js";
+import createScene from "../../../../Specs/createScene.js";
+import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
+import loaderProcess from "../../../../Specs/loaderProcess.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import waitForLoaderProcess from "../waitForLoaderProcess.js";
+import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
   "Scene/GltfLoader",

@@ -5,7 +5,7 @@ import {
   ConstantPositionProperty,
   PositionPropertyArray,
   SampledPositionProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/PositionPropertyArray", function () {
   const time = JulianDate.now();

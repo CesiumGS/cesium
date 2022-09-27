@@ -1,9 +1,9 @@
 import {
   EllipsoidTerrainProvider,
   TerrainProvider,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createContext from "../../../../Specs/createContext.js";;
+import createContext from "../../../../Specs/createContext.js";
 
 describe(
   "Core/EllipsoidTerrainProvider",

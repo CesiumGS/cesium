@@ -5,9 +5,9 @@ import {
   GeographicProjection,
   Intersect,
   Rectangle,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";;
+import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
 describe("Core/BoundingRectangle", function () {
   it("default constructor sets expected values", function () {

@@ -4,7 +4,7 @@ import {
   WebMercatorTilingScheme,
   GridImageryProvider,
   ImageryProvider,
-} from "../../index.js";;
+} from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

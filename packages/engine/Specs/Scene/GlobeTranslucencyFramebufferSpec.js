@@ -5,9 +5,9 @@ import {
   PassState,
   PixelDatatype,
   Texture,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/GlobeTranslucencyFramebuffer", function () {
   let scene;

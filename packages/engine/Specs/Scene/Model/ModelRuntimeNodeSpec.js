@@ -9,7 +9,7 @@ import {
   ModelMatrixUpdateStage,
   NodeStatisticsPipelineStage,
   Quaternion,
-} from "../../index.js";;
+} from "../../../index.js";
 
 describe("Scene/Model/ModelRuntimeNode", function () {
   const mockNode = {

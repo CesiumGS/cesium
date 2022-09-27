@@ -4,7 +4,7 @@ import {
   ColorMaterialProperty,
   createMaterialPropertyDescriptor,
   ImageMaterialProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/createMaterialPropertyDescriptor", function () {
   function MockGraphics() {

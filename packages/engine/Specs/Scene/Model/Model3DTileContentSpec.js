@@ -30,10 +30,10 @@ import {
   RuntimeError,
   StencilConstants,
   Transforms,
-} from "../../index.js";;
-import Cesium3DTilesTester from "../../Cesium3DTilesTester.js";
-import createScene from "../../createScene.js";
-import createCanvas from "../../createCanvas.js";
+} from "../../../index.js";
+import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
+import createCanvas from "../../../../../Specs/createCanvas.js";
 
 describe(
   "Scene/Model/Model3DTileContent",

@@ -1,4 +1,4 @@
-import { HeadingPitchRoll, Quaternion } from "../../index.js";;
+import { HeadingPitchRoll, Quaternion } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

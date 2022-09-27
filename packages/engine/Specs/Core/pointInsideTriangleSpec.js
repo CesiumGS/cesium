@@ -1,4 +1,4 @@
-import { Cartesian2, pointInsideTriangle } from "../../index.js";;
+import { Cartesian2, pointInsideTriangle } from "../../index.js";
 
 describe("Core/pointInsideTriangle", function () {
   it("pointInsideTriangle has point inside", function () {

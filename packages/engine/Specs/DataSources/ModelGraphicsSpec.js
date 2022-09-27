@@ -14,7 +14,7 @@ import {
   ColorBlendMode,
   HeightReference,
   ShadowMode,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/ModelGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

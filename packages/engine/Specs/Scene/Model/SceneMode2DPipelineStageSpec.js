@@ -11,10 +11,10 @@ import {
   SceneMode2DPipelineStage,
   ShaderBuilder,
   VertexAttributeSemantic,
-} from "../../index.js";;
-import createScene from "../../createScene.js";
-import waitForLoaderProcess from "../../waitForLoaderProcess.js";
-import ShaderBuilderTester from "../../ShaderBuilderTester.js";
+} from "../../../index.js";
+import createScene from "../../../../../Specs/BadGeometry.js";
+import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
+import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe(
   "Scene/Model/SceneMode2DPipelineStage",

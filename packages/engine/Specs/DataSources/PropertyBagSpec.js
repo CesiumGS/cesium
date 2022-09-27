@@ -3,7 +3,7 @@ import {
   ConstantProperty,
   PropertyBag,
   SampledProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/PropertyBag", function () {
   const time = JulianDate.now();

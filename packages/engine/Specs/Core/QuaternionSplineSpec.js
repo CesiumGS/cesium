@@ -2,7 +2,7 @@ import {
   Cartesian3,
   Quaternion,
   QuaternionSpline,
-} from "../../index.js";;
+} from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

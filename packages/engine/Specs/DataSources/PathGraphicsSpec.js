@@ -4,7 +4,7 @@ import {
   ColorMaterialProperty,
   ConstantProperty,
   PathGraphics,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/PathGraphics", function () {
   it("creates expected instance from raw assignment and construction", function () {

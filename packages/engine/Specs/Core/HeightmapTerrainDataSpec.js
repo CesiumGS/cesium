@@ -4,7 +4,7 @@ import {
   HeightmapEncoding,
   HeightmapTerrainData,
   TerrainData,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("Core/HeightmapTerrainData", function () {
   it("conforms to TerrainData interface", function () {

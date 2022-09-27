@@ -1,4 +1,4 @@
-import { CubicRealPolynomial } from "../../index.js";;
+import { CubicRealPolynomial } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

@@ -3,8 +3,8 @@ import {
   ModelType,
   ModelFeatureTable,
   ModelFeature,
-} from "../../index.js";;
-import MetadataTester from "../../MetadataTester.js";
+} from "../../../index.js";
+import MetadataTester from "../../../../../Specs/MetadataTester.js";
 
 describe("Scene/Model/ModelFeatureTable", function () {
   let mockPropertyTable;

@@ -7,7 +7,7 @@ import {
   CompositePositionProperty,
   ConstantPositionProperty,
   PositionProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/CompositePositionProperty", function () {
   it("default constructor has expected values", function () {

@@ -3,7 +3,7 @@ import {
   CustomDataSource,
   DataSourceClock,
   EntityCollection,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/CustomDataSource", function () {
   it("constructor has expected defaults", function () {

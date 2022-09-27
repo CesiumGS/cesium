@@ -15,7 +15,7 @@ import {
   StencilConstants,
   StencilFunction,
   StencilOperation,
-} from "../../index.js";;
+} from "../../../index.js";
 
 describe(
   "Scene/Model/ClassificationModelDrawCommand",

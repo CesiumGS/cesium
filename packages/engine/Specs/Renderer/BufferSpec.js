@@ -1,6 +1,6 @@
-import { IndexDatatype, Buffer, BufferUsage } from "../../index.js";;
+import { IndexDatatype, Buffer, BufferUsage } from "../../index.js";
 
-import createContext from "../../../../Specs/createContext.js";;
+import createContext from "../../../../Specs/createContext.js";
 
 describe(
   "Renderer/Buffer",

@@ -6,9 +6,9 @@ import {
   ConstantPositionProperty,
   Entity,
   EntityView,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createScene from "../../../../Specs/createScene.js";;
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "DataSources/EntityView",

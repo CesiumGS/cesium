@@ -9,7 +9,7 @@ import {
   ImageryLayer,
   ImageryState,
   UrlTemplateImageryProvider,
-} from "../../index.js";;
+} from "../../index.js";
 import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";

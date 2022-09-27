@@ -2,7 +2,7 @@ import {
   Color,
   EasingFunction,
   TweenCollection,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe(
   "Scene/TweenCollection",

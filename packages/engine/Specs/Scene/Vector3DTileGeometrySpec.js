@@ -20,10 +20,10 @@ import {
   Primitive,
   StencilConstants,
   Vector3DTileGeometry,
-} from "../../index.js";;
+} from "../../index.js";
 
-import createContext from "../../../../Specs/createContext.js";;
-import createScene from "../../../../Specs/createScene.js";;
+import createContext from "../../../../Specs/createContext.js";
+import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(

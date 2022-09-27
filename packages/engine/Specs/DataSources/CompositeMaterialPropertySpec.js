@@ -6,7 +6,7 @@ import {
   ColorMaterialProperty,
   CompositeMaterialProperty,
   GridMaterialProperty,
-} from "../../index.js";;
+} from "../../index.js";
 
 describe("DataSources/CompositeMaterialProperty", function () {
   it("default constructor has expected values", function () {
