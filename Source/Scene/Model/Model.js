@@ -1901,18 +1901,18 @@ function updateSkipLevelOfDetail(model, frameState) {
 }
 
 function updateClippingPlanes(model, frameState) {
-  // Update the clipping planes collection for this model to detect any changes.
+  // Update the clipping planes collection / state for this model to detect any changes.
+  let currentClippingPlanesState = 0;
   if (model.isClippingEnabled()) {
     if (model._clippingPlanes.owner === model) {
       model._clippingPlanes.update(frameState);
     }
+    currentClippingPlanesState = model._clippingPlanes.clippingPlanesState;
+  }
 
-    const currentClippingPlanesState =
-      model._clippingPlanes.clippingPlanesState;
-    if (currentClippingPlanesState !== model._clippingPlanesState) {
-      model.resetDrawCommands();
-      model._clippingPlanesState = currentClippingPlanesState;
-    }
+  if (currentClippingPlanesState !== model._clippingPlanesState) {
+    model.resetDrawCommands();
+    model._clippingPlanesState = currentClippingPlanesState;
   }
 }
 
