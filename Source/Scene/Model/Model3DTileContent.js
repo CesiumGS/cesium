@@ -240,6 +240,7 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
     model._clippingPlanes !== tilesetClippingPlanes
   ) {
     model._clippingPlanes = tilesetClippingPlanes;
+    model._clippingPlanesState = 0;
   }
 
   model.update(frameState);
