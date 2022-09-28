@@ -3839,7 +3839,7 @@ describe(
         });
       });
 
-      it("add clipping planes collection same length twice works", function () {
+      it("replacing clipping planes with another collection works", function () {
         const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [plane],
