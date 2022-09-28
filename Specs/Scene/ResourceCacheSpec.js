@@ -247,6 +247,18 @@ describe(
       ],
     };
 
+    const mockFrameState = {
+      context: {
+        id: "01234",
+      },
+    };
+
+    const mockFrameState2 = {
+      context: {
+        id: "56789",
+      },
+    };
+
     let scene;
 
     beforeAll(function () {
@@ -850,6 +862,7 @@ describe(
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
         loadBuffer: true,
       });
@@ -857,6 +870,7 @@ describe(
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
         accessorId: 0,
         loadBuffer: true,
@@ -872,6 +886,7 @@ describe(
           gltf: gltfUncompressed,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           bufferViewId: 0,
           loadBuffer: true,
         })
@@ -906,6 +921,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         loadBuffer: true,
@@ -914,6 +930,7 @@ describe(
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         draco: dracoExtension,
         attributeSemantic: "POSITION",
         accessorId: 0,
@@ -930,6 +947,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: 0,
@@ -962,6 +980,7 @@ describe(
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
         loadTypedArray: true,
       });
@@ -969,6 +988,7 @@ describe(
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
         accessorId: 0,
         loadTypedArray: true,
@@ -1000,6 +1020,7 @@ describe(
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
         loadBuffer: true,
         loadTypedArray: true,
@@ -1008,6 +1029,7 @@ describe(
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
         accessorId: 0,
         loadBuffer: true,
@@ -1032,12 +1054,54 @@ describe(
       });
     });
 
+    it("loads vertex buffer on different contexts", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(bufferArrayBuffer)
+      );
+
+      const vertexBufferLoader1 = ResourceCache.loadVertexBuffer({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState,
+        bufferViewId: 0,
+        accessorId: 0,
+        loadBuffer: true,
+      });
+
+      const vertexBufferLoader2 = ResourceCache.loadVertexBuffer({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState2,
+        bufferViewId: 0,
+        accessorId: 0,
+        loadBuffer: true,
+      });
+
+      const promises = [
+        waitForLoaderProcess(vertexBufferLoader1, scene),
+        waitForLoaderProcess(vertexBufferLoader2, scene),
+      ];
+
+      return Promise.all(promises).then(function (vertexBufferLoaders) {
+        const vertexBuffer1 = vertexBufferLoaders[0];
+        const vertexBuffer2 = vertexBufferLoaders[1];
+
+        expect(vertexBuffer1).toBeDefined();
+        expect(vertexBuffer2).toBeDefined();
+
+        expect(vertexBuffer1).not.toBe(vertexBuffer2);
+      });
+    });
+
     it("loadVertexBuffer throws if gltf is undefined", function () {
       expect(function () {
         ResourceCache.loadVertexBuffer({
           gltf: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           bufferViewId: 0,
           loadBuffer: true,
         });
@@ -1050,6 +1114,7 @@ describe(
           gltf: gltfUncompressed,
           gltfResource: undefined,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           bufferViewId: 0,
           loadBuffer: true,
         });
@@ -1062,6 +1127,20 @@ describe(
           gltf: gltfUncompressed,
           gltfResource: gltfResource,
           baseResource: undefined,
+          frameState: mockFrameState,
+          bufferViewId: 0,
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("loadVertexBuffer throws if frameState is undefined", function () {
+      expect(function () {
+        ResourceCache.loadVertexBuffer({
+          gltf: gltfUncompressed,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          frameState: undefined,
           bufferViewId: 0,
           loadBuffer: true,
         });
@@ -1074,6 +1153,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           bufferViewId: 0,
           draco: dracoExtension,
           attributeSemantic: "POSITION",
@@ -1089,6 +1169,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           loadBuffer: true,
         });
       }).toThrowDeveloperError();
@@ -1100,6 +1181,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           draco: dracoExtension,
           attributeSemantic: undefined,
           accessorId: 0,
@@ -1114,6 +1196,7 @@ describe(
           gltf: gltfDraco,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           draco: dracoExtension,
           attributeSemantic: "POSITION",
           accessorId: undefined,
@@ -1128,6 +1211,7 @@ describe(
           gltf: gltfUncompressed,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           bufferViewId: 0,
           loadBuffer: false,
           loadTypedArray: false,
@@ -1145,6 +1229,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         loadBuffer: true,
       });
       const indexBufferLoader = ResourceCache.loadIndexBuffer({
@@ -1152,6 +1237,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         loadBuffer: true,
       });
 
@@ -1166,6 +1252,7 @@ describe(
           accessorId: 2,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           loadBuffer: true,
         })
       ).toBe(indexBufferLoader);
@@ -1198,6 +1285,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         draco: dracoExtension,
         loadBuffer: true,
       });
@@ -1206,6 +1294,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         draco: dracoExtension,
         loadBuffer: true,
       });
@@ -1221,6 +1310,7 @@ describe(
           accessorId: 2,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           draco: dracoExtension,
           loadBuffer: true,
         })
@@ -1252,6 +1342,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         loadTypedArray: true,
       });
       const indexBufferLoader = ResourceCache.loadIndexBuffer({
@@ -1259,6 +1350,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         loadTypedArray: true,
       });
 
@@ -1289,6 +1381,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         loadBuffer: true,
         loadTypedArray: true,
       });
@@ -1297,6 +1390,7 @@ describe(
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         loadBuffer: true,
         loadTypedArray: true,
       });
@@ -1319,6 +1413,45 @@ describe(
       });
     });
 
+    it("loads index buffer on different contexts", function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(bufferArrayBuffer)
+      );
+
+      const indexBufferLoader1 = ResourceCache.loadIndexBuffer({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState,
+        loadBuffer: true,
+      });
+
+      const indexBufferLoader2 = ResourceCache.loadIndexBuffer({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState2,
+        loadBuffer: true,
+      });
+
+      const promises = [
+        waitForLoaderProcess(indexBufferLoader1, scene),
+        waitForLoaderProcess(indexBufferLoader2, scene),
+      ];
+
+      return Promise.all(promises).then(function (indexBufferLoaders) {
+        const indexBuffer1 = indexBufferLoaders[0];
+        const indexBuffer2 = indexBufferLoaders[1];
+
+        expect(indexBuffer1).toBeDefined();
+        expect(indexBuffer2).toBeDefined();
+
+        expect(indexBuffer1).not.toBe(indexBuffer2);
+      });
+    });
+
     it("loadIndexBuffer throws if gltf is undefined", function () {
       expect(function () {
         ResourceCache.loadIndexBuffer({
@@ -1326,6 +1459,7 @@ describe(
           accessorId: 2,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           loadBuffer: true,
         });
       }).toThrowDeveloperError();
@@ -1338,6 +1472,7 @@ describe(
           accessorId: undefined,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           loadBuffer: true,
         });
       }).toThrowDeveloperError();
@@ -1350,6 +1485,7 @@ describe(
           accessorId: 2,
           gltfResource: undefined,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           loadBuffer: true,
         });
       }).toThrowDeveloperError();
@@ -1362,6 +1498,20 @@ describe(
           accessorId: 2,
           gltfResource: gltfResource,
           baseResource: undefined,
+          frameState: mockFrameState,
+          loadBuffer: true,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("loadIndexBuffer throws if frameState is undefined", function () {
+      expect(function () {
+        ResourceCache.loadIndexBuffer({
+          gltf: gltfUncompressed,
+          accessorId: 2,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          frameState: undefined,
           loadBuffer: true,
         });
       }).toThrowDeveloperError();
@@ -1374,6 +1524,7 @@ describe(
           accessorId: 2,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           loadBuffer: false,
           loadTypedArray: false,
         });
@@ -1473,12 +1624,14 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
       const textureLoader = ResourceCache.loadTexture({
         gltf: gltfWithTextures,
         textureInfo: gltfWithTextures.materials[0].emissiveTexture,
         gltfResource: gltfResource,
         baseResource: gltfResource,
+        frameState: mockFrameState,
         supportedImageFormats: new SupportedImageFormats(),
       });
       const cacheEntry = ResourceCache.cacheEntries[expectedCacheKey];
@@ -1492,6 +1645,7 @@ describe(
           textureInfo: gltfWithTextures.materials[0].emissiveTexture,
           gltfResource: gltfResource,
           baseResource: gltfResource,
+          frameState: mockFrameState,
           supportedImageFormats: new SupportedImageFormats(),
         })
       ).toBe(textureLoader);
@@ -1512,6 +1666,45 @@ describe(
       });
     });
 
+    it("loads texture on different contexts", function () {
+      spyOn(Resource.prototype, "fetchImage").and.returnValue(
+        Promise.resolve(image)
+      );
+
+      const textureLoader1 = ResourceCache.loadTexture({
+        gltf: gltfWithTextures,
+        textureInfo: gltfWithTextures.materials[0].emissiveTexture,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState,
+        supportedImageFormats: new SupportedImageFormats(),
+      });
+
+      const textureLoader2 = ResourceCache.loadTexture({
+        gltf: gltfWithTextures,
+        textureInfo: gltfWithTextures.materials[0].emissiveTexture,
+        gltfResource: gltfResource,
+        baseResource: gltfResource,
+        frameState: mockFrameState2,
+        supportedImageFormats: new SupportedImageFormats(),
+      });
+
+      const promises = [
+        waitForLoaderProcess(textureLoader1, scene),
+        waitForLoaderProcess(textureLoader2, scene),
+      ];
+
+      return Promise.all(promises).then(function (textureLoaders) {
+        const texture1 = textureLoaders[0];
+        const texture2 = textureLoaders[1];
+
+        expect(texture1).toBeDefined();
+        expect(texture2).toBeDefined();
+
+        expect(texture1).not.toBe(texture2);
+      });
+    });
+
     it("loadTexture throws if gltf is undefined", function () {
       expect(function () {
         ResourceCache.loadTexture({
@@ -1520,6 +1713,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
+          frameState: mockFrameState,
         });
       }).toThrowDeveloperError();
     });
@@ -1532,6 +1726,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
+          frameState: mockFrameState,
         });
       }).toThrowDeveloperError();
     });
@@ -1544,6 +1739,7 @@ describe(
           gltfResource: undefined,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
+          frameState: mockFrameState,
         });
       }).toThrowDeveloperError();
     });
@@ -1556,6 +1752,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: undefined,
           supportedImageFormats: new SupportedImageFormats(),
+          frameState: mockFrameState,
         });
       }).toThrowDeveloperError();
     });
@@ -1568,6 +1765,20 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: undefined,
+          frameState: mockFrameState,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("loadTexture throws if frameState is undefined", function () {
+      expect(function () {
+        ResourceCache.loadTexture({
+          gltf: gltfWithTextures,
+          textureInfo: gltfWithTextures.materials[0].emissiveTexture,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          supportedImageFormats: new SupportedImageFormats(),
+          frameState: undefined,
         });
       }).toThrowDeveloperError();
     });

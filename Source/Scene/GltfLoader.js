@@ -572,7 +572,8 @@ function loadVertexBuffer(
   semantic,
   draco,
   loadBuffer,
-  loadTypedArray
+  loadTypedArray,
+  frameState
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
@@ -581,6 +582,7 @@ function loadVertexBuffer(
     gltf: gltf,
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
+    frameState: frameState,
     bufferViewId: bufferViewId,
     draco: draco,
     attributeSemantic: semantic,
@@ -601,13 +603,15 @@ function loadIndexBuffer(
   accessorId,
   draco,
   loadBuffer,
-  loadTypedArray
+  loadTypedArray,
+  frameState
 ) {
   const indexBufferLoader = ResourceCache.loadIndexBuffer({
     gltf: gltf,
     accessorId: accessorId,
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
+    frameState: frameState,
     draco: draco,
     asynchronous: loader._asynchronous,
     loadBuffer: loadBuffer,
@@ -1030,7 +1034,8 @@ function loadAttribute(
   semanticInfo,
   draco,
   loadBuffer,
-  loadTypedArray
+  loadTypedArray,
+  frameState
 ) {
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
@@ -1064,7 +1069,8 @@ function loadAttribute(
     gltfSemantic,
     draco,
     loadBuffer,
-    loadTypedArray
+    loadTypedArray,
+    frameState
   );
   const promise = vertexBufferLoader.promise.then(function (
     vertexBufferLoader
@@ -1152,7 +1158,8 @@ function loadVertexAttribute(
     semanticInfo,
     draco,
     loadBuffer,
-    loadTypedArray
+    loadTypedArray,
+    frameState
   );
 
   const attributePlan = new PrimitiveLoadPlan.AttributeLoadPlan(attribute);
@@ -1221,7 +1228,8 @@ function loadInstancedAttribute(
     semanticInfo,
     undefined,
     loadBuffer,
-    loadTypedArray
+    loadTypedArray,
+    frameState
   );
 }
 
@@ -1274,7 +1282,8 @@ function loadIndices(
     accessorId,
     draco,
     loadBuffer,
-    loadTypedArray
+    loadTypedArray,
+    frameState
   );
 
   const promise = indexBufferLoader.promise.then(function (indexBufferLoader) {
@@ -1302,6 +1311,7 @@ function loadTexture(
   gltf,
   textureInfo,
   supportedImageFormats,
+  frameState,
   samplerOverride
 ) {
   const imageId = GltfLoaderUtil.getImageIdFromTexture({
@@ -1320,6 +1330,7 @@ function loadTexture(
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
     supportedImageFormats: supportedImageFormats,
+    frameState: frameState,
     asynchronous: loader._asynchronous,
   });
 
@@ -1344,7 +1355,13 @@ function loadTexture(
   return textureReader;
 }
 
-function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
+function loadMaterial(
+  loader,
+  gltf,
+  gltfMaterial,
+  supportedImageFormats,
+  frameState
+) {
   const material = new Material();
 
   const extensions = defaultValue(
@@ -1365,7 +1382,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
         loader,
         gltf,
         pbrSpecularGlossiness.diffuseTexture,
-        supportedImageFormats
+        supportedImageFormats,
+        frameState
       );
     }
     if (defined(pbrSpecularGlossiness.specularGlossinessTexture)) {
@@ -1374,7 +1392,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
           loader,
           gltf,
           pbrSpecularGlossiness.specularGlossinessTexture,
-          supportedImageFormats
+          supportedImageFormats,
+          frameState
         );
       }
     }
@@ -1397,7 +1416,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
         loader,
         gltf,
         pbrMetallicRoughness.baseColorTexture,
-        supportedImageFormats
+        supportedImageFormats,
+        frameState
       );
     }
     if (defined(pbrMetallicRoughness.metallicRoughnessTexture)) {
@@ -1405,7 +1425,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
         loader,
         gltf,
         pbrMetallicRoughness.metallicRoughnessTexture,
-        supportedImageFormats
+        supportedImageFormats,
+        frameState
       );
     }
     metallicRoughness.baseColorFactor = fromArray(
@@ -1423,7 +1444,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
       loader,
       gltf,
       gltfMaterial.emissiveTexture,
-      supportedImageFormats
+      supportedImageFormats,
+      frameState
     );
   }
   // Normals aren't used for classification, so don't load the normal texture.
@@ -1432,7 +1454,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
       loader,
       gltf,
       gltfMaterial.normalTexture,
-      supportedImageFormats
+      supportedImageFormats,
+      frameState
     );
   }
   if (defined(gltfMaterial.occlusionTexture)) {
@@ -1440,7 +1463,8 @@ function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
       loader,
       gltf,
       gltfMaterial.occlusionTexture,
-      supportedImageFormats
+      supportedImageFormats,
+      frameState
     );
   }
   material.emissiveFactor = fromArray(Cartesian3, gltfMaterial.emissiveFactor);
@@ -1522,6 +1546,7 @@ function loadFeatureIdTexture(
   gltf,
   gltfFeatureIdTexture,
   supportedImageFormats,
+  frameState,
   positionalLabel
 ) {
   const featureIdTexture = new FeatureIdTexture();
@@ -1538,6 +1563,7 @@ function loadFeatureIdTexture(
     gltf,
     textureInfo,
     supportedImageFormats,
+    frameState,
     Sampler.NEAREST // Feature ID textures require nearest sampling
   );
 
@@ -1562,6 +1588,7 @@ function loadFeatureIdTextureLegacy(
   gltfFeatureIdTexture,
   featureTableId,
   supportedImageFormats,
+  frameState,
   featureCount,
   positionalLabel
 ) {
@@ -1575,6 +1602,7 @@ function loadFeatureIdTextureLegacy(
     gltf,
     textureInfo,
     supportedImageFormats,
+    frameState,
     Sampler.NEAREST // Feature ID textures require nearest sampling
   );
 
@@ -1647,7 +1675,8 @@ function loadPrimitive(
       loader,
       gltf,
       gltf.materials[materialId],
-      supportedImageFormats
+      supportedImageFormats,
+      frameState
     );
   }
 
@@ -1765,7 +1794,8 @@ function loadPrimitive(
       gltf,
       primitive,
       meshFeatures,
-      supportedImageFormats
+      supportedImageFormats,
+      frameState
     );
   } else if (hasFeatureMetadataLegacy) {
     loadPrimitiveFeaturesLegacy(
@@ -1773,7 +1803,8 @@ function loadPrimitive(
       gltf,
       primitive,
       featureMetadataLegacy,
-      supportedImageFormats
+      supportedImageFormats,
+      frameState
     );
   }
 
@@ -1807,7 +1838,8 @@ function loadPrimitiveFeatures(
   gltf,
   primitive,
   meshFeaturesExtension,
-  supportedImageFormats
+  supportedImageFormats,
+  frameState
 ) {
   let featureIdsArray;
   if (
@@ -1830,6 +1862,7 @@ function loadPrimitiveFeatures(
         gltf,
         featureIds,
         supportedImageFormats,
+        frameState,
         label
       );
     } else if (defined(featureIds.attribute)) {
@@ -1850,7 +1883,8 @@ function loadPrimitiveFeaturesLegacy(
   gltf,
   primitive,
   metadataExtension,
-  supportedImageFormats
+  supportedImageFormats,
+  frameState
 ) {
   // For looking up the featureCount for each set of feature IDs
   const featureTables = gltf.extensions.EXT_feature_metadata.featureTables;
@@ -1911,6 +1945,7 @@ function loadPrimitiveFeaturesLegacy(
         featureIdTexture,
         propertyTableId,
         supportedImageFormats,
+        frameState,
         featureCount,
         featureIdLabel
       );
@@ -2216,7 +2251,8 @@ function loadStructuralMetadata(
   gltf,
   extension,
   extensionLegacy,
-  supportedImageFormats
+  supportedImageFormats,
+  frameState
 ) {
   const structuralMetadataLoader = new GltfStructuralMetadataLoader({
     gltf: gltf,
@@ -2225,6 +2261,7 @@ function loadStructuralMetadata(
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
     supportedImageFormats: supportedImageFormats,
+    frameState: frameState,
     asynchronous: loader._asynchronous,
   });
   structuralMetadataLoader.load();
@@ -2503,7 +2540,8 @@ function parse(
       gltf,
       structuralMetadataExtension,
       featureMetadataExtensionLegacy,
-      supportedImageFormats
+      supportedImageFormats,
+      frameState
     );
     const promise = structuralMetadataLoader.promise.then(function (
       structuralMetadataLoader
