@@ -22,7 +22,7 @@
 - Fixed a bug where camera would not follow the `Viewer.trackedEntity` if it had a model with a `HeightReference` other than `NONE`. [#10805](https://github.com/CesiumGS/cesium/pull/10805)
 - Fixed a bug where calling `Vector3DTileContent.getFeature` before a render update could result in no feature being returned. [#10819](https://github.com/CesiumGS/cesium/pull/10819)
 - Fixed a bug where calling `removeAll` on a `ClippingPlaneCollection` attached to a `Model` would cause a crash. [#10827](https://github.com/CesiumGS/cesium/pull/10827)
-- Fixed a bug where calling `add` twice with same length on a `ClippingPlaneCollection` attached to a `Model` would cause a crash. [#10832](https://github.com/CesiumGS/cesium/pull/10832)
+- Fixed a bug where replacing a `Model`'s `ClippingPlaneCollection` with one of the same length would cause a crash. [#10831](https://github.com/CesiumGS/cesium/pull/10831)
 
 ### 1.97 - 2022-09-01
 
