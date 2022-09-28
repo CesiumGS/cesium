@@ -3839,6 +3839,24 @@ describe(
         });
       });
 
+      it("add clipping planes collection same length twice works", function () {
+        const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [plane],
+        });
+        return loadAndZoomToModel(
+          { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+          scene
+        ).then(function (model) {
+          verifyRender(model, false);
+
+          model.clippingPlanes = new ClippingPlaneCollection({
+            planes: [plane],
+          });
+          verifyRender(model, true);
+        });
+      });
+
       it("clipping planes apply edge styling", function () {
         const plane = new ClippingPlane(Cartesian3.UNIT_X, 0);
         const clippingPlanes = new ClippingPlaneCollection({
