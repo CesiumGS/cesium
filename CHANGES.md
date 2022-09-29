@@ -24,7 +24,6 @@
 - Fixed a bug where calling `removeAll` on a `ClippingPlaneCollection` attached to a `Model` would cause a crash. [#10827](https://github.com/CesiumGS/cesium/pull/10827)
 - Fixed a bug where replacing a `Model`'s `ClippingPlaneCollection` with one of the same length would cause a crash. [#10831](https://github.com/CesiumGS/cesium/pull/10831)
 - Fixed a regression where tilesets would not load in multiple `Viewer`s. [#10828](https://github.com/CesiumGS/cesium/pull/10828)
-- Fixed a bug where replacing a `Model`'s `ClippingPlaneCollection` with one of the same length would cause a crash. [#10831](https://github.com/CesiumGS/cesium/pull/10831)
 
 ### 1.97 - 2022-09-01
 
