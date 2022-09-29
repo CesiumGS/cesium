@@ -5,6 +5,7 @@
 #### Breaking Changes :mega:
 
 - As of the previous release (1.97), `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
+- Removed `getPropertyNames` functions from `Cesium3DTileFeature`, `Cesium3DTilePointFeature` and `ModelFeature`. Use the `.getPropertyIds` methods instead. [#10834](https://github.com/CesiumGS/cesium/pull/10834)
 
 ##### Additions :tada:
 
