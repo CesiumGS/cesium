@@ -9,7 +9,7 @@ import {
   MetadataEnum,
   MetadataTable,
   MetadataType,
-} from "../Source/Cesium.js";
+} from "../packages/engine/index.js";
 
 function MetadataTester() {}
 

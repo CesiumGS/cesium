@@ -1,4 +1,4 @@
-import { ColorMaterialProperty } from "../Source/Cesium.js";
+import { ColorMaterialProperty } from "../packages/engine/index.js";
 
 function testMaterialDefinitionChanged(property, name, value1, value2) {
   const listener = jasmine.createSpy("listener");
