@@ -1491,7 +1491,7 @@ describe(
           }
         );
       });
-      
+
       it("replaces clipping planes collection with one of the same length", function () {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
           function (tileset) {
