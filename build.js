@@ -1,6 +1,6 @@
 /*eslint-env node*/
 import child_process from "child_process";
-import { existsSync, statSync } from "fs";
+import { existsSync, readFileSync, statSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { EOL } from "os";
 import path from "path";
@@ -27,7 +27,11 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 
-let copyrightHeader = "";
+const copyrightHeaderTemplate = readFileSync(
+  path.join("Source", "copyrightHeader.js"),
+  "utf8"
+);
+const combinedCopyrightHeader = copyrightHeaderTemplate.replace("${version}", version)
 
 function escapeCharacters(token) {
   return token.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -108,7 +112,7 @@ export function esbuildBaseConfig() {
     target: "es2020",
     legalComments: "inline",
     banner: {
-      js: copyrightHeader,
+      js: combinedCopyrightHeader,
     },
   };
 }
@@ -390,6 +394,7 @@ export async function bundleCombinedWorkers(options) {
  * @param {Array.<String>} options.input The worker globs.
  * @param {Array.<String>} options.inputES6 The ES6 worker globs.
  * @param {String} options.path output directory
+ * @param {String} options.copyrightHeader The copyright header to add to worker bundles
  * @returns {Promise.<*>}
  */
 export async function buildWorkers(options) {
@@ -397,6 +402,9 @@ export async function buildWorkers(options) {
   const workers = await globby(options.input);
 
   const workerConfig = esbuildBaseConfig();
+  workerConfig.banner = {
+    js: options.copyrightHeader
+  };
   workerConfig.entryPoints = workers;
   workerConfig.outdir = options.path;
   workerConfig.outbase = `packages/engine/Source`; // Maintain existing file paths
@@ -432,7 +440,7 @@ export async function buildWorkers(options) {
     format: "amd",
     // Rollup cannot generate a sourcemap when pragmas are removed
     sourcemap: options.sourcemap && !options.removePragmas,
-    banner: copyrightHeader,
+    banner: options.copyrightHeader,
   });
 }
 
@@ -811,23 +819,10 @@ function getVersionFromPackageJson(json) {
  * Creates the index.js for a package.
  *
  * @param {String} workspace The workspace to create the index.js for.
+ * @param {String} version The version extracted from package.json
  * @returns
  */
 async function createIndexJs(workspace) {
-  // Read package.json file.
-  let workspacePackageJson;
-  try {
-    const workspacePackageJsonData = await readFile(
-      `packages/${workspace}/package.json`
-    );
-    workspacePackageJson = JSON.parse(workspacePackageJsonData);
-  } catch (e) {
-    console.error(`Unable to read package.json: ${e}`);
-    process.exit(-1);
-  }
-
-  // Extract version from package.json and write it at the top of the index.js file.
-  const version = getVersionFromPackageJson(workspacePackageJson);
   let contents = `export const VERSION = '${version}';\n`;
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
@@ -1009,8 +1004,25 @@ export const buildEngine = async (options) => {
   const specListFile = path.join("packages/engine/Specs", "SpecList.js");
   await createSpecListJs(specFiles, "engine", specListFile);
 
+  // Read package.json file.
+  let workspacePackageJson;
+  try {
+    const workspacePackageJsonData = await readFile(
+      `packages/engine/package.json`
+    );
+    workspacePackageJson = JSON.parse(workspacePackageJsonData);
+  } catch (e) {
+    console.error(`Unable to read package.json: ${e}`);
+    process.exit(-1);
+  }
+  const version = getVersionFromPackageJson(workspacePackageJson);
+  const copyrightBanner = copyrightHeaderTemplate.replace("${version}", version)
+
   // Configure build options shared between builds for different formats (ESM/IIFE/CommonJS).
   const esBuildOptions = defaultESBuildOptions();
+  esBuildOptions.banner = {
+    js: copyrightBanner
+  };
   esBuildOptions.outbase = "packages/engine/Source";
   esBuildOptions.incremental = incremental;
   esBuildOptions.sourcemap = sourcemap;
