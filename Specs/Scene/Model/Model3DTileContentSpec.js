@@ -1491,6 +1491,38 @@ describe(
           }
         );
       });
+      it("replacing a clipping planes collection with one of the same length", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+          function (tileset) {
+            const tile = tileset.root;
+            const model = tile.content._model;
+            const passOptions = Cesium3DTilePass.getPassOptions(
+              Cesium3DTilePass.RENDER
+            );
+
+            expect(model.clippingPlanes).toBeUndefined();
+
+            spyOn(model, "resetDrawCommands");
+
+            const clippingPlaneCollection = new ClippingPlaneCollection({
+              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            tile.update(tileset, scene.frameState, passOptions);
+
+            expect(model.resetDrawCommands).toHaveBeenCalled();
+            expect(model.resetDrawCommands.calls.count()).toBe(1);
+
+            const newClippingPlaneCollection = new ClippingPlaneCollection({
+              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+            });
+            tileset.clippingPlanes = newClippingPlaneCollection;
+            tile.update(tileset, scene.frameState, passOptions);
+
+            expect(model.resetDrawCommands.calls.count()).toBe(2);
+          }
+        );
+      });
 
       it("clipping planes selectively disable rendering", function () {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(

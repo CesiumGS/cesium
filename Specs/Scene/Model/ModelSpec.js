@@ -3840,20 +3840,30 @@ describe(
       });
 
       it("replacing clipping planes with another collection works", function () {
-        const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+        const modelClippedPlane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+        const modelVisiblePlane = new ClippingPlane(Cartesian3.UNIT_X, 2.5);
+
         const clippingPlanes = new ClippingPlaneCollection({
-          planes: [plane],
+          planes: [modelClippedPlane],
         });
+
         return loadAndZoomToModel(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
           scene
         ).then(function (model) {
           verifyRender(model, false);
 
+          // Replace the clipping plane collection with one that makes the model visible.
           model.clippingPlanes = new ClippingPlaneCollection({
-            planes: [plane],
+            planes: [modelVisiblePlane],
           });
           verifyRender(model, true);
+
+          // Replace the clipping plane collection with one that clips the model.
+          model.clippingPlanes = new ClippingPlaneCollection({
+            planes: [modelClippedPlane],
+          });
+          verifyRender(model, false);
         });
       });
 
