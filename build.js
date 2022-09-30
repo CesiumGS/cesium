@@ -20,6 +20,8 @@ import streamToPromise from "stream-to-promise";
 
 import mkdirp from "mkdirp";
 
+const org = "cesium";
+
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
 let version = packageJson.version;
@@ -123,7 +125,7 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
   for (const workspace of Object.keys(workspaceGlobs)) {
     // Since workspace source files are provided relative to the workspace,
     // the workspace path needs to be prepended.
-    const workspacePath = `packages/${workspace.replace(`@cesium/`, ``)}`;
+    const workspacePath = `packages/${workspace.replace(`${org}/`, ``)}`;
     const filesPaths = workspaceGlobs[workspace].map((glob) => {
       if (glob.indexOf(`!`) === 0) {
         return `!`.concat(workspacePath, `/`, glob.replace(`!`, ``));
@@ -251,7 +253,7 @@ function generateDeclaration(workspace, file) {
     assignmentName = `_shaders${assignmentName}`;
   }
   assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-  return `export { ${assignmentName} } from '@cesium/${workspace}';`;
+  return `export { ${assignmentName} } from '@${org}/${workspace}';`;
 }
 
 /**
@@ -731,7 +733,7 @@ const engineStaticAssets = [
 ];
 
 export async function copyAssets2(outputDirectory) {
-  // Copy static assets from @cesium/engine.
+  // Copy static assets from engine.
 
   let stream = gulp
     .src(engineStaticAssets, { nodir: true, base: `packages/engine/Source` })
@@ -739,7 +741,7 @@ export async function copyAssets2(outputDirectory) {
 
   await streamToPromise(stream);
 
-  // Copy static assets from @cesium/widgets.
+  // Copy static assets from widgets.
 
   const widgetsStaticAssets = [
     "packages/widgets/Source/**",
@@ -966,7 +968,7 @@ async function bundleSpecs(options) {
 }
 
 /**
- * Builds @cesium/engine.
+ * Builds the engine workspace.
  *
  * @param {Object} options
  * @param {Boolean} [options.iife=true] True if IIFE bundle should be generated.
@@ -1103,7 +1105,7 @@ export const buildEngine = async (options) => {
 };
 
 /**
- * Build @cesium/widgets.
+ * Builds the widgets workspace.
  */
 export const buildWidgets = async (options) => {
   const iife = options.iife ?? true;

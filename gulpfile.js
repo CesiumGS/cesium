@@ -48,6 +48,8 @@ import {
   esbuildBaseConfig,
 } from "./build.js";
 
+const org = "cesium";
+
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
 let version = packageJson.version;
@@ -83,7 +85,7 @@ const sourceFiles = [
 ];
 
 const relativeWorkspaceSourceFiles = {
-  "@cesium/engine": [
+  "engine": [
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
     "!packages/engine/Source/Workers/**",
@@ -93,7 +95,7 @@ const relativeWorkspaceSourceFiles = {
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     "!packages/engine/Source/ThirdParty/_*",
   ],
-  "@cesium/widgets": ["packages/widgets/Source/**/*.js"],
+  "widgets": ["packages/widgets/Source/**/*.js"],
 };
 
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
@@ -156,9 +158,9 @@ export function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === "@cesium/engine") {
+  if (workspace === `@${org}/engine`) {
     return buildEngine(buildOptions);
-  } else if (workspace === "@cesium/widgets") {
+  } else if (workspace === `@${org}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
@@ -275,7 +277,7 @@ export const buildWatch = gulp.series(build, async function () {
 export async function buildTs() {
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === "@cesium/engine") {
+  if (workspace === `@${org}/engine`) {
     return generateTypeScriptDefinitions(
       "engine",
       "packages/engine/engine.d.ts",
@@ -283,7 +285,7 @@ export async function buildTs() {
       processEngineSource,
       processEngineModules
     );
-  } else if (workspace === "@cesium/widgets") {
+  } else if (workspace === `@${org}/widgets`) {
     const engineModules = await generateTypeScriptDefinitions(
       "engine",
       "packages/engine/engine.d.ts",
@@ -1159,7 +1161,7 @@ export async function coverage() {
 }
 
 const workspaceKarmaFiles = {
-  "@cesium/engine": [
+  "engine": [
     { pattern: "packages/engine/Build/Assets/**/*", included: false },
     { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
     { pattern: "packages/engine/Build/Workers/**/*", included: false },
@@ -1179,7 +1181,7 @@ const workspaceKarmaFiles = {
     { pattern: "packages/engine/Specs/TestWorkers/**/*.wasm", included: false },
     { pattern: "Specs/Data/**", included: false },
   ],
-  "@cesium/widgets": [
+  "widgets": [
     { pattern: "packages/engine/Build/Assets/**/*", included: false },
     { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
     { pattern: "packages/engine/Build/Workers/**/*", included: false },
@@ -1227,7 +1229,7 @@ export async function testEngine() {
         enabled: enableAllBrowsers,
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
-      files: workspaceKarmaFiles["@cesium/engine"],
+      files: workspaceKarmaFiles[`engine`],
       client: {
         captureConsole: verbose,
         args: [
@@ -1285,7 +1287,7 @@ export async function testWidgets() {
         enabled: enableAllBrowsers,
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
-      files: workspaceKarmaFiles["@cesium/widgets"],
+      files: workspaceKarmaFiles[`widgets`],
       client: {
         captureConsole: verbose,
         args: [
@@ -1453,7 +1455,7 @@ function generateTypeScriptDefinitions(
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
-  source = `declare module "@cesium/${workspaceName}" {
+  source = `declare module "@${org}/${workspaceName}" {
 ${source}
 }
 `;
@@ -1464,7 +1466,7 @@ ${source}
       const workspaceModules = Array.from(importModules[workspace]);
       imports += `import { ${workspaceModules.join(
         ",\n"
-      )} } from "@cesium/${workspace}";\n`;
+      )} } from "@${org}/${workspace}";\n`;
     });
     source = imports + source;
   }
@@ -1482,7 +1484,7 @@ ${source}
     const assignmentName = basename(file, extname(file));
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "@cesium/${workspaceName}/Source/${moduleId}" { import { ${assignmentName} } from '@cesium/${workspaceName}'; export default ${assignmentName}; }\n`;
+      source += `declare module "${org}/${workspaceName}/Source/${moduleId}" { import { ${assignmentName} } from '@${org}/${workspaceName}'; export default ${assignmentName}; }\n`;
     }
   });
 
@@ -1675,7 +1677,7 @@ ${source}
   // Map individual modules back to their source file so that TS still works
   // when importing individual files instead of the entire cesium module.
 
-  globbySync(relativeWorkspaceSourceFiles["@cesium/engine"]).forEach(function (
+  globbySync(relativeWorkspaceSourceFiles[`engine`]).forEach(function (
     file
   ) {
     file = relative("packages/engine/Source", file);
@@ -1688,11 +1690,11 @@ ${source}
 
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "cesium/packages/engine/Source/${moduleId}" { import { ${assignmentName} } from '@cesium/engine'; export default ${assignmentName}; }\n`;
+      source += `declare module "${org}/packages/engine/Source/${moduleId}" { import { ${assignmentName} } from '@${org}/engine'; export default ${assignmentName}; }\n`;
     }
   });
 
-  globbySync(relativeWorkspaceSourceFiles["@cesium/widgets"]).forEach(function (
+  globbySync(relativeWorkspaceSourceFiles[`widgets`]).forEach(function (
     file
   ) {
     file = relative("packages/widgets/Source", file);
@@ -1703,7 +1705,7 @@ ${source}
     const assignmentName = basename(file, extname(file));
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "cesium/packages/widgets/Source/${moduleId}" { import { ${assignmentName} } from '@cesium/widgets'; export default ${assignmentName}; }\n`;
+      source += `declare module "${org}/packages/widgets/Source/${moduleId}" { import { ${assignmentName} } from '@${org}/widgets'; export default ${assignmentName}; }\n`;
     }
   });
 
