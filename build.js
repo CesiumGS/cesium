@@ -20,7 +20,9 @@ import streamToPromise from "stream-to-promise";
 
 import mkdirp from "mkdirp";
 
-const org = "cesium";
+// Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
+// This should match the scope of the dependencies of the root level package.json.
+const scope = "cesium";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
@@ -125,7 +127,7 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
   for (const workspace of Object.keys(workspaceGlobs)) {
     // Since workspace source files are provided relative to the workspace,
     // the workspace path needs to be prepended.
-    const workspacePath = `packages/${workspace.replace(`${org}/`, ``)}`;
+    const workspacePath = `packages/${workspace.replace(`${scope}/`, ``)}`;
     const filesPaths = workspaceGlobs[workspace].map((glob) => {
       if (glob.indexOf(`!`) === 0) {
         return `!`.concat(workspacePath, `/`, glob.replace(`!`, ``));
@@ -253,7 +255,7 @@ function generateDeclaration(workspace, file) {
     assignmentName = `_shaders${assignmentName}`;
   }
   assignmentName = assignmentName.replace(/(\.|-)/g, "_");
-  return `export { ${assignmentName} } from '@${org}/${workspace}';`;
+  return `export { ${assignmentName} } from '@${scope}/${workspace}';`;
 }
 
 /**

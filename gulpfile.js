@@ -48,7 +48,9 @@ import {
   esbuildBaseConfig,
 } from "./build.js";
 
-const org = "cesium";
+// Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
+// This should match the scope of the dependencies of the root level package.json.
+const scope = "cesium";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
@@ -158,9 +160,9 @@ export function build() {
   // Configure build target.
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${org}/engine`) {
+  if (workspace === `@${scope}/engine`) {
     return buildEngine(buildOptions);
-  } else if (workspace === `@${org}/widgets`) {
+  } else if (workspace === `@${scope}/widgets`) {
     return buildWidgets(buildOptions);
   }
 
@@ -277,7 +279,7 @@ export const buildWatch = gulp.series(build, async function () {
 export async function buildTs() {
   const workspace = argv.workspace ? argv.workspace : undefined;
 
-  if (workspace === `@${org}/engine`) {
+  if (workspace === `@${scope}/engine`) {
     return generateTypeScriptDefinitions(
       "engine",
       "packages/engine/engine.d.ts",
@@ -285,7 +287,7 @@ export async function buildTs() {
       processEngineSource,
       processEngineModules
     );
-  } else if (workspace === `@${org}/widgets`) {
+  } else if (workspace === `@${scope}/widgets`) {
     const engineModules = await generateTypeScriptDefinitions(
       "engine",
       "packages/engine/engine.d.ts",
@@ -1455,7 +1457,7 @@ function generateTypeScriptDefinitions(
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
-  source = `declare module "@${org}/${workspaceName}" {
+  source = `declare module "@${scope}/${workspaceName}" {
 ${source}
 }
 `;
@@ -1466,7 +1468,7 @@ ${source}
       const workspaceModules = Array.from(importModules[workspace]);
       imports += `import { ${workspaceModules.join(
         ",\n"
-      )} } from "@${org}/${workspace}";\n`;
+      )} } from "@${scope}/${workspace}";\n`;
     });
     source = imports + source;
   }
@@ -1484,7 +1486,7 @@ ${source}
     const assignmentName = basename(file, extname(file));
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "${org}/${workspaceName}/Source/${moduleId}" { import { ${assignmentName} } from '@${org}/${workspaceName}'; export default ${assignmentName}; }\n`;
+      source += `declare module "${scope}/${workspaceName}/Source/${moduleId}" { import { ${assignmentName} } from '@${scope}/${workspaceName}'; export default ${assignmentName}; }\n`;
     }
   });
 
@@ -1690,7 +1692,7 @@ ${source}
 
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "${org}/packages/engine/Source/${moduleId}" { import { ${assignmentName} } from '@${org}/engine'; export default ${assignmentName}; }\n`;
+      source += `declare module "${scope}/packages/engine/Source/${moduleId}" { import { ${assignmentName} } from '@${scope}/engine'; export default ${assignmentName}; }\n`;
     }
   });
 
@@ -1705,7 +1707,7 @@ ${source}
     const assignmentName = basename(file, extname(file));
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "${org}/packages/widgets/Source/${moduleId}" { import { ${assignmentName} } from '@${org}/widgets'; export default ${assignmentName}; }\n`;
+      source += `declare module "${scope}/packages/widgets/Source/${moduleId}" { import { ${assignmentName} } from '@${scope}/widgets'; export default ${assignmentName}; }\n`;
     }
   });
 
