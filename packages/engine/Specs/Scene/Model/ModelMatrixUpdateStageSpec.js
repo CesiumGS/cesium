@@ -9,7 +9,7 @@ import {
   ResourceCache,
   Quaternion,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/BadGeometry.js";
+import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
 
 describe(

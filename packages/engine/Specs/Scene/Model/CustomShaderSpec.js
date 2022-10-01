@@ -10,7 +10,7 @@ import {
   UniformType,
   VaryingType,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/BadGeometry.js";
+import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
 describe("Scene/Model/CustomShader", function () {

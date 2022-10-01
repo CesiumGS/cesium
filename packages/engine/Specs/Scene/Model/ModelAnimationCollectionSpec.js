@@ -6,7 +6,7 @@ import {
   Math as CesiumMath,
 } from "../../../index.js";
 
-import createScene from "../../../../../Specs/BadGeometry.js";
+import createScene from "../../../../../Specs/createScene.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 

@@ -14,7 +14,7 @@ import {
   RuntimeError,
   VertexAttributeSemantic,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/BadGeometry.js";
+import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";

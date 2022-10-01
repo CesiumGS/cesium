@@ -9,7 +9,7 @@ import {
   _shadersSkinningStageVS,
   SkinningPipelineStage,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/BadGeometry.js";
+import createScene from "../../../../../Specs/createScene.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 

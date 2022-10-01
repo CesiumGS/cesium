@@ -32,7 +32,7 @@ import {
   Transforms,
 } from "../../../index.js";
 import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
-import createScene from "../../../../../Specs/BadGeometry.js";
+import createScene from "../../../../../Specs/createScene.js";
 import createCanvas from "../../../../../Specs/createCanvas.js";
 
 describe(

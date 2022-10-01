@@ -11,7 +11,7 @@ import {
   _shadersFeatureIdStageVS,
   VertexAttributeSemantic,
 } from "../../../index.js";
-import createScene from "../../../../../Specs/BadGeometry.js";
+import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";
 
