@@ -3803,7 +3803,7 @@ function updateMostDetailedRayPicks(scene) {
 
 /**
  * Update and render the scene. It is usually not necessary to call this function
- * directly because {@link CesiumWidget} or {@link Viewer} do it automatically.
+ * directly because {@link CesiumWidget} will do it automatically.
  * @param {JulianDate} [time] The simulation time at which to render.
  */
 Scene.prototype.render = function (time) {

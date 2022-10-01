@@ -3,6 +3,7 @@ import {
   BoundingSphereState,
   Cartesian3,
   Cartographic,
+  CesiumWidget,
   Cesium3DTileFeature,
   Cesium3DTileset,
   Clock,
@@ -35,7 +36,6 @@ import AnimationViewModel from "../Animation/AnimationViewModel.js";
 import BaseLayerPicker from "../BaseLayerPicker/BaseLayerPicker.js";
 import createDefaultImageryProviderViewModels from "../BaseLayerPicker/createDefaultImageryProviderViewModels.js";
 import createDefaultTerrainProviderViewModels from "../BaseLayerPicker/createDefaultTerrainProviderViewModels.js";
-import CesiumWidget from "../CesiumWidget/CesiumWidget.js";
 import ClockViewModel from "../ClockViewModel.js";
 import FullscreenButton from "../FullscreenButton/FullscreenButton.js";
 import Geocoder from "../Geocoder/Geocoder.js";

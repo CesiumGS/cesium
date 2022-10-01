@@ -1,4 +1,5 @@
 import {
+  CesiumWidget,
   Clock,
   defaultValue,
   EllipsoidTerrainProvider,
@@ -10,10 +11,6 @@ import {
   SceneMode,
   SkyBox,
   TileCoordinatesImageryProvider
-} from "../../../engine/index.js";
-
-import {
-  CesiumWidget
 } from "../../index.js";
 
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
@@ -21,7 +18,7 @@ import getWebGLStub from "../../../../Specs/getWebGLStub.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
-  "Widgets/CesiumWidget/CesiumWidget",
+  "Widget/CesiumWidget",
   function () {
     let container;
     let widget;

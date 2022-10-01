@@ -281,8 +281,7 @@ export async function createCesiumJs() {
 
 const workspaceSpecFiles = {
   engine: [
-    "packages/engine/Specs/**/*Spec.js",
-    "!packages/engine/Specs/Core/TaskProcessorSpec.js", // TODO: Fix
+    "packages/engine/Specs/**/*Spec.js"
   ],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
@@ -1044,6 +1043,7 @@ export const buildEngine = async (options) => {
   // Generate bundle for CSS and ThirdParty using esbuild.
   await bundleCSS({
     filePaths: [
+      ...workspaceCssFiles["engine"],
       "packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     ],
     outbase: "packages/engine/Source",
@@ -1185,7 +1185,7 @@ export async function buildCesium(options) {
   // Create SpecList.js
   await createCombinedSpecList();
 
-  // Bundle CSS and ThirdParty files.
+  // Bundle ThirdParty files.
   await bundleCSS({
     filePaths: [
       "packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
@@ -1195,8 +1195,15 @@ export async function buildCesium(options) {
     outdir: outputDirectory,
     outbase: "packages/engine/Source",
   });
+
+  // Bundle CSS files.
   await bundleCSS({
-    filePaths: [...workspaceCssFiles[`widgets`]],
+    filePaths: workspaceCssFiles[`engine`],
+    outdir: path.join(outputDirectory, "Widgets/CesiumWidget"),
+    outbase: "packages/engine/Source/Widget",
+  });
+  await bundleCSS({
+    filePaths: workspaceCssFiles[`widgets`],
     outdir: path.join(outputDirectory, "Widgets"),
     outbase: "packages/widgets/Source",
   });
