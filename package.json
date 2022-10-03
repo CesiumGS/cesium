@@ -75,6 +75,7 @@
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-node-resolve": "^14.0.0",
     "aws-sdk": "^2.1210.0",
+    "bluebird": "^3.7.2",
     "chokidar": "^3.5.3",
     "cloc": "^2.8.0",
     "compression": "^1.7.4",

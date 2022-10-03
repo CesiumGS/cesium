@@ -28,6 +28,7 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
+import * as BluebirdPromise from "bluebird";
 import download from "download";
 import decompress from "decompress";
 
@@ -621,7 +622,7 @@ function deployCesium(cacheControl, done) {
   const errors = [];
 
   function uploadFiles(prefix, filePrefix, files) {
-    return Promise.map(
+    return BluebirdPromise.map(
       files,
       function (file) {
         const blobName = `${prefix}/${file.replace(filePrefix, "")}`;
@@ -695,7 +696,12 @@ function deployCesium(cacheControl, done) {
 
   const uploadRelease = deployCesiumRelease(s3, errors);
 
-  Promise.all(uploadSandcastle, uploadRefDoc, uploadCesiumViewer, uploadRelease)
+  BluebirdPromise.all(
+    uploadSandcastle,
+    uploadRefDoc,
+    uploadCesiumViewer,
+    uploadRelease
+  )
     .then(function () {
       console.log(`Successfully uploaded ${uploaded} files.`);
     })
@@ -762,7 +768,7 @@ async function deployCesiumRelease(s3, errors) {
       const key = posix.join(releaseDir, release.tag, "cesium.zip");
       await uploadObject(s3, key, data, quiet);
       const files = await decompress(data);
-      await Promise.map(
+      await BluebirdPromise.map(
         files,
         function (file) {
           if (file.path.startsWith("Apps")) {
