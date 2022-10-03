@@ -30,7 +30,7 @@ import { createInstrumenter } from "istanbul-lib-instrument";
 
 import { get } from "request";
 import { download } from "download";
-import { decompress } from "decompress";
+import decompress from "decompress";
 
 import {
   createCesiumJs,
