@@ -28,7 +28,6 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
-import request from "request";
 import download from "download";
 import decompress from "decompress";
 
@@ -724,19 +723,20 @@ async function deployCesiumRelease(s3, errors) {
   let release;
   try {
     // Deploy any new releases
-    const getRequest = await Promise.promisify(request.get);
-    const response = await getRequest({
-      method: "GET",
-      uri: "https://api.github.com/repos/CesiumGS/cesium/releases/latest",
-      json: true,
-      headers: {
-        Authorization: process.env.TOKEN
-          ? `token ${process.env.TOKEN}`
-          : undefined,
-        "User-Agent": "cesium.com-build",
-      },
-    });
-    const body = response.body;
+    const response = await fetch(
+      "https://api.github.com/repos/CesiumGS/cesium/releases/latest",
+      {
+        method: "GET",
+        headers: {
+          Authorization: process.env.TOKEN
+            ? `token ${process.env.TOKEN}`
+            : undefined,
+          "User-Agent": "cesium.com-build",
+        },
+      }
+    );
+
+    const body = response.json();
 
     release = {
       tag: body.tag_name,
