@@ -58,25 +58,25 @@ describe(
     };
 
     const boomBoxSpecularGlossiness =
-      "./Data/Models/GltfLoader/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
+      "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const boxTextured =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const boxTexturedWithPropertyAttributes =
-      "./Data/Models/GltfLoader/BoxTexturedWithPropertyAttributes/glTF/BoxTexturedWithPropertyAttributes.gltf";
+      "./Data/Models/glTF-2.0/BoxTexturedWithPropertyAttributes/glTF/BoxTexturedWithPropertyAttributes.gltf";
     const boxVertexColors =
-      "./Data/Models/GltfLoader/BoxVertexColors/glTF/BoxVertexColors.gltf";
+      "./Data/Models/glTF-2.0/BoxVertexColors/glTF/BoxVertexColors.gltf";
     const pointCloudRGB =
-      "./Data/Models/GltfLoader/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
-    const weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
+      "./Data/Models/glTF-2.0/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb";
+    const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
+    const weather = "./Data/Models/glTF-2.0/Weather/glTF/weather.gltf";
     const buildingsMetadata =
-      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
     const dracoMilkTruck =
-      "./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf";
+      "./Data/Models/glTF-2.0/CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf";
     const dracoBoxWithTangents =
-      "./Data/Models/DracoCompression/BoxWithTangents/BoxWithTangents.gltf";
+      "./Data/Models/glTF-2.0/BoxWithTangents/glTF-Draco/BoxWithTangents.gltf";
     const boxInstancedTranslationUrl =
-      "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
+      "./Data/Models/glTF-2.0/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
 
     let scene;
     let scene2D;

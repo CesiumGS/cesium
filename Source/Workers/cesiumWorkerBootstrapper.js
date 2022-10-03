@@ -7,7 +7,7 @@ self.onmessage = function (event) {
   require(data.loaderConfig, [data.workerModule], function (workerModule) {
     //replace onmessage with the required-in workerModule
     self.onmessage = workerModule;
-    CESIUM_BASE_URL = data.loaderConfig.baseUrl;
+    self.CESIUM_BASE_URL = data.loaderConfig.baseUrl;
   });
 };
 

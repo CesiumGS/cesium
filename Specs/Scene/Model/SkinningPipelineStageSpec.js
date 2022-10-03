@@ -59,9 +59,9 @@ describe(
     }
 
     const simpleSkinUrl =
-      "./Data/Models/GltfLoader/SimpleSkin/glTF/SimpleSkin.gltf";
+      "./Data/Models/glTF-2.0/SimpleSkin/glTF/SimpleSkin.gltf";
     const cesiumManUrl =
-      "./Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf";
+      "./Data/Models/glTF-2.0/CesiumMan/glTF-Draco/CesiumMan.gltf";
 
     it("processes skin with two joints", function () {
       const mockJointMatrices = [

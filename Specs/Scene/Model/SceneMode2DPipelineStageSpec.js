@@ -22,11 +22,11 @@ describe(
     const scratchMatrix = new Matrix4();
 
     const boxTexturedUrl =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const dracoBoxWithTangentsUrl =
-      "./Data/Models/DracoCompression/BoxWithTangents/BoxWithTangents.gltf";
+      "./Data/Models/glTF-2.0/BoxWithTangents/glTF-Draco/BoxWithTangents.gltf";
     const boxInstancedTranslationUrl =
-      "./Data/Models/GltfLoader/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
+      "./Data/Models/glTF-2.0/BoxInstancedTranslation/glTF/box-instanced-translation.gltf";
 
     let scene;
     const gltfLoaders = [];

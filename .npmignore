@@ -18,13 +18,13 @@
 /Build/Specs
 /Cesium-*.zip
 /Documentation
-/build.cjs
+/build.js
 /favicon.ico
-/gulpfile.cjs
+/gulpfile.js
 /index.html
 /index.release.html
 /launches
-/server.cjs
+/server.js
 /Source/copyrightHeader.js
 /Specs
 /ThirdParty

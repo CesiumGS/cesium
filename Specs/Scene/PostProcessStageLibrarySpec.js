@@ -16,7 +16,7 @@ describe(
   "Scene/PostProcessStageLibrary",
   function () {
     const boxTexturedUrl =
-      "./Data/Models/GltfLoader/BoxTextured/glTF/BoxTextured.gltf";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf";
 
     let scene;
     let originalBloomBrightness;
@@ -314,7 +314,11 @@ describe(
         },
         scene
       ).then(function () {
-        scene.camera.lookAt(origin, new HeadingPitchRange(0.0, 0.0, 1.0));
+        // The range is chosen carefully here. If it's too small and log depth
+        // is off, the model may clip out of view. If it is too large, the
+        // background will be visible in the 3x3 canvas and the color checks
+        // below will fail.
+        scene.camera.lookAt(origin, new HeadingPitchRange(0.0, 0.0, 1.5));
 
         // Render without depth of field
         let originalColor;
@@ -431,7 +435,11 @@ describe(
         },
         scene
       ).then(function () {
-        scene.camera.lookAt(origin, new HeadingPitchRange(0.0, 0.0, 1.0));
+        // The range is chosen carefully here. If it's too small and log depth
+        // is off, the model may clip out of view. If it is too large, the
+        // background will be visible in the 3x3 canvas and the color checks
+        // below will fail.
+        scene.camera.lookAt(origin, new HeadingPitchRange(0.0, 0.0, 1.5));
 
         // Render without bloom
         let originalColor;

@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Buffer from "../Renderer/Buffer.js";
@@ -312,9 +313,22 @@ function createIndicesTypedArray(indexBufferLoader, bufferViewTypedArray) {
   const accessor = gltf.accessors[accessorId];
   const count = accessor.count;
   const indexDatatype = accessor.componentType;
+  const indexSize = IndexDatatype.getSizeInBytes(indexDatatype);
 
-  const arrayBuffer = bufferViewTypedArray.buffer;
-  const byteOffset = bufferViewTypedArray.byteOffset + accessor.byteOffset;
+  let arrayBuffer = bufferViewTypedArray.buffer;
+  let byteOffset = bufferViewTypedArray.byteOffset + accessor.byteOffset;
+
+  if (byteOffset % indexSize !== 0) {
+    const byteLength = count * indexSize;
+    const view = new Uint8Array(arrayBuffer, byteOffset, byteLength);
+    const copy = new Uint8Array(view);
+    arrayBuffer = copy.buffer;
+    byteOffset = 0;
+    deprecationWarning(
+      "index-buffer-unaligned",
+      `The index array is not aligned to a ${indexSize}-byte boundary.`
+    );
+  }
 
   let typedArray;
   if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {

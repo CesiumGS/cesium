@@ -201,8 +201,10 @@ struct VertexInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
-    // Metadata class information. See the MetadataClass Struct section below.
+    // Metadata class properties. See the MetadataClass Struct section below.
     MetadataClass metadataClass;
+    // Metadata statistics. See the Metadata Statistics Struct section below
+    MetadataStatistics metadataStatistics;
 };
 ```
 
@@ -219,8 +221,10 @@ struct FragmentInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
-    // Metadata class information. See the MetadataClass Struct section below.
+    // Metadata class properties. See the MetadataClass Struct section below.
     MetadataClass metadataClass;
+    // Metadata statistics. See the Metadata Statistics Struct section below
+    MetadataStatistics metadataStatistics;
 };
 ```
 
@@ -713,9 +717,9 @@ This struct contains constants for each metadata property, as defined
 in the class schema.
 
 Regardless of the source of metadata, the properties are collected into a single
-struct by property ID. For example, if the metadata class looked like this:
+struct by property ID. Consider the following metadata class:
 
-```jsonc
+```json
 "schema": {
   "classes": {
     "wall": {
@@ -763,6 +767,73 @@ float maxTemp = vsInput.metadataClass.temperature.maxValue;         // == 500.0
 ```
 
 or similarly from the `fsInput` struct in the fragment shader.
+
+## `MetadataStatistics` struct
+
+If the model was loaded from a [3D Tiles tileset](https://github.com/CesiumGS/3d-tiles/tree/main/specification), it may have statistics defined in the `statistics` property of the tileset.json. These will be available in a Custom Shader from the `MetadataStatistics` struct.
+
+### Organization
+
+Regardless of the source of the metadata, the properties are collected into a single source by property ID. Consider the following metadata class:
+
+```json
+  "statistics": {
+    "classes": {
+      "exampleMetadataClass": {
+        "count": 29338,
+        "properties": {
+          "intensity": {
+            "min": 0.0,
+            "max": 0.6333333849906921,
+            "mean": 0.28973701532415364,
+            "median": 0.25416669249534607,
+            "standardDeviation": 0.18222664489583626,
+            "variance": 0.03320655011,
+            "sum": 8500.30455558002,
+          },
+          "classification": {
+            "occurrences": {
+              "MediumVegetation": 6876,
+              "Buildings": 22462
+            }
+          }
+        }
+      }
+    }
+  }
+```
+
+This will show up in the shader in the struct field as follows:
+
+```glsl
+struct floatMetadataStatistics {
+  float minValue; // 'min' is a reserved word in GLSL
+  float maxValue; // 'max' is a reserved word in GLSL
+  float mean;
+  float median;
+  float standardDeviation;
+  float variance;
+  float sum;
+}
+struct MetadataStatistics {
+  floatMetadataStatistics intensity;
+}
+```
+
+The statistics values can be accessed from within the vertex shader as follows:
+
+```glsl
+float minValue = vsInput.metadataStatistics.intensity.minValue;
+float mean = vsInput.metadataStatistics.intensity.mean;
+```
+
+or similarly from the `fsInput` struct in the fragment shader.
+
+### Types
+
+For `SCALAR`, `VECN`, and `MATN` type properties, the statistics struct fields `minValue`, `maxValue`, `median`, and `sum` will be declared with the same type as the metadata property they describe. The fields `mean`, `standardDeviation`, and `variance` are declared with a type of the same dimension as the metadata property, but with floating-point components.
+
+For `ENUM` type metadata, the statistics struct for that property should contain an `occurrence` field, but this field is not yet implemented.
 
 ## `czm_modelVertexOutput` struct
 

@@ -11,8 +11,9 @@ import StencilConstants from "../StencilConstants.js";
  *
  * @private
  */
-const TilesetPipelineStage = {};
-TilesetPipelineStage.name = "TilesetPipelineStage"; // Helps with debugging
+const TilesetPipelineStage = {
+  name: "TilesetPipelineStage", // Helps with debugging
+};
 
 /**
  * Process a model. This modifies the following parts of the render resources:

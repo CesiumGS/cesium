@@ -19,15 +19,15 @@ describe(
   "Scene/Model/FeatureIdPipelineStage",
   function () {
     const boxInstanced =
-      "./Data/Models/GltfLoader/BoxInstanced/glTF/box-instanced.gltf";
+      "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
     const boxTexturedBinary =
-      "./Data/Models/GltfLoader/BoxTextured/glTF-Binary/BoxTextured.glb";
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
     const buildingsMetadata =
-      "./Data/Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf";
-    const microcosm = "./Data/Models/GltfLoader/Microcosm/glTF/microcosm.gltf";
-    const weather = "./Data/Models/GltfLoader/Weather/glTF/weather.gltf";
+      "./Data/Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf";
+    const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
+    const weather = "./Data/Models/glTF-2.0/Weather/glTF/weather.gltf";
     const largeFeatureIdTexture =
-      "./Data/Models/GltfLoader/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
+      "./Data/Models/glTF-2.0/LargeFeatureIdTexture/glTF/LargeFeatureIdTexture.gltf";
 
     let scene;
     const gltfLoaders = [];

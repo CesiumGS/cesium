@@ -136,15 +136,18 @@ describe("Scene/JsonMetadataTable", function () {
     }).toThrowDeveloperError();
   });
 
-  it("setProperty returns false if property doesn't exist", function () {
-    expect(table.setProperty(0, "color", [255, 255, 255, 1.0])).toBe(false);
+  it("setProperty creates a new property if it doesn't exist", function () {
+    expect(table.getProperty(0, "color")).not.toBeDefined();
+
+    table.setProperty(0, "color", [255, 255, 255, 1.0]);
+    expect(table.getProperty(0, "color")).toEqual([255, 255, 255, 1.0]);
   });
 
   it("setProperty sets property value", function () {
     const sizeInfo = {
       lengthBytes: 1024,
     };
-    expect(table.setProperty(0, "sizeInfo", sizeInfo)).toBe(true);
+    table.setProperty(0, "sizeInfo", sizeInfo);
     expect(table.getProperty(0, "sizeInfo")).toEqual(sizeInfo);
   });
 

@@ -180,6 +180,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Erik Dahlström](https://github.com/erikdahlstrom)
 - [Novatron Oy](https://novatron.fi/en/)
   - [Jussi Hirvonen](https://github.com/VsKatshuma)
+- [Sierra Nevada Corp](https://www.sncorp.com/)
+  - [Robert Irving](https://github.com/robert-irving-snc)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -332,3 +334,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jonathan Meerson](https://github.com/yonzmeer)
 - [Jiang Heng](https://github.com/jiangheng90)
 - [Xin Chen](https://github.com/nshen)
+- [Ilya Shevelev](https://github.com/ilyaly)
+- [Gabriel Aldous](https://github.com/Sn00pyW00dst0ck)
+- [金俊](https://github.com/jinjun1994)

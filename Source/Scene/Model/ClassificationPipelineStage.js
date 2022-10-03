@@ -12,8 +12,9 @@ import ModelUtility from "./ModelUtility.js";
  *
  * @private
  */
-const ClassificationPipelineStage = {};
-ClassificationPipelineStage.name = "ClassificationPipelineStage"; // Helps with debugging
+const ClassificationPipelineStage = {
+  name: "ClassificationPipelineStage", // Helps with debugging
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:

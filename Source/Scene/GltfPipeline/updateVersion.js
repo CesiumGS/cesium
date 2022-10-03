@@ -1003,7 +1003,7 @@ function glTF10to20(gltf) {
 // It's not possible to upgrade glTF 1.0 shaders to 2.0 PBR materials in a generic way,
 // but we can look for certain uniform names that are commonly found in glTF 1.0 assets
 // and create PBR materials out of those.
-const baseColorTextureNames = ["u_tex", "u_diffuse"];
+const baseColorTextureNames = ["u_tex", "u_diffuse", "u_emission"];
 const baseColorFactorNames = ["u_diffuse"];
 
 function initializePbrMaterial(material) {
