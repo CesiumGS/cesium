@@ -20,9 +20,9 @@ script:
 
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
-  - # travis_wait 20 npm --silent run website-release -- --concurrency 1
+  # - travis_wait 20 npm --silent run website-release -- --concurrency 1
   - npm pack &> /dev/null
 
   - npm --silent run build-apps
 
- - # ./scripts/deploy.sh
+  # - ./scripts/deploy.sh
