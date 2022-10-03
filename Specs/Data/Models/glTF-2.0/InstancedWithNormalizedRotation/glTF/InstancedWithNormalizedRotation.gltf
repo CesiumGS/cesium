@@ -1,0 +1,128 @@
+{
+  "extensionsUsed" : [ "EXT_mesh_gpu_instancing" ],
+  "accessors" : [ {
+    "bufferView" : 0,
+    "byteOffset" : 0,
+    "componentType" : 5125,
+    "count" : 36,
+    "type" : "SCALAR",
+    "max" : [ 23 ],
+    "min" : [ 0 ]
+  }, {
+    "bufferView" : 1,
+    "byteOffset" : 0,
+    "componentType" : 5126,
+    "count" : 24,
+    "type" : "VEC3",
+    "max" : [ 1.0, 1.0, 1.0 ],
+    "min" : [ 0.0, 0.0, 0.0 ]
+  }, {
+    "bufferView" : 2,
+    "byteOffset" : 0,
+    "componentType" : 5126,
+    "count" : 24,
+    "type" : "VEC3",
+    "max" : [ 1.0, 1.0, 1.0 ],
+    "min" : [ -1.0, -1.0, -1.0 ]
+  }, {
+    "bufferView" : 3,
+    "byteOffset" : 0,
+    "componentType" : 5126,
+    "count" : 10,
+    "type" : "VEC3",
+    "max" : [ 10.0, 10.0, 10.0 ],
+    "min" : [ 0.0, 0.0, 0.0 ]
+  }, {
+    "bufferView" : 4,
+    "byteOffset" : 0,
+    "componentType" : 5123,
+    "normalized" : true,
+    "count" : 10,
+    "type" : "VEC4",
+    "max" : [ 48037, 30277, 12517, 65535 ],
+    "min" : [ 0, 0, 0, 30277 ]
+  }, {
+    "bufferView" : 5,
+    "byteOffset" : 0,
+    "componentType" : 5126,
+    "count" : 10,
+    "type" : "VEC3",
+    "max" : [ 2.0, 2.0, 2.0 ],
+    "min" : [ 1.0, 1.0, 1.0 ]
+  } ],
+  "asset" : {
+    "generator" : "JglTF from https://github.com/javagl/JglTF",
+    "version" : "2.0"
+  },
+  "buffers" : [ {
+    "uri" : "data:application/gltf-buffer;base64,AAAAAAIAAAABAAAAAAAAAAMAAAACAAAABAAAAAYAAAAFAAAABAAAAAcAAAAGAAAACAAAAAoAAAAJAAAACAAAAAsAAAAKAAAADAAAAA4AAAANAAAADAAAAA8AAAAOAAAAEAAAABIAAAARAAAAEAAAABMAAAASAAAAFAAAABYAAAAVAAAAFAAAABcAAAAWAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAgD8AAAAAAAAAAAAAgD8AAAAAAACAPwAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAIA/AACAPwAAgD8AAIA/AACAPwAAAAAAAAAAAACAPwAAAAAAAIA/AACAPwAAgD8AAIA/AACAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAIA/AAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAACAPwAAgD8AAIA/AAAAAAAAgD8AAIA/AAAAAAAAAAAAAIA/AACAPwAAAAAAAIA/AACAPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAA",
+    "byteLength" : 720
+  }, {
+    "uri" : "data:application/gltf-buffer;base64,AAAAAAAAAAAAAAAA5DiOP+Q4jj/kOI4/5DgOQOQ4DkDkOA5AVlVVQFZVVUBWVVVA5DiOQOQ4jkDkOI5AHcexQB3HsUAdx7FAVlXVQFZV1UBWVdVAjuP4QI7j+ECO4/hA5DgOQeQ4DkHkOA5BAAAgQQAAIEEAACBBAAAAAAAA//+TGR8QqgYe/sYyASA7DYT4O0trL5oTRO+VYiI+sBmD4n148UtlH2/SoYyjWKUkRb+0ngdkWylMqXSu9W11LdmQpbtFduUwRXYAAIA/AACAPwAAgD/kOI4/5DiOP+Q4jj/HcZw/x3GcP8dxnD+rqqo/q6qqP6uqqj+O47g/juO4P47juD9yHMc/chzHP3Icxz9WVdU/VlXVP1ZV1T85juM/OY7jPzmO4z8cx/E/HMfxPxzH8T8AAABAAAAAQAAAAEA=",
+    "byteLength" : 320
+  } ],
+  "bufferViews" : [ {
+    "buffer" : 0,
+    "byteOffset" : 0,
+    "byteLength" : 144,
+    "target" : 34963
+  }, {
+    "buffer" : 0,
+    "byteOffset" : 144,
+    "byteLength" : 288,
+    "target" : 34962
+  }, {
+    "buffer" : 0,
+    "byteOffset" : 432,
+    "byteLength" : 288,
+    "target" : 34962
+  }, {
+    "buffer" : 1,
+    "byteOffset" : 0,
+    "byteLength" : 120
+  }, {
+    "buffer" : 1,
+    "byteOffset" : 120,
+    "byteLength" : 80
+  }, {
+    "buffer" : 1,
+    "byteOffset" : 200,
+    "byteLength" : 120
+  } ],
+  "materials" : [ {
+    "pbrMetallicRoughness" : {
+      "baseColorFactor" : [ 0.0, 1.0, 0.0, 1.0 ],
+      "metallicFactor" : 1.0,
+      "roughnessFactor" : 1.0
+    },
+    "alphaMode" : "OPAQUE",
+    "doubleSided" : true
+  } ],
+  "meshes" : [ {
+    "primitives" : [ {
+      "attributes" : {
+        "POSITION" : 1,
+        "NORMAL" : 2
+      },
+      "indices" : 0,
+      "material" : 0,
+      "mode" : 4
+    } ]
+  } ],
+  "nodes" : [ {
+    "extensions" : {
+      "EXT_mesh_gpu_instancing" : {
+        "attributes" : {
+          "TRANSLATION" : 3,
+          "ROTATION" : 4,
+          "SCALE" : 5
+        }
+      }
+    },
+    "mesh" : 0
+  } ],
+  "scene" : 0,
+  "scenes" : [ {
+    "nodes" : [ 0 ]
+  } ]
+}

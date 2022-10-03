@@ -86,8 +86,9 @@ function parseFont(label) {
 }
 
 /**
- * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
- * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
+ * <div class="notice">
+ * Create labels by calling {@link LabelCollection#add}. Do not call the constructor directly.
+ * </div>
  *
  * @alias Label
  * @internalConstructor

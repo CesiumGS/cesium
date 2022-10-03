@@ -259,6 +259,12 @@ describe("ResourceCacheKey", function () {
     ],
   };
 
+  const mockFrameState = {
+    context: {
+      id: "01234",
+    },
+  };
+
   it("getSchemaCacheKey works for external schemas", function () {
     const cacheKey = ResourceCacheKey.getSchemaCacheKey({
       resource: schemaResource,
@@ -496,12 +502,13 @@ describe("ResourceCacheKey", function () {
       gltf: gltfUncompressed,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       bufferViewId: 0,
       loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-buffer"
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-buffer-context-01234"
     );
   });
 
@@ -513,13 +520,14 @@ describe("ResourceCacheKey", function () {
       gltf: gltfDraco,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       draco: draco,
       attributeSemantic: "POSITION",
       loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "vertex-buffer:https://example.com/resources/external.bin-range-0-100-draco-POSITION-buffer"
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-100-draco-POSITION-buffer-context-01234"
     );
   });
 
@@ -528,13 +536,14 @@ describe("ResourceCacheKey", function () {
       gltf: gltfUncompressed,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       bufferViewId: 0,
       dequantize: true,
       loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-dequantize-buffer"
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-dequantize-buffer-context-01234"
     );
   });
 
@@ -543,6 +552,7 @@ describe("ResourceCacheKey", function () {
       gltf: gltfUncompressed,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       bufferViewId: 0,
       loadTypedArray: true,
     });
@@ -557,13 +567,14 @@ describe("ResourceCacheKey", function () {
       gltf: gltfUncompressed,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       bufferViewId: 0,
       loadBuffer: true,
       loadTypedArray: true,
     });
 
     expect(cacheKey).toBe(
-      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-buffer-typed-array"
+      "vertex-buffer:https://example.com/resources/external.bin-range-0-40-buffer-context-01234-typed-array"
     );
   });
 
@@ -573,6 +584,7 @@ describe("ResourceCacheKey", function () {
         gltf: undefined,
         gltfResource: gltfResource,
         baseResource: baseResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
       });
     }).toThrowDeveloperError();
@@ -584,6 +596,7 @@ describe("ResourceCacheKey", function () {
         gltf: gltfUncompressed,
         gltfResource: undefined,
         baseResource: baseResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
       });
     }).toThrowDeveloperError();
@@ -595,6 +608,19 @@ describe("ResourceCacheKey", function () {
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: undefined,
+        frameState: mockFrameState,
+        bufferViewId: 0,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getVertexBufferCacheKey throws if frameState is undefined", function () {
+    expect(function () {
+      ResourceCacheKey.getVertexBufferCacheKey({
+        gltf: gltfUncompressed,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        frameState: undefined,
         bufferViewId: 0,
       });
     }).toThrowDeveloperError();
@@ -606,6 +632,7 @@ describe("ResourceCacheKey", function () {
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: baseResource,
+        frameState: mockFrameState,
       });
     }).toThrowDeveloperError();
   });
@@ -619,6 +646,7 @@ describe("ResourceCacheKey", function () {
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: baseResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
         draco: draco,
         attributeSemantic: "POSITION",
@@ -635,6 +663,7 @@ describe("ResourceCacheKey", function () {
         gltf: gltfDraco,
         gltfResource: gltfResource,
         baseResource: baseResource,
+        frameState: mockFrameState,
         draco: draco,
         attributeSemantic: undefined,
       });
@@ -647,6 +676,7 @@ describe("ResourceCacheKey", function () {
         gltf: gltfUncompressed,
         gltfResource: gltfResource,
         baseResource: baseResource,
+        frameState: mockFrameState,
         bufferViewId: 0,
         loadBuffer: false,
         loadTypedArray: false,
@@ -660,11 +690,12 @@ describe("ResourceCacheKey", function () {
       accessorId: 2,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36-buffer"
+      "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36-buffer-context-01234"
     );
   });
 
@@ -677,12 +708,13 @@ describe("ResourceCacheKey", function () {
       accessorId: 2,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       draco: draco,
       loadBuffer: true,
     });
 
     expect(cacheKey).toBe(
-      "index-buffer:https://example.com/resources/external.bin-range-0-100-draco-buffer"
+      "index-buffer:https://example.com/resources/external.bin-range-0-100-draco-buffer-context-01234"
     );
   });
 
@@ -692,6 +724,7 @@ describe("ResourceCacheKey", function () {
       accessorId: 2,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       loadTypedArray: true,
     });
 
@@ -706,12 +739,13 @@ describe("ResourceCacheKey", function () {
       accessorId: 2,
       gltfResource: gltfResource,
       baseResource: baseResource,
+      frameState: mockFrameState,
       loadBuffer: true,
       loadTypedArray: true,
     });
 
     expect(cacheKey).toBe(
-      "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36-buffer-typed-array"
+      "index-buffer:https://example.com/resources/external.bin-accessor-80-5123-SCALAR-36-buffer-context-01234-typed-array"
     );
   });
 
@@ -722,6 +756,7 @@ describe("ResourceCacheKey", function () {
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: baseResource,
+        frameState: mockFrameState,
         loadBuffer: true,
       });
     }).toThrowDeveloperError();
@@ -734,6 +769,7 @@ describe("ResourceCacheKey", function () {
         accessorId: 2,
         gltfResource: undefined,
         baseResource: baseResource,
+        frameState: mockFrameState,
         loadBuffer: true,
       });
     }).toThrowDeveloperError();
@@ -746,6 +782,20 @@ describe("ResourceCacheKey", function () {
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: undefined,
+        frameState: mockFrameState,
+        loadBuffer: true,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getIndexBufferCacheKey throws if frameState is undefined", function () {
+    expect(function () {
+      ResourceCacheKey.getIndexBufferCacheKey({
+        gltf: gltfUncompressed,
+        accessorId: 2,
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        frameState: undefined,
         loadBuffer: true,
       });
     }).toThrowDeveloperError();
@@ -758,6 +808,7 @@ describe("ResourceCacheKey", function () {
         accessorId: 2,
         gltfResource: gltfResource,
         baseResource: baseResource,
+        frameState: mockFrameState,
         loadBuffer: false,
         loadTypedArray: false,
       });
@@ -842,10 +893,11 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       supportedImageFormats: new SupportedImageFormats(),
+      frameState: mockFrameState,
     });
 
     expect(cacheKey).toBe(
-      "texture:https://example.com/resources/image.png-sampler-10497-10497-9729-9729"
+      "texture:https://example.com/resources/image.png-sampler-10497-10497-9729-9729-context-01234"
     );
   });
 
@@ -859,10 +911,11 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       supportedImageFormats: new SupportedImageFormats(),
+      frameState: mockFrameState,
     });
 
     expect(cacheKey).toBe(
-      "texture:https://example.com/resources/external.bin-range-0-100-sampler-33071-33648-9984-9728"
+      "texture:https://example.com/resources/external.bin-range-0-100-sampler-33071-33648-9984-9728-context-01234"
     );
   });
 
@@ -878,10 +931,11 @@ describe("ResourceCacheKey", function () {
       supportedImageFormats: new SupportedImageFormats({
         webp: true,
       }),
+      frameState: mockFrameState,
     });
 
     expect(cacheKey).toBe(
-      "texture:https://example.com/resources/image.webp-sampler-10497-10497-9729-9729"
+      "texture:https://example.com/resources/image.webp-sampler-10497-10497-9729-9729-context-01234"
     );
   });
 
@@ -895,10 +949,11 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       supportedImageFormats: new SupportedImageFormats(),
+      frameState: mockFrameState,
     });
 
     expect(cacheKey).toBe(
-      "texture:https://example.com/resources/image.png-sampler-10497-10497-9729-9729"
+      "texture:https://example.com/resources/image.png-sampler-10497-10497-9729-9729-context-01234"
     );
   });
 
@@ -914,10 +969,11 @@ describe("ResourceCacheKey", function () {
       supportedImageFormats: new SupportedImageFormats({
         basis: true,
       }),
+      frameState: mockFrameState,
     });
 
     expect(cacheKey).toBe(
-      "texture:https://example.com/resources/image.ktx2-sampler-10497-10497-9729-9729"
+      "texture:https://example.com/resources/image.ktx2-sampler-10497-10497-9729-9729-context-01234"
     );
   });
 
@@ -931,10 +987,11 @@ describe("ResourceCacheKey", function () {
       gltfResource: gltfResource,
       baseResource: baseResource,
       supportedImageFormats: new SupportedImageFormats(),
+      frameState: mockFrameState,
     });
 
     expect(cacheKey).toBe(
-      "texture:https://example.com/resources/image.png-sampler-10497-10497-9729-9729"
+      "texture:https://example.com/resources/image.png-sampler-10497-10497-9729-9729-context-01234"
     );
   });
 
@@ -949,6 +1006,7 @@ describe("ResourceCacheKey", function () {
         gltfResource: gltfResource,
         baseResource: baseResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
     }).toThrowDeveloperError();
   });
@@ -961,6 +1019,7 @@ describe("ResourceCacheKey", function () {
         gltfResource: gltfResource,
         baseResource: baseResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
     }).toThrowDeveloperError();
   });
@@ -976,6 +1035,7 @@ describe("ResourceCacheKey", function () {
         gltfResource: undefined,
         baseResource: baseResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
     }).toThrowDeveloperError();
   });
@@ -991,6 +1051,7 @@ describe("ResourceCacheKey", function () {
         gltfResource: gltfResource,
         baseResource: undefined,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
     }).toThrowDeveloperError();
   });
@@ -1006,6 +1067,23 @@ describe("ResourceCacheKey", function () {
         gltfResource: gltfResource,
         baseResource: baseResource,
         supportedImageFormats: undefined,
+        frameState: mockFrameState,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("getTextureCacheKey throws if frameState is undefined", function () {
+    expect(function () {
+      ResourceCacheKey.getTextureCacheKey({
+        gltf: gltfWithTextures,
+        textureInfo: {
+          index: 0,
+          texCoord: 0,
+        },
+        gltfResource: gltfResource,
+        baseResource: baseResource,
+        supportedImageFormats: new SupportedImageFormats(),
+        frameState: undefined,
       });
     }).toThrowDeveloperError();
   });

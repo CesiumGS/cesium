@@ -605,7 +605,8 @@ span.attribute-abstract,
 span.attribute-static,
 span.attribute-readonly,
 span.attribute-deprecated,
-span.attribute-constant {
+span.attribute-constant,
+span.signature-internal-constructor {
   display: inline-block;
   border-radius: 3px;
   background-color: #779c34 !important;
@@ -625,6 +626,10 @@ span.attribute-abstract {
 
 span.attribute-deprecated {
   background-color: #950b02 !important;
+}
+
+span.signature-internal-constructor {
+  background-color: #8f9148 !important;
 }
 
 .description {
@@ -665,4 +670,15 @@ div.tag-experimental > h5 {
 }
 div.tag-experimental > p {
   margin: 0 0 5px;
+}
+
+div.notice {
+  padding: 10px;
+  background-color: #fafbb5;
+  color: #47472f;
+}
+
+/* Match the background color of the notice div */
+div.notice code {
+  background-color: inherit;
 }

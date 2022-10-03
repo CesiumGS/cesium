@@ -14,9 +14,9 @@ describe(
   "Scene/Model/ModelAnimationCollection",
   function () {
     const animatedTriangleUrl =
-      "./Data/Models/GltfLoader/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
+      "./Data/Models/glTF-2.0/AnimatedTriangle/glTF/AnimatedTriangle.gltf";
     const interpolationTestUrl =
-      "./Data/Models/GltfLoader/InterpolationTest/glTF-Binary/InterpolationTest.glb";
+      "./Data/Models/glTF-2.0/InterpolationTest/glTF-Binary/InterpolationTest.glb";
 
     const defaultDate = JulianDate.fromDate(
       new Date("January 1, 2014 12:00:00 UTC")

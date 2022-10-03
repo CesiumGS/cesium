@@ -1,5 +1,34 @@
 # Change Log
 
+### 1.98.1 - 2022-10-03
+
+- This is an npm only release to fix the improperly published 1.98.
+
+### 1.98 - 2022-10-03
+
+#### Breaking Changes :mega:
+
+- As of the previous release (1.97), `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
+
+##### Additions :tada:
+
+- Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models. [#10758](https://github.com/CesiumGS/cesium/pull/10758)
+
+##### Fixes :wrench:
+
+- Fixed a bug where instanced models without normals would not render. [#10765](https://github.com/CesiumGS/cesium/pull/10765)
+- Fixed a regression where `i3dm` with scale and without rotation would render incorrectly. [#10808](https://github.com/CesiumGS/cesium/pull/10808)
+- Fixed a regression where instanced feature IDs were not processed correctly [#10771](https://github.com/CesiumGS/cesium/pull/10771)
+- Fixed a regression where `Cesium3DTileFeature.setProperty()` was not creating properties for unknown property IDs. [#10775](https://github.com/CesiumGS/cesium/pull/10775)
+- Fixed a regression where `pnts` tiles with `3DTILES_draco_point_compression` and <= 8 quantization bits were being rendered incorrectly. [#10794](https://github.com/CesiumGS/cesium/pull/10794)
+- Fixed a regression where glTF models with unused nodes would crash [#10813](https://github.com/CesiumGS/cesium/pull/10813)
+- Fixed a regression where tilesets would not load in multiple `Viewer`s. [#10828](https://github.com/CesiumGS/cesium/pull/10828)
+- Fixed a bug where camera would not follow the `Viewer.trackedEntity` if it had a model with a `HeightReference` other than `NONE`. [#10805](https://github.com/CesiumGS/cesium/pull/10805)
+- Fixed a bug where calling `removeAll` on a `ClippingPlaneCollection` attached to a `Model` would cause a crash. [#10827](https://github.com/CesiumGS/cesium/pull/10827)
+- Fixed a bug where replacing a `Model`'s `ClippingPlaneCollection` with one of the same length would cause a crash. [#10831](https://github.com/CesiumGS/cesium/pull/10831)
+- Fixed a bug where KMLs with a NetworkLink with viewRefreshMode=='onRegion' would cause Cesium to make numerous resource requests and possibly trigger an out of memory error. [#10790](https://github.com/CesiumGS/cesium/pull/10790)
+- Fixed a bug where calling `Vector3DTileContent.getFeature` before a render update could result in no feature being returned. [#10819](https://github.com/CesiumGS/cesium/pull/10819)
+
 ### 1.97 - 2022-09-01
 
 #### Major Announcements :loudspeaker:
@@ -23,6 +52,7 @@
 - Support for rendering instanced models on the CPU has been removed.
 - `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been removed.
 - `ModelMesh` and `ModelMaterial` have been removed.
+- `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
 
 ##### Additions :tada:
 

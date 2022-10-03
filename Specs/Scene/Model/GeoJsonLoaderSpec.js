@@ -2,6 +2,7 @@ import {
   GeoJsonLoader,
   IndexDatatype,
   Matrix4,
+  PrimitiveType,
   Resource,
   ResourceCache,
   VertexAttributeSemantic,
@@ -12,6 +13,9 @@ import waitForLoaderProcess from "../../waitForLoaderProcess.js";
 describe(
   "Scene/Model/GeoJsonLoader",
   function () {
+    const geoJsonMultiPointUrl =
+      "./Data/Cesium3DTiles/GeoJson/MultiPoint/multiPoint.geojson";
+    const geoJsonPointUrl = "./Data/Cesium3DTiles/GeoJson/Point/point.geojson";
     const geoJsonMultiPolygonUrl =
       "./Data/Cesium3DTiles/GeoJson/MultiPolygon/multiPolygon.geojson";
     const geoJsonPolygonUrl =
@@ -116,10 +120,12 @@ describe(
         );
         expect(featureIdAttribute.count).toBe(expected.vertexCount);
 
-        expect(indices.buffer).toBeDefined();
-        expect(indices.buffer.sizeInBytes).toBe(expected.indexCount * 2);
-        expect(indices.count).toBe(expected.indexCount);
-        expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
+        if (primitive.primitiveType === PrimitiveType.LINES) {
+          expect(indices.buffer).toBeDefined();
+          expect(indices.buffer.sizeInBytes).toBe(expected.indexCount * 2);
+          expect(indices.count).toBe(expected.indexCount);
+          expect(indices.indexDatatype).toBe(IndexDatatype.UNSIGNED_SHORT);
+        }
 
         expect(material.unlit).toBe(true);
         expect(primitive.featureIds.length).toBe(1);
@@ -146,6 +152,22 @@ describe(
         }
       });
     }
+
+    it("loads GeoJSON MultiPoint", function () {
+      return testLoader(geoJsonMultiPointUrl, {
+        vertexCount: 10,
+        featureCount: 1,
+        hasProperties: true,
+      });
+    });
+
+    it("loads GeoJSON Point", function () {
+      return testLoader(geoJsonPointUrl, {
+        vertexCount: 1,
+        featureCount: 1,
+        hasProperties: true,
+      });
+    });
 
     it("loads GeoJSON MultiPolygon", function () {
       return testLoader(geoJsonMultiPolygonUrl, {

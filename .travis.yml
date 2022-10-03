@@ -4,6 +4,11 @@ node_js:
 addons:
   chrome: stable
   firefox: latest
+notifications:
+  slack:
+    secure: JKzk2sJSbZ9h2PUVWj6KtOAdFbEEnOtv/VZy05pJ2H41xRgUHiGdtMW/vMSeq6XX3IJN8eW2zd0cJTgkFn0ioAlYvID8zRhcvkFHg60QXquoqtp5y65dxjtVz79hefxSo7FO1NhMZBQWE9Tg6R7XkoyTMth62+T9vqOgu2Hms6M=
+    if: (branch = main) AND (type = push)
+    on_success: change # default: always
 script:
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
 
@@ -20,5 +25,5 @@ script:
 
   - npm --silent run build-apps
 
-  - npm --silent run deploy-s3 -- -c 'public, max-age=1800' --confirm
-  - npm --silent run deploy-status -- --status success --message Deployed
+  - ./scripts/deploy.sh
+

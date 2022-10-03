@@ -74,9 +74,9 @@ describe(
     }
 
     const morphPrimitivesTestUrl =
-      "./Data/Models/GltfLoader/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
+      "./Data/Models/glTF-2.0/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf";
     const animatedMorphCubeUrl =
-      "./Data/Models/GltfLoader/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
+      "./Data/Models/glTF-2.0/AnimatedMorphCube/glTF/AnimatedMorphCube.gltf";
 
     it("processes morph target with POSITION", function () {
       const renderResources = {
