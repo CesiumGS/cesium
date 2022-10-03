@@ -26,8 +26,15 @@ script:
 
   - npm --silent run build-apps
 
-  - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
-  - npm --silent run deploy-status -- --status success --message Deployed
+  - |
+    if [ $TRAVIS_REPO_SLUG == "CesiumGS/cesium" ]; then
+      npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+    fi
+    
+  - |
+    if [ $TRAVIS_REPO_SLUG == "CesiumGS/cesium" ]; then
+        npm --silent run deploy-status -- --status success --message Deployed
+    fi
 
   - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
 
