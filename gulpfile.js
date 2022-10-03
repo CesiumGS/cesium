@@ -739,7 +739,7 @@ async function deployCesiumRelease(s3, errors) {
       }
     );
 
-    const body = response.json();
+    const body = await response.json();
 
     release = {
       tag: body.tag_name,
