@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.98.1 - 2022-10-03
+
+- This is an npm only release to fix the improperly published 1.98.
+
 ### 1.98 - 2022-10-03
 
 #### Breaking Changes :mega:
