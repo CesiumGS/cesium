@@ -575,8 +575,6 @@ gulp.task("deploy-s3", function (done) {
     return;
   }
 
-  const argv = yargs.usage("Usage: deploy-s3").argv;
-
   const cacheControl = argv.c ? argv.c : "max-age=3600";
 
   if (argv.confirm) {
