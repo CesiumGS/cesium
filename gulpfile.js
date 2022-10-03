@@ -28,7 +28,7 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 
-import { get } from "request";
+import request from "request";
 import download from "download";
 import decompress from "decompress";
 
@@ -428,7 +428,7 @@ export async function buildDocsWatch() {
 
 gulp.task(
   "website-release",
-  gulp.series("build", combineForSandcastle, buildDocs)
+  gulp.series(build, combineForSandcastle, buildDocs)
 );
 
 function combineForSandcastle() {
@@ -606,7 +606,6 @@ gulp.task("deploy-s3", function (done) {
 });
 
 // Deploy cesium to s3
-// Deploy cesium to s3
 function deployCesium(cacheControl, done) {
   const refDocPrefix = "cesiumjs/ref-doc";
   const sandcastlePrefix = "sandcastle";
@@ -727,7 +726,7 @@ async function deployCesiumRelease(s3, errors) {
   let release;
   try {
     // Deploy any new releases
-    const getRequest = await Promise.promisify(get);
+    const getRequest = await Promise.promisify(request.get);
     const response = await getRequest({
       method: "GET",
       uri: "https://api.github.com/repos/CesiumGS/cesium/releases/latest",
