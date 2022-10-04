@@ -1,6 +1,5 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import HeadingPitchRoll from "../../Core/HeadingPitchRoll.js";
@@ -64,20 +63,19 @@ function VoxelInspectorViewModel(scene) {
 
   const that = this;
   function addProperty(options) {
-    const name = options.name;
-    const initialValue = options.initialValue;
-    const toggle = defaultValue(options.toggle, false);
-    let setPrimitiveFunction = options.setPrimitiveFunction;
-    let getPrimitiveFunction = options.getPrimitiveFunction;
+    const { name, initialValue } = options;
 
     that[name] = initialValue;
     that._definedProperties.push(name);
 
+    let setPrimitiveFunction = options.setPrimitiveFunction;
     if (setPrimitiveFunction === true) {
       setPrimitiveFunction = function (value) {
         that._voxelPrimitive[name] = value;
       };
     }
+
+    let getPrimitiveFunction = options.getPrimitiveFunction;
     if (getPrimitiveFunction === true) {
       getPrimitiveFunction = function () {
         that[name] = that._voxelPrimitive[name];
@@ -85,12 +83,6 @@ function VoxelInspectorViewModel(scene) {
     }
     if (defined(getPrimitiveFunction)) {
       that._getPrimitiveFunctions.push(getPrimitiveFunction);
-    }
-
-    if (toggle) {
-      that.constructor.prototype[`${name}Toggle`] = function () {
-        that[name] = !that[name];
-      };
     }
 
     const knock = knockout.observable();
@@ -120,21 +112,6 @@ function VoxelInspectorViewModel(scene) {
   }
 
   addProperty({
-    name: "inspectorVisible",
-    initialValue: false,
-    toggle: true,
-  });
-  addProperty({
-    name: "displayVisible",
-    initialValue: false,
-    toggle: true,
-  });
-  addProperty({
-    name: "shaderVisible",
-    initialValue: false,
-    toggle: true,
-  });
-  addProperty({
     name: "shaderString",
     initialValue: "",
     getPrimitiveFunction: function () {
@@ -149,21 +126,6 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "shaderCompilationSuccess",
     initialValue: true,
-  });
-  addProperty({
-    name: "transformVisible",
-    initialValue: false,
-    toggle: true,
-  });
-  addProperty({
-    name: "boundsVisible",
-    initialValue: false,
-    toggle: true,
-  });
-  addProperty({
-    name: "clippingVisible",
-    initialValue: false,
-    toggle: true,
   });
   addProperty({
     name: "depthTest",
