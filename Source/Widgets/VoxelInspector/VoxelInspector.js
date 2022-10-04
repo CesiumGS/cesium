@@ -47,21 +47,21 @@ function VoxelInspector(container, scene) {
   panel.className = "cesium-cesiumInspector-dropDown";
   element.appendChild(panel);
 
-  const { createCheckbox } = InspectorShared;
-
   // Display
   const displayPanelContents = createSection(panel, "Display");
 
-  displayPanelContents.appendChild(createCheckbox("Depth Test", "depthTest"));
-  displayPanelContents.appendChild(createCheckbox("Show", "show"));
-  displayPanelContents.appendChild(
-    createCheckbox("Disable Update", "disableUpdate")
-  );
-  displayPanelContents.appendChild(createCheckbox("Debug Draw", "debugDraw"));
-  displayPanelContents.appendChild(createCheckbox("Jitter", "jitter"));
-  displayPanelContents.appendChild(
-    createCheckbox("Nearest Sampling", "nearestSampling")
-  );
+  const { createCheckbox } = InspectorShared;
+  [
+    ["Depth Test", "depthTest"],
+    ["Show", "show"],
+    ["Disable Update", "disableUpdate"],
+    ["Debug Draw", "debugDraw"],
+    ["Jitter", "jitter"],
+    ["Nearest Sampling", "nearestSampling"],
+  ].forEach(([title, variable]) => {
+    displayPanelContents.appendChild(createCheckbox(title, variable));
+  });
+
   displayPanelContents.appendChild(
     makeRangeInput("Level Blend Factor", "levelBlendFactor", 0.0, 1.0)
   );
@@ -287,6 +287,18 @@ function VoxelInspector(container, scene) {
 }
 
 Object.defineProperties(VoxelInspector.prototype, {
+  /**
+   * Gets the parent container.
+   * @memberof VoxelInspector.prototype
+   *
+   * @type {Element}
+   */
+  container: {
+    get: function () {
+      return this._container;
+    },
+  },
+
   /**
    * Gets the view model.
    * @memberof VoxelInspector.prototype
