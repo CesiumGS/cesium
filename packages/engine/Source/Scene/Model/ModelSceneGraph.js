@@ -255,8 +255,9 @@ function initialize(sceneGraph) {
   const nodesLength = nodes.length;
 
   // Initialize this array to be the same size as the nodes array in
-  // the model's file. This is so nodes can be stored by their index
-  // in the file, for future ease of access.
+  // the model file. This is so the node indices remain the same. However,
+  // only nodes reachable from the scene's root node will be populated, the
+  // rest will be undefined
   sceneGraph._runtimeNodes = new Array(nodesLength);
 
   const rootNodes = scene.nodes;
@@ -483,6 +484,13 @@ ModelSceneGraph.prototype.buildDrawCommands = function (frameState) {
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
+
+    // If a node in the model was unreachable from the scene graph, there will
+    // be no corresponding runtime node and therefore should be skipped.
+    if (!defined(runtimeNode)) {
+      continue;
+    }
+
     runtimeNode.configurePipeline();
     const nodePipelineStages = runtimeNode.pipelineStages;
 
@@ -637,6 +645,12 @@ ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
 
   for (i = 0; i < this._runtimeNodes.length; i++) {
     const runtimeNode = this._runtimeNodes[i];
+
+    // If a node in the model was unreachable from the scene graph, there will
+    // be no corresponding runtime node and therefore should be skipped.
+    if (!defined(runtimeNode)) {
+      continue;
+    }
 
     for (j = 0; j < runtimeNode.updateStages.length; j++) {
       const nodeUpdateStage = runtimeNode.updateStages[j];

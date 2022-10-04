@@ -11,11 +11,12 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  *
  * @private
  */
-const ModelColorPipelineStage = {};
-ModelColorPipelineStage.name = "ModelColorPipelineStage"; // Helps with debugging
+const ModelColorPipelineStage = {
+  name: "ModelColorPipelineStage", // Helps with debugging
 
-ModelColorPipelineStage.COLOR_UNIFORM_NAME = "model_color";
-ModelColorPipelineStage.COLOR_BLEND_UNIFORM_NAME = "model_colorBlend";
+  COLOR_UNIFORM_NAME: "model_color",
+  COLOR_BLEND_UNIFORM_NAME: "model_colorBlend",
+};
 
 /**
  * Process a model. This modifies the following parts of the render resources:

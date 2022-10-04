@@ -1,6 +1,5 @@
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
  * A feature of a {@link Cesium3DTileset}.
@@ -193,25 +192,6 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
  */
 Cesium3DTileFeature.prototype.hasProperty = function (name) {
   return this._content.batchTable.hasProperty(this._batchId, name);
-};
-
-/**
- * Returns an array of property names for the feature. This includes properties from this feature's
- * class and inherited classes when using a batch table hierarchy.
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
- *
- * @deprecated
- *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The names of the feature's properties.
- */
-Cesium3DTileFeature.prototype.getPropertyNames = function (results) {
-  deprecationWarning(
-    "Cesium3DTileFeature.getPropertyNames",
-    "Cesium3DTileFeature.getPropertyNames was deprecated in CesiumJS 1.95 and will be removed in 1.98. Use Cesium3DTileFeature.getPropertyIds instead"
-  );
-  return this._content.batchTable.getPropertyIds(this._batchId, results);
 };
 
 /**

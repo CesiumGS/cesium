@@ -9,11 +9,11 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  *
  * @private
  */
-const ModelSplitterPipelineStage = {};
-ModelSplitterPipelineStage.name = "ModelSplitterPipelineStage"; // Helps with debugging
+const ModelSplitterPipelineStage = {
+  name: "ModelSplitterPipelineStage", // Helps with debugging
 
-ModelSplitterPipelineStage.SPLIT_DIRECTION_UNIFORM_NAME =
-  "model_splitDirection";
+  SPLIT_DIRECTION_UNIFORM_NAME: "model_splitDirection",
+};
 
 /**
  * Process a model. This modifies the following parts of the render resources:

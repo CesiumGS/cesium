@@ -11,8 +11,9 @@ import Pass from "../../Renderer/Pass.js";
  *
  * @private
  */
-const AlphaPipelineStage = {};
-AlphaPipelineStage.name = "AlphaPipelineStage"; // Helps with debugging
+const AlphaPipelineStage = {
+  name: "AlphaPipelineStage", // Helps with debugging
+};
 
 AlphaPipelineStage.process = function (renderResources, primitive, frameState) {
   const alphaOptions = renderResources.alphaOptions;

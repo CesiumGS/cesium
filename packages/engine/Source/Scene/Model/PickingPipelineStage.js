@@ -14,8 +14,9 @@ import ModelUtility from "./ModelUtility.js";
  * @namespace PickingPipelineStage
  * @private
  */
-const PickingPipelineStage = {};
-PickingPipelineStage.name = "PickingPipelineStage"; // Helps with debugging
+const PickingPipelineStage = {
+  name: "PickingPipelineStage", // Helps with debugging
+};
 
 /**
  * Process a primitive. This modifies the following parts of the render resources:

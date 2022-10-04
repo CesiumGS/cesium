@@ -3091,6 +3091,13 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
           "viewRefreshMode",
           namespaces.kml
         );
+        if (viewRefreshMode === "onRegion") {
+          oneTimeWarning(
+            "kml-refrehMode-onRegion",
+            "KML - Unsupported viewRefreshMode: onRegion"
+          );
+          return;
+        }
         viewBoundScale = defaultValue(
           queryStringValue(link, "viewBoundScale", namespaces.kml),
           1.0
@@ -3255,11 +3262,6 @@ function processNetworkLink(dataSource, node, processingData, deferredLoading) {
             if (defined(networkLinkInfo.refreshMode)) {
               dataSource._networkLinks.set(networkLinkInfo.id, networkLinkInfo);
             }
-          } else if (viewRefreshMode === "onRegion") {
-            oneTimeWarning(
-              "kml-refrehMode-onRegion",
-              "KML - Unsupported viewRefreshMode: onRegion"
-            );
           }
         })
         .catch(function (error) {

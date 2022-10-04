@@ -46,7 +46,9 @@ import Primitive from "./Primitive.js";
 import ShadowMapShader from "./ShadowMapShader.js";
 
 /**
+ * <div class="notice">
  * Use {@link Viewer#shadowMap} to get the scene's shadow map. Do not construct this directly.
+ * </div>
  *
  * <p>
  * The normalOffset bias pushes the shadows forward slightly, and may be disabled
@@ -57,19 +59,20 @@ import ShadowMapShader from "./ShadowMapShader.js";
  * @internalConstructor
  * @class
  *
- * @param {Object} options An object containing the following properties:
- * @param {Camera} options.lightCamera A camera representing the light source.
- * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
- * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
- * @param {Number} [options.pointLightRadius=100.0] Radius of the point light.
- * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
- * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
- * @param {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
- * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
- * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
- * @param {Number} [options.darkness=0.3] The shadow darkness.
- * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
- * @param {Boolean} [options.fadingEnabled=true] Whether shadows start to fade out once the light gets closer to the horizon.
+ * @privateParam {Object} options An object containing the following properties:
+ * @privateParam {Context} options.context The context
+ * @privateParam {Camera} options.lightCamera A camera representing the light source.
+ * @privateParam {Boolean} [options.enabled=true] Whether the shadow map is enabled.
+ * @privateParam {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
+ * @privateParam {Number} [options.pointLightRadius=100.0] Radius of the point light.
+ * @privateParam {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
+ * @privateParam {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
+ * @privateParam {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
+ * @privateParam {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
+ * @privateParam {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
+ * @privateParam {Number} [options.darkness=0.3] The shadow darkness.
+ * @privateParam {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
+ * @privateParam {Boolean} [options.fadingEnabled=true] Whether shadows start to fade out once the light gets closer to the horizon.
  *
  * @exception {DeveloperError} Only one or four cascades are supported.
  *
@@ -77,7 +80,6 @@ import ShadowMapShader from "./ShadowMapShader.js";
  */
 function ShadowMap(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  // options.context is an undocumented option
   const context = options.context;
 
   //>>includeStart('debug', pragmas.debug);

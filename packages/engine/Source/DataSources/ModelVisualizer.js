@@ -474,6 +474,8 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
     }
 
     BoundingSphere.clone(clampedBoundingSphere, result);
+    // Reset the clamped bounding sphere.
+    this._modelHash[entity.id].clampedBoundingSphere = undefined;
     return BoundingSphereState.DONE;
   }
 

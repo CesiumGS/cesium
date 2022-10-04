@@ -14,8 +14,9 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  *
  * @private
  */
-const CPUStylingPipelineStage = {};
-CPUStylingPipelineStage.name = "CPUStylingPipelineStage"; // Helps with debugging
+const CPUStylingPipelineStage = {
+  name: "CPUStylingPipelineStage", // Helps with debugging
+};
 
 /**
  * Processes a primitive. This modifies the following parts of the render resources:

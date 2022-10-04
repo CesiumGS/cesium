@@ -239,7 +239,10 @@ function processDracoAttributes(loader, draco, result) {
       attribute.quantizedRange = quantizedRange;
       attribute.quantizedVolumeOffset = quantizedVolumeOffset;
       attribute.quantizedVolumeScale = quantizedVolumeScale;
-      attribute.quantizedComponentDatatype = ComponentDatatype.UNSIGNED_SHORT;
+      attribute.quantizedComponentDatatype =
+        quantizedRange <= 255
+          ? ComponentDatatype.UNSIGNED_BYTE
+          : ComponentDatatype.UNSIGNED_SHORT;
       attribute.quantizedType = AttributeType.VEC3;
     }
 
