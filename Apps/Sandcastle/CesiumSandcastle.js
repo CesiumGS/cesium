@@ -203,11 +203,8 @@ require({
 
   xhr
     .get({
-      url: "https://cesium.com/learn/cesiumjs/ref-doc/types.txt",
+      url: "../../Build/Documentation/types.txt",
       handleAs: "json",
-      headers: {
-        "X-Requested-With": null, // Set by default, unsetting it is required to ensure simple CORS request.
-      },
       error: function (error) {
         docError = true;
       },
@@ -295,7 +292,7 @@ require({
           .replace("module-", "")
           .replace("#.", ".")
           .replace("#", ".");
-        ele.href = `https://cesium.com/learn/cesiumjs/ref-doc/${member}`;
+        ele.href = `../../Build/Documentation/${member}`;
         ele.onclick = onDocClick;
         docMessage.appendChild(ele);
       }

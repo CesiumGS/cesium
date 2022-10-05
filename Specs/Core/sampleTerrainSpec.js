@@ -16,7 +16,7 @@ describe("Core/sampleTerrain", function () {
     return worldTerrain.readyPromise;
   });
 
-  xit("queries heights", function () {
+  it("queries heights", function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
@@ -33,7 +33,7 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
-  xit("queries heights from Small Terrain", function () {
+  it("queries heights from Small Terrain", function () {
     const terrainProvider = new CesiumTerrainProvider({
       url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
     });
@@ -54,7 +54,7 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
-  xit("sets height to undefined if terrain data is not available at the position and specified level", function () {
+  it("sets height to undefined if terrain data is not available at the position and specified level", function () {
     const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
 
     return sampleTerrain(worldTerrain, 18, positions).then(function () {
@@ -62,7 +62,7 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
-  xit("fills in what it can when given a mix of positions with and without valid tiles", function () {
+  it("fills in what it can when given a mix of positions with and without valid tiles", function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(0.0, 89.0, 0.0),
@@ -78,7 +78,7 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
-  xit("requires terrainProvider, level, and positions", function () {
+  it("requires terrainProvider, level, and positions", function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(0.0, 0.0, 0.0),
@@ -98,7 +98,7 @@ describe("Core/sampleTerrain", function () {
     }).toThrowDeveloperError();
   });
 
-  xit("works for a dodgy point right near the edge of a tile", function () {
+  it("works for a dodgy point right near the edge of a tile", function () {
     const positions = [
       new Cartographic(0.33179290856829535, 0.7363107781851078),
     ];
@@ -210,7 +210,7 @@ describe("Core/sampleTerrain", function () {
       };
     }
 
-    xit("should work for Cesium World Terrain", function () {
+    it("should work for Cesium World Terrain", function () {
       patchXHRLoad({
         "/layer.json": "Data/CesiumTerrainTileJson/9_759_335/layer.json",
         "/9/759/335.terrain?v=1.2.0":
@@ -251,7 +251,7 @@ describe("Core/sampleTerrain", function () {
       });
     });
 
-    xit("should work for ArcGIS terrain", function () {
+    it("should work for ArcGIS terrain", function () {
       patchXHRLoad({
         "/?f=pjson": "Data/ArcGIS/9_214_379/root.json",
         "/tilemap/10/384/640/128/128":

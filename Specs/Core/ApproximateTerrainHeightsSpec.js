@@ -2,8 +2,9 @@ import {
   ApproximateTerrainHeights,
   Cartesian3,
   Rectangle,
-  Math as CesiumMath,
-} from "../../Source/Cesium.js";
+} from "../../../Source/Cesium.js";
+
+import { Math as CesiumMath } from "../../Source/Cesium.js";
 
 describe("Core/ApproximateTerrainHeights", function () {
   beforeAll(function () {

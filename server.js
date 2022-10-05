@@ -9,6 +9,7 @@ import chokidar from "chokidar";
 import compression from "compression";
 import express from "express";
 import mkdirp from "mkdirp";
+import rimraf from "rimraf";
 import yargs from "yargs";
 
 const argv = yargs(process.argv)
@@ -75,6 +76,7 @@ async function buildDev() {
   const start = performance.now();
 
   mkdirp.sync("Build");
+  rimraf.sync(outputDirectory);
 
   fs.writeFileSync(
     "Build/package.json",

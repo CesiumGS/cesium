@@ -335,7 +335,7 @@ describe("Scene/GlobeSurfaceTile", function () {
         scene.destroyForSpecs();
       });
 
-      xit("gets correct results even when the mesh includes normals", function () {
+      it("gets correct results even when the mesh includes normals", function () {
         const terrainProvider = createWorldTerrain({
           requestVertexNormals: true,
           requestWaterMask: false,
