@@ -435,7 +435,13 @@ function combineForSandcastle() {
 }
 
 export const websiteRelease = gulp.series(
-  build,
+  function () {
+    return buildCesium({
+      minify: false,
+      removePragmas: false,
+      node: false,
+    });
+  },
   combineForSandcastle,
   buildDocs
 );

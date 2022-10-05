@@ -17,14 +17,6 @@ script:
   - npm --silent run markdownlint
   - npm --silent run prettier-check
 
-  - npm --silent run build -- --node
-
-  - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
-
-  - npm --silent run make-zip
-  - npm pack &> /dev/null
-
-  - npm --silent run build-apps
-
+  - ./travis/release.sh
   - ./travis/deploy.sh
   - ./travis/verify.sh
