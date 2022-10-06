@@ -1002,6 +1002,9 @@ function uploadObject(bucketName, s3, key, contents, quiet) {
 }
 
 function getMimeType(filename) {
+  //Remove page anchors from documentation, as mime does not properly handle them
+  filename = filename.split("#")[0];
+
   const mimeType = mime.getType(filename);
   if (mimeType) {
     //Compress everything except zipfiles, binary images, and video
