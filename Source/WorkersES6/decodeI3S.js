@@ -264,6 +264,22 @@ function generateGltfBuffer(
   });
   const positionsURL = URL.createObjectURL(positionsBlob);
 
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  let minZ = Number.POSITIVE_INFINITY;
+  let maxZ = Number.NEGATIVE_INFINITY;
+
+  for (let i = 0; i < meshPositions.length / 3; i++) {
+    minX = Math.min(minX, meshPositions[i * 3 + 0]);
+    maxX = Math.max(maxX, meshPositions[i * 3 + 0]);
+    minY = Math.min(minY, meshPositions[i * 3 + 1]);
+    maxY = Math.max(maxY, meshPositions[i * 3 + 1]);
+    minZ = Math.min(minZ, meshPositions[i * 3 + 2]);
+    maxZ = Math.max(maxZ, meshPositions[i * 3 + 2]);
+  }
+
   // NORMALS
   const meshNormals = normals ? normals.subarray(0, endIndex * 3) : undefined;
   let normalsURL;
@@ -329,8 +345,8 @@ function generateGltfBuffer(
     componentType: 5126,
     count: vertexCount,
     type: "VEC3",
-    max: [0, 0, 0],
-    min: [0, 0, 0],
+    max: [minX, minY, minZ],
+    min: [maxX, maxY, maxZ],
   });
 
   // NORMALS
