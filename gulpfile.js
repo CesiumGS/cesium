@@ -1,7 +1,7 @@
 /*eslint-env node*/
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import { join, basename, relative, extname, resolve } from "path";
+import { join, basename, relative, extname, resolve, posix } from "path";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
 import { gzipSync } from "zlib";
@@ -28,6 +28,8 @@ import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 import pLimit from "p-limit";
+import download from "download";
+import decompress from "decompress";
 
 import {
   createCesiumJs,
@@ -48,16 +50,19 @@ let version = packageJson.version;
 if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
-
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
 
 const travisDeployUrl =
   "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+const isProduction = process.env.TRAVIS_BRANCH === "cesium.com";
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
 const taskName = process.argv[2];
-const noDevelopmentGallery = taskName === "release" || taskName === "makeZip";
+const noDevelopmentGallery =
+  taskName === "release" ||
+  taskName === "makeZip" ||
+  taskName === "websiteRelease";
 const argv = yargs(process.argv).argv;
 const verbose = argv.verbose;
 
@@ -116,10 +121,9 @@ async function buildCesium(options) {
   options = options || {};
   mkdirp.sync("Build");
 
-  const outputDirectory = join(
-    "Build",
-    `Cesium${!options.minify ? "Unminified" : ""}`
-  );
+  const outputDirectory =
+    options.outputDirectory ||
+    join("Build", `Cesium${!options.minify ? "Unminified" : ""}`);
   rimraf.sync(outputDirectory);
 
   writeFileSync(
@@ -416,10 +420,31 @@ export function buildDocs() {
 
 export async function buildDocsWatch() {
   await buildDocs();
-
   console.log("Listening for changes in documentation...");
   return gulp.watch(sourceFiles, buildDocs);
 }
+
+function combineForSandcastle() {
+  const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
+  return buildCesium({
+    minify: false,
+    removePragmas: false,
+    node: false,
+    outputDirectory: outputDirectory,
+  });
+}
+
+export const websiteRelease = gulp.series(
+  function () {
+    return buildCesium({
+      minify: false,
+      removePragmas: false,
+      node: false,
+    });
+  },
+  combineForSandcastle,
+  buildDocs
+);
 
 export const release = gulp.series(
   function () {
@@ -467,6 +492,7 @@ export const makeZip = gulp.series(release, async function () {
   delete scripts["deploy-s3"];
   delete scripts["deploy-status"];
   delete scripts["deploy-set-version"];
+  delete scripts["website-release"];
 
   await writeFile(
     "./Build/package.noprepare.json",
@@ -568,7 +594,6 @@ export async function deployS3() {
         alias: "d",
         description: "Upload directory.",
         type: "string",
-        demandOption: true,
       },
       "cache-control": {
         alias: "c",
@@ -583,7 +608,7 @@ export async function deployS3() {
         default: false,
       },
       confirm: {
-        description: "Skip confirmation step.",
+        description: "Skip confirmation step, useful for CI.",
         type: "boolean",
         default: false,
       },
@@ -595,8 +620,7 @@ export async function deployS3() {
   const cacheControl = argv.cacheControl ? argv.cacheControl : "max-age=3600";
 
   if (argv.confirm) {
-    // skip prompt for travis
-    return deployCesium(bucketName, uploadDirectory, cacheControl);
+    return deployCesium(bucketName, uploadDirectory, cacheControl, dryRun);
   }
 
   const iface = createInterface({
@@ -629,6 +653,10 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   // files off disk in parallel
   const limit = pLimit(2000);
 
+  const refDocPrefix = "cesiumjs/ref-doc/";
+  const sandcastlePrefix = "sandcastle/";
+  const cesiumViewerPrefix = "cesiumjs/cesium-viewer/";
+
   const s3 = new aws.S3({
     maxRetries: 10,
     retryDelayOptions: {
@@ -642,29 +670,9 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   let skipped = 0;
   const errors = [];
 
-  const prefix = `${uploadDirectory}/`;
-  await listAll(s3, bucketName, prefix, existingBlobs);
-  const files = await globby(
-    [
-      "Apps/**",
-      "Build/**",
-      "Source/**",
-      "Specs/**",
-      "ThirdParty/**",
-      "*.md",
-      "favicon.ico",
-      "gulpfile.js",
-      "index.html",
-      "package.json",
-      "server.js",
-      "web.config",
-      "*.zip",
-      "*.tgz",
-    ],
-    {
-      dot: true, // include hidden files
-    }
-  );
+  if (!isProduction) {
+    await listAll(s3, bucketName, `${uploadDirectory}/`, existingBlobs);
+  }
 
   async function getContents(file, blobName) {
     const mimeLookup = getMimeType(blobName);
@@ -679,7 +687,9 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     if (compress) {
       const alreadyCompressed = content[0] === 0x1f && content[1] === 0x8b;
       if (alreadyCompressed) {
-        console.log(`Skipping compressing already compressed file: ${file}`);
+        if (verbose) {
+          console.log(`Skipping compressing already compressed file: ${file}`);
+        }
       } else {
         content = gzipSync(content);
       }
@@ -731,8 +741,8 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     skipped++;
   }
 
-  async function readAndUpload(file) {
-    const blobName = `${uploadDirectory}/${file}`;
+  async function readAndUpload(prefix, existingPrefix, file) {
+    const blobName = `${prefix}${file.replace(existingPrefix, "")}`;
 
     let fileContents;
     try {
@@ -777,11 +787,76 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     }
   }
 
-  await Promise.all(
-    files.map((file) => {
-      return limit(() => readAndUpload(file));
-    })
-  );
+  let uploads;
+  if (isProduction) {
+    const uploadSandcastle = async () => {
+      const files = await globby(["Build/Sandcastle/**"]);
+      return Promise.all(
+        files.map((file) => {
+          return limit(() =>
+            readAndUpload(sandcastlePrefix, "Build/Sandcastle/", file)
+          );
+        })
+      );
+    };
+
+    const uploadRefDoc = async () => {
+      const files = await globby(["Build/Documentation/**"]);
+      return Promise.all(
+        files.map((file) => {
+          return limit(() =>
+            readAndUpload(refDocPrefix, "Build/Documentation/", file)
+          );
+        })
+      );
+    };
+
+    const uploadCesiumViewer = async () => {
+      const files = await globby(["Build/CesiumViewer/**"]);
+      return Promise.all(
+        files.map((file) => {
+          return limit(() =>
+            readAndUpload(cesiumViewerPrefix, "Build/CesiumViewer/", file)
+          );
+        })
+      );
+    };
+
+    uploads = [
+      uploadSandcastle(),
+      uploadRefDoc(),
+      uploadCesiumViewer(),
+      deployCesiumRelease(bucketName, s3, errors),
+    ];
+  } else {
+    const files = await globby(
+      [
+        "Apps/**",
+        "Build/**",
+        "Source/**",
+        "Specs/**",
+        "ThirdParty/**",
+        "*.md",
+        "favicon.ico",
+        "gulpfile.js",
+        "index.html",
+        "package.json",
+        "server.js",
+        "web.config",
+        "*.zip",
+        "*.tgz",
+      ],
+      {
+        dot: true, // include hidden files
+      }
+    );
+
+    uploads = files.map((file) => {
+      return limit(() => readAndUpload(`${uploadDirectory}/`, "", file));
+    });
+  }
+
+  await Promise.all(uploads);
 
   console.log(
     `Skipped ${skipped} files and successfully uploaded ${uploaded} files of ${
@@ -789,50 +864,48 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     } files.`
   );
 
-  if (existingBlobs.length === 0) {
-    return;
-  }
-
-  const objectsToDelete = [];
-  existingBlobs.forEach(function (file) {
-    // Don't delete generated zip files
-    if (!/\.(zip|tgz)$/.test(file)) {
-      objectsToDelete.push({ Key: file });
-    }
-  });
-
-  if (objectsToDelete.length > 0) {
-    console.log(`Cleaning ${objectsToDelete.length} files...`);
-
-    // If more than 1000 files, we must issue multiple requests
-    const batches = [];
-    while (objectsToDelete.length > 1000) {
-      batches.push(objectsToDelete.splice(0, 1000));
-    }
-    batches.push(objectsToDelete);
-
-    const deleteObjects = async (objects) => {
-      try {
-        if (!dryRun) {
-          await s3
-            .deleteObjects({
-              Bucket: bucketName,
-              Delete: {
-                Objects: objects,
-              },
-            })
-            .promise();
-        }
-
-        if (verbose) {
-          console.log(`Cleaned ${objects.length} files.`);
-        }
-      } catch (e) {
-        errors.push(e);
+  if (!isProduction && existingBlobs.length >= 0) {
+    const objectsToDelete = [];
+    existingBlobs.forEach(function (file) {
+      // Don't delete generated zip files
+      if (!/\.(zip|tgz)$/.test(file)) {
+        objectsToDelete.push({ Key: file });
       }
-    };
+    });
 
-    await Promise.all(batches.map(deleteObjects));
+    if (objectsToDelete.length > 0) {
+      console.log(`Cleaning ${objectsToDelete.length} files...`);
+
+      // If more than 1000 files, we must issue multiple requests
+      const batches = [];
+      while (objectsToDelete.length > 1000) {
+        batches.push(objectsToDelete.splice(0, 1000));
+      }
+      batches.push(objectsToDelete);
+
+      const deleteObjects = async (objects) => {
+        try {
+          if (!dryRun) {
+            await s3
+              .deleteObjects({
+                Bucket: bucketName,
+                Delete: {
+                  Objects: objects,
+                },
+              })
+              .promise();
+          }
+
+          if (verbose) {
+            console.log(`Cleaned ${objects.length} files.`);
+          }
+        } catch (e) {
+          errors.push(e);
+        }
+      };
+
+      await Promise.all(batches.map(deleteObjects));
+    }
   }
 
   if (errors.length === 0) {
@@ -844,7 +917,94 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   return Promise.reject("There was an error while deploying Cesium");
 }
 
+async function deployCesiumRelease(bucketName, s3, errors) {
+  const releaseDir = "cesiumjs/releases";
+  const quiet = process.env.TRAVIS;
+
+  let release;
+  try {
+    // Deploy any new releases
+    const response = await fetch(
+      "https://api.github.com/repos/CesiumGS/cesium/releases/latest",
+      {
+        method: "GET",
+        headers: {
+          Authorization: process.env.TOKEN
+            ? `token ${process.env.TOKEN}`
+            : undefined,
+          "User-Agent": "cesium.com-build",
+        },
+      }
+    );
+
+    const body = await response.json();
+
+    release = {
+      tag: body.tag_name,
+      name: body.name,
+      url: body.assets[0].browser_download_url,
+    };
+
+    await s3
+      .headObject({
+        Bucket: bucketName,
+        Key: posix.join(releaseDir, release.tag, "cesium.zip"),
+      })
+      .promise();
+    console.log(
+      `Cesium version ${release.tag} up to date. Skipping release deployment.`
+    );
+  } catch (error) {
+    // The current version is not uploaded
+    if (error.code === "NotFound") {
+      console.log("Updating cesium version...");
+      const data = await download(release.url);
+      // upload and unzip contents
+      const key = posix.join(releaseDir, release.tag, "cesium.zip");
+      await uploadObject(bucketName, s3, key, data, quiet);
+      const files = await decompress(data);
+      const limit = pLimit(5);
+      return Promise.all(
+        files.map((file) => {
+          return limit(() => {
+            if (file.path.startsWith("Apps")) {
+              // skip uploading apps and sandcastle
+              return;
+            }
+
+            // Upload to release directory
+            const key = posix.join(releaseDir, release.tag, file.path);
+            return uploadObject(bucketName, s3, key, file.data, quiet);
+          });
+        })
+      );
+    }
+
+    // else, unexpected error
+    errors.push(error);
+  }
+}
+
+function uploadObject(bucketName, s3, key, contents, quiet) {
+  if (!quiet) {
+    console.log(`Uploading ${key}...`);
+  }
+
+  return s3
+    .upload({
+      Bucket: bucketName,
+      Key: key,
+      Body: contents,
+      ContentType: mime.getType(key) || undefined,
+      CacheControl: "public, max-age=1800",
+    })
+    .promise();
+}
+
 function getMimeType(filename) {
+  //Remove page anchors from documentation, as mime does not properly handle them
+  filename = filename.split("#")[0];
+
   const mimeType = mime.getType(filename);
   if (mimeType) {
     //Compress everything except zipfiles, binary images, and video
@@ -1475,54 +1635,105 @@ export async function buildThirdParty() {
 }
 
 function buildSandcastle() {
-  const appStream = gulp
-    .src([
-      "Apps/Sandcastle/**",
-      "!Apps/Sandcastle/load-cesium-es6.js",
-      "!Apps/Sandcastle/standalone.html",
-      "!Apps/Sandcastle/images/**",
-      "!Apps/Sandcastle/gallery/**.jpg",
-    ])
-    // Remove swap out ESM modules for the IIFE build
-    .pipe(
-      gulpReplace(
-        '    <script type="module" src="../load-cesium-es6.js"></script>',
-        '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
-          '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
-      )
-    )
-    // Fix relative paths for new location
-    .pipe(gulpReplace("../../../Build", "../../.."))
-    .pipe(gulpReplace("../../Source", "../../../Source"))
-    .pipe(gulpReplace("../../ThirdParty", "../../../ThirdParty"))
-    .pipe(gulpReplace("../../SampleData", "../../../../Apps/SampleData"))
-    .pipe(gulpReplace("Build/Documentation", "Documentation"))
-    .pipe(gulp.dest("Build/Apps/Sandcastle"));
+  const streams = [];
+  let appStream = gulp.src([
+    "Apps/Sandcastle/**",
+    "!Apps/Sandcastle/load-cesium-es6.js",
+    "!Apps/Sandcastle/standalone.html",
+    "!Apps/Sandcastle/images/**",
+    "!Apps/Sandcastle/gallery/**.jpg",
+  ]);
 
-  const imageStream = gulp
-    .src(["Apps/Sandcastle/gallery/**.jpg", "Apps/Sandcastle/images/**"], {
+  if (isProduction) {
+    // Remove swap out ESM modules for the IIFE build
+    appStream = appStream
+      .pipe(
+        gulpReplace(
+          '    <script type="module" src="../load-cesium-es6.js"></script>',
+          '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
+            '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>";'
+        )
+      )
+      // Fix relative paths for new location
+      .pipe(gulpReplace("../../../Build", ".."))
+      .pipe(gulpReplace("../../../Source", "../CesiumUnminified"))
+      .pipe(gulpReplace("../../Source", "."))
+      .pipe(gulpReplace("../../../ThirdParty", "./ThirdParty"))
+      .pipe(gulpReplace("../../ThirdParty", "./ThirdParty"))
+      .pipe(gulpReplace("../ThirdParty", "./ThirdParty"))
+      .pipe(gulpReplace("../Apps/Sandcastle", "."))
+      .pipe(gulpReplace("../../SampleData", "../SampleData"))
+      .pipe(
+        gulpReplace("../../Build/Documentation", "/learn/cesiumjs/ref-doc/")
+      )
+      .pipe(gulp.dest("Build/Sandcastle"));
+  } else {
+    // Remove swap out ESM modules for the IIFE build
+    appStream = appStream
+      .pipe(
+        gulpReplace(
+          '    <script type="module" src="../load-cesium-es6.js"></script>',
+          '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
+            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
+        )
+      )
+      // Fix relative paths for new location
+      .pipe(gulpReplace("../../../Build", "../../.."))
+      .pipe(gulpReplace("../../Source", "../../../Source"))
+      .pipe(gulpReplace("../../ThirdParty", "../../../ThirdParty"))
+      .pipe(gulpReplace("../../SampleData", "../../../../Apps/SampleData"))
+      .pipe(gulpReplace("Build/Documentation", "Documentation"))
+      .pipe(gulp.dest("Build/Apps/Sandcastle"));
+  }
+  streams.push(appStream);
+
+  let imageStream = gulp.src(
+    ["Apps/Sandcastle/gallery/**.jpg", "Apps/Sandcastle/images/**"],
+    {
       base: "Apps/Sandcastle",
       buffer: false,
-    })
-    .pipe(gulp.dest("Build/Apps/Sandcastle"));
+    }
+  );
+  if (isProduction) {
+    imageStream = imageStream.pipe(gulp.dest("Build/Sandcastle"));
+  } else {
+    imageStream = imageStream.pipe(gulp.dest("Build/Apps/Sandcastle"));
+  }
+  streams.push(imageStream);
+
+  if (isProduction) {
+    const fileStream = gulp
+      .src(["ThirdParty/**"])
+      .pipe(gulp.dest("Build/Sandcastle/ThirdParty"));
+    streams.push(fileStream);
+
+    const dataStream = gulp
+      .src(["Apps/SampleData/**"])
+      .pipe(gulp.dest("Build/Sandcastle/SampleData"));
+    streams.push(dataStream);
+  }
 
   const standaloneStream = gulp
     .src(["Apps/Sandcastle/standalone.html"])
+    .pipe(gulpReplace("../../../", "."))
     .pipe(
       gulpReplace(
         '    <script type="module" src="load-cesium-es6.js"></script>',
-        '    <script src="../../Build/CesiumUnminified/Cesium.js"></script>\n' +
-          '    <script>window.CESIUM_BASE_URL = "../../Build/CesiumUnminified/";</script>";'
+        '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
+          '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>";'
       )
     )
-    .pipe(gulpReplace("../../Build", "../.."))
-    .pipe(gulp.dest("Build/Apps/Sandcastle"));
+    .pipe(gulpReplace("../../Build", "."))
+    .pipe(gulp.dest("Build/Sandcastle"));
+  streams.push(standaloneStream);
 
-  return streamToPromise(mergeStream(appStream, imageStream, standaloneStream));
+  return streamToPromise(mergeStream(...streams));
 }
 
 async function buildCesiumViewer() {
-  const cesiumViewerOutputDirectory = "Build/Apps/CesiumViewer";
+  const cesiumViewerOutputDirectory = isProduction
+    ? "Build/CesiumViewer"
+    : "Build/Apps/CesiumViewer";
   mkdirp.sync(cesiumViewerOutputDirectory);
 
   const config = esbuildBaseConfig();
