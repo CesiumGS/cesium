@@ -1556,14 +1556,6 @@ function updateClippingPlanes(primitive, frameState) {
   clippingPlanes.update(frameState);
 
   const { clippingPlanesState, enabled } = clippingPlanes;
-  if (
-    primitive._clippingPlanesState === clippingPlanesState &&
-    primitive._clippingPlanesEnabled === enabled
-  ) {
-    return false;
-  }
-  primitive._clippingPlanesState = clippingPlanesState;
-  primitive._clippingPlanesEnabled = enabled;
 
   if (enabled) {
     const uniforms = primitive._uniforms;
@@ -1588,6 +1580,15 @@ function updateClippingPlanes(primitive, frameState) {
       uniforms.clippingPlanesMatrix
     );
   }
+
+  if (
+    primitive._clippingPlanesState === clippingPlanesState &&
+    primitive._clippingPlanesEnabled === enabled
+  ) {
+    return false;
+  }
+  primitive._clippingPlanesState = clippingPlanesState;
+  primitive._clippingPlanesEnabled = enabled;
 
   return true;
 }
