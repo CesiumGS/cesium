@@ -43,7 +43,7 @@
           animation: false,
           timeline: false,
         });
-        //supress terrain data to avoid clashing with IntegratedMesh layer geometry
+        // Suppress terrain data to avoid clashing with IntegratedMesh layer geometry
         viewer.scene.globe.depthTestAgainstTerrain = false;
         // More datasets to tour can be added here..
         // The url passed to I3SDataProvider supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a SceneServer.
@@ -66,35 +66,21 @@
           debugShowBoundingVolume: false,
         };
         const i3sOptions = {
+          url: tours["Frankfurt"],
           traceFetches: false, // for tracing I3S fetches
           geoidTiledTerrainProvider: geoidService, // pass the geoid service
-          cesium3dTilesetOptions: cesium3dTilesetOptions,
+          cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
         };
-        // Create I3S data provider
-        const i3sProvider = new Cesium.I3SDataProvider(
-          "",
-          tours["Frankfurt"],
-          i3sOptions
-        );
-        i3sProvider.load();
 
-        //Center camera on I3S once it's loaded
+        // Create I3S data provider
+        const i3sProvider = new Cesium.I3SDataProvider(i3sOptions);
+
+        // Center camera on I3S once it's loaded
         i3sProvider.readyPromise.then(function () {
-          const midLon =
-            (i3sProvider.extent.minLongitude +
-              i3sProvider.extent.maxLongitude) /
-            2;
-          const midLat =
-            (i3sProvider.extent.minLatitude + i3sProvider.extent.maxLatitude) /
-            2;
+          const center = Cesium.Rectangle.center(i3sProvider.extent);
+          center.height = 10000.0;
           viewer.camera.setView({
-            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-              new Cesium.Cartographic(
-                Cesium.Math.toRadians(midLon),
-                Cesium.Math.toRadians(midLat),
-                10000.0
-              )
-            ),
+            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
           });
         });
 
