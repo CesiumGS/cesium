@@ -121,10 +121,9 @@ async function buildCesium(options) {
   options = options || {};
   mkdirp.sync("Build");
 
-  const outputDirectory = join(
-    "Build",
-    `Cesium${!options.minify ? "Unminified" : ""}`
-  );
+  const outputDirectory =
+    options.outputDirectory ||
+    join("Build", `Cesium${!options.minify ? "Unminified" : ""}`);
   rimraf.sync(outputDirectory);
 
   writeFileSync(
@@ -427,9 +426,10 @@ export async function buildDocsWatch() {
 
 function combineForSandcastle() {
   const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
-  return build({
+  return buildCesium({
     minify: false,
     removePragmas: false,
+    node: false,
     outputDirectory: outputDirectory,
   });
 }
@@ -1728,7 +1728,9 @@ function buildSandcastle() {
 }
 
 async function buildCesiumViewer() {
-  const cesiumViewerOutputDirectory = "Build/CesiumViewer";
+  const cesiumViewerOutputDirectory = isProduction
+    ? "Build/CesiumViewer"
+    : "Build/Apps/CesiumViewer";
   mkdirp.sync(cesiumViewerOutputDirectory);
 
   const config = esbuildBaseConfig();
