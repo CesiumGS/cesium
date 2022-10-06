@@ -139,7 +139,7 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
 
   this._geometryDefinitions = [];
 
-  if (this._data.geometryDefinitions) {
+  if (defined(this._data.geometryDefinitions)) {
     for (
       let defIndex = 0;
       defIndex < this._data.geometryDefinitions.length;
@@ -154,7 +154,7 @@ I3SLayer.prototype._computeGeometryDefinitions = function (useCompression) {
         const collectedAttributes = [];
         let compressed = false;
 
-        if (geometryBuffer.compressedAttributes && useCompression) {
+        if (defined(geometryBuffer.compressedAttributes) && useCompression) {
           // check if compressed
           compressed = true;
           const attributes = geometryBuffer.compressedAttributes.attributes;
@@ -204,7 +204,7 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
 
   const geometryDefinition = this._geometryDefinitions[definition];
 
-  if (geometryDefinition) {
+  if (defined(geometryDefinition)) {
     for (let index = 0; index < geometryDefinition.length; ++index) {
       const geometryBufferInfo = geometryDefinition[index];
       let missed = false;
@@ -232,7 +232,7 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
  * @private
  */
 I3SLayer.prototype._loadRootNode = function () {
-  if (this._data.nodePages) {
+  if (defined(this._data.nodePages)) {
     let rootIndex = 0;
     if (defined(this._data.nodePages.rootIndex)) {
       rootIndex = this._data.nodePages.rootIndex;
@@ -271,7 +271,7 @@ I3SLayer.prototype._loadNodePage = function (page) {
     const fetchPromise = Resource.fetchJson(nodePageResource).then(function (
       data
     ) {
-      if (data.error && data.error.code !== 200) {
+      if (defined(data.error) && data.error.code !== 200) {
         return Promise.reject(data.error);
       }
 
@@ -289,14 +289,14 @@ I3SLayer.prototype._loadNodePage = function (page) {
  * @private
  */
 I3SLayer.prototype._computeExtent = function () {
-  if (this._data.fullExtent) {
+  if (defined(this._data.fullExtent)) {
     this._extent = Rectangle.fromDegrees(
       this._data.fullExtent.xmin,
       this._data.fullExtent.ymin,
       this._data.fullExtent.xmax,
       this._data.fullExtent.ymax
     );
-  } else if (this._data.store.extent) {
+  } else if (defined(this._data.store.extent)) {
     this._extent = Rectangle.fromDegrees(
       this._data.store.extent[0],
       this._data.store.extent[1],

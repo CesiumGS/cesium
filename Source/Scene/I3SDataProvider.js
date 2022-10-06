@@ -425,7 +425,7 @@ I3SDataProvider.prototype._loadJson = function (resource) {
   }
 
   return resource.fetchJson().then(function (data) {
-    if (data.error) {
+    if (defined(data.error)) {
       console.error("Failed to fetch I3S ", resource.url);
       if (defined(data.error.message)) {
         console.error(data.error.message);
@@ -638,7 +638,7 @@ I3SDataProvider.prototype._computeExtent = function () {
 
   // Compute the extent from all layers
   for (let layerIndex = 0; layerIndex < this._layers.length; layerIndex++) {
-    if (this._layers[layerIndex]._extent) {
+    if (defined(this._layers[layerIndex]._extent)) {
       const layerExtent = this._layers[layerIndex]._extent;
       if (!defined(rectangle)) {
         rectangle = Rectangle.clone(layerExtent);

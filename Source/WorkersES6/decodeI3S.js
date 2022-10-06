@@ -164,7 +164,7 @@ function transformToLocal(
     positions[indexOffset1] = rotatedPosition.y;
     positions[indexOffset2] = rotatedPosition.z;
 
-    if (normals) {
+    if (defined(normals)) {
       const normal = new Cartesian3(
         normals[indexOffset],
         normals[indexOffset1],
@@ -208,7 +208,7 @@ function generateGltfBuffer(
   uv0s,
   colors
 ) {
-  if (vertexCount === 0 || positions === undefined || positions.length === 0) {
+  if (vertexCount === 0 || !defined(positions) || positions.length === 0) {
     return {
       buffers: [],
       bufferViews: [],
@@ -228,14 +228,14 @@ function generateGltfBuffer(
 
   // if we provide indices, then the vertex count is the length
   // of that array, otherwise we assume non-indexed triangle
-  if (indices) {
+  if (defined(indices)) {
     vertexCount = indices.length;
   }
 
   // allocate array
   const indexArray = new Uint32Array(vertexCount);
 
-  if (indices) {
+  if (defined(indices)) {
     // set the indices
     for (let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
       indexArray[vertexIndex] = indices[vertexIndex];
@@ -283,7 +283,7 @@ function generateGltfBuffer(
   // NORMALS
   const meshNormals = normals ? normals.subarray(0, endIndex * 3) : undefined;
   let normalsURL;
-  if (meshNormals) {
+  if (defined(meshNormals)) {
     const normalsBlob = new Blob([meshNormals], {
       type: "application/binary",
     });
@@ -293,7 +293,7 @@ function generateGltfBuffer(
   // UV0s
   const meshUv0s = uv0s ? uv0s.subarray(0, endIndex * 2) : undefined;
   let uv0URL;
-  if (meshUv0s) {
+  if (defined(meshUv0s)) {
     const uv0Blob = new Blob([meshUv0s], { type: "application/binary" });
     uv0URL = URL.createObjectURL(uv0Blob);
   }
@@ -306,7 +306,7 @@ function generateGltfBuffer(
     : undefined;
   let meshColors;
   let colorsURL;
-  if (meshColorsInBytes) {
+  if (defined(meshColorsInBytes)) {
     const colorCount = meshColorsInBytes.length;
     meshColors = new Float32Array(colorCount);
     for (let i = 0; i < colorCount; ++i) {
@@ -350,7 +350,7 @@ function generateGltfBuffer(
   });
 
   // NORMALS
-  if (normalsURL) {
+  if (defined(normalsURL)) {
     ++currentIndex;
     normalIndex = currentIndex;
     attributes.NORMAL = normalIndex;
@@ -376,7 +376,7 @@ function generateGltfBuffer(
   }
 
   // UV0
-  if (uv0URL) {
+  if (defined(uv0URL)) {
     ++currentIndex;
     uv0Index = currentIndex;
     attributes.TEXCOORD_0 = uv0Index;
@@ -402,7 +402,7 @@ function generateGltfBuffer(
   }
 
   // COLORS
-  if (colorsURL) {
+  if (defined(colorsURL)) {
     ++currentIndex;
     colorIndex = currentIndex;
     attributes.COLOR_0 = colorIndex;
@@ -515,7 +515,7 @@ function decodeDracoEncodedGeometry(data, bufferInfo) {
   };
 
   // if all is OK
-  if (status && status.ok() && dracoGeometry.ptr !== 0) {
+  if (defined(status) && status.ok() && dracoGeometry.ptr !== 0) {
     const faceCount = dracoGeometry.num_faces();
     const attributesCount = dracoGeometry.num_attributes();
     const vertexCount = dracoGeometry.num_points();
@@ -572,7 +572,7 @@ function decodeDracoEncodedGeometry(data, bufferInfo) {
         attrIndex
       );
 
-      if (metadata.ptr) {
+      if (metadata.ptr !== 0) {
         const numEntries = metadataQuerier.NumEntries(metadata);
         for (let entry = 0; entry < numEntries; ++entry) {
           const entryName = metadataQuerier.GetEntryName(metadata, entry);
@@ -784,7 +784,7 @@ function decodeDracoAttribute(
 
   const attributeData = handlers[dracoAttribute.data_type()]();
 
-  if (dracoAttributeData) {
+  if (defined(dracoAttributeData)) {
     dracoDecoderModule.destroy(dracoAttributeData);
   }
 
@@ -865,13 +865,15 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
     decodedGeometry.featureCount = dataView.getUint32(offset, 1);
     offset += 4;
 
-    if (bufferInfo) {
+    if (defined(bufferInfo)) {
       for (
         let attrIndex = 0;
         attrIndex < bufferInfo.attributes.length;
         attrIndex++
       ) {
-        if (binaryAttributeDecoders[bufferInfo.attributes[attrIndex]]) {
+        if (
+          defined(binaryAttributeDecoders[bufferInfo.attributes[attrIndex]])
+        ) {
           offset = binaryAttributeDecoders[bufferInfo.attributes[attrIndex]](
             decodedGeometry,
             data,
@@ -889,10 +891,10 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
       let featureAttributeOrder = schema.featureAttributeOrder;
 
       if (
-        featureData &&
-        featureData.geometryData &&
-        featureData.geometryData[0] &&
-        featureData.geometryData[0].params
+        defined(featureData) &&
+        defined(featureData.geometryData) &&
+        defined(featureData.geometryData[0]) &&
+        defined(featureData.geometryData[0].params)
       ) {
         ordering = Object.keys(
           featureData.geometryData[0].params.vertexAttributes
@@ -905,7 +907,7 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
       // use default geometry schema
       for (let i = 0; i < ordering.length; i++) {
         const decoder = binaryAttributeDecoders[ordering[i]];
-        if (!decoder) {
+        if (!defined(decoder)) {
           console.log(ordering[i]);
         }
         offset = decoder(decodedGeometry, data, offset);
@@ -913,7 +915,7 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
 
       for (let j = 0; j < featureAttributeOrder.length; j++) {
         const curDecoder = binaryAttributeDecoders[featureAttributeOrder[j]];
-        if (!curDecoder) {
+        if (!defined(curDecoder)) {
           console.log(featureAttributeOrder[j]);
         }
         offset = curDecoder(decodedGeometry, data, offset);
@@ -939,7 +941,10 @@ function decodeI3S(parameters, transferableObjects) {
   );
 
   // Adjust height from orthometric to ellipsoidal
-  if (parameters.geoidDataList && parameters.geoidDataList.length > 0) {
+  if (
+    defined(parameters.geoidDataList) &&
+    parameters.geoidDataList.length > 0
+  ) {
     orthometricToEllipsoidal(
       geometryData.vertexCount,
       geometryData.positions,
@@ -965,7 +970,7 @@ function decodeI3S(parameters, transferableObjects) {
   );
 
   // Adjust UVs if there is a UV region
-  if (geometryData.uv0s && geometryData["uv-region"]) {
+  if (defined(geometryData.uv0s) && defined(geometryData["uv-region"])) {
     cropUVs(
       geometryData.vertexCount,
       geometryData.uv0s,
@@ -984,13 +989,13 @@ function decodeI3S(parameters, transferableObjects) {
   );
 
   const customAttributes = {};
-  if (geometryData["feature-index"]) {
+  if (defined(geometryData["feature-index"])) {
     customAttributes.positions = geometryData.positions;
     customAttributes.indices = geometryData.indices;
     customAttributes.featureIndex = geometryData["feature-index"];
     customAttributes.cartesianCenter = parameters.cartesianCenter;
     customAttributes.parentRotation = parameters.parentRotation;
-  } else if (geometryData["faceRange"]) {
+  } else if (defined(geometryData["faceRange"])) {
     customAttributes.positions = geometryData.positions;
     customAttributes.indices = geometryData.indices;
     customAttributes.sourceURL = parameters.url;

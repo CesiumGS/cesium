@@ -1,3 +1,5 @@
+import defined from "../Core/defined.js";
+
 /**
  * This class implements an I3S Feature
  * <p>
@@ -11,7 +13,7 @@ function I3SFeature(parent, uri) {
   this._dataProvider = parent._dataProvider;
   this._layer = parent._layer;
 
-  if (this._parent._nodeIndex) {
+  if (defined(this._parent._nodeIndex)) {
     this._resource = this._parent._layer.resource.getDerivedResource({
       url: `nodes/${this._parent._data.mesh.attribute.resource}/${uri}`,
     });

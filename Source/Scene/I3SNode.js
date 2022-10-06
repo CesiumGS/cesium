@@ -23,31 +23,44 @@ import I3SFeature from "./I3SFeature.js";
  * @internalConstructor
  */
 function I3SNode(parent, ref, isRoot) {
-  this._parent = parent;
-  this._dataProvider = parent._dataProvider;
-  this._isRoot = isRoot;
+  let level;
+  let layer;
+  let nodeIndex;
+  let resource;
 
   if (isRoot) {
-    this._level = 0;
-    this._layer = this._parent;
+    level = 0;
+    layer = parent;
   } else {
-    this._level = this._parent._level + 1;
-    this._layer = this._parent._layer;
+    level = parent._level + 1;
+    layer = parent._layer;
   }
 
   if (typeof ref === "number") {
-    this._nodeIndex = ref;
+    nodeIndex = ref;
   } else {
-    this._resource = this._parent.resource.getDerivedResource({
+    resource = parent.resource.getDerivedResource({
       url: `${ref}/`,
     });
   }
 
+  this._parent = parent;
+  this._dataProvider = parent._dataProvider;
+  this._isRoot = isRoot;
+  this._level = level;
+  this._layer = layer;
+  this._nodeIndex = nodeIndex;
+  this._resource = resource;
+
   this._tile = undefined;
+  this._data = undefined;
   this._geometryData = [];
   this._featureData = [];
   this._fields = {};
   this._children = [];
+  this._childrenReadyPromise = undefined;
+  this._globalTransform = undefined;
+  this._inverseGlobalTransform = undefined;
 }
 
 Object.defineProperties(I3SNode.prototype, {
@@ -217,7 +230,7 @@ I3SNode.prototype.loadFields = function () {
   }
 
   const promises = [];
-  if (fields) {
+  if (defined(fields)) {
     for (let i = 0; i < fields.length; i++) {
       promises.push(createAndLoadField(fields, i));
     }
@@ -232,13 +245,13 @@ I3SNode.prototype.loadFields = function () {
 I3SNode.prototype._loadChildren = function () {
   const that = this;
   //If the promise for loading the children was already created, just return it
-  if (this._childrenReadyPromise) {
+  if (defined(this._childrenReadyPromise)) {
     return this._childrenReadyPromise;
   }
 
   this._childrenReadyPromise = new Promise(function (resolve, reject) {
     const childPromises = [];
-    if (that._data.children) {
+    if (defined(that._data.children)) {
       for (
         let childIndex = 0;
         childIndex < that._data.children.length;
@@ -278,7 +291,7 @@ I3SNode.prototype._loadGeometryData = function () {
 
   // To debug decoding for a specific tile, add a condition
   // that wraps this if/else to match the tile uri
-  if (this._data.geometryData) {
+  if (defined(this._data.geometryData)) {
     for (
       let geomIndex = 0;
       geomIndex < this._data.geometryData.length;
@@ -291,7 +304,7 @@ I3SNode.prototype._loadGeometryData = function () {
       this._geometryData.push(curGeometryData);
       geometryPromises.push(curGeometryData.load());
     }
-  } else if (this._data.mesh) {
+  } else if (defined(this._data.mesh)) {
     const geometryDefinition = this._layer._findBestGeometryBuffers(
       this._data.mesh.geometry.definition,
       ["position", "uv0"]
@@ -316,7 +329,7 @@ I3SNode.prototype._loadFeatureData = function () {
 
   // To debug decoding for a specific tile, add a condition
   // that wraps this if/else to match the tile uri
-  if (this._data.featureData) {
+  if (defined(this._data.featureData)) {
     for (
       let featureIndex = 0;
       featureIndex < this._data.featureData.length;
@@ -329,7 +342,7 @@ I3SNode.prototype._loadFeatureData = function () {
       this._featureData.push(newFeatureData);
       featurePromises.push(newFeatureData.load());
     }
-  } else if (this._data.mesh && this._data.mesh.attribute) {
+  } else if (defined(this._data.mesh) && defined(this._data.mesh.attribute)) {
     const featureURI = `./features/0`;
     const newFeatureData = new I3SFeature(this, featureURI);
     this._featureData.push(newFeatureData);
@@ -360,7 +373,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
 
   let geoPosition;
 
-  if (obb) {
+  if (defined(obb)) {
     geoPosition = Cartographic.fromDegrees(
       obb.center[0],
       obb.center[1],
@@ -390,7 +403,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
   let boundingVolume = {};
   let position;
   let span = 0;
-  if (obb) {
+  if (defined(obb)) {
     boundingVolume = {
       box: [
         0,
@@ -468,7 +481,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
   const hpr = new HeadingPitchRoll(0, 0, 0);
   let orientation = Transforms.headingPitchRollQuaternion(position, hpr);
 
-  if (this._data.obb) {
+  if (defined(this._data.obb)) {
     orientation = new Quaternion(
       this._data.obb.quaternion[0],
       this._data.obb.quaternion[1],
@@ -505,7 +518,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
 
   const localTransforms = this._globalTransforms.clone();
 
-  if (this._parent._globalTransforms) {
+  if (defined(this._parent._globalTransforms)) {
     Matrix4.multiply(
       this._globalTransforms,
       this._parent.inverseGlobalTransform,
@@ -578,11 +591,11 @@ I3SNode.prototype._createI3SDecoderTask = function (dataProvider, data) {
     alt: 0,
   };
 
-  if (parentData.obb) {
+  if (defined(parentData.obb)) {
     center.long = parentData.obb.center[0];
     center.lat = parentData.obb.center[1];
     center.alt = parentData.obb.center[2];
-  } else if (parentData.mbs) {
+  } else if (defined(parentData.mbs)) {
     center.long = parentData.mbs[0];
     center.lat = parentData.mbs[1];
     center.alt = parentData.mbs[2];
@@ -666,7 +679,7 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
   Promise.all(dataPromises).then(function () {
     // Binary glTF
     const generateGltf = new Promise(function (resolve, reject) {
-      if (that._geometryData && that._geometryData.length > 0) {
+      if (defined(that._geometryData) && that._geometryData.length > 0) {
         const parameters = {
           geometryData: that._geometryData[0],
           featureData: that._featureData,
@@ -726,7 +739,7 @@ function I3SGeometry(parent, uri) {
   this._dataProvider = parent._dataProvider;
   this._layer = parent._layer;
 
-  if (this._parent._nodeIndex) {
+  if (defined(this._parent._nodeIndex)) {
     this._resource = this._layer.resource.getDerivedResource({
       url: `nodes/${this._parent._data.mesh.geometry.resource}/${uri}`,
     });
@@ -795,7 +808,10 @@ function sameSide(p1, p2, a, b) {
  * the closest position in local space
  */
 I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
-  if (this.customAttributes && this.customAttributes.positions) {
+  if (
+    defined(this.customAttributes) &&
+    defined(this.customAttributes.positions)
+  ) {
     // convert queried position to local
     const position = new Cartesian3(px, py, pz);
 
@@ -820,7 +836,7 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
 
     //We may have indexed or non-indexed triangles here
     let triCount;
-    if (indices) {
+    if (defined(indices)) {
       triCount = indices.length;
     } else {
       triCount = positions.length / 3;
@@ -828,7 +844,7 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
 
     for (let triIndex = 0; triIndex < triCount; triIndex++) {
       let i0, i1, i2;
-      if (indices) {
+      if (defined(indices)) {
         i0 = indices[triIndex];
         i1 = indices[triIndex + 1];
         i2 = indices[triIndex + 2];
@@ -963,7 +979,10 @@ I3SGeometry.prototype._generateGltf = function (
   let isTextured = false;
   let materialDefinition;
   let texturePath = "";
-  if (this._parent._data.mesh && this._layer._data.materialDefinitions) {
+  if (
+    defined(this._parent._data.mesh) &&
+    defined(this._layer._data.materialDefinitions)
+  ) {
     const materialInfo = this._parent._data.mesh.material;
     const materialIndex = materialInfo.definition;
     if (
@@ -974,8 +993,8 @@ I3SGeometry.prototype._generateGltf = function (
       gltfMaterial = materialDefinition;
 
       if (
-        gltfMaterial.pbrMetallicRoughness &&
-        gltfMaterial.pbrMetallicRoughness.baseColorTexture
+        defined(gltfMaterial.pbrMetallicRoughness) &&
+        defined(gltfMaterial.pbrMetallicRoughness.baseColorTexture)
       ) {
         isTextured = true;
         gltfMaterial.pbrMetallicRoughness.baseColorTexture.index = 0;
@@ -983,7 +1002,7 @@ I3SGeometry.prototype._generateGltf = function (
         // Choose the JPG for the texture
         let textureName = "0";
 
-        if (this._layer._data.textureSetDefinitions) {
+        if (defined(this._layer._data.textureSetDefinitions)) {
           for (
             let defIndex = 0;
             defIndex < this._layer._data.textureSetDefinitions.length;
@@ -1006,7 +1025,7 @@ I3SGeometry.prototype._generateGltf = function (
         }
 
         if (
-          this._parent._data.mesh &&
+          defined(this._parent._data.mesh) &&
           this._parent._data.mesh.material.resource >= 0
         ) {
           texturePath = this._layer.resource.getDerivedResource({
@@ -1015,7 +1034,7 @@ I3SGeometry.prototype._generateGltf = function (
         }
       }
     }
-  } else if (this._parent._data.textureData) {
+  } else if (defined(this._parent._data.textureData)) {
     //No material definition, but if there's a texture reference, we can create a simple material using it (verison 1.6 support)
     isTextured = true;
     texturePath = this._parent.resource.getDerivedResource({
@@ -1132,7 +1151,7 @@ function I3SField(parent, storageInfo) {
   this._dataProvider = parent._dataProvider;
   const uri = `attributes/${storageInfo.key}/0`;
 
-  if (this._parent._nodeIndex) {
+  if (defined(this._parent._nodeIndex)) {
     this._resource = this._parent._layer.resource.getDerivedResource({
       url: `nodes/${this._parent._data.mesh.attribute.resource}/${uri}`,
     });
@@ -1333,7 +1352,7 @@ I3SField.prototype._parseBody = function (dataView, offset) {
   ) {
     const item = this._storageInfo.ordering[itemIndex];
     const desc = this._storageInfo[item];
-    if (desc) {
+    if (defined(desc)) {
       this._values[item] = [];
       for (let index = 0; index < this._header.count; ++index) {
         if (desc.valueType !== "String") {
