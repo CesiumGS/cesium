@@ -35,7 +35,10 @@ const copyrightHeaderTemplate = readFileSync(
   path.join("Source", "copyrightHeader.js"),
   "utf8"
 );
-const combinedCopyrightHeader = copyrightHeaderTemplate.replace("${version}", version)
+const combinedCopyrightHeader = copyrightHeaderTemplate.replace(
+  "${version}",
+  version
+);
 
 function escapeCharacters(token) {
   return token.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -280,9 +283,7 @@ export async function createCesiumJs() {
 }
 
 const workspaceSpecFiles = {
-  engine: [
-    "packages/engine/Specs/**/*Spec.js"
-  ],
+  engine: ["packages/engine/Specs/**/*Spec.js"],
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
 
@@ -406,7 +407,7 @@ export async function buildWorkers(options) {
 
   const workerConfig = esbuildBaseConfig();
   workerConfig.banner = {
-    js: options.copyrightHeader
+    js: options.copyrightHeader,
   };
   workerConfig.entryPoints = workers;
   workerConfig.outdir = options.path;
@@ -733,30 +734,72 @@ const engineStaticAssets = [
   "!packages/engine/Source/**/*.md",
 ];
 
-export async function copyAssets2(outputDirectory) {
-  // Copy static assets from engine.
+const widgetsStaticAssets = [
+  "packages/widgets/Source/**",
+  "!packages/widgets/Source/**/*.js",
+  "!packages/widgets/Source/**/*.glsl",
+  "!packages/widgets/Source/**/*.css",
+  "!packages/widgets/Source/**/*.md",
+];
 
-  let stream = gulp
-    .src(engineStaticAssets, { nodir: true, base: `packages/engine/Source` })
-    .pipe(gulp.dest(outputDirectory));
+/**
+ * Helper function to copy files.
+ *
+ * @param {Array.<String>} globs The file globs to be copied.
+ * @param {String} destination The path to copy the files to.
+ * @param {String} base The base path to omit from the globs when files are copied. Defaults to "".
+ * @returns {Promise.<Buffer>} A promise containing the stream output as a buffer.
+ */
+export async function copyFiles(globs, destination, base) {
+  const stream = gulp
+    .src(globs, { nodir: true, base: base ?? "" })
+    .pipe(gulp.dest(destination));
 
-  await streamToPromise(stream);
+  return streamToPromise(stream);
+}
 
-  // Copy static assets from widgets.
+/**
+ * Copy assets from engine.
+ *
+ * @param {String} destination The path to copy files to.
+ * @returns {Promise.<>} A promise that completes when all assets are copied to the destination.
+ */
+export async function copyEngineAssets(destination) {
+  const engineStaticAssets = [
+    "packages/engine/Source/**",
+    "!packages/engine/Source/**/*.js",
+    "!packages/engine/Source/**/*.glsl",
+    "!packages/engine/Source/**/*.css",
+    "!packages/engine/Source/**/*.md",
+  ];
 
+  await copyFiles(engineStaticAssets, destination, "packages/engine/Source");
+
+  // Since the CesiumWidget was part of the Widgets folder, the files must be manually
+  // copied over to the right directory.
+
+  await copyFiles(
+    ["packages/engine/Source/Widget/**", "!packages/engine/Source/Widget/*.js"],
+    path.join(destination, "Widgets/CesiumWidget"),
+    "packages/engine/Source/Widget"
+  );
+}
+
+/**
+ * Copy assets from widgets.
+ *
+ * @param {String} destination The path to copy files to.
+ * @returns {Promise.<>} A promise that completes when all assets are copied to the destination.
+ */
+ export async function copyWidgetsAssets(destination) {
   const widgetsStaticAssets = [
     "packages/widgets/Source/**",
     "!packages/widgets/Source/**/*.js",
     "!packages/widgets/Source/**/*.glsl",
-    "!packages/widgets/Source/**/*.css",
     "!packages/widgets/Source/**/*.md",
   ];
 
-  stream = gulp
-    .src(widgetsStaticAssets, { nodir: true, base: `packages/widgets/Source` })
-    .pipe(gulp.dest(path.join(outputDirectory, "Widgets")));
-
-  await streamToPromise(stream);
+  await copyFiles(widgetsStaticAssets, destination, "packages/widgets/Source");
 }
 
 /**
@@ -1019,12 +1062,15 @@ export const buildEngine = async (options) => {
     process.exit(-1);
   }
   const version = getVersionFromPackageJson(workspacePackageJson);
-  const copyrightBanner = copyrightHeaderTemplate.replace("${version}", version)
+  const copyrightBanner = copyrightHeaderTemplate.replace(
+    "${version}",
+    version
+  );
 
   // Configure build options shared between builds for different formats (ESM/IIFE/CommonJS).
   const esBuildOptions = defaultESBuildOptions();
   esBuildOptions.banner = {
-    js: copyrightBanner
+    js: copyrightBanner,
   };
   esBuildOptions.outbase = "packages/engine/Source";
   esBuildOptions.incremental = incremental;
@@ -1237,7 +1283,15 @@ export async function buildCesium(options) {
     write: write,
   });
 
-  await copyAssets2(outputDirectory);
+  // Copy static assets to the Build folder.
+
+  await copyEngineAssets("Source");
+  await copyWidgetsAssets(path.join(outputDirectory, "Widgets"));
+
+  // Copy static assets to Source folder.
+
+  await copyEngineAssets("Source");
+  await copyWidgetsAssets("Source/Widgets");
 
   return {
     ...bundles,
