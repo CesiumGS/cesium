@@ -54,21 +54,17 @@ function sampleGeoid(sampleX, sampleY, geoidData) {
 function sampleGeoidFromList(lon, lat, geoidDataList) {
   for (let i = 0; i < geoidDataList.length; i++) {
     const localExtent = geoidDataList[i].nativeExtent;
-    const lonRadian = (lon / 180) * Math.PI;
-    const latRadian = (lat / 180) * Math.PI;
 
-    let localPt = {};
+    let localPt = new Cartesian3();
     if (geoidDataList[i].projectionType === "WebMercator") {
       const radii = geoidDataList[i].projection._ellipsoid._radii;
       const webMercatorProj = new WebMercatorProjection(
         new Ellipsoid(radii.x, radii.y, radii.z)
       );
-      localPt = webMercatorProj.project(
-        new Cartographic(lonRadian, latRadian, 0)
-      );
+      localPt = webMercatorProj.project(new Cartographic(lon, lat, 0));
     } else {
-      localPt.x = lonRadian;
-      localPt.y = latRadian;
+      localPt.x = lon;
+      localPt.y = lat;
     }
 
     if (
@@ -94,25 +90,25 @@ function orthometricToEllipsoidal(
   fast
 ) {
   if (fast) {
-    //Geometry is already relative to the tile origin which has already been shifted to account for geoid height
-    //Nothing to do here
+    // Geometry is already relative to the tile origin which has already been shifted to account for geoid height
+    // Nothing to do here
     return;
   }
 
-  //For more precision, sample the geoid height at each vertex and shift by the difference between that value and the height at the center of the tile
+  // For more precision, sample the geoid height at each vertex and shift by the difference between that value and the height at the center of the tile
   const centerHeight = sampleGeoidFromList(
-    center.long,
-    center.lat,
+    center.longitude,
+    center.latitude,
     geoidDataList
   );
 
-  for (let j = 0; j < vertexCount; ++j) {
+  for (let i = 0; i < vertexCount; ++i) {
     const height = sampleGeoidFromList(
-      center.long + scale_x * position[j * 3],
-      center.lat + scale_y * position[j * 3 + 1],
+      center.longitude + CesiumMath.toRadians(scale_x * position[i * 3]),
+      center.latitude + CesiumMath.toRadians(scale_y * position[i * 3 + 1]),
       geoidDataList
     );
-    position[j * 3 + 2] += height - centerHeight;
+    position[i * 3 + 2] += height - centerHeight;
   }
 }
 
@@ -142,13 +138,14 @@ function transformToLocal(
     const indexOffset2 = indexOffset + 2;
 
     const cartographic = new Cartographic();
-    cartographic.longitude = CesiumMath.toRadians(
-      cartographicCenter.long + scale_x * positions[indexOffset]
-    );
-    cartographic.latitude = CesiumMath.toRadians(
-      cartographicCenter.lat + scale_y * positions[indexOffset1]
-    );
-    cartographic.height = cartographicCenter.alt + positions[indexOffset2];
+    cartographic.longitude =
+      cartographicCenter.longitude +
+      CesiumMath.toRadians(scale_x * positions[indexOffset]);
+
+    cartographic.latitude =
+      cartographicCenter.latitude +
+      CesiumMath.toRadians(scale_y * positions[indexOffset1]);
+    cartographic.height = cartographicCenter.height + positions[indexOffset2];
 
     const position = {};
     ellipsoid.cartographicToCartesian(cartographic, position);
@@ -174,7 +171,7 @@ function transformToLocal(
       const rotatedNormal = {};
       Matrix3.multiplyByVector(parentRotation, normal, rotatedNormal);
 
-      // @TODO: check if normals are Z-UP or Y-UP and flip y and z
+      // TODO: check if normals are Z-UP or Y-UP and flip y and z
       normals[indexOffset] = rotatedNormal.x;
       normals[indexOffset1] = rotatedNormal.y;
       normals[indexOffset2] = rotatedNormal.z;
@@ -226,22 +223,22 @@ function generateGltfBuffer(
   const nodes = [];
   const nodesInScene = [];
 
-  // if we provide indices, then the vertex count is the length
+  // If we provide indices, then the vertex count is the length
   // of that array, otherwise we assume non-indexed triangle
   if (defined(indices)) {
     vertexCount = indices.length;
   }
 
-  // allocate array
+  // Allocate array
   const indexArray = new Uint32Array(vertexCount);
 
   if (defined(indices)) {
-    // set the indices
+    // Set the indices
     for (let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
       indexArray[vertexIndex] = indices[vertexIndex];
     }
   } else {
-    // generate indices
+    // Generate indices
     for (
       let newVertexIndex = 0;
       newVertexIndex < vertexCount;
@@ -251,7 +248,7 @@ function generateGltfBuffer(
     }
   }
 
-  // push to the buffers, bufferViews and accessors
+  // Push to the buffers, bufferViews and accessors
   const indicesBlob = new Blob([indexArray], { type: "application/binary" });
   const indicesURL = URL.createObjectURL(indicesBlob);
 
@@ -298,22 +295,15 @@ function generateGltfBuffer(
     uv0URL = URL.createObjectURL(uv0Blob);
   }
 
-  // Colors
-  // @TODO: check we can directly import vertex colors as bytes instead
-  // of having to convert to float
-  const meshColorsInBytes = colors
+  // COLORS
+  const meshColorsInBytes = defined(colors)
     ? colors.subarray(0, endIndex * 4)
     : undefined;
-  let meshColors;
   let colorsURL;
   if (defined(meshColorsInBytes)) {
-    const colorCount = meshColorsInBytes.length;
-    meshColors = new Float32Array(colorCount);
-    for (let i = 0; i < colorCount; ++i) {
-      meshColors[i] = meshColorsInBytes[i] / 255.0;
-    }
-
-    const colorsBlob = new Blob([meshColors], { type: "application/binary" });
+    const colorsBlob = new Blob([meshColorsInBytes], {
+      type: "application/binary",
+    });
     colorsURL = URL.createObjectURL(colorsBlob);
   }
 
@@ -370,8 +360,6 @@ function generateGltfBuffer(
       componentType: 5126,
       count: vertexCount,
       type: "VEC3",
-      max: [0, 0, 0],
-      min: [0, 0, 0],
     });
   }
 
@@ -396,8 +384,6 @@ function generateGltfBuffer(
       componentType: 5126,
       count: vertexCount,
       type: "VEC2",
-      max: [0, 0],
-      min: [0, 0],
     });
   }
 
@@ -408,22 +394,21 @@ function generateGltfBuffer(
     attributes.COLOR_0 = colorIndex;
     buffers.push({
       uri: colorsURL,
-      byteLength: meshColors.byteLength,
+      byteLength: meshColorsInBytes.byteLength,
     });
     bufferViews.push({
       buffer: colorIndex,
       byteOffset: 0,
-      byteLength: meshColors.byteLength,
+      byteLength: meshColorsInBytes.byteLength,
       target: 34962,
     });
     accessors.push({
       bufferView: colorIndex,
       byteOffset: 0,
-      componentType: 5126,
+      componentType: 5121,
+      normalized: true,
       count: vertexCount,
       type: "VEC4",
-      max: [0, 0, 0, 0],
-      min: [0, 0, 0, 0],
     });
   }
 
@@ -446,11 +431,9 @@ function generateGltfBuffer(
     componentType: 5125,
     count: vertexCount,
     type: "SCALAR",
-    max: [0],
-    min: [0],
   });
 
-  // create a new mesh for this page
+  // Create a new mesh for this page
   meshes.push({
     primitives: [
       {
@@ -487,7 +470,7 @@ function decode(data, schema, bufferInfo, featureData) {
   return decodeBinaryGeometry(data, schema, bufferInfo, featureData);
 }
 
-function decodeDracoEncodedGeometry(data, bufferInfo) {
+function decodeDracoEncodedGeometry(data) {
   // Create the Draco decoder.
   const dracoDecoderModule = draco;
   const buffer = new dracoDecoderModule.DecoderBuffer();
@@ -817,13 +800,13 @@ const binaryAttributeDecoders = {
     return offset;
   },
   featureId: function (decodedGeometry, data, offset) {
-    //We don't need to use this for anything so just increment the offset
+    // We don't need to use this for anything so just increment the offset
     const count = decodedGeometry.featureCount;
     offset += count * 8;
     return offset;
   },
   id: function (decodedGeometry, data, offset) {
-    //We don't need to use this for anything so just increment the offset
+    // We don't need to use this for anything so just increment the offset
     const count = decodedGeometry.featureCount;
     offset += count * 8;
     return offset;
@@ -904,7 +887,7 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
         );
       }
 
-      // use default geometry schema
+      // Use default geometry schema
       for (let i = 0; i < ordering.length; i++) {
         const decoder = binaryAttributeDecoders[ordering[i]];
         if (!defined(decoder)) {
@@ -931,7 +914,7 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
   return decodedGeometry;
 }
 
-function decodeI3S(parameters, transferableObjects) {
+function decodeI3S(parameters) {
   // Decode the data into geometry
   const geometryData = decode(
     parameters.binaryData,
@@ -1002,7 +985,7 @@ function decodeI3S(parameters, transferableObjects) {
     customAttributes.cartesianCenter = parameters.cartesianCenter;
     customAttributes.parentRotation = parameters.parentRotation;
 
-    //Build the feature index array from the faceRange. This should store the
+    // Build the feature index array from the faceRange.
     customAttributes.featureIndex = new Array(geometryData.positions.length);
     for (
       let range = 0;
@@ -1020,7 +1003,7 @@ function decodeI3S(parameters, transferableObjects) {
     }
   }
 
-  meshData.customAttributes = customAttributes;
+  meshData._customAttributes = customAttributes;
 
   const results = {
     meshData: meshData,

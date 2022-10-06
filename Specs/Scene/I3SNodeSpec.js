@@ -1354,7 +1354,7 @@ describe(
         .then(function (result) {
           //Set mock customAttributes
           const geometryData = nodeWithMesh.geometryData[0];
-          geometryData.customAttributes = customAttributes;
+          geometryData._customAttributes = customAttributes;
 
           expect(
             geometryData.getClosestPointIndexOnTriangle(
@@ -1404,7 +1404,7 @@ describe(
         .then(function (result) {
           //Set mock customAttributes
           const geometryData = nodeWithMesh.geometryData[0];
-          geometryData.customAttributes = customAttributesIndexed;
+          geometryData._customAttributes = customAttributesIndexed;
 
           expect(
             geometryData.getClosestPointIndexOnTriangle(

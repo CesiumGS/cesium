@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
+import defaultValue from "../Core/defaultValue.js";
 import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -61,6 +62,7 @@ function I3SNode(parent, ref, isRoot) {
   this._childrenReadyPromise = undefined;
   this._globalTransform = undefined;
   this._inverseGlobalTransform = undefined;
+  this._inverseRotationMatrix = undefined;
 }
 
 Object.defineProperties(I3SNode.prototype, {
@@ -111,7 +113,7 @@ Object.defineProperties(I3SNode.prototype, {
   /**
    * Gets the collection of geometries.
    * @memberof I3SNode.prototype
-   * @type {Array}
+   * @type {I3SGeometry[]}
    * @readonly
    */
   geometryData: {
@@ -122,7 +124,7 @@ Object.defineProperties(I3SNode.prototype, {
   /**
    * Gets the collection of features.
    * @memberof I3SNode.prototype
-   * @type {Array}
+   * @type {I3SFeature[]}
    * @readonly
    */
   featureData: {
@@ -133,7 +135,7 @@ Object.defineProperties(I3SNode.prototype, {
   /**
    * Gets the collection of fields.
    * @memberof I3SNode.prototype
-   * @type {Array}
+   * @type {I3SField[]}
    * @readonly
    */
   fields: {
@@ -187,13 +189,12 @@ I3SNode.prototype.load = function () {
     }
   }
 
-  // if we don't have a nodepage index load from json
+  // If we don't have a nodepage index load from json
   if (!defined(this._nodeIndex)) {
-    return this._dataProvider._loadJson(this.resource).then(function (data) {
+    return this._dataProvider._loadJson(this._resource).then(function (data) {
       // Success
       that._data = data;
       processData();
-      return data;
     });
   }
 
@@ -219,7 +220,7 @@ I3SNode.prototype.load = function () {
  * @returns {Promise} A promise that is resolved when the I3S Node fields are loaded
  */
 I3SNode.prototype.loadFields = function () {
-  // check if we must load fields
+  // Check if we must load fields
   const fields = this._layer._data.attributeStorageInfo;
 
   const that = this;
@@ -244,42 +245,35 @@ I3SNode.prototype.loadFields = function () {
  */
 I3SNode.prototype._loadChildren = function () {
   const that = this;
-  //If the promise for loading the children was already created, just return it
+  // If the promise for loading the children was already created, just return it
   if (defined(this._childrenReadyPromise)) {
     return this._childrenReadyPromise;
   }
 
-  this._childrenReadyPromise = new Promise(function (resolve, reject) {
-    const childPromises = [];
-    if (defined(that._data.children)) {
-      for (
-        let childIndex = 0;
-        childIndex < that._data.children.length;
-        childIndex++
-      ) {
-        const child = that._data.children[childIndex];
-        const newChild = new I3SNode(
-          that,
-          child.href ? child.href : child,
-          false
-        );
-        that._children.push(newChild);
-        childPromises.push(newChild.load());
-      }
+  const childPromises = [];
+  if (defined(that._data.children)) {
+    for (
+      let childIndex = 0;
+      childIndex < that._data.children.length;
+      childIndex++
+    ) {
+      const child = that._data.children[childIndex];
+      const newChild = new I3SNode(
+        that,
+        defaultValue(child.href, child),
+        false
+      );
+      that._children.push(newChild);
+      childPromises.push(newChild.load());
     }
+  }
 
-    Promise.all(childPromises).then(
-      function () {
-        for (let i = 0; i < that._children.length; i++) {
-          that._tile.children.push(that._children[i]._tile);
-        }
-        resolve();
-      },
-      function (reason) {
-        reject(reason);
-      }
-    );
+  this._childrenReadyPromise = Promise.all(childPromises).then(function () {
+    for (let i = 0; i < that._children.length; i++) {
+      that._tile.children.push(that._children[i]._tile);
+    }
   });
+
   return this._childrenReadyPromise;
 };
 
@@ -383,7 +377,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
     geoPosition = Cartographic.fromDegrees(mbs[0], mbs[1], mbs[2]);
   }
 
-  //Offset bounding box position if we have a geoid service defined
+  // Offset bounding box position if we have a geoid service defined
   if (defined(this._dataProvider._geoidDataList) && defined(geoPosition)) {
     for (let i = 0; i < this._dataProvider._geoidDataList.length; i++) {
       const tile = this._dataProvider._geoidDataList[i];
@@ -433,10 +427,10 @@ I3SNode.prototype._create3DTileDefinition = function () {
     span = this._data.mbs[3];
   }
   span *= 2;
-  // compute the geometric error
+  // Compute the geometric error
   let metersPerPixel = Infinity;
 
-  // get the meters/pixel density required to pop the next LOD
+  // Get the meters/pixel density required to pop the next LOD
   if (defined(this._data.lodThreshold)) {
     if (
       this._layer._data.nodePages.lodSelectionMetricType ===
@@ -453,7 +447,7 @@ I3SNode.prototype._create3DTileDefinition = function () {
       const maxScreenThreshold = this._data.lodThreshold;
       metersPerPixel = span / maxScreenThreshold;
     } else {
-      //Other LOD selection types can only be used for point cloud data
+      // Other LOD selection types can only be used for point cloud data
       console.error("Invalid lodSelectionMetricType in Layer");
     }
   } else if (defined(this._data.lodSelection)) {
@@ -474,10 +468,10 @@ I3SNode.prototype._create3DTileDefinition = function () {
     metersPerPixel = 100000;
   }
 
-  // calculate the length of 16 pixels in order to trigger the screen space error
+  // Calculate the length of 16 pixels in order to trigger the screen space error
   const geometricError = metersPerPixel * 16;
 
-  // transformations
+  // Transformations
   const hpr = new HeadingPitchRoll(0, 0, 0);
   let orientation = Transforms.headingPitchRollQuaternion(position, hpr);
 
@@ -490,22 +484,21 @@ I3SNode.prototype._create3DTileDefinition = function () {
     );
   }
 
-  this._rotationMatrix = Matrix3.fromQuaternion(orientation);
-  this._inverseRotationMatrix = new Matrix3();
-  Matrix3.inverse(this._rotationMatrix, this._inverseRotationMatrix);
+  const rotationMatrix = Matrix3.fromQuaternion(orientation);
+  const inverseRotationMatrix = Matrix3.inverse(rotationMatrix, new Matrix3());
 
-  this._globalTransforms = new Matrix4(
-    this._rotationMatrix[0],
-    this._rotationMatrix[1],
-    this._rotationMatrix[2],
+  const globalTransform = new Matrix4(
+    rotationMatrix[0],
+    rotationMatrix[1],
+    rotationMatrix[2],
     0,
-    this._rotationMatrix[3],
-    this._rotationMatrix[4],
-    this._rotationMatrix[5],
+    rotationMatrix[3],
+    rotationMatrix[4],
+    rotationMatrix[5],
     0,
-    this._rotationMatrix[6],
-    this._rotationMatrix[7],
-    this._rotationMatrix[8],
+    rotationMatrix[6],
+    rotationMatrix[7],
+    rotationMatrix[8],
     0,
     position.x,
     position.y,
@@ -513,18 +506,24 @@ I3SNode.prototype._create3DTileDefinition = function () {
     1
   );
 
-  this.inverseGlobalTransform = new Matrix4();
-  Matrix4.inverse(this._globalTransforms, this.inverseGlobalTransform);
+  const inverseGlobalTransform = Matrix4.inverse(
+    globalTransform,
+    new Matrix4()
+  );
 
-  const localTransforms = this._globalTransforms.clone();
+  const localTransform = Matrix4.clone(globalTransform);
 
-  if (defined(this._parent._globalTransforms)) {
+  if (defined(this._parent._globalTransform)) {
     Matrix4.multiply(
-      this._globalTransforms,
-      this._parent.inverseGlobalTransform,
-      localTransforms
+      globalTransform,
+      this._parent._inverseGlobalTransform,
+      localTransform
     );
   }
+
+  this._globalTransform = globalTransform;
+  this._inverseGlobalTransform = inverseGlobalTransform;
+  this._inverseRotationMatrix = inverseRotationMatrix;
 
   // get children definition
   const childrenDefinition = [];
@@ -540,40 +539,30 @@ I3SNode.prototype._create3DTileDefinition = function () {
     refine: "REPLACE",
     boundingVolume: boundingVolume,
     transform: [
-      localTransforms[0],
-      localTransforms[4],
-      localTransforms[8],
-      localTransforms[12],
-      localTransforms[1],
-      localTransforms[5],
-      localTransforms[9],
-      localTransforms[13],
-      localTransforms[2],
-      localTransforms[6],
-      localTransforms[10],
-      localTransforms[14],
-      localTransforms[3],
-      localTransforms[7],
-      localTransforms[11],
-      localTransforms[15],
+      localTransform[0],
+      localTransform[4],
+      localTransform[8],
+      localTransform[12],
+      localTransform[1],
+      localTransform[5],
+      localTransform[9],
+      localTransform[13],
+      localTransform[2],
+      localTransform[6],
+      localTransform[10],
+      localTransform[14],
+      localTransform[3],
+      localTransform[7],
+      localTransform[11],
+      localTransform[15],
     ],
     content: {
-      uri: defined(this.resource) ? this.resource.url : undefined,
+      uri: defined(this._resource) ? this._resource.url : undefined,
     },
     geometricError: geometricError,
   };
 
   return inPlaceTileDefinition;
-};
-
-/**
- * @private
- */
-I3SNode.prototype._scheduleCreateContentURL = function () {
-  const that = this;
-  return new Promise(function (resolve, reject) {
-    that._createContentURL(resolve, that._tile);
-  });
 };
 
 /**
@@ -585,23 +574,21 @@ I3SNode.prototype._createI3SDecoderTask = function (dataProvider, data) {
   const parentRotationInverseMatrix =
     data.geometryData._parent._inverseRotationMatrix;
 
-  const center = {
-    long: 0,
-    lat: 0,
-    alt: 0,
-  };
+  let longitude = 0.0;
+  let latitude = 0.0;
+  let height = 0.0;
 
   if (defined(parentData.obb)) {
-    center.long = parentData.obb.center[0];
-    center.lat = parentData.obb.center[1];
-    center.alt = parentData.obb.center[2];
+    longitude = parentData.obb.center[0];
+    latitude = parentData.obb.center[1];
+    height = parentData.obb.center[2];
   } else if (defined(parentData.mbs)) {
-    center.long = parentData.mbs[0];
-    center.lat = parentData.mbs[1];
-    center.alt = parentData.mbs[2];
+    longitude = parentData.mbs[0];
+    latitude = parentData.mbs[1];
+    height = parentData.mbs[2];
   }
 
-  const axisFlipRotation = Matrix3.fromRotationX(-Math.PI / 2);
+  const axisFlipRotation = Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO);
   const parentRotation = new Matrix3();
 
   Matrix3.multiply(
@@ -610,11 +597,12 @@ I3SNode.prototype._createI3SDecoderTask = function (dataProvider, data) {
     parentRotation
   );
 
-  const cartographicCenter = new Cartographic(
-    CesiumMath.toRadians(center.long),
-    CesiumMath.toRadians(center.lat),
-    center.alt
+  const cartographicCenter = Cartographic.fromDegrees(
+    longitude,
+    latitude,
+    height
   );
+
   const cartesianCenter = Ellipsoid.WGS84.cartographicToCartesian(
     cartographicCenter
   );
@@ -622,15 +610,15 @@ I3SNode.prototype._createI3SDecoderTask = function (dataProvider, data) {
   const payload = {
     binaryData: data.geometryData._data,
     featureData:
-      data.featureData && data.featureData[0]
+      defined(data.featureData) && defined(data.featureData[0])
         ? data.featureData[0].data
         : undefined,
     schema: data.defaultGeometrySchema,
     bufferInfo: data.geometryData._geometryBufferInfo,
-    ellipsoidRadiiSquare: Ellipsoid.WGS84._radiiSquared,
+    ellipsoidRadiiSquare: Ellipsoid.WGS84.radiiSquared,
     url: data.url,
     geoidDataList: data.geometryData._dataProvider._geoidDataList,
-    cartographicCenter: center,
+    cartographicCenter: cartographicCenter,
     cartesianCenter: cartesianCenter,
     parentRotation: parentRotation,
   };
@@ -646,7 +634,7 @@ I3SNode.prototype._createI3SDecoderTask = function (dataProvider, data) {
 /**
  * @private
  */
-I3SNode.prototype._createContentURL = function (resolve, tile) {
+I3SNode.prototype._createContentURL = function () {
   let rawGltf = {
     scene: 0,
     scenes: [
@@ -676,76 +664,80 @@ I3SNode.prototype._createContentURL = function (resolve, tile) {
   const dataPromises = [this._loadFeatureData(), this._loadGeometryData()];
 
   const that = this;
-  Promise.all(dataPromises).then(function () {
+  return Promise.all(dataPromises).then(function () {
     // Binary glTF
-    const generateGltf = new Promise(function (resolve, reject) {
-      if (defined(that._geometryData) && that._geometryData.length > 0) {
-        const parameters = {
-          geometryData: that._geometryData[0],
-          featureData: that._featureData,
-          defaultGeometrySchema: that._layer._data.store.defaultGeometrySchema,
-          url: that._geometryData[0].resource.url,
-          tile: that._tile,
-        };
+    let generateGltfPromise = Promise.resolve();
+    if (defined(that._geometryData) && that._geometryData.length > 0) {
+      const parameters = {
+        geometryData: that._geometryData[0],
+        featureData: that._featureData,
+        defaultGeometrySchema: that._layer._data.store.defaultGeometrySchema,
+        url: that._geometryData[0].resource.url,
+        tile: that._tile,
+      };
 
-        const task = that._createI3SDecoderTask(that._dataProvider, parameters);
-        if (!defined(task)) {
-          // Postponed
-          resolve();
-          return;
-        }
-
-        task.then(function (result) {
-          rawGltf = parameters.geometryData._generateGltf(
-            result.meshData.nodesInScene,
-            result.meshData.nodes,
-            result.meshData.meshes,
-            result.meshData.buffers,
-            result.meshData.bufferViews,
-            result.meshData.accessors
-          );
-
-          that._geometryData[0].customAttributes =
-            result.meshData.customAttributes;
-          resolve();
-        });
-      } else {
-        resolve();
+      const task = that._createI3SDecoderTask(that._dataProvider, parameters);
+      if (!defined(task)) {
+        // Postponed
+        return;
       }
-    });
 
-    generateGltf.then(function () {
+      generateGltfPromise = task.then(function (result) {
+        rawGltf = parameters.geometryData._generateGltf(
+          result.meshData.nodesInScene,
+          result.meshData.nodes,
+          result.meshData.meshes,
+          result.meshData.buffers,
+          result.meshData.bufferViews,
+          result.meshData.accessors
+        );
+
+        that._geometryData[0]._customAttributes =
+          result.meshData._customAttributes;
+      });
+    }
+
+    return generateGltfPromise.then(function () {
       const binaryGltfData = that._dataProvider._binarizeGltf(rawGltf);
       const glbDataBlob = new Blob([binaryGltfData], {
         type: "application/binary",
       });
       that._glbURL = URL.createObjectURL(glbDataBlob);
-      resolve();
     });
   });
 };
 
 /**
  * This class implements an I3S Geometry, in Cesium, each I3SGeometry
- * generates an in memory gltf to be used as content for a Cesium3DTile
- * @private
+ * generates an in memory glTF to be used as content for a Cesium3DTile
+ * <p>
+ * Do not construct this directly, instead access tiles through {@link I3SNode}.
+ * </p>
  * @alias I3SGeometry
- * @constructor
- * @param {I3SNode} [parent] The parent of that geometry
- * @param {String} [uri] The uri to load the data from
+ * @internalConstructor
+ * @privateParam {I3SNode} parent The parent of that geometry
+ * @privateParam {String} uri The uri to load the data from
  */
 function I3SGeometry(parent, uri) {
-  this._parent = parent;
-  this._dataProvider = parent._dataProvider;
-  this._layer = parent._layer;
+  const dataProvider = parent._dataProvider;
+  const layer = parent._layer;
 
-  if (defined(this._parent._nodeIndex)) {
-    this._resource = this._layer.resource.getDerivedResource({
-      url: `nodes/${this._parent._data.mesh.geometry.resource}/${uri}`,
+  let resource;
+
+  if (defined(parent._nodeIndex)) {
+    resource = layer.resource.getDerivedResource({
+      url: `nodes/${parent._data.mesh.geometry.resource}/${uri}`,
     });
   } else {
-    this._resource = this._parent.resource.getDerivedResource({ url: uri });
+    resource = parent.resource.getDerivedResource({ url: uri });
   }
+
+  this._parent = parent;
+  this._dataProvider = dataProvider;
+  this._layer = layer;
+  this._resource = resource;
+
+  this._customAttributes = undefined;
 }
 
 Object.defineProperties(I3SGeometry.prototype, {
@@ -753,6 +745,7 @@ Object.defineProperties(I3SGeometry.prototype, {
    * Gets the resource for the geometry
    * @memberof I3SGeometry.prototype
    * @type {Resource}
+   * @readonly
    */
   resource: {
     get: function () {
@@ -764,44 +757,79 @@ Object.defineProperties(I3SGeometry.prototype, {
    * Gets the I3S data for this object.
    * @memberof I3SGeometry.prototype
    * @type {Object}
+   * @readonly
    */
   data: {
     get: function () {
       return this._data;
     },
   },
+  /**
+   * Gets the custom attributes of the geometry.
+   * @memberof I3SGeometry.prototype
+   * @type {Object}
+   * @readonly
+   */
+  customAttributes: {
+    get: function () {
+      return this._customAttributes;
+    },
+  },
 });
 
 /**
  * Loads the content.
- * @returns {Promise<void>} a promise that is resolved when the geometry data is loaded
+ * @returns {Promise} A promise that is resolved when the geometry data is loaded
+ * @private
  */
 I3SGeometry.prototype.load = function () {
   const that = this;
-  return this._dataProvider._loadBinary(this.resource).then(function (data) {
+  return this._dataProvider._loadBinary(this._resource).then(function (data) {
     that._data = data;
     return data;
   });
 };
 
+const scratchAb = new Cartesian3();
+const scratchAp1 = new Cartesian3();
+const scratchAp2 = new Cartesian3();
+const scratchCp1 = new Cartesian3();
+const scratchCp2 = new Cartesian3();
+
 function sameSide(p1, p2, a, b) {
-  const ab = {};
-  const ap1 = {};
-  const ap2 = {};
-  const cp1 = {};
-  const cp2 = {};
-  Cartesian3.subtract(b, a, ab);
-  Cartesian3.cross(ab, Cartesian3.subtract(p1, a, ap1), cp1);
-  Cartesian3.cross(ab, Cartesian3.subtract(p2, a, ap2), cp2);
+  const ab = Cartesian3.subtract(b, a, scratchAb);
+  const cp1 = Cartesian3.cross(
+    ab,
+    Cartesian3.subtract(p1, a, scratchAp1),
+    scratchCp1
+  );
+  const cp2 = Cartesian3.cross(
+    ab,
+    Cartesian3.subtract(p2, a, scratchAp2),
+    scratchCp2
+  );
   return Cartesian3.dot(cp1, cp2) >= 0;
 }
 
+const scratchV0 = new Cartesian3();
+const scratchV1 = new Cartesian3();
+const scratchV2 = new Cartesian3();
+
+const scratchV0V1 = new Cartesian3();
+const scratchV0V2 = new Cartesian3();
+const scratchCrossProd = new Cartesian3();
+const scratchNormal = new Cartesian3();
+
+const scratchV0p = new Cartesian3();
+const scratchV1p = new Cartesian3();
+const scratchV2p = new Cartesian3();
+
 /**
  * Find a triangle touching the point px,py,pz, then return the vertex closest to the search point
- * @param {number} [px] the x component of the point to query
- * @param {number} [py] the y component of the point to query
- * @param {number} [pz] the z component of the point to query
- * @returns {object} a structure containing the index of the closest point,
+ * @param {Number} px The x component of the point to query
+ * @param {Number} py The y component of the point to query
+ * @param {Number} pz The z component of the point to query
+ * @returns {Object} A structure containing the index of the closest point,
  * the squared distance from the queried point to the point that is found
  * the distance from the queried point to the point that is found
  * the queried position in local space
@@ -809,17 +837,17 @@ function sameSide(p1, p2, a, b) {
  */
 I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
   if (
-    defined(this.customAttributes) &&
-    defined(this.customAttributes.positions)
+    defined(this._customAttributes) &&
+    defined(this._customAttributes.positions)
   ) {
-    // convert queried position to local
+    // Convert queried position to local
     const position = new Cartesian3(px, py, pz);
 
-    position.x -= this.customAttributes.cartesianCenter.x;
-    position.y -= this.customAttributes.cartesianCenter.y;
-    position.z -= this.customAttributes.cartesianCenter.z;
+    position.x -= this._customAttributes.cartesianCenter.x;
+    position.y -= this._customAttributes.cartesianCenter.y;
+    position.z -= this._customAttributes.cartesianCenter.z;
     Matrix3.multiplyByVector(
-      this.customAttributes.parentRotation,
+      this._customAttributes.parentRotation,
       position,
       position
     );
@@ -831,10 +859,10 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
     let bestPt;
 
     // Brute force lookup, @TODO: this can be improved with a spatial partitioning search system
-    const positions = this.customAttributes.positions;
-    const indices = this.customAttributes.indices;
+    const positions = this._customAttributes.positions;
+    const indices = this._customAttributes.indices;
 
-    //We may have indexed or non-indexed triangles here
+    // We may have indexed or non-indexed triangles here
     let triCount;
     if (defined(indices)) {
       triCount = indices.length;
@@ -854,24 +882,27 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
         i2 = triIndex * 3 + 2;
       }
 
-      const v0 = new Cartesian3(
+      const v0 = Cartesian3.fromElements(
         positions[i0 * 3],
         positions[i0 * 3 + 1],
-        positions[i0 * 3 + 2]
+        positions[i0 * 3 + 2],
+        scratchV0
       );
-      const v1 = new Cartesian3(
+      const v1 = Cartesian3.fromElements(
         positions[i1 * 3],
         positions[i1 * 3 + 1],
-        positions[i1 * 3 + 2]
+        positions[i1 * 3 + 2],
+        scratchV1
       );
       const v2 = new Cartesian3(
         positions[i2 * 3],
         positions[i2 * 3 + 1],
-        positions[i2 * 3 + 2]
+        positions[i2 * 3 + 2],
+        scratchV2
       );
 
-      //Check how the point is positioned relative to the triangle.
-      //This will tell us whether the projection of the point in the triangle's plane lands in the triangle
+      // Check how the point is positioned relative to the triangle.
+      // This will tell us whether the projection of the point in the triangle's plane lands in the triangle
       if (
         !sameSide(position, v0, v1, v2) ||
         !sameSide(position, v1, v0, v2) ||
@@ -879,39 +910,32 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
       ) {
         continue;
       }
-      //Because of precision issues, we can't always reliably tell if the point lands directly on the face, so the most robust way is just to find the closest one
-      const v0v1 = {},
-        v0v2 = {},
-        crossProd = {},
-        normal = {};
-      Cartesian3.subtract(v1, v0, v0v1);
-      Cartesian3.subtract(v2, v0, v0v2);
-      Cartesian3.cross(v0v1, v0v2, crossProd);
+      // Because of precision issues, we can't always reliably tell if the point lands directly on the face, so the most robust way is just to find the closest one
+      const v0v1 = Cartesian3.subtract(v1, v0, scratchV0V1);
+      const v0v2 = Cartesian3.subtract(v2, v0, scratchV0V2);
+      const crossProd = Cartesian3.cross(v0v1, v0v2, scratchCrossProd);
 
-      //Skip "triangles" with 3 colinear points
+      // Skip "triangles" with 3 colinear points
       if (Cartesian3.magnitude(crossProd) === 0) {
         continue;
       }
-      Cartesian3.normalize(crossProd, normal);
+      const normal = Cartesian3.normalize(crossProd, scratchNormal);
 
-      const v0p = {},
-        v1p = {},
-        v2p = {};
-      Cartesian3.subtract(position, v0, v0p);
+      const v0p = Cartesian3.subtract(position, v0, scratchV0p);
       const normalDist = Math.abs(Cartesian3.dot(v0p, normal));
       if (normalDist < bestTriDist) {
         bestTriDist = normalDist;
         bestTri = triIndex;
 
-        //Found a triangle, return the index of the closest point
+        // Found a triangle, return the index of the closest point
         const d0 = Cartesian3.magnitudeSquared(
           Cartesian3.subtract(position, v0, v0p)
         );
         const d1 = Cartesian3.magnitudeSquared(
-          Cartesian3.subtract(position, v1, v1p)
+          Cartesian3.subtract(position, v1, scratchV1p)
         );
         const d2 = Cartesian3.magnitudeSquared(
-          Cartesian3.subtract(position, v2, v2p)
+          Cartesian3.subtract(position, v2, scratchV2p)
         );
         if (d0 < d1 && d0 < d2) {
           bestIndex = i0;
@@ -934,21 +958,13 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
         index: bestIndex,
         distanceSquared: bestDistSq,
         distance: Math.sqrt(bestDistSq),
-        queriedPosition: {
-          x: position.x,
-          y: position.y,
-          z: position.z,
-        },
-        closestPosition: {
-          x: bestPt.x,
-          y: bestPt.y,
-          z: bestPt.z,
-        },
+        queriedPosition: position,
+        closestPosition: Cartesian3.clone(bestPt),
       };
     }
   }
 
-  //No hits found
+  // No hits found
   return {
     index: -1,
     distanceSquared: Number.Infinity,
@@ -1035,7 +1051,7 @@ I3SGeometry.prototype._generateGltf = function (
       }
     }
   } else if (defined(this._parent._data.textureData)) {
-    //No material definition, but if there's a texture reference, we can create a simple material using it (verison 1.6 support)
+    // No material definition, but if there's a texture reference, we can create a simple material using it (version 1.6 support)
     isTextured = true;
     texturePath = this._parent.resource.getDerivedResource({
       url: `${this._parent._data.textureData[0].href}`,
@@ -1137,13 +1153,12 @@ function sampleGeoid(sampleX, sampleY, geoidData) {
 }
 
 /**
- * This class implements an I3S Field which is custom data attachec
+ * This class implements an I3S Field which is custom data attached
  * to nodes
- * @private
  * @alias I3SField
- * @constructor
- * @param {I3SNode} [parent] The parent of that geometry
- * @param {Object} [storageInfo] The structure containing the storage info of the field
+ * @internalConstructor
+ * @privateParam {I3SNode} parent The parent of that geometry
+ * @privateParam {Object} storageInfo The structure containing the storage info of the field
  */
 function I3SField(parent, storageInfo) {
   this._storageInfo = storageInfo;
@@ -1165,6 +1180,7 @@ Object.defineProperties(I3SField.prototype, {
    * Gets the resource for the fields
    * @memberof I3SField.prototype
    * @type {Resource}
+   * @readonly
    */
   resource: {
     get: function () {
@@ -1175,6 +1191,7 @@ Object.defineProperties(I3SField.prototype, {
    * Gets the header for this field.
    * @memberof I3SField.prototype
    * @type {Object}
+   * @readonly
    */
   header: {
     get: function () {
@@ -1185,10 +1202,11 @@ Object.defineProperties(I3SField.prototype, {
    * Gets the values for this field.
    * @memberof I3SField.prototype
    * @type {Object}
+   * @readonly
    */
   values: {
     get: function () {
-      return this._values && this._values.attributeValues
+      return defined(this._values) && defined(this._values.attributeValues)
         ? this._values.attributeValues
         : [];
     },
@@ -1197,6 +1215,7 @@ Object.defineProperties(I3SField.prototype, {
    * Gets the name for the field.
    * @memberof I3SField.prototype
    * @type {String}
+   * @readonly
    */
   name: {
     get: function () {
@@ -1221,18 +1240,18 @@ function getNumericTypeSize(type) {
     return 8;
   }
 
-  //Not a numerice type
+  // Not a numerice type
   return 0;
 }
 
 /**
  * Loads the content.
- * @returns {Promise<void>} a promise that is resolved when the geometry data is loaded
+ * @returns {Promise} A promise that is resolved when the geometry data is loaded
  */
 I3SField.prototype.load = function () {
   const that = this;
-  return this._dataProvider._loadBinary(this.resource).then(function (data) {
-    // check if we have a 404
+  return this._dataProvider._loadBinary(this._resource).then(function (data) {
+    // Check if we have a 404
     const dataView = new DataView(data);
     let success = true;
     if (dataView.getUint8(0) === "{".charCodeAt(0)) {
@@ -1252,7 +1271,7 @@ I3SField.prototype.load = function () {
         that._storageInfo.attributeValues.valueType
       );
       if (valueSize > 0) {
-        //Values will be padded to align the addresses with the data size
+        // Values will be padded to align the addresses with the data size
         offset = Math.ceil(offset / valueSize) * valueSize;
       }
 
@@ -1296,11 +1315,11 @@ I3SField.prototype._parseValue = function (dataView, type, offset) {
     const left = dataView.getUint32(offset, true);
     const right = dataView.getUint32(offset + 4, true);
     if (right < Math.pow(2, 31)) {
-      //Positive number
+      // Positive number
       value = left + Math.pow(2, 32) * right;
     } else {
-      //Negative
-      value = left + Math.pow(2, 32) * (right - Math.pow(2, 32)); ///TODO
+      // Negative
+      value = left + Math.pow(2, 32) * (right - Math.pow(2, 32));
     }
 
     offset += 8;
@@ -1377,7 +1396,7 @@ I3SField.prototype._parseBody = function (dataView, offset) {
             }
             offset = curParsedValue.offset;
           }
-          //We skip the last character of the string since it's a null terminator
+          // We skip the last character of the string since it's a null terminator
           this._values[item].push(stringContent);
         }
       }
@@ -1425,7 +1444,7 @@ Cesium3DTile.prototype.requestContent = function () {
     this._contentReadyToProcessPromise = this._contentReadyToProcessDefer.promise;
     this._contentReadyPromise = this._contentReadyDefer.promise;
 
-    this._i3sNode._scheduleCreateContentURL().then(function () {
+    this._i3sNode._createContentURL().then(function () {
       that._contentResource = new Resource({ url: that._i3sNode._glbURL });
       that._resolveHookedObject();
     });

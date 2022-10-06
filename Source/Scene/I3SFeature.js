@@ -1,12 +1,12 @@
 import defined from "../Core/defined.js";
 
 /**
- * This class implements an I3S Feature
+ * This class implements an I3S Feature.
  * <p>
  * Do not construct this directly, instead access tiles through {@link I3SDataProvider}.
  * </p>
  * @alias I3SFeature
- * @constructor
+ * @internalConstructor
  */
 function I3SFeature(parent, uri) {
   this._parent = parent;
@@ -27,6 +27,7 @@ Object.defineProperties(I3SFeature.prototype, {
    * Gets the resource for the feature
    * @memberof I3SFeature.prototype
    * @type {Resource}
+   * @readonly
    */
   resource: {
     get: function () {
@@ -37,6 +38,7 @@ Object.defineProperties(I3SFeature.prototype, {
    * Gets the I3S data for this object.
    * @memberof I3SFeature.prototype
    * @type {Object}
+   * @readonly
    */
   data: {
     get: function () {
@@ -47,7 +49,8 @@ Object.defineProperties(I3SFeature.prototype, {
 
 /**
  * Loads the content.
- * @returns {Promise<void>} a promise that is resolved when the data of the I3S feature is loaded
+ * @returns {Promise} A promise that is resolved when the data of the I3S feature is loaded
+ * @private
  */
 I3SFeature.prototype.load = function () {
   const that = this;
