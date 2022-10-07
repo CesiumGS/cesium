@@ -10,20 +10,13 @@ notifications:
     if: (branch = main) AND (type = push)
     on_success: change # default: always
 script:
+  - ./travis/prepare.sh
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
 
   - npm --silent run eslint
   - npm --silent run markdownlint
   - npm --silent run prettier-check
 
-  - npm --silent run build
-
-  - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
-
-  - travis_wait 20 npm --silent run website-release -- --concurrency 1
-  - npm pack &> /dev/null
-
-  - npm --silent run build-apps
-
-  - ./scripts/deploy.sh
-
+  - ./travis/release.sh
+  - ./travis/deploy.sh
+  - ./travis/verify.sh
