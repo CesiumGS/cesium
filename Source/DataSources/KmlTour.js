@@ -158,10 +158,10 @@ function playEntry(widget, cameraOptions, allDone) {
     this._activeEntries.push(entry);
     this.entryStart.raiseEvent(entry);
     if (entry.blocking) {
-      entry.playInWidget(_playNext, widget.scene.camera, cameraOptions);
+      entry.play(_playNext, widget.scene.camera, cameraOptions);
     } else {
       const tour = this;
-      entry.playInWidget(function () {
+      entry.play(function () {
         tour.entryEnd.raiseEvent(entry);
         const indx = tour._activeEntries.indexOf(entry);
         if (indx >= 0) {
