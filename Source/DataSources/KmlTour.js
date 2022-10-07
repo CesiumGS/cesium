@@ -1,4 +1,5 @@
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 /**
  * Describes a KmlTour, which uses KmlTourFlyTo, and KmlTourWait to
@@ -88,11 +89,39 @@ KmlTour.prototype.addPlaylistEntry = function (entry) {
  * @param {Object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
  * options for FlyTo playlist entries.
  */
-KmlTour.prototype.play = function (widget, cameraOptions) {
+KmlTour.prototype.playInWidget = function (widget, cameraOptions) {
   this.tourStart.raiseEvent();
 
   const tour = this;
   playEntry.call(this, widget, cameraOptions, function (terminated) {
+    tour.playlistIndex = 0;
+    // Stop nonblocking entries
+    if (!terminated) {
+      cancelAllEntries(tour._activeEntries);
+    }
+    tour.tourEnd.raiseEvent(terminated);
+  });
+};
+
+/**
+ * Play this tour.
+ *
+ * @param {Viewer} viewer viewer widget.
+ * @param {Object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
+ * options for FlyTo playlist entries.
+ *
+ * @deprecated
+ */
+KmlTour.prototype.play = function (viewer, cameraOptions) {
+  deprecationWarning(
+    "KmlTour.prototype.play",
+    "KmlTour.prototype.play was deprecated in Cesium 1.100. It will be removed in 1.101. Use KmlTour.prototype.playInWidget instead."
+  );
+
+  this.tourStart.raiseEvent();
+
+  const tour = this;
+  playEntry.call(this, viewer, cameraOptions, function (terminated) {
     tour.playlistIndex = 0;
     // Stop nonblocking entries
     if (!terminated) {
@@ -129,10 +158,10 @@ function playEntry(widget, cameraOptions, allDone) {
     this._activeEntries.push(entry);
     this.entryStart.raiseEvent(entry);
     if (entry.blocking) {
-      entry.play(_playNext, widget.scene.camera, cameraOptions);
+      entry.playInWidget(_playNext, widget.scene.camera, cameraOptions);
     } else {
       const tour = this;
-      entry.play(function () {
+      entry.playInWidget(function () {
         tour.entryEnd.raiseEvent(entry);
         const indx = tour._activeEntries.indexOf(entry);
         if (indx >= 0) {

@@ -74,7 +74,7 @@ describe("DataSources/KmlTour", function () {
     tour.addPlaylistEntry(flyTo);
 
     const mockWidget = createMockWidget();
-    tour.play(mockWidget);
+    tour.playInWidget(mockWidget);
     return pollToPromise(function () {
       return waitSpy.calls.count() > 0 && flySpy.calls.count() > 0;
     }).then(function () {
@@ -101,7 +101,7 @@ describe("DataSources/KmlTour", function () {
     tour.entryStart.addEventListener(entryStart);
     tour.entryEnd.addEventListener(entryEnd);
 
-    tour.play(createMockWidget());
+    tour.playInWidget(createMockWidget());
     return pollToPromise(function () {
       return tourEnd.calls.count() > 0;
     }).then(function () {
@@ -131,7 +131,7 @@ describe("DataSources/KmlTour", function () {
     tour.entryEnd.addEventListener(entryEnd);
 
     const mockWidget = createMockWidget();
-    tour.play(mockWidget);
+    tour.playInWidget(mockWidget);
     setTimeout(function () {
       tour.stop();
       expect(tourStart).toHaveBeenCalled();
