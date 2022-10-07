@@ -14,6 +14,12 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/I3SNode", function () {
+  // Mock the I3SDataProvider load function
+  const originalLoad = I3SDataProvider.prototype._load;
+  I3SDataProvider.prototype._load = function () {
+    return Promise.resolve();
+  };
+
   const mockI3SProvider = new I3SDataProvider({
     url: "mockProviderUrl?testQuery=test",
   });
@@ -51,6 +57,9 @@ describe("Scene/I3SNode", function () {
 
   mockI3SProviderWithGeoidConversion._geoidDataList = geoidDataList;
   mockI3SProviderWithGeoidConversion._taskProcessorReadyPromise = Promise.resolve();
+
+  // Un-mock the I3SDataProvider load function
+  I3SDataProvider.prototype._load = originalLoad;
 
   const mockCesiumTileset = {
     debugShowBoundingVolume: true,
