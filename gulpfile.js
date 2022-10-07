@@ -135,7 +135,7 @@ function handleBuildWarnings(result) {
   }
 }
 
-export function build() {
+export async function build() {
   // Configure build options from command line arguments.
   const iife = argv.iife ?? false;
   const minify = argv.minify ?? false;
@@ -161,9 +161,9 @@ export function build() {
     return buildWidgets(buildOptions);
   }
 
-  return buildEngine(buildOptions)
-    .then(buildWidgets(buildOptions))
-    .then(buildCesium(buildOptions));
+  await buildEngine(buildOptions);
+  await buildWidgets(buildOptions);
+  await buildCesium(buildOptions);
 }
 export default build;
 
