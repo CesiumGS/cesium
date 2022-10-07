@@ -1457,8 +1457,8 @@ Cesium3DTile.prototype.requestContent = function () {
 
 Object.defineProperties(Cesium3DTile.prototype, {
   /**
-   * Gets the I3S Node for the tile content.
-   * @memberof Batched3DModel3DTileContent.prototype
+   * Gets the I3S Node for the tile.
+   * @memberof Cesium3DTile.prototype
    * @type {String}
    */
   i3sNode: {

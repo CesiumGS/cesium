@@ -110,12 +110,12 @@ I3SLayer.prototype.load = function () {
 
   if (this._data.spatialReference.wkid !== 4326) {
     console.log(
-      `Unsupported spatial reference: ${that._data.spatialReference.wkid}`
+      `Unsupported spatial reference: ${this._data.spatialReference.wkid}`
     );
     return Promise.reject();
   }
 
-  return that._dataProvider._geoidDataIsReadyPromise.then(function () {
+  return this._dataProvider._geoidDataIsReadyPromise.then(function () {
     return that._loadRootNode().then(function () {
       that._create3DTileset();
       return that._tileset.readyPromise.then(function () {
