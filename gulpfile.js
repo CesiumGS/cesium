@@ -161,7 +161,9 @@ export function build() {
     return buildWidgets(buildOptions);
   }
 
-  return buildCesium(buildOptions);
+  return buildEngine(buildOptions)
+    .then(buildWidgets(buildOptions))
+    .then(buildCesium(buildOptions));
 }
 export default build;
 
