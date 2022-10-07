@@ -304,21 +304,33 @@ export async function buildTs() {
     );
   }
 
-  return Promise.all([
-    generateTypeScriptDefinitions(
-      "engine",
-      "packages/engine/engine.d.ts",
-      "packages/engine/tsd-conf.json",
-      processEngineSource,
-      processEngineModules
-    ),
-    generateTypeScriptDefinitions(
-      "widgets",
-      "packages/widgets/widgets.d.ts",
-      "packages/widgets/tsd-conf.json"
-    ),
-    createTypeScriptDefinitions(),
-  ]);
+  // Generate types for engine.
+
+  const engineModules = await generateTypeScriptDefinitions(
+    "engine",
+    "packages/engine/engine.d.ts",
+    "packages/engine/tsd-conf.json",
+    processEngineSource,
+    processEngineModules
+  );
+
+  // Generate types for widgets.
+
+  const importModules = {
+    engine: engineModules,
+  };
+  await generateTypeScriptDefinitions(
+    "widgets",
+    "packages/widgets/widgets.d.ts",
+    "packages/widgets/tsd-conf.json",
+    undefined,
+    undefined,
+    importModules
+  );
+
+  // Generate types for CesiumJS.
+
+  await createTypeScriptDefinitions();
 }
 
 export function buildApps() {
@@ -1570,7 +1582,7 @@ function generateTypeScriptDefinitions(
   // The next step is to find the list of Cesium modules exported by the Cesium API
   // So that we can map these modules with a link back to their original source file.
 
-  const regex = /^declare (function|class|namespace|enum) (.+)/gm;
+  const regex = /^declare[ const ]*(function|class|namespace|enum) (.+)/gm;
   let matches;
   let publicModules = new Set();
   //eslint-disable-next-line no-cond-assign
@@ -1614,27 +1626,10 @@ ${source}
     source = imports + source;
   }
 
-  const allPublicModules = new Set(publicModules.values());
-
-  // Map individual modules back to their source file so that TS still works
-  // when importing individual files instead of the entire cesium module.
-  globbySync(sourceFiles).forEach(function (file) {
-    file = relative(`packages/${workspaceName}/Source`, file);
-
-    let moduleId = file;
-    moduleId = filePathToModuleId(moduleId);
-
-    const assignmentName = basename(file, extname(file));
-    if (publicModules.has(assignmentName)) {
-      publicModules.delete(assignmentName);
-      source += `declare module "${scope}/${workspaceName}/Source/${moduleId}" { import { ${assignmentName} } from '@${scope}/${workspaceName}'; export default ${assignmentName}; }\n`;
-    }
-  });
-
   // Write the final source file back out
   writeFileSync(definitionsPath, source);
 
-  return Promise.resolve(allPublicModules);
+  return Promise.resolve(publicModules);
 }
 
 function processEngineModules(modules) {
@@ -1827,7 +1822,6 @@ ${source}
     moduleId = filePathToModuleId(moduleId);
 
     const assignmentName = basename(file, extname(file));
-    console.log(`Module ID: ${moduleId}, Assignment Name: ${assignmentName}`);
 
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
