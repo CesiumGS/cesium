@@ -82,9 +82,14 @@ KmlTour.prototype.addPlaylistEntry = function (entry) {
 };
 
 /**
+ * @typedef {Object} Widget
+ * @property {Scene} scene The scene in the widget.
+ */
+
+/**
  * Play this tour.
  *
- * @param {Viewer} viewer viewer widget.
+ * @param {Widget} viewer viewer widget.
  * @param {Object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
  * options for FlyTo playlist entries.
  */

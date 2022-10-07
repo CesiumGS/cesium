@@ -1599,8 +1599,12 @@ function generateTypeScriptDefinitions(
 
   // Fix up the output to match what we need
   // declare => export since we are wrapping everything in a namespace
+  // CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
+  // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
   source = source
     .replace(/^declare /gm, "export ")
+    .replace(/module "Math"/gm, "namespace Math")
+    .replace(/CesiumMath/gm, "Math")
     .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
     .replace(/String\[]/gm, "string[]")
     .replace(/Boolean\[]/gm, "boolean[]")
@@ -1608,7 +1612,14 @@ function generateTypeScriptDefinitions(
     .replace(/<Number>/gm, "<number>")
     .replace(/<String>/gm, "<string>")
     .replace(/<Boolean>/gm, "<boolean>")
-    .replace(/<Object>/gm, "<object>");
+    .replace(/<Object>/gm, "<object>")
+    .replace(
+      /= "WebGLConstants\.(.+)"/gm,
+      // eslint-disable-next-line no-unused-vars
+      (match, p1) => `= WebGLConstants.${p1}`
+    )
+    // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
+    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4");
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
@@ -1689,24 +1700,8 @@ function processEngineSource(definitionsPath, source) {
       newSource += "\n\n";
     }
   });
-  source = newSource;
 
-  // Fix up the output to match what we need
-  // declare => export since we are wrapping everything in a namespace
-  // CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
-  // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
-  source = source
-    .replace(/module "Math"/gm, "namespace Math")
-    .replace(/CesiumMath/gm, "Math")
-    .replace(
-      /= "WebGLConstants\.(.+)"/gm,
-      // eslint-disable-next-line no-unused-vars
-      (match, p1) => `= WebGLConstants.${p1}`
-    )
-    // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
-    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4");
-
-  return source;
+  return newSource;
 }
 
 function createTypeScriptDefinitions() {
