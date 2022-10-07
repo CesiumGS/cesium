@@ -115,7 +115,7 @@ KmlTour.prototype.playInWidget = function (widget, cameraOptions) {
 KmlTour.prototype.play = function (viewer, cameraOptions) {
   deprecationWarning(
     "KmlTour.prototype.play",
-    "KmlTour.prototype.play was deprecated in Cesium 1.100. It will be removed in 1.101. Use KmlTour.prototype.playInWidget instead."
+    "KmlTour.prototype.play was deprecated in Cesium 1.99. It will be removed in 1.100. Use KmlTour.prototype.playInWidget instead."
   );
 
   this.tourStart.raiseEvent();
