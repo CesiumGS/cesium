@@ -3,7 +3,7 @@ import defined from "../Core/defined.js";
 /**
  * This class implements an I3S Feature.
  * <p>
- * Do not construct this directly, instead access tiles through {@link I3SDataProvider}.
+ * Do not construct this directly, instead access tiles through {@link I3SNode}.
  * </p>
  * @alias I3SFeature
  * @internalConstructor

@@ -62,10 +62,10 @@ import Lerc from "lerc";
 import Rectangle from "../Core/Rectangle.js";
 
 /**
- * This class implements an I3S Scene Layer. The URL
- * argument should return a scene object. Currently supported I3S
- * versions are 1.6 and 1.7/1.8 (OGC I3S 1.2). An I3SDataProvider is the main public class for I3S support.
- * I3SFeature and I3SNode classes implement the Object Model for I3S entities, with public interfaces.
+ * An I3SDataProvider is the main public class for I3S support. The url option
+ * should return a scene object. Currently supported I3S versions are 1.6 and
+ * 1.7/1.8 (OGC I3S 1.2). I3SFeature and I3SNode classes implement the
+ * Object Model for I3S entities, with public interfaces.
  *
  * @alias I3SDataProvider
  * @constructor

@@ -5,7 +5,7 @@ import Cesium3DTileset from "./Cesium3DTileset.js";
 import I3SNode from "./I3SNode.js";
 
 /**
- * This class implements an I3S layer. Each I3SLayer creates a Cesium3DTileset.
+ * This class implements an I3S layer. In CesiumJS each I3SLayer creates a Cesium3DTileset.
  * <p>
  * Do not construct this directly, instead access layers through {@link I3SDataProvider}.
  * </p>

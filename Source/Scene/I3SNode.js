@@ -15,10 +15,9 @@ import Cesium3DTile from "./Cesium3DTile.js";
 import I3SFeature from "./I3SFeature.js";
 
 /**
- * This class implements an I3S Node, in Cesium, each I3SNode
- * creates a Cesium3DTile
+ * This class implements an I3S Node. In CesiumJS each I3SNode creates a Cesium3DTile.
  * <p>
- * Do not construct this directly, instead access tiles through {@link I3SDataProvider}.
+ * Do not construct this directly, instead access tiles through {@link I3SLayer}.
  * </p>
  * @alias I3SNode
  * @internalConstructor
@@ -708,7 +707,7 @@ I3SNode.prototype._createContentURL = function () {
 };
 
 /**
- * This class implements an I3S Geometry, in Cesium, each I3SGeometry
+ * This class implements an I3S Geometry. Each I3SGeometry
  * generates an in memory glTF to be used as content for a Cesium3DTile
  * <p>
  * Do not construct this directly, instead access tiles through {@link I3SNode}.
@@ -825,14 +824,14 @@ const scratchV1p = new Cartesian3();
 const scratchV2p = new Cartesian3();
 
 /**
- * Find a triangle touching the point px,py,pz, then return the vertex closest to the search point
+ * Find a triangle touching the point [px, py, pz], then return the vertex closest to the search point
  * @param {Number} px The x component of the point to query
  * @param {Number} py The y component of the point to query
  * @param {Number} pz The z component of the point to query
  * @returns {Object} A structure containing the index of the closest point,
- * the squared distance from the queried point to the point that is found
- * the distance from the queried point to the point that is found
- * the queried position in local space
+ * the squared distance from the queried point to the point that is found,
+ * the distance from the queried point to the point that is found,
+ * the queried position in local space,
  * the closest position in local space
  */
 I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
@@ -1246,7 +1245,7 @@ function getNumericTypeSize(type) {
 
 /**
  * Loads the content.
- * @returns {Promise} A promise that is resolved when the geometry data is loaded
+ * @returns {Promise} A promise that is resolved when the field data is loaded
  */
 I3SField.prototype.load = function () {
   const that = this;
