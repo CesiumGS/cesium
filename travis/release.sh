@@ -3,6 +3,7 @@ set -ev
 if [ $TRAVIS_BRANCH == "cesium.com" ]; then
   npm --silent run website-release
 else
+  npm --silent run build --workspaces
   npm --silent run build -- --node
   npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
   npm --silent run make-zip

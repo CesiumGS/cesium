@@ -11,7 +11,7 @@ import {
   DrawCommand,
   ShaderProgram,
   VertexArray,
-  Math as CesiumMath
+  Math as CesiumMath,
 } from "../packages/engine/index.js";
 import equals from "./equals.js";
 

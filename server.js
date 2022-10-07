@@ -70,7 +70,7 @@ function formatTimeSinceInSeconds(start) {
 
 /**
  * Returns CesiumJS bundles configured for development.
- * 
+ *
  * @returns {Bundles} The bundles.
  */
 async function generateDevelopmentBuild() {
@@ -108,12 +108,14 @@ async function generateDevelopmentBuild() {
     write: false,
   });
 
-  console.log(`Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`);
+  console.log(
+    `Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`
+  );
 
   return {
     esmResult: bundles.esmBundle,
     iifeResult: bundles.iifeBundle,
-    specResult: bundles.specsBundle
+    specResult: bundles.specsBundle,
   };
 }
 

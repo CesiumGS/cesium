@@ -4,7 +4,7 @@ import {
   BoundingSphereState,
   EllipsoidGeometryUpdater,
   PrimitiveCollection,
-  Math as CesiumMath
+  Math as CesiumMath,
 } from "../packages/engine/index.js";
 
 import createDynamicProperty from "./createDynamicProperty.js";

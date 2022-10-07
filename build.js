@@ -774,7 +774,7 @@ export async function copyEngineAssets(destination) {
  * @param {String} destination The path to copy files to.
  * @returns {Promise.<>} A promise that completes when all assets are copied to the destination.
  */
- export async function copyWidgetsAssets(destination) {
+export async function copyWidgetsAssets(destination) {
   const widgetsStaticAssets = [
     "packages/widgets/Source/**",
     "!packages/widgets/Source/**/*.js",
@@ -1144,8 +1144,6 @@ export const buildWidgets = async (options) => {
   const minify = options.minify ?? false;
   const sourcemap = options.sourcemap ?? true;
   const write = options.write ?? true;
-
-
 
   // Generate Build folder to place build artifacts.
   mkdirp.sync("packages/widgets/Build");

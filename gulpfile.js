@@ -1,10 +1,5 @@
 /*eslint-env node*/
-import {
-  writeFileSync,
-  copyFileSync,
-  readFileSync,
-  existsSync,
-} from "fs";
+import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import { join, basename, relative, extname, resolve, posix } from "path";
 import { exec, execSync } from "child_process";
@@ -87,7 +82,7 @@ const sourceFiles = [
 ];
 
 const relativeWorkspaceSourceFiles = {
-  "engine": [
+  engine: [
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
     "!packages/engine/Source/Workers/**",
@@ -97,7 +92,7 @@ const relativeWorkspaceSourceFiles = {
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     "!packages/engine/Source/ThirdParty/_*",
   ],
-  "widgets": ["packages/widgets/Source/**/*.js"],
+  widgets: ["packages/widgets/Source/**/*.js"],
 };
 
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
@@ -1309,7 +1304,7 @@ export async function coverage() {
 }
 
 const workspaceKarmaFiles = {
-  "engine": [
+  engine: [
     { pattern: "packages/engine/Build/Assets/**/*", included: false },
     { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
     { pattern: "packages/engine/Build/Workers/**/*", included: false },
@@ -1329,7 +1324,7 @@ const workspaceKarmaFiles = {
     { pattern: "packages/engine/Specs/TestWorkers/**/*.wasm", included: false },
     { pattern: "Specs/Data/**", included: false },
   ],
-  "widgets": [
+  widgets: [
     { pattern: "packages/engine/Build/Assets/**/*", included: false },
     { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
     { pattern: "packages/engine/Build/Workers/**/*", included: false },
@@ -1825,9 +1820,7 @@ ${source}
   // Map individual modules back to their source file so that TS still works
   // when importing individual files instead of the entire cesium module.
 
-  globbySync(relativeWorkspaceSourceFiles[`engine`]).forEach(function (
-    file
-  ) {
+  globbySync(relativeWorkspaceSourceFiles[`engine`]).forEach(function (file) {
     file = relative("packages/engine/Source", file);
 
     let moduleId = file;
@@ -1842,9 +1835,7 @@ ${source}
     }
   });
 
-  globbySync(relativeWorkspaceSourceFiles[`widgets`]).forEach(function (
-    file
-  ) {
+  globbySync(relativeWorkspaceSourceFiles[`widgets`]).forEach(function (file) {
     file = relative("packages/widgets/Source", file);
 
     let moduleId = file;
