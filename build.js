@@ -1279,7 +1279,7 @@ export async function buildCesium(options) {
 
   // Copy static assets to the Build folder.
 
-  await copyEngineAssets("Source");
+  await copyEngineAssets(outputDirectory);
   await copyWidgetsAssets(path.join(outputDirectory, "Widgets"));
 
   // Copy static assets to Source folder.
