@@ -23,12 +23,10 @@ if (__karma__.config.args) {
 
 if (workspace) {
   window.CESIUM_BASE_URL = `base/packages/${workspace}/Build`;
+} else if (release) {
+  window.CESIUM_BASE_URL = "base/Build/Cesium";
 } else {
-  if (release) {
-    window.CESIUM_BASE_URL = "base/Build/Cesium";
-  } else {
-    window.CESIUM_BASE_URL = "base/Build/CesiumUnminified";
-  }
+  window.CESIUM_BASE_URL = "base/Build/CesiumUnminified";
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;

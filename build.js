@@ -725,23 +725,6 @@ export function copyAssets(globs, outputDirectory) {
 
   return streamToPromise(stream);
 }
-
-const engineStaticAssets = [
-  "packages/engine/Source/**",
-  "!packages/engine/Source/**/*.js",
-  "!packages/engine/Source/**/*.glsl",
-  "!packages/engine/Source/**/*.css",
-  "!packages/engine/Source/**/*.md",
-];
-
-const widgetsStaticAssets = [
-  "packages/widgets/Source/**",
-  "!packages/widgets/Source/**/*.js",
-  "!packages/widgets/Source/**/*.glsl",
-  "!packages/widgets/Source/**/*.css",
-  "!packages/widgets/Source/**/*.md",
-];
-
 /**
  * Helper function to copy files.
  *
@@ -1157,11 +1140,8 @@ export const buildEngine = async (options) => {
  * Builds the widgets workspace.
  */
 export const buildWidgets = async (options) => {
-  const iife = options.iife ?? true;
   const incremental = options.incremental ?? false;
   const minify = options.minify ?? false;
-  const node = options.node ?? true;
-  const removePragmas = options.removePragmas ?? false;
   const sourcemap = options.sourcemap ?? true;
   const write = options.write ?? true;
 

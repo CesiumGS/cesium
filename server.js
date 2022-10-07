@@ -3,13 +3,11 @@ import fs from "fs";
 import path from "path";
 import { performance } from "perf_hooks";
 import request from "request";
-import { URL, fileURLToPath } from "url";
+import { URL } from "url";
 
 import chokidar from "chokidar";
 import compression from "compression";
 import express from "express";
-import mkdirp from "mkdirp";
-import rimraf from "rimraf";
 import yargs from "yargs";
 
 const argv = yargs(process.argv)
@@ -34,12 +32,8 @@ const argv = yargs(process.argv)
   .help().argv;
 
 import {
-  buildCesiumJs,
-  buildSpecs,
   buildWorkers,
-  copyAssets,
   createCesiumJs,
-  createGalleryList,
   createJsHintOptions,
   createSpecList,
   glslToJavaScript,
@@ -123,58 +117,58 @@ async function generateDevelopmentBuild() {
   };
 }
 
-async function buildDev() {
+// async function buildDev() {
 
-  console.log("Building Cesium...");
-  const start = performance.now();
+//   console.log("Building Cesium...");
+//   const start = performance.now();
 
-  mkdirp.sync("Build");
-  rimraf.sync(outputDirectory);
+//   mkdirp.sync("Build");
+//   rimraf.sync(outputDirectory);
 
-  fs.writeFileSync(
-    "Build/package.json",
-    JSON.stringify({
-      type: "commonjs",
-    }),
-    "utf8"
-  );
+//   fs.writeFileSync(
+//     "Build/package.json",
+//     JSON.stringify({
+//       type: "commonjs",
+//     }),
+//     "utf8"
+//   );
 
-  await glslToJavaScript(false, "Build/minifyShaders.state");
-  await createCesiumJs();
-  await createSpecList();
-  await createJsHintOptions();
+//   await glslToJavaScript(false, "Build/minifyShaders.state");
+//   await createCesiumJs();
+//   await createSpecList();
+//   await createJsHintOptions();
 
-  const [esmResult, iifeResult] = await buildCesiumJs({
-    iife: true,
-    sourcemap: true,
-    path: outputDirectory,
-    incremental: true,
-    write: false,
-  });
+//   const [esmResult, iifeResult] = await buildCesiumJs({
+//     iife: true,
+//     sourcemap: true,
+//     path: outputDirectory,
+//     incremental: true,
+//     write: false,
+//   });
 
-  await buildWorkers({
-    sourcemap: true,
-    path: outputDirectory,
-    incremental: true,
-  });
+//   await buildWorkers({
+//     sourcemap: true,
+//     path: outputDirectory,
+//     incremental: true,
+//   });
 
-  await createGalleryList();
+//   await createGalleryList();
 
-  const specResult = await buildSpecs({
-    incremental: true,
-    write: false,
-  });
+//   const specResult = await buildSpecs({
+//     incremental: true,
+//     write: false,
+//   });
 
-  console.log(`Cesium built in ${formatTimeSinceInSeconds(start)} seconds.`);
+//   console.log(`Cesium built in ${formatTimeSinceInSeconds(start)} seconds.`);
 
-  await copyAssets(outputDirectory);
+//   await copyAssets(outputDirectory);
 
-  return {
-    esmResult,
-    iifeResult,
-    specResult,
-  };
-}
+//   return {
+//     esmResult,
+//     iifeResult,
+//     specResult,
+//   };
+// }
 
 const serveResult = (result, fileName, res, next) => {
   let bundle;
