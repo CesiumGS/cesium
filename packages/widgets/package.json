@@ -9,6 +9,7 @@
     "@cesium/widgets": "*",
     "nosleep.js": "^0.12.0"
   },
+  "type": "module",
   "scripts": {
     "build": "gulp build --workspace @cesium/widgets",
     "build-ts": "gulp buildTs --workspace @cesium/widgets",
