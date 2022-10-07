@@ -868,7 +868,7 @@ function getVersionFromPackageJson(json) {
  * @param {String} version The version extracted from package.json
  * @returns
  */
-async function createIndexJs(workspace) {
+async function createIndexJs(workspace, version) {
   let contents = `export const VERSION = '${version}';\n`;
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
@@ -1042,14 +1042,6 @@ export const buildEngine = async (options) => {
     "engine"
   );
 
-  // Create index.js
-  await createIndexJs("engine");
-
-  // Create SpecList.js
-  const specFiles = await globby(workspaceSpecFiles["engine"]);
-  const specListFile = path.join("packages/engine/Specs", "SpecList.js");
-  await createSpecListJs(specFiles, "engine", specListFile);
-
   // Read package.json file.
   let workspacePackageJson;
   try {
@@ -1062,6 +1054,15 @@ export const buildEngine = async (options) => {
     process.exit(-1);
   }
   const version = getVersionFromPackageJson(workspacePackageJson);
+
+  // Create index.js
+  await createIndexJs("engine", version);
+
+  // Create SpecList.js
+  const specFiles = await globby(workspaceSpecFiles["engine"]);
+  const specListFile = path.join("packages/engine/Specs", "SpecList.js");
+  await createSpecListJs(specFiles, "engine", specListFile);
+
   const copyrightBanner = copyrightHeaderTemplate.replace(
     "${version}",
     version
@@ -1164,11 +1165,26 @@ export const buildWidgets = async (options) => {
   const sourcemap = options.sourcemap ?? true;
   const write = options.write ?? true;
 
+
+
   // Generate Build folder to place build artifacts.
   mkdirp.sync("packages/widgets/Build");
 
+  // Read package.json file.
+  let workspacePackageJson;
+  try {
+    const workspacePackageJsonData = await readFile(
+      `packages/engine/package.json`
+    );
+    workspacePackageJson = JSON.parse(workspacePackageJsonData);
+  } catch (e) {
+    console.error(`Unable to read package.json: ${e}`);
+    process.exit(-1);
+  }
+  const version = getVersionFromPackageJson(workspacePackageJson);
+
   // Create index.js
-  await createIndexJs("widgets");
+  await createIndexJs("widgets", version);
 
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["widgets"]);
