@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.99 - 2022-11-01
+
+##### Deprecated :hourglass_flowing_sand:
+
+- KmlTour.prototype.play was deprecated in Cesium 1.100. It will be removed in 1.101. Use KmlTour.prototype.playInWidget instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
+
 ### 1.98.1 - 2022-10-03
 
 - This is an npm only release to fix the improperly published 1.98.
