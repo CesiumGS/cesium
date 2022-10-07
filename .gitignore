@@ -18,19 +18,6 @@ Thumbs.db
 
 /Specs/SpecList.js
 /Specs/jasmine/**
-/Source/Shaders/**/*.js
-/Source/ThirdParty/Shaders/**/*.js
-/Source/Workers/**
-!/Source/Workers/cesiumWorkerBootstrapper.js
-!/Source/Workers/transferTypedArrayTest.js
-!/Source/Workers/package.json
-
-Source/ThirdParty/_commonjsHelpers*
-Source/ThirdParty/draco_decoder.wasm
-Source/ThirdParty/Workers/draco_decoder_nodejs.js
-Source/ThirdParty/Workers/pako_inflate.min.js
-Source/ThirdParty/Workers/pako_deflate.min.js
-Source/ThirdParty/Workers/z-worker-pako.js
 
 /Tools/jsdoc/cesium_template/static/javascript/prism.js
 /Tools/jsdoc/cesium_template/static/styles/prism.css
@@ -45,25 +32,3 @@ yarn.lock
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/shelf
-
-# @cesium/engine
-packages/engine/index.js
-packages/engine/engine.d.ts
-packages/engine/Build
-packages/engine/Source/Shaders/**/*.js
-packages/engine/Source/ThirdParty/Shaders/**/*.js
-packages/engine/Source/ThirdParty/_commonjsHelpers*
-packages/engine/Source/ThirdParty/draco_decoder.wasm
-packages/engine/Source/ThirdParty/Workers/draco_decoder_nodejs.js
-packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js
-packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js
-packages/engine/Source/ThirdParty/Workers/z-worker-pako.js
-packages/engine/Source/Workers/**
-!packages/engine/Source/Workers/cesiumWorkerBootstrapper.js
-!packages/engine/Source/Workers/transferTypedArrayTest.js
-!packages/engine/Source/Workers/package.json
-
-# @cesium/widgets
-packages/widgets/index.js
-packages/widgets/widgets.d.ts
-packages/widgets/Build
