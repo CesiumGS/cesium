@@ -310,7 +310,7 @@ I3SDataProvider.prototype.destroy = function () {
     }
   }
 
-  return destroyObject();
+  return destroyObject(this);
 };
 
 /**
@@ -414,6 +414,15 @@ I3SDataProvider.prototype._load = function () {
       return that;
     });
   });
+
+  return this._readyPromise;
+};
+
+/**
+ * @private
+ */
+I3SDataProvider._fetchJson = function (resource) {
+  return resource.fetchJson();
 };
 
 /**
@@ -424,7 +433,7 @@ I3SDataProvider.prototype._loadJson = function (resource) {
     console.log("I3S FETCH:", resource.url);
   }
 
-  return resource.fetchJson().then(function (data) {
+  return I3SDataProvider._fetchJson(resource).then(function (data) {
     if (defined(data.error)) {
       console.error("Failed to fetch I3S ", resource.url);
       if (defined(data.error.message)) {
@@ -605,6 +614,9 @@ function getTiles(terrainProvider, extent) {
   });
 }
 
+/**
+ * @private
+ */
 I3SDataProvider.prototype._loadGeoidData = function () {
   // Load tiles from arcgis
   const that = this;
@@ -628,6 +640,8 @@ I3SDataProvider.prototype._loadGeoidData = function () {
       });
     }
   );
+
+  return this._geoidDataIsReadyPromise;
 };
 
 /**

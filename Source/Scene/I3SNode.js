@@ -96,7 +96,7 @@ Object.defineProperties(I3SNode.prototype, {
    */
   parent: {
     get: function () {
-      return this._isRoot ? undefined : this._parent;
+      return this._parent;
     },
   },
   /**

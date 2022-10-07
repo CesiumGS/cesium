@@ -102,7 +102,7 @@ Object.defineProperties(I3SLayer.prototype, {
 
 /**
  * Loads the content, including the root node definition and its children
- * @returns {Promise<void>} A promise that is resolved when the layer data is loaded
+ * @returns {Promise} A promise that is resolved when the layer data is loaded
  * @private
  */
 I3SLayer.prototype.load = function () {
@@ -116,9 +116,9 @@ I3SLayer.prototype.load = function () {
   }
 
   return that._dataProvider._geoidDataIsReadyPromise.then(function () {
-    that._loadRootNode().then(function () {
+    return that._loadRootNode().then(function () {
       that._create3DTileset();
-      that._tileset.readyPromise.then(function () {
+      return that._tileset.readyPromise.then(function () {
         that._rootNode._tile = that._tileset._root;
         that._tileset._root._i3sNode = that._rootNode;
         if (that._data.store.version === "1.6") {
@@ -260,6 +260,13 @@ I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
 /**
  * @private
  */
+I3SLayer._fetchJson = function (resource) {
+  return resource.fetchJson();
+};
+
+/**
+ * @private
+ */
 I3SLayer.prototype._loadNodePage = function (page) {
   const that = this;
 
@@ -268,7 +275,7 @@ I3SLayer.prototype._loadNodePage = function (page) {
     const nodePageResource = this.resource.getDerivedResource({
       url: `nodepages/${page}/`,
     });
-    const fetchPromise = Resource.fetchJson(nodePageResource).then(function (
+    const fetchPromise = I3SLayer._fetchJson(nodePageResource).then(function (
       data
     ) {
       if (defined(data.error) && data.error.code !== 200) {
