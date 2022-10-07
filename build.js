@@ -778,6 +778,7 @@ export async function copyWidgetsAssets(destination) {
   const widgetsStaticAssets = [
     "packages/widgets/Source/**",
     "!packages/widgets/Source/**/*.js",
+    "!packages/widgets/Source/**/*.css",
     "!packages/widgets/Source/**/*.glsl",
     "!packages/widgets/Source/**/*.md",
   ];

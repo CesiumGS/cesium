@@ -2133,7 +2133,7 @@ async function buildCesiumViewer() {
   handleBuildWarnings(result);
 
   await esbuild({
-    entryPoints: ["Source/Widgets/InfoBox/InfoBoxDescription.css"],
+    entryPoints: ["packages/widgets/Source/InfoBox/InfoBoxDescription.css"],
     minify: true,
     bundle: true,
     loader: {
@@ -2141,12 +2141,15 @@ async function buildCesiumViewer() {
       ".png": "text",
     },
     outdir: cesiumViewerOutputDirectory,
-    outbase: "Source",
+    outbase: "packages/widgets/Source/",
   });
 
   await buildWorkers({
-    minify: true,
-    removePragmas: true,
+    input: [
+      "packages/engine/Source/Workers/**",
+      "packages/engine/Source/ThirdParty/Workers/**",
+    ],
+    inputES6: ["packages/engine/Source/WorkersES6/*.js"],
     path: cesiumViewerOutputDirectory,
   });
 
