@@ -358,7 +358,7 @@ const serveResult = (result, fileName, res, next) => {
 
   const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
   glslWatcher.on("all", async () => {
-    await glslToJavaScript(false, "Build/minifyShaders.state");
+    await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
     esmResult.outputFiles = [];
     iifeResult.outputFiles = [];
   });

@@ -194,7 +194,7 @@ export const buildWatch = gulp.series(build, async function () {
   });
 
   gulp.watch(shaderFiles, async () => {
-    glslToJavaScript(minify, "Build/minifyShaders.state");
+    glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
     esmResult = await esmResult.rebuild();
 
     if (iifeResult) {
@@ -518,7 +518,7 @@ export const release = gulp.series(
 export const makeZip = gulp.series(release, async function () {
   //For now we regenerate the JS glsl to force it to be unminified in the release zip
   //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
-  await glslToJavaScript(false, "Build/minifyShaders.state");
+  await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
 
   const scripts = packageJson.scripts;
   // Remove prepare step from package.json to avoid running "prepare" an extra time.
@@ -1561,7 +1561,17 @@ export async function test() {
     server.start();
   });
 }
-
+/**
+ * Generates TypeScript definition file (.d.ts) for a package.
+ *
+ * @param {*} workspaceName
+ * @param {String} definitionsPath The path of the .d.ts file to generate.
+ * @param {*} configurationPath
+ * @param {*} processSourceFunc
+ * @param {*} processModulesFunc
+ * @param {*} importModules
+ * @returns
+ */
 function generateTypeScriptDefinitions(
   workspaceName,
   definitionsPath,
