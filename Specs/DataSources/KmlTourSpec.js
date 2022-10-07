@@ -24,16 +24,16 @@ describe("DataSources/KmlTour", function () {
 
   function createMockWidget() {
     const mockWidget = {};
-    mockWidget._scene = {};
-    mockWidget._scene.camera = {};
-    mockWidget._scene.camera.flyTo = jasmine
+    mockWidget.scene = {};
+    mockWidget.scene.camera = {};
+    mockWidget.scene.camera.flyTo = jasmine
       .createSpy("flyTo")
       .and.callFake(function (options) {
         if (options.complete) {
           options.complete();
         }
       });
-    mockWidget._scene.camera.flyToBoundingSphere = jasmine
+    mockWidget.scene.camera.flyToBoundingSphere = jasmine
       .createSpy("flyToBoundingSphere")
       .and.callFake(function (boundingSphere, options) {
         if (options.complete) {
@@ -146,10 +146,10 @@ describe("DataSources/KmlTour", function () {
       expect(tourStart.calls.count()).toEqual(1);
       expect(tourEnd.calls.count()).toEqual(1);
 
-      expect(mockWidget._scene.camera.flyTo.calls.count()).toEqual(0);
-      expect(
-        mockWidget._scene.camera.flyToBoundingSphere.calls.count()
-      ).toEqual(0);
+      expect(mockWidget.scene.camera.flyTo.calls.count()).toEqual(0);
+      expect(mockWidget.scene.camera.flyToBoundingSphere.calls.count()).toEqual(
+        0
+      );
     }, 5);
   });
 });

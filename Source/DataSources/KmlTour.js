@@ -129,7 +129,7 @@ function playEntry(widget, cameraOptions, allDone) {
     this._activeEntries.push(entry);
     this.entryStart.raiseEvent(entry);
     if (entry.blocking) {
-      entry.play(_playNext, widget._scene.camera, cameraOptions);
+      entry.play(_playNext, widget.scene.camera, cameraOptions);
     } else {
       const tour = this;
       entry.play(function () {
