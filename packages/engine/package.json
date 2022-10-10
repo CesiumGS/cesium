@@ -29,6 +29,7 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/engine",
     "build-ts": "gulp buildTs --workspace @cesium/engine",
+    "coverage": "gulp coverage --workspace @cesium/engine",
     "test": "gulp testEngine"
   },
   "repository": {
