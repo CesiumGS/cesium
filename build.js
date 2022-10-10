@@ -587,6 +587,33 @@ export default "${contents}";\n`;
   );
 }
 
+function createExternalResolvePlugin(globalName) {
+  return {
+    name: "external-cesium",
+    setup: (build) => {
+      build.onResolve({ filter: new RegExp(`index.js$`) }, () => {
+        return {
+          path: globalName,
+          namespace: "external-cesium",
+        };
+      });
+
+      build.onLoad(
+        {
+          filter: new RegExp(`^${globalName}$`),
+          namespace: "external-cesium",
+        },
+        () => {
+          const contents = `module.exports = ${globalName}`;
+          return {
+            contents,
+          };
+        }
+      );
+    },
+  };
+}
+
 const externalResolvePlugin = {
   name: "external-cesium",
   setup: (build) => {
@@ -964,37 +991,39 @@ const workspaceCssFiles = {
  * @param {String} options.outbase The base path the output files are relative to.
  * @param {String} options.outdir The directory to place the output in.
  * @param {Boolean} [options.removePragmas=false] True if debug pragmas should be removed.
+ * @param {String} options.globalName The global name of the module being tested.
  * @param {String} options.specListFile The path to the SpecList.js file
  * @param {Boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
  * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  * @returns {Object} The bundle generated from Specs.
  */
 async function bundleSpecs(options) {
+  const incremental = options.incremental ?? true;
+  const sourcemap = options.sourcemap ?? true;
+  const write = options.write ?? true;
+
+  const buildOptions = {
+    bundle: true,
+    format: "esm",
+    incremental: incremental,
+    outdir: options.outdir,
+    sourcemap: sourcemap,
+    plugins: [createExternalResolvePlugin(options.globalName)],
+    target: "es2020",
+    write: write,
+  };
+
   // When bundling specs for a workspace, the spec-main.js and karma-main.js
   // are bundled separately since they use a different outbase than the workspace's SpecList.js.
   await esbuild.build({
+    ...buildOptions,
     entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"],
-    bundle: true,
-    format: "esm",
-    sourcemap: options.sourcemap,
-    target: "es2020",
-    outdir: options.outdir,
-    external: ["https", "http", "url", "zlib"],
-    incremental: options.incremental,
-    write: options.write,
   });
 
   return await esbuild.build({
+    ...buildOptions,
     entryPoints: [options.specListFile],
-    bundle: true,
-    format: "esm",
-    sourcemap: options.sourcemap,
-    target: "es2020",
-    outdir: options.outdir,
     outbase: options.outbase,
-    external: ["https", "http", "url", "zlib"],
-    incremental: options.incremental,
-    write: options.write,
   });
 }
 
@@ -1120,6 +1149,7 @@ export const buildEngine = async (options) => {
     incremental: incremental,
     minify: minify,
     outbase: "packages/engine/Specs",
+    globalName: "CesiumEngine",
     outdir: "packages/engine/Build/Specs",
     specListFile: specListFile,
     sourcemap: sourcemap,
@@ -1177,6 +1207,7 @@ export const buildWidgets = async (options) => {
     incremental: incremental,
     minify: minify,
     outbase: "packages/widgets/Specs",
+    globalName: "CesiumWidgets",
     outdir: "packages/widgets/Build/Specs",
     specListFile: specListFile,
     sourcemap: sourcemap,

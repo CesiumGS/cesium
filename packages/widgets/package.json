@@ -20,6 +20,7 @@
   "scripts": {
     "build": "gulp build --workspace @cesium/widgets",
     "build-ts": "gulp buildTs --workspace @cesium/widgets",
+    "coverage": "gulp coverage --workspace @cesium/widgets",
     "test": "gulp testWidgets"
   },
   "repository": {

@@ -8,7 +8,6 @@ let webglStub = false;
 let release = false;
 let debugCanvasWidth;
 let debugCanvasHeight;
-let workspace;
 
 if (__karma__.config.args) {
   includeCategory = __karma__.config.args[0];
@@ -18,12 +17,9 @@ if (__karma__.config.args) {
   release = __karma__.config.args[6];
   debugCanvasWidth = __karma__.config.args[7];
   debugCanvasHeight = __karma__.config.args[8];
-  workspace = __karma__.config.args[9];
 }
 
-if (workspace) {
-  window.CESIUM_BASE_URL = `base/packages/${workspace}/Build`;
-} else if (release) {
+if (release) {
   window.CESIUM_BASE_URL = "base/Build/Cesium";
 } else {
   window.CESIUM_BASE_URL = "base/Build/CesiumUnminified";
