@@ -590,7 +590,11 @@ export default "${contents}";\n`;
 const externalResolvePlugin = {
   name: "external-cesium",
   setup: (build) => {
-    build.onResolve({ filter: new RegExp(`Cesium\.js$`) }, () => {
+    // In Specs, when we import files from the source files, we import
+    // them from the index.js files. This plugin replaces those imports
+    // with the IIFE Cesium.js bundle that's loaded in the browser
+    // in SpecRunner.html.
+    build.onResolve({ filter: new RegExp(`index\.js$`) }, () => {
       return {
         path: "Cesium",
         namespace: "external-cesium",
@@ -830,7 +834,6 @@ export function buildSpecs(options) {
     sourcemap: true,
     target: "es2020",
     outdir: path.join("Build", "Specs"),
-    external: ["https", "http", "url", "zlib"],
     plugins: [externalResolvePlugin],
     incremental: options.incremental,
     write: options.write,

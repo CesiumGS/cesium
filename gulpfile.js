@@ -497,6 +497,7 @@ export const websiteRelease = gulp.series(
 );
 
 export const release = gulp.series(
+  // Generate Build/CesiumUnminified
   function () {
     return buildCesium({
       minify: false,
@@ -504,6 +505,7 @@ export const release = gulp.series(
       node: true,
     });
   },
+  // Generate Build/Cesium
   function () {
     return buildCesium({
       minify: true,

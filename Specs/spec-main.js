@@ -31,7 +31,7 @@ if (defined(queryString.debugCanvasHeight)) {
 if (release) {
   window.CESIUM_BASE_URL = "../Build/Cesium";
 } else {
-  window.CESIUM_BASE_URL = "../packages/engine/Build/";
+  window.CESIUM_BASE_URL = "../Build/CesiumUnminified";
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
