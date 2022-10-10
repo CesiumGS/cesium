@@ -32,7 +32,7 @@ describe("Core/DeveloperError", function () {
       expect(str).toContain(`${name}: ${testMessage}`);
     } else {
       // Since source maps are used, there will not be exact filenames
-      expect(str).toContain("other message");
+      expect(str).toContain(testMessage);
     }
   });
 });
