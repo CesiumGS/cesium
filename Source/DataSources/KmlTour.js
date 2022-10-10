@@ -85,43 +85,25 @@ KmlTour.prototype.addPlaylistEntry = function (entry) {
 /**
  * Play this tour.
  *
- * @param {CesiumWidget} widget The Cesium widget.
+ * @param {Viewer|CesiumWidget} widget The widget.
  * @param {Object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
  * options for FlyTo playlist entries.
  */
-KmlTour.prototype.playInWidget = function (widget, cameraOptions) {
+KmlTour.prototype.play = function (widget, cameraOptions) {
+  // We want to avoid importing the Viewer/CesiumWidget class, so we check
+  // for the presence of the .cesiumWidget property that's only available
+  // on the Viewer.
+  if (defined(widget.cesiumWidget)) {
+    deprecationWarning(
+      "viewer",
+      "The viewer parameter has been deprecated in Cesium 1.99. It will be removed in 1.100. Instead of a Viewer, pass a CesiumWidget instead."
+    );
+  }
+
   this.tourStart.raiseEvent();
 
   const tour = this;
   playEntry.call(this, widget, cameraOptions, function (terminated) {
-    tour.playlistIndex = 0;
-    // Stop nonblocking entries
-    if (!terminated) {
-      cancelAllEntries(tour._activeEntries);
-    }
-    tour.tourEnd.raiseEvent(terminated);
-  });
-};
-
-/**
- * Play this tour.
- *
- * @param {Viewer} viewer viewer widget.
- * @param {Object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
- * options for FlyTo playlist entries.
- *
- * @deprecated
- */
-KmlTour.prototype.play = function (viewer, cameraOptions) {
-  deprecationWarning(
-    "KmlTour.prototype.play",
-    "KmlTour.prototype.play was deprecated in Cesium 1.99. It will be removed in 1.100. Use KmlTour.prototype.playInWidget instead."
-  );
-
-  this.tourStart.raiseEvent();
-
-  const tour = this;
-  playEntry.call(this, viewer, cameraOptions, function (terminated) {
     tour.playlistIndex = 0;
     // Stop nonblocking entries
     if (!terminated) {
