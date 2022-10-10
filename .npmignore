@@ -12,6 +12,7 @@
 /.vscode
 /Apps
 /Build/Apps
+/Build/CesiumDev
 /Build/Coverage
 /Build/minifyShaders.state
 /Build/Documentation

@@ -833,6 +833,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       [
         "Apps/**",
         "Build/**",
+        "!Build/CesiumDev/**",
         "Source/**",
         "Specs/**",
         "ThirdParty/**",
