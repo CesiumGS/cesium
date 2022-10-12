@@ -26,9 +26,11 @@
     "bitstream": 0,
     "availableCount": 4
   },
-  "contentAvailability": {
-    "constant": 1
-  },
+  "contentAvailability": [ 
+    {
+      "constant": 1
+    } 
+  ],
   "childSubtreeAvailability": {
     "constant": 0
   },
