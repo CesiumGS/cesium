@@ -11,14 +11,8 @@ notifications:
     on_success: change # default: always
 jobs:
   include:
-    - stage: "Tests"
-      name: "Coverage"
-      script: ./travis/test-coverage.sh    
-    - name: "Release"
-      script: ./travis/test-release.sh
-    - name: "Workspaces"
-      script: ./travis/test-workspaces.sh
-    - stage: "Deploy"
+    - stage:
+      name: "Linting, Coverage, Deployment"
       script:
         - ./travis/prepare.sh
         - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
@@ -27,3 +21,6 @@ jobs:
         - npm --silent run prettier-check
         - ./travis/release.sh
         - ./travis/deploy.sh
+    - name: "Release Tests"
+      script: ./travis/test-release.sh
+
