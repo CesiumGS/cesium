@@ -1181,7 +1181,6 @@ async function setStatus(state, targetUrl, description, context) {
  * @param {Object} options An object with the following properties:
  * @param {String} options.outputDirectory The output directory for the generated build artifacts.
  * @param {String} options.coverageDirectory The path where the coverage reports should be saved to.
- * @param {String} options.karmaBundle The path to the bundled karma-main.js for the package.
  * @param {String} options.specList The path to the spec list for the package.
  * @param {RegExp} options.filter The filter for finding which files should be instrumented.
  * @param {Boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
@@ -1233,6 +1232,18 @@ export async function runCoverage(options) {
     },
   };
 
+  const karmaBundle = join(options.outputDirectory, "karma-main.js");
+  await esbuild({
+    entryPoints: ["Specs/karma-main.js"],
+    bundle: true,
+    sourcemap: true,
+    format: "esm",
+    target: "es2020",
+    external: ["https", "http", "url", "zlib"],
+    outfile: karmaBundle,
+    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
+  });
+
   // Generate instrumented bundle for Specs.
 
   const specListBundle = join(options.outputDirectory, "SpecList.js");
@@ -1263,7 +1274,7 @@ export async function runCoverage(options) {
       },
       files: [
         {
-          pattern: options.karmaBundle,
+          pattern: karmaBundle,
           included: true,
           type: "module",
         },
@@ -1341,7 +1352,6 @@ export async function coverage() {
     return runCoverage({
       outputDirectory: "packages/engine/Build/Instrumented",
       coverageDirectory: "packages/engine/Build/Coverage",
-      karmaBundle: "packages/engine/Build/Specs/karma-main.js",
       specList: "packages/engine/Specs/SpecList.js",
       filter: /packages(\\|\/)engine(\\|\/)Source((\\|\/)\w+)+\.js$/,
       webglStub: argv.webglStub,
@@ -1352,7 +1362,6 @@ export async function coverage() {
     return runCoverage({
       outputDirectory: "packages/widgets/Build/Instrumented",
       coverageDirectory: "packages/widgets/Build/Coverage",
-      karmaBundle: "packages/widgets/Build/Specs/karma-main.js",
       specList: "packages/widgets/Specs/SpecList.js",
       filter: /packages(\\|\/)widgets(\\|\/)Source((\\|\/)\w+)+\.js$/,
       webglStub: argv.webglStub,
@@ -1364,7 +1373,6 @@ export async function coverage() {
   return runCoverage({
     outputDirectory: "Build/Instrumented",
     coverageDirectory: "Build/Coverage",
-    karmaBundle: "Build/Specs/karma-main.js",
     specList: "Specs/SpecList.js",
     filter: /packages(\\|\/)(engine|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
     webglStub: argv.webglStub,
