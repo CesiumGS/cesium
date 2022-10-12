@@ -20,10 +20,10 @@ jobs:
       script: ./travis/test-workspaces.sh
     - stage: "Deploy"
       script:
-        - ./prepare.sh
+        - ./travis/prepare.sh
         - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
         - npm --silent run eslint
         - npm --silent run markdownlint
         - npm --silent run prettier-check
-        - ./release.sh
-        - ./deploy.sh
+        - ./travis/release.sh
+        - ./travis/deploy.sh
