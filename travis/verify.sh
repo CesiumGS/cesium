@@ -1,6 +1,8 @@
 #!/bin/bash
 set -ev
 if [ $TRAVIS_BRANCH != "cesium.com" ]; then
+  npm --silent run build -- --node
+  npm --silent run make-zip
   npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
 
   # Various Node.js smoke-screen tests
