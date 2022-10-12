@@ -586,33 +586,6 @@ export default "${contents}";\n`;
   );
 }
 
-function createExternalResolvePlugin(globalName) {
-  return {
-    name: "external-cesium",
-    setup: (build) => {
-      build.onResolve({ filter: new RegExp(`index.js$`) }, () => {
-        return {
-          path: globalName,
-          namespace: "external-cesium",
-        };
-      });
-
-      build.onLoad(
-        {
-          filter: new RegExp(`^${globalName}$`),
-          namespace: "external-cesium",
-        },
-        () => {
-          const contents = `module.exports = ${globalName}`;
-          return {
-            contents,
-          };
-        }
-      );
-    },
-  };
-}
-
 const externalResolvePlugin = {
   name: "external-cesium",
   setup: (build) => {
@@ -846,7 +819,7 @@ export async function createJsHintOptions() {
  * @param {Boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise.<*>}
  */
-export function buildSpecs(options) {
+export function bundleCombinedSpecs(options) {
   options = options || {};
 
   return esbuild.build({
@@ -861,6 +834,7 @@ export function buildSpecs(options) {
     target: "es2020",
     outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
+    external: [`http`, `https`, `url`, `zlib`],
     incremental: options.incremental,
     write: options.write,
   });
@@ -1007,7 +981,7 @@ async function bundleSpecs(options) {
     incremental: incremental,
     outdir: options.outdir,
     sourcemap: sourcemap,
-    plugins: [createExternalResolvePlugin(options.globalName)],
+    external: ["https", "http", "zlib", "url"],
     target: "es2020",
     write: write,
   };
@@ -1306,7 +1280,7 @@ export async function buildCesium(options) {
   ]);
 
   // Generate Specs bundle.
-  const specsBundle = await buildSpecs({
+  const specsBundle = await bundleCombinedSpecs({
     incremental: incremental,
     write: write,
   });

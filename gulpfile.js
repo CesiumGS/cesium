@@ -1181,11 +1181,9 @@ async function setStatus(state, targetUrl, description, context) {
  * @param {Object} options An object with the following properties:
  * @param {String} options.outputDirectory The output directory for the generated build artifacts.
  * @param {String} options.coverageDirectory The path where the coverage reports should be saved to.
- * @param {String} options.outputFile The path of the bundle to be generated.
- * @param {String} options.entryPoint The path to the entry point for the package.
- * @param {String} options.globalName The name of the IIFE module to be generated.
- * @param {String} options.karmaMain The path to the bundled karma-main.js for the package.
- * @param {String} options.specList The path to the bundled spec list for the package.
+ * @param {String} options.karmaBundle The path to the bundled karma-main.js for the package.
+ * @param {String} options.specList The path to the spec list for the package.
+ * @param {RegExp} options.filter The filter for finding which files should be instrumented.
  * @param {Boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
  * @param {Boolean} [options.suppressPassed=false] True if output should be suppressed for tests that pass.
  * @param {Boolean} [options.failTaskOnError=false] True if the gulp task should fail on errors in the tests.
@@ -1212,7 +1210,7 @@ export async function runCoverage(options) {
     setup: (build) => {
       build.onLoad(
         {
-          filter: /packages\/(engine|widgets)\/Source\/(Core|DataSources|Renderer|Scene|Widget\/)?(\w+)+\.js$/,
+          filter: options.filter,
         },
         async (args) => {
           const source = await readFile(args.path, { encoding: "utf8" });
@@ -1235,17 +1233,17 @@ export async function runCoverage(options) {
     },
   };
 
-  // Generate IIFE bundle.
+  // Generate instrumented bundle for Specs.
 
+  const specListBundle = join(options.outputDirectory, "SpecList.js");
   await esbuild({
-    entryPoints: [options.entryPoint],
+    entryPoints: [options.specList],
     bundle: true,
     sourcemap: true,
-    format: "iife",
-    globalName: options.globalName,
+    format: "esm",
     target: "es2020",
     external: ["https", "http", "url", "zlib"],
-    outfile: options.outputFile,
+    outfile: specListBundle,
     plugins: [instrumentPlugin],
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
@@ -1264,23 +1262,21 @@ export async function runCoverage(options) {
         suppressSkipped: true,
       },
       files: [
-        { pattern: options.outputFile, included: true },
-        { pattern: `${options.outputFile}.map`, included: false },
         {
-          pattern: options.karmaMain,
+          pattern: options.karmaBundle,
           included: true,
           type: "module",
         },
         {
-          pattern: options.specList,
+          pattern: specListBundle,
           included: true,
           type: "module",
         },
         // Static assets are always served from the shared/combined folders.
-        { pattern: "Specs/Data/**", included: false },
-        { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
         { pattern: "Build/CesiumUnminified/**", included: false },
+        { pattern: "Specs/Data/**", included: false },
         { pattern: "Specs/TestWorkers/**", included: false },
+        { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
       ],
       reporters: ["spec", "coverage"],
       coverageReporter: {
@@ -1345,11 +1341,9 @@ export async function coverage() {
     return runCoverage({
       outputDirectory: "packages/engine/Build/Instrumented",
       coverageDirectory: "packages/engine/Build/Coverage",
-      outputFile: "packages/engine/Build/Instrumented/CesiumEngine.js",
-      entryPoint: "packages/engine/index.js",
-      globalName: "CesiumEngine",
-      karmaMain: "packages/engine/Build/Specs/karma-main.js",
-      specList: "packages/engine/Build/Specs/SpecList.js",
+      karmaBundle: "packages/engine/Build/Specs/karma-main.js",
+      specList: "packages/engine/Specs/SpecList.js",
+      filter: /packages(\\|\/)engine(\\|\/)Source((\\|\/)\w+)+\.js$/,
       webglStub: argv.webglStub,
       suppressPassed: argv.suppressPassed,
       failTaskOnError: argv.failTaskOnError,
@@ -1358,11 +1352,9 @@ export async function coverage() {
     return runCoverage({
       outputDirectory: "packages/widgets/Build/Instrumented",
       coverageDirectory: "packages/widgets/Build/Coverage",
-      outputFile: "packages/widgets/Build/Instrumented/CesiumWidgets.js",
-      entryPoint: "packages/widgets/index.js",
-      globalName: "CesiumWidgets",
-      karmaMain: "packages/widgets/Build/Specs/karma-main.js",
-      specList: "packages/widgets/Build/Specs/SpecList.js",
+      karmaBundle: "packages/widgets/Build/Specs/karma-main.js",
+      specList: "packages/widgets/Specs/SpecList.js",
+      filter: /packages(\\|\/)widgets(\\|\/)Source((\\|\/)\w+)+\.js$/,
       webglStub: argv.webglStub,
       suppressPassed: argv.suppressPassed,
       failTaskOnError: argv.failTaskOnError,
@@ -1372,11 +1364,9 @@ export async function coverage() {
   return runCoverage({
     outputDirectory: "Build/Instrumented",
     coverageDirectory: "Build/Coverage",
-    outputFile: "Build/Instrumented/Cesium.js",
-    entryPoint: "Source/Cesium.js",
-    globalName: "Cesium",
-    karmaMain: "Build/Specs/karma-main.js",
-    specList: "Build/Specs/SpecList.js",
+    karmaBundle: "Build/Specs/karma-main.js",
+    specList: "Specs/SpecList.js",
+    filter: /packages(\\|\/)(engine|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
     webglStub: argv.webglStub,
     suppressPassed: argv.suppressPassed,
     failTaskOnError: argv.failTaskOnError,
@@ -1408,6 +1398,8 @@ const workspaceKarmaFiles = {
     { pattern: "packages/engine/Build/Assets/**/*", included: false },
     { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
     { pattern: "packages/engine/Build/Workers/**/*", included: false },
+    { pattern: "packages/engine/Build/CesiumEngine.js", included: true },
+    { pattern: "packages/engine/Build/CesiumEngine.js.map", included: false },
     {
       pattern: "packages/widgets/Build/Specs/karma-main.js",
       included: true,
