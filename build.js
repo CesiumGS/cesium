@@ -1020,6 +1020,8 @@ async function bundleSpecs(options) {
  * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export const buildEngine = async (options) => {
+  options = options || {};
+
   const iife = options.iife ?? true;
   const incremental = options.incremental ?? false;
   const minify = options.minify ?? false;
@@ -1154,6 +1156,8 @@ export const buildEngine = async (options) => {
  * Builds the widgets workspace.
  */
 export const buildWidgets = async (options) => {
+  options = options || {};
+
   const incremental = options.incremental ?? false;
   const minify = options.minify ?? false;
   const sourcemap = options.sourcemap ?? true;

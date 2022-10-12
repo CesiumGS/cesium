@@ -13,8 +13,17 @@ jobs:
   include:
     - stage: "Tests"
       name: "Coverage"
-      script: ./travis/release.sh    
-    - name: "Release Tests"
-      script: ./travis/verify.sh
-    - stage: "Verify"
-      script: npm pack &> /dev/null
+      script: ./travis/test-coverage.sh    
+    - name: "Release"
+      script: ./travis/test-release.sh
+    - name: "Workspaces"
+      script: ./travis/test-workspaces.sh
+    - stage: "Deploy"
+      script:
+        - ./prepare.sh
+        - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
+        - npm --silent run eslint
+        - npm --silent run markdownlint
+        - npm --silent run prettier-check
+        - ./release.sh
+        - ./deploy.sh

@@ -495,25 +495,36 @@ export const websiteRelease = gulp.series(
   buildDocs
 );
 
+export const releaseBuild = gulp.series(
+  function () {
+    return buildEngine();
+  },
+  function () {
+    return buildWidgets();
+  },
+  gulp.parallel(
+    // Generate Build/CesiumUnminified
+    function () {
+      return buildCesium({
+        minify: false,
+        removePragmas: false,
+        node: true,
+      });
+    },
+    // Generate Build/Cesium
+    function () {
+      return buildCesium({
+        minify: true,
+        removePragmas: true,
+        node: true,
+      });
+    }
+  )
+);
+
 export const release = gulp.series(
-  // Generate Build/CesiumUnminified
-  function () {
-    return buildCesium({
-      minify: false,
-      removePragmas: false,
-      node: true,
-    });
-  },
-  // Generate Build/Cesium
-  function () {
-    return buildCesium({
-      minify: true,
-      removePragmas: true,
-      node: true,
-    });
-  },
-  buildTs,
-  buildDocs
+  releaseBuild,
+  gulp.parallel(buildTs, buildDocs)
 );
 
 export const makeZip = gulp.series(release, async function () {
