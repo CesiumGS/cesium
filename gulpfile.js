@@ -495,7 +495,7 @@ export const websiteRelease = gulp.series(
   buildDocs
 );
 
-export const releaseBuild = gulp.series(
+export const buildRelease = gulp.series(
   function () {
     return buildEngine();
   },
@@ -523,7 +523,7 @@ export const releaseBuild = gulp.series(
 );
 
 export const release = gulp.series(
-  releaseBuild,
+  buildRelease,
   gulp.parallel(buildTs, buildDocs)
 );
 
