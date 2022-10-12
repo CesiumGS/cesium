@@ -11,9 +11,17 @@
     "widgets"
   ],
   "main": "index.js",
-  "types": "widgets.d.ts",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "Source/**/*.js",
+    "README.md",
+    "LICENSE.md"
+  ],
   "dependencies": {
-    "@cesium/engine": "*",
+    "@cesium/engine": "0.0.1",
     "nosleep.js": "^0.12.0"
   },
   "type": "module",

@@ -10,7 +10,15 @@
     "globe"
   ],
   "main": "index.js",
-  "types": "engine.d.ts",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "Source/**/*.js",
+    "README.md",
+    "LICENSE.md"
+  ],
   "dependencies": {
     "@tweenjs/tween.js": "^18.6.4",
     "@zip.js/zip.js": "2.4.x",
