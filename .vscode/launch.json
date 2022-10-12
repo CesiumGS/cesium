@@ -6,7 +6,7 @@
             "request": "launch",
             "runtimeArgs": [
                 "run-script",
-                "coverage"
+                "test"
             ],
             "runtimeExecutable": "npm",
             "skipFiles": [

@@ -1373,163 +1373,6 @@ export async function coverage() {
   });
 }
 
-const workspaceKarmaFiles = {
-  engine: [
-    { pattern: "packages/engine/Build/Assets/**/*", included: false },
-    { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
-    { pattern: "packages/engine/Build/Workers/**/*", included: false },
-    { pattern: "packages/engine/Build/CesiumEngine.js", included: true },
-    { pattern: "packages/engine/Build/CesiumEngine.js.map", included: false },
-    {
-      pattern: "packages/engine/Build/Specs/karma-main.js",
-      included: true,
-      type: "module",
-    },
-    {
-      pattern: "packages/engine/Build/Specs/SpecList.js",
-      included: true,
-      type: "module",
-    },
-    { pattern: "packages/engine/Specs/TestWorkers/**", included: false },
-    { pattern: "packages/engine/Specs/TestWorkers/**/*.wasm", included: false },
-    { pattern: "Specs/Data/**", included: false },
-  ],
-  widgets: [
-    { pattern: "packages/engine/Build/Assets/**/*", included: false },
-    { pattern: "packages/engine/Build/ThirdParty/**/*", included: false },
-    { pattern: "packages/engine/Build/Workers/**/*", included: false },
-    { pattern: "packages/engine/Build/CesiumEngine.js", included: true },
-    { pattern: "packages/engine/Build/CesiumEngine.js.map", included: false },
-    {
-      pattern: "packages/widgets/Build/Specs/karma-main.js",
-      included: true,
-      type: "module",
-    },
-    {
-      pattern: "packages/widgets/Build/Specs/SpecList.js",
-      included: true,
-      type: "module",
-    },
-    { pattern: "Specs/Data/**", included: false },
-  ],
-};
-
-export async function testEngine() {
-  const enableAllBrowsers = argv.all ? true : false;
-  const includeCategory = argv.include ? argv.include : "";
-  const excludeCategory = argv.exclude ? argv.exclude : "";
-  const webglValidation = argv.webglValidation ? argv.webglValidation : false;
-  const webglStub = argv.webglStub ? argv.webglStub : false;
-  const release = argv.release ? argv.release : false;
-  const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
-  const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  const debug = argv.debug ? false : true;
-  const debugCanvasWidth = argv.debugCanvasWidth;
-  const debugCanvasHeight = argv.debugCanvasHeight;
-  const includeName = argv.includeName ? argv.includeName : "";
-
-  const config = await karma.config.parseConfig(
-    karmaConfigFile,
-    {
-      port: 9876,
-      singleRun: debug,
-      browsers: ["Chrome"],
-      specReporter: {
-        suppressErrorSummary: false,
-        suppressFailed: false,
-        suppressPassed: suppressPassed,
-        suppressSkipped: true,
-      },
-      detectBrowsers: {
-        enabled: enableAllBrowsers,
-      },
-      logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
-      files: workspaceKarmaFiles[`engine`],
-      client: {
-        captureConsole: verbose,
-        args: [
-          includeCategory,
-          excludeCategory,
-          "--grep",
-          includeName,
-          webglValidation,
-          webglStub,
-          release,
-          debugCanvasWidth,
-          debugCanvasHeight,
-          "engine",
-        ],
-      },
-    },
-    { promiseConfig: true, throwErrors: true }
-  );
-
-  return new Promise((resolve) => {
-    const server = new karma.Server(config, function doneCallback(exitCode) {
-      resolve(failTaskOnError ? exitCode : undefined);
-    });
-    server.start();
-  });
-}
-
-export async function testWidgets() {
-  const enableAllBrowsers = argv.all ? true : false;
-  const includeCategory = argv.include ? argv.include : "";
-  const excludeCategory = argv.exclude ? argv.exclude : "";
-  const webglValidation = argv.webglValidation ? argv.webglValidation : false;
-  const webglStub = argv.webglStub ? argv.webglStub : false;
-  const release = argv.release ? argv.release : false;
-  const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
-  const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  const debug = argv.debug ? false : true;
-  const debugCanvasWidth = argv.debugCanvasWidth;
-  const debugCanvasHeight = argv.debugCanvasHeight;
-  const includeName = argv.includeName ? argv.includeName : "";
-
-  const config = await karma.config.parseConfig(
-    karmaConfigFile,
-    {
-      port: 9876,
-      singleRun: debug,
-      browsers: ["Chrome"],
-      specReporter: {
-        suppressErrorSummary: false,
-        suppressFailed: false,
-        suppressPassed: suppressPassed,
-        suppressSkipped: true,
-      },
-      detectBrowsers: {
-        enabled: enableAllBrowsers,
-      },
-      logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
-      files: workspaceKarmaFiles[`widgets`],
-      client: {
-        captureConsole: verbose,
-        args: [
-          includeCategory,
-          excludeCategory,
-          "--grep",
-          includeName,
-          webglValidation,
-          webglStub,
-          release,
-          debugCanvasWidth,
-          debugCanvasHeight,
-          "widgets",
-        ],
-      },
-    },
-    { promiseConfig: true, throwErrors: true }
-  );
-
-  return new Promise((resolve) => {
-    const server = new karma.Server(config, function doneCallback(exitCode) {
-      resolve(failTaskOnError ? exitCode : undefined);
-    });
-    server.start();
-  });
-}
-
 export async function test() {
   const enableAllBrowsers = argv.all ? true : false;
   const includeCategory = argv.include ? argv.include : "";
@@ -1543,6 +1386,11 @@ export async function test() {
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
   const includeName = argv.includeName ? argv.includeName : "";
+
+  let workspace = argv.workspace;
+  if (workspace) {
+    workspace = workspace.replaceAll(`@${scope}/`, ``);
+  }
 
   let browsers = ["Chrome"];
   if (argv.browsers) {
@@ -1558,10 +1406,26 @@ export async function test() {
     { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
     { pattern: "Specs/TestWorkers/**", included: false },
-    { pattern: "Build/CesiumUnminified/Assets/**/*", included: false },
-    { pattern: "Build/CesiumUnminified/ThirdParty/**/*", included: false },
-    { pattern: "Build/CesiumUnminified/Workers/**/*", included: false },
   ];
+
+  if (workspace) {
+    files = [
+      {
+        pattern: `packages/${workspace}/Build/Specs/karma-main.js`,
+        included: true,
+        type: "module",
+      },
+      {
+        pattern: `packages/${workspace}/Build/Specs/SpecList.js`,
+        included: true,
+        type: "module",
+      },
+      { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Build/CesiumUnminified/**", included: false },
+      { pattern: "Specs/TestWorkers/**", included: false },
+    ];
+  }
 
   if (release) {
     files = [
