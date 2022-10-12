@@ -2,7 +2,7 @@ import {
   Ellipsoid,
   Globe,
   SceneMode
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {
   SceneModePickerViewModel

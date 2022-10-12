@@ -1,7 +1,7 @@
 import {
   Ellipsoid,
   Globe
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 import {
   HomeButtonViewModel
 } from "../../index.js";

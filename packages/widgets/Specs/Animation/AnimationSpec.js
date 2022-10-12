@@ -1,6 +1,6 @@
 import {
   defined,
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {
   Animation,

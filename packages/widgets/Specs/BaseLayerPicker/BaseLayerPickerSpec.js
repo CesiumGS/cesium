@@ -2,7 +2,7 @@ import {
   EllipsoidTerrainProvider,
   FeatureDetection,
   ImageryLayerCollection
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {
   BaseLayerPicker

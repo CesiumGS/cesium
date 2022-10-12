@@ -1,4 +1,4 @@
-import { defaultValue } from "../packages/engine/index.js";
+import { defaultValue } from "@cesium/engine";
 
 function runLater(functionToRunLater, milliseconds) {
   milliseconds = defaultValue(milliseconds, 0);

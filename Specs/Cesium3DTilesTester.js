@@ -11,7 +11,7 @@ import {
   PointCloudShading,
   TileBoundingSphere,
   RuntimeError,
-} from "../packages/engine/index.js";
+} from "@cesium/engine";
 
 import pollToPromise from "./pollToPromise.js";
 

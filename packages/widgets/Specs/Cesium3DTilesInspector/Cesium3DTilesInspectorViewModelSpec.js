@@ -2,7 +2,7 @@ import {
   Cesium3DTileset,
   Cesium3DTileStyle,
   Globe,
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 import { Cesium3DTilesInspectorViewModel } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 

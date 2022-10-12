@@ -1,6 +1,6 @@
 import {
   Fullscreen
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {
   FullscreenButtonViewModel,

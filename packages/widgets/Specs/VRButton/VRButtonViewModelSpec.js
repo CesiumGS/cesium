@@ -1,4 +1,4 @@
-import { Fullscreen } from "../../../engine/index.js";
+import { Fullscreen } from "@cesium/engine";
 import { VRButtonViewModel } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";

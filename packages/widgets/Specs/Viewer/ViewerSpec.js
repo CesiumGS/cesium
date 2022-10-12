@@ -27,7 +27,7 @@ import {
   SceneMode,
   ShadowMode,
   TimeDynamicPointCloud,
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {
   Animation,

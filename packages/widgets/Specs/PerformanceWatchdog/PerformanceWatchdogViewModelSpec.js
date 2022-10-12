@@ -2,7 +2,7 @@ import {
   defined,
   getTimestamp,
   FrameRateMonitor,
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {
   PerformanceWatchdogViewModel,

@@ -1,6 +1,6 @@
 import {
   FeatureDetection
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {NavigationHelpButton} from "../../index.js";
 

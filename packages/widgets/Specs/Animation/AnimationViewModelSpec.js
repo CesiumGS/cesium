@@ -2,7 +2,7 @@ import {
   ClockRange,
   ClockStep,
   JulianDate
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {
   AnimationViewModel,

@@ -2,7 +2,7 @@ import {
   OrthographicFrustum,
   PerspectiveFrustum,
   SceneMode
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {ProjectionPickerViewModel} from "../../index.js"
 

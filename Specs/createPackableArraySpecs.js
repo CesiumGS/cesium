@@ -1,4 +1,4 @@
-import { defaultValue } from "../packages/engine/index.js";
+import { defaultValue } from "@cesium/engine";
 
 function createPackableArraySpecs(
   packable,

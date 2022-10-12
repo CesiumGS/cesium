@@ -1,7 +1,7 @@
 import {
   Cartesian2,
   Cartesian3
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import { SelectionIndicatorViewModel } from "../../index.js";
 

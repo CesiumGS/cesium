@@ -1,7 +1,7 @@
 import {
   Ellipsoid,
   Globe
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 import {
   CesiumInspector,
 } from "../../index.js";

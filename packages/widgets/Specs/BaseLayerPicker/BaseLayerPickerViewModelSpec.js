@@ -1,7 +1,7 @@
 import {
   EllipsoidTerrainProvider,
   ImageryLayerCollection,
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {
   BaseLayerPickerViewModel,

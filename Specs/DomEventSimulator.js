@@ -1,4 +1,4 @@
-import { defaultValue, FeatureDetection } from "../packages/engine/index.js";
+import { defaultValue, FeatureDetection } from "@cesium/engine";
 
 function createMouseEvent(type, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

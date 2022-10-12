@@ -1,4 +1,4 @@
-import { defined } from "../../../engine/index.js";
+import { defined } from "@cesium/engine";
 import { InfoBox } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";

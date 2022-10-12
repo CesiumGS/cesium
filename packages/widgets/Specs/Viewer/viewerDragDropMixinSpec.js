@@ -1,7 +1,7 @@
 import {
   defined,
   TimeInterval
-} from "../../../engine/index.js";
+} from "@cesium/engine";
 
 import {viewerDragDropMixin} from "../../index.js";
 

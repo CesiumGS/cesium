@@ -1,4 +1,4 @@
-import { clone, defaultValue, Context } from "../packages/engine/index.js";
+import { clone, defaultValue, Context } from "@cesium/engine";
 
 import createCanvas from "./createCanvas.js";
 import createFrameState from "./createFrameState.js";
