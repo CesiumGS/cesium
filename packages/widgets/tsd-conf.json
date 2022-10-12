@@ -26,7 +26,7 @@
   "opts": {
       "destination": "packages/widgets",
       "template": "tsd-jsdoc/dist",
-      "outFile": "widgets.d.ts",
+      "outFile": "index.d.ts",
       "recurse": true
   }
 }

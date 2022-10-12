@@ -27,7 +27,7 @@
   "opts": {
       "destination": "packages/engine",
       "template": "tsd-jsdoc/dist",
-      "outFile": "engine.d.ts",
+      "outFile": "index.d.ts",
       "recurse": true
   }
 }

@@ -1,5 +1,5 @@
 index.js
-engine.d.ts
+index.d.ts
 Build
 Specs/SpecList.js
 Source/Shaders/**/*.js

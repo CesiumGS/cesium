@@ -39,7 +39,7 @@ import {
   buildWorkers,
   glslToJavaScript,
   createSpecList,
-  buildSpecs,
+  bundleCombinedSpecs,
   createJsHintOptions,
   esbuildBaseConfig,
 } from "./build.js";
@@ -181,7 +181,7 @@ export const buildWatch = gulp.series(build, async function () {
     incremental: true,
   });
 
-  let specResult = await buildSpecs({
+  let specResult = await bundleCombinedSpecs({
     incremental: true,
   });
 
@@ -278,7 +278,7 @@ export async function buildTs() {
   if (workspace === `@${scope}/engine`) {
     return generateTypeScriptDefinitions(
       "engine",
-      "packages/engine/engine.d.ts",
+      "packages/engine/index.d.ts",
       "packages/engine/tsd-conf.json",
       processEngineSource,
       processEngineModules
@@ -286,7 +286,7 @@ export async function buildTs() {
   } else if (workspace === `@${scope}/widgets`) {
     const engineModules = await generateTypeScriptDefinitions(
       "engine",
-      "packages/engine/engine.d.ts",
+      "packages/engine/index.d.ts",
       "packages/engine/tsd-conf.json",
       processEngineSource,
       processEngineModules
@@ -297,7 +297,7 @@ export async function buildTs() {
     };
     return generateTypeScriptDefinitions(
       "widgets",
-      "packages/widgets/widgets.d.ts",
+      "packages/widgets/types.d.ts",
       "packages/widgets/tsd-conf.json",
       undefined,
       undefined,
@@ -309,7 +309,7 @@ export async function buildTs() {
 
   const engineModules = await generateTypeScriptDefinitions(
     "engine",
-    "packages/engine/engine.d.ts",
+    "packages/engine/index.d.ts",
     "packages/engine/tsd-conf.json",
     processEngineSource,
     processEngineModules
@@ -322,7 +322,7 @@ export async function buildTs() {
   };
   await generateTypeScriptDefinitions(
     "widgets",
-    "packages/widgets/widgets.d.ts",
+    "packages/widgets/index.d.ts",
     "packages/widgets/tsd-conf.json",
     undefined,
     undefined,
@@ -1768,6 +1768,15 @@ function processEngineSource(definitionsPath, source) {
       newSource += "\n\n";
     }
   });
+
+  // Manually add a type definition from Viewer to avoid circular dependency
+  // with the widgets package. This will no longer be needed past Cesium 1.100.
+  newSource += `
+  /**
+   * @typedef {Object} Viewer
+   * @property {Scene} scene The scene in the widget.
+   */
+  `;
 
   return newSource;
 }
