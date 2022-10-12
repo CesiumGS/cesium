@@ -600,6 +600,13 @@ const externalResolvePlugin = {
       };
     });
 
+    build.onResolve({ filter: /@cesium/ }, () => {
+      return {
+        path: "Cesium",
+        namespace: "external-cesium",
+      };
+    });
+
     build.onLoad(
       {
         filter: new RegExp(`^Cesium$`),
