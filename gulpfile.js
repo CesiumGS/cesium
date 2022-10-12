@@ -1316,11 +1316,11 @@ export async function runCoverage(options) {
         )}/index.html">${folder}</a></li>`;
       });
       html += "</ul></body></html>";
-      writeFileSync("Build/Coverage/index.html", html);
+      writeFileSync(join(options.coverageDirectory, "index.html"), html);
 
       if (!process.env.TRAVIS) {
         folders.forEach(function (dir) {
-          open(`Build/Coverage/${dir}/index.html`);
+          open(join(options.coverageDirectory, `${dir}/index.html`));
         });
       }
 
