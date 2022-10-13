@@ -1,4 +1,5 @@
 // import { intersectScene } from "./Intersection.glsl";
+// import { nextIntersection } from "./IntersectionUtils.glsl";
 // import { TraversalData, SampleData, traverseOctreeFromBeginning, traverseOctreeFromExisting } from "./Octree.glsl";
 // import { accumulatePropertiesFromMegatexture } from "./Megatexture.glsl";
 
