@@ -39,6 +39,7 @@ import {
   Transforms,
   WireframeIndexGenerator,
 } from "../../../Source/Cesium.js";
+import ModelUtility from "../../../Source/Scene/Model/ModelUtility.js";
 import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
@@ -79,6 +80,8 @@ describe(
       0, -1, 0, 0,
       0, 0, 0, 1
     ]);
+    const boxWithOffsetUrl =
+      "./Data/Models/glTF-2.0/BoxWithOffset/glTF/BoxWithOffset.gltf";
 
     const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
     const morphPrimitivesTestUrl =
@@ -1507,27 +1510,27 @@ describe(
           expect(boundingSphere.center).toEqual(new Cartesian3(6378137, 0, 0));
         });
       });
-    });
 
-    it("boundingSphere updates bounding sphere when invoked", function () {
-      return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
-        function (model) {
-          const expectedRadius = 0.8660254037844386;
-          const translation = new Cartesian3(10, 0, 0);
-          const modelMatrix = Matrix4.fromTranslation(translation);
-          model.modelMatrix = modelMatrix;
-          model.scale = 2.0;
+      it("boundingSphere updates bounding sphere when invoked", function () {
+        return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+          function (model) {
+            const expectedRadius = 0.8660254037844386;
+            const translation = new Cartesian3(10, 0, 0);
+            const modelMatrix = Matrix4.fromTranslation(translation);
+            model.modelMatrix = modelMatrix;
+            model.scale = 2.0;
 
-          // boundingSphere should still account for the model matrix
-          // even though the scene has not yet updated.
-          const boundingSphere = model.boundingSphere;
-          expect(boundingSphere.center).toEqual(translation);
-          expect(boundingSphere.radius).toEqualEpsilon(
-            2.0 * expectedRadius,
-            CesiumMath.EPSILON8
-          );
-        }
-      );
+            // boundingSphere should still account for the model matrix
+            // even though the scene has not yet updated.
+            const boundingSphere = model.boundingSphere;
+            expect(boundingSphere.center).toEqual(translation);
+            expect(boundingSphere.radius).toEqualEpsilon(
+              2.0 * expectedRadius,
+              CesiumMath.EPSILON8
+            );
+          }
+        );
+      });
     });
 
     describe("picking and id", function () {
@@ -3254,6 +3257,61 @@ describe(
             model.scale = 1.0;
             scene.renderForSpecs();
             expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+            expect(boundingSphere.radius).toEqualEpsilon(
+              expectedRadius,
+              CesiumMath.EPSILON3
+            );
+          });
+        });
+      });
+
+      it("changing scale affects bounding sphere for uncentered models", function () {
+        const resource = Resource.createIfNeeded(boxWithOffsetUrl);
+        const loadPromise = resource.fetchArrayBuffer();
+        return loadPromise.then(function (buffer) {
+          return loadAndZoomToModel(
+            {
+              gltf: new Uint8Array(buffer),
+              scale: 10,
+            },
+            scene
+          ).then(function (model) {
+            const expectedRadius = 0.866;
+            const expectedCenter = new Cartesian3(5.0, 0.0, 0.0);
+            const expectedTranslation = Matrix4.fromTranslation(expectedCenter);
+            const axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
+              Axis.Y,
+              Axis.Z,
+              new Matrix4()
+            );
+            Matrix4.multiplyTransformation(
+              axisCorrectionMatrix,
+              expectedTranslation,
+              expectedTranslation
+            );
+            Matrix4.getTranslation(expectedTranslation, expectedCenter);
+
+            let boundingSphere = model.boundingSphere;
+            expect(boundingSphere.center).toEqual(
+              Cartesian3.multiplyByScalar(
+                expectedCenter,
+                10.0,
+                new Cartesian3()
+              )
+            );
+            expect(boundingSphere.radius).toEqualEpsilon(
+              expectedRadius * 10.0,
+              CesiumMath.EPSILON3
+            );
+
+            model.scale = 0.0;
+            boundingSphere = model.boundingSphere;
+            expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+            expect(boundingSphere.radius).toEqual(0.0);
+
+            model.scale = 1.0;
+            boundingSphere = model.boundingSphere;
+            expect(boundingSphere.center).toEqual(expectedCenter);
             expect(boundingSphere.radius).toEqualEpsilon(
               expectedRadius,
               CesiumMath.EPSILON3

@@ -2037,17 +2037,22 @@ function updateBoundingSphereAndScale(model, frameState) {
 }
 
 function updateBoundingSphere(model, modelMatrix) {
-  model._boundingSphere = BoundingSphere.transform(
-    model._sceneGraph.boundingSphere,
-    modelMatrix,
-    model._boundingSphere
-  );
-
   model._clampedScale = defined(model._maximumScale)
     ? Math.min(model._scale, model._maximumScale)
     : model._scale;
 
+  model._boundingSphere.center = Cartesian3.multiplyByScalar(
+    model._sceneGraph.boundingSphere.center,
+    model._clampedScale,
+    model._boundingSphere.center
+  );
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
+
+  model._boundingSphere = BoundingSphere.transform(
+    model._boundingSphere,
+    modelMatrix,
+    model._boundingSphere
+  );
 }
 
 function updateComputedScale(model, modelMatrix, frameState) {
