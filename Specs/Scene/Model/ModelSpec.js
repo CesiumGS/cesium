@@ -3291,7 +3291,7 @@ describe(
             );
             Matrix4.getTranslation(expectedTranslation, expectedCenter);
 
-            let boundingSphere = model.boundingSphere;
+            const boundingSphere = model.boundingSphere;
             expect(boundingSphere.center).toEqual(
               Cartesian3.multiplyByScalar(
                 expectedCenter,
@@ -3305,12 +3305,12 @@ describe(
             );
 
             model.scale = 0.0;
-            boundingSphere = model.boundingSphere;
+            scene.renderForSpecs();
             expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
             expect(boundingSphere.radius).toEqual(0.0);
 
             model.scale = 1.0;
-            boundingSphere = model.boundingSphere;
+            scene.renderForSpecs();
             expect(boundingSphere.center).toEqual(expectedCenter);
             expect(boundingSphere.radius).toEqualEpsilon(
               expectedRadius,
