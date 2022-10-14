@@ -112,11 +112,10 @@ void main()
                 if (entryExitT.x == NO_HIT) {
                     break;
                 } else {
-                    // Found another intersection. Keep raymarching.
-                    // TODO: Why are we adding?? Shouldn't we jump to currT = entryExitT.x ?
-                    currT += entryExitT.x;
-                    endT += entryExitT.y;
-                    positionUv += entryExitT.x * viewDirUv;
+                    // Found another intersection. Resume raymarching there
+                    currT = entryExitT.x;
+                    endT = entryExitT.y;
+                    positionUv = viewPosUv + currT * viewDirUv;
                 }
             #endif
         }
