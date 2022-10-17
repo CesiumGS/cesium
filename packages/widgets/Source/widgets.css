@@ -1,7 +1,7 @@
 @import url(./shared.css);
 @import url(./Animation/Animation.css);
 @import url(./BaseLayerPicker/BaseLayerPicker.css);
-@import url(@cesium/engine/Source/Widget/CesiumWidget.css);
+@import url(../../engine/Source/Widget/CesiumWidget.css);
 @import url(./CesiumInspector/CesiumInspector.css);
 @import url(./Cesium3DTilesInspector/Cesium3DTilesInspector.css);
 @import url(./FullscreenButton/FullscreenButton.css);
