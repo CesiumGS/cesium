@@ -20,6 +20,10 @@
     "README.md",
     "LICENSE.md"
   ],
+  "sideEffects": [
+    "./Source/**/*.css",
+    "./Specs/**/*"
+  ],
   "dependencies": {
     "@cesium/engine": "0.0.1",
     "nosleep.js": "^0.12.0"
