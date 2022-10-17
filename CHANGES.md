@@ -2,6 +2,10 @@
 
 ### 1.99 - 2022-11-01
 
+##### Additions :tada:
+
+- Added support for I3S 3D Object and IntegratedMesh Layers. [#9634](https://github.com/CesiumGS/cesium/pull/9634)
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - The viewer parameter in `KmlTour.prototype.play` was deprecated in Cesium 1.99. It will be removed in 1.100. Instead of a `Viewer`, pass a `CesiumWidget` instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
