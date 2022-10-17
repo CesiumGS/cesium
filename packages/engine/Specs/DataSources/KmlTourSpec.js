@@ -5,11 +5,10 @@ import {
   KmlTour,
   KmlTourFlyTo,
   KmlTourWait,
-} from "../../../Source/Cesium.js";
+  Math as CesiumMath
+} from "../../index.js";
 
-import { Math as CesiumMath } from "../../Source/Cesium.js";
-
-import pollToPromise from "../pollToPromise.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("DataSources/KmlTour", function () {
   function getLookAt() {

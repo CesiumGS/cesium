@@ -28,6 +28,7 @@ import {
   Model,
   ModelSceneGraph,
   ModelFeature,
+ModelUtility,
   Pass,
   PrimitiveType,
   Resource,
@@ -38,10 +39,9 @@ import {
   StyleCommandsNeeded,
   Transforms,
   WireframeIndexGenerator,
-} from "../../../Source/Cesium.js";
-import ModelUtility from "../../../Source/Scene/Model/ModelUtility.js";
-import createScene from "../../createScene.js";
-import pollToPromise from "../../pollToPromise.js";
+} from "../../../index.js";
+import createScene from "../../../../../Specs/createScene.js";
+import pollToPromise from "../../../../../Specs/pollToPromise.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
 
 describe(
