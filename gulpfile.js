@@ -945,6 +945,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       [
         "Apps/**",
         "Build/**",
+        "!Build/CesiumDev/**",
         "Source/**",
         "Specs/**",
         "ThirdParty/**",
@@ -1545,9 +1546,14 @@ export async function test() {
     { promiseConfig: true, throwErrors: true }
   );
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const server = new karma.Server(config, function doneCallback(exitCode) {
-      resolve(failTaskOnError ? exitCode : undefined);
+      if (failTaskOnError && exitCode) {
+        reject(exitCode);
+        return;
+      }
+
+      resolve();
     });
     server.start();
   });

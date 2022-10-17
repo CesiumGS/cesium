@@ -1,5 +1,15 @@
 # Change Log
 
+### 1.99 - 2022-11-01
+
+##### Deprecated :hourglass_flowing_sand:
+
+- The viewer parameter in `KmlTour.prototype.play` was deprecated in Cesium 1.99. It will be removed in 1.100. Instead of a `Viewer`, pass a `CesiumWidget` instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
+
+##### Fixes :wrench:
+
+- Fixed a bug where the scale of a `Model` was being incorrectly applied to its bounding sphere. [#10855](https://github.com/CesiumGS/cesium/pull/10855)
+
 ### 1.98.1 - 2022-10-03
 
 - This is an npm only release to fix the improperly published 1.98.
