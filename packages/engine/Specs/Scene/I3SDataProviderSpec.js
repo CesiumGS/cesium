@@ -4,7 +4,7 @@ import {
   Math as CesiumMath,
   Rectangle,
   Resource,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/I3SDataProvider", function () {
   const mockTileset = {

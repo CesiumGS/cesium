@@ -11,7 +11,7 @@ import {
   Rectangle,
   Resource,
   WebMercatorProjection,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/I3SNode", function () {
   // Mock the I3SDataProvider load function

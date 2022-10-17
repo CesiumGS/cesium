@@ -2,7 +2,7 @@ import {
   I3SLayer,
   I3SDataProvider,
   Math as CesiumMath,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/I3SLayer", function () {
   const rootNodePageEntry = {
