@@ -32,7 +32,7 @@ const argv = yargs(process.argv)
   .help().argv;
 
 import {
-  buildWorkers,
+  bundleWorkers,
   createCesiumJs,
   createJsHintOptions,
   createSpecList,
@@ -79,7 +79,6 @@ async function generateDevelopmentBuild() {
   // Build @cesium/engine
   console.log("[1/3] Building @cesium/engine...");
   await buildEngine({
-    iife: true,
     sourcemap: true,
     incremental: true,
     write: false,
@@ -118,59 +117,6 @@ async function generateDevelopmentBuild() {
     specResult: bundles.specsBundle,
   };
 }
-
-// async function buildDev() {
-
-//   console.log("Building Cesium...");
-//   const start = performance.now();
-
-//   mkdirp.sync("Build");
-//   rimraf.sync(outputDirectory);
-
-//   fs.writeFileSync(
-//     "Build/package.json",
-//     JSON.stringify({
-//       type: "commonjs",
-//     }),
-//     "utf8"
-//   );
-
-//   await glslToJavaScript(false, "Build/minifyShaders.state");
-//   await createCesiumJs();
-//   await createSpecList();
-//   await createJsHintOptions();
-
-//   const [esmResult, iifeResult] = await buildCesiumJs({
-//     iife: true,
-//     sourcemap: true,
-//     path: outputDirectory,
-//     incremental: true,
-//     write: false,
-//   });
-
-//   await buildWorkers({
-//     sourcemap: true,
-//     path: outputDirectory,
-//     incremental: true,
-//   });
-
-//   await createGalleryList();
-
-//   const specResult = await buildSpecs({
-//     incremental: true,
-//     write: false,
-//   });
-
-//   console.log(`Cesium built in ${formatTimeSinceInSeconds(start)} seconds.`);
-
-//   await copyAssets(outputDirectory);
-
-//   return {
-//     esmResult,
-//     iifeResult,
-//     specResult,
-//   };
-// }
 
 const serveResult = (result, fileName, res, next) => {
   let bundle;
@@ -268,7 +214,7 @@ const serveResult = (result, fileName, res, next) => {
   });
   workerWatcher.on("all", async () => {
     const start = performance.now();
-    await buildWorkers({
+    await bundleWorkers({
       path: outputDirectory,
       sourcemap: true,
     });

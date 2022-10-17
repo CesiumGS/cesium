@@ -114,15 +114,16 @@ function handleBuildWarnings(result) {
   }
 }
 
-export function esbuildBaseConfig() {
+export const defaultESBuildOptions = () => {
   return {
-    target: "es2020",
-    legalComments: "inline",
-    banner: {
-      js: combinedCopyrightHeader,
-    },
+    bundle: true,
+    color: true,
+    legalComments: `inline`,
+    logLevel: `info`,
+    logLimit: 0,
+    target: `es2020`,
   };
-}
+};
 
 export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
   let files = [];
@@ -163,16 +164,18 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
  * @param {Boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise.<CesiumBundles>}
  */
-export async function buildCesiumJs(options) {
-  const buildConfig = esbuildBaseConfig();
+export async function bundleCesiumJs(options) {
+  const buildConfig = defaultESBuildOptions();
   buildConfig.entryPoints = ["Source/Cesium.js"];
-  buildConfig.bundle = true;
   buildConfig.minify = options.minify;
   buildConfig.sourcemap = options.sourcemap;
   buildConfig.external = ["https", "http", "url", "zlib"];
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
   buildConfig.incremental = options.incremental;
   buildConfig.write = options.write;
+  buildConfig.banner = {
+    js: combinedCopyrightHeader,
+  };
   // print errors immediately, and collect warnings so we can filter out known ones
   buildConfig.logLevel = "error";
 
@@ -349,10 +352,14 @@ export async function bundleCombinedWorkers(options) {
     `packages/engine/Source/ThirdParty/Workers/**`,
   ]);
 
-  const esBuildConfig = esbuildBaseConfig();
+  const esBuildConfig = defaultESBuildOptions();
+  esBuildConfig.bundle = false;
   esBuildConfig.entryPoints = workers;
   esBuildConfig.outdir = options.path;
   esBuildConfig.minify = options.minify;
+  esBuildConfig.banner = {
+    js: combinedCopyrightHeader,
+  };
 
   await esbuild.build(esBuildConfig);
 
@@ -400,11 +407,12 @@ export async function bundleCombinedWorkers(options) {
  * @param {String} options.copyrightHeader The copyright header to add to worker bundles
  * @returns {Promise.<*>}
  */
-export async function buildWorkers(options) {
+export async function bundleWorkers(options) {
   // Copy existing workers
   const workers = await globby(options.input);
 
-  const workerConfig = esbuildBaseConfig();
+  const workerConfig = defaultESBuildOptions();
+  workerConfig.bundle = false;
   workerConfig.banner = {
     js: options.copyrightHeader,
   };
@@ -918,18 +926,6 @@ async function createSpecListJs(files, workspace, outputPath) {
   return contents;
 }
 
-const defaultESBuildOptions = () => {
-  return {
-    bundle: true,
-    color: true,
-    external: [`http`, `https`, `url`, `zlib`],
-    legalComments: `inline`,
-    logLevel: `info`,
-    logLimit: 0,
-    target: `es2020`,
-  };
-};
-
 /**
  * Bundles CSS files.
  *
@@ -965,21 +961,15 @@ const workspaceCssFiles = {
  * Bundles spec files for testing in the browser.
  *
  * @param {Object} options
- * @param {Boolean} [options.iife=true] True if IIFE bundle should be generated.
  * @param {Boolean} [options.incremental=false] True if builds should be generated incrementally.
- * @param {Boolean} [options.minify=false] True if bundles should be minified.
  * @param {String} options.outbase The base path the output files are relative to.
  * @param {String} options.outdir The directory to place the output in.
- * @param {Boolean} [options.removePragmas=false] True if debug pragmas should be removed.
- * @param {String} options.globalName The global name of the module being tested.
  * @param {String} options.specListFile The path to the SpecList.js file
- * @param {Boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
  * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  * @returns {Object} The bundle generated from Specs.
  */
 async function bundleSpecs(options) {
   const incremental = options.incremental ?? true;
-  const sourcemap = options.sourcemap ?? true;
   const write = options.write ?? true;
 
   const buildOptions = {
@@ -987,7 +977,7 @@ async function bundleSpecs(options) {
     format: "esm",
     incremental: incremental,
     outdir: options.outdir,
-    sourcemap: sourcemap,
+    sourcemap: true,
     external: ["https", "http", "zlib", "url"],
     target: "es2020",
     write: write,
@@ -1011,23 +1001,15 @@ async function bundleSpecs(options) {
  * Builds the engine workspace.
  *
  * @param {Object} options
- * @param {Boolean} [options.iife=true] True if IIFE bundle should be generated.
  * @param {Boolean} [options.incremental=false] True if builds should be generated incrementally.
  * @param {Boolean} [options.minify=false] True if bundles should be minified.
- * @param {Boolean} [options.node=true] True if CommonJS bundle should be generated.
- * @param {Boolean} [options.removePragmas=false] True if debug pragmas should be removed.
- * @param {Boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
  * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export const buildEngine = async (options) => {
   options = options || {};
 
-  const iife = options.iife ?? true;
   const incremental = options.incremental ?? false;
   const minify = options.minify ?? false;
-  const node = options.node ?? true;
-  const removePragmas = options.removePragmas ?? false;
-  const sourcemap = options.sourcemap ?? true;
   const write = options.write ?? true;
 
   // Create Build folder to place build artifacts.
@@ -1056,35 +1038,6 @@ export const buildEngine = async (options) => {
   // Create index.js
   await createIndexJs("engine", version);
 
-  // Create SpecList.js
-  const specFiles = await globby(workspaceSpecFiles["engine"]);
-  const specListFile = path.join("packages/engine/Specs", "SpecList.js");
-  await createSpecListJs(specFiles, "engine", specListFile);
-
-  const copyrightBanner = copyrightHeaderTemplate.replace(
-    "${version}",
-    version
-  );
-
-  // Configure build options shared between builds for different formats (ESM/IIFE/CommonJS).
-  const esBuildOptions = defaultESBuildOptions();
-  esBuildOptions.banner = {
-    js: copyrightBanner,
-  };
-  esBuildOptions.outbase = "packages/engine/Source";
-  esBuildOptions.incremental = incremental;
-  esBuildOptions.sourcemap = sourcemap;
-  esBuildOptions.write = write;
-  esBuildOptions.plugins = removePragmas ? [stripPragmaPlugin] : undefined;
-
-  // Generate ESM bundle using esbuild.
-  await esbuild.build({
-    ...esBuildOptions,
-    entryPoints: ["packages/engine/index.js"],
-    format: "esm",
-    outfile: path.join("packages/engine/Build", "index.js"),
-  });
-
   // Generate bundle for CSS and ThirdParty using esbuild.
   await bundleCSS({
     filePaths: [
@@ -1096,7 +1049,7 @@ export const buildEngine = async (options) => {
   });
 
   // Build workers.
-  await buildWorkers({
+  await bundleWorkers({
     input: [
       "packages/engine/Source/Workers/**",
       "packages/engine/Source/ThirdParty/Workers/**",
@@ -1105,39 +1058,20 @@ export const buildEngine = async (options) => {
     path: "packages/engine/Build",
   });
 
-  if (iife) {
-    await esbuild.build({
-      ...esBuildOptions,
-      entryPoints: [`packages/engine/index.js`],
-      format: "iife",
-      globalName: "CesiumEngine",
-      outfile: path.join(`packages/engine/Build`, `CesiumEngine.js`),
-    });
-  }
-
-  if (node) {
-    await esbuild.build({
-      ...esBuildOptions,
-      entryPoints: [`packages/engine/index.js`],
-      format: "cjs",
-      define: {
-        TransformStream: "null",
-      },
-      outfile: path.join(`packages/engine/Build`, `index.cjs`),
-    });
-  }
+  // Create SpecList.js
+  const specFiles = await globby(workspaceSpecFiles["engine"]);
+  const specListFile = path.join("packages/engine/Specs", "SpecList.js");
+  await createSpecListJs(specFiles, "engine", specListFile);
 
   await bundleSpecs({
     incremental: incremental,
-    minify: minify,
     outbase: "packages/engine/Specs",
-    globalName: "CesiumEngine",
     outdir: "packages/engine/Build/Specs",
     specListFile: specListFile,
-    sourcemap: sourcemap,
     write: write,
   });
 
+  // Copy static assets to Build folder.
   await copyAssets(
     [
       "packages/engine/Source/**",
@@ -1154,13 +1088,16 @@ export const buildEngine = async (options) => {
 
 /**
  * Builds the widgets workspace.
+ *
+ * @param {Object} options
+ * @param {Boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export const buildWidgets = async (options) => {
   options = options || {};
 
   const incremental = options.incremental ?? false;
-  const minify = options.minify ?? false;
-  const sourcemap = options.sourcemap ?? true;
+
   const write = options.write ?? true;
 
   // Generate Build folder to place build artifacts.
@@ -1189,12 +1126,9 @@ export const buildWidgets = async (options) => {
 
   await bundleSpecs({
     incremental: incremental,
-    minify: minify,
     outbase: "packages/widgets/Specs",
-    globalName: "CesiumWidgets",
     outdir: "packages/widgets/Build/Specs",
     specListFile: specListFile,
-    sourcemap: sourcemap,
     write: write,
   });
 };
@@ -1268,7 +1202,7 @@ export async function buildCesium(options) {
   });
 
   // Generate bundles.
-  const bundles = await buildCesiumJs({
+  const bundles = await bundleCesiumJs({
     minify: minify,
     iife: iife,
     incremental: incremental,

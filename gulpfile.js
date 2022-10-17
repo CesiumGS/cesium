@@ -43,13 +43,13 @@ import {
   buildCesium,
   buildEngine,
   buildWidgets,
-  buildCesiumJs,
-  buildWorkers,
+  bundleCesiumJs,
+  bundleWorkers,
   glslToJavaScript,
   createSpecList,
   bundleCombinedSpecs,
   createJsHintOptions,
-  esbuildBaseConfig,
+  defaultESBuildOptions,
 } from "./build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -181,7 +181,7 @@ export const buildWatch = gulp.series(build, async function () {
 
   const outputDirectory = join("Build", `Cesium${!minify ? "Unminified" : ""}`);
 
-  let [esmResult, iifeResult, cjsResult] = await buildCesiumJs({
+  let [esmResult, iifeResult, cjsResult] = await bundleCesiumJs({
     minify: minify,
     path: outputDirectory,
     removePragmas: removePragmas,
@@ -193,7 +193,7 @@ export const buildWatch = gulp.series(build, async function () {
     incremental: true,
   });
 
-  await buildWorkers({
+  await bundleWorkers({
     minify: minify,
     path: outputDirectory,
     removePragmas: removePragmas,
@@ -255,7 +255,7 @@ export const buildWatch = gulp.series(build, async function () {
   );
 
   gulp.watch(workerSourceFiles, () => {
-    return buildWorkers({
+    return bundleWorkers({
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,
@@ -2111,7 +2111,7 @@ async function buildCesiumViewer() {
     : "Build/Apps/CesiumViewer";
   mkdirp.sync(cesiumViewerOutputDirectory);
 
-  const config = esbuildBaseConfig();
+  const config = defaultESBuildOptions();
   config.entryPoints = [
     "Apps/CesiumViewer/CesiumViewer.js",
     "Apps/CesiumViewer/CesiumViewer.css",
@@ -2124,7 +2124,6 @@ async function buildCesiumViewer() {
   };
   config.format = "iife";
   config.inject = ["Apps/CesiumViewer/index.js"];
-  config.external = ["https", "http", "zlib"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
   config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
@@ -2144,7 +2143,7 @@ async function buildCesiumViewer() {
     outbase: "packages/widgets/Source/",
   });
 
-  await buildWorkers({
+  await bundleWorkers({
     input: [
       "packages/engine/Source/Workers/**",
       "packages/engine/Source/ThirdParty/Workers/**",
