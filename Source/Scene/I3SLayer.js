@@ -102,7 +102,7 @@ Object.defineProperties(I3SLayer.prototype, {
 
 /**
  * Loads the content, including the root node definition and its children
- * @returns {Promise} A promise that is resolved when the layer data is loaded
+ * @returns {Promise.<void>} A promise that is resolved when the layer data is loaded
  * @private
  */
 I3SLayer.prototype.load = function () {

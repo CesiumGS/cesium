@@ -216,7 +216,7 @@ I3SNode.prototype.load = function () {
 
 /**
  * Loads the node fields.
- * @returns {Promise} A promise that is resolved when the I3S Node fields are loaded
+ * @returns {Promise.<void>} A promise that is resolved when the I3S Node fields are loaded
  */
 I3SNode.prototype.loadFields = function () {
   // Check if we must load fields
@@ -778,7 +778,7 @@ Object.defineProperties(I3SGeometry.prototype, {
 
 /**
  * Loads the content.
- * @returns {Promise} A promise that is resolved when the geometry data is loaded
+ * @returns {Promise.<Object>} A promise that is resolved when the geometry data is loaded
  * @private
  */
 I3SGeometry.prototype.load = function () {
@@ -1245,7 +1245,7 @@ function getNumericTypeSize(type) {
 
 /**
  * Loads the content.
- * @returns {Promise} A promise that is resolved when the field data is loaded
+ * @returns {Promise.<void>} A promise that is resolved when the field data is loaded
  */
 I3SField.prototype.load = function () {
   const that = this;
