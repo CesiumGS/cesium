@@ -51,8 +51,8 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "0.0.1",
-    "@cesium/widgets": "0.0.1"
+    "@cesium/engine": "0.1.0",
+    "@cesium/widgets": "0.1.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.2",
