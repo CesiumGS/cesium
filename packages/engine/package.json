@@ -16,6 +16,9 @@
     "index.js",
     "index.d.ts",
     "Source/**/*.js",
+    "Build/**",
+    "!Build/Specs",
+    "!Build/minifyShaders.state",
     "README.md",
     "LICENSE.md"
   ],

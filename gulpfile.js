@@ -1712,9 +1712,11 @@ function processEngineSource(definitionsPath, source) {
   // with the widgets package. This will no longer be needed past Cesium 1.100.
   newSource += `
   /**
-   * @typedef {Object} Viewer
-   * @property {Scene} scene The scene in the widget.
+   * @property scene - The scene in the widget.
    */
+  export type Viewer = {
+      scene: Scene;
+  };
   `;
 
   return newSource;

@@ -730,20 +730,6 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
 }
 
 /**
- * Copies non-JS static assets to the output directory
- *
- * @param {Array.<String>} globs The globs to copy.
- * @param {String} outputDirectory The output directory.
- * @returns {Promise.<*>}
- */
-export function copyAssets(globs, outputDirectory) {
-  const stream = gulp
-    .src(globs, { nodir: true })
-    .pipe(gulp.dest(outputDirectory));
-
-  return streamToPromise(stream);
-}
-/**
  * Helper function to copy files.
  *
  * @param {Array.<String>} globs The file globs to be copied.
@@ -1053,6 +1039,7 @@ export const buildEngine = async (options) => {
     input: [
       "packages/engine/Source/Workers/**",
       "packages/engine/Source/ThirdParty/Workers/**",
+      "!packages/engine/Source/ThirdParty/Workers/package.json",
     ],
     inputES6: ["packages/engine/Source/WorkersES6/*.js"],
     path: "packages/engine/Build",
@@ -1072,15 +1059,12 @@ export const buildEngine = async (options) => {
   });
 
   // Copy static assets to Build folder.
-  await copyAssets(
+  await copyFiles(
     [
-      "packages/engine/Source/**",
-      "!packages/engine/Source/**/*.js",
-      "!packages/engine/Source/**/*.glsl",
-      "!packages/engine/Source/**/*.css",
-      "!packages/engine/Source/**/*.md",
+      "packages/engine/Source/ThirdParty/**/*.wasm",
+      "packages/engine/Source/ThirdParty/**/*.json",
     ],
-    "packages/engine/Build"
+    "packages/engine/Build/ThirdParty"
   );
 
   return;
