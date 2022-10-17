@@ -80,6 +80,7 @@ vec3 proceduralIBL(
     return iblColor;
 }
 
+#if defined(DIFFUSE_IBL) || defined(SPECULAR_IBL)
 vec3 textureIBL(
     vec3 positionEC,
     vec3 normalEC,
@@ -134,6 +135,7 @@ vec3 textureIBL(
 
     return diffuseColor * diffuseIrradiance + specularColor * specularIBL;
 }
+#endif
 
 vec3 imageBasedLightingStage(
     vec3 positionEC,
