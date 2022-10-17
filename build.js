@@ -1223,6 +1223,27 @@ export async function buildCesium(options) {
 
   await copyEngineAssets("Source");
   await copyWidgetsAssets("Source/Widgets");
+  await copyFiles(
+    ["packages/widgets/Source/**/*.css"],
+    "Source/Widgets",
+    "packages/widgets/Source"
+  );
+
+  // WORKAROUND:
+  // Since CesiumWidget was originally part of the Widgets folder, we need to fix up any
+  // references to it when we put it back in the Widgets folder, as expected by the
+  // combined CesiumJS structure.
+  const widgetsCssBuffer = await readFile("Source/Widgets/widgets.css");
+  const widgetsCssContents = widgetsCssBuffer
+    .toString()
+    .replace("../../engine/Source/Widget", "./CesiumWidget");
+  await writeFile("Source/Widgets/widgets.css", widgetsCssContents);
+
+  const lighterCssBuffer = await readFile("Source/Widgets/lighter.css");
+  const lighterCssContents = lighterCssBuffer
+    .toString()
+    .replace("../../engine/Source/Widget", "./CesiumWidget");
+  await writeFile("Source/Widgets/lighter.css", lighterCssContents);
 
   return {
     ...bundles,
