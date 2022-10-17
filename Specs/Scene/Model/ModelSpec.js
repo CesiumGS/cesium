@@ -26,8 +26,9 @@ import {
   Math as CesiumMath,
   Matrix4,
   Model,
-  ModelSceneGraph,
   ModelFeature,
+  ModelSceneGraph,
+  OctahedralProjectedCubeMap,
   Pass,
   PrimitiveType,
   Resource,
@@ -3179,6 +3180,21 @@ describe(
               expect(rgba).not.toEqual(result);
             });
           });
+        });
+      });
+
+      it("renders when specularEnvironmentMaps aren't supported", function () {
+        spyOn(OctahedralProjectedCubeMap, "isSupported").and.returnValue(false);
+
+        return loadAndZoomToModel(
+          {
+            gltf: boomBoxUrl,
+            scale: 10.0,
+          },
+          scene
+        ).then(function (model) {
+          expect(scene.specularEnvironmentMapsSupported).toBe(false);
+          verifyRender(model, true);
         });
       });
     });
