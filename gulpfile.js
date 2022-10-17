@@ -1,7 +1,15 @@
 /*eslint-env node*/
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import { join, basename, relative, extname, resolve, posix } from "path";
+import {
+  join,
+  basename,
+  relative,
+  extname,
+  resolve,
+  posix,
+  dirname,
+} from "path";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
 import { gzipSync } from "zlib";
@@ -527,17 +535,26 @@ export const release = gulp.series(
   gulp.parallel(buildTs, buildDocs)
 );
 
-export const makeZip = gulp.series(release, async function () {
-  //For now we regenerate the JS glsl to force it to be unminified in the release zip
-  //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
-  await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
+/**
+ * Removes scripts from package.json files to ensure that
+ * they still work when run from within the ZIP file.
+ *
+ * @param {String} packageJsonPath The path to the package.json.
+ * @returns {WritableStream} A stream that writes to the updated package.json file.
+ */
+async function pruneScriptsForZip(packageJsonPath) {
+  // Read the contents of the file.
+  const contents = await readFile(packageJsonPath);
+  const contentsJson = JSON.parse(contents);
 
-  const scripts = packageJson.scripts;
+  const scripts = contentsJson.scripts;
+
   // Remove prepare step from package.json to avoid running "prepare" an extra time.
   delete scripts.prepare;
 
   // Remove build and transform tasks since they do not function as intended from within the release zip
   delete scripts.build;
+  delete scripts["build-release"];
   delete scripts["build-watch"];
   delete scripts["build-ts"];
   delete scripts["build-third-party"];
@@ -556,14 +573,28 @@ export const makeZip = gulp.series(release, async function () {
   delete scripts["deploy-set-version"];
   delete scripts["website-release"];
 
-  await writeFile(
-    "./Build/package.noprepare.json",
-    JSON.stringify(packageJson, null, 2)
+  // Write to a temporary package.json file.
+  const noPreparePackageJson = join(
+    dirname(packageJsonPath),
+    "Build/package.noprepare.json"
   );
+  await writeFile(noPreparePackageJson, JSON.stringify(contentsJson, null, 2));
 
-  const packageJsonSrc = gulp
-    .src("Build/package.noprepare.json")
-    .pipe(gulpRename("package.json"));
+  return gulp.src(noPreparePackageJson).pipe(gulpRename(packageJsonPath));
+}
+
+export const makeZip = gulp.series(release, async function () {
+  //For now we regenerate the JS glsl to force it to be unminified in the release zip
+  //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
+  await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
+
+  const packageJsonSrc = await pruneScriptsForZip("package.json");
+  const enginePackageJsonSrc = await pruneScriptsForZip(
+    "packages/engine/package.json"
+  );
+  const widgetsPackageJsonSrc = await pruneScriptsForZip(
+    "packages/widgets/package.json"
+  );
 
   const builtSrc = gulp.src(
     [
@@ -571,6 +602,10 @@ export const makeZip = gulp.series(release, async function () {
       "Build/CesiumUnminified/**",
       "Build/Documentation/**",
       "Build/package.json",
+      "packages/engine/Build/**",
+      "packages/widgets/Build/**",
+      "!packages/engine/Build/package.noprepare.json",
+      "!packages/widgets/Build/package.noprepare.json",
     ],
     {
       base: ".",
@@ -583,6 +618,12 @@ export const makeZip = gulp.series(release, async function () {
       "Apps/**/.eslintrc.json",
       "Apps/Sandcastle/.jshintrc",
       "!Apps/Sandcastle/gallery/development/**",
+      "packages/engine/**",
+      "!packages/engine/Build/**",
+      "!packages/engine/.gitignore",
+      "packages/widgets/**",
+      "!packages/widgets/Build/**",
+      "!packages/widgets/.gitignore",
       "Source/**",
       "Source/**/.eslintrc.json",
       "Specs/**",
@@ -611,7 +652,14 @@ export const makeZip = gulp.series(release, async function () {
     .pipe(gulpRename("index.html"));
 
   return streamToPromise(
-    mergeStream(packageJsonSrc, builtSrc, staticSrc, indexSrc)
+    mergeStream(
+      packageJsonSrc,
+      enginePackageJsonSrc,
+      widgetsPackageJsonSrc,
+      builtSrc,
+      staticSrc,
+      indexSrc
+    )
       .pipe(
         gulpTap(function (file) {
           // Work around an issue with gulp-zip where archives generated on Windows do
@@ -626,6 +674,8 @@ export const makeZip = gulp.series(release, async function () {
       .pipe(gulp.dest("."))
       .on("finish", function () {
         rimraf.sync("./Build/package.noprepare.json");
+        rimraf.sync("./packages/engine/Build/package.noprepare.json");
+        rimraf.sync("./packages/widgets/Build/package.noprepare.json");
       })
   );
 });
