@@ -314,7 +314,7 @@ describe("Scene/I3SNode", function () {
       nodesPerPage: 64,
     },
     attributeStorageInfo: attrStorageInfo,
-    store: { defaultGeometrySchema: {} },
+    store: { defaultGeometrySchema: {}, version: "1.7" },
     materialDefinitions: [
       {
         doubleSided: true,
@@ -390,9 +390,37 @@ describe("Scene/I3SNode", function () {
     ],
   ];
 
+  const layerDataWithoutNodePages = {
+    href: "mockLayerUrl",
+    attributeStorageInfo: attrStorageInfo,
+    store: { defaultGeometrySchema: {}, version: "1.6" },
+    materialDefinitions: [
+      {
+        doubleSided: true,
+        pbrMetallicRoughness: {
+          metallicFactor: 0,
+        },
+      },
+      {
+        doubleSided: true,
+        pbrMetallicRoughness: {
+          baseColorTexture: { textureSetDefinitionId: 0 },
+          metallicFactor: 0,
+        },
+      },
+    ],
+    textureSetDefinitions: [
+      {
+        formats: [
+          { name: "0", format: "dds" },
+          { name: "1", format: "jpg" },
+        ],
+      },
+    ],
+  };
   const mockI3SLayerWithoutNodePages = new I3SLayer(
     mockI3SProviderWithoutQuery,
-    layerData
+    layerDataWithoutNodePages
   );
   mockI3SLayerWithoutNodePages._tileset = mockCesiumTileset;
   mockI3SLayerWithoutNodePages._geometryDefinitions = [
@@ -837,35 +865,13 @@ describe("Scene/I3SNode", function () {
         ).toEqual("test");
 
         expect(rootNode.fields.testInt8.header.count).toEqual(2);
-        expect(rootNode.fields.testInt8.values[0]).toEqual(1);
-        expect(rootNode.fields.testInt8.values[1]).toEqual(2);
         expect(rootNode.fields.testUInt8.header.count).toEqual(2);
-        expect(rootNode.fields.testUInt8.values[0]).toEqual(1);
-        expect(rootNode.fields.testUInt8.values[1]).toEqual(2);
-
         expect(rootNode.fields.testInt16.header.count).toEqual(2);
-        expect(rootNode.fields.testInt16.values[0]).toEqual(1);
-        expect(rootNode.fields.testInt16.values[1]).toEqual(2);
         expect(rootNode.fields.testUInt16.header.count).toEqual(2);
-        expect(rootNode.fields.testUInt16.values[0]).toEqual(1);
-        expect(rootNode.fields.testUInt16.values[1]).toEqual(2);
-
         expect(rootNode.fields.testInt32.header.count).toEqual(2);
-        expect(rootNode.fields.testInt32.values[0]).toEqual(1);
-        expect(rootNode.fields.testInt32.values[1]).toEqual(-1);
         expect(rootNode.fields.testUInt32.header.count).toEqual(2);
-        expect(rootNode.fields.testUInt32.values[0]).toEqual(1);
-        expect(rootNode.fields.testUInt32.values[1]).toEqual(
-          Math.pow(2, 32) - 1
-        );
-
         expect(rootNode.fields.testInt64.header.count).toEqual(2);
-        expect(rootNode.fields.testInt64.values[0]).toEqual(1);
-        expect(rootNode.fields.testInt64.values[1]).toEqual(-1);
         expect(rootNode.fields.testUInt64.header.count).toEqual(2);
-        expect(rootNode.fields.testUInt64.values[0]).toEqual(1);
-        expect(rootNode.fields.testUInt64.values[1]).toEqual(Math.pow(2, 64)); //Value loses precision because js doesn't support int64
-
         expect(rootNode.fields.testFloat32.header.count).toEqual(2);
         expect(rootNode.fields.testFloat32.values[0]).toEqual(1.0);
         expect(rootNode.fields.testFloat32.values[1]).toEqual(2.0);
@@ -877,8 +883,28 @@ describe("Scene/I3SNode", function () {
         expect(
           rootNode.fields.testString.header.attributeValuesByteCount
         ).toEqual(16);
-        expect(rootNode.fields.testString.values[0]).toEqual("abc");
-        expect(rootNode.fields.testString.values[1]).toEqual("def");
+
+        const featureFields0 = rootNode.getFieldsForFeature(0);
+        const featureFields1 = rootNode.getFieldsForFeature(1);
+
+        expect(featureFields0.testInt8).toEqual(1);
+        expect(featureFields1.testInt8).toEqual(2);
+        expect(featureFields0.testUInt8).toEqual(1);
+        expect(featureFields1.testUInt8).toEqual(2);
+        expect(featureFields0.testInt16).toEqual(1);
+        expect(featureFields1.testInt16).toEqual(2);
+        expect(featureFields0.testUInt16).toEqual(1);
+        expect(featureFields1.testUInt16).toEqual(2);
+        expect(featureFields0.testInt32).toEqual(1);
+        expect(featureFields1.testInt32).toEqual(-1);
+        expect(featureFields0.testUInt32).toEqual(1);
+        expect(featureFields1.testUInt32).toEqual(Math.pow(2, 32) - 1);
+        expect(featureFields0.testInt64).toEqual(1);
+        expect(featureFields1.testInt64).toEqual(-1);
+        expect(featureFields0.testUInt64).toEqual(1);
+        expect(featureFields1.testUInt64).toEqual(Math.pow(2, 64)); //Value loses precision because js doesn't support int64
+        expect(featureFields0.testString).toEqual("abc");
+        expect(featureFields1.testString).toEqual("def");
       });
   });
 
@@ -1150,35 +1176,47 @@ describe("Scene/I3SNode", function () {
   it("loads feature data from node pages", function () {
     const nodeWithMesh = new I3SNode(mockI3SLayerWithNodePages, 1, true);
 
-    spyOn(nodeWithMesh._dataProvider, "_loadJson").and.returnValue(
-      Promise.resolve({ featureData: [], geometryData: [] })
-    );
-
     return nodeWithMesh
       .load()
       .then(function () {
         return nodeWithMesh._loadFeatureData();
       })
       .then(function (result) {
-        expect(nodeWithMesh.featureData.length).toEqual(1);
-        expect(nodeWithMesh.featureData[0].resource.url).toContain(
-          "mockProviderUrl/mockLayerUrl/nodes/1/features/0"
-        );
-        expect(
-          nodeWithMesh.featureData[0].resource.queryParameters.testQuery
-        ).toEqual("test");
-
-        expect(nodeWithMesh.featureData[0].data.featureData).toEqual([]);
-        expect(nodeWithMesh.featureData[0].data.geometryData).toEqual([]);
-
-        expect(nodeWithMesh._dataProvider._loadJson).toHaveBeenCalledWith(
-          nodeWithMesh.featureData[0].resource
-        );
+        //Expect nothing to be loaded. Feature data is not used when reading nodes from node pages
+        //because the information is all stored in the node page entry and binary data
+        expect(nodeWithMesh.featureData.length).toEqual(0);
       });
   });
 
   it("load feature data rejects invalid url", function () {
-    const nodeWithMesh = new I3SNode(mockI3SLayerWithNodePages, 1, true);
+    const nodeWithMesh = new I3SNode(
+      mockI3SLayerWithoutNodePages,
+      "mockNodeUrl",
+      true
+    );
+
+    spyOn(nodeWithMesh._dataProvider, "_loadJson").and.callFake(function (
+      resource
+    ) {
+      if (
+        resource
+          .getUrlComponent()
+          .endsWith(
+            "mockProviderUrl/mockLayerUrl/mockNodeUrl/mockFeatureDataUrl"
+          )
+      ) {
+        return Promise.reject({ statusCode: 404 });
+      }
+      if (
+        resource
+          .getUrlComponent()
+          .endsWith("mockProviderUrl/mockLayerUrl/mockNodeUrl/")
+      ) {
+        return Promise.resolve(nodeWithContent);
+      }
+
+      return Promise.reject();
+    });
 
     return nodeWithMesh
       .load()
@@ -1200,18 +1238,15 @@ describe("Scene/I3SNode", function () {
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
       Promise.resolve(new ArrayBuffer())
     );
-    spyOn(nodeWithMesh._dataProvider, "_loadJson").and.returnValue(
-      Promise.resolve({ featureData: [], geometryData: [] })
-    );
+    spyOn(nodeWithMesh, "_loadFeatureData").and.returnValue(Promise.all([]));
 
     const mockProcessor = {
       scheduleTask: function (payload) {
         //Expect results to match what was returned by our spy
         expect(payload.binaryData).toEqual(new ArrayBuffer());
-        expect(payload.featureData).toEqual({
-          featureData: [],
-          geometryData: [],
-        });
+
+        //Expect featureData to be undefined as it is only used for legacy versions (<= 1.6)
+        expect(payload.featureData).toBeUndefined();
 
         expect(payload.bufferInfo).toEqual(
           mockI3SLayerWithNodePages._geometryDefinitions[0][1]
