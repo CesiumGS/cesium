@@ -754,6 +754,7 @@ export async function copyFiles(globs, destination, base) {
 export async function copyEngineAssets(destination) {
   const engineStaticAssets = [
     "packages/engine/Source/**",
+    "!packages/engine/Source/Workers/package.json",
     "!packages/engine/Source/**/*.js",
     "!packages/engine/Source/**/*.glsl",
     "!packages/engine/Source/**/*.css",
@@ -1222,6 +1223,12 @@ export async function buildCesium(options) {
   // Copy static assets to Source folder.
 
   await copyEngineAssets("Source");
+  await copyFiles(
+    ["packages/engine/Source/ThirdParty/**/*.js"],
+    "Source/ThirdParty",
+    "packages/engine/Source/ThirdParty"
+  );
+
   await copyWidgetsAssets("Source/Widgets");
   await copyFiles(
     ["packages/widgets/Source/**/*.css"],
