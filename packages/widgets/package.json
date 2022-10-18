@@ -33,7 +33,8 @@
     "build": "gulp build --workspace @cesium/widgets",
     "build-ts": "gulp buildTs --workspace @cesium/widgets",
     "coverage": "gulp coverage --workspace @cesium/widgets",
-    "test": "gulp test --workspace @cesium/widgets"
+    "test": "gulp test --workspace @cesium/widgets",
+    "postversion": "gulp postversion --workspace @cesium/widgets"
   },
   "repository": {
     "type": "git",

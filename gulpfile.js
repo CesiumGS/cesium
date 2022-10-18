@@ -583,6 +583,22 @@ async function pruneScriptsForZip(packageJsonPath) {
   return gulp.src(noPreparePackageJson).pipe(gulpRename(packageJsonPath));
 }
 
+export const postversion = function () {
+  const workspace = argv.workspace;
+  if (!workspace) {
+    return;
+  }
+
+  // After the workspace version is bumped by `npm version`,
+  // update the root `package.json` file to depend on the new version
+  const directory = workspace.replaceAll(`@${scope}/`, ``);
+  const workspacePackageJson = require(`./packages/${directory}/package.json`);
+  const version = workspacePackageJson.version;
+
+  packageJson.dependencies[workspace] = version;
+  return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
+};
+
 export const makeZip = gulp.series(release, async function () {
   //For now we regenerate the JS glsl to force it to be unminified in the release zip
   //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.

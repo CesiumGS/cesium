@@ -21,29 +21,30 @@ There is no release manager; instead, our community shares the responsibility. A
 3. Make sure you are using the latest drivers for your video card.
 4. Pull down the latest `main` branch.
 5. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account with read and geocode permissions. These tokens are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the token from 2 releases ago.
-6. Proofread [CHANGES.md](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first.
-7. Update the versions in the workspace `package.json` files, following the rules of [semantic versioning](https://semver.org/). If there are no changes, you don't need to update the version of the workspace.
-8. Update the versions of any updated workspaces packages in the `depenencies` of the root `package.json`. These should match the versions in the previous step.
-9. Update the version in `package.json` to match, e.g. `1.14.0` -> `1.15.0`.
-10. Commit these changes.
-11. Make sure the repository is clean `git clean -d -x -f`. **This will delete all files not already in the repository.**
-12. Run `npm install`.
-13. Make sure `ThirdParty.json` is up to date by running `npm run build-third-party`. If there are any changes, verify and commit them.
-14. Create the release zip `npm run make-zip`.
-15. Run tests against the release `npm run test -- --failTaskOnError --release`. Test **in all browsers** with the `--browsers` flag (i.e. `--browsers Firefox,Chrome`). Alternatively, test with the browser Spec Runner by starting a local server (`npm start`) and browsing to http://localhost:8080/Specs/SpecRunner.html?built=true&release=true.
-16. Unpack the release zip to the directory of your choice and start the server by running `npm install` and then `npm start`
-17. Browse to http://localhost:8080 and confirm that the home page loads as expected and all links work.
-18. Verify that the [documentation](http://localhost:8080/Build/Documentation/index.html) built correctly
-19. Make sure [Hello World](http://localhost:8080/Apps/HelloWorld.html) loads.
-20. Make sure [Cesium Viewer](http://localhost:8080/Apps/CesiumViewer/index.html) loads.
-21. Run [Sandcastle](http://localhost:8080/Apps/Sandcastle/index.html) on the browser of your choice (or multiple browsers if you are up for it). Switch to the `All` tab and run through every demo to make sure they all work. Actually play with each of the buttons and sliders on each demo to ensure everything works as expected.
-22. If any of the above steps fail, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be fixed before we can release. **Do NOT proceed to the next step until issues are resolved.**
-23. Push your commits to main
+6. Proofread [`CHANGES.md`](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first. Ensure each change is in the section for the relevant workspace.
+7. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,
+   - `npm version minor -w @cesium/engine --no-git-tag-version`
+   - If there are no changes, skip updating the workspace version.
+8. Update the version in `package.json` to match, e.g. `1.14.0` -> `1.15.0`.
+9. Commit these changes.
+10. Make sure the repository is clean `git clean -d -x -f`. **This will delete all files not already in the repository.**
+11. Run `npm install`.
+12. Make sure `ThirdParty.json` is up to date by running `npm run build-third-party`. If there are any changes, verify and commit them.
+13. Create the release zip `npm run make-zip`.
+14. Run tests against the release `npm run test -- --failTaskOnError --release`. Test **in all browsers** with the `--browsers` flag (i.e. `--browsers Firefox,Chrome`). Alternatively, test with the browser Spec Runner by starting a local server (`npm start`) and browsing to http://localhost:8080/Specs/SpecRunner.html?built=true&release=true.
+15. Unpack the release zip to the directory of your choice and start the server by running `npm install` and then `npm start`
+16. Browse to http://localhost:8080 and confirm that the home page loads as expected and all links work.
+17. Verify that the [documentation](http://localhost:8080/Build/Documentation/index.html) built correctly
+18. Make sure [Hello World](http://localhost:8080/Apps/HelloWorld.html) loads.
+19. Make sure [Cesium Viewer](http://localhost:8080/Apps/CesiumViewer/index.html) loads.
+20. Run [Sandcastle](http://localhost:8080/Apps/Sandcastle/index.html) on the browser of your choice (or multiple browsers if you are up for it). Switch to the `All` tab and run through every demo to make sure they all work. Actually play with each of the buttons and sliders on each demo to ensure everything works as expected.
+21. If any of the above steps fail, post a message to the `#cesiumjs` channel in Slack to figure out what needs to be fixed before we can release. **Do NOT proceed to the next step until issues are resolved.**
+22. Push your commits to main
     - `git push`
-24. Create and push a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), e.g.,
+23. Create and push a [tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging), e.g.,
     - `git tag -a 1.1 -m "1.1 release"`
     - `git push origin 1.1` (this assumes origin is the primary cesium repository, do not use `git push --tags` as it pushes all tags from all remotes you have on your system.)
-25. Publish the release zip file to GitHub
+24. Publish the release zip file to GitHub
     - https://github.com/CesiumGS/cesium/releases/new
     - Select the tag you use pushed
     - Enter 'CesiumJS 1.xx' for the title
@@ -51,10 +52,10 @@ There is no release manager; instead, our community shares the responsibility. A
       - Look at a [previous release](https://github.com/CesiumGS/cesium/releases/tag/1.79) for an example. Don't use emoji, headings, or other formatting
     - Attach the `Cesium-1.xx` release zip file
     - Publish the release
-26. Publish to npm by running `npm publish` in the repository root (not the unzipped file directory) (the first time you do this, you will need to authorize the machine using `npm adduser`)
-27. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspace. Repeat this step for each updated workspace.
-28. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc when you push the branch up.
-29. After the `cesium.com` branch is live on cesium.com, comment in the `#comms-chat` slack channel to notify comms that the release is done so they can add these highlights and publish the monthly blog post
+25. Publish to npm by running `npm publish` in the repository root (not the unzipped file directory) (the first time you do this, you will need to authorize the machine using `npm adduser`)
+26. Use `npm publish -w <WORKSPACE>` in the repository root (not the unzipped file directory) to publish the workspace. Repeat this step for each updated workspace.
+27. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc when you push the branch up.
+28. After the `cesium.com` branch is live on cesium.com, comment in the `#comms-chat` slack channel to notify comms that the release is done so they can add these highlights and publish the monthly blog post
     - Note, it may take a little while for the new version of CesiumJS to be live on cesium.com (~30 minutes after the branch builds). You can check the version of Cesium in [sandcastle](https://sandcastle.cesium.com/) by looking at the tab above the cesium pane.
-30. Update the version of CesiumJS used in the Cesium Workshop: https://github.com/CesiumGS/cesium-workshop/blob/main/index.html#L13-L14
-31. Continue to the [Cesium Analytics release](https://github.com/CesiumGS/cesium-analytics/blob/main/Documentation/Contributors/AnalyticsReleaseGuide/README.md)
+29. Update the version of CesiumJS used in the Cesium Workshop: https://github.com/CesiumGS/cesium-workshop/blob/main/index.html#L13-L14
+30. Continue to the [Cesium Analytics release](https://github.com/CesiumGS/cesium-analytics/blob/main/Documentation/Contributors/AnalyticsReleaseGuide/README.md)
