@@ -7,5 +7,8 @@ if [ $TRAVIS_BRANCH != "cesium.com" ]; then
   NODE_ENV=production node Specs/test.cjs
   node Specs/test.mjs
 
+  node packages/engine/Specs/test.mjs
+  node packages/widgets/Specs/test.mjs
+
   npm --silent run cloc
 fi
