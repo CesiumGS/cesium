@@ -2,6 +2,14 @@
 
 ### 1.99 - 2022-11-01
 
+#### Major Announcements :loudspeaker:
+
+- CesiumJS now uses npm workspaces:
+  - The source code has been paritioned into two workspaces: `@cesium/engine` and `@cesium/widgets`.
+  - These workspaces packages will follow semantic versioning.
+  - These workspaces packages will be published as ES modules with TypeScript definitions.
+  - The combined CesiumJS release is still published, however, only the `Assets`, `ThirdParty` and `Widgets` (with CSS files only) are available in the root level `Source` folder.
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - The viewer parameter in `KmlTour.prototype.play` was deprecated in Cesium 1.99. It will be removed in 1.100. Instead of a `Viewer`, pass a `CesiumWidget` instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
