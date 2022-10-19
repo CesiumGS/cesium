@@ -12,7 +12,14 @@ notifications:
 jobs:
   include:
     - stage:
-      name: "Linting, Coverage, Deployment"
+      name: "Coverage"
+      script:
+        - npm --silent run build -- --node
+        - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+        - npm --silent run deploy-s3 -- -b "cesium-dev" -d cesium/$TRAVIS_BRANCH -c 'no-cache' --only-coverage
+    - name: "Release Tests"
+      script: ./travis/test-release.sh
+    - name: "Linting, Deployment"
       script:
         - ./travis/prepare.sh
         - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
@@ -21,6 +28,4 @@ jobs:
         - npm --silent run prettier-check
         - ./travis/release.sh
         - ./travis/deploy.sh
-    - name: "Release Tests"
-      script: ./travis/test-release.sh
 
