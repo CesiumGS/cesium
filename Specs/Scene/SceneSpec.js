@@ -1689,6 +1689,7 @@ describe(
       let functionCalled = false;
       scene._frameState.afterRender.push(function () {
         functionCalled = true;
+        return true;
       });
 
       scene.renderForSpecs();
