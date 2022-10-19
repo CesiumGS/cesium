@@ -2846,6 +2846,8 @@ function raiseLoadProgressEvent(tileset, frameState) {
         numberOfPendingRequests,
         numberOfTilesProcessing
       );
+
+      return true;
     });
   }
 
@@ -2860,11 +2862,13 @@ function raiseLoadProgressEvent(tileset, frameState) {
   if (progressChanged && tileset._tilesLoaded) {
     frameState.afterRender.push(function () {
       tileset.allTilesLoaded.raiseEvent();
+      return true;
     });
     if (!tileset._initialTilesLoaded) {
       tileset._initialTilesLoaded = true;
       frameState.afterRender.push(function () {
         tileset.initialTilesLoaded.raiseEvent();
+        return true;
       });
     }
   }

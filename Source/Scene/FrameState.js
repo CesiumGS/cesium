@@ -229,6 +229,10 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * scene state, e.g., manipulate the camera, instead of firing events
    * directly in <code>update</code> functions.
    * </p>
+   * <p>
+   * If any function in the array returns <code>true</code>, in request render mode
+   * another frame will be rendered.
+   * </p>
    *
    * @type {FrameState.AfterRenderCallback[]}
    *
@@ -410,5 +414,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
  * A function that will be called at the end of the frame.
  *
  * @callback FrameState.AfterRenderCallback
+ * @returns {Boolean} true if another render should be requested in request render mode
  */
 export default FrameState;
