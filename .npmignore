@@ -26,6 +26,11 @@
 /index.html
 /index.release.html
 /launches
+/packages/engine/Build/Specs/
+/packages/engine/Build/minifyShaders.state
+/packages/engine/Specs
+/packages/widgets/Specs
+/packages/widgets/Build/Specs/
 /server.js
 /Source/copyrightHeader.js
 /Specs
