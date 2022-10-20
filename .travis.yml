@@ -16,7 +16,7 @@ jobs:
       script:
         - npm --silent run build -- --node
         - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
-        - npm --silent run deploy-s3 -- -b "cesium-dev" -d cesium/$TRAVIS_BRANCH -c 'no-cache' --only-coverage
+        - npm --silent run deploy-s3 -- -b "cesium-dev" -d cesium/$TRAVIS_BRANCH/Build/Coverage -c 'no-cache' --only-coverage
     - name: "Release Tests"
       script: ./travis/test-release.sh
     - name: "Linting, Deployment"
