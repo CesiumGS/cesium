@@ -4,11 +4,11 @@
 
 #### Major Announcements :loudspeaker:
 
-- CesiumJS now uses npm workspaces:
-  - The source code has been paritioned into two workspaces: `@cesium/engine` and `@cesium/widgets`.
+- CesiumJS is now published alongside two smaller packages `@cesium/engine` and `@cesium/widgets`:
+  - The source code has been paritioned into two npm workspaces: `packages/engine` and `packages/widgets`.
   - These workspaces packages will follow semantic versioning.
   - These workspaces packages will be published as ES modules with TypeScript definitions.
-  - The combined CesiumJS release is still published, however, only the `Assets`, `ThirdParty` and `Widgets` (with CSS files only) are available in the root level `Source` folder.
+  - The combined CesiumJS release will continue to be published, however, only the `Assets`, `ThirdParty` and `Widgets` (with CSS files only) are available in the root level `Source` folder.
 
 ##### Deprecated :hourglass_flowing_sand:
 
