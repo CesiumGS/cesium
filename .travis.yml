@@ -17,7 +17,7 @@ jobs:
       script:
         - npm --silent run build -- --node
         - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
-        - aws s3 sync s3://cesium-dev/cesium/$TRAVIS_BRANCH/Build/Coverage ./Build/Coverage --dryrun --delete --color on
+        - aws s3 sync s3://cesium-dev/cesium/$TRAVIS_BRANCH/Build/Coverage ./Build/Coverage --delete --color on
     - name: "Release Tests"
       script: ./travis/test-release.sh
     - name: "Linting, Deployment"
