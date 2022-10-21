@@ -10,6 +10,10 @@
   - These workspaces packages will be published as ES modules with TypeScript definitions.
   - The combined CesiumJS release will continue to be published, however, only the `Assets`, `ThirdParty` and `Widgets` (with CSS files only) are available in the root level `Source` folder.
 
+##### Additions :tada:
+
+- Added support for I3S 3D Object and IntegratedMesh Layers. [#9634](https://github.com/CesiumGS/cesium/pull/9634)
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - The viewer parameter in `KmlTour.prototype.play` was deprecated in Cesium 1.99. It will be removed in 1.100. Instead of a `Viewer`, pass a `CesiumWidget` instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
@@ -18,6 +22,7 @@
 
 - Fixed a bug where the scale of a `Model` was being incorrectly applied to its bounding sphere. [#10855](https://github.com/CesiumGS/cesium/pull/10855)
 - Fixed a bug where rendering a `Model` with image-based lighting while specular environment maps were unsupported caused a crash. [#10859](https://github.com/CesiumGS/cesium/pull/10859)
+- Fixed a bug where request render mode was broken when a ground primitive is added. [#10756](https://github.com/CesiumGS/cesium/issues/10756)
 
 ### 1.98.1 - 2022-10-03
 

@@ -606,6 +606,7 @@ function initialize(model) {
       frameState.afterRender.push(function () {
         model._ready = true;
         resolve(model);
+        return true;
       });
     };
   });
