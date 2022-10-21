@@ -15,7 +15,7 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "Source/**/*.js",
+    "Source",
     "Build/**",
     "!Build/Specs/**",
     "!Build/minifyShaders.state",
