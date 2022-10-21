@@ -31,6 +31,7 @@ yarn add @cesium/engine
 
 ````js
 import * as Cesium from "@cesium/engine";
+import "@cesium/engine/Source/Widget/CesiumWidget.css";
 
 const cesiumWidget = new Cesium.CesiumWidget("cesiumContainer");
 ````
@@ -39,6 +40,7 @@ Or, import individual modules to benefit from tree shaking optmtimizations throu
 
 ````js
 import { CesiumWidget } from "@cesium/engine";
+import "@cesium/engine/Source/Widget/CesiumWidget.css";
 
 const cesiumWidget = new CesiumWidget("cesiumContainer");
 ````
