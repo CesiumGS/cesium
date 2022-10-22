@@ -337,4 +337,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Ilya Shevelev](https://github.com/ilyaly)
 - [Gabriel Aldous](https://github.com/Sn00pyW00dst0ck)
 - [金俊](https://github.com/jinjun1994)
-- [Oussama BOnnor](https://github.com/oussamabonnor1)
+- [Oussama Bonnor](https://github.com/oussamabonnor1)
