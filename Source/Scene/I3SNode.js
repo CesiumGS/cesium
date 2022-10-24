@@ -242,7 +242,7 @@ I3SNode.prototype.loadFields = function () {
 
 /**
  * Returns the fields for a given picked position
- * @param {Cartesian3} Index of the feature whose attributes we want to get
+ * @param {Cartesian3} pickedPosition The picked position
  * @returns {Object} Object containing field names and their values
  */
 I3SNode.prototype.getFieldsForPickedPosition = function (pickedPosition) {
@@ -270,7 +270,7 @@ I3SNode.prototype.getFieldsForPickedPosition = function (pickedPosition) {
 
 /**
  * Returns the fields for a given feature
- * @param {Number} Index of the feature whose attributes we want to get
+ * @param {Number} featureIndex Index of the feature whose attributes we want to get
  * @returns {Object} Object containing field names and their values
  */
 I3SNode.prototype.getFieldsForFeature = function (featureIndex) {
