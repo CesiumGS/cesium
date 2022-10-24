@@ -8,6 +8,7 @@ import IonGeocoderService from "../../Core/IonGeocoderService.js";
 import CesiumMath from "../../Core/Math.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Rectangle from "../../Core/Rectangle.js";
+import Ellipsoid from "../../Core/Ellipsoid";
 import sampleTerrainMostDetailed from "../../Core/sampleTerrainMostDetailed.js";
 import computeFlyToLocationForRectangle from "../../Scene/computeFlyToLocationForRectangle.js";
 import knockout from "../../ThirdParty/knockout.js";
@@ -59,6 +60,7 @@ function GeocoderViewModel(options) {
 
   this._handleArrowDown = handleArrowDown;
   this._handleArrowUp = handleArrowUp;
+  this.destinationCoords = null;
 
   const that = this;
 
@@ -361,6 +363,16 @@ function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
   );
 }
 
+function toDegrees(cartesian3Pos) {
+  const carto = Ellipsoid.WGS84.cartesianToCartographic(cartesian3Pos);
+  const lon = CesiumMath.toDegrees(carto.longitude);
+  const lat = CesiumMath.toDegrees(carto.latitude);
+  return {
+    lon: lon,
+    lat: lat,
+  };
+}
+
 function flyToDestination(viewModel, destination) {
   const scene = viewModel._scene;
   const mapProjection = scene.mapProjection;
@@ -402,6 +414,7 @@ function flyToDestination(viewModel, destination) {
   return promise
     .then(function (result) {
       finalDestination = ellipsoid.cartographicToCartesian(result);
+      GeocoderViewModel.destinationCoords = toDegrees(finalDestination);
     })
     .finally(function () {
       // Whether terrain querying succeeded or not, fly to the destination.
