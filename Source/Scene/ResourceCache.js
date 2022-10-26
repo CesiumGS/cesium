@@ -760,9 +760,9 @@ ResourceCache.clearForSpecs = function () {
     GltfTextureLoader,
     GltfImageLoader,
     GltfBufferViewLoader,
-    BufferLoader,
     MetadataSchemaLoader,
     GltfJsonLoader,
+    BufferLoader,
   ];
 
   let cacheKey;
