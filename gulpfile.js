@@ -305,7 +305,7 @@ export async function buildTs() {
     };
     return generateTypeScriptDefinitions(
       "widgets",
-      "packages/widgets/types.d.ts",
+      "packages/widgets/index.d.ts",
       "packages/widgets/tsd-conf.json",
       undefined,
       undefined,
