@@ -87,28 +87,28 @@ describe(
       return pollToPromise(function () {
         provider.update(scene.frameState);
         return provider.ready;
-      }).then(function () {
-        const requestTilePromise = provider.requestData();
-        // need to call update until the promise is ready
-        return pollToPromise(function () {
-          provider.update(scene.frameState);
-          return provider.doneLoading();
-        })
-          .then(function () {
+      })
+        .then(function () {
+          const requestTilePromise = provider.requestData();
+          // need to call update until the promise is ready
+          return pollToPromise(function () {
+            provider.update(scene.frameState);
+            return provider.doneLoading();
+          }).then(function () {
             return requestTilePromise;
-          })
-          .then(function (data) {
-            expect(data.length).toEqual(1);
-
-            const dimensions = provider.dimensions;
-            const voxelCount = dimensions.x * dimensions.y * dimensions.z;
-            const componentCount = MetadataType.getComponentCount(
-              provider.types[0]
-            );
-            const expectedLength = voxelCount * componentCount;
-            expect(data[0].length).toEqual(expectedLength);
           });
-      });
+        })
+        .then(function (data) {
+          expect(data.length).toEqual(1);
+
+          const dimensions = provider.dimensions;
+          const voxelCount = dimensions.x * dimensions.y * dimensions.z;
+          const componentCount = MetadataType.getComponentCount(
+            provider.types[0]
+          );
+          const expectedLength = voxelCount * componentCount;
+          expect(data[0].length).toEqual(expectedLength);
+        });
     });
 
     it("requestData throws if the provider is not ready", function () {
@@ -120,6 +120,33 @@ describe(
       expect(function () {
         return provider.requestData();
       }).toThrowDeveloperError();
+    });
+
+    it("requestData loads multiple attributes correctly", function () {
+      const url =
+        "./Data/Cesium3DTiles/Voxel/VoxelMultiAttribute3DTiles/tileset.json";
+      const provider = new Cesium3DTilesVoxelProvider({ url });
+
+      return pollToPromise(function () {
+        provider.update(scene.frameState);
+        return provider.ready;
+      })
+        .then(function () {
+          const requestTilePromise = provider.requestData();
+          // need to call update until the promise is ready
+          return pollToPromise(function () {
+            provider.update(scene.frameState);
+            return provider.doneLoading();
+          }).then(function () {
+            return requestTilePromise;
+          });
+        })
+        .then(function (data) {
+          expect(data.length).toBe(3);
+          expect(data[0][0]).toBe(0.0);
+          expect(data[1][0]).toBe(0.5);
+          expect(data[2][0]).toBe(1.0);
+        });
     });
   },
   "WebGL"

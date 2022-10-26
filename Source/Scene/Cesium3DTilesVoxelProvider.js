@@ -417,11 +417,12 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
     z: tileZ,
   });
 
-  // TODO: is the first condition flipped? if isSubtreeRoot, level == 0
+  // Find the coordinates of the parent subtree containing tileCoordinates
+  // If tileCoordinates is a subtree child, use that subtree
+  // If tileCoords is a subtree root, use its parent subtree
   const isSubtreeRoot =
     tileCoordinates.isSubtreeRoot() && tileCoordinates.level > 0;
 
-  // TODO: are these switched? Root has no parent
   const subtreeCoord = isSubtreeRoot
     ? tileCoordinates.getParentSubtreeCoordinates()
     : tileCoordinates.getSubtreeCoordinates();
@@ -456,9 +457,14 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
       for (let i = 0; i < attributesLength; i++) {
         // The attributes array from GltfLoader is not in the same order as
         // names, types, etc. from the provider.
-        // A temporary fix: Look up the attribute based on its name
-        const name = `_${names[i]}`;
-        const attribute = attributes.find((a) => a.name === name);
+        // Find the appropriate glTF attribute based on its name
+        const name = names[i];
+        const attribute = attributes.find((attribute) => {
+          // glTF custom attribute names should be prefixed with "_". Remove the "_"
+          const attributeName = attribute.name.substring(1);
+          // Also check raw name to handle non-conformant glTFs with no "_"
+          return attributeName === name || attribute.name === name;
+        });
         if (!defined(attribute)) {
           continue;
         }
