@@ -1003,23 +1003,9 @@ export const buildEngine = async (options) => {
   // Create index.js
   await createIndexJs("engine");
 
-  // Generate bundle for CSS and ThirdParty using esbuild.
-  await bundleCSS({
-    filePaths: [
-      ...workspaceCssFiles["engine"],
-      "packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
-    ],
-    outbase: "packages/engine/Source",
-    outdir: "packages/engine/Build",
-  });
-
   // Build workers.
   await bundleWorkers({
-    input: [
-      "packages/engine/Source/Workers/**",
-      "packages/engine/Source/ThirdParty/Workers/**",
-      "!packages/engine/Source/ThirdParty/Workers/package.json",
-    ],
+    input: ["packages/engine/Source/Workers/**"],
     inputES6: ["packages/engine/Source/WorkersES6/*.js"],
     path: "packages/engine/Build",
   });
@@ -1036,15 +1022,6 @@ export const buildEngine = async (options) => {
     specListFile: specListFile,
     write: write,
   });
-
-  // Copy static assets to Build folder.
-  await copyFiles(
-    [
-      "packages/engine/Source/ThirdParty/**/*.wasm",
-      "packages/engine/Source/ThirdParty/**/*.json",
-    ],
-    "packages/engine/Build/ThirdParty"
-  );
 
   return;
 };
