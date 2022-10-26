@@ -1276,11 +1276,13 @@ async function setStatus(state, targetUrl, description, context) {
  * @param {Boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
  * @param {Boolean} [options.suppressPassed=false] True if output should be suppressed for tests that pass.
  * @param {Boolean} [options.failTaskOnError=false] True if the gulp task should fail on errors in the tests.
+ * @param {String} options.workspace The name of the workspace, if any.
  */
 export async function runCoverage(options) {
   const webglStub = options.webglStub ?? false;
   const suppressPassed = options.suppressPassed ?? false;
   const failTaskOnError = options.failTaskOnError ?? false;
+  const workspace = options.workspace;
 
   const folders = [];
   let browsers = ["Chrome"];
@@ -1349,6 +1351,75 @@ export async function runCoverage(options) {
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
 
+  let files = [
+    {
+      pattern: karmaBundle,
+      included: true,
+      type: "module",
+    },
+    {
+      pattern: specListBundle,
+      included: true,
+      type: "module",
+    },
+    // Static assets are always served from the shared/combined folders.
+    { pattern: "Build/CesiumUnminified/**", included: false },
+    { pattern: "Specs/Data/**", included: false },
+    { pattern: "Specs/TestWorkers/**", included: false },
+    { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+  ];
+
+  let proxies;
+  if (workspace) {
+    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+    files = [
+      {
+        pattern: karmaBundle,
+        included: true,
+        type: "module",
+      },
+      {
+        pattern: specListBundle,
+        included: true,
+        type: "module",
+      },
+      { pattern: "Specs/Data/**", included: false },
+      { pattern: "packages/engine/Build/Workers/**", included: false },
+      { pattern: "packages/engine/Source/Assets/**", included: false },
+      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
+      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Specs/TestWorkers/**", included: false },
+    ];
+
+    proxies = {
+      "/base/Build/CesiumUnminified/Assets/":
+        "/base/packages/engine/Source/Assets/",
+      "/base/Build/CesiumUnminified/ThirdParty/":
+        "/base/packages/engine/Source/ThirdParty/",
+      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
+        "/base/packages/engine/Source/Widget/",
+      "/base/Build/CesiumUnminified/Workers/":
+        "/base/packages/engine/Build/Workers/",
+    };
+
+    if (workspace === "widgets") {
+      files = [
+        ...files,
+        { pattern: "packages/widgets/Source/**.css", included: false },
+        { pattern: "packages/widgets/Source/**.svg", included: false },
+        { pattern: "packages/widgets/Source/**.gif", included: false },
+        { pattern: "packages/widgets/Source/**.png", included: false },
+      ];
+
+      proxies = {
+        ...proxies,
+        "/base/Build/CesiumUnminified/Widgets/":
+          "/base/packages/widgets/Source/",
+      };
+    }
+  }
+
   // Setup Karma config.
 
   const config = await karma.config.parseConfig(
@@ -1362,23 +1433,8 @@ export async function runCoverage(options) {
         suppressPassed: suppressPassed,
         suppressSkipped: true,
       },
-      files: [
-        {
-          pattern: karmaBundle,
-          included: true,
-          type: "module",
-        },
-        {
-          pattern: specListBundle,
-          included: true,
-          type: "module",
-        },
-        // Static assets are always served from the shared/combined folders.
-        { pattern: "Build/CesiumUnminified/**", included: false },
-        { pattern: "Specs/Data/**", included: false },
-        { pattern: "Specs/TestWorkers/**", included: false },
-        { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      ],
+      files: files,
+      proxies: proxies,
       reporters: ["spec", "coverage"],
       coverageReporter: {
         dir: options.coverageDirectory,
@@ -1447,6 +1503,7 @@ export async function coverage() {
       webglStub: argv.webglStub,
       suppressPassed: argv.suppressPassed,
       failTaskOnError: argv.failTaskOnError,
+      workspace: workspace,
     });
   } else if (workspace === "widgets") {
     return runCoverage({
@@ -1457,6 +1514,7 @@ export async function coverage() {
       webglStub: argv.webglStub,
       suppressPassed: argv.suppressPassed,
       failTaskOnError: argv.failTaskOnError,
+      workspace: workspace,
     });
   }
 
@@ -1506,7 +1564,10 @@ export async function test() {
     { pattern: "Specs/TestWorkers/**", included: false },
   ];
 
+  let proxies;
   if (workspace) {
+    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+
     files = [
       {
         pattern: `packages/${workspace}/Build/Specs/karma-main.js`,
@@ -1519,10 +1580,40 @@ export async function test() {
         type: "module",
       },
       { pattern: "Specs/Data/**", included: false },
+      { pattern: "packages/engine/Build/Workers/**", included: false },
+      { pattern: "packages/engine/Source/Assets/**", included: false },
+      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
+      { pattern: "packages/engine/Source/Widget/*.css", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "Build/CesiumUnminified/**", included: false },
       { pattern: "Specs/TestWorkers/**", included: false },
     ];
+
+    proxies = {
+      "/base/Build/CesiumUnminified/Assets/":
+        "/base/packages/engine/Source/Assets/",
+      "/base/Build/CesiumUnminified/ThirdParty/":
+        "/base/packages/engine/Source/ThirdParty/",
+      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
+        "/base/packages/engine/Source/Widget/",
+      "/base/Build/CesiumUnminified/Workers/":
+        "/base/packages/engine/Build/Workers/",
+    };
+
+    if (workspace === "widgets") {
+      files = [
+        ...files,
+        { pattern: "packages/widgets/Source/**.css", included: false },
+        { pattern: "packages/widgets/Source/**.svg", included: false },
+        { pattern: "packages/widgets/Source/**.gif", included: false },
+        { pattern: "packages/widgets/Source/**.png", included: false },
+      ];
+
+      proxies = {
+        ...proxies,
+        "/base/Build/CesiumUnminified/Widgets/":
+          "/base/packages/widgets/Source/",
+      };
+    }
   }
 
   if (release) {
@@ -1556,6 +1647,7 @@ export async function test() {
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
       files: files,
+      proxies: proxies,
       client: {
         captureConsole: verbose,
         args: [
