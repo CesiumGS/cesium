@@ -357,9 +357,6 @@ export async function bundleCombinedWorkers(options) {
   esBuildConfig.entryPoints = workers;
   esBuildConfig.outdir = options.path;
   esBuildConfig.minify = options.minify;
-  esBuildConfig.banner = {
-    js: combinedCopyrightHeader,
-  };
 
   await esbuild.build(esBuildConfig);
 
