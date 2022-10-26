@@ -19,6 +19,8 @@
 /Build/Sandcastle
 /Build/Specs
 /Cesium-*.zip
+/cesium-engine-*.tgz
+/cesium-widgets-*.tgz
 /Documentation
 /build.js
 /favicon.ico
@@ -26,11 +28,7 @@
 /index.html
 /index.release.html
 /launches
-/packages/engine/Build/Specs/
-/packages/engine/Build/minifyShaders.state
-/packages/engine/Specs
-/packages/widgets/Specs
-/packages/widgets/Build/Specs/
+/packages/
 /server.js
 /Source/copyrightHeader.js
 /Specs
