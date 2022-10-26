@@ -35,6 +35,11 @@ function I3SLayer(dataProvider, layerData, index) {
       .concat(`${layerData.href}`);
   }
 
+  this._version = layerData.store.version;
+  const splitVersion = this._version.split(".");
+  this._majorVersion = parseInt(splitVersion[0]);
+  this._minorVersion = splitVersion.length > 1 ? parseInt(splitVersion[1]) : 0;
+
   this._resource = new Resource({ url: tilesetUrl });
   this._resource.setQueryParameters(
     this._dataProvider.resource.queryParameters
@@ -98,11 +103,68 @@ Object.defineProperties(I3SLayer.prototype, {
       return this._data;
     },
   },
+
+  /**
+   * The version string of the loaded I3S dataset
+   * @memberof I3SLayer.prototype
+   * @type {String}
+   * @readonly
+   */
+  version: {
+    get: function () {
+      return this._version;
+    },
+  },
+
+  /**
+   * The major version number of the loaded I3S dataset
+   * @memberof I3SLayer.prototype
+   * @type {Number}
+   * @readonly
+   */
+  majorVersion: {
+    get: function () {
+      return this._majorVersion;
+    },
+  },
+
+  /**
+   * The minor version number of the loaded I3S dataset
+   * @memberof I3SLayer.prototype
+   * @type {Number}
+   * @readonly
+   */
+  minorVersion: {
+    get: function () {
+      return this._minorVersion;
+    },
+  },
+
+  /**
+   * When <code>true</code>, when the loaded I3S version is 1.6 or older
+   * @memberof I3SLayer.prototype
+   * @type {Boolean}
+   * @readonly
+   */
+  legacyVersion16: {
+    get: function () {
+      if (!defined(this.version)) {
+        return undefined;
+      }
+      if (
+        this.majorVersion < 1 ||
+        (this.majorVersion === 1 && this.minorVersion <= 6)
+      ) {
+        return true;
+      }
+      return false;
+    },
+  },
 });
 
 /**
  * Loads the content, including the root node definition and its children
- * @returns {Promise.<void>} A promise that is resolved when the layer data is loaded
+ * @returns {Promise} A promise that is resolved when the layer data is loaded
  * @private
  */
 I3SLayer.prototype.load = function () {
@@ -121,7 +183,7 @@ I3SLayer.prototype.load = function () {
       return that._tileset.readyPromise.then(function () {
         that._rootNode._tile = that._tileset._root;
         that._tileset._root._i3sNode = that._rootNode;
-        if (that._data.store.version === "1.6") {
+        if (that.legacyVersion16) {
           return that._rootNode._loadChildren();
         }
       });

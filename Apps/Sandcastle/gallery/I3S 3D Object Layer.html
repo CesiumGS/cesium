@@ -102,46 +102,31 @@
             Cesium.defined(pickedFeature.content.tile.i3sNode)
           ) {
             const i3sNode = pickedFeature.content.tile.i3sNode;
-            i3sNode.loadFields().then(function () {
-              const geometry = i3sNode.geometryData[0];
-              if (pickedPosition) {
-                const location = geometry.getClosestPointIndexOnTriangle(
-                  pickedPosition.x,
-                  pickedPosition.y,
-                  pickedPosition.z
-                );
+            if (pickedPosition) {
+              i3sNode.loadFields().then(function () {
                 let description = "No attributes";
                 let name;
-                if (
-                  location.index !== -1 &&
-                  geometry.customAttributes.featureIndex
-                ) {
-                  console.log(
-                    `pickedPosition(x,y,z) : ${pickedPosition.x}, ${pickedPosition.y}, ${pickedPosition.z}`
-                  );
-                  const featureIndex =
-                    geometry.customAttributes.featureIndex[location.index];
-                  if (Object.keys(i3sNode.fields).length > 0) {
-                    description =
-                      '<table class="cesium-infoBox-defaultTable"><tbody>';
-                    for (const fieldName in i3sNode.fields) {
-                      if (i3sNode.fields.hasOwnProperty(fieldName)) {
-                        const field = i3sNode.fields[fieldName];
-                        description += `<tr><th>${field.name}</th><td>`;
-                        description += `${field.values[featureIndex]}</td></tr>`;
-                        console.log(
-                          `${field.name}: ${field.values[featureIndex]}`
-                        );
-                        if (
-                          !Cesium.defined(name) &&
-                          isNameProperty(field.name)
-                        ) {
-                          name = field.values[featureIndex];
-                        }
+                console.log(
+                  `pickedPosition(x,y,z) : ${pickedPosition.x}, ${pickedPosition.y}, ${pickedPosition.z}`
+                );
+
+                const fields = i3sNode.getFieldsForPickedPosition(
+                  pickedPosition
+                );
+                if (Object.keys(fields).length > 0) {
+                  description =
+                    '<table class="cesium-infoBox-defaultTable"><tbody>';
+                  for (const fieldName in fields) {
+                    if (i3sNode.fields.hasOwnProperty(fieldName)) {
+                      description += `<tr><th>${fieldName}</th><td>`;
+                      description += `${fields[fieldName]}</td></tr>`;
+                      console.log(`${fieldName}: ${fields[fieldName]}`);
+                      if (!Cesium.defined(name) && isNameProperty(fieldName)) {
+                        name = fields[fieldName];
                       }
                     }
-                    description += `</tbody></table>`;
                   }
+                  description += `</tbody></table>`;
                 }
                 if (!Cesium.defined(name)) {
                   name = "unknown";
@@ -149,8 +134,8 @@
                 selectedEntity.name = name;
                 selectedEntity.description = description;
                 viewer.selectedEntity = selectedEntity;
-              }
-            });
+              });
+            }
           }
         },
         Cesium.ScreenSpaceEventType.LEFT_CLICK);

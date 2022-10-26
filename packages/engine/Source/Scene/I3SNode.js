@@ -241,6 +241,52 @@ I3SNode.prototype.loadFields = function () {
 };
 
 /**
+ * Returns the fields for a given picked position
+ * @param {Cartesian3} pickedPosition The picked position
+ * @returns {Object} Object containing field names and their values
+ */
+I3SNode.prototype.getFieldsForPickedPosition = function (pickedPosition) {
+  const geometry = this.geometryData[0];
+  if (!defined(geometry.customAttributes.featureIndex)) {
+    return {};
+  }
+
+  const location = geometry.getClosestPointIndexOnTriangle(
+    pickedPosition.x,
+    pickedPosition.y,
+    pickedPosition.z
+  );
+
+  if (
+    location.index === -1 ||
+    location.index > geometry.customAttributes.featureIndex.length
+  ) {
+    return {};
+  }
+
+  const featureIndex = geometry.customAttributes.featureIndex[location.index];
+  return this.getFieldsForFeature(featureIndex);
+};
+
+/**
+ * Returns the fields for a given feature
+ * @param {Number} featureIndex Index of the feature whose attributes we want to get
+ * @returns {Object} Object containing field names and their values
+ */
+I3SNode.prototype.getFieldsForFeature = function (featureIndex) {
+  const featureFields = {};
+  for (const fieldName in this.fields) {
+    if (this.fields.hasOwnProperty(fieldName)) {
+      const field = this.fields[fieldName];
+      if (featureIndex >= 0 && featureIndex < field.values.length) {
+        featureFields[field.name] = field.values[featureIndex];
+      }
+    }
+  }
+  return featureFields;
+};
+
+/**
  * @private
  */
 I3SNode.prototype._loadChildren = function () {
@@ -336,11 +382,6 @@ I3SNode.prototype._loadFeatureData = function () {
       this._featureData.push(newFeatureData);
       featurePromises.push(newFeatureData.load());
     }
-  } else if (defined(this._data.mesh) && defined(this._data.mesh.attribute)) {
-    const featureURI = `./features/0`;
-    const newFeatureData = new I3SFeature(this, featureURI);
-    this._featureData.push(newFeatureData);
-    featurePromises.push(newFeatureData.load());
   }
 
   return Promise.all(featurePromises);
@@ -661,7 +702,10 @@ I3SNode.prototype._createContentURL = function () {
   };
 
   // Load the geometry data
-  const dataPromises = [this._loadFeatureData(), this._loadGeometryData()];
+  const dataPromises = [this._loadGeometryData()];
+  if (this._dataProvider.legacyVersion16) {
+    dataPromises.push(this._loadFeatureData());
+  }
 
   const that = this;
   return Promise.all(dataPromises).then(function () {
