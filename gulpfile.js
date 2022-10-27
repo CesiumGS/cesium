@@ -1402,22 +1402,6 @@ export async function runCoverage(options) {
       "/base/Build/CesiumUnminified/Workers/":
         "/base/packages/engine/Build/Workers/",
     };
-
-    if (workspace === "widgets") {
-      files = [
-        ...files,
-        { pattern: "packages/widgets/Source/**.css", included: false },
-        { pattern: "packages/widgets/Source/**.svg", included: false },
-        { pattern: "packages/widgets/Source/**.gif", included: false },
-        { pattern: "packages/widgets/Source/**.png", included: false },
-      ];
-
-      proxies = {
-        ...proxies,
-        "/base/Build/CesiumUnminified/Widgets/":
-          "/base/packages/widgets/Source/",
-      };
-    }
   }
 
   // Setup Karma config.
@@ -1598,22 +1582,6 @@ export async function test() {
       "/base/Build/CesiumUnminified/Workers/":
         "/base/packages/engine/Build/Workers/",
     };
-
-    if (workspace === "widgets") {
-      files = [
-        ...files,
-        { pattern: "packages/widgets/Source/**.css", included: false },
-        { pattern: "packages/widgets/Source/**.svg", included: false },
-        { pattern: "packages/widgets/Source/**.gif", included: false },
-        { pattern: "packages/widgets/Source/**.png", included: false },
-      ];
-
-      proxies = {
-        ...proxies,
-        "/base/Build/CesiumUnminified/Widgets/":
-          "/base/packages/widgets/Source/",
-      };
-    }
   }
 
   if (release) {
