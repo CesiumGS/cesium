@@ -4,10 +4,9 @@ import {
   defined,
   DeveloperError,
   EasingFunction,
-  SceneTransforms
+  SceneTransforms,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
-
 
 const screenSpacePos = new Cartesian2();
 const offScreen = "-1000px";

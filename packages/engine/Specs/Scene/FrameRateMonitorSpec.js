@@ -1,8 +1,4 @@
-import {
-  defined,
-  getTimestamp,
-  FrameRateMonitor,
-} from "../../index.js";
+import { defined, getTimestamp, FrameRateMonitor } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

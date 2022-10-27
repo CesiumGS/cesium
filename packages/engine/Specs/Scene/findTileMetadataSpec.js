@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  findTileMetadata,
-  MetadataClass,
-} from "../../index.js";
+import { Cartesian3, findTileMetadata, MetadataClass } from "../../index.js";
 
 describe("Scene/findTileMetadata", function () {
   let tileClass;

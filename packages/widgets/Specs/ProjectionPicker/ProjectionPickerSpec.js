@@ -1,6 +1,4 @@
-import {
-  FeatureDetection,
-} from "@cesium/engine";
+import { FeatureDetection } from "@cesium/engine";
 
 import { ProjectionPicker } from "../../index.js";
 

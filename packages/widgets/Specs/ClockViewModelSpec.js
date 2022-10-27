@@ -1,12 +1,5 @@
-import {
-  Clock,
-  ClockRange,
-  ClockStep,
-  JulianDate
-} from "@cesium/engine";
-import {
-  ClockViewModel
-} from "../index.js";
+import { Clock, ClockRange, ClockStep, JulianDate } from "@cesium/engine";
+import { ClockViewModel } from "../index.js";
 
 describe("Widgets/ClockViewModel", function () {
   it("default constructor creates a clock", function () {

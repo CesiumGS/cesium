@@ -1,7 +1,4 @@
-import {
-  ImplicitAvailabilityBitstream,
-  RuntimeError,
-} from "../../index.js";
+import { ImplicitAvailabilityBitstream, RuntimeError } from "../../index.js";
 
 describe("Scene/ImplicitAvailabilityBitstream", function () {
   it("throws on missing lengthBits", function () {

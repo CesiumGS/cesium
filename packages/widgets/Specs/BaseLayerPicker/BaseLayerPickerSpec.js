@@ -1,12 +1,10 @@
 import {
   EllipsoidTerrainProvider,
   FeatureDetection,
-  ImageryLayerCollection
+  ImageryLayerCollection,
 } from "@cesium/engine";
 
-import {
-  BaseLayerPicker
-} from "../../index.js"
+import { BaseLayerPicker } from "../../index.js";
 
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 

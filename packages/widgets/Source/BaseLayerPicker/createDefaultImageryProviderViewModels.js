@@ -5,7 +5,7 @@ import {
   IonImageryProvider,
   IonWorldImageryStyle,
   OpenStreetMapImageryProvider,
-  TileMapServiceImageryProvider
+  TileMapServiceImageryProvider,
 } from "@cesium/engine";
 import ProviderViewModel from "./ProviderViewModel.js";
 

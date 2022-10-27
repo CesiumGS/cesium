@@ -1,7 +1,4 @@
-import {
-  defaultValue,
-  JulianDate,
-} from "@cesium/engine";
+import { defaultValue, JulianDate } from "@cesium/engine";
 
 /**
  * @private

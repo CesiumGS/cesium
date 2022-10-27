@@ -1,8 +1,4 @@
-import {
-  JulianDate,
-  Rotation,
-  SampledProperty,
-} from "../../index.js";
+import { JulianDate, Rotation, SampledProperty } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

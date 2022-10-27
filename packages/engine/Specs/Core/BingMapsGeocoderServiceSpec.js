@@ -1,8 +1,4 @@
-import {
-  BingMapsGeocoderService,
-  Rectangle,
-  Resource,
-} from "../../index.js";
+import { BingMapsGeocoderService, Rectangle, Resource } from "../../index.js";
 
 describe("Core/BingMapsGeocoderService", function () {
   afterAll(function () {

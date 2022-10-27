@@ -1,7 +1,4 @@
-import {
-  cancelAnimationFrame,
-  requestAnimationFrame,
-} from "../../index.js";
+import { cancelAnimationFrame, requestAnimationFrame } from "../../index.js";
 
 describe("Core/requestAnimationFrame", function () {
   it("calls the callback", function () {

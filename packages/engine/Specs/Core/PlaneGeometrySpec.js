@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  PlaneGeometry,
-  VertexFormat,
-} from "../../index.js";
+import { Cartesian3, PlaneGeometry, VertexFormat } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 

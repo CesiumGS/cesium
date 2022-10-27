@@ -1,7 +1,4 @@
-import {
-  Resource,
-  DiscardEmptyTileImagePolicy,
-} from "../../index.js";
+import { Resource, DiscardEmptyTileImagePolicy } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

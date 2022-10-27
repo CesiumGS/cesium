@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  FeatureDetection,
-  S2Cell,
-} from "../../index.js";
+import { Cartesian3, FeatureDetection, S2Cell } from "../../index.js";
 /* eslint-disable new-cap */
 /* eslint-disable no-undef */
 

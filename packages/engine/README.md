@@ -17,33 +17,33 @@ CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web bro
 
 Install with npm:
 
-````sh
+```sh
 npm install @cesium/engine --save
-````
+```
 
 Or, install with yarn:
 
-````sh
+```sh
 yarn add @cesium/engine
-````
+```
 
 ## Usage
 
-````js
+```js
 import * as Cesium from "@cesium/engine";
 import "@cesium/engine/Source/Widget/CesiumWidget.css";
 
 const cesiumWidget = new Cesium.CesiumWidget("cesiumContainer");
-````
+```
 
 Or, import individual modules to benefit from tree shaking optmtimizations through most build tools:
 
-````js
+```js
 import { CesiumWidget } from "@cesium/engine";
 import "@cesium/engine/Source/Widget/CesiumWidget.css";
 
 const cesiumWidget = new CesiumWidget("cesiumContainer");
-````
+```
 
 See our [Quickstart Guide](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/) for more information on getting a Cesium app up and running.
 

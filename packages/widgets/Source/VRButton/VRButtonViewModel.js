@@ -6,7 +6,7 @@ import {
   EventHelper,
   Fullscreen,
   getElement,
-  OrthographicFrustum
+  OrthographicFrustum,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import NoSleep from "nosleep.js";

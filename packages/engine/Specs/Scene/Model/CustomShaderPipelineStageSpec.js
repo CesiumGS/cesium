@@ -915,4 +915,3 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
     );
   });
 });
-

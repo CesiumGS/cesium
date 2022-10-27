@@ -9,7 +9,7 @@ import {
   Rectangle,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
-  TileCoordinatesImageryProvider
+  TileCoordinatesImageryProvider,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";

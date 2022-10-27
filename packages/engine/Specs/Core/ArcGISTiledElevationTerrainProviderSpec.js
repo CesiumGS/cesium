@@ -9,7 +9,7 @@ import {
   RuntimeError,
   TerrainProvider,
   WebMercatorTilingScheme,
-  Math as CesiumMath
+  Math as CesiumMath,
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";

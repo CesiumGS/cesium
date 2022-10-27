@@ -1,9 +1,4 @@
-import {
-  Cartesian3,
-  Cartographic,
-  Ellipsoid,
-  Rectangle,
-} from "../../index.js";
+import { Cartesian3, Cartographic, Ellipsoid, Rectangle } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

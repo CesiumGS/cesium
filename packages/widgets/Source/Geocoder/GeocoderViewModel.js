@@ -11,7 +11,7 @@ import {
   Math as CesiumMath,
   Matrix4,
   Rectangle,
-  sampleTerrainMostDetailed
+  sampleTerrainMostDetailed,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";

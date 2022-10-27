@@ -1,7 +1,4 @@
-import {
-  BatchTexturePipelineStage,
-  ShaderBuilder,
-} from "../../../index.js";
+import { BatchTexturePipelineStage, ShaderBuilder } from "../../../index.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
 describe("Scene/Model/BatchTexturePipelineStage", function () {

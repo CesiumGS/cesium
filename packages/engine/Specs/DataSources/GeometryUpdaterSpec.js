@@ -1,8 +1,4 @@
-import {
-  Entity,
-  GeometryUpdater,
-  PrimitiveCollection,
-} from "../../index.js";
+import { Entity, GeometryUpdater, PrimitiveCollection } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

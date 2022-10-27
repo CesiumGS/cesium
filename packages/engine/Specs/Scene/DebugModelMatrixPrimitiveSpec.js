@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  Matrix4,
-  DebugModelMatrixPrimitive,
-} from "../../index.js";
+import { Cartesian3, Matrix4, DebugModelMatrixPrimitive } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

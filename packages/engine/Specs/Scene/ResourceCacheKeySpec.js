@@ -1088,4 +1088,3 @@ describe("ResourceCacheKey", function () {
     }).toThrowDeveloperError();
   });
 });
-

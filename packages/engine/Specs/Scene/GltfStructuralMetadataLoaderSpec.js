@@ -609,4 +609,3 @@ describe(
   },
   "WebGL"
 );
-

@@ -1,8 +1,4 @@
-import {
-  GeocodeType,
-  Ion,
-  IonGeocoderService,
-} from "../../index.js";
+import { GeocodeType, Ion, IonGeocoderService } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

@@ -1,9 +1,9 @@
-import { 
+import {
   Color,
   defined,
   destroyObject,
   DeveloperError,
-  getElement
+  getElement,
 } from "@cesium/engine";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 

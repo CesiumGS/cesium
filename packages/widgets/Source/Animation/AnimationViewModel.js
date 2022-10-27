@@ -4,7 +4,7 @@ import {
   ClockStep,
   defined,
   DeveloperError,
-  JulianDate
+  JulianDate,
 } from "@cesium/engine";
 
 import knockout from "../ThirdParty/knockout.js";

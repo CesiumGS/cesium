@@ -1,9 +1,4 @@
-import {
-  Cartesian2,
-  Cartesian3,
-  Color,
-  Particle,
-} from "../../index.js";
+import { Cartesian2, Cartesian3, Color, Particle } from "../../index.js";
 
 describe("Scene/Particle", function () {
   it("default constructor", function () {

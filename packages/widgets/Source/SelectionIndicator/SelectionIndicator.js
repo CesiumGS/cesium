@@ -2,11 +2,10 @@ import {
   defined,
   destroyObject,
   DeveloperError,
-  getElement
+  getElement,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import SelectionIndicatorViewModel from "./SelectionIndicatorViewModel.js";
-
 
 /**
  * A widget for displaying an indicator on a selected object.

@@ -3,7 +3,7 @@ import {
   defaultValue,
   defined,
   destroyObject,
-  getElement
+  getElement,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import InspectorShared from "../InspectorShared.js";
@@ -18,7 +18,7 @@ import Cesium3DTilesInspectorViewModel from "./Cesium3DTilesInspectorViewModel.j
  * @param {Element|String} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene the Scene instance to use.
  */
- function Cesium3DTilesInspector(container, scene) {
+function Cesium3DTilesInspector(container, scene) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("container", container);
   Check.typeOf.object("scene", scene);
