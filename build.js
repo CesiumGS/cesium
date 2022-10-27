@@ -1069,6 +1069,7 @@ export const buildWidgets = async (options) => {
  * @param {Boolean} [options.incremental=true] True if builds should be generated incrementally.
  * @param {Boolean} [options.minify=false] True if bundles should be minified.
  * @param {Boolean} [options.node=true] True if CommonJS bundle should be generated.
+ * @param {Boolean} options.outputDirectory The directory where the output should go.
  * @param {Boolean} [options.removePragmas=false] True if debug pragmas should be removed.
  * @param {Boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
  * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
@@ -1085,10 +1086,9 @@ export async function buildCesium(options) {
 
   // Generate Build folder to place build artifacts.
   mkdirp.sync("Build");
-  const outputDirectory = path.join(
-    "Build",
-    `Cesium${!minify ? "Unminified" : ""}`
-  );
+  const outputDirectory =
+    options.outputDirectory ??
+    path.join("Build", `Cesium${!minify ? "Unminified" : ""}`);
   rimraf.sync(outputDirectory);
 
   await writeFile(

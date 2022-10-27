@@ -102,6 +102,7 @@ async function generateDevelopmentBuild() {
     incremental: true,
     minify: false,
     node: false,
+    outputDirectory: outputDirectory,
     removePragmas: false,
     sourcemap: true,
     write: false,
