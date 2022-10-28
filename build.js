@@ -157,6 +157,8 @@ export async function buildCesiumJs(options) {
 
   // Copy and minify non-bundled CSS and JS
   const cssAndThirdPartyConfig = esbuildBaseConfig();
+  // We don't want the CesiumJS copyright banner added to the ThirdParty files.
+  cssAndThirdPartyConfig.banner = undefined;
   cssAndThirdPartyConfig.entryPoints = [
     "Source/ThirdParty/google-earth-dbroot-parser.js",
     ...css, // Load and optionally minify css
@@ -288,10 +290,7 @@ function rollupWarning(message) {
  */
 export async function buildWorkers(options) {
   // Copy existing workers
-  const workers = await globby([
-    "Source/Workers/**",
-    "Source/ThirdParty/Workers/**",
-  ]);
+  const workers = await globby(["Source/Workers/**"]);
 
   const workerConfig = esbuildBaseConfig();
   workerConfig.entryPoints = workers;
@@ -299,6 +298,18 @@ export async function buildWorkers(options) {
   workerConfig.outbase = "Source"; // Maintain existing file paths
   workerConfig.minify = options.minify;
   await esbuild.build(workerConfig);
+
+  // Copy ThirdParty workers
+  const thirdPartyWorkers = await globby(["Source/ThirdParty/Workers/**"]);
+
+  const thirdPartyWorkerConfig = esbuildBaseConfig();
+  thirdPartyWorkerConfig.entryPoints = thirdPartyWorkers;
+  thirdPartyWorkerConfig.outdir = options.path;
+  thirdPartyWorkerConfig.outbase = "Source"; // Maintain existing file paths
+  thirdPartyWorkerConfig.minify = options.minify;
+  // We don't want the CesiumJS copyright banner added to the ThirdParty worker files.
+  thirdPartyWorkerConfig.banner = undefined;
+  await esbuild.build(thirdPartyWorkerConfig);
 
   // Use rollup to build the workers:
   // 1) They can be built as AMD style modules
