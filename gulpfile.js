@@ -259,64 +259,37 @@ export const buildWatch = gulp.series(build, async function () {
 });
 
 export async function buildTs() {
-  const workspace = argv.workspace ? argv.workspace : undefined;
-
-  if (workspace === `@${scope}/engine`) {
-    return generateTypeScriptDefinitions(
-      "engine",
-      "packages/engine/index.d.ts",
-      "packages/engine/tsd-conf.json",
-      processEngineSource,
-      processEngineModules
-    );
-  } else if (workspace === `@${scope}/widgets`) {
-    const engineModules = await generateTypeScriptDefinitions(
-      "engine",
-      "packages/engine/index.d.ts",
-      "packages/engine/tsd-conf.json",
-      processEngineSource,
-      processEngineModules
-    );
-
-    const importModules = {
-      engine: engineModules,
-    };
-    return generateTypeScriptDefinitions(
-      "widgets",
-      "packages/widgets/index.d.ts",
-      "packages/widgets/tsd-conf.json",
-      undefined,
-      undefined,
-      importModules
-    );
+  let workspaces;
+  if (argv.workspace && !Array.isArray(argv.workspace)) {
+    workspaces = [argv.workspace];
+  } else if (argv.workspace) {
+    workspaces = argv.workspace;
+  } else {
+    workspaces = Object.keys(packageJson.dependencies);
   }
 
-  // Generate types for engine.
+  // Generate types for passed packages in order.
+  const importModules = {};
+  for (const workspace of workspaces) {
+    const directory = workspace.replace(`@${scope}/`, ``);
+    const workspaceModules = await generateTypeScriptDefinitions(
+      directory,
+      `packages/${directory}/index.d.ts`,
+      `packages/${directory}/tsd-conf.json`,
+      // The engine package needs additional processing for its enum strings
+      directory === "engine" ? processEngineSource : undefined,
+      // Handle engine's module naming exceptions
+      directory === "engine" ? processEngineModules : undefined,
+      importModules
+    );
+    importModules[directory] = workspaceModules;
+  }
 
-  const engineModules = await generateTypeScriptDefinitions(
-    "engine",
-    "packages/engine/index.d.ts",
-    "packages/engine/tsd-conf.json",
-    processEngineSource,
-    processEngineModules
-  );
-
-  // Generate types for widgets.
-
-  const importModules = {
-    engine: engineModules,
-  };
-  await generateTypeScriptDefinitions(
-    "widgets",
-    "packages/widgets/index.d.ts",
-    "packages/widgets/tsd-conf.json",
-    undefined,
-    undefined,
-    importModules
-  );
+  if (argv.workspace) {
+    return;
+  }
 
   // Generate types for CesiumJS.
-
   await createTypeScriptDefinitions();
 }
 
@@ -1704,7 +1677,9 @@ ${source}
   if (importModules) {
     let imports = "";
     Object.keys(importModules).forEach((workspace) => {
-      const workspaceModules = Array.from(importModules[workspace]);
+      const workspaceModules = Array.from(importModules[workspace]).filter(
+        (importModule) => source.indexOf(importModule) !== -1
+      );
       imports += `import { ${workspaceModules.join(
         ",\n"
       )} } from "@${scope}/${workspace}";\n`;
