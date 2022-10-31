@@ -8,7 +8,12 @@
   - The source code will been paritioned into two folders: `packages/engine` and `packages/widgets`.
   - These workspaces packages will follow semantic versioning.
   - These workspaces packages will be published as ES modules with TypeScript definitions.
-  - The combined CesiumJS release will continue to be published, however, only the `Assets`, `ThirdParty` and `Widgets` (with CSS files only) are available in the root level `Source` folder.
+  - The combined CesiumJS release will continue to be published, however, the `Source` folder will only contain the following:
+    - `Cesium.js`
+    - `Cesium.d.ts`
+    - `Assets`
+    - `ThirdParty`
+    - `Widgets`(CSS files only)
   - The ability to import modules and TypeScript definitions from individual files will been removed.
 
 ##### Additions :tada:
