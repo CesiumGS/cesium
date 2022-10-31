@@ -292,6 +292,14 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    */
   this.styleString = "{}";
 
+  /**
+   * Gets or sets the JSON for the tileset enableDebugWireframe attribute.  This property is observable.
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  this.hasEnabledWireframe = false;
+
   this._tileset = undefined;
   this._feature = undefined;
   this._tile = undefined;
@@ -316,6 +324,8 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
     "styleString",
     "_feature",
     "_tile",
+    "_tileset",
+    "hasEnabledWireframe",
   ]);
 
   this._properties = knockout.observable({});
@@ -1254,6 +1264,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
         this.immediatelyLoadDesiredLevelOfDetail =
           tileset.immediatelyLoadDesiredLevelOfDetail;
         this.loadSiblings = tileset.loadSiblings;
+        this.hasEnabledWireframe = tileset._enableDebugWireframe;
 
         const pointCloudShading = tileset.pointCloudShading;
         this.pointCloudShading = pointCloudShading.attenuation;

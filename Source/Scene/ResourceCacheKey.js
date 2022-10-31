@@ -294,6 +294,7 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @param {Object} options.gltf The glTF JSON.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {FrameState} options.frameState The frame state.
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
@@ -311,6 +312,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   const gltf = options.gltf;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
+  const frameState = options.frameState;
   const bufferViewId = options.bufferViewId;
   const draco = options.draco;
   const attributeSemantic = options.attributeSemantic;
@@ -322,6 +324,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.frameState", frameState);
 
   const hasBufferViewId = defined(bufferViewId);
   const hasDraco = defined(draco);
@@ -358,6 +361,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   if (loadBuffer) {
     cacheKeySuffix += "-buffer";
+    cacheKeySuffix += `-context-${frameState.context.id}`;
   }
 
   if (loadTypedArray) {
@@ -398,6 +402,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
  * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {FrameState} options.frameState The frame state.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {Boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
  * @param {Boolean} [options.loadTypedArray=false] Load index buffer as a typed array.
@@ -411,6 +416,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   const accessorId = options.accessorId;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
+  const frameState = options.frameState;
   const draco = options.draco;
   const loadBuffer = defaultValue(options.loadBuffer, false);
   const loadTypedArray = defaultValue(options.loadTypedArray, false);
@@ -420,6 +426,8 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   Check.typeOf.number("options.accessorId", accessorId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.frameState", frameState);
+
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
       "At least one of loadBuffer and loadTypedArray must be true."
@@ -430,6 +438,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   let cacheKeySuffix = "";
   if (loadBuffer) {
     cacheKeySuffix += "-buffer";
+    cacheKeySuffix += `-context-${frameState.context.id}`;
   }
 
   if (loadTypedArray) {
@@ -509,6 +518,7 @@ ResourceCacheKey.getImageCacheKey = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
+ * @param {FrameState} options.frameState The frame state.
  *
  * @returns {String} The texture cache key.
  * @private
@@ -520,6 +530,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
   const supportedImageFormats = options.supportedImageFormats;
+  const frameState = options.frameState;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -527,6 +538,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+  Check.typeOf.object("options.frameState", frameState);
   //>>includeEnd('debug');
 
   const textureId = textureInfo.index;
@@ -549,7 +561,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
   // removing the sampleCacheKey here.
   const samplerCacheKey = getSamplerCacheKey(gltf, textureInfo);
 
-  return `texture:${imageCacheKey}-sampler-${samplerCacheKey}`;
+  return `texture:${imageCacheKey}-sampler-${samplerCacheKey}-context-${frameState.context.id}`;
 };
 
 export default ResourceCacheKey;

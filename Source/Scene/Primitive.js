@@ -360,9 +360,9 @@ function Primitive(options) {
           primitive._state === PrimitiveState.FAILED;
         if (!defined(error)) {
           resolve(primitive);
-        } else {
-          reject(error);
+          return true;
         }
+        reject(error);
       });
     };
   });

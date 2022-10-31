@@ -673,6 +673,10 @@ Vector3DTileContent.prototype.getFeature = function (batchId) {
   }
   //>>includeEnd('debug');
 
+  if (!defined(this._features)) {
+    createFeatures(this);
+  }
+
   return this._features[batchId];
 };
 

@@ -151,6 +151,12 @@ describe(
     extensionSchemaUri.schemaUri = "schema.json";
     delete extensionSchemaUri.schema;
 
+    const mockFrameState = {
+      context: {
+        id: "01234",
+      },
+    };
+
     let scene;
 
     beforeAll(function () {
@@ -173,6 +179,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
+          frameState: mockFrameState,
         });
       }).toThrowDeveloperError();
     });
@@ -186,6 +193,7 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
+          frameState: mockFrameState,
         });
       }).toThrowDeveloperError();
     });
@@ -198,6 +206,7 @@ describe(
           gltfResource: undefined,
           baseResource: gltfResource,
           supportedImageFormats: new SupportedImageFormats(),
+          frameState: mockFrameState,
         });
       }).toThrowDeveloperError();
     });
@@ -210,11 +219,12 @@ describe(
           gltfResource: gltfResource,
           baseResource: undefined,
           supportedImageFormats: new SupportedImageFormats(),
+          frameState: mockFrameState,
         });
       }).toThrowDeveloperError();
     });
 
-    it("throws if gltf is undefined", function () {
+    it("throws if supportedImageFormats is undefined", function () {
       expect(function () {
         return new GltfStructuralMetadataLoader({
           gltf: gltf,
@@ -222,6 +232,20 @@ describe(
           gltfResource: gltfResource,
           baseResource: gltfResource,
           supportedImageFormats: undefined,
+          frameState: mockFrameState,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if frameState is undefined", function () {
+      expect(function () {
+        return new GltfStructuralMetadataLoader({
+          gltf: gltf,
+          extension: extension,
+          gltfResource: gltfResource,
+          baseResource: gltfResource,
+          supportedImageFormats: new SupportedImageFormats(),
+          frameState: undefined,
         });
       }).toThrowDeveloperError();
     });
@@ -242,6 +266,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
 
       structuralMetadataLoader.load();
@@ -273,6 +298,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
 
       structuralMetadataLoader.load();
@@ -308,6 +334,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
 
       structuralMetadataLoader.load();
@@ -338,6 +365,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
 
       structuralMetadataLoader.load();
@@ -408,6 +436,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
 
       structuralMetadataLoader.load();
@@ -457,6 +486,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
 
       structuralMetadataLoader.load();
@@ -521,6 +551,7 @@ describe(
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
+        frameState: mockFrameState,
       });
       // Also load a copy of the schema into the cache
       const schemaResource = gltfResource.getDerivedResource({
@@ -548,6 +579,7 @@ describe(
             gltfResource: gltfResource,
             baseResource: gltfResource,
             supportedImageFormats: new SupportedImageFormats(),
+            frameState: mockFrameState,
           });
           expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
           structuralMetadataLoader.load();

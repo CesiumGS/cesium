@@ -1,4 +1,5 @@
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 /**
  * Describes a KmlTour, which uses KmlTourFlyTo, and KmlTourWait to
@@ -84,15 +85,25 @@ KmlTour.prototype.addPlaylistEntry = function (entry) {
 /**
  * Play this tour.
  *
- * @param {Viewer} viewer viewer widget.
+ * @param {Viewer|CesiumWidget} widget The widget.
  * @param {Object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
  * options for FlyTo playlist entries.
  */
-KmlTour.prototype.play = function (viewer, cameraOptions) {
+KmlTour.prototype.play = function (widget, cameraOptions) {
+  // We want to avoid importing the Viewer/CesiumWidget class, so we check
+  // for the presence of the .cesiumWidget property that's only available
+  // on the Viewer.
+  if (defined(widget.cesiumWidget)) {
+    deprecationWarning(
+      "viewer",
+      "The viewer parameter has been deprecated in Cesium 1.99. It will be removed in 1.100. Instead of a Viewer, pass a CesiumWidget instead."
+    );
+  }
+
   this.tourStart.raiseEvent();
 
   const tour = this;
-  playEntry.call(this, viewer, cameraOptions, function (terminated) {
+  playEntry.call(this, widget, cameraOptions, function (terminated) {
     tour.playlistIndex = 0;
     // Stop nonblocking entries
     if (!terminated) {
@@ -122,14 +133,14 @@ function cancelAllEntries(activeEntries) {
 
 // Play playlist entry.
 // This function is called recursevly with playNext and iterates over all entries from playlist.
-function playEntry(viewer, cameraOptions, allDone) {
+function playEntry(widget, cameraOptions, allDone) {
   const entry = this.playlist[this.playlistIndex];
   if (entry) {
-    const _playNext = playNext.bind(this, viewer, cameraOptions, allDone);
+    const _playNext = playNext.bind(this, widget, cameraOptions, allDone);
     this._activeEntries.push(entry);
     this.entryStart.raiseEvent(entry);
     if (entry.blocking) {
-      entry.play(_playNext, viewer.scene.camera, cameraOptions);
+      entry.play(_playNext, widget.scene.camera, cameraOptions);
     } else {
       const tour = this;
       entry.play(function () {
@@ -139,7 +150,7 @@ function playEntry(viewer, cameraOptions, allDone) {
           tour._activeEntries.splice(indx, 1);
         }
       });
-      _playNext(viewer, cameraOptions, allDone);
+      _playNext(widget, cameraOptions, allDone);
     }
   } else if (defined(allDone)) {
     allDone(false);
@@ -147,7 +158,7 @@ function playEntry(viewer, cameraOptions, allDone) {
 }
 
 // Increment playlistIndex and call playEntry if terminated isn't true.
-function playNext(viewer, cameraOptions, allDone, terminated) {
+function playNext(widget, cameraOptions, allDone, terminated) {
   const entry = this.playlist[this.playlistIndex];
   this.entryEnd.raiseEvent(entry, terminated);
 
@@ -159,7 +170,7 @@ function playNext(viewer, cameraOptions, allDone, terminated) {
       this._activeEntries.splice(indx, 1);
     }
     this.playlistIndex++;
-    playEntry.call(this, viewer, cameraOptions, allDone);
+    playEntry.call(this, widget, cameraOptions, allDone);
   }
 }
 export default KmlTour;

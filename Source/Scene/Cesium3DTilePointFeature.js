@@ -2,7 +2,6 @@ import Cartographic from "../Core/Cartographic.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import createBillboardPointCallback from "./createBillboardPointCallback.js";
 
@@ -725,25 +724,6 @@ function setBillboardImage(feature) {
  */
 Cesium3DTilePointFeature.prototype.hasProperty = function (name) {
   return this._content.batchTable.hasProperty(this._batchId, name);
-};
-
-/**
- * Returns an array of property names for the feature. This includes properties from this feature's
- * class and inherited classes when using a batch table hierarchy.
- *
- * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
- *
- * @deprecated
- *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The names of the feature's properties.
- */
-Cesium3DTilePointFeature.prototype.getPropertyNames = function (results) {
-  deprecationWarning(
-    "Cesium3DTilePointFeature.getPropertyNames",
-    "Cesium3DTilePointFeature.getPropertyNames is deprecated in CesiumJS 1.95, and will be removed in 1.98. Use Cesium3DTilePointFeature.getPropertyIds instead"
-  );
-  return this._content.batchTable.getPropertyIds(this._batchId, results);
 };
 
 /**

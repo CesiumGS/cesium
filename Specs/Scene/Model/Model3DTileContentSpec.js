@@ -18,6 +18,7 @@ import {
   GroupMetadata,
   HeadingPitchRange,
   HeadingPitchRoll,
+  JulianDate,
   Math as CesiumMath,
   Matrix4,
   MetadataClass,
@@ -650,7 +651,13 @@ describe(
     });
 
     describe("pnts", function () {
+      const time = new JulianDate(2457522.0);
+      const renderOptions = {
+        time: time,
+      };
+
       beforeEach(function () {
+        renderOptions.scene = scene;
         setCamera(centerLongitude, centerLatitude, 5.0);
       });
 
@@ -671,7 +678,7 @@ describe(
               color: "vec4(Number(${secondaryColor}[0] < 1.0), 0.0, 0.0, 1.0)",
             });
 
-            expect(scene).toRenderAndCall(function (rgba) {
+            expect(renderOptions).toRenderAndCall(function (rgba) {
               // Produces a red color
               expect(rgba[0]).toBeGreaterThan(rgba[1]);
               expect(rgba[0]).toBeGreaterThan(rgba[2]);
@@ -711,13 +718,13 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
           function (tileset) {
             let color;
-            expect(scene).toRenderAndCall(function (rgba) {
+            expect(renderOptions).toRenderAndCall(function (rgba) {
               color = rgba;
             });
             tileset.debugColorizeTiles = true;
-            expect(scene).notToRender(color);
+            expect(renderOptions).notToRender(color);
             tileset.debugColorizeTiles = false;
-            expect(scene).toRender(color);
+            expect(renderOptions).toRender(color);
           }
         );
       });
@@ -734,13 +741,13 @@ describe(
           tileset.style = new Cesium3DTileStyle({
             color: 'color("red")',
           });
-          expect(scene).toRender([255, 0, 0, 255]);
+          expect(renderOptions).toRender([255, 0, 0, 255]);
 
           // Applies translucency
           tileset.style = new Cesium3DTileStyle({
             color: "rgba(255, 0, 0, 0.005)",
           });
-          expect(scene).toRenderAndCall(function (rgba) {
+          expect(renderOptions).toRenderAndCall(function (rgba) {
             // Pixel is a darker red
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[0]).toBeLessThan(255);
@@ -751,7 +758,7 @@ describe(
 
           // Remove style
           tileset.style = undefined;
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
         });
       });
 
@@ -767,17 +774,17 @@ describe(
           tileset.style = new Cesium3DTileStyle({
             show: false,
           });
-          expect(scene).toRender([0, 0, 0, 255]);
+          expect(renderOptions).toRender([0, 0, 0, 255]);
 
           // Apply show style that shows all points
           tileset.style = new Cesium3DTileStyle({
             show: true,
           });
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
 
           // Remove style
           tileset.style = undefined;
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
         });
       });
 
@@ -796,11 +803,11 @@ describe(
           tileset.style = new Cesium3DTileStyle({
             pointSize: 5.0,
           });
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
 
           // Remove style
           tileset.style = undefined;
-          expect(scene).toRender([0, 0, 0, 255]);
+          expect(renderOptions).toRender([0, 0, 0, 255]);
         });
       });
 
@@ -816,7 +823,7 @@ describe(
           tileset.style = new Cesium3DTileStyle({
             color: "vec4(${COLOR}[0], 0.0, 0.0, 1.0)",
           });
-          expect(scene).toRenderAndCall(function (rgba) {
+          expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[1]).toBe(0);
             expect(rgba[2]).toBe(0);
@@ -827,16 +834,16 @@ describe(
           tileset.style = new Cesium3DTileStyle({
             show: "${POSITION}[0] > -50.0",
           });
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
 
           tileset.style = new Cesium3DTileStyle({
             show: "${POSITION}[0] > 50.0",
           });
-          expect(scene).toRender([0, 0, 0, 255]);
+          expect(renderOptions).toRender([0, 0, 0, 255]);
 
           // Remove style
           tileset.style = undefined;
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
         });
       });
 
@@ -852,16 +859,16 @@ describe(
           tileset.style = new Cesium3DTileStyle({
             show: "${temperature} > 1.0",
           });
-          expect(scene).toRender([0, 0, 0, 255]);
+          expect(renderOptions).toRender([0, 0, 0, 255]);
 
           tileset.style = new Cesium3DTileStyle({
             show: "${temperature} > 0.1",
           });
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
 
           // Remove style
           tileset.style = undefined;
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
         });
       });
 
@@ -877,7 +884,7 @@ describe(
             color: "color() * ${temperature_}",
           });
 
-          expect(scene).toRenderAndCall(function (rgba) {
+          expect(renderOptions).toRenderAndCall(function (rgba) {
             // Pixel color is some shade of gray
             expect(rgba[0]).toBe(rgba[1]);
             expect(rgba[0]).toBe(rgba[2]);
@@ -887,7 +894,7 @@ describe(
 
           // Remove style
           tileset.style = undefined;
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
         });
       });
 
@@ -904,7 +911,7 @@ describe(
             pointSize: 5.0,
           });
 
-          expect(scene).toRenderAndCall(function (rgba) {
+          expect(renderOptions).toRenderAndCall(function (rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[0]).toBeLessThan(255);
             expect(rgba[1]).toBe(0);
@@ -914,7 +921,7 @@ describe(
 
           // Remove style
           tileset.style = undefined;
-          expect(scene).notToRender([0, 0, 0, 255]);
+          expect(renderOptions).notToRender([0, 0, 0, 255]);
         });
       });
 
@@ -1481,6 +1488,39 @@ describe(
 
             tile.update(tileset, scene.frameState, passOptions);
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+          }
+        );
+      });
+
+      it("replaces clipping planes collection with one of the same length", function () {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+          function (tileset) {
+            const tile = tileset.root;
+            const model = tile.content._model;
+            const passOptions = Cesium3DTilePass.getPassOptions(
+              Cesium3DTilePass.RENDER
+            );
+
+            expect(model.clippingPlanes).toBeUndefined();
+
+            spyOn(model, "resetDrawCommands");
+
+            const clippingPlaneCollection = new ClippingPlaneCollection({
+              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            tile.update(tileset, scene.frameState, passOptions);
+
+            expect(model.resetDrawCommands).toHaveBeenCalled();
+            expect(model.resetDrawCommands.calls.count()).toBe(1);
+
+            const newClippingPlaneCollection = new ClippingPlaneCollection({
+              planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
+            });
+            tileset.clippingPlanes = newClippingPlaneCollection;
+            tile.update(tileset, scene.frameState, passOptions);
+
+            expect(model.resetDrawCommands.calls.count()).toBe(2);
           }
         );
       });

@@ -25,6 +25,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
+ * @param {FrameState} options.frameState The frame state.
  * @param {String} [options.cacheKey] The cache key of the resource.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
@@ -39,6 +40,7 @@ function GltfStructuralMetadataLoader(options) {
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
   const supportedImageFormats = options.supportedImageFormats;
+  const frameState = options.frameState;
   const cacheKey = options.cacheKey;
   const asynchronous = defaultValue(options.asynchronous, true);
 
@@ -47,6 +49,7 @@ function GltfStructuralMetadataLoader(options) {
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+  Check.typeOf.object("options.frameState", frameState);
 
   if (!defined(options.extension) && !defined(options.extensionLegacy)) {
     throw new DeveloperError(
@@ -61,6 +64,7 @@ function GltfStructuralMetadataLoader(options) {
   this._extension = extension;
   this._extensionLegacy = extensionLegacy;
   this._supportedImageFormats = supportedImageFormats;
+  this._frameState = frameState;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._bufferViewLoaders = [];
@@ -376,6 +380,7 @@ function loadTextures(structuralMetadataLoader) {
   const gltfResource = structuralMetadataLoader._gltfResource;
   const baseResource = structuralMetadataLoader._baseResource;
   const supportedImageFormats = structuralMetadataLoader._supportedImageFormats;
+  const frameState = structuralMetadataLoader._frameState;
   const asynchronous = structuralMetadataLoader._asynchronous;
 
   // Load the textures
@@ -389,6 +394,7 @@ function loadTextures(structuralMetadataLoader) {
         gltfResource: gltfResource,
         baseResource: baseResource,
         supportedImageFormats: supportedImageFormats,
+        frameState: frameState,
         asynchronous: asynchronous,
       });
       texturePromises.push(textureLoader.promise);

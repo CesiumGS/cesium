@@ -739,6 +739,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   if (defined(frame) && !defined(this._lastRenderedFrame)) {
     frameState.afterRender.push(function () {
       that._resolveReadyPromise(that);
+      return true;
     });
   }
 
@@ -746,6 +747,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
     if (that.frameChanged.numberOfListeners > 0) {
       frameState.afterRender.push(function () {
         that.frameChanged.raiseEvent(that);
+        return true;
       });
     }
   }

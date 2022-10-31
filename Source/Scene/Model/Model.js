@@ -33,6 +33,7 @@ import ModelSceneGraph from "./ModelSceneGraph.js";
 import ModelStatistics from "./ModelStatistics.js";
 import ModelType from "./ModelType.js";
 import ModelUtility from "./ModelUtility.js";
+import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
@@ -48,22 +49,55 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
  *  </li>
  *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_instance_features|EXT_instance_features}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features|EXT_mesh_features}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing|EXT_mesh_gpu_instancing}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression|EXT_meshopt_compression}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_texture_webp|EXT_texture_webp}
+ *  </li>
+ *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
  *  </li>
  *  <li>
- *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+ *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Archived/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Archived/KHR_materials_pbrSpecularGlossiness|KHR_materials_pbrSpecularGlossiness}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
  *  </li>
  *  <li>
- *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ *  {@link https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_mesh_quantization|KHR_mesh_quantization}
  *  </li>
  *  <li>
  *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_basisu|KHR_texture_basisu}
  *  </li>
  *  <li>
- *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC}
+ *  {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ *  </li>
+ *  <li>
+ *  {@link https://github.com/KhronosGroup/glTF/blob/main/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
  *  </li>
  * </ul>
  * </p>
@@ -355,6 +389,18 @@ function Model(options) {
   this._enableShowOutline = defaultValue(options.enableShowOutline, true);
   this._debugWireframe = defaultValue(options.debugWireframe, false);
 
+  // Warning for improper setup of debug wireframe
+  if (
+    this._debugWireframe === true &&
+    this._enableDebugWireframe === false &&
+    this.type === ModelType.GLTF
+  ) {
+    oneTimeWarning(
+      "model-debug-wireframe-ignored",
+      "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
+    );
+  }
+
   // Credit specified by the user.
   let credit = options.credit;
   if (typeof credit === "string") {
@@ -593,6 +639,7 @@ function initialize(model) {
       frameState.afterRender.push(function () {
         model._ready = true;
         resolve(model);
+        return true;
       });
     };
   });
@@ -1167,6 +1214,18 @@ Object.defineProperties(Model.prototype, {
         this.resetDrawCommands();
       }
       this._debugWireframe = value;
+
+      // Warning for improper setup of debug wireframe
+      if (
+        this._debugWireframe === true &&
+        this._enableDebugWireframe === false &&
+        this.type === ModelType.GLTF
+      ) {
+        oneTimeWarning(
+          "model-debug-wireframe-ignored",
+          "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
+        );
+      }
     },
   },
 
@@ -1876,18 +1935,18 @@ function updateSkipLevelOfDetail(model, frameState) {
 }
 
 function updateClippingPlanes(model, frameState) {
-  // Update the clipping planes collection for this model to detect any changes.
+  // Update the clipping planes collection / state for this model to detect any changes.
+  let currentClippingPlanesState = 0;
   if (model.isClippingEnabled()) {
     if (model._clippingPlanes.owner === model) {
       model._clippingPlanes.update(frameState);
     }
+    currentClippingPlanesState = model._clippingPlanes.clippingPlanesState;
+  }
 
-    const currentClippingPlanesState =
-      model._clippingPlanes.clippingPlanesState;
-    if (currentClippingPlanesState !== model._clippingPlanesState) {
-      model.resetDrawCommands();
-      model._clippingPlanesState = currentClippingPlanesState;
-    }
+  if (currentClippingPlanesState !== model._clippingPlanesState) {
+    model.resetDrawCommands();
+    model._clippingPlanesState = currentClippingPlanesState;
   }
 }
 
@@ -2012,17 +2071,22 @@ function updateBoundingSphereAndScale(model, frameState) {
 }
 
 function updateBoundingSphere(model, modelMatrix) {
-  model._boundingSphere = BoundingSphere.transform(
-    model._sceneGraph.boundingSphere,
-    modelMatrix,
-    model._boundingSphere
-  );
-
   model._clampedScale = defined(model._maximumScale)
     ? Math.min(model._scale, model._maximumScale)
     : model._scale;
 
+  model._boundingSphere.center = Cartesian3.multiplyByScalar(
+    model._sceneGraph.boundingSphere.center,
+    model._clampedScale,
+    model._boundingSphere.center
+  );
   model._boundingSphere.radius = model._initialRadius * model._clampedScale;
+
+  model._boundingSphere = BoundingSphere.transform(
+    model._boundingSphere,
+    modelMatrix,
+    model._boundingSphere
+  );
 }
 
 function updateComputedScale(model, modelMatrix, frameState) {
