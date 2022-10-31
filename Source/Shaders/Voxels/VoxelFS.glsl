@@ -1,4 +1,6 @@
 // import { intersectScene } from "./Intersection.glsl";
+// import { nextIntersection } from "./IntersectionUtils.glsl";
+// import { convertUvToShapeUvSpace } from ("./convertUvToBox.glsl", "./convertUvToCylinder.glsl", "./convertUvToEllipsoid.glsl");
 // import { TraversalData, SampleData, traverseOctreeFromBeginning, traverseOctreeFromExisting } from "./Octree.glsl";
 // import { accumulatePropertiesFromMegatexture } from "./Megatexture.glsl";
 
@@ -41,12 +43,18 @@ void main()
     float currT = entryExitT.x;
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
+    // TODO: is it possible for this to be out of bounds, and does it matter?
+    vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
-    traverseOctreeFromBeginning(positionUv, traversalData, sampleDatas);
+    traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
 
+    // TODO: 
+    //  - jitter doesn't affect the first traversal?
+    //  - jitter is always > 0?
+    //  - jitter is only applied at one step?
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
         currT += noise * traversalData.stepT;
@@ -67,8 +75,8 @@ void main()
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionShapeUv = traversalData.positionUvShapeSpace;
-        fragmentInput.voxel.positionUvLocal = traversalData.positionUvLocal;
+        fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
+        fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.travelDistance = traversalData.stepT;
@@ -104,17 +112,18 @@ void main()
                 if (entryExitT.x == NO_HIT) {
                     break;
                 } else {
-                    // Found another intersection. Keep raymarching.
-                    currT += entryExitT.x;
-                    endT += entryExitT.y;
-                    positionUv += entryExitT.x * viewDirUv;
+                    // Found another intersection. Resume raymarching there
+                    currT = entryExitT.x;
+                    endT = entryExitT.y;
+                    positionUv = viewPosUv + currT * viewDirUv;
                 }
             #endif
         }
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctree but is faster when the ray is in the same tile as the previous step.
-        traverseOctreeFromExisting(positionUv, traversalData, sampleDatas);
+        positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
+        traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
