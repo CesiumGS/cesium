@@ -433,6 +433,7 @@ ResourceCache.loadDraco = function (options) {
  * @param {Object} options.gltf The glTF JSON.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {FrameState} options.frameState The frame state.
  * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
@@ -453,6 +454,7 @@ ResourceCache.loadVertexBuffer = function (options) {
   const gltf = options.gltf;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
+  const frameState = options.frameState;
   const bufferViewId = options.bufferViewId;
   const draco = options.draco;
   const attributeSemantic = options.attributeSemantic;
@@ -466,6 +468,7 @@ ResourceCache.loadVertexBuffer = function (options) {
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.frameState", frameState);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
       "At least one of loadBuffer and loadTypedArray must be true."
@@ -506,6 +509,7 @@ ResourceCache.loadVertexBuffer = function (options) {
     gltf: gltf,
     gltfResource: gltfResource,
     baseResource: baseResource,
+    frameState: frameState,
     bufferViewId: bufferViewId,
     draco: draco,
     attributeSemantic: attributeSemantic,
@@ -557,6 +561,7 @@ ResourceCache.loadVertexBuffer = function (options) {
  * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {FrameState} options.frameState The frame state.
  * @param {Object} [options.draco] The Draco extension object.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
@@ -570,6 +575,7 @@ ResourceCache.loadIndexBuffer = function (options) {
   const accessorId = options.accessorId;
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
+  const frameState = options.frameState;
   const draco = options.draco;
   const asynchronous = defaultValue(options.asynchronous, true);
   const loadBuffer = defaultValue(options.loadBuffer, false);
@@ -580,6 +586,7 @@ ResourceCache.loadIndexBuffer = function (options) {
   Check.typeOf.number("options.accessorId", accessorId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.frameState", frameState);
   if (!loadBuffer && !loadTypedArray) {
     throw new DeveloperError(
       "At least one of loadBuffer and loadTypedArray must be true."
@@ -592,6 +599,7 @@ ResourceCache.loadIndexBuffer = function (options) {
     accessorId: accessorId,
     gltfResource: gltfResource,
     baseResource: baseResource,
+    frameState: frameState,
     draco: draco,
     loadBuffer: loadBuffer,
     loadTypedArray: loadTypedArray,
@@ -689,6 +697,7 @@ ResourceCache.loadImage = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
+ * @param {FrameState} options.frameState The frame state.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @returns {GltfTextureLoader} The texture loader.
@@ -701,6 +710,7 @@ ResourceCache.loadTexture = function (options) {
   const gltfResource = options.gltfResource;
   const baseResource = options.baseResource;
   const supportedImageFormats = options.supportedImageFormats;
+  const frameState = options.frameState;
   const asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
@@ -708,6 +718,8 @@ ResourceCache.loadTexture = function (options) {
   Check.typeOf.object("options.textureInfo", textureInfo);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.supportedImageFormats", supportedImageFormats);
+  Check.typeOf.object("options.frameState", frameState);
   //>>includeEnd('debug');
 
   const cacheKey = ResourceCacheKey.getTextureCacheKey({
@@ -716,6 +728,7 @@ ResourceCache.loadTexture = function (options) {
     gltfResource: gltfResource,
     baseResource: baseResource,
     supportedImageFormats: supportedImageFormats,
+    frameState: frameState,
   });
 
   let textureLoader = ResourceCache.get(cacheKey);

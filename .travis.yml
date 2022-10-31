@@ -10,31 +10,13 @@ notifications:
     if: (branch = main) AND (type = push)
     on_success: change # default: always
 script:
-  - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
+  - ./travis/prepare.sh
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
 
   - npm --silent run eslint
   - npm --silent run markdownlint
   - npm --silent run prettier-check
 
-  - npm --silent run build -- --node
-
-  - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
-
-  - npm --silent run make-zip
-  - npm pack &> /dev/null
-
-  - npm --silent run build-apps
-
-  - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
-  - npm --silent run deploy-status -- --status success --message Deployed
-
-  - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
-
-  # Various Node.js smoke-screen tests
-  - node -e "const Cesium = require('./');"
-  - NODE_ENV=development node Specs/test.cjs
-  - NODE_ENV=production node Specs/test.cjs
-  - node Specs/test.mjs
-
-  - npm --silent run cloc
+  - ./travis/release.sh
+  - ./travis/deploy.sh
+  - ./travis/verify.sh

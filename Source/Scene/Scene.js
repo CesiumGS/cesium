@@ -3603,8 +3603,10 @@ function callAfterRenderFunctions(scene) {
   // the function modifies scene state that should remain constant over the frame.
   const functions = scene._frameState.afterRender;
   for (let i = 0, length = functions.length; i < length; ++i) {
-    functions[i]();
-    scene.requestRender();
+    const shouldRequestRender = functions[i]();
+    if (shouldRequestRender) {
+      scene.requestRender();
+    }
   }
 
   functions.length = 0;

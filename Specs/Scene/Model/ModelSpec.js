@@ -26,8 +26,9 @@ import {
   Math as CesiumMath,
   Matrix4,
   Model,
-  ModelSceneGraph,
   ModelFeature,
+  ModelSceneGraph,
+  OctahedralProjectedCubeMap,
   Pass,
   PrimitiveType,
   Resource,
@@ -39,6 +40,7 @@ import {
   Transforms,
   WireframeIndexGenerator,
 } from "../../../Source/Cesium.js";
+import ModelUtility from "../../../Source/Scene/Model/ModelUtility.js";
 import createScene from "../../createScene.js";
 import pollToPromise from "../../pollToPromise.js";
 import loadAndZoomToModel from "./loadAndZoomToModel.js";
@@ -79,6 +81,8 @@ describe(
       0, -1, 0, 0,
       0, 0, 0, 1
     ]);
+    const boxWithOffsetUrl =
+      "./Data/Models/glTF-2.0/BoxWithOffset/glTF/BoxWithOffset.gltf";
 
     const microcosm = "./Data/Models/glTF-2.0/Microcosm/glTF/microcosm.gltf";
     const morphPrimitivesTestUrl =
@@ -1507,27 +1511,27 @@ describe(
           expect(boundingSphere.center).toEqual(new Cartesian3(6378137, 0, 0));
         });
       });
-    });
 
-    it("boundingSphere updates bounding sphere when invoked", function () {
-      return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
-        function (model) {
-          const expectedRadius = 0.8660254037844386;
-          const translation = new Cartesian3(10, 0, 0);
-          const modelMatrix = Matrix4.fromTranslation(translation);
-          model.modelMatrix = modelMatrix;
-          model.scale = 2.0;
+      it("boundingSphere updates bounding sphere when invoked", function () {
+        return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+          function (model) {
+            const expectedRadius = 0.8660254037844386;
+            const translation = new Cartesian3(10, 0, 0);
+            const modelMatrix = Matrix4.fromTranslation(translation);
+            model.modelMatrix = modelMatrix;
+            model.scale = 2.0;
 
-          // boundingSphere should still account for the model matrix
-          // even though the scene has not yet updated.
-          const boundingSphere = model.boundingSphere;
-          expect(boundingSphere.center).toEqual(translation);
-          expect(boundingSphere.radius).toEqualEpsilon(
-            2.0 * expectedRadius,
-            CesiumMath.EPSILON8
-          );
-        }
-      );
+            // boundingSphere should still account for the model matrix
+            // even though the scene has not yet updated.
+            const boundingSphere = model.boundingSphere;
+            expect(boundingSphere.center).toEqual(translation);
+            expect(boundingSphere.radius).toEqualEpsilon(
+              2.0 * expectedRadius,
+              CesiumMath.EPSILON8
+            );
+          }
+        );
+      });
     });
 
     describe("picking and id", function () {
@@ -3178,6 +3182,21 @@ describe(
           });
         });
       });
+
+      it("renders when specularEnvironmentMaps aren't supported", function () {
+        spyOn(OctahedralProjectedCubeMap, "isSupported").and.returnValue(false);
+
+        return loadAndZoomToModel(
+          {
+            gltf: boomBoxUrl,
+            scale: 10.0,
+          },
+          scene
+        ).then(function (model) {
+          expect(scene.specularEnvironmentMapsSupported).toBe(false);
+          verifyRender(model, true);
+        });
+      });
     });
 
     describe("scale", function () {
@@ -3254,6 +3273,61 @@ describe(
             model.scale = 1.0;
             scene.renderForSpecs();
             expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+            expect(boundingSphere.radius).toEqualEpsilon(
+              expectedRadius,
+              CesiumMath.EPSILON3
+            );
+          });
+        });
+      });
+
+      it("changing scale affects bounding sphere for uncentered models", function () {
+        const resource = Resource.createIfNeeded(boxWithOffsetUrl);
+        const loadPromise = resource.fetchArrayBuffer();
+        return loadPromise.then(function (buffer) {
+          return loadAndZoomToModel(
+            {
+              gltf: new Uint8Array(buffer),
+              scale: 10,
+            },
+            scene
+          ).then(function (model) {
+            const expectedRadius = 0.866;
+            const expectedCenter = new Cartesian3(5.0, 0.0, 0.0);
+            const expectedTranslation = Matrix4.fromTranslation(expectedCenter);
+            const axisCorrectionMatrix = ModelUtility.getAxisCorrectionMatrix(
+              Axis.Y,
+              Axis.Z,
+              new Matrix4()
+            );
+            Matrix4.multiplyTransformation(
+              axisCorrectionMatrix,
+              expectedTranslation,
+              expectedTranslation
+            );
+            Matrix4.getTranslation(expectedTranslation, expectedCenter);
+
+            const boundingSphere = model.boundingSphere;
+            expect(boundingSphere.center).toEqual(
+              Cartesian3.multiplyByScalar(
+                expectedCenter,
+                10.0,
+                new Cartesian3()
+              )
+            );
+            expect(boundingSphere.radius).toEqualEpsilon(
+              expectedRadius * 10.0,
+              CesiumMath.EPSILON3
+            );
+
+            model.scale = 0.0;
+            scene.renderForSpecs();
+            expect(boundingSphere.center).toEqual(Cartesian3.ZERO);
+            expect(boundingSphere.radius).toEqual(0.0);
+
+            model.scale = 1.0;
+            scene.renderForSpecs();
+            expect(boundingSphere.center).toEqual(expectedCenter);
             expect(boundingSphere.radius).toEqualEpsilon(
               expectedRadius,
               CesiumMath.EPSILON3
@@ -3767,11 +3841,9 @@ describe(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
           scene
         ).then(function (model) {
-          scene.renderForSpecs();
           verifyRender(model, false);
 
           model.clippingPlanes = undefined;
-          scene.renderForSpecs();
           verifyRender(model, true);
         });
       });
@@ -3789,7 +3861,6 @@ describe(
         return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             let modelColor;
-            scene.renderForSpecs();
             verifyRender(model, true);
             expect(scene).toRenderAndCall(function (rgba) {
               modelColor = rgba;
@@ -3798,18 +3869,76 @@ describe(
             // The clipping plane should cut the model in half such that
             // we see the back faces.
             model.clippingPlanes = clippingPlanes;
-            scene.renderForSpecs();
             expect(scene).toRenderAndCall(function (rgba) {
               expect(rgba).not.toEqual(modelColor);
             });
 
             plane.distance = 10.0; // Move the plane away from the model
-            scene.renderForSpecs();
             expect(scene).toRenderAndCall(function (rgba) {
               expect(rgba).toEqual(modelColor);
             });
           }
         );
+      });
+
+      it("removing clipping plane from collection works", function () {
+        const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [plane],
+        });
+        return loadAndZoomToModel(
+          { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+          scene
+        ).then(function (model) {
+          verifyRender(model, false);
+
+          clippingPlanes.removeAll();
+          verifyRender(model, true);
+        });
+      });
+
+      it("removing clipping planes collection works", function () {
+        const plane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [plane],
+        });
+        return loadAndZoomToModel(
+          { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+          scene
+        ).then(function (model) {
+          verifyRender(model, false);
+
+          model.clippingPlanes = undefined;
+          verifyRender(model, true);
+        });
+      });
+
+      it("replacing clipping planes with another collection works", function () {
+        const modelClippedPlane = new ClippingPlane(Cartesian3.UNIT_X, -2.5);
+        const modelVisiblePlane = new ClippingPlane(Cartesian3.UNIT_X, 2.5);
+
+        const clippingPlanes = new ClippingPlaneCollection({
+          planes: [modelClippedPlane],
+        });
+
+        return loadAndZoomToModel(
+          { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
+          scene
+        ).then(function (model) {
+          verifyRender(model, false);
+
+          // Replace the clipping plane collection with one that makes the model visible.
+          model.clippingPlanes = new ClippingPlaneCollection({
+            planes: [modelVisiblePlane],
+          });
+          verifyRender(model, true);
+
+          // Replace the clipping plane collection with one that clips the model.
+          model.clippingPlanes = new ClippingPlaneCollection({
+            planes: [modelClippedPlane],
+          });
+          verifyRender(model, false);
+        });
       });
 
       it("clipping planes apply edge styling", function () {
@@ -3823,7 +3952,6 @@ describe(
         return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             let modelColor;
-            scene.renderForSpecs();
             verifyRender(model, true);
             expect(scene).toRenderAndCall(function (rgba) {
               modelColor = rgba;
@@ -3831,13 +3959,11 @@ describe(
 
             model.clippingPlanes = clippingPlanes;
 
-            scene.renderForSpecs();
             expect(scene).toRenderAndCall(function (rgba) {
               expect(rgba).toEqual([0, 0, 255, 255]);
             });
 
             clippingPlanes.edgeWidth = 0.0;
-            scene.renderForSpecs();
             expect(scene).toRenderAndCall(function (rgba) {
               expect(rgba).toEqual(modelColor);
             });
@@ -3855,16 +3981,13 @@ describe(
         });
         return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
-            scene.renderForSpecs();
             verifyRender(model, true);
 
             // These planes are defined such that the model is outside their union.
             model.clippingPlanes = clippingPlanes;
-            scene.renderForSpecs();
             verifyRender(model, false);
 
             model.clippingPlanes.unionClippingRegions = false;
-            scene.renderForSpecs();
             verifyRender(model, true);
           }
         );

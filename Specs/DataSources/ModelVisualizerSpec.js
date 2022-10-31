@@ -435,6 +435,11 @@ describe(
         .then(() => {
           expect(state).toBe(BoundingSphereState.DONE);
 
+          // Ensure that flags and results computed for this model are reset.
+          const modelData = visualizer._modelHash[testObject.id];
+          expect(modelData.awaitingSampleTerrain).toBe(false);
+          expect(modelData.clampedBoundingSphere).toBeUndefined();
+
           // Ensure that we only sample the terrain once from the visualizer.
           // We check for 2 calls here because we call it once in the test.
           expect(sampleTerrainSpy).toHaveBeenCalledTimes(2);
@@ -561,6 +566,11 @@ describe(
         })
         .then(() => {
           expect(state).toBe(BoundingSphereState.DONE);
+
+          // Ensure that flags and results computed for this model are reset.
+          const modelData = visualizer._modelHash[testObject.id];
+          expect(modelData.awaitingSampleTerrain).toBe(false);
+          expect(modelData.clampedBoundingSphere).toBeUndefined();
 
           // Ensure that we only sample the terrain once from the visualizer.
           // We check for 2 calls here because we call it once in the test.
@@ -705,6 +715,11 @@ describe(
         return state !== BoundingSphereState.PENDING;
       }).then(() => {
         expect(state).toBe(BoundingSphereState.FAILED);
+
+        // Ensure that flags and results computed for this model are reset.
+        const modelData = visualizer._modelHash[testObject.id];
+        expect(modelData.sampleTerrainFailed).toBe(false);
+
         // Ensure that we only sample the terrain once from the visualizer.
         expect(sampleTerrainSpy).toHaveBeenCalledTimes(1);
         // Reset the terrain provider.
