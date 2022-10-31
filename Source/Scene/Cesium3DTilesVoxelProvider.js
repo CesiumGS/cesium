@@ -457,14 +457,10 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
       for (let i = 0; i < attributesLength; i++) {
         // The attributes array from GltfLoader is not in the same order as
         // names, types, etc. from the provider.
-        // Find the appropriate glTF attribute based on its name
-        const name = names[i];
-        const attribute = attributes.find((attribute) => {
-          // glTF custom attribute names should be prefixed with "_". Remove the "_"
-          const attributeName = attribute.name.substring(1);
-          // Also check raw name to handle non-conformant glTFs with no "_"
-          return attributeName === name || attribute.name === name;
-        });
+        // Find the appropriate glTF attribute based on its name.
+        // Note: glTF custom attribute names are prefixed with "_"
+        const name = `_${names[i]}`;
+        const attribute = attributes.find((a) => a.name === name);
         if (!defined(attribute)) {
           continue;
         }
