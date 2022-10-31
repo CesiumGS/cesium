@@ -14,7 +14,7 @@
     - `Assets`
     - `ThirdParty`
     - `Widgets`(CSS files only)
-  - The ability to import modules and TypeScript definitions from individual files will been removed.
+  - The ability to import modules and TypeScript definitions from individual files will been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
 
 ##### Additions :tada:
 
