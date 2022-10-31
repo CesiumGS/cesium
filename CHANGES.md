@@ -2,6 +2,15 @@
 
 ### 1.99 - 2022-11-01
 
+#### Major Announcements :loudspeaker:
+
+- Starting with Cesium 1.100, CesiumJS will be published alongside two smaller packages `@cesium/engine` and `@cesium/widgets` [#10824](https://github.com/CesiumGS/cesium/pull/10824):
+  - The source code will been paritioned into two folders: `packages/engine` and `packages/widgets`.
+  - These workspaces packages will follow semantic versioning.
+  - These workspaces packages will be published as ES modules with TypeScript definitions.
+  - The combined CesiumJS release will continue to be published, however, only the `Assets`, `ThirdParty` and `Widgets` (with CSS files only) are available in the root level `Source` folder.
+  - The ability to import modules and TypeScript definitions from individual files will been removed.
+
 ##### Additions :tada:
 
 - Added support for I3S 3D Object and IntegratedMesh Layers. [#9634](https://github.com/CesiumGS/cesium/pull/9634)
