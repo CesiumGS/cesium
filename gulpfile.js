@@ -415,7 +415,10 @@ export function buildDocs() {
     `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
     {
       stdio: "inherit",
-      env: Object.assign({}, process.env, { CESIUM_VERSION: version }),
+      env: Object.assign({}, process.env, {
+        CESIUM_VERSION: version,
+        CESIUM_PACKAGES: packageJson.workspaces,
+      }),
     }
   );
 
