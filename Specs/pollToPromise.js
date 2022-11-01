@@ -1,4 +1,4 @@
-import { defaultValue, getTimestamp } from "../Source/Cesium.js";
+import { defaultValue, getTimestamp } from "@cesium/engine";
 
 function pollToPromise(f, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -4,9 +4,8 @@ import {
   BoundingSphereState,
   EllipsoidGeometryUpdater,
   PrimitiveCollection,
-} from "../../Source/Cesium.js";
-
-import { Math as CesiumMath } from "../Source/Cesium.js";
+  Math as CesiumMath,
+} from "@cesium/engine";
 
 import createDynamicProperty from "./createDynamicProperty.js";
 import pollToPromise from "./pollToPromise.js";
