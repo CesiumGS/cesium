@@ -1,15 +1,7 @@
 /*eslint-env node*/
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import {
-  join,
-  basename,
-  relative,
-  extname,
-  resolve,
-  posix,
-  dirname,
-} from "path";
+import { join, basename, resolve, posix, dirname } from "path";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
 import { gzipSync } from "zlib";
@@ -22,7 +14,7 @@ import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
 import gulpReplace from "gulp-replace";
-import { globby, globbySync } from "globby";
+import { globby } from "globby";
 import open from "open";
 import rimraf from "rimraf";
 import mkdirp from "mkdirp";
@@ -88,20 +80,6 @@ const sourceFiles = [
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdParty/_*",
 ];
-
-const relativeWorkspaceSourceFiles = {
-  engine: [
-    "packages/engine/Source/**/*.js",
-    "!packages/engine/Source/*.js",
-    "!packages/engine/Source/Workers/**",
-    "!packages/engine/Source/WorkersES6/**",
-    "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
-    "!packages/engine/Source/ThirdParty/Workers/**",
-    "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
-    "!packages/engine/Source/ThirdParty/_*",
-  ],
-  widgets: ["packages/widgets/Source/**/*.js"],
-};
 
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
 const watchedSpecFiles = [
@@ -281,64 +259,37 @@ export const buildWatch = gulp.series(build, async function () {
 });
 
 export async function buildTs() {
-  const workspace = argv.workspace ? argv.workspace : undefined;
-
-  if (workspace === `@${scope}/engine`) {
-    return generateTypeScriptDefinitions(
-      "engine",
-      "packages/engine/index.d.ts",
-      "packages/engine/tsd-conf.json",
-      processEngineSource,
-      processEngineModules
-    );
-  } else if (workspace === `@${scope}/widgets`) {
-    const engineModules = await generateTypeScriptDefinitions(
-      "engine",
-      "packages/engine/index.d.ts",
-      "packages/engine/tsd-conf.json",
-      processEngineSource,
-      processEngineModules
-    );
-
-    const importModules = {
-      engine: engineModules,
-    };
-    return generateTypeScriptDefinitions(
-      "widgets",
-      "packages/widgets/index.d.ts",
-      "packages/widgets/tsd-conf.json",
-      undefined,
-      undefined,
-      importModules
-    );
+  let workspaces;
+  if (argv.workspace && !Array.isArray(argv.workspace)) {
+    workspaces = [argv.workspace];
+  } else if (argv.workspace) {
+    workspaces = argv.workspace;
+  } else {
+    workspaces = Object.keys(packageJson.dependencies);
   }
 
-  // Generate types for engine.
+  // Generate types for passed packages in order.
+  const importModules = {};
+  for (const workspace of workspaces) {
+    const directory = workspace.replace(`@${scope}/`, ``);
+    const workspaceModules = await generateTypeScriptDefinitions(
+      directory,
+      `packages/${directory}/index.d.ts`,
+      `packages/${directory}/tsd-conf.json`,
+      // The engine package needs additional processing for its enum strings
+      directory === "engine" ? processEngineSource : undefined,
+      // Handle engine's module naming exceptions
+      directory === "engine" ? processEngineModules : undefined,
+      importModules
+    );
+    importModules[directory] = workspaceModules;
+  }
 
-  const engineModules = await generateTypeScriptDefinitions(
-    "engine",
-    "packages/engine/index.d.ts",
-    "packages/engine/tsd-conf.json",
-    processEngineSource,
-    processEngineModules
-  );
-
-  // Generate types for widgets.
-
-  const importModules = {
-    engine: engineModules,
-  };
-  await generateTypeScriptDefinitions(
-    "widgets",
-    "packages/widgets/index.d.ts",
-    "packages/widgets/tsd-conf.json",
-    undefined,
-    undefined,
-    importModules
-  );
+  if (argv.workspace) {
+    return;
+  }
 
   // Generate types for CesiumJS.
-
   await createTypeScriptDefinitions();
 }
 
@@ -1402,22 +1353,6 @@ export async function runCoverage(options) {
       "/base/Build/CesiumUnminified/Workers/":
         "/base/packages/engine/Build/Workers/",
     };
-
-    if (workspace === "widgets") {
-      files = [
-        ...files,
-        { pattern: "packages/widgets/Source/**.css", included: false },
-        { pattern: "packages/widgets/Source/**.svg", included: false },
-        { pattern: "packages/widgets/Source/**.gif", included: false },
-        { pattern: "packages/widgets/Source/**.png", included: false },
-      ];
-
-      proxies = {
-        ...proxies,
-        "/base/Build/CesiumUnminified/Widgets/":
-          "/base/packages/widgets/Source/",
-      };
-    }
   }
 
   // Setup Karma config.
@@ -1598,22 +1533,6 @@ export async function test() {
       "/base/Build/CesiumUnminified/Workers/":
         "/base/packages/engine/Build/Workers/",
     };
-
-    if (workspace === "widgets") {
-      files = [
-        ...files,
-        { pattern: "packages/widgets/Source/**.css", included: false },
-        { pattern: "packages/widgets/Source/**.svg", included: false },
-        { pattern: "packages/widgets/Source/**.gif", included: false },
-        { pattern: "packages/widgets/Source/**.png", included: false },
-      ];
-
-      proxies = {
-        ...proxies,
-        "/base/Build/CesiumUnminified/Widgets/":
-          "/base/packages/widgets/Source/",
-      };
-    }
   }
 
   if (release) {
@@ -1758,7 +1677,9 @@ ${source}
   if (importModules) {
     let imports = "";
     Object.keys(importModules).forEach((workspace) => {
-      const workspaceModules = Array.from(importModules[workspace]);
+      const workspaceModules = Array.from(importModules[workspace]).filter(
+        (importModule) => source.indexOf(importModule) !== -1
+      );
       imports += `import { ${workspaceModules.join(
         ",\n"
       )} } from "@${scope}/${workspace}";\n`;
@@ -1947,36 +1868,6 @@ ${source}
 
 `;
 
-  // Map individual modules back to their source file so that TS still works
-  // when importing individual files instead of the entire cesium module.
-
-  globbySync(relativeWorkspaceSourceFiles[`engine`]).forEach(function (file) {
-    file = relative("packages/engine/Source", file);
-
-    let moduleId = file;
-    moduleId = filePathToModuleId(moduleId);
-
-    const assignmentName = basename(file, extname(file));
-
-    if (publicModules.has(assignmentName)) {
-      publicModules.delete(assignmentName);
-      source += `declare module "${scope}/packages/engine/Source/${moduleId}" { import { ${assignmentName} } from '@${scope}/engine'; export default ${assignmentName}; }\n`;
-    }
-  });
-
-  globbySync(relativeWorkspaceSourceFiles[`widgets`]).forEach(function (file) {
-    file = relative("packages/widgets/Source", file);
-
-    let moduleId = file;
-    moduleId = filePathToModuleId(moduleId);
-
-    const assignmentName = basename(file, extname(file));
-    if (publicModules.has(assignmentName)) {
-      publicModules.delete(assignmentName);
-      source += `declare module "${scope}/packages/widgets/Source/${moduleId}" { import { ${assignmentName} } from '@${scope}/widgets'; export default ${assignmentName}; }\n`;
-    }
-  });
-
   // Write the final source file back out
   writeFileSync("Source/Cesium.d.ts", source);
 
@@ -1989,21 +1880,6 @@ ${source}
   execSync("npx tsc -p Specs/TypeScript/tsconfig.json", {
     stdio: "inherit",
   });
-
-  // Below is a sanity check to make sure we didn't leave anything out that
-  // we don't already know about
-
-  // Intentionally ignored nested items
-  publicModules.delete("KmlFeatureData");
-  publicModules.delete("MaterialAppearance");
-
-  if (publicModules.size !== 0) {
-    throw new Error(
-      `Unexpected unexposed modules: ${Array.from(publicModules.values()).join(
-        ", "
-      )}`
-    );
-  }
 
   return Promise.resolve();
 }
@@ -2307,8 +2183,4 @@ async function buildCesiumViewer() {
   );
 
   return streamToPromise(stream.pipe(gulp.dest(cesiumViewerOutputDirectory)));
-}
-
-function filePathToModuleId(moduleId) {
-  return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }

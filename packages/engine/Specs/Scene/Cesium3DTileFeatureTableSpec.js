@@ -1,7 +1,4 @@
-import {
-  ComponentDatatype,
-  Cesium3DTileFeatureTable,
-} from "../../index.js";
+import { ComponentDatatype, Cesium3DTileFeatureTable } from "../../index.js";
 
 describe("Scene/Cesium3DTileFeatureTable", function () {
   it("loads from JSON", function () {

@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  JulianDate,
-  ConstantProperty,
-} from "../../index.js";
+import { Cartesian3, JulianDate, ConstantProperty } from "../../index.js";
 
 describe("DataSources/ConstantProperty", function () {
   const time = JulianDate.now();

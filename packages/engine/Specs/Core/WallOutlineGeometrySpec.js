@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  Ellipsoid,
-  WallOutlineGeometry,
-} from "../../index.js";
+import { Cartesian3, Ellipsoid, WallOutlineGeometry } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
 

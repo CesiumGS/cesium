@@ -1,8 +1,4 @@
-import {
-  Cartesian2,
-  Cartesian3,
-  ImageBasedLighting,
-} from "../../index.js";
+import { Cartesian2, Cartesian3, ImageBasedLighting } from "../../index.js";
 
 describe("Scene/ImageBasedLighting", function () {
   // These are dummy values, not meant to represent valid spherical harmonic coefficients.

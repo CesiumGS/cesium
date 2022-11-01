@@ -3,11 +3,10 @@ import {
   defined,
   destroyObject,
   DeveloperError,
-  FrameRateMonitor
+  FrameRateMonitor,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
-
 
 /**
  * The view model for {@link PerformanceWatchdog}.

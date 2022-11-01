@@ -8,7 +8,7 @@ import {
   getElement,
   GpxDataSource,
   KmlDataSource,
-  wrapFunction
+  wrapFunction,
 } from "@cesium/engine";
 /**
  * A mixin which adds default drag and drop support for CZML files to the Viewer widget.

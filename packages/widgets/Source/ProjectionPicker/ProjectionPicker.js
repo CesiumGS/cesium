@@ -3,7 +3,7 @@ import {
   destroyObject,
   DeveloperError,
   FeatureDetection,
-  getElement
+  getElement,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import ProjectionPickerViewModel from "./ProjectionPickerViewModel.js";

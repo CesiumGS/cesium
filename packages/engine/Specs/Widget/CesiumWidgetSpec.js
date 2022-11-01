@@ -10,7 +10,7 @@ import {
   Scene,
   SceneMode,
   SkyBox,
-  TileCoordinatesImageryProvider
+  TileCoordinatesImageryProvider,
 } from "../../index.js";
 
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";

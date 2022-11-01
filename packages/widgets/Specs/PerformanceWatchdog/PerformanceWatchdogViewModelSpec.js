@@ -1,12 +1,6 @@
-import {
-  defined,
-  getTimestamp,
-  FrameRateMonitor,
-} from "@cesium/engine";
+import { defined, getTimestamp, FrameRateMonitor } from "@cesium/engine";
 
-import {
-  PerformanceWatchdogViewModel,
-} from "../../index.js";
+import { PerformanceWatchdogViewModel } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

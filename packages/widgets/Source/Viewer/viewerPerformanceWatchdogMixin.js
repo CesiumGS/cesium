@@ -1,8 +1,4 @@
-import {
-  defaultValue,
-  defined,
-  DeveloperError
-} from "@cesium/engine";
+import { defaultValue, defined, DeveloperError } from "@cesium/engine";
 import PerformanceWatchdog from "../PerformanceWatchdog/PerformanceWatchdog.js";
 
 /**

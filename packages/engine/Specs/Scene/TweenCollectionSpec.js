@@ -1,8 +1,4 @@
-import {
-  Color,
-  EasingFunction,
-  TweenCollection,
-} from "../../index.js";
+import { Color, EasingFunction, TweenCollection } from "../../index.js";
 
 describe(
   "Scene/TweenCollection",

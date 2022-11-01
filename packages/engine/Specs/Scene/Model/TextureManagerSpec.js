@@ -1,8 +1,4 @@
-import {
-  Resource,
-  TextureManager,
-  TextureUniform,
-} from "../../../index.js";
+import { Resource, TextureManager, TextureUniform } from "../../../index.js";
 import TextureMinificationFilter from "../../../Source/Renderer/TextureMinificationFilter.js";
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";

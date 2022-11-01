@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  ConstantSpline,
-  Quaternion,
-} from "../../index.js";
+import { Cartesian3, ConstantSpline, Quaternion } from "../../index.js";
 
 describe("Core/ConstantSpline", function () {
   it("constructor throws without value", function () {

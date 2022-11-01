@@ -12,7 +12,7 @@ import {
   Plane,
   Quaternion,
   Rectangle,
-  Math as CesiumMath
+  Math as CesiumMath,
 } from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";

@@ -593,4 +593,3 @@ describe(
   },
   "WebGL"
 );
-

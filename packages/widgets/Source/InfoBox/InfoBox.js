@@ -4,7 +4,7 @@ import {
   Color,
   defined,
   destroyObject,
-  getElement
+  getElement,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";

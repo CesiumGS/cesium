@@ -1,9 +1,4 @@
-import {
-  defer,
-  Request,
-  RequestScheduler,
-  RequestState,
-} from "../../index.js";
+import { defer, Request, RequestScheduler, RequestState } from "../../index.js";
 
 describe("Core/RequestScheduler", function () {
   let originalMaximumRequests;

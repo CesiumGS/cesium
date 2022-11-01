@@ -1,7 +1,4 @@
-import {
-  EllipsoidTerrainProvider,
-  TerrainProvider,
-} from "../../index.js";
+import { EllipsoidTerrainProvider, TerrainProvider } from "../../index.js";
 
 import createContext from "../../../../Specs/createContext.js";
 

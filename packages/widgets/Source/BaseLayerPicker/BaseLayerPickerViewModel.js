@@ -2,7 +2,7 @@ import {
   defaultValue,
   defined,
   DeveloperError,
-  EllipsoidTerrainProvider
+  EllipsoidTerrainProvider,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";

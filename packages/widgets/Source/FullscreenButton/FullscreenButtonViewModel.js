@@ -4,11 +4,10 @@ import {
   destroyObject,
   DeveloperError,
   Fullscreen,
-  getElement
+  getElement,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
-
 
 /**
  * The view model for {@link FullscreenButton}.

@@ -1,12 +1,6 @@
-import {
-  defaultValue,
-  defined,
-  DeveloperError,
-} from "@cesium/engine";
+import { defaultValue, defined, DeveloperError } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
-
-
 
 /**
  * A view model that represents each item in the {@link BaseLayerPicker}.

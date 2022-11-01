@@ -8,11 +8,8 @@
 !.vscode/**/
 !Apps/**/
 !Documentation/**/
-!packages/engine/Source/**/
-!packages/widgets/Source/**/
+!packages/**/
 !Specs/**/
-!packages/engine/Specs/**/
-!packages/widgets/Specs/**/
 !Tools/**/
 
 !**/*.js
@@ -23,21 +20,21 @@
 !**/*.ts
 
 # Re-ignore a few things caught above
+
 **/*.min.js
 
-Source/**
+packages/engine/Build/**
 packages/engine/index.js
-packages/widgets/index.js
-
-
 packages/engine/Source/Scene/GltfPipeline/**
 packages/engine/Source/Shaders/**/*.js
-
 packages/engine/Source/ThirdParty/**
-packages/widgets/Source/ThirdParty/**
-
 packages/engine/Source/Workers/**/*
-packages/widgets/Source/Workers/**/*
+!packages/engine/Source/Workers/cesiumWorkerBootstrapper.js
+!packages/engine/Source/Workers/transferTypedArrayTest.js
+
+packages/widgets/Build/**
+packages/widgets/index.js
+packages/widgets/Source/ThirdParty/**
 
 Specs/jasmine/**
 
@@ -45,5 +42,3 @@ Apps/Sandcastle/ThirdParty
 Tools/jsdoc/cesium_template/static/javascript/prism.js
 Tools/jsdoc/cesium_template/static/styles/prism.css
 
-!packages/engine/Source/Workers/cesiumWorkerBootstrapper.js
-!packages/engine/Source/Workers/transferTypedArrayTest.js

@@ -1,8 +1,4 @@
-import {
-  I3SLayer,
-  I3SDataProvider,
-  Math as CesiumMath,
-} from "../../index.js";
+import { I3SLayer, I3SDataProvider, Math as CesiumMath } from "../../index.js";
 
 describe("Scene/I3SLayer", function () {
   const rootNodePageEntry = {

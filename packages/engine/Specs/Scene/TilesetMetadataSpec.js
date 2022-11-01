@@ -1,8 +1,4 @@
-import {
-  Cartesian3,
-  MetadataClass,
-  TilesetMetadata,
-} from "../../index.js";
+import { Cartesian3, MetadataClass, TilesetMetadata } from "../../index.js";
 
 describe("Scene/TilesetMetadata", function () {
   it("creates tileset metadata with default values", function () {

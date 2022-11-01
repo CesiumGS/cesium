@@ -1,7 +1,4 @@
-import {
-  FeatureDetection,
-  MetadataComponentType,
-} from "../../index.js";
+import { FeatureDetection, MetadataComponentType } from "../../index.js";
 
 describe("Scene/MetadataComponentType", function () {
   it("getMinimum", function () {

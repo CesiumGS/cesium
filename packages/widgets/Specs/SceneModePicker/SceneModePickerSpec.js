@@ -1,6 +1,4 @@
-import {
-  FeatureDetection
-} from "@cesium/engine";
+import { FeatureDetection } from "@cesium/engine";
 
 import { SceneModePicker } from "../../index.js";
 

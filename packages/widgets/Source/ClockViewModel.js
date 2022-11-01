@@ -3,7 +3,7 @@ import {
   defined,
   destroyObject,
   EventHelper,
-  JulianDate
+  JulianDate,
 } from "@cesium/engine";
 import knockout from "./ThirdParty/knockout.js";
 

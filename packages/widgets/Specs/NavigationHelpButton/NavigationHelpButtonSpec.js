@@ -1,8 +1,6 @@
-import {
-  FeatureDetection
-} from "@cesium/engine";
+import { FeatureDetection } from "@cesium/engine";
 
-import {NavigationHelpButton} from "../../index.js";
+import { NavigationHelpButton } from "../../index.js";
 
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 

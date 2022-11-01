@@ -1,11 +1,6 @@
-import {
-  Ellipsoid,
-  Globe
-} from "@cesium/engine";
+import { Ellipsoid, Globe } from "@cesium/engine";
 
-import {
-  Cesium3DTilesInspector
-} from "../../index.js";
+import { Cesium3DTilesInspector } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 

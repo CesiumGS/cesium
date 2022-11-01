@@ -1,4 +1,4 @@
-import { createCommand, knockout} from "../index.js";
+import { createCommand, knockout } from "../index.js";
 import getArguments from "../../../Specs/getArguments.js";
 
 describe("Widgets/createCommand", function () {

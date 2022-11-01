@@ -9,10 +9,10 @@ import {
   GlobeSurfaceTile,
   Primitive,
   QuadtreeTile,
-  Math as CesiumMath ,
+  Math as CesiumMath,
 } from "@cesium/engine";
 
-import {CesiumInspectorViewModel } from "../../index.js"
+import { CesiumInspectorViewModel } from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 
