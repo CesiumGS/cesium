@@ -4,7 +4,7 @@
 
 #### Major Announcements :loudspeaker:
 
-- Starting with Cesium 1.100, CesiumJS will be published alongside two smaller packages `@cesium/engine` and `@cesium/widgets` [#10824](https://github.com/CesiumGS/cesium/pull/10824):
+- Starting with version 1.100, CesiumJS will be published alongside two smaller packages `@cesium/engine` and `@cesium/widgets` [#10824](https://github.com/CesiumGS/cesium/pull/10824):
   - The source code will been paritioned into two folders: `packages/engine` and `packages/widgets`.
   - These workspaces packages will follow semantic versioning.
   - These workspaces packages will be published as ES modules with TypeScript definitions.
