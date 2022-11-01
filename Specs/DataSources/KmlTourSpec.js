@@ -22,25 +22,25 @@ describe("DataSources/KmlTour", function () {
     return new KmlLookAt(position, hpr);
   }
 
-  function createMockViewer() {
-    const mockViewer = {};
-    mockViewer.scene = {};
-    mockViewer.scene.camera = {};
-    mockViewer.scene.camera.flyTo = jasmine
+  function createMockWidget() {
+    const mockWidget = {};
+    mockWidget.scene = {};
+    mockWidget.scene.camera = {};
+    mockWidget.scene.camera.flyTo = jasmine
       .createSpy("flyTo")
       .and.callFake(function (options) {
         if (options.complete) {
           options.complete();
         }
       });
-    mockViewer.scene.camera.flyToBoundingSphere = jasmine
+    mockWidget.scene.camera.flyToBoundingSphere = jasmine
       .createSpy("flyToBoundingSphere")
       .and.callFake(function (boundingSphere, options) {
         if (options.complete) {
           options.complete();
         }
       });
-    return mockViewer;
+    return mockWidget;
   }
 
   it("add entries to playlist", function () {
@@ -73,8 +73,8 @@ describe("DataSources/KmlTour", function () {
     tour.addPlaylistEntry(wait);
     tour.addPlaylistEntry(flyTo);
 
-    const mockViewer = createMockViewer();
-    tour.play(mockViewer);
+    const mockWidget = createMockWidget();
+    tour.play(mockWidget);
     return pollToPromise(function () {
       return waitSpy.calls.count() > 0 && flySpy.calls.count() > 0;
     }).then(function () {
@@ -101,7 +101,7 @@ describe("DataSources/KmlTour", function () {
     tour.entryStart.addEventListener(entryStart);
     tour.entryEnd.addEventListener(entryEnd);
 
-    tour.play(createMockViewer());
+    tour.play(createMockWidget());
     return pollToPromise(function () {
       return tourEnd.calls.count() > 0;
     }).then(function () {
@@ -130,8 +130,8 @@ describe("DataSources/KmlTour", function () {
     tour.entryStart.addEventListener(entryStart);
     tour.entryEnd.addEventListener(entryEnd);
 
-    const mockViewer = createMockViewer();
-    tour.play(mockViewer);
+    const mockWidget = createMockWidget();
+    tour.play(mockWidget);
     setTimeout(function () {
       tour.stop();
       expect(tourStart).toHaveBeenCalled();
@@ -146,8 +146,8 @@ describe("DataSources/KmlTour", function () {
       expect(tourStart.calls.count()).toEqual(1);
       expect(tourEnd.calls.count()).toEqual(1);
 
-      expect(mockViewer.scene.camera.flyTo.calls.count()).toEqual(0);
-      expect(mockViewer.scene.camera.flyToBoundingSphere.calls.count()).toEqual(
+      expect(mockWidget.scene.camera.flyTo.calls.count()).toEqual(0);
+      expect(mockWidget.scene.camera.flyToBoundingSphere.calls.count()).toEqual(
         0
       );
     }, 5);

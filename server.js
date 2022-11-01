@@ -64,7 +64,7 @@ const specFiles = [
 const shaderFiles = ["Source/Shaders/**/*.glsl"];
 const workerSourceFiles = ["Source/WorkersES6/*.js"];
 
-const outputDirectory = path.join("Build", "CesiumUnminified");
+const outputDirectory = path.join("Build", "CesiumDev");
 
 function formatTimeSinceInSeconds(start) {
   return Math.ceil((performance.now() - start) / 100) / 10;
@@ -365,6 +365,10 @@ const serveResult = (result, fileName, res, next) => {
     specResult.outputFiles = [];
   });
 
+  // Serve any static files starting with "Build/CesiumUnminified" from the
+  // development build instead. That way, previous build output is preserved
+  // while the latest is being served
+  app.use("/Build/CesiumUnminified", express.static("Build/CesiumDev"));
   app.use(express.static(path.resolve(".")));
 
   function getRemoteUrlFromParam(req) {
