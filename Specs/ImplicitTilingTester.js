@@ -1,4 +1,4 @@
-import { defined, defaultValue } from "../Source/Cesium.js";
+import { defined, defaultValue } from "@cesium/engine";
 import concatTypedArrays from "./concatTypedArrays.js";
 import MetadataTester from "./MetadataTester.js";
 
