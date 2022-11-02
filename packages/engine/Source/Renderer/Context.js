@@ -30,187 +30,6 @@ import TextureCache from "./TextureCache.js";
 import UniformState from "./UniformState.js";
 import VertexArray from "./VertexArray.js";
 
-function errorToString(gl, error) {
-  let message = "WebGL Error:  ";
-  switch (error) {
-    case gl.INVALID_ENUM:
-      message += "INVALID_ENUM";
-      break;
-    case gl.INVALID_VALUE:
-      message += "INVALID_VALUE";
-      break;
-    case gl.INVALID_OPERATION:
-      message += "INVALID_OPERATION";
-      break;
-    case gl.OUT_OF_MEMORY:
-      message += "OUT_OF_MEMORY";
-      break;
-    case gl.CONTEXT_LOST_WEBGL:
-      message += "CONTEXT_LOST_WEBGL lost";
-      break;
-    default:
-      message += `Unknown (${error})`;
-  }
-
-  return message;
-}
-
-function createErrorMessage(gl, glFunc, glFuncArguments, error) {
-  let message = `${errorToString(gl, error)}: ${glFunc.name}(`;
-
-  for (let i = 0; i < glFuncArguments.length; ++i) {
-    if (i !== 0) {
-      message += ", ";
-    }
-    message += glFuncArguments[i];
-  }
-  message += ");";
-
-  return message;
-}
-
-function throwOnError(gl, glFunc, glFuncArguments) {
-  const error = gl.getError();
-  if (error !== gl.NO_ERROR) {
-    throw new RuntimeError(
-      createErrorMessage(gl, glFunc, glFuncArguments, error)
-    );
-  }
-}
-
-function makeGetterSetter(gl, propertyName, logFunction) {
-  return {
-    get: function () {
-      const value = gl[propertyName];
-      logFunction(gl, `get: ${propertyName}`, value);
-      return gl[propertyName];
-    },
-    set: function (value) {
-      gl[propertyName] = value;
-      logFunction(gl, `set: ${propertyName}`, value);
-    },
-  };
-}
-
-function wrapGL(gl, logFunction) {
-  if (!defined(logFunction)) {
-    return gl;
-  }
-
-  function wrapFunction(property) {
-    return function () {
-      const result = property.apply(gl, arguments);
-      logFunction(gl, property, arguments);
-      return result;
-    };
-  }
-
-  const glWrapper = {};
-
-  // JavaScript linters normally demand that a for..in loop must directly contain an if,
-  // but in our loop below, we actually intend to iterate all properties, including
-  // those in the prototype.
-  /*eslint-disable guard-for-in*/
-  for (const propertyName in gl) {
-    const property = gl[propertyName];
-
-    // wrap any functions we encounter, otherwise just copy the property to the wrapper.
-    if (property instanceof Function) {
-      glWrapper[propertyName] = wrapFunction(property);
-    } else {
-      Object.defineProperty(
-        glWrapper,
-        propertyName,
-        makeGetterSetter(gl, propertyName, logFunction)
-      );
-    }
-  }
-  /*eslint-enable guard-for-in*/
-
-  return glWrapper;
-}
-
-function getExtension(gl, names) {
-  const length = names.length;
-  for (let i = 0; i < length; ++i) {
-    const extension = gl.getExtension(names[i]);
-    if (extension) {
-      return extension;
-    }
-  }
-
-  return undefined;
-}
-
-/**
- * @typedef {Object} WebGLOptions
- *
- * WebGL options to be passed on to HTMLCanvasElement.getContext().
- * See {@link https://registry.khronos.org/webgl/specs/latest/1.0/#5.2|WebGLContextAttributes}
- * but note the modified defaults for 'alpha', 'stencil', and 'powerPreference'
- *
- * <p>
- * <code>alpha</code> defaults to false, which can improve performance
- * compared to the standard WebGL default of true.  If an application needs
- * to composite Cesium above other HTML elements using alpha-blending, set
- * <code>alpha</code> to true.
- * </p>
- *
- * @property {Boolean} [alpha=false]
- * @property {Boolean} [depth=true]
- * @property {Boolean} [stencil=false]
- * @property {Boolean} [antialias=true]
- * @property {Boolean} [premultipliedAlpha=true]
- * @property {Boolean} [preserveDrawingBuffer=false]
- * @property {("default"|"low-power"|"high-performance")} [powerPreference="high-performance"]
- * @property {Boolean} [failIfMajorPerformanceCaveat=false]
- */
-
-/**
- * @private
- * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
- * @param {WebGLOptions} webglOptions WebGL options to be passed on to HTMLCanvasElement.getContext()
- * @param {Boolean} requestWebgl2 Whether to request a WebGL2RenderingContext
- * @returns {WebGLRenderingContext|WebGL2RenderingContext}
- */
-function getWebGLContext(canvas, webglOptions, requestWebgl2) {
-  if (typeof WebGLRenderingContext === "undefined") {
-    throw new RuntimeError(
-      "The browser does not support WebGL.  Visit http://get.webgl.org."
-    );
-  }
-
-  requestWebgl2 =
-    requestWebgl2 && typeof WebGL2RenderingContext !== "undefined";
-  const contextType = requestWebgl2 ? "webgl2" : "webgl";
-  const glContext = canvas.getContext(contextType, webglOptions);
-
-  if (!defined(glContext)) {
-    throw new RuntimeError(
-      "The browser supports WebGL, but initialization failed."
-    );
-  }
-
-  return glContext;
-}
-
-/**
- * @typedef {Object} ContextOptions
- *
- * Options to control the setting up of a WebGL Context.
- * <p>
- * <code>allowTextureFilterAnisotropic</code> defaults to true, which enables
- * anisotropic texture filtering when the WebGL extension is supported.
- * Setting this to false will improve performance, but hurt visual quality,
- * especially for horizon views.
- * </p>
- *
- * @property {Boolean} [requestWebGl2 = false] If true and the browser supports it, use a WebGL 2 rendering context
- * @property {Boolean} [allowTextureFilterAnisotropic=true] If true, use anisotropic filtering during texture sampling
- * @property {WebGLOptions} [webgl] WebGL options to be passed on to canvas.getContext
- * @property {Function} [getWebGLStub] A function to create a WebGL stub for testing
- */
-
 /**
  * @private
  * @constructor
@@ -565,6 +384,187 @@ function Context(canvas, options) {
   this.cache = {};
 
   RenderState.apply(gl, rs, ps);
+}
+
+/**
+ * @typedef {Object} ContextOptions
+ *
+ * Options to control the setting up of a WebGL Context.
+ * <p>
+ * <code>allowTextureFilterAnisotropic</code> defaults to true, which enables
+ * anisotropic texture filtering when the WebGL extension is supported.
+ * Setting this to false will improve performance, but hurt visual quality,
+ * especially for horizon views.
+ * </p>
+ *
+ * @property {Boolean} [requestWebGl2 = false] If true and the browser supports it, use a WebGL 2 rendering context
+ * @property {Boolean} [allowTextureFilterAnisotropic=true] If true, use anisotropic filtering during texture sampling
+ * @property {WebGLOptions} [webgl] WebGL options to be passed on to canvas.getContext
+ * @property {Function} [getWebGLStub] A function to create a WebGL stub for testing
+ */
+
+/**
+ * @private
+ * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
+ * @param {WebGLOptions} webglOptions WebGL options to be passed on to HTMLCanvasElement.getContext()
+ * @param {Boolean} requestWebgl2 Whether to request a WebGL2RenderingContext
+ * @returns {WebGLRenderingContext|WebGL2RenderingContext}
+ */
+function getWebGLContext(canvas, webglOptions, requestWebgl2) {
+  if (typeof WebGLRenderingContext === "undefined") {
+    throw new RuntimeError(
+      "The browser does not support WebGL.  Visit http://get.webgl.org."
+    );
+  }
+
+  requestWebgl2 =
+    requestWebgl2 && typeof WebGL2RenderingContext !== "undefined";
+  const contextType = requestWebgl2 ? "webgl2" : "webgl";
+  const glContext = canvas.getContext(contextType, webglOptions);
+
+  if (!defined(glContext)) {
+    throw new RuntimeError(
+      "The browser supports WebGL, but initialization failed."
+    );
+  }
+
+  return glContext;
+}
+
+/**
+ * @typedef {Object} WebGLOptions
+ *
+ * WebGL options to be passed on to HTMLCanvasElement.getContext().
+ * See {@link https://registry.khronos.org/webgl/specs/latest/1.0/#5.2|WebGLContextAttributes}
+ * but note the modified defaults for 'alpha', 'stencil', and 'powerPreference'
+ *
+ * <p>
+ * <code>alpha</code> defaults to false, which can improve performance
+ * compared to the standard WebGL default of true.  If an application needs
+ * to composite Cesium above other HTML elements using alpha-blending, set
+ * <code>alpha</code> to true.
+ * </p>
+ *
+ * @property {Boolean} [alpha=false]
+ * @property {Boolean} [depth=true]
+ * @property {Boolean} [stencil=false]
+ * @property {Boolean} [antialias=true]
+ * @property {Boolean} [premultipliedAlpha=true]
+ * @property {Boolean} [preserveDrawingBuffer=false]
+ * @property {("default"|"low-power"|"high-performance")} [powerPreference="high-performance"]
+ * @property {Boolean} [failIfMajorPerformanceCaveat=false]
+ */
+
+function errorToString(gl, error) {
+  let message = "WebGL Error:  ";
+  switch (error) {
+    case gl.INVALID_ENUM:
+      message += "INVALID_ENUM";
+      break;
+    case gl.INVALID_VALUE:
+      message += "INVALID_VALUE";
+      break;
+    case gl.INVALID_OPERATION:
+      message += "INVALID_OPERATION";
+      break;
+    case gl.OUT_OF_MEMORY:
+      message += "OUT_OF_MEMORY";
+      break;
+    case gl.CONTEXT_LOST_WEBGL:
+      message += "CONTEXT_LOST_WEBGL lost";
+      break;
+    default:
+      message += `Unknown (${error})`;
+  }
+
+  return message;
+}
+
+function createErrorMessage(gl, glFunc, glFuncArguments, error) {
+  let message = `${errorToString(gl, error)}: ${glFunc.name}(`;
+
+  for (let i = 0; i < glFuncArguments.length; ++i) {
+    if (i !== 0) {
+      message += ", ";
+    }
+    message += glFuncArguments[i];
+  }
+  message += ");";
+
+  return message;
+}
+
+function throwOnError(gl, glFunc, glFuncArguments) {
+  const error = gl.getError();
+  if (error !== gl.NO_ERROR) {
+    throw new RuntimeError(
+      createErrorMessage(gl, glFunc, glFuncArguments, error)
+    );
+  }
+}
+
+function makeGetterSetter(gl, propertyName, logFunction) {
+  return {
+    get: function () {
+      const value = gl[propertyName];
+      logFunction(gl, `get: ${propertyName}`, value);
+      return gl[propertyName];
+    },
+    set: function (value) {
+      gl[propertyName] = value;
+      logFunction(gl, `set: ${propertyName}`, value);
+    },
+  };
+}
+
+function wrapGL(gl, logFunction) {
+  if (!defined(logFunction)) {
+    return gl;
+  }
+
+  function wrapFunction(property) {
+    return function () {
+      const result = property.apply(gl, arguments);
+      logFunction(gl, property, arguments);
+      return result;
+    };
+  }
+
+  const glWrapper = {};
+
+  // JavaScript linters normally demand that a for..in loop must directly contain an if,
+  // but in our loop below, we actually intend to iterate all properties, including
+  // those in the prototype.
+  /*eslint-disable guard-for-in*/
+  for (const propertyName in gl) {
+    const property = gl[propertyName];
+
+    // wrap any functions we encounter, otherwise just copy the property to the wrapper.
+    if (property instanceof Function) {
+      glWrapper[propertyName] = wrapFunction(property);
+    } else {
+      Object.defineProperty(
+        glWrapper,
+        propertyName,
+        makeGetterSetter(gl, propertyName, logFunction)
+      );
+    }
+  }
+  /*eslint-enable guard-for-in*/
+
+  return glWrapper;
+}
+
+function getExtension(gl, names) {
+  const length = names.length;
+  for (let i = 0; i < length; ++i) {
+    const extension = gl.getExtension(names[i]);
+    if (extension) {
+      return extension;
+    }
+  }
+
+  return undefined;
 }
 
 const defaultFramebufferMarker = {};
