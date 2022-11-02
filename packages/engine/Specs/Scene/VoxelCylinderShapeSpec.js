@@ -7,7 +7,7 @@ import {
   OrientedBoundingBox,
   Quaternion,
   VoxelCylinderShape,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe(
   "Scene/VoxelCylinderShape",

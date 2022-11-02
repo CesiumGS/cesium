@@ -4,7 +4,7 @@ import {
   ImplicitTileset,
   ImplicitTileCoordinates,
   Resource,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/ImplicitSubtreeCache", function () {
   const implicitOctreeJson = {

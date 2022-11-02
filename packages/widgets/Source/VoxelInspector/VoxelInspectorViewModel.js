@@ -1,13 +1,15 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import Check from "../../Core/Check.js";
-import defined from "../../Core/defined.js";
-import destroyObject from "../../Core/destroyObject.js";
-import HeadingPitchRoll from "../../Core/HeadingPitchRoll.js";
-import Matrix3 from "../../Core/Matrix3.js";
-import Matrix4 from "../../Core/Matrix4.js";
-import CustomShader from "../../Scene/Model/CustomShader.js";
-import VoxelShapeType from "../../Scene/VoxelShapeType.js";
-import knockout from "../../ThirdParty/knockout.js";
+import {
+  Cartesian3,
+  Check,
+  defined,
+  destroyObject,
+  HeadingPitchRoll,
+  Matrix3,
+  Matrix4,
+  CustomShader,
+  VoxelShapeType,
+} from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 
 function formatShaderString(str) {
   // This function:

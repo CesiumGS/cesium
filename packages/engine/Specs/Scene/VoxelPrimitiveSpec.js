@@ -4,9 +4,9 @@ import {
   CustomShader,
   Matrix4,
   VoxelPrimitive,
-} from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+} from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/VoxelPrimitive",

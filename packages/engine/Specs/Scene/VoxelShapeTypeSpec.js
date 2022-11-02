@@ -4,7 +4,7 @@ import {
   VoxelCylinderShape,
   VoxelEllipsoidShape,
   VoxelShapeType,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/VoxelShapeType", function () {
   it("getMinBounds works", function () {

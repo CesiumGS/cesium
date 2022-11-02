@@ -7,7 +7,7 @@ import {
   Matrix4,
   Quaternion,
   VoxelEllipsoidShape,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/VoxelEllipsoidShape", function () {
   it("constructs", function () {

@@ -1,6 +1,7 @@
-import { Ellipsoid, Globe, VoxelInspector } from "../../../../Source/Cesium.js";
+import { Ellipsoid, Globe } from "@cesium/engine";
+import { VoxelInspector } from "../../index.js";
 
-import createScene from "../../createScene.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe(
   "Widgets/VoxelInspector/VoxelInspector",

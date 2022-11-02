@@ -1,5 +1,5 @@
-import { VoxelPrimitive, VoxelRenderResources } from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
+import { VoxelPrimitive, VoxelRenderResources } from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/VoxelRenderResources", function () {
   const scene = createScene();

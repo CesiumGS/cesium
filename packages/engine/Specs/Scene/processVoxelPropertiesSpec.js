@@ -3,10 +3,10 @@ import {
   VoxelPrimitive,
   VoxelRenderResources,
   processVoxelProperties,
-} from "../../Source/Cesium.js";
-import createScene from "../createScene.js";
-import ShaderBuilderTester from "../ShaderBuilderTester.js";
-import pollToPromise from "../pollToPromise.js";
+} from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
+import ShaderBuilderTester from "../../../../Specs/ShaderBuilderTester.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/processVoxelProperties", function () {
   let scene;

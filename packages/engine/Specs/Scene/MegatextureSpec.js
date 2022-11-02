@@ -3,8 +3,8 @@ import {
   Megatexture,
   MetadataComponentType,
   RuntimeError,
-} from "../Source/Cesium.js";
-import createScene from "../createScene.js";
+} from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/Megatexture", function () {
   const scene = createScene();

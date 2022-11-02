@@ -1,4 +1,4 @@
-import { KeyframeNode } from "../../Source/Cesium.js";
+import { KeyframeNode } from "../../index.js";
 
 const dummySpatialNode = {};
 

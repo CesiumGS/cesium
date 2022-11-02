@@ -8,10 +8,10 @@ import {
   Math as CesiumMath,
   CullingVolume,
   Cesium3DTilesVoxelProvider,
-} from "../../Source/Cesium.js";
+} from "../../index.js";
 import MetadataType from "../../Source/Scene/MetadataType.js";
-import createScene from "../createScene.js";
-import pollToPromise from "../pollToPromise.js";
+import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 const towardPrimitive = Cartesian3.fromElements(1.0, 1.0, 1.0);
 

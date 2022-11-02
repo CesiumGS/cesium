@@ -1,14 +1,16 @@
-import Cartesian3 from "../../Core/Cartesian3.js";
-import CesiumMath from "../../Core/Math.js";
-import Check from "../../Core/Check.js";
-import defaultValue from "../../Core/defaultValue.js";
-import destroyObject from "../../Core/destroyObject.js";
-import Ellipsoid from "../../Core/Ellipsoid.js";
-import knockout from "../../ThirdParty/knockout.js";
-import getElement from "../getElement.js";
+import {
+  Cartesian3,
+  Math as CesiumMath,
+  Check,
+  defaultValue,
+  destroyObject,
+  Ellipsoid,
+  VoxelShapeType,
+  getElement,
+} from "@cesium/engine";
 import InspectorShared from "../InspectorShared.js";
 import VoxelInspectorViewModel from "./VoxelInspectorViewModel.js";
-import VoxelShapeType from "../../Scene/VoxelShapeType.js";
+import knockout from "../ThirdParty/knockout.js";
 
 /**
  * Inspector widget to aid in debugging voxels

@@ -3,7 +3,7 @@ import {
   Matrix4,
   SpatialNode,
   VoxelBoxShape,
-} from "../Source/Cesium.js";
+} from "../../index.js";
 
 describe("Scene/SpatialNode", function () {
   it("constructs", function () {
