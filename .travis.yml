@@ -1,6 +1,7 @@
 language: node_js
 node_js:
   - "18"
+dist: focal # Workaround for NodeJS 18 - https://travis-ci.community/t/the-command-npm-config-set-spin-false-failed-and-exited-with-1-during/12909/7
 addons:
   chrome: stable
   firefox: latest
