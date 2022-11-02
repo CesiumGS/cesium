@@ -1,5 +1,5 @@
 {
-    "extends": "../Source/.eslintrc.json",
+    "extends": "../packages/.eslintrc.json",
     "env": {
         "jasmine": true
     },

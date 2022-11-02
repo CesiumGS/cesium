@@ -8,8 +8,6 @@ import { URL } from "url";
 import chokidar from "chokidar";
 import compression from "compression";
 import express from "express";
-import mkdirp from "mkdirp";
-import rimraf from "rimraf";
 import yargs from "yargs";
 
 const argv = yargs(process.argv)
@@ -34,15 +32,14 @@ const argv = yargs(process.argv)
   .help().argv;
 
 import {
-  buildCesiumJs,
-  buildSpecs,
-  buildWorkers,
-  copyAssets,
+  bundleWorkers,
   createCesiumJs,
-  createGalleryList,
   createJsHintOptions,
   createSpecList,
   glslToJavaScript,
+  buildEngine,
+  buildWidgets,
+  buildCesium,
 } from "./build.js";
 
 const sourceFiles = [
@@ -71,55 +68,54 @@ function formatTimeSinceInSeconds(start) {
   return Math.ceil((performance.now() - start) / 100) / 10;
 }
 
-async function buildDev() {
-  console.log("Building Cesium...");
-  const start = performance.now();
+/**
+ * Returns CesiumJS bundles configured for development.
+ *
+ * @returns {Bundles} The bundles.
+ */
+async function generateDevelopmentBuild() {
+  const startTime = performance.now();
 
-  mkdirp.sync("Build");
-  rimraf.sync(outputDirectory);
+  // Build @cesium/engine
+  console.log("[1/3] Building @cesium/engine...");
+  await buildEngine({
+    sourcemap: true,
+    incremental: true,
+    write: false,
+    minify: false,
+  });
 
-  fs.writeFileSync(
-    "Build/package.json",
-    JSON.stringify({
-      type: "commonjs",
-    }),
-    "utf8"
+  // Build @cesium/widgets
+  console.log("[2/3] Building @cesium/widgets...");
+  await buildWidgets({
+    sourcemap: true,
+    incremental: true,
+    write: false,
+    minify: false,
+  });
+
+  // Build CesiumJS
+  console.log("[3/3] Building CesiumJS...");
+  const bundles = await buildCesium({
+    development: true,
+    iife: true,
+    incremental: true,
+    minify: false,
+    node: false,
+    outputDirectory: outputDirectory,
+    removePragmas: false,
+    sourcemap: true,
+    write: false,
+  });
+
+  console.log(
+    `Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`
   );
 
-  await glslToJavaScript(false, "Build/minifyShaders.state");
-  await createCesiumJs();
-  await createSpecList();
-  await createJsHintOptions();
-
-  const [esmResult, iifeResult] = await buildCesiumJs({
-    iife: true,
-    sourcemap: true,
-    path: outputDirectory,
-    incremental: true,
-    write: false,
-  });
-
-  await buildWorkers({
-    sourcemap: true,
-    path: outputDirectory,
-    incremental: true,
-  });
-
-  await createGalleryList();
-
-  const specResult = await buildSpecs({
-    incremental: true,
-    write: false,
-  });
-
-  console.log(`Cesium built in ${formatTimeSinceInSeconds(start)} seconds.`);
-
-  await copyAssets(outputDirectory);
-
   return {
-    esmResult,
-    iifeResult,
-    specResult,
+    esmResult: bundles.esmBundle,
+    iifeResult: bundles.iifeBundle,
+    specResult: bundles.specsBundle,
   };
 }
 
@@ -143,7 +139,7 @@ const serveResult = (result, fileName, res, next) => {
 
 (async function () {
   const gzipHeader = Buffer.from("1F8B08", "hex");
-  let { esmResult, iifeResult, specResult } = await buildDev();
+  let { esmResult, iifeResult, specResult } = await generateDevelopmentBuild();
 
   // eventually this mime type configuration will need to change
   // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
@@ -219,7 +215,7 @@ const serveResult = (result, fileName, res, next) => {
   });
   workerWatcher.on("all", async () => {
     const start = performance.now();
-    await buildWorkers({
+    await bundleWorkers({
       path: outputDirectory,
       sourcemap: true,
     });
@@ -309,7 +305,7 @@ const serveResult = (result, fileName, res, next) => {
 
   const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
   glslWatcher.on("all", async () => {
-    await glslToJavaScript(false, "Build/minifyShaders.state");
+    await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
     esmResult.outputFiles = [];
     iifeResult.outputFiles = [];
   });
