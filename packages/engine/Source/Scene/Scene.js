@@ -81,50 +81,13 @@ const requestRenderAfterFrame = function (scene) {
 /**
  * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
  * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
- * <p>
- * <em><code>contextOptions</code> parameter details:</em>
- * </p>
- * <p>
- * The default values are:
- * <code>
- * {
- *   webgl : {
- *     alpha : false,
- *     depth : true,
- *     stencil : false,
- *     antialias : true,
- *     powerPreference: 'high-performance',
- *     premultipliedAlpha : true,
- *     preserveDrawingBuffer : false,
- *     failIfMajorPerformanceCaveat : false
- *   },
- *   allowTextureFilterAnisotropic : true
- * }
- * </code>
- * </p>
- * <p>
- * The <code>webgl</code> property corresponds to the {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
- * object used to create the WebGL context.
- * </p>
- * <p>
- * <code>webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
- * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
- * <code>webgl.alpha</code> to true.
- * </p>
- * <p>
- * The other <code>webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.
- * </p>
- * <p>
- * <code>allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
- * WebGL extension is supported.  Setting this to false will improve performance, but hurt visual quality, especially for horizon views.
- * </p>
  *
  * @alias Scene
  * @constructor
  *
  * @param {Object} options Object with the following properties:
  * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
- * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
+ * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
  * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
@@ -134,7 +97,7 @@ const requestRenderAfterFrame = function (scene) {
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
  * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
- * @param {Number} [depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
+ * @param {Number} [options.depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
  * @param {Number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  *
  * @see CesiumWidget
@@ -157,17 +120,7 @@ function Scene(options) {
   let creditContainer = options.creditContainer;
   let creditViewport = options.creditViewport;
 
-  let contextOptions = clone(options.contextOptions);
-  if (!defined(contextOptions)) {
-    contextOptions = {};
-  }
-  if (!defined(contextOptions.webgl)) {
-    contextOptions.webgl = {};
-  }
-  contextOptions.webgl.powerPreference = defaultValue(
-    contextOptions.webgl.powerPreference,
-    "high-performance"
-  );
+  const contextOptions = clone(options.contextOptions);
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(canvas)) {
