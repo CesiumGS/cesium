@@ -1,5 +1,8 @@
 # Change Log
 
+##### Fixes :wrench:
+- Fixed a bug where *.ktx2 images loading fail. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
+
 ### 1.99 - 2022-11-01
 
 ##### Additions :tada:
