@@ -15,7 +15,7 @@ jobs:
     - stage:
       name: "Coverage"
       script:
-        - npm --silent run build -- --node
+        - npm --silent run build
         - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
         - aws s3 sync ./Build/Coverage s3://cesium-dev/cesium/$TRAVIS_BRANCH/Build/Coverage --delete --color on
     - name: "Release Tests"
