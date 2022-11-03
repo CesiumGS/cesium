@@ -9,6 +9,4 @@ if [ $TRAVIS_BRANCH != "cesium.com" ]; then
 
   node packages/engine/Specs/test.mjs
   node packages/widgets/Specs/test.mjs
-
-  npm --silent run cloc
 fi
