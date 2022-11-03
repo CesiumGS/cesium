@@ -2,116 +2,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "start via NPM",
-            "request": "launch",
-            "runtimeArgs": [
-                "run-script",
-                "test"
-            ],
-            "runtimeExecutable": "npm",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "name": "Launch build widgets via NPM",
-            "request": "launch",
-            "runtimeArgs": [
-                "run-script",
-                "build",
-                "-w",
-                "@cesium/widgets"
-            ],
-            "runtimeExecutable": "npm",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "name": "Launch via NPM",
-            "request": "launch",
-            "runtimeArgs": [
-                "run-script",
-                "test",
-                "-w",
-                "@cesium/engine"
-            ],
-            "runtimeExecutable": "npm",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "name": "Launch build engine via NPM",
-            "request": "launch",
-            "runtimeArgs": [
-                "run-script",
-                "build",
-                "-w",
-                "@cesium/engine"
-            ],
-            "runtimeExecutable": "npm",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "args": [
-                "buildEngine"
-            ],
-            "name": "Gulp task - buildEngine",
-            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
-            "request": "launch",
-            "cwd": "${workspaceFolder}/packages/engine",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "args": [
-                "build",
-                "--workspaces"
-            ],
-            "name": "Gulp task - build - workspaces",
-            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
-            "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "args": [
-                "build"
-            ],
-            "name": "Gulp task - build",
-            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
-            "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
-            "args": [
-                "build-ts",
-                "-w",
-                "@cesium/widgets"
-            ],
-            "name": "Gulp task - build-ts",
-            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
-            "request": "launch",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "type": "node"
-        },
-        {
             "type": "node",
             "request": "launch",
             "name": "Launch Server",
@@ -128,20 +18,9 @@
         {
             "name": "Launch in Chrome",
             "request": "launch",
-            "type": "pwa-chrome",
+            "type": "chrome",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
-        },
-        {
-            "type": "chrome",
-            "request": "attach",
-            "name": "Attach Karma Chrome",
-            "address": "localhost",
-            "port": 9333,
-            "pathMapping": {
-                "/": "${workspaceRoot}/",
-                "/base/": "${workspaceRoot}/"
-            }
         }
     ]
 }
