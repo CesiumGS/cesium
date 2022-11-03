@@ -1,6 +1,5 @@
 language: node_js
-node_js:
-  - "16"
+dist: focal # Workaround for NodeJS 18 - https://travis-ci.community/t/the-command-npm-config-set-spin-false-failed-and-exited-with-1-during/12909/7
 addons:
   chrome: stable
   firefox: latest
@@ -14,13 +13,19 @@ jobs:
   include:
     - stage:
       name: "Coverage"
+      node_js: "18"
       script:
         - npm --silent run build
         - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
         - aws s3 sync ./Build/Coverage s3://cesium-dev/cesium/$TRAVIS_BRANCH/Build/Coverage --delete --color on
     - name: "Release Tests"
-      script: ./travis/test-release.sh
+      node_js: "18"
+      script: 
+        - ./travis/test-release.sh
+        - ./travis/verify.sh
+        - npm --silent run cloc
     - name: "Linting, Deployment"
+      node_js: "18"
       script:
         - ./travis/prepare.sh
         - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
@@ -29,3 +34,8 @@ jobs:
         - npm --silent run prettier-check
         - ./travis/release.sh
         - ./travis/deploy.sh
+    - name: "NodeJS 16"
+      node_js: "16"
+      script:
+        - npm --silent run build-release
+        - ./travis/verify.sh
