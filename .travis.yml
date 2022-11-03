@@ -20,7 +20,10 @@ jobs:
         - aws s3 sync ./Build/Coverage s3://cesium-dev/cesium/$TRAVIS_BRANCH/Build/Coverage --delete --color on
     - name: "Release Tests"
       node_js: "18"
-      script: ./travis/test-release.sh
+      script: 
+        - ./travis/test-release.sh
+        - ./travis/verify.sh
+        - npm --silent run cloc
     - name: "Linting, Deployment"
       node_js: "18"
       script:
@@ -31,8 +34,6 @@ jobs:
         - npm --silent run prettier-check
         - ./travis/release.sh
         - ./travis/deploy.sh
-        - ./travis/verify.sh
-        - npm --silent run cloc
     - name: "NodeJS 16"
       node_js: "16"
       script:
