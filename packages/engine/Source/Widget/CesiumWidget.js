@@ -136,7 +136,7 @@ function configureCameraFrustum(widget) {
  * @param {Boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
  * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
  * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
- * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
+ * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties passed to {@link Scene}.
  * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
  *        to the bottom of the widget itself.
  * @param {Element|String} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
