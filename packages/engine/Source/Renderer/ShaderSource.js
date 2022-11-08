@@ -1,7 +1,6 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import modernizeShader from "../Renderer/modernizeShader.js";
 import CzmBuiltins from "../Shaders/Builtin/CzmBuiltins.js";
 import AutomaticUniforms from "./AutomaticUniforms.js";
 
@@ -263,8 +262,8 @@ function combineShader(shaderSource, isFragmentShader, context) {
 
   // GLSLModernizer inserts its own layout qualifiers
   // at this position in the source
-  if (context.webgl2) {
-    result += "#define OUTPUT_DECLARATION\n\n";
+  if (context.webgl2 && isFragmentShader) {
+    result += "layout(location = 0) out vec4 out_FragColor;\n\n";
   }
 
   // Define a constant for the OES_texture_float_linear extension since WebGL does not.
@@ -290,7 +289,11 @@ function combineShader(shaderSource, isFragmentShader, context) {
 
   // modernize the source
   if (context.webgl2) {
-    result = modernizeShader(result, isFragmentShader, true);
+    if (/#version/.test(result)) {
+      result = result.replaceAll("#version 100", "#version 300 es");
+    }
+
+    result = `#version 300 es\n\n${result}`;
   }
 
   return result;
@@ -330,7 +333,7 @@ function ShaderSource(options) {
   if (
     defined(pickColorQualifier) &&
     pickColorQualifier !== "uniform" &&
-    pickColorQualifier !== "varying"
+    pickColorQualifier !== "in"
   ) {
     throw new DeveloperError(
       "options.pickColorQualifier must be 'uniform' or 'varying'."
@@ -431,7 +434,7 @@ ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
   );
   const pickMain =
     "attribute vec4 pickColor; \n" +
-    "varying vec4 czm_pickColor; \n" +
+    "in vec4 czm_pickColor; \n" +
     "void main() \n" +
     "{ \n" +
     "    czm_old_main(); \n" +
@@ -457,7 +460,7 @@ ShaderSource.createPickFragmentShaderSource = function (
     `    if (gl_FragColor.a == 0.0) { \n` +
     `       discard; \n` +
     `    } \n` +
-    `    gl_FragColor = czm_pickColor; \n` +
+    `    out_FragColor = czm_pickColor; \n` +
     `}`;
 
   return `${renamedFS}\n${pickMain}`;
