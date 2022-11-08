@@ -2,7 +2,7 @@ uniform vec4 color;
 uniform vec4 gapColor;
 uniform float dashLength;
 uniform float dashPattern;
-varying float v_polylineAngle;
+in float v_polylineAngle;
 
 const float maskLength = 16.0;
 

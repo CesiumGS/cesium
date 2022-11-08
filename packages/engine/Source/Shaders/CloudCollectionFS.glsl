@@ -1,11 +1,11 @@
 uniform sampler2D u_noiseTexture;
 uniform vec3 u_noiseTextureDimensions;
 uniform float u_noiseDetail;
-varying vec2 v_offset;
-varying vec3 v_maximumSize;
-varying vec4 v_color;
-varying float v_slice;
-varying float v_brightness;
+in vec2 v_offset;
+in vec3 v_maximumSize;
+in vec4 v_color;
+in float v_slice;
+in float v_brightness;
 
 float wrap(float value, float rangeLength) {
     if(value < 0.0) {
@@ -44,8 +44,8 @@ vec2 voxelToUV(vec3 voxelIndex) {
 vec4 lerpSamplesX(vec3 voxelIndex, float x) {
     vec2 uv0 = voxelToUV(voxelIndex);
     vec2 uv1 = voxelToUV(voxelIndex + vec3(1.0, 0.0, 0.0));
-    vec4 sample0 = texture2D(u_noiseTexture, uv0);
-    vec4 sample1 = texture2D(u_noiseTexture, uv1);
+    vec4 sample0 = texture(u_noiseTexture, uv0);
+    vec4 sample1 = texture(u_noiseTexture, uv1);
     return mix(sample0, sample1, x);
 }
 
@@ -231,7 +231,7 @@ vec4 drawCloud(vec3 rayOrigin, vec3 rayDir, vec3 cloudCenter, vec3 cloudScale, f
 
 void main() {
 #ifdef DEBUG_BILLBOARDS
-    gl_FragColor = vec4(0.0, 0.5, 0.5, 1.0);
+    out_FragColor = vec4(0.0, 0.5, 0.5, 1.0);
 #endif
     // To avoid calculations with high values,
     // we raycast from an arbitrarily smaller space.
@@ -248,7 +248,7 @@ void main() {
     vec3 point, normal;
     if(intersectEllipsoid(rayOrigin, rayDir, ellipsoidCenter, ellipsoidScale, v_slice,
                           point, normal)) {
-        gl_FragColor = v_brightness * v_color;
+        out_FragColor = v_brightness * v_color;
     }
 #else
 #ifndef DEBUG_BILLBOARDS
@@ -257,7 +257,7 @@ void main() {
     if(cloud.w < 0.01) {
         discard;
     }
-    gl_FragColor = cloud;
+    out_FragColor = cloud;
 #endif
 #endif
 }

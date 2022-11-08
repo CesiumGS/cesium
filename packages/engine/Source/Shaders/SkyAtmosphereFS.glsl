@@ -1,12 +1,12 @@
-varying vec3 v_outerPositionWC;
+in vec3 v_outerPositionWC;
 
 uniform vec3 u_hsbShift;
 
 #ifndef PER_FRAGMENT_ATMOSPHERE
-varying vec3 v_mieColor;
-varying vec3 v_rayleighColor;
-varying float v_opacity;
-varying float v_translucent;
+in vec3 v_mieColor;
+in vec3 v_rayleighColor;
+in float v_opacity;
+in float v_translucent;
 #endif
 
 void main (void)
@@ -60,5 +60,5 @@ void main (void)
         color.a = mix(color.b, 1.0, color.a) * smoothstep(0.0, 1.0, czm_morphTime);
     }
 
-    gl_FragColor = color;
+    out_FragColor = color;
 }

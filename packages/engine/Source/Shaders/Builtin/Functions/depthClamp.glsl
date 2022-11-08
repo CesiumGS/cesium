@@ -1,6 +1,6 @@
 // emulated noperspective
-#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)
-varying float v_WindowZ;
+#if !defined(LOG_DEPTH)
+out float v_WindowZ;
 #endif
 
 /**
@@ -36,12 +36,8 @@ varying float v_WindowZ;
 vec4 czm_depthClamp(vec4 coords)
 {
 #ifndef LOG_DEPTH
-#ifdef GL_EXT_frag_depth
     v_WindowZ = (0.5 * (coords.z / coords.w) + 0.5) * coords.w;
     coords.z = 0.0;
-#else
-    coords.z = min(coords.z, coords.w);
-#endif
 #endif
     return coords;
 }

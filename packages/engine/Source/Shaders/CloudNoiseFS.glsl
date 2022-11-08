@@ -1,7 +1,7 @@
 uniform vec3 u_noiseTextureDimensions;
 uniform float u_noiseDetail;
 uniform vec3 u_noiseOffset;
-varying vec2 v_position;
+in vec2 v_position;
 
 float textureSliceWidth = u_noiseTextureDimensions.x;
 float inverseNoiseTextureRows = u_noiseTextureDimensions.z;
@@ -88,5 +88,5 @@ void main() {
     float worley0 = clamp(worleyFBMNoise(position, 3.0, 1.0), 0.0, 1.0);
     float worley1 = clamp(worleyFBMNoise(position, 3.0, 2.0), 0.0, 1.0);
     float worley2 = clamp(worleyFBMNoise(position, 3.0, 3.0), 0.0, 1.0);
-    gl_FragColor = vec4(worley0, worley1, worley2, 1.0);
+    out_FragColor = vec4(worley0, worley1, worley2, 1.0);
 }

@@ -1,8 +1,8 @@
-attribute vec4 currentPosition;
-attribute vec4 previousPosition;
-attribute vec4 nextPosition;
-attribute vec2 expandAndWidth;
-attribute float a_batchId;
+in vec4 currentPosition;
+in vec4 previousPosition;
+in vec4 nextPosition;
+in vec2 expandAndWidth;
+in float a_batchId;
 
 uniform mat4 u_modifiedModelView;
 
