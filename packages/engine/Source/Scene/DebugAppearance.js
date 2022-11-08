@@ -108,7 +108,7 @@ function DebugAppearance(options) {
     `varying ${glslDatatype} ${varyingName};\n${getColor}\n` +
     `void main()\n` +
     `{\n` +
-    `gl_FragColor = getColor();\n` +
+    `out_FragColor = getColor();\n` +
     `}`;
 
   /**

@@ -129,10 +129,10 @@ function modernizeShader(source, isFragmentShader) {
   replaceInSourceString("gl_FragDepthEXT", "gl_FragDepth", splitSource);
 
   if (isFragmentShader) {
-    replaceInSourceString("varying", "in", splitSource);
+    replaceInSourceString("in", "in", splitSource);
   } else {
     replaceInSourceString("attribute", "in", splitSource);
-    replaceInSourceString("varying", "out", splitSource);
+    replaceInSourceString("in", "out", splitSource);
   }
 
   return compileSource(splitSource);

@@ -905,7 +905,7 @@ Primitive._updateColorAttribute = function (
 function appendPickToVertexShader(source) {
   const renamedVS = ShaderSource.replaceMain(source, "czm_non_pick_main");
   const pickMain =
-    "varying vec4 v_pickColor; \n" +
+    "in vec4 v_pickColor; \n" +
     "void main() \n" +
     "{ \n" +
     "    czm_non_pick_main(); \n" +
@@ -1125,19 +1125,12 @@ function depthClampFS(fragmentShaderSource) {
   modifiedFS +=
     "void main() {\n" +
     "    czm_non_depth_clamp_main();\n" +
-    "#if defined(GL_EXT_frag_depth)\n" +
     "    #if defined(LOG_DEPTH)\n" +
     "        czm_writeLogDepth();\n" +
     "    #else\n" +
     "        czm_writeDepthClamp();\n" +
     "    #endif\n" +
-    "#endif\n" +
     "}\n";
-  modifiedFS = `${
-    "#ifdef GL_EXT_frag_depth\n" +
-    "#extension GL_EXT_frag_depth : enable\n" +
-    "#endif\n"
-  }${modifiedFS}`;
   return modifiedFS;
 }
 

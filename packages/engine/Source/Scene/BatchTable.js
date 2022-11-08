@@ -530,12 +530,12 @@ function getGlslAttributeFunction(batchTable, attributeIndex) {
   ) {
     glslFunction +=
       "vec4 textureValue; \n" +
-      "textureValue.x = czm_unpackFloat(texture2D(batchTexture, st)); \n" +
-      "textureValue.y = czm_unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x, 0.0))); \n" +
-      "textureValue.z = czm_unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x * 2.0, 0.0))); \n" +
-      "textureValue.w = czm_unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x * 3.0, 0.0))); \n";
+      "textureValue.x = czm_unpackFloat(texture(batchTexture, st)); \n" +
+      "textureValue.y = czm_unpackFloat(texture(batchTexture, st + vec2(batchTextureStep.x, 0.0))); \n" +
+      "textureValue.z = czm_unpackFloat(texture(batchTexture, st + vec2(batchTextureStep.x * 2.0, 0.0))); \n" +
+      "textureValue.w = czm_unpackFloat(texture(batchTexture, st + vec2(batchTextureStep.x * 3.0, 0.0))); \n";
   } else {
-    glslFunction += "    vec4 textureValue = texture2D(batchTexture, st); \n";
+    glslFunction += "    vec4 textureValue = texture(batchTexture, st); \n";
   }
 
   glslFunction += `    ${functionReturnType} value = textureValue${functionReturnValue}; \n`;

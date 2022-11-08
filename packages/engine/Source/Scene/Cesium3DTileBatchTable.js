@@ -517,13 +517,13 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
       newMain +=
         `${
           "uniform sampler2D tile_batchTexture; \n" +
-          "varying vec4 tile_featureColor; \n" +
-          "varying vec2 tile_featureSt; \n" +
+          "in vec4 tile_featureColor; \n" +
+          "in vec2 tile_featureSt; \n" +
           "void main() \n" +
           "{ \n" +
           "    vec2 st = computeSt("
         }${batchIdAttributeName}); \n` +
-        `    vec4 featureProperties = texture2D(tile_batchTexture, st); \n` +
+        `    vec4 featureProperties = texture(tile_batchTexture, st); \n` +
         `    tile_color(featureProperties); \n` +
         `    float show = ceil(featureProperties.a); \n` + // 0 - false, non-zero - true
         `    gl_Position *= show; \n`; // Per-feature show/hide
@@ -553,7 +553,7 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
       // When VTF is not supported, color blend mode MIX will look incorrect due to the feature's color not being available in the vertex shader
       newMain =
         `${
-          "varying vec2 tile_featureSt; \n" +
+          "in vec2 tile_featureSt; \n" +
           "void main() \n" +
           "{ \n" +
           "    tile_color(vec4(1.0)); \n" +
@@ -593,7 +593,7 @@ function getDefaultShader(source, applyHighlight) {
 }
 
 function replaceDiffuseTextureCalls(source, diffuseAttributeOrUniformName) {
-  const functionCall = `texture2D(${diffuseAttributeOrUniformName}`;
+  const functionCall = `texture(${diffuseAttributeOrUniformName}`;
 
   let fromIndex = 0;
   let startIndex = source.indexOf(functionCall, fromIndex);
@@ -691,8 +691,8 @@ function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
       `    tile_main(); \n`;
   } else if (type === "sampler2D") {
     // Handles any number of nested parentheses
-    // E.g. texture2D(u_diffuse, uv)
-    // E.g. texture2D(u_diffuse, computeUV(index))
+    // E.g. texture(u_diffuse, uv)
+    // E.g. texture(u_diffuse, computeUV(index))
     source = replaceDiffuseTextureCalls(source, diffuseAttributeOrUniformName);
     setColor =
       "    tile_diffuse = tile_featureColor; \n" + "    tile_main(); \n";
@@ -727,8 +727,8 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
       // When VTF is supported, per-feature show/hide already happened in the fragment shader
       source +=
         "uniform sampler2D tile_pickTexture; \n" +
-        "varying vec2 tile_featureSt; \n" +
-        "varying vec4 tile_featureColor; \n" +
+        "in vec2 tile_featureSt; \n" +
+        "in vec4 tile_featureColor; \n" +
         "void main() \n" +
         "{ \n" +
         "    tile_color(tile_featureColor); \n";
@@ -745,10 +745,10 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
       source +=
         "uniform sampler2D tile_pickTexture; \n" +
         "uniform sampler2D tile_batchTexture; \n" +
-        "varying vec2 tile_featureSt; \n" +
+        "in vec2 tile_featureSt; \n" +
         "void main() \n" +
         "{ \n" +
-        "    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n" +
+        "    vec4 featureProperties = texture(tile_batchTexture, tile_featureSt); \n" +
         "    if (featureProperties.a == 0.0) { \n" + // show: alpha == 0 - false, non-zeo - true
         "        discard; \n" +
         "    } \n";
@@ -794,27 +794,27 @@ Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = funct
       // When VTF is supported, per-feature show/hide already happened in the fragment shader
       source +=
         "uniform sampler2D tile_pickTexture;\n" +
-        "varying vec2 tile_featureSt; \n" +
-        "varying vec4 tile_featureColor; \n" +
+        "in vec2 tile_featureSt; \n" +
+        "in vec4 tile_featureColor; \n" +
         "void main() \n" +
         "{ \n" +
         "    tile_main(); \n" +
-        "    gl_FragColor = tile_featureColor; \n" +
+        "    out_FragColor = tile_featureColor; \n" +
         "    gl_FragColor.rgb *= gl_FragColor.a; \n" +
         "}";
     } else {
       source +=
         "uniform sampler2D tile_batchTexture; \n" +
         "uniform sampler2D tile_pickTexture;\n" +
-        "varying vec2 tile_featureSt; \n" +
+        "in vec2 tile_featureSt; \n" +
         "void main() \n" +
         "{ \n" +
         "    tile_main(); \n" +
-        "    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n" +
+        "    vec4 featureProperties = texture(tile_batchTexture, tile_featureSt); \n" +
         "    if (featureProperties.a == 0.0) { \n" + // show: alpha == 0 - false, non-zero - true
         "        discard; \n" +
         "    } \n" +
-        "    gl_FragColor = featureProperties; \n" +
+        "    out_FragColor = featureProperties; \n" +
         "    gl_FragColor.rgb *= gl_FragColor.a; \n" +
         "} \n";
     }
@@ -875,7 +875,7 @@ Cesium3DTileBatchTable.prototype.getUniformMapCallback = function () {
 };
 
 Cesium3DTileBatchTable.prototype.getPickId = function () {
-  return "texture2D(tile_pickTexture, tile_featureSt)";
+  return "texture(tile_pickTexture, tile_featureSt)";
 };
 
 ///////////////////////////////////////////////////////////////////////////

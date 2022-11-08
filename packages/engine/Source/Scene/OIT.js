@@ -468,10 +468,10 @@ const colorShaderSource =
   "    vec3 Ci = czm_gl_FragColor.rgb * czm_gl_FragColor.a;\n" +
   "    float ai = czm_gl_FragColor.a;\n" +
   "    float wzi = czm_alphaWeight(ai);\n" +
-  "    gl_FragColor = vec4(Ci, ai) * wzi;\n";
+  "    out_FragColor = vec4(Ci, ai) * wzi;\n";
 
 const alphaShaderSource =
-  "    float ai = czm_gl_FragColor.a;\n" + "    gl_FragColor = vec4(ai);\n";
+  "    float ai = czm_gl_FragColor.a;\n" + "    out_FragColor = vec4(ai);\n";
 
 function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
   let shader = context.shaderCache.getDerivedShaderProgram(

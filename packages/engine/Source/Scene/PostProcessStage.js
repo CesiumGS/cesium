@@ -52,7 +52,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *     uniform float scale;
  *     uniform vec3 offset;
  *     void main() {
- *         vec4 color = texture2D(colorTexture, v_textureCoordinates);
+ *         vec4 color = texture(colorTexture, v_textureCoordinates);
  *         gl_FragColor = vec4(color.rgb * scale + offset, 1.0);
  *     }`;
  * scene.postProcessStages.add(new Cesium.PostProcessStage({
@@ -73,7 +73,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *     varying vec2 v_textureCoordinates;
  *     uniform vec4 highlight;
  *     void main() {
- *         vec4 color = texture2D(colorTexture, v_textureCoordinates);
+ *         vec4 color = texture(colorTexture, v_textureCoordinates);
  *         if (czm_selected()) {
  *             vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;
  *             gl_FragColor = vec4(highlighted, 1.0);
@@ -364,7 +364,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * if (czm_selected(v_textureCoordinates)) {
    *     // apply post-process stage
    * } else {
-   *     gl_FragColor = texture2D(colorTexture, v_textureCoordinates);
+   *     gl_FragColor = texture(colorTexture, v_textureCoordinates);
    * }
    * </code>
    * </p>
@@ -563,15 +563,15 @@ function createDrawCommand(stage, context) {
         "uniform sampler2D czm_idTexture; \n" +
         "uniform sampler2D czm_selectedIdTexture; \n" +
         "uniform float czm_selectedIdTextureStep; \n" +
-        "varying vec2 v_textureCoordinates; \n" +
+        "in vec2 v_textureCoordinates; \n" +
         "bool czm_selected(vec2 offset) \n" +
         "{ \n" +
         "    bool selected = false;\n" +
-        "    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n" +
+        "    vec4 id = texture(czm_idTexture, v_textureCoordinates + offset); \n" +
         "    for (int i = 0; i < "
       }${width}; ++i) \n` +
       `    { \n` +
-      `        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n` +
+      `        vec4 selectedId = texture(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n` +
       `        if (all(equal(id, selectedId))) \n` +
       `        { \n` +
       `            return true; \n` +

@@ -388,9 +388,9 @@ function processTexture(
   );
 
   // Read one or more channels from the texture
-  // example: texture2D(u_featureIdTexture_0, v_texCoord_1).rg
+  // example: texture(u_featureIdTexture_0, v_texCoord_1).rg
   const texCoord = `v_texCoord_${textureReader.texCoord}`;
-  const textureRead = `texture2D(${uniformName}, ${texCoord}).${channels}`;
+  const textureRead = `texture(${uniformName}, ${texCoord}).${channels}`;
 
   // Finally, assign to the struct field. Example:
   // featureIds.featureId_0 = unpacked;

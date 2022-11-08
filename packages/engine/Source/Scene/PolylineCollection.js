@@ -1306,11 +1306,7 @@ PolylineBucket.prototype.updateShader = function (
 
   const fs = new ShaderSource({
     defines: defines,
-    sources: [
-      "varying vec4 v_pickColor;\n",
-      this.material.shaderSource,
-      PolylineFS,
-    ],
+    sources: ["in vec4 v_pickColor;\n", this.material.shaderSource, PolylineFS],
   });
 
   const vsSource = batchTable.getVertexShaderCallback()(PolylineVS);

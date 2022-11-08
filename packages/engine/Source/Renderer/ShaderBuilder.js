@@ -371,7 +371,7 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
  * @param {String} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
  *
  * @example
- * // creates the line "varying vec3 v_color;" in both shaders
+ * // creates the line "in vec3 v_color;" in both shaders
  * shaderBuilder.addVarying("vec3", "v_color");
  */
 ShaderBuilder.prototype.addVarying = function (type, identifier) {

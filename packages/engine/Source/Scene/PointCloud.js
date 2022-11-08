@@ -955,7 +955,7 @@ function createShaders(pointCloud, frameState, style) {
 
   let vs =
     "attribute vec3 a_position; \n" +
-    "varying vec4 v_color; \n" +
+    "in vec4 v_color; \n" +
     "uniform vec4 u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier; \n" +
     "uniform vec4 u_constantColor; \n" +
     "uniform vec4 u_highlightColor; \n";
@@ -1121,7 +1121,7 @@ function createShaders(pointCloud, frameState, style) {
 
   vs += "} \n";
 
-  let fs = "varying vec4 v_color; \n";
+  let fs = "in vec4 v_color; \n";
 
   if (hasClippedContent) {
     fs +=
@@ -1136,7 +1136,7 @@ function createShaders(pointCloud, frameState, style) {
   fs +=
     "void main() \n" +
     "{ \n" +
-    "    gl_FragColor = czm_gammaCorrect(v_color); \n";
+    "    out_FragColor = czm_gammaCorrect(v_color); \n";
 
   if (hasClippedContent) {
     fs += getClipAndStyleCode(
