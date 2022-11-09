@@ -8,6 +8,8 @@
 
 CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
+`@cesium/widgets` is a widgets library for use with CesiumJS— including the `CesiumViewer` widget plus widgets for common tasks such as animation, base layer selection and geocoding.
+
 [Examples](https://sandcastle.cesium.com/)
 :earth_africa: [Docs](https://cesium.com/learn/cesiumjs-learn/) :earth_asia: [Website](https://cesium.com/cesiumjs) :earth_americas: [Forum](https://community.cesium.com/)
 
@@ -45,7 +47,7 @@ import "@cesium/widgets/Source/widgets.css";
 const viewer = new Viewer("cesiumContainer");
 ```
 
-See our [Quickstart Guide](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/) for more information on getting a Cesium app up and running.
+See our [Quickstart Guide](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/) for more information on getting a CesiumJS app up and running.
 
 ## Community
 
