@@ -35,7 +35,7 @@ import {
   bundleWorkers,
   createCesiumJs,
   createJsHintOptions,
-  createSpecList,
+  createCombinedSpecList,
   glslToJavaScript,
   buildEngine,
   buildWidgets,
@@ -54,7 +54,10 @@ const sourceFiles = [
   "!Source/ThirdParty/_*",
 ];
 const specFiles = [
-  "Specs/**/*Spec.js",
+  "packages/engine/Specs/**/*Spec.js",
+  "!packages/engine/Specs/SpecList.js",
+  "packages/widgets/Specs/**/*Spec.js",
+  "!packages/widgets/Specs/SpecList.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
@@ -357,7 +360,7 @@ const serveResult = (result, fileName, res, next) => {
   const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
   specWatcher.on("all", async (event) => {
     if (event === "add" || event === "unlink") {
-      await createSpecList();
+      await createCombinedSpecList();
     }
 
     specResult.outputFiles = [];
