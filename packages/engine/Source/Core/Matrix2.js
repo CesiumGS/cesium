@@ -782,7 +782,7 @@ Matrix2.multiplyByScalar = function (matrix, scalar, result) {
  * Computes the product of a matrix times a (non-uniform) scale, as if the scale were a scale matrix.
  *
  * @param {Matrix2} matrix The matrix on the left-hand side.
- * @param {Number} scale The non-uniform scale on the right-hand side.
+ * @param {Cartesian2} scale The non-uniform scale on the right-hand side.
  * @param {Matrix2} result The object onto which to store the result.
  * @returns {Matrix2} The modified result parameter.
  *
