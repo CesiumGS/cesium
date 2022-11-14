@@ -119,7 +119,6 @@ export const defaultESBuildOptions = () => {
     bundle: true,
     color: true,
     legalComments: `inline`,
-    logLevel: `info`,
     logLimit: 0,
     target: `es2020`,
   };
@@ -177,7 +176,7 @@ export async function bundleCesiumJs(options) {
     js: combinedCopyrightHeader,
   };
   // print errors immediately, and collect warnings so we can filter out known ones
-  buildConfig.logLevel = "error";
+  buildConfig.logLevel = "info";
 
   const bundles = {};
 

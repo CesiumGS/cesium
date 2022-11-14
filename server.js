@@ -35,7 +35,7 @@ import {
   bundleWorkers,
   createCesiumJs,
   createJsHintOptions,
-  createSpecList,
+  createCombinedSpecList,
   glslToJavaScript,
   buildEngine,
   buildWidgets,
@@ -43,24 +43,29 @@ import {
 } from "./build.js";
 
 const sourceFiles = [
-  "Source/**/*.js",
-  "!Source/*.js",
-  "!Source/Shaders/**",
-  "!Source/Workers/**",
-  "!Source/WorkersES6/**",
-  "Source/WorkersES6/createTaskProcessorWorker.js",
-  "!Source/ThirdParty/Workers/**",
-  "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/_*",
+  "packages/engine/Source/**/*.js",
+  "!packages/engine/Source/*.js",
+  "packages/widgets/Source/**/*.js",
+  "!packages/widgets/Source/*.js",
+  "!packages/engine/Source/Shaders/**",
+  "!packages/engine/Source/Workers/**",
+  "!packages/engine/Source/WorkersES6/**",
+  "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
+  "!packages/engine/Source/ThirdParty/Workers/**",
+  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!packages/engine/Source/ThirdParty/_*",
 ];
 const specFiles = [
-  "Specs/**/*Spec.js",
+  "packages/engine/Specs/**/*Spec.js",
+  "!packages/engine/Specs/SpecList.js",
+  "packages/widgets/Specs/**/*Spec.js",
+  "!packages/widgets/Specs/SpecList.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
 ];
-const shaderFiles = ["Source/Shaders/**/*.glsl"];
-const workerSourceFiles = ["Source/WorkersES6/*.js"];
+const shaderFiles = ["packages/engine/Source/Shaders/**/*.glsl"];
+const workerSourceFiles = ["packages/engine/Source/WorkersES6/*.js"];
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
@@ -357,7 +362,7 @@ const serveResult = (result, fileName, res, next) => {
   const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
   specWatcher.on("all", async (event) => {
     if (event === "add" || event === "unlink") {
-      await createSpecList();
+      await createCombinedSpecList();
     }
 
     specResult.outputFiles = [];
