@@ -3,7 +3,7 @@ uniform samplerCube cubeMap;
 
 void main()
 {
-    vec4 rgba = texture(cubeMap, v_cubeMapCoordinates);
+    vec4 rgba = czm_textureCube(cubeMap, v_cubeMapCoordinates);
     #ifdef RGBA_NORMALIZED
         out_FragColor = vec4(rgba.rgb, 1.0);
     #else

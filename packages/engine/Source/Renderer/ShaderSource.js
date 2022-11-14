@@ -3,6 +3,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CzmBuiltins from "../Shaders/Builtin/CzmBuiltins.js";
 import AutomaticUniforms from "./AutomaticUniforms.js";
+import demodernizeShader from "./demodernizeShader.js";
 
 function removeComments(source) {
   // remove inline comments
@@ -222,12 +223,6 @@ function combineShader(shaderSource, isFragmentShader, context) {
   // combine into single string
   let result = "";
 
-  // #version must be first
-  // defaults to #version 100 if not specified
-  if (defined(version)) {
-    result = `#version ${version}\n`;
-  }
-
   const extensionsLength = extensions.length;
   for (i = 0; i < extensionsLength; i++) {
     result += extensions[i];
@@ -288,12 +283,13 @@ function combineShader(shaderSource, isFragmentShader, context) {
   result += combinedSources;
 
   // modernize the source
-  if (context.webgl2) {
-    if (/#version/.test(result)) {
-      result = result.replaceAll("#version 100", "#version 300 es");
-    }
-
-    result = `#version 300 es\n\n${result}`;
+  if (!context.webgl2) {
+    result = demodernizeShader(result, isFragmentShader);
+    result = `#version 100\n ${result}`;
+  } else {
+    // Replace all czm_textureCube calls with texture
+    result = result.replaceAll(/czm_textureCube/g, `texture`);
+    result = `#version 300 es\n ${result}`;
   }
 
   return result;

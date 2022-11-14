@@ -89,6 +89,73 @@ describe("Renderer/demodernizeShader", () => {
     const expectedVersion = "#version 100";
     expect(output.startsWith(expectedVersion)).toEqual(true);
 
-    expect(output).toContain("vec4 tex = textureCube(u_texture, vec2(0.0));");
+    expect(output).toContain("vec4 tex = textureCube(u_texture, vec3(0.0));");
+  });
+
+  it("replaces in with attribute in vertex shader", () => {
+    const input = `#version 300 es
+    in float a_float;
+    in vec3 a_vec3;
+    in mat2 a_mat2;
+    void main() {}
+    `;
+    const output = demodernizeShader(input, false);
+
+    const expectedVersion = "#version 100";
+    expect(output.startsWith(expectedVersion)).toEqual(true);
+
+    expect(output).toContain("attribute float a_float;");
+    expect(output).toContain("attribute vec3 a_vec3;");
+    expect(output).toContain("attribute mat2 a_mat2;");
+  });
+
+  it("replaces in with varying in fragment shader", () => {
+    const input = `#version 300 es
+    in float a_float;
+    in vec3 a_vec3;
+    in mat2 a_mat2;
+    void main() {}
+    `;
+    const output = demodernizeShader(input, true);
+
+    const expectedVersion = "#version 100";
+    expect(output.startsWith(expectedVersion)).toEqual(true);
+
+    expect(output).toContain("varying float a_float;");
+    expect(output).toContain("varying vec3 a_vec3;");
+    expect(output).toContain("varying mat2 a_mat2;");
+  });
+
+  it("replaces out with varying in vertex shader", () => {
+    const input = `#version 300 es
+    out float a_float;
+    out vec3 a_vec3;
+    out mat2 a_mat2;
+    void main() {}
+    `;
+    const output = demodernizeShader(input, false);
+
+    const expectedVersion = "#version 100";
+    expect(output.startsWith(expectedVersion)).toEqual(true);
+
+    expect(output).toContain("varying float a_float;");
+    expect(output).toContain("varying vec3 a_vec3;");
+    expect(output).toContain("varying mat2 a_mat2;");
+  });
+
+  it("replaces gl_FragDepth with gl_FragDepthEXT", () => {
+    const input = `#version 300 es
+    void main() {
+      gl_FragDepth = vec4(1.0);
+      gl_FragDepth += vec4(2.0);
+    }
+    `;
+    const output = demodernizeShader(input, true);
+
+    const expectedVersion = "#version 100";
+    expect(output.startsWith(expectedVersion)).toEqual(true);
+
+    expect(output).toContain("gl_FragDepthEXT = vec4(1.0);");
+    expect(output).toContain("gl_FragDepthEXT += vec4(2.0);");
   });
 });

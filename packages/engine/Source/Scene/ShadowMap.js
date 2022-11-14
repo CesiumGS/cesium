@@ -812,7 +812,7 @@ function createDebugShadowViewCommand(shadowMap, context) {
       "        } \n" +
       "    } \n" +
       " \n" +
-      "    float shadow = czm_unpackDepth(texture(shadowMap_textureCube, dir)); \n" +
+      "    float shadow = czm_unpackDepth(czm_textureCube(shadowMap_textureCube, dir)); \n" +
       "    out_FragColor = vec4(vec3(shadow), 1.0); \n" +
       "} \n";
   } else {

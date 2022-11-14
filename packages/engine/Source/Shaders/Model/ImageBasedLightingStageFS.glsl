@@ -30,7 +30,7 @@ vec3 proceduralIBL(
 
     float inverseRoughness = 1.04 - roughness;
     inverseRoughness *= inverseRoughness;
-    vec3 sceneSkyBox = texture(czm_environmentMap, r).rgb * inverseRoughness;
+    vec3 sceneSkyBox = czm_textureCube(czm_environmentMap, r).rgb * inverseRoughness;
 
     float atmosphereHeight = 0.05;
     float blendRegionSize = 0.1 * ((1.0 - inverseRoughness) * 8.0 + 1.1 - horizonDotNadir);
