@@ -43,15 +43,17 @@ import {
 } from "./build.js";
 
 const sourceFiles = [
-  "Source/**/*.js",
-  "!Source/*.js",
-  "!Source/Shaders/**",
-  "!Source/Workers/**",
-  "!Source/WorkersES6/**",
-  "Source/WorkersES6/createTaskProcessorWorker.js",
-  "!Source/ThirdParty/Workers/**",
-  "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/_*",
+  "packages/engine/Source/**/*.js",
+  "!packages/engine/Source/*.js",
+  "packages/widgets/Source/**/*.js",
+  "!packages/widgets/Source/*.js",
+  "!packages/engine/Source/Shaders/**",
+  "!packages/engine/Source/Workers/**",
+  "!packages/engine/Source/WorkersES6/**",
+  "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
+  "!packages/engine/Source/ThirdParty/Workers/**",
+  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!packages/engine/Source/ThirdParty/_*",
 ];
 const specFiles = [
   "packages/engine/Specs/**/*Spec.js",
@@ -62,8 +64,8 @@ const specFiles = [
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
 ];
-const shaderFiles = ["Source/Shaders/**/*.glsl"];
-const workerSourceFiles = ["Source/WorkersES6/*.js"];
+const shaderFiles = ["packages/engine/Source/Shaders/**/*.glsl"];
+const workerSourceFiles = ["packages/engine/Source/WorkersES6/*.js"];
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
