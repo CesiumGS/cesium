@@ -35,13 +35,12 @@ import {
   buildCesium,
   buildEngine,
   buildWidgets,
-  bundleCesiumJs,
   bundleWorkers,
   glslToJavaScript,
   createSpecList,
-  bundleCombinedSpecs,
   createJsHintOptions,
   defaultESBuildOptions,
+  bundleCombinedWorkers,
 } from "./build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -159,24 +158,17 @@ export const buildWatch = gulp.series(build, async function () {
 
   const outputDirectory = join("Build", `Cesium${!minify ? "Unminified" : ""}`);
 
-  let [esmResult, iifeResult, cjsResult] = await bundleCesiumJs({
+  const bundles = await buildCesium({
     minify: minify,
     path: outputDirectory,
     removePragmas: removePragmas,
     sourcemap: sourcemap,
     incremental: true,
   });
-
-  let specResult = await bundleCombinedSpecs({
-    incremental: true,
-  });
-
-  await bundleWorkers({
-    minify: minify,
-    path: outputDirectory,
-    removePragmas: removePragmas,
-    sourcemap: sourcemap,
-  });
+  let esmResult = bundles.esmBundle;
+  let cjsResult = bundles.nodeBundle;
+  let iifeResult = bundles.iifeBundle;
+  let specResult = bundles.specsBundle;
 
   gulp.watch(shaderFiles, async () => {
     glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
@@ -233,7 +225,7 @@ export const buildWatch = gulp.series(build, async function () {
   );
 
   gulp.watch(workerSourceFiles, () => {
-    return bundleWorkers({
+    return bundleCombinedWorkers({
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,
