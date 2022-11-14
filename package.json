@@ -150,7 +150,7 @@
     "prettier-check": "prettier --check \"**/*\""
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   },
   "lint-staged": {
     "*.{js,cjs,html}": [
