@@ -527,6 +527,10 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts["deploy-set-version"];
   delete scripts["website-release"];
 
+  // Set server tasks to use production flag
+  scripts["start"] = "node server.js --production";
+  scripts["start-public"] = "node server.js --public --production";
+
   // Write to a temporary package.json file.
   const noPreparePackageJson = join(
     dirname(packageJsonPath),
