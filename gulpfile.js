@@ -575,6 +575,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/Cesium/**",
       "Build/CesiumUnminified/**",
       "Build/Documentation/**",
+      "Build/Specs/**",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",
