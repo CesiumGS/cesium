@@ -35,13 +35,12 @@ import {
   buildCesium,
   buildEngine,
   buildWidgets,
-  bundleCesiumJs,
   bundleWorkers,
   glslToJavaScript,
   createSpecList,
-  bundleCombinedSpecs,
   createJsHintOptions,
   defaultESBuildOptions,
+  bundleCombinedWorkers,
 } from "./build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -71,19 +70,25 @@ const argv = yargs(process.argv).argv;
 const verbose = argv.verbose;
 
 const sourceFiles = [
-  "Source/**/*.js",
-  "!Source/*.js",
-  "!Source/Workers/**",
-  "!Source/WorkersES6/**",
-  "Source/WorkersES6/createTaskProcessorWorker.js",
-  "!Source/ThirdParty/Workers/**",
-  "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/_*",
+  "packages/engine/Source/**/*.js",
+  "!packages/engine/Source/*.js",
+  "packages/widgets/Source/**/*.js",
+  "!packages/widgets/Source/*.js",
+  "!packages/engine/Source/Shaders/**",
+  "!packages/engine/Source/Workers/**",
+  "!packages/engine/Source/WorkersES6/**",
+  "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
+  "!packages/engine/Source/ThirdParty/Workers/**",
+  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!packages/engine/Source/ThirdParty/_*",
 ];
 
 const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
 const watchedSpecFiles = [
-  "Specs/**/*Spec.js",
+  "packages/engine/Specs/**/*Spec.js",
+  "!packages/engine/Specs/SpecList.js",
+  "packages/widgets/Specs/**/*Spec.js",
+  "!packages/widgets/Specs/SpecList.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
@@ -159,24 +164,17 @@ export const buildWatch = gulp.series(build, async function () {
 
   const outputDirectory = join("Build", `Cesium${!minify ? "Unminified" : ""}`);
 
-  let [esmResult, iifeResult, cjsResult] = await bundleCesiumJs({
+  const bundles = await buildCesium({
     minify: minify,
     path: outputDirectory,
     removePragmas: removePragmas,
     sourcemap: sourcemap,
     incremental: true,
   });
-
-  let specResult = await bundleCombinedSpecs({
-    incremental: true,
-  });
-
-  await bundleWorkers({
-    minify: minify,
-    path: outputDirectory,
-    removePragmas: removePragmas,
-    sourcemap: sourcemap,
-  });
+  let esmResult = bundles.esmBundle;
+  let cjsResult = bundles.nodeBundle;
+  let iifeResult = bundles.iifeBundle;
+  let specResult = bundles.specsBundle;
 
   gulp.watch(shaderFiles, async () => {
     glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
@@ -233,7 +231,7 @@ export const buildWatch = gulp.series(build, async function () {
   );
 
   gulp.watch(workerSourceFiles, () => {
-    return bundleWorkers({
+    return bundleCombinedWorkers({
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,

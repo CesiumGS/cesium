@@ -22,6 +22,9 @@
     "README.md",
     "LICENSE.md"
   ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "sideEffects": [
     "./Source/ThirdParty/**/*",
     "./Source/Widget/*.css",

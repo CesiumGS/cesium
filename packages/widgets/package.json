@@ -24,6 +24,9 @@
     "./Source/**/*.css",
     "./Specs/**/*"
   ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
   "dependencies": {
     "@cesium/engine": "0.1.0",
     "nosleep.js": "^0.12.0"
