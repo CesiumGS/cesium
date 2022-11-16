@@ -149,7 +149,7 @@ describe("Renderer/modernizeShader", function () {
       "uniform sampler2D example; \n" +
       "uniform sampler2D exampleCube; \n" +
       "uniform sampler2D example3D; \n" +
-      "varying vec2 v_textureCoordinates; \n" +
+      "in vec2 v_textureCoordinates; \n" +
       "void main() \n" +
       "{ \n" +
       "    gl_FragData[0] = texture2D(example, v_textureCoordinates); \n" +
@@ -171,7 +171,7 @@ describe("Renderer/modernizeShader", function () {
     const notExpectedTextureCube =
       "textureCube(exampleCube, v_textureCoordinates);";
     const notExpectedTexture3D = "texture3D(example3D, v_textureCoordinates);";
-    const notExpectedVarying = "varying vec2 v_textureCoordinates;";
+    const notExpectedVarying = "in vec2 v_textureCoordinates;";
 
     expect(output).toContain(expectedDepth);
     expect(output).toContain(expectedTexture2D);

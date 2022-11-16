@@ -142,7 +142,7 @@ function getECShaderProgram(context, shaderProgram) {
         "    czm_point_cloud_post_process_main(); \n" +
         "#ifdef LOG_DEPTH\n" +
         "    czm_writeLogDepth();\n" +
-        "    gl_FragData[1] = czm_packDepth(gl_FragDepthEXT); \n" +
+        "    gl_FragData[1] = czm_packDepth(gl_FragDepth); \n" +
         "#else\n" +
         "    gl_FragData[1] = czm_packDepth(gl_FragCoord.z);\n" +
         "#endif\n" +

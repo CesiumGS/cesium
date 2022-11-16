@@ -8,7 +8,7 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 function DerivedCommand() {}
 
-const fragDepthRegex = /\bgl_FragDepthEXT\b/;
+const fragDepthRegex = /\bgl_FragDepth\b/;
 const discardRegex = /\bdiscard\b/;
 
 function getDepthOnlyShaderProgram(context, shaderProgram) {

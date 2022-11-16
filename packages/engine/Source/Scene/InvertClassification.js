@@ -152,7 +152,7 @@ const translucentFS =
   "    }\n" +
   "#endif\n" +
   "    out_FragColor = color * highlightColor;\n" +
-  "    gl_FragDepthEXT = texture(depthTexture, v_textureCoordinates).r;\n" +
+  "    gl_FragDepth = texture(depthTexture, v_textureCoordinates).r;\n" +
   "}\n";
 
 const opaqueFS =

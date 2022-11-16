@@ -997,7 +997,7 @@ fullscreenSubscription.dispose();
 - Varyings start with `v_`, e.g.,
 
 ```javascript
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 ```
 
 - Uniforms start with `u_`, e.g.,

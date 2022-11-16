@@ -138,7 +138,7 @@ describe(
       const stage = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
-            "uniform sampler2D texture; varying vec2 v_textureCoordinates; void main() { gl_FragColor = texture2D(texture, v_textureCoordinates); }",
+            "uniform sampler2D texture; in vec2 v_textureCoordinates; void main() { gl_FragColor = texture2D(texture, v_textureCoordinates); }",
           uniforms: {
             texture: "./Data/Images/Green2x2.png",
           },
@@ -249,7 +249,7 @@ describe(
       ).then(function (model) {
         const fs =
           "uniform sampler2D colorTexture; \n" +
-          "varying vec2 v_textureCoordinates; \n" +
+          "in vec2 v_textureCoordinates; \n" +
           "void main() { \n" +
           "    if (czm_selected(v_textureCoordinates)) { \n" +
           "        gl_FragColor = texture2D(colorTexture, v_textureCoordinates); \n" +

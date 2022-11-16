@@ -48,7 +48,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * // Simple stage to change the color
  * const fs =`
  *     uniform sampler2D colorTexture;
- *     varying vec2 v_textureCoordinates;
+ *     in vec2 v_textureCoordinates;
  *     uniform float scale;
  *     uniform vec3 offset;
  *     void main() {
@@ -70,7 +70,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.
  * const fs =`
  *     uniform sampler2D colorTexture;
- *     varying vec2 v_textureCoordinates;
+ *     in vec2 v_textureCoordinates;
  *     uniform vec4 highlight;
  *     void main() {
  *         vec4 color = texture(colorTexture, v_textureCoordinates);
@@ -556,7 +556,7 @@ function createDrawCommand(stage, context) {
   if (defined(stage._selectedIdTexture)) {
     const width = stage._selectedIdTexture.width;
 
-    fs = fs.replace(/varying\s+vec2\s+v_textureCoordinates;/g, "");
+    fs = fs.replace(/in\s+vec2\s+v_textureCoordinates;/g, "");
     fs =
       `${
         "#define CZM_SELECTED_FEATURE \n" +

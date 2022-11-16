@@ -27,7 +27,7 @@ function demodernizeShader(input, isFragmentShader) {
 
   if (isFragmentShader) {
     // Replace the in with varying.
-    output = output.replaceAll(/(in) (vec\d|mat\d|float)/g, `varying $2`);
+    output = output.replaceAll(/(in)\s+(vec\d|mat\d|float)/g, `varying $2`);
 
     if (/out_FragData_(\d+)/.test(output)) {
       output = `#extension GL_EXT_draw_buffers : enable\n ${output}`;
@@ -59,11 +59,11 @@ function demodernizeShader(input, isFragmentShader) {
     }
   } else {
     // Replace the in with attribute.
-    output = output.replaceAll(/(in) (vec\d|mat\d|float)/g, `attribute $2`);
+    output = output.replaceAll(/(in)\s+(vec\d|mat\d|float)/g, `attribute $2`);
 
     // Replace the out with varying.
     output = output.replaceAll(
-      /(out) (vec\d|mat\d|float) ([A-z_0-9]+);/g,
+      /(out)\s+(vec\d|mat\d|float)\s+([A-z_0-9]+);/g,
       `varying $2 $3;`
     );
   }

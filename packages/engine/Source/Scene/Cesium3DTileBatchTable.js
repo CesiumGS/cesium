@@ -517,8 +517,8 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
       newMain +=
         `${
           "uniform sampler2D tile_batchTexture; \n" +
-          "in vec4 tile_featureColor; \n" +
-          "in vec2 tile_featureSt; \n" +
+          "out vec4 tile_featureColor; \n" +
+          "out vec2 tile_featureSt; \n" +
           "void main() \n" +
           "{ \n" +
           "    vec2 st = computeSt("
@@ -553,7 +553,7 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
       // When VTF is not supported, color blend mode MIX will look incorrect due to the feature's color not being available in the vertex shader
       newMain =
         `${
-          "in vec2 tile_featureSt; \n" +
+          "out vec2 tile_featureSt; \n" +
           "void main() \n" +
           "{ \n" +
           "    tile_color(vec4(1.0)); \n" +

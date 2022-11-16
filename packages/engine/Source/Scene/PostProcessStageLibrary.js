@@ -293,7 +293,7 @@ function getSilhouetteEdgeDetection(edgeDetectionStages) {
   }
 
   const fs =
-    `${fsDecl}varying vec2 v_textureCoordinates; \n` +
+    `${fsDecl}in vec2 v_textureCoordinates; \n` +
     `void main() { \n` +
     `    vec4 color = vec4(0.0); \n` +
     `    for (int i = 0; i < ${edgeDetectionStages.length}; i++) \n` +

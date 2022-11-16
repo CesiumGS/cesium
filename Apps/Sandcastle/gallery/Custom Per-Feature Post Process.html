@@ -59,7 +59,7 @@
         // Shade selected model with highlight.
         const fragmentShaderSource = `
           uniform sampler2D colorTexture;
-          varying vec2 v_textureCoordinates;
+          in vec2 v_textureCoordinates;
           uniform vec4 highlight;
           void main() {
               vec4 color = texture2D(colorTexture, v_textureCoordinates);

@@ -58,7 +58,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
-            "varying vec2 v_textureCoordinates;\n" +
+            "in vec2 v_textureCoordinates;\n" +
             "void main() {\n" +
             "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
             "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
@@ -110,7 +110,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
-            "varying vec2 v_textureCoordinates;\n" +
+            "in vec2 v_textureCoordinates;\n" +
             "void main() {\n" +
             "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
             "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
@@ -153,7 +153,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
-            "varying vec2 v_textureCoordinates;\n" +
+            "in vec2 v_textureCoordinates;\n" +
             "void main() {\n" +
             "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
             "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
@@ -200,7 +200,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
-            "varying vec2 v_textureCoordinates;\n" +
+            "in vec2 v_textureCoordinates;\n" +
             "void main() {\n" +
             "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
             "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
@@ -236,7 +236,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
-            "varying vec2 v_textureCoordinates;\n" +
+            "in vec2 v_textureCoordinates;\n" +
             "void main() {\n" +
             "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
             "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
@@ -266,7 +266,7 @@ describe(
         new PostProcessStage({
           fragmentShader:
             "uniform sampler2D colorTexture;\n" +
-            "varying vec2 v_textureCoordinates;\n" +
+            "in vec2 v_textureCoordinates;\n" +
             "void main() {\n" +
             "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
             "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
