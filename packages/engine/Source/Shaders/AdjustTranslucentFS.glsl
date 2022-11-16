@@ -1,4 +1,7 @@
-
+#ifdef MRT
+layout (location = 0) vec4 out_FragData_0;
+layout (location = 1) vec4 out_FragData_1;
+#endif
 
 uniform vec4 u_bgColor;
 uniform sampler2D u_depthTexture;

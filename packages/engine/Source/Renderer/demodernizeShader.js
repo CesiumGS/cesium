@@ -32,11 +32,14 @@ function demodernizeShader(input, isFragmentShader) {
     if (/out_FragData_(\d+)/.test(output)) {
       output = `#extension GL_EXT_draw_buffers : enable\n ${output}`;
 
+      // Remove all layout declarations for out_FragData.
+      output = output.replaceAll(
+        /layout \(location = \d+\) vec4 out_FragData_\d+;/g,
+        ``
+      );
+
       // Replace out_FragData with gl_FragData.
       output = output.replaceAll(/out_FragData_(\d+)/g, `gl_FragData[$1]`);
-
-      // Remove all layout declarations for out_FragData.
-      input.replaceAll(/layout \(location = \d+\) vec4 out_FragData_\d+/g, ``);
     }
 
     // Replace out_FragColor with gl_FragColor.

@@ -505,6 +505,14 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
       }vec4 czm_gl_FragColor;\n` + `bool czm_discard = false;\n`
     );
 
+    const fragDataMatches = [...source.matchAll(/out_FragData_(d+)/g)];
+    let fragDataDeclarations = ``;
+    for (let i = 0; i < fragDataMatches.length; i++) {
+      const fragDataMatch = fragDataMatches[i];
+      fragDataDeclarations = `layout (location = ${fragDataMatch[1]}) vec4 ${fragDataMatch[0]};\n${fragDataDeclarations}`;
+    }
+    source = `${fragDataDeclarations}\n${source}`;
+
     fs.sources.push(
       `${
         "void main()\n" +

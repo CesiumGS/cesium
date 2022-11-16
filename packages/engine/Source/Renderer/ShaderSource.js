@@ -429,8 +429,8 @@ ShaderSource.createPickVertexShaderSource = function (vertexShaderSource) {
     "czm_old_main"
   );
   const pickMain =
-    "attribute vec4 pickColor; \n" +
-    "in vec4 czm_pickColor; \n" +
+    "in vec4 pickColor; \n" +
+    "out vec4 czm_pickColor; \n" +
     "void main() \n" +
     "{ \n" +
     "    czm_old_main(); \n" +
