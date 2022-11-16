@@ -131,20 +131,19 @@ function getECShaderProgram(context, shaderProgram) {
         source,
         "czm_point_cloud_post_process_main"
       );
-      source = source.replace(/gl_FragColor/g, "gl_FragData[0]");
+      source = source.replace(/out_FragColor/g, "out_FragData_0");
       return source;
     });
 
-    fs.sources.unshift("#extension GL_EXT_draw_buffers : enable \n");
     fs.sources.push(
       "void main() \n" +
         "{ \n" +
         "    czm_point_cloud_post_process_main(); \n" +
         "#ifdef LOG_DEPTH\n" +
         "    czm_writeLogDepth();\n" +
-        "    gl_FragData[1] = czm_packDepth(gl_FragDepth); \n" +
+        "    out_FragData_1 = czm_packDepth(gl_FragDepth); \n" +
         "#else\n" +
-        "    gl_FragData[1] = czm_packDepth(gl_FragCoord.z);\n" +
+        "    out_FragData_1 = czm_packDepth(gl_FragCoord.z);\n" +
         "#endif\n" +
         "}"
     );

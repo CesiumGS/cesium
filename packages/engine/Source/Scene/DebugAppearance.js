@@ -88,9 +88,9 @@ function DebugAppearance(options) {
 
   const vs =
     `${
-      "attribute vec3 position3DHigh;\n" +
-      "attribute vec3 position3DLow;\n" +
-      "attribute float batchId;\n"
+      "in vec3 position3DHigh;\n" +
+      "in vec3 position3DLow;\n" +
+      "in float batchId;\n"
     }${
       perInstanceAttribute
         ? ""
