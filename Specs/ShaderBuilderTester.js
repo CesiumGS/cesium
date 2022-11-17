@@ -70,7 +70,7 @@ ShaderBuilderTester.expectHasVaryings = function (
   );
   expectEqualUnordered(
     shaderBuilder._fragmentShaderParts.varyingLines,
-    expectedVaryings.map((varying) => `out ${varying}`)
+    expectedVaryings.map((varying) => `in ${varying}`)
   );
 };
 
