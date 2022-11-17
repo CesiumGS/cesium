@@ -126,12 +126,19 @@ function getECShaderProgram(context, shaderProgram) {
 
     const fs = shaderProgram.fragmentShaderSource.clone();
 
+    fs.sources.splice(
+      0,
+      0,
+      `layout (location = 0) out vec4 out_FragData_0;
+       layout (location = 1) out vec4 out_FragData_1;`
+    );
+
     fs.sources = fs.sources.map(function (source) {
       source = ShaderSource.replaceMain(
         source,
         "czm_point_cloud_post_process_main"
       );
-      source = source.replace(/out_FragColor/g, "out_FragData_0");
+      source = source.replaceAll(/out_FragColor/g, "out_FragData_0");
       return source;
     });
 

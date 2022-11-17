@@ -364,7 +364,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
     }${
       debugCascadeColors
         ? "    // Draw cascade colors for debugging \n" +
-          "    gl_FragColor *= czm_cascadeColor(weights); \n"
+          "    out_FragColor *= czm_cascadeColor(weights); \n"
         : ""
     }`;
   } else {

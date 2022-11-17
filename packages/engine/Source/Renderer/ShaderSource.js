@@ -263,7 +263,8 @@ function combineShader(shaderSource, isFragmentShader, context) {
     !/layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g.test(
       combinedSources
     ) &&
-    !/czm_out_FragColor/g.test(combinedSources)
+    !/czm_out_FragColor/g.test(combinedSources) &&
+    /out_FragColor/g.test(combinedSources)
   ) {
     result += "layout(location = 0) out vec4 out_FragColor;\n\n";
   }

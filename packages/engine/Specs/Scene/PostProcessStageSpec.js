@@ -138,9 +138,9 @@ describe(
       const stage = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
-            "uniform sampler2D texture; in vec2 v_textureCoordinates; void main() { out_FragColor = texture(texture, v_textureCoordinates); }",
+            "uniform sampler2D inputTexture; in vec2 v_textureCoordinates; void main() { out_FragColor = texture(inputTexture, v_textureCoordinates); }",
           uniforms: {
-            texture: "./Data/Images/Green2x2.png",
+            inputTexture: "./Data/Images/Green2x2.png",
           },
         })
       );
@@ -174,9 +174,9 @@ describe(
         const stage = scene.postProcessStages.add(
           new PostProcessStage({
             fragmentShader:
-              "uniform sampler2D texture; void main() { out_FragColor = texture(texture, vec2(0.5)); }",
+              "uniform sampler2D inputTexture; void main() { out_FragColor = texture(inputTexture, vec2(0.5)); }",
             uniforms: {
-              texture: image,
+              inputTexture: image,
             },
           })
         );

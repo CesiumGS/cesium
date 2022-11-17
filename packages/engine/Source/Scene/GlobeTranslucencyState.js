@@ -441,7 +441,7 @@ function getTranslucentShaderProgram(vs, fs) {
     "        // Reverse premultiplication process to get the correct composited result of the classification primitives \n" +
     "        classificationColor.rgb /= classificationColor.a; \n" +
     "    } \n" +
-    "    out_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n" +
+    "    out_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + out_FragColor * (1.0 - classificationColor.a); \n" +
     "} \n";
 
   sources.push(globeTranslucencyMain);
