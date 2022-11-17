@@ -22,15 +22,14 @@ vec3 wrapVec(vec3 value, float rangeLength) {
                 wrap(value.z, rangeLength));
 }
 
-float textureSliceWidth = u_noiseTextureDimensions.x;
-float noiseTextureRows = u_noiseTextureDimensions.y;
-float inverseNoiseTextureRows = u_noiseTextureDimensions.z;
-
-float textureSliceWidthSquared = textureSliceWidth * textureSliceWidth;
-vec2 inverseNoiseTextureDimensions = vec2(noiseTextureRows / textureSliceWidthSquared,
-                                          inverseNoiseTextureRows / textureSliceWidth);
-
 vec2 voxelToUV(vec3 voxelIndex) {
+    float textureSliceWidth = u_noiseTextureDimensions.x;
+    float noiseTextureRows = u_noiseTextureDimensions.y;
+    float inverseNoiseTextureRows = u_noiseTextureDimensions.z;
+
+    float textureSliceWidthSquared = textureSliceWidth * textureSliceWidth;
+    vec2 inverseNoiseTextureDimensions = vec2(noiseTextureRows / textureSliceWidthSquared,
+                                            inverseNoiseTextureRows / textureSliceWidth);
     vec3 wrappedIndex = wrapVec(voxelIndex, textureSliceWidth);
     float column = mod(wrappedIndex.z, textureSliceWidth * inverseNoiseTextureRows);
     float row = floor(wrappedIndex.z / textureSliceWidth * noiseTextureRows);
@@ -50,6 +49,7 @@ vec4 lerpSamplesX(vec3 voxelIndex, float x) {
 }
 
 vec4 sampleNoiseTexture(vec3 position) {
+    float textureSliceWidth = u_noiseTextureDimensions.x;
     vec3 recenteredPos = position + vec3(textureSliceWidth / 2.0);
     vec3 lerpValue = fract(recenteredPos);
     vec3 voxelIndex = floor(recenteredPos);

@@ -3,9 +3,6 @@ uniform float u_noiseDetail;
 uniform vec3 u_noiseOffset;
 in vec2 v_position;
 
-float textureSliceWidth = u_noiseTextureDimensions.x;
-float inverseNoiseTextureRows = u_noiseTextureDimensions.z;
-
 float wrap(float value, float rangeLength) {
     if(value < 0.0) {
         float absValue = abs(value);
@@ -30,6 +27,7 @@ vec3 random3(vec3 p) {
 // Frequency corresponds to cell size.
 // The higher the frequency, the smaller the cell size.
 vec3 getWorleyCellPoint(vec3 centerCell, vec3 offset, float freq) {
+    float textureSliceWidth = u_noiseTextureDimensions.x;
     vec3 cell = centerCell + offset;
     cell = wrapVec(cell, textureSliceWidth / u_noiseDetail);
     cell += floor(u_noiseOffset / u_noiseDetail);
@@ -78,6 +76,8 @@ float worleyFBMNoise(vec3 p, float octaves, float scale) {
 }
 
 void main() {
+    float textureSliceWidth = u_noiseTextureDimensions.x;
+    float inverseNoiseTextureRows = u_noiseTextureDimensions.z;
     float x = mod(v_position.x, textureSliceWidth);
     float y = mod(v_position.y, textureSliceWidth);
     float sliceRow = floor(v_position.y / textureSliceWidth);
