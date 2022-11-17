@@ -585,9 +585,9 @@ function getDefaultShader(source, applyHighlight) {
     `{ \n` +
     `    tile_main(); \n` +
     `    tile_featureColor = czm_gammaCorrect(tile_featureColor); \n` +
-    `    gl_FragColor.a *= tile_featureColor.a; \n` +
+    `    out_FragColor.a *= tile_featureColor.a; \n` +
     `    float highlight = ceil(tile_colorBlend); \n` +
-    `    gl_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n` +
+    `    out_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n` +
     `} \n`
   );
 }
@@ -671,9 +671,9 @@ function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
   // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
   const highlight =
     "    tile_featureColor = czm_gammaCorrect(tile_featureColor); \n" +
-    "    gl_FragColor.a *= tile_featureColor.a; \n" +
+    "    out_FragColor.a *= tile_featureColor.a; \n" +
     "    float highlight = ceil(tile_colorBlend); \n" +
-    "    gl_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n";
+    "    out_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n";
 
   let setColor;
   if (type === "vec3" || type === "vec4") {
@@ -734,7 +734,7 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
         "    tile_color(tile_featureColor); \n";
 
       if (hasPremultipliedAlpha) {
-        source += "    gl_FragColor.rgb *= gl_FragColor.a; \n";
+        source += "    out_FragColor.rgb *= out_FragColor.a; \n";
       }
 
       source += "}";
@@ -775,7 +775,7 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
       source += "    tile_color(featureProperties); \n";
 
       if (hasPremultipliedAlpha) {
-        source += "    gl_FragColor.rgb *= gl_FragColor.a; \n";
+        source += "    out_FragColor.rgb *= out_FragColor.a; \n";
       }
 
       source += "} \n";
@@ -800,7 +800,7 @@ Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = funct
         "{ \n" +
         "    tile_main(); \n" +
         "    out_FragColor = tile_featureColor; \n" +
-        "    gl_FragColor.rgb *= gl_FragColor.a; \n" +
+        "    out_FragColor.rgb *= out_FragColor.a; \n" +
         "}";
     } else {
       source +=
@@ -815,7 +815,7 @@ Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = funct
         "        discard; \n" +
         "    } \n" +
         "    out_FragColor = featureProperties; \n" +
-        "    gl_FragColor.rgb *= gl_FragColor.a; \n" +
+        "    out_FragColor.rgb *= out_FragColor.a; \n" +
         "} \n";
     }
     return source;

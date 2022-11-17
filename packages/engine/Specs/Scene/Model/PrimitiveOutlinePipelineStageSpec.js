@@ -111,10 +111,10 @@ describe(
           "HAS_PRIMITIVE_OUTLINE",
         ]);
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_outlineCoordinates;",
+          "in vec3 a_outlineCoordinates;",
         ]);
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec3 v_outlineCoordinates;",
+          "vec3 v_outlineCoordinates;",
         ]);
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
         ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [

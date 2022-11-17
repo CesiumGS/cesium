@@ -174,7 +174,7 @@ describe(
       );
 
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying vec4 v_pointCloudColor;",
+        "vec4 v_pointCloudColor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -221,7 +221,7 @@ describe(
       );
 
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying vec4 v_pointCloudColor;",
+        "vec4 v_pointCloudColor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -362,7 +362,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "attributes.positionMC"
+        "ins.positionMC"
       );
     });
 
@@ -438,7 +438,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "attributes.normalMC"
+        "ins.normalMC"
       );
     });
 
@@ -476,7 +476,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "attributes.color_0"
+        "ins.color_0"
       );
     });
 

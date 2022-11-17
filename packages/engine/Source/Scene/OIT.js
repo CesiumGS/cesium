@@ -458,20 +458,20 @@ function getTranslucentAlphaRenderState(oit, context, renderState) {
 }
 
 const mrtShaderSource =
-  "    vec3 Ci = czm_gl_FragColor.rgb * czm_gl_FragColor.a;\n" +
-  "    float ai = czm_gl_FragColor.a;\n" +
+  "    vec3 Ci = czm_out_FragColor.rgb * czm_out_FragColor.a;\n" +
+  "    float ai = czm_out_FragColor.a;\n" +
   "    float wzi = czm_alphaWeight(ai);\n" +
   "    out_FragData_0 = vec4(Ci * wzi, ai);\n" +
   "    out_FragData_1 = vec4(ai * wzi);\n";
 
 const colorShaderSource =
-  "    vec3 Ci = czm_gl_FragColor.rgb * czm_gl_FragColor.a;\n" +
-  "    float ai = czm_gl_FragColor.a;\n" +
+  "    vec3 Ci = czm_out_FragColor.rgb * czm_out_FragColor.a;\n" +
+  "    float ai = czm_out_FragColor.a;\n" +
   "    float wzi = czm_alphaWeight(ai);\n" +
   "    out_FragColor = vec4(Ci, ai) * wzi;\n";
 
 const alphaShaderSource =
-  "    float ai = czm_gl_FragColor.a;\n" + "    out_FragColor = vec4(ai);\n";
+  "    float ai = czm_out_FragColor.a;\n" + "    out_FragColor = vec4(ai);\n";
 
 function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
   let shader = context.shaderCache.getDerivedShaderProgram(
@@ -485,8 +485,11 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
 
     fs.sources = fs.sources.map(function (source) {
       source = ShaderSource.replaceMain(source, "czm_translucent_main");
-      source = source.replace(/out_FragColor/g, "czm_gl_FragColor");
-      source = source.replace(/[^_]gl_FragColor/g, "czm_gl_FragColor");
+      source = source.replace(/out_FragColor/g, "czm_out_FragColor");
+      source = source.replace(
+        /layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g,
+        ""
+      );
       source = source.replace(/\bdiscard\b/g, "czm_discard = true");
       source = source.replace(/czm_phong/g, "czm_translucentPhong");
       return source;
@@ -498,20 +501,16 @@ function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
     fs.sources.splice(
       0,
       0,
-      `${
-        source.indexOf("gl_FragData") !== -1
-          ? "#extension GL_EXT_draw_buffers : enable \n"
-          : ""
-      }vec4 czm_gl_FragColor;\n` + `bool czm_discard = false;\n`
+      `vec4 czm_out_FragColor;\n` + `bool czm_discard = false;\n`
     );
 
-    const fragDataMatches = [...source.matchAll(/out_FragData_(d+)/g)];
+    const fragDataMatches = [...source.matchAll(/out_FragData_(\d+)/g)];
     let fragDataDeclarations = ``;
     for (let i = 0; i < fragDataMatches.length; i++) {
       const fragDataMatch = fragDataMatches[i];
-      fragDataDeclarations = `layout (location = ${fragDataMatch[1]}) vec4 ${fragDataMatch[0]};\n${fragDataDeclarations}`;
+      fragDataDeclarations = `layout (location = ${fragDataMatch[1]}) out vec4 ${fragDataMatch[0]};\n${fragDataDeclarations}`;
     }
-    source = `${fragDataDeclarations}\n${source}`;
+    fs.sources.push(fragDataDeclarations);
 
     fs.sources.push(
       `${

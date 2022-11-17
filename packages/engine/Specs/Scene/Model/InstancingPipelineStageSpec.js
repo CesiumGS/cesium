@@ -269,10 +269,10 @@ describe(
           "HAS_INSTANCE_MATRICES",
         ]);
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec4 a_instancingTransformRow0;",
-          "attribute vec4 a_instancingTransformRow1;",
-          "attribute vec4 a_instancingTransformRow2;",
-          "attribute float a_instanceFeatureId_0;",
+          "in vec4 a_instancingTransformRow0;",
+          "in vec4 a_instancingTransformRow1;",
+          "in vec4 a_instancingTransformRow2;",
+          "in float a_instanceFeatureId_0;",
         ]);
 
         expect(runtimeNode.instancingTransformsBuffer).toBeDefined();
@@ -314,13 +314,13 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec4 a_instancingTransformRow0;",
-          "attribute vec4 a_instancingTransformRow1;",
-          "attribute vec4 a_instancingTransformRow2;",
-          "attribute vec4 a_instancingTransform2DRow0;",
-          "attribute vec4 a_instancingTransform2DRow1;",
-          "attribute vec4 a_instancingTransform2DRow2;",
-          "attribute float a_instanceFeatureId_0;",
+          "in vec4 a_instancingTransformRow0;",
+          "in vec4 a_instancingTransformRow1;",
+          "in vec4 a_instancingTransformRow2;",
+          "in vec4 a_instancingTransform2DRow0;",
+          "in vec4 a_instancingTransform2DRow1;",
+          "in vec4 a_instancingTransform2DRow2;",
+          "in float a_instanceFeatureId_0;",
         ]);
 
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
@@ -514,7 +514,7 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_instanceTranslation;",
+          "in vec3 a_instanceTranslation;",
         ]);
 
         // No additional buffer was created.
@@ -561,7 +561,7 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_instanceTranslation;",
+          "in vec3 a_instanceTranslation;",
         ]);
 
         // No additional buffer was created.
@@ -617,8 +617,8 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_instanceTranslation;",
-          "attribute vec3 a_instanceTranslation2D;",
+          "in vec3 a_instanceTranslation;",
+          "in vec3 a_instanceTranslation2D;",
         ]);
 
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [

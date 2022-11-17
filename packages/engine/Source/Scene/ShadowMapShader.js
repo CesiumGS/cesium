@@ -92,7 +92,7 @@ ShadowMapShader.createShadowCastFragmentShader = function (
       "void main() \n" +
       "{ \n" +
       "    czm_shadow_cast_main(); \n" +
-      "    if (gl_FragColor.a == 0.0) \n" +
+      "    if (out_FragColor.a == 0.0) \n" +
       "    { \n" +
       "       discard; \n" +
       "    } \n";
@@ -383,7 +383,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
       "    float visibility = czm_shadowVisibility(shadowMap_texture, shadowParameters); \n";
   }
 
-  fsSource += "    gl_FragColor.rgb *= visibility; \n" + "} \n";
+  fsSource += "    out_FragColor.rgb *= visibility; \n" + "} \n";
 
   sources.push(fsSource);
 

@@ -276,7 +276,7 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
         "void main() \n" +
         "{ \n" +
         "    czm_non_pick_main(); \n" +
-        "    if (gl_FragColor.a == 0.0) { \n" +
+        "    if (out_FragColor.a == 0.0) { \n" +
         "        discard; \n" +
         "    } \n" +
         "    out_FragColor = "

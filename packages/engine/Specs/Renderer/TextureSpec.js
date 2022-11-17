@@ -33,10 +33,10 @@ describe(
 
     const fs =
       "uniform sampler2D u_texture;" +
-      "void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
+      "void main() { out_FragColor = texture(u_texture, vec2(0.0)); }";
     const fsLuminanceAlpha =
       "uniform sampler2D u_texture;" +
-      "void main() { gl_FragColor = vec4(texture2D(u_texture, vec2(0.0)).ra, 0.0, 1.0); }";
+      "void main() { out_FragColor = vec4(texture(u_texture, vec2(0.0)).ra, 0.0, 1.0); }";
     let texture;
     const uniformMap = {
       u_texture: function () {
@@ -333,7 +333,7 @@ describe(
 
       const fs =
         "uniform sampler2D u_texture;" +
-        "void main() { gl_FragColor = texture2D(u_texture, vec2(0.5, 0.0)); }";
+        "void main() { out_FragColor = texture(u_texture, vec2(0.5, 0.0)); }";
 
       if (!context.textureFloatLinear) {
         expect({
@@ -417,7 +417,7 @@ describe(
 
       const fs =
         "uniform sampler2D u_texture;" +
-        "void main() { gl_FragColor = texture2D(u_texture, vec2(0.5, 0.0)); }";
+        "void main() { out_FragColor = texture(u_texture, vec2(0.5, 0.0)); }";
 
       if (!context.textureHalfFloatLinear) {
         expect({
@@ -527,7 +527,7 @@ describe(
       fragmentShaderSource += "uniform sampler2D u_texture;";
       fragmentShaderSource += "uniform mediump vec2 u_txCoords;";
       fragmentShaderSource +=
-        "void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }";
+        "void main() { out_FragColor = texture(u_texture, u_txCoords); }";
 
       let txCoords;
       const um = {
@@ -688,7 +688,7 @@ describe(
       fragmentShaderSource += "uniform sampler2D u_texture;";
       fragmentShaderSource += "uniform mediump vec2 u_txCoords;";
       fragmentShaderSource +=
-        "void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }";
+        "void main() { out_FragColor = texture(u_texture, u_txCoords); }";
 
       let txCoords;
       const um = {

@@ -42,7 +42,7 @@ function demodernizeShader(input, isFragmentShader) {
       output = output.replaceAll(/out_FragData_(\d+)/g, `gl_FragData[$1]`);
     }
 
-    // Replace out_FragColor with gl_FragColor.
+    // Replace out_FragColor with out_FragColor.
     output = output.replaceAll(/out_FragColor/g, `gl_FragColor`);
     output = output.replaceAll(/out_FragColor\[(\d+)\]/g, `gl_FragColor[$1]`);
 

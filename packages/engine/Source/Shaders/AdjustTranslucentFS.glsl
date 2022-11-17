@@ -1,6 +1,8 @@
 #ifdef MRT
-layout (location = 0) vec4 out_FragData_0;
-layout (location = 1) vec4 out_FragData_1;
+layout (location = 0) out vec4 out_FragData_0;
+layout (location = 1) out vec4 out_FragData_1;
+#else
+layout (location = 0) out vec4 out_FragColor;
 #endif
 
 uniform vec4 u_bgColor;

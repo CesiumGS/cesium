@@ -397,7 +397,7 @@ function Context(canvas, options) {
  * especially for horizon views.
  * </p>
  *
- * @property {Boolean} [requestWebGl2 = false] If true and the browser supports it, use a WebGL 2 rendering context
+ * @property {Boolean} [requestWebGl1=false] If true and the browser supports it, use a WebGL 1 rendering context
  * @property {Boolean} [allowTextureFilterAnisotropic=true] If true, use anisotropic filtering during texture sampling
  * @property {WebGLOptions} [webgl] WebGL options to be passed on to canvas.getContext
  * @property {Function} [getWebGLStub] A function to create a WebGL stub for testing
@@ -407,19 +407,18 @@ function Context(canvas, options) {
  * @private
  * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
  * @param {WebGLOptions} webglOptions WebGL options to be passed on to HTMLCanvasElement.getContext()
- * @param {Boolean} requestWebgl2 Whether to request a WebGL2RenderingContext
- * @returns {WebGLRenderingContext|WebGL2RenderingContext}
+ * @param {Boolean} requestWebgl1 Whether to request a WebGLRenderingContext
+ * @returns {WebGL2RenderingContext|WebGLRenderingContext}
  */
-function getWebGLContext(canvas, webglOptions, requestWebgl2) {
+function getWebGLContext(canvas, webglOptions, requestWebgl1) {
   if (typeof WebGLRenderingContext === "undefined") {
     throw new RuntimeError(
       "The browser does not support WebGL.  Visit http://get.webgl.org."
     );
   }
 
-  requestWebgl2 =
-    requestWebgl2 && typeof WebGL2RenderingContext !== "undefined";
-  const contextType = requestWebgl2 ? "webgl2" : "webgl";
+  requestWebgl1 = requestWebgl1 && typeof WebGLRenderingContext !== "undefined";
+  const contextType = requestWebgl1 ? "webgl" : "webgl2";
   const glContext = canvas.getContext(contextType, webglOptions);
 
   if (!defined(glContext)) {

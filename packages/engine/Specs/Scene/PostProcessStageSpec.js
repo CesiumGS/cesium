@@ -35,7 +35,7 @@ describe(
 
     it("constructs", function () {
       const fragmentShader =
-        "uniform vec4 color; void main() { gl_FragColor = color; }";
+        "uniform vec4 color; void main() { out_FragColor = color; }";
       const uniforms = { color: Color.clone(Color.RED) };
       const textureScale = 0.5;
       const forcePowerOfTwo = true;
@@ -72,7 +72,7 @@ describe(
     });
 
     it("default constructs", function () {
-      const fragmentShader = "void main() { gl_FragColor = vec4(1.0); }";
+      const fragmentShader = "void main() { out_FragColor = vec4(1.0); }";
 
       const stage = new PostProcessStage({
         fragmentShader: fragmentShader,
@@ -97,7 +97,7 @@ describe(
     });
 
     it("throws with invalid texture scale", function () {
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       expect(function () {
         return new PostProcessStage({
           fragmentShader: fs,
@@ -115,7 +115,7 @@ describe(
     it("throws if pixel format is not a color format", function () {
       expect(function () {
         return new PostProcessStage({
-          fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
+          fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
           pixelFormat: PixelFormat.DEPTH_STENCIL,
         });
       }).toThrowDeveloperError();
@@ -126,7 +126,7 @@ describe(
       scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
-            "void main() { gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
+            "void main() { out_FragColor = vec4(1.0, 1.0, 0.0, 1.0); }",
         })
       );
       scene.renderForSpecs(); // render one frame so the stage is ready
@@ -138,7 +138,7 @@ describe(
       const stage = scene.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
-            "uniform sampler2D texture; in vec2 v_textureCoordinates; void main() { gl_FragColor = texture2D(texture, v_textureCoordinates); }",
+            "uniform sampler2D texture; in vec2 v_textureCoordinates; void main() { out_FragColor = texture(texture, v_textureCoordinates); }",
           uniforms: {
             texture: "./Data/Images/Green2x2.png",
           },
@@ -174,7 +174,7 @@ describe(
         const stage = scene.postProcessStages.add(
           new PostProcessStage({
             fragmentShader:
-              "uniform sampler2D texture; void main() { gl_FragColor = texture2D(texture, vec2(0.5)); }",
+              "uniform sampler2D texture; void main() { out_FragColor = texture(texture, vec2(0.5)); }",
             uniforms: {
               texture: image,
             },
@@ -207,7 +207,7 @@ describe(
       const bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
       s.postProcessStages.add(
         new PostProcessStage({
-          fragmentShader: `void main() { gl_FragColor = vec4(vec3(${
+          fragmentShader: `void main() { out_FragColor = vec4(vec3(${
             bgColor / 255
           }), 1.0); }`,
         })
@@ -216,7 +216,7 @@ describe(
       const stage = s.postProcessStages.add(
         new PostProcessStage({
           fragmentShader:
-            "uniform sampler2D depthTexture; void main() { gl_FragColor = vec4(1.0); }",
+            "uniform sampler2D depthTexture; void main() { out_FragColor = vec4(1.0); }",
         })
       );
       return pollToPromise(function () {
@@ -252,9 +252,9 @@ describe(
           "in vec2 v_textureCoordinates; \n" +
           "void main() { \n" +
           "    if (czm_selected(v_textureCoordinates)) { \n" +
-          "        gl_FragColor = texture2D(colorTexture, v_textureCoordinates); \n" +
+          "        out_FragColor = texture(colorTexture, v_textureCoordinates); \n" +
           "    } else { \n" +
-          "        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+          "        out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
           "    } \n" +
           "} \n";
         const stage = scene.postProcessStages.add(
@@ -278,7 +278,7 @@ describe(
 
     it("destroys", function () {
       const stage = new PostProcessStage({
-        fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
       });
       expect(stage.isDestroyed()).toEqual(false);
       stage.destroy();

@@ -257,7 +257,14 @@ function combineShader(shaderSource, isFragmentShader, context) {
 
   // GLSLModernizer inserts its own layout qualifiers
   // at this position in the source
-  if (context.webgl2 && isFragmentShader) {
+  if (
+    context.webgl2 &&
+    isFragmentShader &&
+    !/layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g.test(
+      combinedSources
+    ) &&
+    !/czm_out_FragColor/g.test(combinedSources)
+  ) {
     result += "layout(location = 0) out vec4 out_FragColor;\n\n";
   }
 
@@ -452,7 +459,7 @@ ShaderSource.createPickFragmentShaderSource = function (
     `void main() \n` +
     `{ \n` +
     `    czm_old_main(); \n` +
-    `    if (gl_FragColor.a == 0.0) { \n` +
+    `    if (out_FragColor.a == 0.0) { \n` +
     `       discard; \n` +
     `    } \n` +
     `    out_FragColor = czm_pickColor; \n` +

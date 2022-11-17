@@ -129,9 +129,9 @@ describe(
       fs += "void main()\n" + "{\n";
 
       if (context.standardDerivatives) {
-        fs += "  gl_FragColor = vec4(dFdx(1.0), dFdy(1.0), 1.0, 1.0);\n";
+        fs += "  out_FragColor = vec4(dFdx(1.0), dFdy(1.0), 1.0, 1.0);\n";
       } else {
-        fs += "  gl_FragColor = vec4(1.0);\n";
+        fs += "  out_FragColor = vec4(1.0);\n";
       }
 
       fs += "}";
@@ -205,7 +205,7 @@ describe(
       const fs =
         "void main()\n" +
         "{\n" +
-        "  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n" +
+        "  out_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n" +
         "}";
 
       expect({
@@ -219,7 +219,7 @@ describe(
       fsFragDepth +=
         "void main()\n" +
         "{\n" +
-        "    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n";
+        "    out_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n";
 
       if (context.fragmentDepth) {
         fsFragDepth += "    gl_FragDepth";

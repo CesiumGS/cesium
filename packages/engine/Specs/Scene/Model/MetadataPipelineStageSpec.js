@@ -311,9 +311,9 @@ describe(
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           [
-            "    metadata.insulation = texture2D(u_propertyTexture_1, attributes.texCoord_0).b;",
-            "    metadata.insideTemperature = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).r);",
-            "    metadata.outsideTemperature = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).g);",
+            "    metadata.insulation = texture(u_propertyTexture_1, attributes.texCoord_0).b;",
+            "    metadata.insideTemperature = int(255.0 * texture(u_propertyTexture_1, attributes.texCoord_0).r);",
+            "    metadata.outsideTemperature = int(255.0 * texture(u_propertyTexture_1, attributes.texCoord_0).g);",
             "    metadataClass.insulation.defaultValue = float(1);",
           ]
         );
@@ -404,11 +404,11 @@ describe(
           MetadataPipelineStage.FUNCTION_ID_INITIALIZE_METADATA_FS,
           MetadataPipelineStage.FUNCTION_SIGNATURE_INITIALIZE_METADATA,
           [
-            "    metadata.vec2Property = texture2D(u_propertyTexture_1, attributes.texCoord_0).gb;",
-            "    metadata.uint8Property = int(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).r);",
-            "    metadata.uint8vec3Property = ivec3(255.0 * texture2D(u_propertyTexture_1, attributes.texCoord_0).rgb);",
-            "    metadata.arrayProperty = texture2D(u_propertyTexture_1, attributes.texCoord_0).rgb;",
-            "    metadata.valueTransformProperty = czm_valueTransform(u_valueTransformProperty_offset, u_valueTransformProperty_scale, texture2D(u_propertyTexture_1, attributes.texCoord_0).rg);",
+            "    metadata.vec2Property = texture(u_propertyTexture_1, attributes.texCoord_0).gb;",
+            "    metadata.uint8Property = int(255.0 * texture(u_propertyTexture_1, attributes.texCoord_0).r);",
+            "    metadata.uint8vec3Property = ivec3(255.0 * texture(u_propertyTexture_1, attributes.texCoord_0).rgb);",
+            "    metadata.arrayProperty = texture(u_propertyTexture_1, attributes.texCoord_0).rgb;",
+            "    metadata.valueTransformProperty = czm_valueTransform(u_valueTransformProperty_offset, u_valueTransformProperty_scale, texture(u_propertyTexture_1, attributes.texCoord_0).rg);",
             "    metadataClass.uint8vec3Property.defaultValue = ivec3(255,0,0);",
             "    metadataClass.uint8vec3Property.maxValue = ivec3(30,17,50);",
             "    metadataClass.uint8vec3Property.minValue = ivec3(10,10,10);",
