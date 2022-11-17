@@ -721,10 +721,18 @@ describe(
     it("addVarying adds varyings to both shaders", function () {
       const shaderBuilder = new ShaderBuilder();
       shaderBuilder.addVarying("vec2", "v_uv");
-      const expectedLines = ["out vec2 v_uv;"];
+
+      const expectedVaryings = ["vec2 v_uv;"];
+      const expectedVertexVaryings = expectedVaryings.map(
+        (varying) => `out ${varying}`
+      );
+      const expectedFragmentVaryings = expectedVaryings.map(
+        (varying) => `in ${varying}`
+      );
+
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
-      checkVertexShader(shaderProgram, [], expectedLines);
-      checkFragmentShader(shaderProgram, [], expectedLines);
+      checkVertexShader(shaderProgram, [], expectedVertexVaryings);
+      checkFragmentShader(shaderProgram, [], expectedFragmentVaryings);
     });
 
     it("addVertexLines throws for undefined lines", function () {
@@ -827,18 +835,24 @@ describe(
 
       const expectedAttributes = ["in vec3 a_position;", "in vec3 a_uv;"];
 
-      const expectedVaryings = ["out vec2 v_uv;"];
+      const expectedVaryings = ["vec2 v_uv;"];
+      const expectedVertexVaryings = expectedVaryings.map(
+        (varying) => `out ${varying}`
+      );
+      const expectedFragmentVaryings = expectedVaryings.map(
+        (varying) => `in ${varying}`
+      );
 
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],
-        expectedAttributes.concat(expectedVaryings, vertexLines)
+        expectedAttributes.concat(expectedVertexVaryings, vertexLines)
       );
       checkFragmentShader(
         shaderProgram,
         ["BLUE_TINT 0.5"],
-        expectedVaryings.concat(fragmentLines)
+        expectedFragmentVaryings.concat(fragmentLines)
       );
     });
   },

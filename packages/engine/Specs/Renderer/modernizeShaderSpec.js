@@ -1,6 +1,6 @@
 import { modernizeShader } from "../../index.js";
 
-describe("Renderer/modernizeShader", function () {
+xdescribe("Renderer/modernizeShader", function () {
   it("adds version string", function () {
     const simple =
       "#define OUTPUT_DECLARATION \n" + "void main() \n" + "{ \n" + "} \n";

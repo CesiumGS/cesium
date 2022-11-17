@@ -1,9 +1,7 @@
 import { ShaderSource } from "../../index.js";
 
 describe("Renderer/ShaderSource", function () {
-  const mockContext = {
-    webgl2: false,
-  };
+  const mockContext = {};
 
   it("combines #defines", function () {
     const source = new ShaderSource({
@@ -54,7 +52,7 @@ describe("Renderer/ShaderSource", function () {
       pickColorQualifier: "in",
     });
     const shaderText = source.createCombinedVertexShader(mockContext);
-    expect(shaderText).toContain("in vec4 czm_pickColor;");
+    expect(shaderText).toContain("out vec4 czm_pickColor;");
     expect(shaderText).toContain("out_FragColor = czm_pickColor;");
   });
 
