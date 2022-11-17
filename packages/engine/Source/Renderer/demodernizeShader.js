@@ -13,8 +13,8 @@
 function demodernizeShader(input, isFragmentShader) {
   let output = input;
 
-  // Replace the version string from "#version 300 es" to "#version 100".
-  output = output.replaceAll(`version 300 es`, `version 100`);
+  // Remove version string got GLSL 3.00.
+  output = output.replaceAll(`version 300 es`, ``);
 
   // Replace all czm_textureCube calls with textureCube
   output = output.replaceAll(/czm_textureCube/g, `textureCube`);
@@ -67,6 +67,9 @@ function demodernizeShader(input, isFragmentShader) {
       `varying $2 $3;`
     );
   }
+
+  // Add version string for GLSL 1.00.
+  output = `#version 100\n${output}`;
 
   return output;
 }

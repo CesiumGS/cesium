@@ -285,7 +285,6 @@ function combineShader(shaderSource, isFragmentShader, context) {
   // modernize the source
   if (!context.webgl2) {
     result = demodernizeShader(result, isFragmentShader);
-    result = `#version 100\n ${result}`;
   } else {
     // Replace all czm_textureCube calls with texture
     result = result.replaceAll(/czm_textureCube/g, `texture`);
