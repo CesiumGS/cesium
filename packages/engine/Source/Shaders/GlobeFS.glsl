@@ -405,7 +405,12 @@ void main()
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * u_lambertDiffuseMultiplier + 0.3, 0.0, 1.0);
+    #ifdef VERTEX_SHADOW_DARKNESS
+        float diffuseIntensityAdjustValue = VERTEX_SHADOW_DARKNESS;
+    #else 
+        float diffuseIntensityAdjustValue = 0.3;
+    #endif
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * u_lambertDiffuseMultiplier + diffuseIntensityAdjustValue, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);

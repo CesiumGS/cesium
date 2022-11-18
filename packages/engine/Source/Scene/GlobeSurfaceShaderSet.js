@@ -10,13 +10,15 @@ function GlobeSurfaceShader(
   flags,
   material,
   shaderProgram,
-  clippingShaderState
+  clippingShaderState,
+  vertexShadowDarkness
 ) {
   this.numberOfDayTextures = numberOfDayTextures;
   this.flags = flags;
   this.material = material;
   this.shaderProgram = shaderProgram;
   this.clippingShaderState = clippingShaderState;
+  this.vertexShadowDarkness = vertexShadowDarkness;
 }
 
 /**
@@ -104,6 +106,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   const hasExaggeration = options.hasExaggeration;
   const showUndergroundColor = options.showUndergroundColor;
   const translucent = options.translucent;
+  const vertexShadowDarkness = options.vertexShadowDarkness;
 
   let quantization = 0;
   let quantizationDefine = "";
@@ -175,7 +178,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     surfaceShader.numberOfDayTextures === numberOfDayTextures &&
     surfaceShader.flags === flags &&
     surfaceShader.material === this.material &&
-    surfaceShader.clippingShaderState === currentClippingShaderState
+    surfaceShader.clippingShaderState === currentClippingShaderState &&
+    surfaceShader.vertexShadowDarkness === vertexShadowDarkness
   ) {
     return surfaceShader.shaderProgram;
   }
@@ -190,7 +194,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   if (
     !defined(surfaceShader) ||
     surfaceShader.material !== this.material ||
-    surfaceShader.clippingShaderState !== currentClippingShaderState
+    surfaceShader.clippingShaderState !== currentClippingShaderState ||
+    surfaceShader.vertexShadowDarkness !== vertexShadowDarkness
   ) {
     // Cache miss - we've never seen this combination of numberOfDayTextures and flags before.
     const vs = this.baseVertexShaderSource.clone();
@@ -252,6 +257,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       if (hasVertexNormals) {
         vs.defines.push("ENABLE_VERTEX_LIGHTING");
         fs.defines.push("ENABLE_VERTEX_LIGHTING");
+        fs.defines.push(
+          `VERTEX_SHADOW_DARKNESS ${vertexShadowDarkness.toFixed(2)}`
+        );
       } else {
         vs.defines.push("ENABLE_DAYNIGHT_SHADING");
         fs.defines.push("ENABLE_DAYNIGHT_SHADING");
@@ -377,7 +385,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       flags,
       this.material,
       shader,
-      currentClippingShaderState
+      currentClippingShaderState,
+      vertexShadowDarkness
     );
   }
 

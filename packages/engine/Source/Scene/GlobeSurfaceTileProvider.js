@@ -89,6 +89,7 @@ function GlobeSurfaceTileProvider(options) {
   this.dynamicAtmosphereLightingFromSun = false;
   this.showGroundAtmosphere = false;
   this.shadows = ShadowMode.RECEIVE_ONLY;
+  this.vertexShadowDarkness = 0.3;
 
   /**
    * The color to use to highlight terrain fill tiles. If undefined, fill tiles are not
@@ -2044,6 +2045,7 @@ const surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
   hasGeodeticSurfaceNormals: undefined,
   hasExaggeration: undefined,
+  vertexShadowDarkness: undefined,
 };
 
 const defaultUndergroundColor = Color.TRANSPARENT;
@@ -2280,6 +2282,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
   surfaceShaderSetOptions.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals;
   surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
+  surfaceShaderSetOptions.vertexShadowDarkness =
+    tileProvider.vertexShadowDarkness;
 
   const tileImageryCollection = surfaceTile.imagery;
   let imageryIndex = 0;
