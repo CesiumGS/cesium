@@ -168,7 +168,7 @@ ShadowVolumeAppearance.prototype.createPickFragmentShader = function (
   return new ShaderSource({
     defines: defines,
     sources: [ShadowVolumeAppearanceFS],
-    pickColorQualifier: "in",
+    pickColorQualifier: "varying",
   });
 };
 
