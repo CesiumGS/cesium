@@ -311,6 +311,7 @@ const filesToClean = [
   "Apps/Sandcastle/templates/bucket.css",
   "Cesium-*.zip",
   "cesium-*.tgz",
+  "packages/**/*.tgz",
 ];
 
 export async function clean() {
