@@ -109,8 +109,10 @@ void main()
 #ifdef EYE_DISTANCE_SCALING
     totalSize *= czm_nearFarScalar(scaleByDistance, lengthSq);
 #endif
-    // Add padding for anti-aliasing on both sides.
-    totalSize += 3.0;
+    if (totalSize > 0.0) {
+        // Add padding for anti-aliasing on both sides.
+        totalSize += 3.0;
+    }
 
     // Clamp to max point size.
     totalSize = min(totalSize, u_maxTotalPointSize);
