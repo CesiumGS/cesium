@@ -336,7 +336,7 @@ function ShaderSource(options) {
   if (
     defined(pickColorQualifier) &&
     pickColorQualifier !== "uniform" &&
-    pickColorQualifier !== "in"
+    pickColorQualifier !== "varying"
   ) {
     throw new DeveloperError(
       "options.pickColorQualifier must be 'uniform' or 'varying'."
@@ -456,7 +456,9 @@ ShaderSource.createPickFragmentShaderSource = function (
     "czm_old_main"
   );
   const pickMain =
-    `${pickColorQualifier} vec4 czm_pickColor; \n` +
+    `${
+      pickColorQualifier === "varying" ? "in" : "uniform"
+    } vec4 czm_pickColor; \n` +
     `void main() \n` +
     `{ \n` +
     `    czm_old_main(); \n` +

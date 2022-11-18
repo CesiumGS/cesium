@@ -1,7 +1,9 @@
 import { ShaderSource } from "../../index.js";
 
 describe("Renderer/ShaderSource", function () {
-  const mockContext = {};
+  const mockContext = {
+    webgl2: true,
+  };
 
   it("combines #defines", function () {
     const source = new ShaderSource({
@@ -49,10 +51,10 @@ describe("Renderer/ShaderSource", function () {
   it("creates a pick shader with a varying", function () {
     const source = new ShaderSource({
       sources: ["void main() { out_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "in",
+      pickColorQualifier: "varying",
     });
     const shaderText = source.createCombinedVertexShader(mockContext);
-    expect(shaderText).toContain("out vec4 czm_pickColor;");
+    expect(shaderText).toContain("in vec4 czm_pickColor;");
     expect(shaderText).toContain("out_FragColor = czm_pickColor;");
   });
 
@@ -76,7 +78,7 @@ describe("Renderer/ShaderSource", function () {
     const source = new ShaderSource({
       defines: ["A"],
       sources: ["void main() { out_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "in",
+      pickColorQualifier: "varying",
       includeBuiltIns: false,
     });
     const clone = source.clone();
@@ -99,7 +101,7 @@ describe("Renderer/ShaderSource", function () {
     const source = new ShaderSource({
       defines: ["A", "B", "C"],
       sources: ["void main() { out_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "in",
+      pickColorQualifier: "varying",
       includeBuiltIns: false,
     });
 

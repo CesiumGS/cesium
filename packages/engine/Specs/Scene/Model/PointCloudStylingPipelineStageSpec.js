@@ -362,7 +362,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "ins.positionMC"
+        "attributes.positionMC"
       );
     });
 
@@ -438,7 +438,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "ins.normalMC"
+        "attributes.normalMC"
       );
     });
 
@@ -476,7 +476,7 @@ describe(
 
       ShaderBuilderTester.expectVertexLinesContains(
         shaderBuilder,
-        "ins.color_0"
+        "attributes.color_0"
       );
     });
 
