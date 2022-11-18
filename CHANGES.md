@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.100 - 2022-12-01
+
+- Added `vertexShadowDarkness` parameter to `Globe` to control the amount of darkness of the vertex shadow when terrain lighting is enabled. [#10914](https://github.com/CesiumGS/cesium/pull/10914)
+
+##### Additions :tada:
+
 ### 1.99 - 2022-11-01
 
 #### Major Announcements :loudspeaker:
