@@ -1904,23 +1904,39 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
   const contents = await readFile(path);
   const thirdPartyExtra = JSON.parse(contents);
   return Promise.all(
-    thirdPartyExtra.map(function (module) {
+    thirdPartyExtra.map(async function (module) {
       if (!discoveredDependencies.includes(module.name)) {
-        // If this is not a npm module, return existing info
-        if (
-          !packageJson.dependencies[module.name] &&
-          !packageJson.devDependencies[module.name]
-        ) {
-          discoveredDependencies.push(module.name);
-          return Promise.resolve(module);
-        }
-
-        return getLicenseDataFromPackage(
+        let result = await getLicenseDataFromPackage(
+          packageJson,
           module.name,
           discoveredDependencies,
           module.license,
           module.notes
         );
+
+        if (result) {
+          return result;
+        }
+
+        // Resursively check the workspaces
+        for (const workspace of packageJson.workspaces) {
+          const workspacePackageJson = require(`./${workspace}/package.json`);
+          result = await getLicenseDataFromPackage(
+            workspacePackageJson,
+            module.name,
+            discoveredDependencies,
+            module.license,
+            module.notes
+          );
+
+          if (result) {
+            return result;
+          }
+        }
+
+        // If this is not a npm module, return existing info
+        discoveredDependencies.push(module.name);
+        return module;
       }
     })
   );
@@ -1935,14 +1951,23 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
  * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
  */
 async function getLicenseDataFromPackage(
+  packageJson,
   packageName,
   discoveredDependencies,
   licenseOverride,
   notes
 ) {
+  if (
+    !packageJson.dependencies[packageName] &&
+    (!packageJson.devDependencies || !packageJson.devDependencies[packageName])
+  ) {
+    return;
+  }
+
   if (discoveredDependencies.includes(packageName)) {
     return [];
   }
+
   discoveredDependencies.push(packageName);
 
   const packagePath = join("node_modules", packageName, "package.json");
