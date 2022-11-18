@@ -28,8 +28,6 @@ void main()
     float outlinePercent = outlineWidthBothSides / totalSize;
     // Scale in response to browser-zoom.
     totalSize *= czm_pixelRatio;
-    // Add padding for anti-aliasing on both sides.
-    totalSize += 3.0;
 
     float temp = compressedAttribute1.x * SHIFT_RIGHT8;
     float show = floor(temp);
@@ -111,6 +109,9 @@ void main()
 #ifdef EYE_DISTANCE_SCALING
     totalSize *= czm_nearFarScalar(scaleByDistance, lengthSq);
 #endif
+    // Add padding for anti-aliasing on both sides.
+    totalSize += 3.0;
+
     // Clamp to max point size.
     totalSize = min(totalSize, u_maxTotalPointSize);
     // If size is too small, push vertex behind near plane for clipping.
