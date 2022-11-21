@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.100 - 2022-12-01
+
+##### Fixes :wrench:
+
+- Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
+
 ### 1.99 - 2022-11-01
 
 #### Major Announcements :loudspeaker:
