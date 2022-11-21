@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.100 - 2022-12-01
+
+##### Fixes :wrench:
+
+- Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar` [#10912](https://github.com/CesiumGS/cesium/pull/10912)
+
 ### 1.99 - 2022-11-01
 
 #### Major Announcements :loudspeaker:
