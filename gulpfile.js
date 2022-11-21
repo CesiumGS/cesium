@@ -329,7 +329,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " Source/ --exclude-dir=Assets,ThirdParty,Workers --not-match-f=copyrightHeader.js";
+      " packages/engine/Source/ packages/widgets/Source --exclude-dir=Assets,ThirdParty,Workers";
 
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
@@ -346,7 +346,9 @@ async function clocSource() {
   await source;
   return new Promise(function (resolve, reject) {
     cmdLine =
-      "npx cloc" + " --quiet --progress-rate=0" + " Specs/ --exclude-dir=Data";
+      "npx cloc" +
+      " --quiet --progress-rate=0" +
+      " Specs/ packages/engine/Specs packages/widget/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=.eslintrc.json";
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
         console.log(stderr);
