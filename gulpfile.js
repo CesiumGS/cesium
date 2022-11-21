@@ -2087,7 +2087,7 @@ function buildSandcastle() {
         gulpReplace(
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
+            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/"</script>'
         )
       )
       // Fix relative paths for new location
