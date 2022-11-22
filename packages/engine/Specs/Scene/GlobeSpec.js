@@ -429,9 +429,9 @@ describe(
           expect(renderOptions).toRenderAndCall(function (rgba) {
             initialRgba = rgba;
             expect(renderOptions).notToRender([0, 0, 0, 255]);
+            globe.vertexShadowDarkness = 0.1;
+            expect(renderOptions).notToRender(initialRgba);
           });
-          globe.vertexShadowDarkness = 0.1;
-          expect(renderOptions).notToRender(initialRgba);
         });
       });
     });
