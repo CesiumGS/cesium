@@ -257,9 +257,6 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       if (hasVertexNormals) {
         vs.defines.push("ENABLE_VERTEX_LIGHTING");
         fs.defines.push("ENABLE_VERTEX_LIGHTING");
-        fs.defines.push(
-          `VERTEX_SHADOW_DARKNESS ${vertexShadowDarkness.toFixed(2)}`
-        );
       } else {
         vs.defines.push("ENABLE_DAYNIGHT_SHADING");
         fs.defines.push("ENABLE_DAYNIGHT_SHADING");
