@@ -2384,14 +2384,16 @@ function executeCommands(scene, passState) {
       }
     }
 
+    let passId;
+
     if (!useInvertClassification || picking || renderTranslucentDepthForPick) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
       // Draw 3D Tiles
-      let passId = Pass.CESIUM_3D_TILE;
+      passId = Pass.CESIUM_3D_TILE;
       executePassCommands(scene, passId, passState, frustumCommands);
 
-      if (length > 0) {
+      if (frustumCommands.indices[passId] > 0) {
         if (defined(globeDepth) && useGlobeDepthFramebuffer) {
           // When clearGlobeDepth is true, executeUpdateDepth needs
           // a globe depth texture with resolved stencil bits.
@@ -2449,7 +2451,7 @@ function executeCommands(scene, passState) {
       passState.framebuffer = scene._invertClassification._fbo.framebuffer;
 
       // Draw normally
-      let passId = Pass.CESIUM_3D_TILE;
+      passId = Pass.CESIUM_3D_TILE;
       executePassCommands(scene, passId, passState, frustumCommands);
 
       if (defined(globeDepth) && useGlobeDepthFramebuffer) {
@@ -2476,7 +2478,7 @@ function executeCommands(scene, passState) {
       }
 
       // Clear stencil set by the classification for the next classification pass
-      if (length > 0 && context.stencilBuffer) {
+      if (frustumCommands.indices[passId] > 0 && context.stencilBuffer) {
         clearClassificationStencil.execute(context, passState);
       }
 
@@ -2485,7 +2487,7 @@ function executeCommands(scene, passState) {
       executePassCommands(scene, passId, passState, frustumCommands);
     }
 
-    if (length > 0 && context.stencilBuffer) {
+    if (frustumCommands.indices[passId] > 0 && context.stencilBuffer) {
       clearStencil.execute(context, passState);
     }
 
