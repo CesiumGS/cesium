@@ -5,7 +5,7 @@
 replicaCount: 10
 
 image:
-  repository: docker.io/bbachin1/angular-node-webapp
+  repository: acrarolibotnonprod.azurecr.io/cesium-standalone:v1.0.0
   pullPolicy: Always
 
 application:
