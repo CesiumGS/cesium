@@ -31,6 +31,9 @@ function Cesium3DTilesetStatistics() {
   this.geometryByteLength = 0;
   this.texturesByteLength = 0;
   this.batchTableByteLength = 0; // batch textures and any binary metadata properties not otherwise accounted for
+  // Other stats
+  this.numberOfLoadedTrianglesTotal = 0;
+  this.numberOfLoadedTexelsTotal = 0;
 }
 
 Cesium3DTilesetStatistics.prototype.clear = function () {
@@ -71,6 +74,11 @@ function updatePointAndFeatureCounts(statistics, content, decrement, load) {
     statistics.batchTableByteLength += decrement
       ? -batchTableByteLength
       : batchTableByteLength;
+
+    if (!decrement) {
+      statistics.numberOfLoadedTrianglesTotal += trianglesLength;
+      statistics.numberOfLoadedTexelsTotal += texelsLength;
+    }
   } else {
     statistics.numberOfFeaturesSelected += decrement
       ? -featuresLength
