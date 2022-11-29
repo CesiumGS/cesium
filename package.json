@@ -51,10 +51,10 @@
     "./Specs/**/*"
   ],
   "dependencies": {
+    "@babel/node": "^7.20.2",
+    "@babel/preset-env": "^7.20.2",
     "@cesium/engine": "0.1.0",
-    "@cesium/widgets": "0.1.0"
-  },
-  "devDependencies": {
+    "@cesium/widgets": "0.1.0",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-node-resolve": "^14.0.0",
     "aws-sdk": "^2.1210.0",
@@ -74,7 +74,6 @@
     "express": "^4.17.1",
     "globby": "^13.1.2",
     "glsl-strip-comments": "^1.0.0",
-    "gulp": "^4.0.2",
     "gulp-clean-css": "^4.3.0",
     "gulp-insert": "^0.5.0",
     "gulp-rename": "^2.0.0",
@@ -106,7 +105,7 @@
     "p-limit": "^4.0.0",
     "prettier": "2.1.2",
     "prismjs": "^1.28.0",
-    "request": "^2.79.0",
+    "request": "^2.88.2",
     "rimraf": "^3.0.2",
     "rollup": "^2.52.2",
     "rollup-plugin-strip-pragma": "^1.0.0",
