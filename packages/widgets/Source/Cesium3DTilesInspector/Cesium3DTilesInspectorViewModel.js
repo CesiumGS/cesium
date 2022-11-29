@@ -95,7 +95,8 @@ function getStatistics(tileset, isPick) {
       `<li><strong>Features Loaded: </strong>${statistics.numberOfFeaturesLoaded.toLocaleString()}</li>` +
       `<li><strong>Points Selected: </strong>${statistics.numberOfPointsSelected.toLocaleString()}</li>` +
       `<li><strong>Points Loaded: </strong>${statistics.numberOfPointsLoaded.toLocaleString()}</li>` +
-      `<li><strong>Triangles Selected: </strong>${statistics.numberOfTrianglesSelected.toLocaleString()}</li>`;
+      `<li><strong>Triangles Selected: </strong>${statistics.numberOfTrianglesSelected.toLocaleString()}</li>` +
+      `<li><strong>Texels Selected: </strong>${statistics.numberOfTexelsSelected.toLocaleString()}</li>`;
     s += "</ul>";
     s += '<ul class="cesium-cesiumInspector-statistics">';
     s +=

@@ -21,6 +21,7 @@ function Cesium3DTilesetStatistics() {
   this.numberOfPointsSelected = 0;
   this.numberOfPointsLoaded = 0;
   this.numberOfTrianglesSelected = 0;
+  this.numberOfTexelsSelected = 0;
   // Styling statistics
   this.numberOfTilesStyled = 0;
   this.numberOfFeaturesStyled = 0;
@@ -40,6 +41,7 @@ Cesium3DTilesetStatistics.prototype.clear = function () {
   this.numberOfFeaturesSelected = 0;
   this.numberOfPointsSelected = 0;
   this.numberOfTrianglesSelected = 0;
+  this.numberOfTexelsSelected = 0;
   this.numberOfTilesStyled = 0;
   this.numberOfFeaturesStyled = 0;
   this.numberOfTilesCulledWithChildrenUnion = 0;
@@ -53,6 +55,7 @@ function updatePointAndFeatureCounts(statistics, content, decrement, load) {
   const geometryByteLength = content.geometryByteLength;
   const texturesByteLength = content.texturesByteLength;
   const batchTableByteLength = content.batchTableByteLength;
+  const texelsLength = texturesByteLength / 4;
 
   if (load) {
     statistics.numberOfFeaturesLoaded += decrement
@@ -78,6 +81,9 @@ function updatePointAndFeatureCounts(statistics, content, decrement, load) {
     statistics.numberOfTrianglesSelected += decrement
       ? -trianglesLength
       : trianglesLength;
+    statistics.numberOfTexelsSelected += decrement
+      ? -texelsLength
+      : texelsLength;
   }
 
   if (defined(contents)) {
@@ -118,6 +124,7 @@ Cesium3DTilesetStatistics.clone = function (statistics, result) {
   result.numberOfPointsSelected = statistics.numberOfPointsSelected;
   result.numberOfPointsLoaded = statistics.numberOfPointsLoaded;
   result.numberOfTrianglesSelected = statistics.numberOfTrianglesSelected;
+  result.numberOfTexelsSelected = statistics.numberOfTexelsSelected;
   result.numberOfTilesStyled = statistics.numberOfTilesStyled;
   result.numberOfFeaturesStyled = statistics.numberOfFeaturesStyled;
   result.numberOfTilesCulledWithChildrenUnion =
