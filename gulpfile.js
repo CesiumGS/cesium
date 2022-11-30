@@ -439,6 +439,7 @@ export async function buildDocsWatch() {
 function combineForSandcastle() {
   const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
   return buildCesium({
+    development: false,
     minify: false,
     removePragmas: false,
     node: false,
@@ -449,6 +450,7 @@ function combineForSandcastle() {
 export const websiteRelease = gulp.series(
   function () {
     return buildCesium({
+      development: false,
       minify: false,
       removePragmas: false,
       node: false,
@@ -465,26 +467,25 @@ export const buildRelease = gulp.series(
   function () {
     return buildWidgets();
   },
-  gulp.parallel(
-    // Generate Build/CesiumUnminified
-    function () {
-      return buildCesium({
-        minify: false,
-        removePragmas: false,
-        node: true,
-        sourcemap: false,
-      });
-    },
-    // Generate Build/Cesium
-    function () {
-      return buildCesium({
-        minify: true,
-        removePragmas: true,
-        node: true,
-        sourcemap: false,
-      });
-    }
-  )
+  // Generate Build/CesiumUnminified
+  function () {
+    return buildCesium({
+      minify: false,
+      removePragmas: false,
+      node: true,
+      sourcemap: false,
+    });
+  },
+  // Generate Build/Cesium
+  function () {
+    return buildCesium({
+      development: false,
+      minify: true,
+      removePragmas: true,
+      node: true,
+      sourcemap: false,
+    });
+  }
 );
 
 export const release = gulp.series(
