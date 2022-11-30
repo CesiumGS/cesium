@@ -134,7 +134,7 @@ export async function build() {
   const node = argv.node ?? true;
 
   const buildOptions = {
-    development: noDevelopmentGallery,
+    development: !noDevelopmentGallery,
     iife: true,
     minify: minify,
     removePragmas: removePragmas,
@@ -2052,7 +2052,6 @@ function buildSandcastle() {
   let appStream = gulp.src([
     "Apps/Sandcastle/**",
     "!Apps/Sandcastle/load-cesium-es6.js",
-    "!Apps/Sandcastle/standalone.html",
     "!Apps/Sandcastle/images/**",
     "!Apps/Sandcastle/gallery/**.jpg",
   ]);
@@ -2088,6 +2087,13 @@ function buildSandcastle() {
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
             '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
+        )
+      )
+      .pipe(
+        gulpReplace(
+          '    <script type="module" src="load-cesium-es6.js"></script>',
+          '    <script src="../../CesiumUnminified/Cesium.js"></script>\n' +
+            '    <script>window.CESIUM_BASE_URL = "../../CesiumUnminified/";</script>'
         )
       )
       // Fix relative paths for new location
