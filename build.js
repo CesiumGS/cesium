@@ -1155,7 +1155,7 @@ export async function buildCesium(options) {
       path: outputDirectory,
       removePragmas: removePragmas,
     }),
-    createGalleryList(development),
+    createGalleryList(!development),
   ]);
 
   // Generate Specs bundle.
