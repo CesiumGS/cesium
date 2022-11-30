@@ -338,3 +338,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Gabriel Aldous](https://github.com/Sn00pyW00dst0ck)
 - [金俊](https://github.com/jinjun1994)
 - [Oussama Bonnor](https://github.com/oussamabonnor1)
+- [Marco Hutter](https://github.com/javagl)
