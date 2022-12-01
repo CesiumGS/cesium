@@ -132,6 +132,8 @@ function doSampling(terrainProvider, level, positions) {
   const tileRequestSet = {}; // A unique set
   for (i = 0; i < positions.length; ++i) {
     const xy = tilingScheme.positionToTileXY(positions[i], level);
+    if (!xy) continue;
+
     const key = xy.toString();
 
     if (!tileRequestSet.hasOwnProperty(key)) {
