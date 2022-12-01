@@ -32,6 +32,7 @@ jobs:
         - npm --silent run eslint
         - npm --silent run markdownlint
         - npm --silent run prettier-check
+        - npm run build
         - ./travis/release.sh
         - ./travis/deploy.sh
     - name: "NodeJS 16"
