@@ -1,6 +1,5 @@
 language: node_js
-node_js:
-  - "16"
+dist: focal # Workaround for NodeJS 18 - https://travis-ci.community/t/the-command-npm-config-set-spin-false-failed-and-exited-with-1-during/12909/7
 addons:
   chrome: stable
   firefox: latest
@@ -9,14 +8,34 @@ notifications:
     secure: JKzk2sJSbZ9h2PUVWj6KtOAdFbEEnOtv/VZy05pJ2H41xRgUHiGdtMW/vMSeq6XX3IJN8eW2zd0cJTgkFn0ioAlYvID8zRhcvkFHg60QXquoqtp5y65dxjtVz79hefxSo7FO1NhMZBQWE9Tg6R7XkoyTMth62+T9vqOgu2Hms6M=
     if: (branch = main) AND (type = push)
     on_success: change # default: always
-script:
-  - ./travis/prepare.sh
-  - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
-
-  - npm --silent run eslint
-  - npm --silent run markdownlint
-  - npm --silent run prettier-check
-
-  - ./travis/release.sh
-  - ./travis/deploy.sh
-  - ./travis/verify.sh
+before_script: pip install awscli --user
+jobs:
+  include:
+    - stage:
+      name: "Coverage"
+      node_js: "18"
+      script:
+        - npm --silent run build
+        - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+        - aws s3 sync ./Build/Coverage s3://cesium-dev/cesium/$TRAVIS_BRANCH/Build/Coverage --delete --color on
+    - name: "Release Tests"
+      node_js: "18"
+      script: 
+        - ./travis/test-release.sh
+        - ./travis/verify.sh
+        - npm --silent run cloc
+    - name: "Linting, Deployment"
+      node_js: "18"
+      script:
+        - ./travis/prepare.sh
+        - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
+        - npm --silent run eslint
+        - npm --silent run markdownlint
+        - npm --silent run prettier-check
+        - ./travis/release.sh
+        - ./travis/deploy.sh
+    - name: "NodeJS 16"
+      node_js: "16"
+      script:
+        - npm --silent run build-release
+        - ./travis/verify.sh

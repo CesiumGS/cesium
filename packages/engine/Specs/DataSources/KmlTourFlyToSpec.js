@@ -1,0 +1,153 @@
+import {
+  Cartesian3,
+  HeadingPitchRange,
+  HeadingPitchRoll,
+  KmlCamera,
+  KmlLookAt,
+  KmlTourFlyTo,
+} from "../../index.js";
+
+import { Math as CesiumMath } from "../../index.js";
+
+import pollToPromise from "../../../../Specs/pollToPromise.js";
+
+describe("DataSources/KmlTourFlyTo", function () {
+  it("generates camera options for KmlLookAt", function () {
+    const position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
+    const hpr = new HeadingPitchRange(
+      CesiumMath.toRadians(10.0),
+      CesiumMath.toRadians(45.0),
+      10000
+    );
+
+    const flyto = new KmlTourFlyTo(10, "bounce", new KmlLookAt(position, hpr));
+    const options = flyto.getCameraOptions();
+
+    expect(options.duration).toEqual(10);
+    expect(options.complete).toBeUndefined();
+    expect(options.easingFunction).toBeUndefined();
+    expect(options.offset).toBe(hpr);
+    expect(options.destination).toBeUndefined();
+    expect(options.orientation).toBeUndefined();
+  });
+
+  it("generates camera options for KmlCamera", function () {
+    const position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
+    const hpr = new HeadingPitchRoll(
+      CesiumMath.toRadians(10.0),
+      CesiumMath.toRadians(45.0),
+      0
+    );
+
+    const flyto = new KmlTourFlyTo(10, "bounce", new KmlCamera(position, hpr));
+    const options = flyto.getCameraOptions();
+
+    expect(options.duration).toEqual(10);
+    expect(options.complete).toBeUndefined();
+    expect(options.easingFunction).toBeUndefined();
+    expect(options.offset).toBeUndefined();
+    expect(options.destination.x).toEqual(position.x);
+    expect(options.destination.y).toEqual(position.y);
+    expect(options.destination.z).toEqual(position.z);
+    expect(options.orientation).toBe(hpr);
+  });
+
+  it("adds activeCallback to options", function () {
+    const position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
+    const hpr = new HeadingPitchRange(
+      CesiumMath.toRadians(10.0),
+      CesiumMath.toRadians(45.0),
+      10000
+    );
+
+    const flyto = new KmlTourFlyTo(10, "bounce", new KmlLookAt(position, hpr));
+    flyto.activeCallback = jasmine.createSpy("activeCallback");
+    const options = flyto.getCameraOptions();
+
+    expect(options.complete).toBeDefined();
+    options.complete();
+    expect(options.complete).toHaveBeenCalled();
+  });
+
+  it("calls camera flyTo for KmlCamera", function () {
+    const position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
+    const hpr = new HeadingPitchRoll(
+      CesiumMath.toRadians(10.0),
+      CesiumMath.toRadians(45.0),
+      0
+    );
+
+    const flyto = new KmlTourFlyTo(
+      0.01,
+      "bounce",
+      new KmlCamera(position, hpr)
+    );
+    const doneSpy = jasmine.createSpy("cameraDone");
+    const flyFake = jasmine.createSpy("flyTo").and.callFake(function (options) {
+      if (options.complete) {
+        options.complete();
+      }
+    });
+    const fakeCamera = {
+      flyTo: flyFake,
+    };
+    flyto.play(doneSpy, fakeCamera);
+
+    return pollToPromise(function () {
+      return doneSpy.calls.count() > 0;
+    }).then(function () {
+      expect(fakeCamera.flyTo).toHaveBeenCalled();
+      expect(fakeCamera.flyTo.calls.mostRecent().args[0].destination).toBe(
+        position
+      );
+      expect(fakeCamera.flyTo.calls.mostRecent().args[0].orientation).toBe(hpr);
+      expect(doneSpy).toHaveBeenCalled();
+    });
+  });
+
+  it("calls camera flyToBoundingSphere for KmlLookAt", function () {
+    const position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
+    const hpr = new HeadingPitchRange(
+      CesiumMath.toRadians(10.0),
+      CesiumMath.toRadians(45.0),
+      10000
+    );
+
+    const flyto = new KmlTourFlyTo(
+      0.01,
+      "bounce",
+      new KmlLookAt(position, hpr)
+    );
+    const doneSpy = jasmine.createSpy("cameraDone");
+    const flyFake = jasmine
+      .createSpy("flyToBoundingSphere")
+      .and.callFake(function (sphere, options) {
+        if (options.complete) {
+          options.complete();
+        }
+      });
+    const fakeCamera = {
+      flyToBoundingSphere: flyFake,
+    };
+    flyto.play(doneSpy, fakeCamera);
+
+    return pollToPromise(function () {
+      return doneSpy.calls.count() > 0;
+    }).then(function () {
+      expect(fakeCamera.flyToBoundingSphere).toHaveBeenCalled();
+      expect(
+        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.x
+      ).toEqual(position.x);
+      expect(
+        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.y
+      ).toEqual(position.y);
+      expect(
+        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.z
+      ).toEqual(position.z);
+      expect(
+        fakeCamera.flyToBoundingSphere.calls.mostRecent().args[1].offset
+      ).toBe(hpr);
+      expect(doneSpy).toHaveBeenCalled();
+    });
+  });
+});

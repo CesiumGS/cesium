@@ -5,7 +5,7 @@ import {
   GeographicTilingScheme,
   Resource,
   RuntimeError,
-} from "../Source/Cesium.js";
+} from "@cesium/engine";
 
 function MockImageryProvider() {
   this.tilingScheme = new GeographicTilingScheme();
