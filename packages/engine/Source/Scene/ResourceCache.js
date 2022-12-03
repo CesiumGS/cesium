@@ -476,7 +476,7 @@ ResourceCache.loadVertexBuffer = function (options) {
   }
 
   const hasBufferViewId = defined(bufferViewId);
-  const hasDraco = defined(draco);
+  const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
 
@@ -552,6 +552,14 @@ ResourceCache.loadVertexBuffer = function (options) {
 
   return vertexBufferLoader;
 };
+
+function hasDracoCompression(draco, semantic) {
+  return (
+    defined(draco) &&
+    defined(draco.attributes) &&
+    defined(draco.attributes[semantic])
+  );
+}
 
 /**
  * Loads a glTF index buffer from the cache.
