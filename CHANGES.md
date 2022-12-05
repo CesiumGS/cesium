@@ -1,10 +1,29 @@
 # Change Log
 
-### 1.100 - 2022-12-01
+### 1.101 - 2023-01-01
+
+### engine
 
 ##### Fixes :wrench:
 
 - Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar` [#10912](https://github.com/CesiumGS/cesium/pull/10912)
+
+### 1.100 - 2022-12-01
+
+#### Major Announcements :loudspeaker:
+
+- CesiumJS is now published alongside two smaller packages `@cesium/engine` and `@cesium/widgets` [#10824](https://github.com/CesiumGS/cesium/pull/10824):
+  - The source code has been paritioned into two folders: `packages/engine` and `packages/widgets`.
+  - These workspaces packages will follow semantic versioning.
+  - These workspaces packages will be published as ES modules with TypeScript definitions.
+  - In the combined CesiumJS release, the `Source` folder only contains the following:
+    - `Cesium.js`
+    - `Cesium.d.ts`
+    - `Assets`
+    - `ThirdParty`
+    - `Widgets`(CSS files only)
+  - The ability to import modules and TypeScript definitions from individual files has been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
+
 
 ### 1.99 - 2022-11-01
 
