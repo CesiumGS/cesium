@@ -134,7 +134,7 @@ export async function build() {
   const node = argv.node ?? true;
 
   const buildOptions = {
-    development: noDevelopmentGallery,
+    development: !noDevelopmentGallery,
     iife: true,
     minify: minify,
     removePragmas: removePragmas,
@@ -311,6 +311,7 @@ const filesToClean = [
   "Apps/Sandcastle/templates/bucket.css",
   "Cesium-*.zip",
   "cesium-*.tgz",
+  "packages/**/*.tgz",
 ];
 
 export async function clean() {
@@ -328,7 +329,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " Source/ --exclude-dir=Assets,ThirdParty,Workers --not-match-f=copyrightHeader.js";
+      " packages/engine/Source/ packages/widgets/Source --exclude-dir=Assets,ThirdParty,Workers";
 
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
@@ -345,7 +346,9 @@ async function clocSource() {
   await source;
   return new Promise(function (resolve, reject) {
     cmdLine =
-      "npx cloc" + " --quiet --progress-rate=0" + " Specs/ --exclude-dir=Data";
+      "npx cloc" +
+      " --quiet --progress-rate=0" +
+      " Specs/ packages/engine/Specs packages/widget/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=.eslintrc.json";
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
         console.log(stderr);
@@ -436,6 +439,7 @@ export async function buildDocsWatch() {
 function combineForSandcastle() {
   const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
   return buildCesium({
+    development: false,
     minify: false,
     removePragmas: false,
     node: false,
@@ -446,6 +450,7 @@ function combineForSandcastle() {
 export const websiteRelease = gulp.series(
   function () {
     return buildCesium({
+      development: false,
       minify: false,
       removePragmas: false,
       node: false,
@@ -462,26 +467,25 @@ export const buildRelease = gulp.series(
   function () {
     return buildWidgets();
   },
-  gulp.parallel(
-    // Generate Build/CesiumUnminified
-    function () {
-      return buildCesium({
-        minify: false,
-        removePragmas: false,
-        node: true,
-        sourcemap: false,
-      });
-    },
-    // Generate Build/Cesium
-    function () {
-      return buildCesium({
-        minify: true,
-        removePragmas: true,
-        node: true,
-        sourcemap: false,
-      });
-    }
-  )
+  // Generate Build/CesiumUnminified
+  function () {
+    return buildCesium({
+      minify: false,
+      removePragmas: false,
+      node: true,
+      sourcemap: false,
+    });
+  },
+  // Generate Build/Cesium
+  function () {
+    return buildCesium({
+      development: false,
+      minify: true,
+      removePragmas: true,
+      node: true,
+      sourcemap: false,
+    });
+  }
 );
 
 export const release = gulp.series(
@@ -527,6 +531,10 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts["deploy-set-version"];
   delete scripts["website-release"];
 
+  // Set server tasks to use production flag
+  scripts["start"] = "node server.js --production";
+  scripts["start-public"] = "node server.js --public --production";
+
   // Write to a temporary package.json file.
   const noPreparePackageJson = join(
     dirname(packageJsonPath),
@@ -571,6 +579,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/Cesium/**",
       "Build/CesiumUnminified/**",
       "Build/Documentation/**",
+      "Build/Specs/**",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",
@@ -1899,23 +1908,39 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
   const contents = await readFile(path);
   const thirdPartyExtra = JSON.parse(contents);
   return Promise.all(
-    thirdPartyExtra.map(function (module) {
+    thirdPartyExtra.map(async function (module) {
       if (!discoveredDependencies.includes(module.name)) {
-        // If this is not a npm module, return existing info
-        if (
-          !packageJson.dependencies[module.name] &&
-          !packageJson.devDependencies[module.name]
-        ) {
-          discoveredDependencies.push(module.name);
-          return Promise.resolve(module);
-        }
-
-        return getLicenseDataFromPackage(
+        let result = await getLicenseDataFromPackage(
+          packageJson,
           module.name,
           discoveredDependencies,
           module.license,
           module.notes
         );
+
+        if (result) {
+          return result;
+        }
+
+        // Resursively check the workspaces
+        for (const workspace of packageJson.workspaces) {
+          const workspacePackageJson = require(`./${workspace}/package.json`);
+          result = await getLicenseDataFromPackage(
+            workspacePackageJson,
+            module.name,
+            discoveredDependencies,
+            module.license,
+            module.notes
+          );
+
+          if (result) {
+            return result;
+          }
+        }
+
+        // If this is not a npm module, return existing info
+        discoveredDependencies.push(module.name);
+        return module;
       }
     })
   );
@@ -1930,14 +1955,23 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
  * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
  */
 async function getLicenseDataFromPackage(
+  packageJson,
   packageName,
   discoveredDependencies,
   licenseOverride,
   notes
 ) {
+  if (
+    !packageJson.dependencies[packageName] &&
+    (!packageJson.devDependencies || !packageJson.devDependencies[packageName])
+  ) {
+    return;
+  }
+
   if (discoveredDependencies.includes(packageName)) {
     return [];
   }
+
   discoveredDependencies.push(packageName);
 
   const packagePath = join("node_modules", packageName, "package.json");
@@ -2019,7 +2053,6 @@ function buildSandcastle() {
   let appStream = gulp.src([
     "Apps/Sandcastle/**",
     "!Apps/Sandcastle/load-cesium-es6.js",
-    "!Apps/Sandcastle/standalone.html",
     "!Apps/Sandcastle/images/**",
     "!Apps/Sandcastle/gallery/**.jpg",
   ]);
@@ -2032,6 +2065,13 @@ function buildSandcastle() {
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
             '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>";'
+        )
+      )
+      .pipe(
+        gulpReplace(
+          '    <script type="module" src="load-cesium-es6.js"></script>',
+          '    <script src="CesiumUnminified/Cesium.js"></script>\n' +
+            '    <script>window.CESIUM_BASE_URL = "CesiumUnminified/";</script>";'
         )
       )
       // Fix relative paths for new location
@@ -2055,6 +2095,13 @@ function buildSandcastle() {
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
             '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
+        )
+      )
+      .pipe(
+        gulpReplace(
+          '    <script type="module" src="load-cesium-es6.js"></script>',
+          '    <script src="../../CesiumUnminified/Cesium.js"></script>\n' +
+            '    <script>window.CESIUM_BASE_URL = "../../CesiumUnminified/";</script>'
         )
       )
       // Fix relative paths for new location
