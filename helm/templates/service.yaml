@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: {{.Values.application.name}}
   labels:
-    run: angular-webapp
+    run: cesium-standalone
 spec:
   ports:
   - port: 3080
     protocol: TCP
   selector:
-    app: angular-webapp
+    app: cesium-standalone
   type: NodePort
