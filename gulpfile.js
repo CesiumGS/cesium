@@ -570,8 +570,9 @@ export const postversion = async function () {
     // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
     const packageJson = require(packageJsonPath);
     if (!Object.hasOwn(packageJson.dependencies, workspace)) {
- 
-      console.log(`Skipping update for ${workspace} as it is not a dependency.`);
+      console.log(
+        `Skipping update for ${workspace} as it is not a dependency.`
+      );
       return;
     }
     // Update the version for the updated workspace.
