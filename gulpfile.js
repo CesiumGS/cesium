@@ -547,24 +547,39 @@ async function pruneScriptsForZip(packageJsonPath) {
   return gulp.src(noPreparePackageJson).pipe(gulpRename(packageJsonPath));
 }
 
-export const postversion = function () {
+export const postversion = async function () {
   const workspace = argv.workspace;
   if (!workspace) {
     return;
   }
-
-  // After the workspace version is bumped by `npm version`,
-  // update the root `package.json` file to depend on the new version
   const directory = workspace.replaceAll(`@${scope}/`, ``);
   const workspacePackageJson = require(`./packages/${directory}/package.json`);
   const version = workspacePackageJson.version;
 
-  if (packageJson.dependencies[workspace]) {
+  // Iterate through all package JSONs that may depend on the updated package and
+  // update the version of the updated workspace.
+  const packageJsons = await globby([
+    "./package.json",
+    "./packages/*/package.json",
+  ]);
+  const promises = packageJsons.map(async (packageJsonPath) => {
+    // Ensure that we don't check the updated workspace itself.
+    if (basename(dirname(packageJsonPath)) === directory) {
+      return;
+    }
+    // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
+    const packageJson = require(packageJsonPath);
+    if (!Object.hasOwn(packageJson.dependencies, workspace)) {
+      console.log(
+        `Skipping update for ${workspace} as it is not a dependency.`
+      );
+      return;
+    }
+    // Update the version for the updated workspace.
     packageJson.dependencies[workspace] = version;
-    return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
-  }
-
-  console.log(`Skipping update for ${workspace} as it is not a dependency.`);
+    await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
+  });
+  return Promise.all(promises);
 };
 
 export const makeZip = gulp.series(release, async function () {
