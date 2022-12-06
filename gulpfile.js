@@ -263,13 +263,15 @@ export async function buildTs() {
   } else if (argv.workspace) {
     workspaces = argv.workspace;
   } else {
-    workspaces = Object.keys(packageJson.dependencies);
+    workspaces = packageJson.workspaces;
   }
 
   // Generate types for passed packages in order.
   const importModules = {};
   for (const workspace of workspaces) {
-    const directory = workspace.replace(`@${scope}/`, ``);
+    const directory = workspace
+      .replace(`@${scope}/`, "")
+      .replace(`packages/`, "");
     const workspaceModules = await generateTypeScriptDefinitions(
       directory,
       `packages/${directory}/index.d.ts`,
@@ -568,6 +570,8 @@ export const postversion = async function () {
     // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
     const packageJson = require(packageJsonPath);
     if (!Object.hasOwn(packageJson.dependencies, workspace)) {
+ 
+      console.log(`Skipping update for ${workspace} as it is not a dependency.`);
       return;
     }
     // Update the version for the updated workspace.
@@ -2080,14 +2084,14 @@ function buildSandcastle() {
         gulpReplace(
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>";'
+            '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>'
         )
       )
       .pipe(
         gulpReplace(
           '    <script type="module" src="load-cesium-es6.js"></script>',
           '    <script src="CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "CesiumUnminified/";</script>";'
+            '    <script>window.CESIUM_BASE_URL = "CesiumUnminified/";</script>'
         )
       )
       // Fix relative paths for new location
@@ -2110,7 +2114,7 @@ function buildSandcastle() {
         gulpReplace(
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
+            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>'
         )
       )
       .pipe(
@@ -2163,7 +2167,7 @@ function buildSandcastle() {
       gulpReplace(
         '    <script type="module" src="load-cesium-es6.js"></script>',
         '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
-          '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>";'
+          '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>'
       )
     )
     .pipe(gulpReplace("../../Build", "."))
