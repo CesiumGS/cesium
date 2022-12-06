@@ -1476,51 +1476,6 @@ describe(
         command.execute(context);
       }).toThrowDeveloperError();
     });
-
-    it("throws when instanceCount is greater than one and instancing is disabled", function () {
-      // disable extension
-      const instancedArrays = context._instancedArrays;
-      context._instancedArrays = undefined;
-
-      const vs =
-        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { out_FragColor = vec4(1.0); }";
-      sp = ShaderProgram.fromCache({
-        context: context,
-        vertexShaderSource: vs,
-        fragmentShaderSource: fs,
-        attributeLocations: {
-          position: 0,
-        },
-      });
-
-      va = new VertexArray({
-        context: context,
-        attributes: [
-          {
-            index: 0,
-            vertexBuffer: Buffer.createVertexBuffer({
-              context: context,
-              typedArray: new Float32Array([0, 0, 0, 1]),
-              usage: BufferUsage.STATIC_DRAW,
-            }),
-            componentsPerAttribute: 4,
-          },
-        ],
-      });
-
-      const command = new DrawCommand({
-        primitiveType: PrimitiveType.POINTS,
-        shaderProgram: sp,
-        vertexArray: va,
-        instanceCount: 2,
-      });
-
-      expect(function () {
-        command.execute(context);
-      }).toThrowDeveloperError();
-      context._instancedArrays = instancedArrays;
-    });
   },
   "WebGL"
 );

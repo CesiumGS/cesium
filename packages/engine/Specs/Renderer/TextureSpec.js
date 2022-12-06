@@ -1468,30 +1468,6 @@ describe(
       }
     });
 
-    it("throws when generating mipmaps with a non-power of two width", function () {
-      texture = new Texture({
-        context: context,
-        width: 3,
-        height: 2,
-      });
-
-      expect(function () {
-        texture.generateMipmap();
-      }).toThrowDeveloperError();
-    });
-
-    it("throws when generating mipmaps with a non-power of two height", function () {
-      texture = new Texture({
-        context: context,
-        width: 2,
-        height: 3,
-      });
-
-      expect(function () {
-        texture.generateMipmap();
-      }).toThrowDeveloperError();
-    });
-
     it("throws when generating mipmaps with an invalid hint", function () {
       texture = new Texture({
         context: context,
