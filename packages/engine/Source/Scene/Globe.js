@@ -379,6 +379,15 @@ function Globe(ellipsoid) {
 
   this._oceanNormalMap = undefined;
   this._zoomedOutOceanSpecularIntensity = undefined;
+
+  /**
+   * Determines the darkness of the vertex shadow.
+   * This only takes effect when <code>enableLighting</code> is <code>true</code>.
+   *
+   * @type {Number}
+   * @default 0.3
+   */
+  this.vertexShadowDarkness = 0.3;
 }
 
 Object.defineProperties(Globe.prototype, {
@@ -1046,6 +1055,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.fillHighlightColor = this.fillHighlightColor;
     tileProvider.showSkirts = this.showSkirts;
     tileProvider.backFaceCulling = this.backFaceCulling;
+    tileProvider.vertexShadowDarkness = this.vertexShadowDarkness;
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
