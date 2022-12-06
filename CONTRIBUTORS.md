@@ -339,3 +339,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [金俊](https://github.com/jinjun1994)
 - [Oussama Bonnor](https://github.com/oussamabonnor1)
 - [Calogero Mauceri](https://github.com/calogeromauceri)
+- [Marcel Wendler](https://github.com/UniquePanda)
