@@ -1,0 +1,1 @@
+helm package . && helm install release1 cesium-standalone-0.1.0.tgz

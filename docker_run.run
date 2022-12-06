@@ -1,1 +1,1 @@
-docker run -it -p 8080:8080 cesium-sandcastle-standalone
+sudo docker run -it -p 8080:8080 cesium-standalone
