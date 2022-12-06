@@ -2049,7 +2049,6 @@ const surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
   hasGeodeticSurfaceNormals: undefined,
   hasExaggeration: undefined,
-  vertexShadowDarkness: undefined,
 };
 
 const defaultUndergroundColor = Color.TRANSPARENT;
@@ -2287,8 +2286,6 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
   surfaceShaderSetOptions.hasGeodeticSurfaceNormals = hasGeodeticSurfaceNormals;
   surfaceShaderSetOptions.hasExaggeration = hasExaggeration;
-  surfaceShaderSetOptions.vertexShadowDarkness =
-    tileProvider.vertexShadowDarkness;
 
   const tileImageryCollection = surfaceTile.imagery;
   let imageryIndex = 0;
