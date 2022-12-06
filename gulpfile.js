@@ -263,13 +263,15 @@ export async function buildTs() {
   } else if (argv.workspace) {
     workspaces = argv.workspace;
   } else {
-    workspaces = Object.keys(packageJson.dependencies);
+    workspaces = packageJson.workspaces;
   }
 
   // Generate types for passed packages in order.
   const importModules = {};
   for (const workspace of workspaces) {
-    const directory = workspace.replace(`@${scope}/`, ``);
+    const directory = workspace
+      .replace(`@${scope}/`, "")
+      .replace(`packages/`, "");
     const workspaceModules = await generateTypeScriptDefinitions(
       directory,
       `packages/${directory}/index.d.ts`,
@@ -557,8 +559,12 @@ export const postversion = function () {
   const workspacePackageJson = require(`./packages/${directory}/package.json`);
   const version = workspacePackageJson.version;
 
-  packageJson.dependencies[workspace] = version;
-  return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
+  if (packageJson.dependencies[workspace]) {
+    packageJson.dependencies[workspace] = version;
+    return writeFile("package.json", JSON.stringify(packageJson, undefined, 2));
+  }
+
+  console.log(`Skipping update for ${workspace} as it is not a dependency.`);
 };
 
 export const makeZip = gulp.series(release, async function () {
