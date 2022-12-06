@@ -563,12 +563,12 @@ export const postversion = async function () {
   const promises = packageJsons.map(async (packageJsonPath) => {
     // Ensure that we don't check the updated workspace itself.
     if (basename(dirname(packageJsonPath)) === directory) {
-      return Promise.resolve();
+      return;
     }
     // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
     const packageJson = require(packageJsonPath);
-    if (!(workspace in packageJson.dependencies)) {
-      return Promise.resolve();
+    if (!Object.hasOwn(packageJson.dependencies, workspace)) {
+      return;
     }
     // Update the version for the updated workspace.
     packageJson.dependencies[workspace] = version;
