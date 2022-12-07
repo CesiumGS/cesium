@@ -132,7 +132,7 @@ function doSampling(terrainProvider, level, positions) {
   const tileRequestSet = {}; // A unique set
   for (i = 0; i < positions.length; ++i) {
     const xy = tilingScheme.positionToTileXY(positions[i], level);
-    if (!xy) {
+    if (!defined(xy)) {
       continue;
     }
 
