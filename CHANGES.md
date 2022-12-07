@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.101 - 2023-01-02
+
+##### Fixes :wrench:
+
+- Fixed glTF models with a mix of Draco and non-Draco attributes. [#10936](https://github.com/CesiumGS/cesium/pull/10936)
+
 ### 1.100 - 2022-12-01
 
 #### Major Announcements :loudspeaker:
