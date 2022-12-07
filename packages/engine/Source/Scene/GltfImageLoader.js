@@ -293,7 +293,7 @@ function loadImageFromBufferTypedArray(typedArray) {
 const ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 
 function loadImageFromUri(resource) {
-  const uri = resource.url;
+  const uri = resource.getUrlComponent(false, true);
   if (ktx2Regex.test(uri)) {
     // Resolves to a CompressedTextureBuffer
     return loadKTX2(resource);

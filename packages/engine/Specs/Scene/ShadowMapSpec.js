@@ -966,6 +966,7 @@ describe(
       createCascadedShadowMap();
 
       // Render with shadows
+      const startTime = new JulianDate(2457561.211806); // Sun pointing straight above
       const shadowedColor = renderAndReadPixels();
 
       // Render cascade colors
@@ -974,7 +975,7 @@ describe(
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(shadowedColor);
-      });
+      }, startTime);
     });
 
     it("enable soft shadows", function () {
@@ -1364,13 +1365,15 @@ describe(
         scene.render();
       }
 
+      const startTime = new JulianDate(2457561.211806); // Sun pointing straight above
+
       // Show the floor and render. The receive shadows shader should now be up-to-date.
       floor.show = true;
       renderAndCall(function (rgba) {
         expect(rgba).not.toEqual(backgroundColor);
         expect(rgba).not.toEqual(unshadowedColor);
         expect(rgba).not.toEqual(shadowedColor);
-      });
+      }, startTime);
 
       // Render a few more frames
       for (i = 0; i < 6; ++i) {

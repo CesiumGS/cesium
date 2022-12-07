@@ -28,6 +28,10 @@ const argv = yargs(process.argv)
       description:
         'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"',
     },
+    production: {
+      type: "boolean",
+      description: "If true, skip build step and serve existing built files.",
+    },
   })
   .help().argv;
 
@@ -35,7 +39,7 @@ import {
   bundleWorkers,
   createCesiumJs,
   createJsHintOptions,
-  createSpecList,
+  createCombinedSpecList,
   glslToJavaScript,
   buildEngine,
   buildWidgets,
@@ -43,24 +47,29 @@ import {
 } from "./build.js";
 
 const sourceFiles = [
-  "Source/**/*.js",
-  "!Source/*.js",
-  "!Source/Shaders/**",
-  "!Source/Workers/**",
-  "!Source/WorkersES6/**",
-  "Source/WorkersES6/createTaskProcessorWorker.js",
-  "!Source/ThirdParty/Workers/**",
-  "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/_*",
+  "packages/engine/Source/**/*.js",
+  "!packages/engine/Source/*.js",
+  "packages/widgets/Source/**/*.js",
+  "!packages/widgets/Source/*.js",
+  "!packages/engine/Source/Shaders/**",
+  "!packages/engine/Source/Workers/**",
+  "!packages/engine/Source/WorkersES6/**",
+  "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
+  "!packages/engine/Source/ThirdParty/Workers/**",
+  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!packages/engine/Source/ThirdParty/_*",
 ];
 const specFiles = [
-  "Specs/**/*Spec.js",
+  "packages/engine/Specs/**/*Spec.js",
+  "!packages/engine/Specs/SpecList.js",
+  "packages/widgets/Specs/**/*Spec.js",
+  "!packages/widgets/Specs/SpecList.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
 ];
-const shaderFiles = ["Source/Shaders/**/*.glsl"];
-const workerSourceFiles = ["Source/WorkersES6/*.js"];
+const shaderFiles = ["packages/engine/Source/Shaders/**/*.glsl"];
+const workerSourceFiles = ["packages/engine/Source/WorkersES6/*.js"];
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
@@ -139,7 +148,15 @@ const serveResult = (result, fileName, res, next) => {
 
 (async function () {
   const gzipHeader = Buffer.from("1F8B08", "hex");
-  let { esmResult, iifeResult, specResult } = await generateDevelopmentBuild();
+  let esmResult, iifeResult, specResult;
+  const production = argv.production;
+
+  if (!production) {
+    const bundles = await generateDevelopmentBuild();
+    esmResult = bundles.esmResult;
+    iifeResult = bundles.iifeResult;
+    specResult = bundles.specResult;
+  }
 
   // eventually this mime type configuration will need to change
   // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
@@ -208,165 +225,181 @@ const serveResult = (result, fileName, res, next) => {
   ];
   app.get(knownTilesetFormats, checkGzipAndNext);
 
-  // Set up file watcher for more expensive operations which would block during
-  // "just in time" compilation
-  const workerWatcher = chokidar.watch(workerSourceFiles, {
-    ignoreInitial: true,
-  });
-  workerWatcher.on("all", async () => {
-    const start = performance.now();
-    await bundleWorkers({
-      path: outputDirectory,
-      sourcemap: true,
+  if (!production) {
+    // Set up file watcher for more expensive operations which would block during
+    // "just in time" compilation
+    const workerWatcher = chokidar.watch(workerSourceFiles, {
+      ignoreInitial: true,
     });
-    console.log(
-      `Rebuilt Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
-    );
-  });
+    workerWatcher.on("all", async () => {
+      const start = performance.now();
+      await bundleWorkers({
+        path: outputDirectory,
+        sourcemap: true,
+      });
+      console.log(
+        `Rebuilt Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
+      );
+    });
 
-  //eslint-disable-next-line no-unused-vars
-  app.get("/Build/CesiumUnminified/Cesium.js", async function (req, res, next) {
-    if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
-      try {
-        const start = performance.now();
-        await createCesiumJs();
-        iifeResult = await iifeResult.rebuild();
-        console.log(
-          `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
-        );
-      } catch (e) {
-        next(e);
+    app.get("/Build/CesiumUnminified/Cesium.js", async function (
+      //eslint-disable-next-line no-unused-vars
+      req,
+      res,
+      next
+    ) {
+      if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
+        try {
+          const start = performance.now();
+          await createCesiumJs();
+          iifeResult = await iifeResult.rebuild();
+          console.log(
+            `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
+          );
+        } catch (e) {
+          next(e);
+        }
       }
-    }
 
-    return serveResult(iifeResult, "Cesium.js", res, next);
-  });
+      return serveResult(iifeResult, "Cesium.js", res, next);
+    });
 
-  app.get("/Build/CesiumUnminified/Cesium.js.map", async function (
+    app.get("/Build/CesiumUnminified/Cesium.js.map", async function (
+      //eslint-disable-next-line no-unused-vars
+      req,
+      res,
+      next
+    ) {
+      if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
+        try {
+          const start = performance.now();
+          await createCesiumJs();
+          iifeResult = await iifeResult.rebuild();
+          console.log(
+            `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
+          );
+        } catch (e) {
+          next(e);
+        }
+      }
+
+      return serveResult(iifeResult, "Cesium.js.map", res, next);
+    });
+
+    app.get("/Build/CesiumUnminified/index.js", async function (
+      //eslint-disable-next-line no-unused-vars
+      req,
+      res,
+      next
+    ) {
+      if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
+        try {
+          const start = performance.now();
+          await createCesiumJs();
+          esmResult = await esmResult.rebuild();
+          console.log(
+            `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
+          );
+        } catch (e) {
+          next(e);
+        }
+      }
+
+      return serveResult(esmResult, "index.js", res, next);
+    });
+    app.get("/Build/CesiumUnminified/index.js.map", async function (
+      //eslint-disable-next-line no-unused-vars
+      req,
+      res,
+      next
+    ) {
+      if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
+        try {
+          const start = performance.now();
+          await createCesiumJs();
+          esmResult = await esmResult.rebuild();
+          console.log(
+            `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
+          );
+        } catch (e) {
+          next(e);
+        }
+      }
+
+      return serveResult(esmResult, "index.js.map", res, next);
+    });
+
+    const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
+    glslWatcher.on("all", async () => {
+      await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
+      esmResult.outputFiles = [];
+      iifeResult.outputFiles = [];
+    });
+
+    let jsHintOptionsCache;
+    const sourceCodeWatcher = chokidar.watch(sourceFiles, {
+      ignoreInitial: true,
+    });
+    sourceCodeWatcher.on("all", () => {
+      esmResult.outputFiles = [];
+      iifeResult.outputFiles = [];
+      jsHintOptionsCache = undefined;
+    });
+
+    app.get("/Apps/Sandcastle/jsHintOptions.js", async function (
+      //eslint-disable-next-line no-unused-vars
+      req,
+      res,
+      //eslint-disable-next-line no-unused-vars
+      next
+    ) {
+      if (!jsHintOptionsCache) {
+        jsHintOptionsCache = await createJsHintOptions();
+      }
+
+      res.append("Cache-Control", "max-age=0");
+      res.append("Content-Type", "application/javascript");
+      res.send(jsHintOptionsCache);
+    });
+
+    let specRebuildPromise = Promise.resolve();
     //eslint-disable-next-line no-unused-vars
-    req,
-    res,
-    next
-  ) {
-    if (!iifeResult?.outputFiles || iifeResult.outputFiles.length === 0) {
-      try {
-        const start = performance.now();
-        await createCesiumJs();
-        iifeResult = await iifeResult.rebuild();
-        console.log(
-          `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
-        );
-      } catch (e) {
-        next(e);
+    app.get("/Build/Specs/*", async function (req, res, next) {
+      // Multiple files may be requested at this path, calling this function in quick succession.
+      // Await the previous build before re-building again.
+      await specRebuildPromise;
+
+      if (!specResult?.outputFiles || specResult.outputFiles.length === 0) {
+        try {
+          const start = performance.now();
+          specRebuildPromise = specResult.rebuild();
+          specResult = await specRebuildPromise;
+          console.log(
+            `Rebuilt Specs/* in ${formatTimeSinceInSeconds(start)} seconds.`
+          );
+        } catch (e) {
+          next(e);
+        }
       }
-    }
 
-    return serveResult(iifeResult, "Cesium.js.map", res, next);
-  });
+      return serveResult(specResult, path.basename(req.originalUrl), res, next);
+    });
 
-  //eslint-disable-next-line no-unused-vars
-  app.get("/Build/CesiumUnminified/index.js", async function (req, res, next) {
-    if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
-      try {
-        const start = performance.now();
-        await createCesiumJs();
-        esmResult = await esmResult.rebuild();
-        console.log(
-          `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
-        );
-      } catch (e) {
-        next(e);
+    const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
+    specWatcher.on("all", async (event) => {
+      if (event === "add" || event === "unlink") {
+        await createCombinedSpecList();
       }
-    }
 
-    return serveResult(esmResult, "index.js", res, next);
-  });
-  app.get("/Build/CesiumUnminified/index.js.map", async function (
-    //eslint-disable-next-line no-unused-vars
-    req,
-    res,
-    next
-  ) {
-    if (!esmResult?.outputFiles || esmResult.outputFiles.length === 0) {
-      try {
-        const start = performance.now();
-        await createCesiumJs();
-        esmResult = await esmResult.rebuild();
-        console.log(
-          `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
-        );
-      } catch (e) {
-        next(e);
-      }
-    }
+      specResult.outputFiles = [];
+    });
 
-    return serveResult(esmResult, "index.js.map", res, next);
-  });
+    // Serve any static files starting with "Build/CesiumUnminified" from the
+    // development build instead. That way, previous build output is preserved
+    // while the latest is being served
+    app.use("/Build/CesiumUnminified", express.static("Build/CesiumDev"));
+  }
 
-  const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
-  glslWatcher.on("all", async () => {
-    await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
-    esmResult.outputFiles = [];
-    iifeResult.outputFiles = [];
-  });
-
-  let jsHintOptionsCache;
-  const sourceCodeWatcher = chokidar.watch(sourceFiles, {
-    ignoreInitial: true,
-  });
-  sourceCodeWatcher.on("all", () => {
-    esmResult.outputFiles = [];
-    iifeResult.outputFiles = [];
-    jsHintOptionsCache = undefined;
-  });
-
-  //eslint-disable-next-line no-unused-vars
-  app.get("/Apps/Sandcastle/jsHintOptions.js", async function (req, res, next) {
-    if (!jsHintOptionsCache) {
-      jsHintOptionsCache = await createJsHintOptions();
-    }
-
-    res.append("Cache-Control", "max-age=0");
-    res.append("Content-Type", "application/javascript");
-    res.send(jsHintOptionsCache);
-  });
-
-  let specRebuildPromise = Promise.resolve();
-  //eslint-disable-next-line no-unused-vars
-  app.get("/Build/Specs/*", async function (req, res, next) {
-    // Multiple files may be requested at this path, calling this function in quick succession.
-    // Await the previous build before re-building again.
-    await specRebuildPromise;
-
-    if (!specResult?.outputFiles || specResult.outputFiles.length === 0) {
-      try {
-        const start = performance.now();
-        specRebuildPromise = specResult.rebuild();
-        specResult = await specRebuildPromise;
-        console.log(
-          `Rebuilt Specs/* in ${formatTimeSinceInSeconds(start)} seconds.`
-        );
-      } catch (e) {
-        next(e);
-      }
-    }
-
-    return serveResult(specResult, path.basename(req.originalUrl), res, next);
-  });
-
-  const specWatcher = chokidar.watch(specFiles, { ignoreInitial: true });
-  specWatcher.on("all", async (event) => {
-    if (event === "add" || event === "unlink") {
-      await createSpecList();
-    }
-
-    specResult.outputFiles = [];
-  });
-
-  // Serve any static files starting with "Build/CesiumUnminified" from the
-  // development build instead. That way, previous build output is preserved
-  // while the latest is being served
-  app.use("/Build/CesiumUnminified", express.static("Build/CesiumDev"));
   app.use(express.static(path.resolve(".")));
 
   function getRemoteUrlFromParam(req) {
@@ -504,9 +537,13 @@ const serveResult = (result, fileName, res, next) => {
       server.close(function () {
         process.exit(0);
       });
-      esmResult.rebuild.dispose();
-      iifeResult.rebuild.dispose();
-      specResult.rebuild.dispose();
+
+      if (!production) {
+        esmResult.rebuild.dispose();
+        iifeResult.rebuild.dispose();
+        specResult.rebuild.dispose();
+      }
+
       isFirstSig = false;
     } else {
       console.log("Cesium development server force kill.");

@@ -1193,7 +1193,7 @@ Matrix3.multiplyByScalar = function (matrix, scalar, result) {
  * Computes the product of a matrix times a (non-uniform) scale, as if the scale were a scale matrix.
  *
  * @param {Matrix3} matrix The matrix on the left-hand side.
- * @param {Number} scale The non-uniform scale on the right-hand side.
+ * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
  *
