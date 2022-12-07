@@ -754,7 +754,7 @@ function GpxDataSource() {
   this._error = new Event();
   this._loading = new Event();
   this._clock = undefined;
-  this._entityCollection = new EntityCollection();
+  this._entityCollection = new EntityCollection(this);
   this._entityCluster = new EntityCluster();
   this._name = undefined;
   this._version = undefined;
