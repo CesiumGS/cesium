@@ -49,7 +49,7 @@ Object.defineProperties(I3SFeature.prototype, {
 
 /**
  * Loads the content.
- * @returns {Promise.<Object>} A promise that is resolved when the data of the I3S feature is loaded
+ * @returns {Promise} A promise that is resolved when the data of the I3S feature is loaded
  * @private
  */
 I3SFeature.prototype.load = function () {

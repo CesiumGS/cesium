@@ -109,7 +109,7 @@ describe("Scene/I3SDataProvider", function () {
   const mockLayerData = {
     href: "layers/0/",
     attributeStorageInfo: [],
-    store: { rootNode: "mockRootNodeUrl" },
+    store: { rootNode: "mockRootNodeUrl", version: "1.6" },
     fullExtent: { xmin: 0, ymin: 1, xmax: 2, ymax: 3 },
     spatialReference: { wkid: 4326 },
     id: 0,

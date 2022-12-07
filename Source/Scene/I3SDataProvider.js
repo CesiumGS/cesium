@@ -626,7 +626,8 @@ I3SDataProvider.prototype._loadGeoidData = function () {
     console.log(
       "No Geoid Terrain service provided - no geoid conversion will be performed."
     );
-    return Promise.resolve();
+    this._geoidDataIsReadyPromise = Promise.resolve();
+    return this._geoidDataIsReadyPromise;
   }
 
   this._geoidDataIsReadyPromise = geoidTerrainProvider.readyPromise.then(

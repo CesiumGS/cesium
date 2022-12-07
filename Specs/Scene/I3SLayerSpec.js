@@ -85,7 +85,7 @@ describe("Scene/I3SLayer", function () {
       rootIndex: 0,
     },
     attributeStorageInfo: [],
-    store: { defaultGeometrySchema: {} },
+    store: { defaultGeometrySchema: {}, version: "1.7" },
     geometryDefinitions: geometryDefinitions,
     fullExtent: { xmin: 0, ymin: 1, xmax: 2, ymax: 3 },
     spatialReference: { wkid: 4326 },
@@ -97,7 +97,7 @@ describe("Scene/I3SLayer", function () {
       rootIndex: 0,
     },
     attributeStorageInfo: [],
-    store: { defaultGeometrySchema: {}, extent: [0, 1, 2, 3] },
+    store: { defaultGeometrySchema: {}, extent: [0, 1, 2, 3], version: "1.7" },
     spatialReference: { wkid: 4326 },
   };
 
@@ -116,6 +116,11 @@ describe("Scene/I3SLayer", function () {
 
     expect(testLayer.resource.url).toContain("mockProviderUrl/mockLayerUrl/");
     expect(testLayer.resource.queryParameters.testQuery).toEqual("test");
+
+    expect(testLayer.version).toEqual("1.7");
+    expect(testLayer.majorVersion).toEqual(1);
+    expect(testLayer.minorVersion).toEqual(7);
+    expect(testLayer.legacyVersion16).toEqual(false);
 
     expect(testLayer.data).toEqual(layerData);
 
@@ -365,7 +370,11 @@ describe("Scene/I3SLayer", function () {
         nodesPerPage: 2,
         rootIndex: 0,
       },
-      store: { defaultGeometrySchema: {}, extent: [0, 1, 2, 3] },
+      store: {
+        defaultGeometrySchema: {},
+        extent: [0, 1, 2, 3],
+        version: "1.7",
+      },
       spatialReference: { wkid: 3857 },
     };
     const mockI3SProvider = createMockI3SProvider();
