@@ -44,7 +44,7 @@ function Context(canvas, options) {
 
   const {
     getWebGLStub,
-    requestWebgl2 = false,
+    requestWebgl1 = false,
     webgl: webglOptions = {},
     allowTextureFilterAnisotropic = true,
   } = defaultValue(options, {});
@@ -59,7 +59,7 @@ function Context(canvas, options) {
 
   const glContext = defined(getWebGLStub)
     ? getWebGLStub(canvas, webglOptions)
-    : getWebGLContext(canvas, webglOptions, requestWebgl2);
+    : getWebGLContext(canvas, webglOptions, requestWebgl1);
 
   // Get context type. instanceof will throw if WebGL2 is not supported
   const webgl2 =
@@ -367,7 +367,7 @@ function Context(canvas, options) {
    */
   this.options = {
     getWebGLStub: getWebGLStub,
-    requestWebgl2: requestWebgl2,
+    requestWebgl1: requestWebgl1,
     webgl: webglOptions,
     allowTextureFilterAnisotropic: allowTextureFilterAnisotropic,
   };

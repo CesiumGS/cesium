@@ -20,7 +20,7 @@ describe(
     let fbm;
 
     beforeAll(function () {
-      context = createContext({ requestWebgl2: true });
+      context = createContext();
     });
 
     afterAll(function () {

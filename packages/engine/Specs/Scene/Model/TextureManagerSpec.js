@@ -10,10 +10,12 @@ describe(
     let sceneWithWebgl2;
 
     beforeAll(function () {
-      sceneWithWebgl1 = createScene();
-      sceneWithWebgl2 = createScene({
-        contextOptions: { requestWebgl2: true },
+      sceneWithWebgl1 = createScene({
+        contextOptions: {
+          sceneWithWebgl1: true,
+        },
       });
+      sceneWithWebgl2 = createScene();
     });
 
     afterAll(function () {

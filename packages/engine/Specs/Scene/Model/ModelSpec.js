@@ -1294,11 +1294,7 @@ describe(
       let sceneWithWebgl2;
 
       beforeAll(function () {
-        sceneWithWebgl2 = createScene({
-          contextOptions: {
-            requestWebgl2: true,
-          },
-        });
+        sceneWithWebgl2 = createScene();
       });
 
       afterEach(function () {
