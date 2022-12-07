@@ -14,7 +14,7 @@ import {
   SampledProperty,
   TimeIntervalCollectionProperty,
   ShadowMode,
-} from "../../Source/Cesium.js";
+} from "@cesium/engine";
 
 function createGeometryUpdaterSpecs(
   Updater,
