@@ -4,11 +4,13 @@
     },
     "source": {
         "include": [
-            "Source"
+            "packages/engine/Source",
+            "packages/widgets/Source"
         ],
         "exclude": [
-            "Source/ThirdParty",
-            "Source/Workers"
+            "packages/engine/Source/ThirdParty",
+            "packages/engine/Source/Workers",
+            "packages/widgets/Source/ThirdParty"
         ],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"

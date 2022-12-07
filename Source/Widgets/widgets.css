@@ -4,7 +4,6 @@
 @import url(./CesiumWidget/CesiumWidget.css);
 @import url(./CesiumInspector/CesiumInspector.css);
 @import url(./Cesium3DTilesInspector/Cesium3DTilesInspector.css);
-@import url(./VoxelInspector/VoxelInspector.css);
 @import url(./FullscreenButton/FullscreenButton.css);
 @import url(./VRButton/VRButton.css);
 @import url(./Geocoder/Geocoder.css);
@@ -16,3 +15,4 @@
 @import url(./SelectionIndicator/SelectionIndicator.css);
 @import url(./Timeline/Timeline.css);
 @import url(./Viewer/Viewer.css);
+@import url(./VoxelInspector/VoxelInspector.css);

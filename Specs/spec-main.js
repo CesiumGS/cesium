@@ -1,6 +1,5 @@
 import customizeJasmine from "./customizeJasmine.js";
-import defined from "../Source/Core/defined.js";
-import queryToObject from "../Source/Core/queryToObject.js";
+import { defined, queryToObject } from "../packages/engine/index.js";
 
 const queryString = queryToObject(window.location.search.substring(1));
 
