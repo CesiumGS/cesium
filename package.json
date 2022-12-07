@@ -74,6 +74,7 @@
     "express": "^4.17.1",
     "globby": "^13.1.2",
     "glsl-strip-comments": "^1.0.0",
+    "gulp": "^4.0.2",
     "gulp-clean-css": "^4.3.0",
     "gulp-insert": "^0.5.0",
     "gulp-rename": "^2.0.0",

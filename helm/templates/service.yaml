@@ -6,7 +6,7 @@ metadata:
     run: cesium-standalone
 spec:
   ports:
-  - port: 3080
+  - port: 8080
     protocol: TCP
   selector:
     app: cesium-standalone

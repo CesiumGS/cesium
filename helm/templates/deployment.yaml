@@ -23,5 +23,5 @@ spec:
         imagePullPolicy: {{.Values.image.pullPolicy}}
         resources: {}
         ports:
-          - containerPort: 3080 
+          - containerPort: 8080 
 status: {}

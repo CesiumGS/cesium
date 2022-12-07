@@ -1,2 +1,0 @@
-sudo docker tag cesium-standalone:1.0.2 acrarolibotnonprod.azurecr.io/cesium-standalone &&\
-sudo docker push acrarolibotnonprod.azurecr.io/cesium-standalone

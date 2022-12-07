@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: acrarolibotnonprod.azurecr.io/cesium-standalone
+  repository: acrarolibotnonprod.azurecr.io/cesium-standalone:1.0.3
   pullPolicy: Always
 
 application:

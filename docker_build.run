@@ -1,1 +1,0 @@
-sudo docker build . -t cesium-standalone:1.0.2
