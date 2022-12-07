@@ -327,7 +327,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   Check.typeOf.object("options.frameState", frameState);
 
   const hasBufferViewId = defined(bufferViewId);
-  const hasDraco = defined(draco);
+  const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
 
   if (hasBufferViewId === hasDraco) {
@@ -393,6 +393,14 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
 
   return `vertex-buffer:${bufferCacheKey}-range-${bufferViewCacheKey}${cacheKeySuffix}`;
 };
+
+function hasDracoCompression(draco, semantic) {
+  return (
+    defined(draco) &&
+    defined(draco.attributes) &&
+    defined(draco.attributes[semantic])
+  );
+}
 
 /**
  * Gets the index buffer cache key.
