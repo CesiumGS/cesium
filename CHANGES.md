@@ -13,6 +13,7 @@
 - Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar` [#10912](https://github.com/CesiumGS/cesium/pull/10912)
 - Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
 - Fixed a bug where the entity collection of a `GpxDataSource` did not have the `owner` property set. [#10921](https://github.com/CesiumGS/cesium/issues/10921)
+- Fixed a bug where \*.ktx2 images loading fail. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
 
 ### 1.100 - 2022-12-01
 
