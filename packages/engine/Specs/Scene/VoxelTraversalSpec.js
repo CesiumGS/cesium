@@ -6,10 +6,10 @@ import {
   Cartesian3,
   OrientedBoundingBox,
   Math as CesiumMath,
+  MetadataType,
   CullingVolume,
   Cesium3DTilesVoxelProvider,
 } from "../../index.js";
-import MetadataType from "../../Source/Scene/MetadataType.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 

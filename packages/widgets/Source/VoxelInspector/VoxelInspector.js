@@ -5,12 +5,13 @@ import {
   defaultValue,
   destroyObject,
   Ellipsoid,
-  VoxelShapeType,
   getElement,
+  VoxelShapeType,
 } from "@cesium/engine";
+
+import knockout from "../ThirdParty/knockout.js";
 import InspectorShared from "../InspectorShared.js";
 import VoxelInspectorViewModel from "./VoxelInspectorViewModel.js";
-import knockout from "../ThirdParty/knockout.js";
 
 /**
  * Inspector widget to aid in debugging voxels
