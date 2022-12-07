@@ -379,6 +379,63 @@ describe(
       });
     });
 
+    it("renders terrain with vertexShadowDarkness", function () {
+      const renderOptions = {
+        scene: scene,
+        time: new JulianDate(2557522.0),
+      };
+      globe.enableLighting = true;
+
+      const layerCollection = globe.imageryLayers;
+      layerCollection.removeAll();
+      const imageryProvider = new SingleTileImageryProvider({
+        url: "Data/Images/Red16x16.png",
+      });
+      layerCollection.addImageryProvider(imageryProvider);
+      return imageryProvider.readyPromise.then(function () {
+        Resource._Implementations.loadWithXhr = function (
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        ) {
+          Resource._DefaultImplementations.loadWithXhr(
+            "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
+            responseType,
+            method,
+            data,
+            headers,
+            deferred
+          );
+        };
+
+        returnVertexNormalTileJson();
+
+        const terrainProvider = new CesiumTerrainProvider({
+          url: "made/up/url",
+          requestVertexNormals: true,
+        });
+
+        globe.terrainProvider = terrainProvider;
+        scene.camera.setView({
+          destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+        });
+
+        return updateUntilDone(globe).then(function () {
+          let initialRgba;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            initialRgba = rgba;
+            expect(renderOptions).notToRender([0, 0, 0, 255]);
+            globe.vertexShadowDarkness = 0.1;
+            expect(renderOptions).notToRender(initialRgba);
+          });
+        });
+      });
+    });
+
     it("renders with hue shift", function () {
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
