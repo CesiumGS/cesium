@@ -25,6 +25,10 @@ describe("Scene/processVoxelProperties", function () {
     });
   });
 
+  afterAll(function () {
+    scene.destroyForSpecs();
+  });
+
   it("adds shader defines and structs", function () {
     const primitive = new VoxelPrimitive({ provider });
     primitive.update(scene.frameState);

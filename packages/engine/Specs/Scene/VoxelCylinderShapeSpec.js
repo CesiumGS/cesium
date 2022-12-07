@@ -200,6 +200,66 @@ describe(
       expect(shape.shapeTransform).toEqual(modelMatrix);
       expect(visible).toBeTrue();
     });
+
+    it("computeOrientedBoundingBoxForTile returns oriented bounding box for a specified tile", () => {
+      let result = new OrientedBoundingBox();
+      const shape = new VoxelCylinderShape();
+      const translation = new Cartesian3(1.0, 2.0, 3.0);
+      const scale = new Cartesian3(2.0, 3.0, 4.0);
+      const rotation = Quaternion.IDENTITY;
+      const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+        translation,
+        rotation,
+        scale,
+        new Matrix4()
+      );
+
+      // Half revolution
+      const minRadius = 0.25;
+      const maxRadius = 0.75;
+      const minHeight = -0.5;
+      const maxHeight = +0.5;
+      const minAngle = -CesiumMath.PI;
+      const maxAngle = 0.0;
+      const minBounds = new Cartesian3(minRadius, minHeight, minAngle);
+      const maxBounds = new Cartesian3(maxRadius, maxHeight, maxAngle);
+      shape.update(modelMatrix, minBounds, maxBounds);
+      result = shape.computeOrientedBoundingBoxForTile(0, 0, 0, 0, result);
+      expect(result.center.x).toEqual(1.0);
+      expect(result.center.y).toEqual(0.875);
+      expect(result.center.z).toEqual(3.0);
+      expect(
+        result.halfAxes.equals(new Matrix3(1.5, 0, 0, 0, 1.125, 0, 0, 0, 2))
+      ).toBe(true);
+    });
+
+    it("computeApproximateStepSize returns step size for the specified voxel grid dimension", () => {
+      const shape = new VoxelCylinderShape();
+      const translation = new Cartesian3(1.0, 2.0, 3.0);
+      const scale = new Cartesian3(2.0, 3.0, 4.0);
+      const rotation = Quaternion.IDENTITY;
+      const modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+        translation,
+        rotation,
+        scale,
+        new Matrix4()
+      );
+
+      // Half revolution
+      const minRadius = 0.25;
+      const maxRadius = 0.75;
+      const minHeight = -0.5;
+      const maxHeight = +0.5;
+      const minAngle = -CesiumMath.PI;
+      const maxAngle = 0.0;
+      const minBounds = new Cartesian3(minRadius, minHeight, minAngle);
+      const maxBounds = new Cartesian3(maxRadius, maxHeight, maxAngle);
+      shape.update(modelMatrix, minBounds, maxBounds);
+
+      const dimensions = new Cartesian3(0.5, 1, CesiumMath.PI);
+      const result = shape.computeApproximateStepSize(dimensions);
+      expect(result).toEqualEpsilon(0.4319638, CesiumMath.EPSILON7);
+    });
   },
   "WebGL"
 );

@@ -26,6 +26,10 @@ describe("Scene/VoxelDrawCommands", function () {
     });
   });
 
+  afterAll(function () {
+    scene.destroyForSpecs();
+  });
+
   it("sets up basic voxel draw commands", function () {
     const primitive = new VoxelPrimitive({ provider });
     primitive.update(scene.frameState);

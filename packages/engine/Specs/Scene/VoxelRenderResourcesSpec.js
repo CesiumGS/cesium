@@ -2,7 +2,15 @@ import { VoxelPrimitive, VoxelRenderResources } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe("Scene/VoxelRenderResources", function () {
-  const scene = createScene();
+  let scene;
+
+  beforeEach(function () {
+    scene = createScene();
+  });
+
+  afterEach(function () {
+    scene.destroyForSpecs();
+  });
 
   it("constructs", function () {
     const primitive = new VoxelPrimitive();

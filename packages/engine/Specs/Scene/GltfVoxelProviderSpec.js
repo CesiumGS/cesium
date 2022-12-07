@@ -29,6 +29,13 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
+    it("throws if constructed directly", function () {
+      expect(() => {
+        // eslint-disable-next-line no-unused-vars
+        const provider = new VoxelProvider();
+      }).toThrowDeveloperError();
+    });
+
     it("conforms to VoxelProvider interface", function () {
       expect(GltfVoxelProvider).toConformToInterface(VoxelProvider);
     });
