@@ -16,6 +16,7 @@ import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
 import ModelComponents from "./ModelComponents.js";
 import ModelUtility from "./Model/ModelUtility.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
@@ -353,6 +354,20 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     attribute.name = customAttributeName;
     attribute.count = featureCount;
     attribute.type = property.type;
+    const componentDatatype = ComponentDatatype.fromTypedArray(
+      attributeTypedArray
+    );
+    if (
+      componentDatatype === ComponentDatatype.INT ||
+      componentDatatype === ComponentDatatype.UNSIGNED_INT ||
+      componentDatatype === ComponentDatatype.DOUBLE
+    ) {
+      oneTimeWarning(
+        "Cast pnts property to floats",
+        `Point cloud property "${customAttributeName}" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`
+      );
+      attributeTypedArray = new Float32Array(attributeTypedArray);
+    }
     attribute.componentDatatype = ComponentDatatype.fromTypedArray(
       attributeTypedArray
     );
