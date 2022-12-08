@@ -34,7 +34,7 @@ function demodernizeShader(input, isFragmentShader) {
 
       // Remove all layout declarations for out_FragData.
       output = output.replaceAll(
-        /layout \(location = \d+\) vec4 out_FragData_\d+;/g,
+        /layout\s+\(location\s*=\s*\d+\)\s*out\s+vec4\s+out_FragData_\d+;/g,
         ``
       );
 
@@ -48,7 +48,7 @@ function demodernizeShader(input, isFragmentShader) {
 
     // Remove all layout declarations for out_FragColor.
     output = output.replaceAll(
-      /layout \(location = 0\) vec4 out_FragColor/g,
+      /layout\s+\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor/g,
       ``
     );
 

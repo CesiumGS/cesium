@@ -871,12 +871,15 @@ describe(
     });
 
     it("throws when instanceDivisor is greater than zero and instancing is disabled", function () {
+      const contextWithoutInstancing = createContext({
+        requestWebgl1: true,
+      });
+
       // disable extension
-      const instancedArrays = context._instancedArrays;
-      context._instancedArrays = undefined;
+      contextWithoutInstancing._instancedArrays = undefined;
 
       const buffer = Buffer.createVertexBuffer({
-        context: context,
+        context: contextWithoutInstancing,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
@@ -897,11 +900,12 @@ describe(
 
       expect(function () {
         return new VertexArray({
-          context: context,
+          context: contextWithoutInstancing,
           attributes: attributes,
         });
       }).toThrowDeveloperError();
-      context._instancedArrays = instancedArrays;
+
+      contextWithoutInstancing.destroyForSpecs();
     });
   },
   "WebGL"

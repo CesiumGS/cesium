@@ -171,7 +171,11 @@ describe(
     });
 
     it("does not run a stage that requires depth textures when depth textures are not supported", function () {
-      const s = createScene();
+      const s = createScene({
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
       s.context._depthTexture = false;
 
       if (defined(s._view.globeDepth)) {

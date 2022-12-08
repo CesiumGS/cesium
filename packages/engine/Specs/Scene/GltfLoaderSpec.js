@@ -2173,7 +2173,11 @@ describe(
 
       beforeAll(function () {
         // Disable instancing extension.
-        sceneWithNoInstancing = createScene();
+        sceneWithNoInstancing = createScene({
+          contextOptions: {
+            requestWebgl1: true,
+          },
+        });
         sceneWithNoInstancing.context._instancedArrays = undefined;
       });
 
@@ -2493,7 +2497,7 @@ describe(
         });
       });
 
-      it("loads BoxInstanced when WebGL instancing is disabled", function () {
+      it("loads BoxInstanced when WebGL instancing is disabled on WebGL 1", function () {
         const options = {
           scene: sceneWithNoInstancing,
         };
@@ -3397,20 +3401,24 @@ describe(
     });
 
     describe("loadIndicesForWireframe", function () {
-      let sceneWithWebgl2;
+      let sceneWithWebgl1;
 
       beforeAll(function () {
-        sceneWithWebgl2 = createScene();
-        sceneWithWebgl2.context._webgl2 = true;
+        sceneWithWebgl1 = createScene({
+          contextOptions: {
+            requestWebgl1: true,
+          },
+        });
       });
 
       afterAll(function () {
-        sceneWithWebgl2.destroyForSpecs();
+        sceneWithWebgl1.destroyForSpecs();
       });
 
       it("loads indices in buffer and typed array for wireframes in WebGL1", function () {
         return loadGltf(triangle, {
           loadIndicesForWireframe: true,
+          scene: sceneWithWebgl1,
         }).then(function (gltfLoader) {
           const components = gltfLoader.components;
           const scene = components.scene;
@@ -3436,7 +3444,6 @@ describe(
       it("loads indices in buffer only for wireframes in WebGL2", function () {
         return loadGltf(triangle, {
           loadIndicesForWireframe: true,
-          scene: sceneWithWebgl2,
         }).then(function (gltfLoader) {
           const components = gltfLoader.components;
           const scene = components.scene;

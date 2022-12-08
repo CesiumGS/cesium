@@ -12,7 +12,7 @@ describe(
     beforeAll(function () {
       sceneWithWebgl1 = createScene({
         contextOptions: {
-          sceneWithWebgl1: true,
+          requestWebgl1: true,
         },
       });
       sceneWithWebgl2 = createScene();
@@ -113,7 +113,9 @@ describe(
         })
       );
 
-      return waitForTextureLoad(textureManager, id).then(function (texture) {
+      return waitForTextureLoad(textureManager, id, false).then(function (
+        texture
+      ) {
         expect(texture._hasMipmap).toBe(true);
       });
     });
@@ -131,7 +133,9 @@ describe(
         })
       );
 
-      return waitForTextureLoad(textureManager, id).then(function (texture) {
+      return waitForTextureLoad(textureManager, id, false).then(function (
+        texture
+      ) {
         expect(texture.width).toBe(16);
         expect(texture.height).toBe(16);
         expect(texture._hasMipmap).toBe(true);
