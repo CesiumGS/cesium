@@ -105,7 +105,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0 + 0.1 * vec2(u_time, 0.0);
-                material.diffuse = texture2D(u_stripes, texCoord).rgb;
+                material.diffuse = texture(u_stripes, texCoord).rgb;
             }
             `,
         });
@@ -156,7 +156,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 material.diffuse = mix(material.diffuse, vec3(0.0), checkerboard.r);
             }
             `,
@@ -178,7 +178,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 material.diffuse = checkerboard.rgb;
                 material.alpha = checkerboard.a;
             }
@@ -197,7 +197,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 if (checkerboard.r > 0.0) {
                     discard;
                 }
@@ -245,7 +245,7 @@
           fragmentShaderText: `
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
-                material.diffuse = texture2D(u_gradient, fsInput.attributes.texCoord_0).rgb;
+                material.diffuse = texture(u_gradient, fsInput.attributes.texCoord_0).rgb;
             }
             `,
         });
