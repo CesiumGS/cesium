@@ -362,9 +362,9 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
       componentDatatype === ComponentDatatype.UNSIGNED_INT ||
       componentDatatype === ComponentDatatype.DOUBLE
     ) {
-      oneTimeWarning(
+      parseBatchTable._oneTimeWarning(
         "Cast pnts property to floats",
-        `Point cloud property "${customAttributeName}" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`
+        `Point cloud property "${customAttributeName}" will be cast to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`
       );
       attributeTypedArray = new Float32Array(attributeTypedArray);
     }
@@ -450,5 +450,6 @@ function transcodeComponentType(componentType) {
 
 // exposed for testing
 parseBatchTable._deprecationWarning = deprecationWarning;
+parseBatchTable._oneTimeWarning = oneTimeWarning;
 
 export default parseBatchTable;
