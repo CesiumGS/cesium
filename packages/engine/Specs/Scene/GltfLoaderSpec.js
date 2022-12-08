@@ -3442,8 +3442,12 @@ describe(
       });
 
       it("loads indices in buffer only for wireframes in WebGL2", function () {
+        const customScene = createScene();
+        customScene.context._webgl2 = true;
+
         return loadGltf(triangle, {
           loadIndicesForWireframe: true,
+          scene: customScene,
         }).then(function (gltfLoader) {
           const components = gltfLoader.components;
           const scene = components.scene;
@@ -3463,6 +3467,8 @@ describe(
           expect(primitive.indices.count).toBe(3);
           expect(primitive.indices.typedArray).not.toBeDefined();
           expect(primitive.indices.buffer).toBeDefined();
+
+          customScene.destroyForSpecs();
         });
       });
     });

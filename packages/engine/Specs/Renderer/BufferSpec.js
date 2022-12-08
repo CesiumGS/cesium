@@ -17,7 +17,7 @@ describe(
       let context;
       let buffer;
       let buffer2;
-      const webglMessage = contextOptions.requestWebgl1 ? ": " : "WebGL 2";
+      const webglMessage = contextOptions.requestWebgl1 ? "" : ": WebGL 2";
 
       beforeAll(function () {
         context = createContext(contextOptions);
