@@ -343,9 +343,9 @@ describe(
       const highpFloatSupported = ContextLimits.highpFloatSupported;
       ContextLimits._highpFloatSupported = false;
       const vs =
-        "in vec4 position; uniform float u_value; varying float v_value; void main() { gl_PointSize = 1.0; v_value = u_value * czm_viewport.z; gl_Position = position; }";
+        "in vec4 position; uniform float u_value; out float v_value; void main() { gl_PointSize = 1.0; v_value = u_value * czm_viewport.z; gl_Position = position; }";
       const fs =
-        "uniform float u_value; varying float v_value; void main() { out_FragColor = vec4(u_value * v_value * czm_viewport.z); }";
+        "uniform float u_value; in float v_value; void main() { out_FragColor = vec4(u_value * v_value * czm_viewport.z); }";
       const uniformMap = {
         u_value: function () {
           return 1.0;
@@ -406,6 +406,7 @@ describe(
 
     it("diamond dependency", function () {
       const fs =
+        "layout (location = 0) out vec4 out_FragColor;\n" +
         "void main() { \n" +
         "  vec4 color = vec4(1.0, 1.0, 1.0, 0.8); \n" +
         "  color = czm_testDiamondDependency1(color); \n" +
@@ -467,7 +468,9 @@ describe(
         "#version 100 \n" +
         "in vec4 position; void main() { gl_Position = position; }";
       const fs =
-        "#version 100 \n" + "void main() { out_FragColor = vec4(1.0); }";
+        "#version 100 \n" +
+        "layout (location = 0) out vec4 out_FragColor;\n" +
+        "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -481,7 +484,10 @@ describe(
         "#version 100 \n" +
         "in vec4 position; void main() { gl_Position = position; }";
       const fs =
-        "\n" + "#version 100 \n" + "void main() { out_FragColor = vec4(1.0); }";
+        "\n" +
+        "#version 100 \n" +
+        "layout (location = 0) out vec4 out_FragColor;\n" +
+        "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -495,7 +501,9 @@ describe(
       }
 
       const vs = "does not compile.";
-      const fs = "void main() { out_FragColor = vec4(1.0); }";
+      const fs =
+        "layout (location = 0) out vec4 out_FragColor;\n" +
+        "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -546,6 +554,7 @@ describe(
     it("fails with built-in function circular dependency", function () {
       const vs = "void main() { gl_Position = vec4(0.0); }";
       const fs =
+        "layout (location = 0) out vec4 out_FragColor;\n" +
         "void main() { czm_circularDependency1(); out_FragColor = vec4(1.0); }";
       expect(function () {
         sp = ShaderProgram.fromCache({

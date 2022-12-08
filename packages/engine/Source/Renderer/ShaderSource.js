@@ -255,20 +255,6 @@ function combineShader(shaderSource, isFragmentShader, context) {
     }
   }
 
-  // GLSLModernizer inserts its own layout qualifiers
-  // at this position in the source
-  if (
-    context.webgl2 &&
-    isFragmentShader &&
-    !/layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g.test(
-      combinedSources
-    ) &&
-    !/czm_out_FragColor/g.test(combinedSources) &&
-    /out_FragColor/g.test(combinedSources)
-  ) {
-    result += "layout(location = 0) out vec4 out_FragColor;\n\n";
-  }
-
   // Define a constant for the OES_texture_float_linear extension since WebGL does not.
   if (context.textureFloatLinear) {
     result += "#define OES_texture_float_linear\n\n";
@@ -280,14 +266,29 @@ function combineShader(shaderSource, isFragmentShader, context) {
   }
 
   // append built-ins
+  let builtinSources = "";
   if (shaderSource.includeBuiltIns) {
-    result += getBuiltinsAndAutomaticUniforms(combinedSources);
+    builtinSources = getBuiltinsAndAutomaticUniforms(combinedSources);
   }
 
   // reset line number
   result += "\n#line 0\n";
 
   // append actual source
+  const combinedShader = builtinSources + combinedSources;
+  if (
+    context.webgl2 &&
+    isFragmentShader &&
+    !/layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g.test(
+      combinedShader
+    ) &&
+    !/czm_out_FragColor/g.test(combinedShader) &&
+    /out_FragColor/g.test(combinedShader)
+  ) {
+    result += "layout(location = 0) out vec4 out_FragColor;\n\n";
+  }
+
+  result += builtinSources;
   result += combinedSources;
 
   // modernize the source
@@ -296,7 +297,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
   } else {
     // Replace all czm_textureCube calls with texture
     result = result.replaceAll(/czm_textureCube/g, `texture`);
-    result = `#version 300 es\n ${result}`;
+    result = `#version 300 es\n${result}`;
   }
 
   return result;
