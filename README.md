@@ -54,7 +54,8 @@ Alternatively, [use a content delivery network (CDN) URL](https://cesium.com/lea
 
 See our [Quickstart Guide](https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/) for more information on getting a CesiumJS app up and running.
 
-TODO: Link to build guide/other local development docs
+Instructions for serving local data are in the CesiumJS
+[Offline Guide](./Documentation/OfflineGuide/README.md).
 
 Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md). :heart:
 
@@ -68,12 +69,11 @@ Our mission is to create the leading 3D globe and map for static and time-dynami
 
 ## :earth_americas: Where Does the 3D Content Come From?
 
-CesiumJS can stream 3D content such as terrain, imagery, and 3D Tiles from the commercial [Cesium ion](https://cesium.com/blog/2018/03/01/hello-cesium-ion/)
-platform and other content sources. You are free to use any combination of content sources with CesiumJS that you please.
-Using Cesium ion helps support CesiumJS development. :heart:
+The Cesium platform follows an [open-core business model](https://cesium.com/why-cesium/open-ecosystem/cesium-business-model/) with open source runtime engines such as CesiumJS and optional commercial subscription to Cesium ion.
 
-Instructions for serving local data are in the CesiumJS
-[Offline Guide](./Documentation/OfflineGuide/README.md).
+CesiumJS can stream [3D content such as terrain, imagery, and 3D Tiles from the commercial Cesium ion platform](https://cesium.com/platform/cesium-ion/content/) alongside open standards from other offline or online servives. We provide Cesium ion as the quickest option for all users to get up and running, but you are free to use any combination of content sources with CesiumJS that you please.
+
+[Using Cesium ion](https://cesium.com/ion/signup/) helps support CesiumJS development. :heart:
 
 ## :white_check_mark: Features
 
