@@ -3,10 +3,10 @@
 ![Cesium](https://github.com/CesiumGS/cesium/wiki/logos/Cesium_Logo_Color.jpg)
 
 [![Build Status](https://travis-ci.com/CesiumGS/cesium.svg?branch=main)](https://travis-ci.com/CesiumGS/cesium)
-[![npm](https://img.shields.io/npm/v/cesium/engine)](https://www.npmjs.com/package/@cesium/engine)
+[![npm](https://img.shields.io/npm/v/@cesium/engine)](https://www.npmjs.com/package/@cesium/engine)
 [![Docs](https://img.shields.io/badge/docs-online-orange.svg)](https://cesium.com/learn/)
 
-CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
+[CesiumJS](../../README.md) is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
 `@cesium/engine` includes cesiumJS's core, rendering, and data APIs. Here you'll find terrain and imagery engines, support for 3D Tiles and 3D models, geometries, and vector data.
 

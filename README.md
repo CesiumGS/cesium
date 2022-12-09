@@ -17,13 +17,15 @@ Built on open formats, CesiumJS is designed for robust interoperability and scal
 
 Visit the [Downloads page](https://cesium.com/downloads/) to download a pre-built copy of CesiumJS.
 
-### npm
+### npm & yarn
 
 If you’re building your application using a module bundler such as Webpack, Parcel, or Rollup, you can install CesiumJS via the [`cesium` npm package](https://www.npmjs.com/package/cesium):
 
 ```sh
 npm install cesium --save
 ```
+
+Then, import CesiumJS in your app code:
 
 ```js
 import * as Cesium from "cesium";
@@ -43,7 +45,7 @@ const viewer = new Viewer("cesiumContainer");
 
 #### Packages
 
-In addition to the `cesium` package, CesiumJS is also distrubuted as smaller scoped npm packages:
+In addition to the `cesium` package, CesiumJS is also distrubuted as scoped npm packages for more specific dependency management:
 
 - [`@cesium/engine`](./packages/engine/README.md) - CesiumJS's core, rendering, and data APIs
 - [`@cesium/widgets`](./packages/widgets/README.md) - A widgets library for use with CesiumJS
