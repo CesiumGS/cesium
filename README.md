@@ -8,6 +8,8 @@
 
 CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
+Built on open formats, CesiumJS is designed for robust interoperability and scaling for massive datasets.
+
 [Examples](https://sandcastle.cesium.com/)
 :earth_africa: [Docs](https://cesium.com/learn/cesiumjs-learn/) :earth_asia: [Website](https://cesium.com/cesiumjs) :earth_americas: [Forum](https://community.cesium.com/)
 
@@ -77,4 +79,8 @@ CesiumJS can stream [3D content such as terrain, imagery, and 3D Tiles from the 
 
 ## :white_check_mark: Features
 
-[CesiumJS Features Checklist](https://github.com/CesiumGS/cesium/wiki/CesiumJS-Features-Checklist)
+- Stream in 3D Tiles and other standard formats from Cesium ion or another source
+- Visualize and analyze on a high-precision WGS84 globe
+- Share with users on desktop or mobile
+
+See more in the [CesiumJS Features Checklist](https://github.com/CesiumGS/cesium/wiki/CesiumJS-Features-Checklist).
