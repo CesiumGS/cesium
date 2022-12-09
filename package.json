@@ -158,7 +158,7 @@
       "prettier --write"
     ],
     "*.md": [
-      "markdownlint --ignore CHANGES.md --ignore LICENSE.md --ignore packages/engine/LICENSE.md --ignore packages/widgets/LICENSE.md",
+      "markdownlint --ignore CHANGES.md --ignore LICENSE.md --ignore \"./**/LICENSE.md\"",
       "prettier --write"
     ]
   },
