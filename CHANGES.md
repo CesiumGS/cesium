@@ -1,5 +1,68 @@
 # Change Log
 
+### 1.101 - 2023-01-02
+
+#### engine
+
+##### Additions :tada:
+
+- Added `vertexShadowDarkness` parameter to `Globe` to control the amount of darkness of the vertex shadow when terrain lighting is enabled. [#10914](https://github.com/CesiumGS/cesium/pull/10914)
+
+##### Fixes :wrench:
+
+- Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar` [#10912](https://github.com/CesiumGS/cesium/pull/10912)
+- Fixed glTF models with a mix of Draco and non-Draco attributes. [#10936](https://github.com/CesiumGS/cesium/pull/10936)
+- Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
+- Fixed a bug where the entity collection of a `GpxDataSource` did not have the `owner` property set. [#10921](https://github.com/CesiumGS/cesium/issues/10921)
+- Fixed a bug where \*.ktx2 images loading fail. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
+- Fixed a bug where a `Model` would sometimes disappear when loaded in Columbus View. [#10945](https://github.com/CesiumGS/cesium/pull/10945)
+
+### 1.100 - 2022-12-01
+
+#### Major Announcements :loudspeaker:
+
+- CesiumJS is now published alongside two smaller packages `@cesium/engine` and `@cesium/widgets` [#10824](https://github.com/CesiumGS/cesium/pull/10824):
+  - The source code has been paritioned into two folders: `packages/engine` and `packages/widgets`.
+  - These workspaces packages will follow semantic versioning.
+  - These workspaces packages will be published as ES modules with TypeScript definitions.
+  - In the combined CesiumJS release, the `Source` folder only contains the following:
+    - `Cesium.js`
+    - `Cesium.d.ts`
+    - `Assets`
+    - `ThirdParty`
+    - `Widgets`(CSS files only)
+  - The ability to import modules and TypeScript definitions from individual files has been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
+
+### 1.99 - 2022-11-01
+
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.100, CesiumJS will be published alongside two smaller packages `@cesium/engine` and `@cesium/widgets` [#10824](https://github.com/CesiumGS/cesium/pull/10824):
+  - The source code will been paritioned into two folders: `packages/engine` and `packages/widgets`.
+  - These workspaces packages will follow semantic versioning.
+  - These workspaces packages will be published as ES modules with TypeScript definitions.
+  - The combined CesiumJS release will continue to be published, however, the `Source` folder will only contain the following:
+    - `Cesium.js`
+    - `Cesium.d.ts`
+    - `Assets`
+    - `ThirdParty`
+    - `Widgets`(CSS files only)
+  - The ability to import modules and TypeScript definitions from individual files will been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
+
+##### Additions :tada:
+
+- Added support for I3S 3D Object and IntegratedMesh Layers. [#9634](https://github.com/CesiumGS/cesium/pull/9634)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- The viewer parameter in `KmlTour.prototype.play` was deprecated in Cesium 1.99. It will be removed in 1.100. Instead of a `Viewer`, pass a `CesiumWidget` instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
+
+##### Fixes :wrench:
+
+- Fixed a bug where the scale of a `Model` was being incorrectly applied to its bounding sphere. [#10855](https://github.com/CesiumGS/cesium/pull/10855)
+- Fixed a bug where rendering a `Model` with image-based lighting while specular environment maps were unsupported caused a crash. [#10859](https://github.com/CesiumGS/cesium/pull/10859)
+- Fixed a bug where request render mode was broken when a ground primitive is added. [#10756](https://github.com/CesiumGS/cesium/issues/10756)
+
 ### 1.98.1 - 2022-10-03
 
 - This is an npm only release to fix the improperly published 1.98.

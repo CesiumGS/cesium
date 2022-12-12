@@ -337,4 +337,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Ilya Shevelev](https://github.com/ilyaly)
 - [Gabriel Aldous](https://github.com/Sn00pyW00dst0ck)
 - [金俊](https://github.com/jinjun1994)
+- [Oussama Bonnor](https://github.com/oussamabonnor1)
 - [Marco Hutter](https://github.com/javagl)
+- [Calogero Mauceri](https://github.com/calogeromauceri)
+- [Marcel Wendler](https://github.com/UniquePanda)
+- [JiaoJianing](https://github.com/JiaoJianing)
