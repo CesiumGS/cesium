@@ -58,6 +58,6 @@ There is no release manager; instead, our community shares the responsibility. A
     - `npm publish -w @cesium/widgets`
 27. Check out the `cesium.com` branch. Merge the new release tag into the `cesium.com` branch `git merge origin <tag-name>`. CI will deploy the hosted release, Sandcastle, and the updated doc when you push the branch up.
 28. After the `cesium.com` branch is live on cesium.com, comment in the `#comms-chat` slack channel to notify comms that the release is done so they can add these highlights and publish the monthly blog post
-    - Note, it may take a little while for the new version of CesiumJS to be live on cesium.com (~30 minutes after the branch builds). You can check the version of Cesium in [sandcastle](https://sandcastle.cesium.com/) by looking at the tab above the cesium pane.
+    - Note, it may take a little while for the new version of CesiumJS to be live on cesium.com (~30 minutes after the branch builds). You can check the version of Cesium in [Sandcastle](https://sandcastle.cesium.com/) by looking at the tab above the Cesium pane. The version of CesiumJS on the [Downloads page](https://cesium.com/downloads/) will change later when the release blog is published.
 29. Update the version of CesiumJS used in the Cesium Workshop: https://github.com/CesiumGS/cesium-workshop/blob/main/index.html#L13-L14
 30. Continue to the [Cesium Analytics release](https://github.com/CesiumGS/cesium-analytics/blob/main/Documentation/Contributors/AnalyticsReleaseGuide/README.md)
