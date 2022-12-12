@@ -35,6 +35,7 @@
       }
     }
   ],
+  "geometricError": 240,
   "root": {
     "boundingVolume": {
       "region": [
