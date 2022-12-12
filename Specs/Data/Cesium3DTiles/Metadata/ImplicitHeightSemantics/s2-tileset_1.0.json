@@ -4,7 +4,8 @@
   },
   "extensionsUsed": [
     "3DTILES_implicit_tiling",
-    "3DTILES_metadata"
+    "3DTILES_metadata",
+    "3DTILES_bounding_volume_S2"
   ],
   "extensionsRequired": [
     "3DTILES_implicit_tiling"
