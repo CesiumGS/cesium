@@ -26,6 +26,7 @@
   "propertyTables": [
     {
       "class": "tile",
+      "count": 585,
       "properties": {
         "tileBounds": {
           "values": 0
