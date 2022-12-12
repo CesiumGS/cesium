@@ -31,6 +31,7 @@
     "propertyTables": [
         {
             "class": "tile",
+            "count": 21,
             "properties": {
                 "minimumHeight": {
                     "values": 0

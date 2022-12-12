@@ -37,6 +37,7 @@
   "propertyTables": [
     {
       "class": "tile",
+      "count": 5,
       "properties": {
         "quadrant": {
           "values": 1

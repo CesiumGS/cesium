@@ -26,6 +26,7 @@
     "propertyTables": [
         {
             "class": "tile",
+            "count": 21,
             "properties": {
                 "geometricError": {
                     "values": 0
