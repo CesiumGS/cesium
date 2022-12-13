@@ -55,7 +55,7 @@ Most other files loaded in CesiumJS, such as 3D Tiles or glTF, are static assets
    For example, a local tileset in an `example` directory can now be loaded with the following url:
 
    ```js
-   var tileset = viewer.scene.primitives.add(
+   const tileset = viewer.scene.primitives.add(
      new Cesium.Cesium3DTileset({
        url: "http://localhost:8003/example/tileset.json",
      })
