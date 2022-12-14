@@ -30,7 +30,7 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 
 ## 3D Tiles, glTF, and other static files
 
-Most other files loaded in CesiumJS, such as 3D Tiles or glTF, are static assets that do not require any server-side operations to load. However, since browsers commonly treat requests to load resources using the `file://` schema as cross-origin requests, it's reccomended that you set up a local server.
+Most other files loaded in CesiumJS, such as 3D Tiles or glTF, are static assets that do not require any server-side operations to load. However, since browsers commonly treat requests to load resources using the `file://` schema as cross-origin requests, it's recommended that you set up a local server.
 
 1. Download and install [Node.js](https://nodejs.org/en/download/)
 

@@ -1,10 +1,17 @@
 # @cesium/engine
 
-![Cesium](https://github.com/CesiumGS/cesium/wiki/logos/Cesium_Logo_Color.jpg)
-
 [![Build Status](https://travis-ci.com/CesiumGS/cesium.svg?branch=main)](https://travis-ci.com/CesiumGS/cesium)
 [![npm](https://img.shields.io/npm/v/@cesium/engine)](https://www.npmjs.com/package/@cesium/engine)
 [![Docs](https://img.shields.io/badge/docs-online-orange.svg)](https://cesium.com/learn/)
+
+<!-- markdownlint-capture -->
+<!-- markdownlint-disable -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../Documentation/images/Cesium_light_color.svg">
+  <source media="(prefers-color-scheme: light)" srcset="../../Documentation/images/Cesium_dark_color.svg">
+  <img alt="Cesium" src="https://github.com/CesiumGS/cesium/wiki/logos/Cesium_Logo_Color.jpg" width="300">
+</picture>
+<!-- markdownlint-restore -->
 
 [CesiumJS](../../README.md) is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
@@ -38,7 +45,7 @@ import "@cesium/engine/Source/Widget/CesiumWidget.css";
 const cesiumWidget = new Cesium.CesiumWidget("cesiumContainer");
 ```
 
-Or, import individual modules to benefit from tree shaking optmtimizations through most build tools:
+Or, import individual modules to benefit from tree shaking optimizations through most build tools:
 
 ```js
 import { CesiumWidget } from "@cesium/engine";

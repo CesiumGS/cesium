@@ -1,10 +1,17 @@
 # CesiumJS
 
-![Cesium](https://github.com/CesiumGS/cesium/wiki/logos/Cesium_Logo_Color.jpg)
-
 [![Build Status](https://travis-ci.com/CesiumGS/cesium.svg?branch=main)](https://travis-ci.com/CesiumGS/cesium)
 [![npm](https://img.shields.io/npm/v/cesium)](https://www.npmjs.com/package/cesium)
 [![Docs](https://img.shields.io/badge/docs-online-orange.svg)](https://cesium.com/learn/)
+
+<!-- markdownlint-capture -->
+<!-- markdownlint-disable -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./Documentation/images/Cesium_light_color.svg">
+  <source media="(prefers-color-scheme: light)" srcset="./Documentation/images/Cesium_dark_color.svg">
+  <img alt="Cesium" src="https://github.com/CesiumGS/cesium/wiki/logos/Cesium_Logo_Color.jpg" width="300">
+</picture>
+<!-- markdownlint-restore -->
 
 CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
@@ -34,7 +41,7 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 const viewer = new CesiumWidgets.Viewer("cesiumContainer");
 ```
 
-Or, import individual modules to benefit from tree shaking optmtimizations through most build tools:
+Or, import individual modules to benefit from tree shaking optimizations through most build tools:
 
 ```js
 import { Viewer } from "cesium";
@@ -45,7 +52,7 @@ const viewer = new Viewer("cesiumContainer");
 
 #### Packages
 
-In addition to the `cesium` package, CesiumJS is also distrubuted as scoped npm packages for more specific dependency management:
+In addition to the `cesium` package, CesiumJS is also distributed as scoped npm packages for more specific dependency management:
 
 - [`@cesium/engine`](./packages/engine/README.md) - CesiumJS's core, rendering, and data APIs
 - [`@cesium/widgets`](./packages/widgets/README.md) - A widgets library for use with CesiumJS
@@ -75,7 +82,7 @@ Our mission is to create the leading 3D globe and map for static and time-dynami
 
 The Cesium platform follows an [open-core business model](https://cesium.com/why-cesium/open-ecosystem/cesium-business-model/) with open source runtime engines such as CesiumJS and optional commercial subscription to Cesium ion.
 
-CesiumJS can stream [3D content such as terrain, imagery, and 3D Tiles from the commercial Cesium ion platform](https://cesium.com/platform/cesium-ion/content/) alongside open standards from other offline or online servives. We provide Cesium ion as the quickest option for all users to get up and running, but you are free to use any combination of content sources with CesiumJS that you please.
+CesiumJS can stream [3D content such as terrain, imagery, and 3D Tiles from the commercial Cesium ion platform](https://cesium.com/platform/cesium-ion/content/) alongside open standards from other offline or online services. We provide Cesium ion as the quickest option for all users to get up and running, but you are free to use any combination of content sources with CesiumJS that you please.
 
 [Using Cesium ion](https://cesium.com/ion/signup/) helps support CesiumJS development. :heart:
 
