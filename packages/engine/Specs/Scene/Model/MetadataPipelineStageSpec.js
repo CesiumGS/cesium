@@ -10,7 +10,7 @@ import {
   Cartesian3,
   Transforms,
 } from "../../../index.js";
-import Cesium3DTilesTester from "../../../../../Specs/Cesium3DTilesTester.js";
+import Cesium3DTilesTester from "../..//Cesium3DTilesTester.js";
 import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 import waitForLoaderProcess from "../../../../../Specs/waitForLoaderProcess.js";

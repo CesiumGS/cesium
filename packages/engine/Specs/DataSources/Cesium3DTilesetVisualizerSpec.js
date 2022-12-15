@@ -6,6 +6,7 @@ import {
   Matrix4,
   Resource,
   BoundingSphereState,
+  Cesium3DTileset,
   ConstantPositionProperty,
   ConstantProperty,
   EntityCollection,
@@ -38,9 +39,15 @@ describe(
     function allPrimitivesReady() {
       const promises = [];
       for (let i = 0; i < scene.primitives.length; ++i) {
-        promises.push(scene.primitives.get(i).readyPromise);
+        const primitive = scene.primitives.get(i);
+        if (primitive instanceof Cesium3DTileset) {
+          promises.push(primitive.load());
+        } else {
+          promises.push(primitive.readyPromise);
+        }
       }
       return Promise.all(promises).catch(function (e) {
+        // TODO: All settled?
         // 404 errors
       });
     }
@@ -97,7 +104,7 @@ describe(
       expect(scene.primitives.length).toEqual(0);
     });
 
-    it("object with no position does not set modelMatrix.", function () {
+    it("object with no position does not set modelMatrix.", async function () {
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
@@ -107,11 +114,16 @@ describe(
 
       visualizer.update(JulianDate.now());
 
-      const tilesetPrimitive = scene.primitives.get(0);
+      let tilesetPrimitive;
+      await pollToPromise(() => {
+        tilesetPrimitive = scene.primitives.get(0);
+        return defined(tilesetPrimitive);
+      });
+
       expect(tilesetPrimitive.modelMatrix).toEqual(Matrix4.IDENTITY);
     });
 
-    it("A Cesium3DTilesetGraphics causes a primitive to be created and updated.", function () {
+    it("A Cesium3DTilesetGraphics causes a primitive to be created and updated.", async function () {
       const time = JulianDate.now();
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
@@ -131,7 +143,12 @@ describe(
 
       expect(scene.primitives.length).toEqual(1);
 
-      const primitive = scene.primitives.get(0);
+      let primitive;
+      await pollToPromise(() => {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
+
       visualizer.update(time);
       expect(primitive.show).toEqual(true);
       expect(primitive.maximumScreenSpaceError).toEqual(24.0);
@@ -261,14 +278,10 @@ describe(
       const result = new BoundingSphere();
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
-      return allPrimitivesReady()
-        .catch(function (e) {
-          // 404 error
-        })
-        .finally(function () {
-          state = visualizer.getBoundingSphere(testObject, result);
-          expect(state).toBe(BoundingSphereState.FAILED);
-        });
+      return allPrimitivesReady().finally(function () {
+        state = visualizer.getBoundingSphere(testObject, result);
+        expect(state).toBe(BoundingSphereState.FAILED);
+      });
     });
 
     it("Compute bounding sphere throws without entity.", function () {

@@ -2168,8 +2168,7 @@ function clearZoom(viewer) {
 }
 
 function cancelZoom(viewer) {
-  const zoomPromise = viewer._zoomPromise;
-  if (defined(zoomPromise)) {
+  if (defined(viewer._zoomPromise)) {
     clearZoom(viewer);
     viewer._completeZoom(false);
   }
@@ -2183,7 +2182,7 @@ Viewer.prototype._postRender = function () {
   updateTrackedEntity(this);
 };
 
-function updateZoomTarget(viewer) {
+async function updateZoomTarget(viewer) {
   const target = viewer._zoomTarget;
   if (!defined(target) || viewer.scene.mode === SceneMode.MORPHING) {
     return;
@@ -2192,54 +2191,18 @@ function updateZoomTarget(viewer) {
   const scene = viewer.scene;
   const camera = scene.camera;
   const zoomOptions = defaultValue(viewer._zoomOptions, {});
+  let zoomComplete = false;
   let options;
 
-  // If zoomTarget was Cesium3DTileset
-  if (target instanceof Cesium3DTileset) {
-    return target.readyPromise
-      .then(function () {
-        const boundingSphere = target.boundingSphere;
-        // If offset was originally undefined then give it base value instead of empty object
-        if (!defined(zoomOptions.offset)) {
-          zoomOptions.offset = new HeadingPitchRange(
-            0.0,
-            -0.5,
-            boundingSphere.radius
-          );
-        }
+  if (
+    target instanceof Cesium3DTileset ||
+    target instanceof TimeDynamicPointCloud
+  ) {
+    // CLear the zoom target so this doesn't get called repeatedly
+    viewer._zoomTarget = undefined;
 
-        options = {
-          offset: zoomOptions.offset,
-          duration: zoomOptions.duration,
-          maximumHeight: zoomOptions.maximumHeight,
-          complete: function () {
-            viewer._completeZoom(true);
-          },
-          cancel: function () {
-            viewer._completeZoom(false);
-          },
-        };
-
-        if (viewer._zoomIsFlight) {
-          camera.flyToBoundingSphere(target.boundingSphere, options);
-        } else {
-          camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-          camera.lookAtTransform(Matrix4.IDENTITY);
-
-          // Finish the promise
-          viewer._completeZoom(true);
-        }
-
-        clearZoom(viewer);
-      })
-      .catch(() => {
-        cancelZoom(viewer);
-      });
-  }
-
-  // If zoomTarget was TimeDynamicPointCloud
-  if (target instanceof TimeDynamicPointCloud) {
-    return target.readyPromise.then(function () {
+    try {
+      await target.load; // TODO: Time dynamic point cloud
       const boundingSphere = target.boundingSphere;
       // If offset was originally undefined then give it base value instead of empty object
       if (!defined(zoomOptions.offset)) {
@@ -2250,30 +2213,38 @@ function updateZoomTarget(viewer) {
         );
       }
 
-      options = {
-        offset: zoomOptions.offset,
-        duration: zoomOptions.duration,
-        maximumHeight: zoomOptions.maximumHeight,
-        complete: function () {
-          viewer._completeZoom(true);
-        },
-        cancel: function () {
-          viewer._completeZoom(false);
-        },
-      };
+      await new Promise((resolve) => {
+        options = {
+          offset: zoomOptions.offset,
+          duration: zoomOptions.duration,
+          maximumHeight: zoomOptions.maximumHeight,
+          complete: function () {
+            zoomComplete = true;
+            resolve();
+          },
+          cancel: function () {
+            resolve();
+          },
+        };
 
-      if (viewer._zoomIsFlight) {
-        camera.flyToBoundingSphere(boundingSphere, options);
-      } else {
-        camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-        camera.lookAtTransform(Matrix4.IDENTITY);
+        if (viewer._zoomIsFlight) {
+          camera.flyToBoundingSphere(target.boundingSphere, options);
+        } else {
+          camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+          camera.lookAtTransform(Matrix4.IDENTITY);
 
-        // Finish the promise
-        viewer._completeZoom(true);
-      }
-
+          // Finish the promise
+          zoomComplete = true;
+          resolve();
+        }
+      });
+    } finally {
+      // Use finally so the error is not swallowed here
       clearZoom(viewer);
-    });
+      viewer._completeZoom(zoomComplete);
+    }
+
+    return;
   }
 
   // If zoomTarget was an ImageryLayer

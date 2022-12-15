@@ -1,5 +1,5 @@
 import createScene from "../../../../Specs/createScene.js";
-import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import Cesium3DTilesTester from "..//Cesium3DTilesTester.js";
 import {
   Cartesian3,
   Cesium3DTileFeature,
@@ -2198,10 +2198,10 @@ describe(
       Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "vctr");
     });
 
-    it("destroys", function () {
-      const tileset = new Cesium3DTileset({
-        url: vectorTilePolygonsWithBatchTableTileset,
-      });
+    it("destroys", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        vectorTilePolygonsWithBatchTableTileset
+      );
       expect(tileset.isDestroyed()).toEqual(false);
       tileset.destroy();
       expect(tileset.isDestroyed()).toEqual(true);

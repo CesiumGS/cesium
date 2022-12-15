@@ -54,84 +54,89 @@ import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 
 /**
+ * @typedef {Object} Cesium3DTileset.ConstructorOptions
+ *
+ * Initialization options for the Cesium3DTileset constructor
+ *
+ * @property {Boolean} [show=true] Determines if the tileset will be shown.
+ * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
+ * @property {Axis} [modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
+ * @property {Axis} [modelForwardAxis=Axis.X] Which axis is considered forward when loading models for tile contents.
+ * @property {ShadowMode} [shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
+ * @property {Number} [maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
+ * @property {Number} [maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
+ * @property {Boolean} [cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
+ * @property {Boolean} [cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
+ * @property {Number} [cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
+ * @property {Boolean} [preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
+ * @property {Boolean} [preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
+ * @property {Boolean} [preferLeaves=false] Optimization option. Prefer loading of leaves first.
+ * @property {Boolean} [dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
+ * @property {Number} [dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
+ * @property {Number} [dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
+ * @property {Number} [dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
+ * @property {Number} [progressiveResolutionHeightFraction=0.3] Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
+ * @property {Boolean} [foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
+ * @property {Number} [foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.
+ * @property {Number} [foveatedMinimumScreenSpaceErrorRelaxation=0.0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
+ * @property {Cesium3DTileset.foveatedInterpolationCallback} [foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
+ * @property {Number} [foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.
+ * @property {Boolean} [skipLevelOfDetail=false] Optimization option. Determines if level of detail skipping should be applied during the traversal.
+ * @property {Number} [baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
+ * @property {Number} [skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
+ * @property {Number} [skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
+ * @property {Boolean} [immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
+ * @property {Boolean} [loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
+ * @property {ClippingPlaneCollection} [clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+ * @property {ClassificationType} [classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
+ * @property {Object} [pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+ * @property {Cartesian3} [lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
+ * @property {ImageBasedLighting} [imageBasedLighting] The properties for managing image-based lighting for this tileset.
+ * @property {Boolean} [backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @property {Boolean} [enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @property {Boolean} [showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @property {Color} [outlineColor=Color.BLACK] The color to use when rendering outlines.
+ * @property {Boolean} [vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
+ * @property {Boolean} [vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
+ * @property {String|Number} [featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @property {String|Number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @property {Boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
+ * @property {SplitDirection} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
+ * @property {Boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has loaded.
+ * @property {String} [debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
+ * @property {Boolean} [debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
+ * @property {Boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
+ * @property {Boolean} [enableDebugWireframe] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has loaded.
+ * @property {Boolean} [debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
+ * @property {Boolean} [debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
+ * @property {Boolean} [debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
+ * @property {Boolean} [debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
+ * @property {Boolean} [debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile.
+ * @property {Boolean} [debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
+ * @property {Boolean} [debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
+ * @property {Boolean} [debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
+ */
+
+/**
  * A {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles tileset},
  * used for streaming massive heterogeneous 3D geospatial datasets.
+ * This object is normally not instantiated directly, use {@link Cesium3DTileset.fromUrl}.
  *
  * @alias Cesium3DTileset
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset JSON file.
- * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
- * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
- * @param {Axis} [options.modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
- * @param {Axis} [options.modelForwardAxis=Axis.X] Which axis is considered forward when loading models for tile contents.
- * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
- * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
- * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
- * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
- * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
- * @param {Number} [options.cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
- * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
- * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
- * @param {Boolean} [options.preferLeaves=false] Optimization option. Prefer loading of leaves first.
- * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
- * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
- * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
- * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
- * @param {Number} [options.progressiveResolutionHeightFraction=0.3] Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
- * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
- * @param {Number} [options.foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.
- * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0.0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
- * @param {Cesium3DTileset.foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
- * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.
- * @param {Boolean} [options.skipLevelOfDetail=false] Optimization option. Determines if level of detail skipping should be applied during the traversal.
- * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
- * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
- * @param {Number} [options.skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
- * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
- * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
- * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
- * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
- * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
- * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
- * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting for this tileset.
- * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
- * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set to false to avoid the additional processing of geometry at load time. When false, the showOutlines and outlineColor options are ignored.
- * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
- * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
- * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
- * @param {Boolean} [options.vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
- * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
- * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
- * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has loaded.
- * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
- * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
- * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
- * @param {Boolean} [options.enableDebugWireframe] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has loaded.
- * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
- * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
- * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
- * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile.
- * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
- * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
- * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
- *
- * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @param {Cesium3DTileset.ConstructorOptions} options Object describing initialization options
  *
  * @example
- * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
- *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
- * }));
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl('http://localhost:8002/tilesets/Seattle/tileset.json');
+ * scene.primitives.add(tileset);
  *
  * @example
  * // Common setting for the skipLevelOfDetail optimization
- * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
- *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl(
+ *    'http://localhost:8002/tilesets/Seattle/tileset.json',
+ *    {
  *      skipLevelOfDetail : true,
  *      baseScreenSpaceError : 1024,
  *      skipScreenSpaceErrorFactor : 16,
@@ -139,26 +144,25 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  *      immediatelyLoadDesiredLevelOfDetail : false,
  *      loadSiblings : false,
  *      cullWithChildrenBounds : true
- * }));
+ *    });
+ * scene.primitives.add(tileset);
  *
  * @example
  * // Common settings for the dynamicScreenSpaceError optimization
- * const tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
- *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl(
+ *    'http://localhost:8002/tilesets/Seattle/tileset.json',
+ *    {
  *      dynamicScreenSpaceError : true,
  *      dynamicScreenSpaceErrorDensity : 0.00278,
  *      dynamicScreenSpaceErrorFactor : 4.0,
  *      dynamicScreenSpaceErrorHeightFalloff : 0.25
- * }));
+ *    }));
+ * scene.primitives.add(tileset);
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles specification}
  */
 function Cesium3DTileset(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.url", options.url);
-  //>>includeEnd('debug');
 
   this._url = undefined;
   this._basePath = undefined;
@@ -185,6 +189,8 @@ function Cesium3DTileset(options) {
   this._previousModelMatrix = undefined;
   this._extras = undefined;
   this._credits = undefined;
+  this._rootJson = undefined;
+  this._loadPromise = undefined;
 
   this._showCreditsOnScreen = defaultValue(options.showCreditsOnScreen, false);
 
@@ -972,11 +978,19 @@ function Cesium3DTileset(options) {
   this._schemaLoader = undefined;
 
   const that = this;
-  let resource;
+  if (!defined(options.url)) {
+    return;
+  }
+
+  deprecationWarning(
+    "Cesium3DTileset.url",
+    "Cesium3DTileset url, modelUpAxis, and modelForwardAxis parameters were deprecated in CesiumJS 1.101.  It will be removed in 1.103.  Use Cesium3DTileset.fromUrl and Cesium3DTileset.load instead."
+  );
+
   this._readyPromise = Promise.resolve(options.url)
     .then(function (url) {
       let basePath;
-      resource = Resource.createIfNeeded(url);
+      const resource = Resource.createIfNeeded(url);
       that._resource = resource;
 
       // ion resources have a credits property we can use for additional attribution.
@@ -998,80 +1012,10 @@ function Cesium3DTileset(options) {
         return;
       }
 
-      // This needs to be called before loadTileset() so tile metadata
-      // can be initialized synchronously in the Cesium3DTile constructor
-      return processMetadataExtension(that, tilesetJson);
+      return processJson(that, tilesetJson, options);
     })
     .then(function (tilesetJson) {
-      if (that.isDestroyed()) {
-        return;
-      }
-
-      that._root = that.loadTileset(resource, tilesetJson);
-
-      // Handle legacy gltfUpAxis option
-      const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
-        ? Axis.fromName(tilesetJson.asset.gltfUpAxis)
-        : Axis.Y;
-      const modelUpAxis = defaultValue(options.modelUpAxis, gltfUpAxis);
-      const modelForwardAxis = defaultValue(options.modelForwardAxis, Axis.X);
-
-      const asset = tilesetJson.asset;
-      that._asset = asset;
-      that._properties = tilesetJson.properties;
-      that._geometricError = tilesetJson.geometricError;
-      that._extensionsUsed = tilesetJson.extensionsUsed;
-      that._extensions = tilesetJson.extensions;
-      that._modelUpAxis = modelUpAxis;
-      that._modelForwardAxis = modelForwardAxis;
-      that._extras = tilesetJson.extras;
-
-      const extras = asset.extras;
-      if (
-        defined(extras) &&
-        defined(extras.cesium) &&
-        defined(extras.cesium.credits)
-      ) {
-        const extraCredits = extras.cesium.credits;
-        let credits = that._credits;
-        if (!defined(credits)) {
-          credits = [];
-          that._credits = credits;
-        }
-        for (let i = 0; i < extraCredits.length; ++i) {
-          const credit = extraCredits[i];
-          credits.push(new Credit(credit.html, that._showCreditsOnScreen));
-        }
-      }
-
-      // Save the original, untransformed bounding volume position so we can apply
-      // the tile transform and model matrix at run time
-      const boundingVolume = that._root.createBoundingVolume(
-        tilesetJson.root.boundingVolume,
-        Matrix4.IDENTITY
-      );
-      const clippingPlanesOrigin = boundingVolume.boundingSphere.center;
-      // If this origin is above the surface of the earth
-      // we want to apply an ENU orientation as our best guess of orientation.
-      // Otherwise, we assume it gets its position/orientation completely from the
-      // root tile transform and the tileset's model matrix
-      const originCartographic = that._ellipsoid.cartesianToCartographic(
-        clippingPlanesOrigin
-      );
-      if (
-        defined(originCartographic) &&
-        originCartographic.height >
-          ApproximateTerrainHeights._defaultMinTerrainHeight
-      ) {
-        that._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(
-          clippingPlanesOrigin
-        );
-      }
-      that._clippingPlanesOriginMatrix = Matrix4.clone(
-        that._initialClippingPlanesOriginMatrix
-      );
-
-      return that;
+      return load(that, tilesetJson);
     });
 }
 
@@ -1099,19 +1043,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @type {Object}
    * @readonly
-   *
-   * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
    */
   asset: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._asset;
     },
   },
@@ -1123,19 +1057,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @type {Object}
    * @readonly
-   *
-   * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
    */
   extensions: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._extensions;
     },
   },
@@ -1168,8 +1092,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @type {Object}
    * @readonly
    *
-   * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
-   *
    * @example
    * console.log(`Maximum building height: ${tileset.properties.height.maximum}`);
    * console.log(`Minimum building height: ${tileset.properties.height.minimum}`);
@@ -1179,21 +1101,13 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    */
   properties: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._properties;
     },
   },
 
   /**
    * When <code>true</code>, the tileset's root tile is loaded and the tileset is ready to render.
-   * This is set to <code>true</code> right before {@link Cesium3DTileset#readyPromise} is resolved.
+   * This is set to <code>true</code> right before {@link Cesium3DTileset#load} is resolved.
    *
    * @memberof Cesium3DTileset.prototype
    *
@@ -1218,10 +1132,11 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @type {Promise.<Cesium3DTileset>}
    * @readonly
+   * @deprecated
    *
    * @example
    * tileset.readyPromise.then(function(tileset) {
-   *     // tile.properties is not defined until readyPromise resolves.
+   *     // tileset.properties is not defined until readyPromise resolves.
    *     const properties = tileset.properties;
    *     if (Cesium.defined(properties)) {
    *         for (const name in properties) {
@@ -1232,6 +1147,10 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "Cesium3DTileset.readyPromise",
+        "Cesium3DTileset.readyPromise was deprecated in CesiumJS 1.101.  It will be removed in 1.103.  Use Cesium3DTileset.fromUrl and Cesium3DTileset.load instead."
+      );
       return this._readyPromise;
     },
   },
@@ -1529,14 +1448,14 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @type {Cesium3DTile}
    * @readonly
    *
-   * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+   * @exception {DeveloperError} The tileset is not loaded.  Await Cesium3DTileset.load() before accessing.
    */
   root: {
     get: function () {
       //>>includeStart('debug', pragmas.debug);
       if (!this.ready) {
         throw new DeveloperError(
-          "The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true."
+          "The tileset is not loaded.  Await Cesium3DTileset.load() before accessing."
         );
       }
       //>>includeEnd('debug');
@@ -1553,24 +1472,23 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @type {BoundingSphere}
    * @readonly
    *
-   * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+   * @exception {DeveloperError} The tileset is not loaded.  Await Cesium3DTileset.load() before accessing.
    *
    * @example
-   * const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-   *     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
-   * }));
+   * const tileset = await Cesium.Cesium3DTileset.fromUrl('http://localhost:8002/tilesets/Seattle/tileset.json');
+   * viewer.scene.primitives.add(tileset);
    *
-   * tileset.readyPromise.then(function(tileset) {
-   *     // Set the camera to view the newly added tileset
-   *     viewer.camera.viewBoundingSphere(tileset.boundingSphere, new Cesium.HeadingPitchRange(0, -0.5, 0));
-   * });
+   * await tileset.load();
+   *
+   * // tileset.boundingSphere is not defined until load() resolves.
+   * viewer.camera.viewBoundingSphere(tileset.boundingSphere, new Cesium.HeadingPitchRange(0, -0.5, 0));
    */
   boundingSphere: {
     get: function () {
       //>>includeStart('debug', pragmas.debug);
       if (!this.ready) {
         throw new DeveloperError(
-          "The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true."
+          "The tileset is not loaded. Await Cesium3DTileset.load() before accessing."
         );
       }
       //>>includeEnd('debug');
@@ -1797,8 +1715,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
-   *
    * @type {*}
    * @readonly
    *
@@ -1806,14 +1722,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    */
   extras: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._extras;
     },
   },
@@ -1969,6 +1877,91 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 });
 
+function processJson(tileset, tilesetJson, options) {
+  const asset = tilesetJson.asset;
+  if (!defined(asset)) {
+    throw new RuntimeError("Tileset must have an asset property.");
+  }
+
+  if (
+    asset.version !== "0.0" &&
+    asset.version !== "1.0" &&
+    asset.version !== "1.1" &&
+    asset.version !== "2.0"
+  ) {
+    throw new RuntimeError(
+      "The tileset must be 3D Tiles version 0.0, 1.0, 1.1, or 2.0"
+    );
+  }
+
+  if (defined(tilesetJson.extensionsRequired)) {
+    Cesium3DTileset.checkSupportedExtensions(tilesetJson.extensionsRequired);
+  }
+
+  tileset._asset = asset;
+  tileset._properties = tilesetJson.properties;
+  tileset._geometricError = tilesetJson.geometricError;
+  tileset._extensionsUsed = tilesetJson.extensionsUsed;
+  tileset._extensions = tilesetJson.extensions;
+  // Handle legacy gltfUpAxis option
+  const gltfUpAxis = defined(asset.gltfUpAxis)
+    ? Axis.fromName(asset.gltfUpAxis)
+    : Axis.Y;
+  tileset._modelUpAxis = defaultValue(options.modelUpAxis, gltfUpAxis);
+  tileset._modelForwardAxis = defaultValue(options.modelForwardAxis, Axis.X);
+  tileset._extras = tilesetJson.extras;
+  tileset._rootJson = tilesetJson.root;
+
+  // This needs to be called before load() or loadTileset() so tile metadata
+  // can be initialized before loading tiles
+  return processMetadataExtension(tileset, tilesetJson);
+}
+
+/**
+ * Asynchronously creates an instance of a Cesium3DTileset.
+ *
+ * @param {Resource|String|Promise<Resource>|Promise<String>} url The url to a tileset JSON file.
+ * @param {Cesium3DTileset.ConstructorOptions} [options] Object describing initialization options
+ * @returns {Promise.<Cesium3DTileset>} A promise that resolves with the created tileset object.
+ *
+ * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0, 0.1, 1.0, or 2.0.
+ *
+ * @example
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl('http://localhost:8002/tilesets/Seattle/tileset.json');
+ * viewer.scene.primitives.add(tileset);
+ */
+Cesium3DTileset.fromUrl = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  const tilesetUrl = await Promise.resolve(url);
+  const resource = Resource.createIfNeeded(tilesetUrl);
+
+  const tilesetJson = await Cesium3DTileset.loadJson(tilesetUrl);
+  const tileset = new Cesium3DTileset(options, tilesetJson);
+
+  tileset._resource = resource;
+  // ion resources have a credits property we can use for additional attribution.
+  tileset._credits = resource.credits;
+
+  let basePath;
+  if (resource.extension === "json") {
+    basePath = resource.getBaseUri(true);
+  } else if (resource.isDataUri) {
+    basePath = "";
+  }
+
+  tileset._url = resource.url;
+  tileset._basePath = basePath;
+
+  await processJson(tileset, tilesetJson, options);
+
+  return tileset;
+};
+
 /**
  * Provides a hook to override the method used to request the tileset json
  * useful when fetching tilesets from remote servers
@@ -1978,6 +1971,134 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 Cesium3DTileset.loadJson = function (tilesetUrl) {
   const resource = Resource.createIfNeeded(tilesetUrl);
   return resource.fetchJson();
+};
+
+function loadTileset(tileset, resource, root, parentTile) {
+  const statistics = tileset._statistics;
+
+  const asset = tileset._asset;
+  const tilesetVersion = asset.tilesetVersion;
+  if (defined(tilesetVersion)) {
+    // Append the tileset version to the resource
+    tileset._basePath += `?v=${tilesetVersion}`;
+    resource = resource.clone();
+    resource.setQueryParameters({ v: tilesetVersion });
+  }
+
+  // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
+  // Get the basePath relative to the external tileset.
+  const rootTile = makeTile(tileset, resource, root, parentTile);
+
+  // If there is a parentTile, add the root of the currently loading tileset
+  // to parentTile's children, and update its _depth.
+  if (defined(parentTile)) {
+    parentTile.children.push(rootTile);
+    rootTile._depth = parentTile._depth + 1;
+  }
+
+  const stack = [];
+  stack.push(rootTile);
+
+  while (stack.length > 0) {
+    const tile = stack.pop();
+    ++statistics.numberOfTilesTotal;
+    tileset._allTilesAdditive =
+      tileset._allTilesAdditive && tile.refine === Cesium3DTileRefine.ADD;
+    const children = tile._header.children;
+    if (defined(children)) {
+      const length = children.length;
+      for (let i = 0; i < length; ++i) {
+        const childHeader = children[i];
+        const childTile = makeTile(tileset, resource, childHeader, tile);
+        tile.children.push(childTile);
+        childTile._depth = tile._depth + 1;
+        stack.push(childTile);
+      }
+    }
+
+    if (tileset._cullWithChildrenBounds) {
+      Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
+    }
+  }
+
+  return rootTile;
+}
+
+function load(tileset) {
+  if (tileset.isDestroyed()) {
+    return;
+  }
+
+  tileset._root = loadTileset(tileset, tileset._resource, tileset._rootJson);
+
+  const asset = tileset._asset;
+  const extras = asset.extras;
+  if (
+    defined(extras) &&
+    defined(extras.cesium) &&
+    defined(extras.cesium.credits)
+  ) {
+    const extraCredits = extras.cesium.credits;
+    let credits = tileset._credits;
+    if (!defined(credits)) {
+      credits = [];
+      tileset._credits = credits;
+    }
+    for (let i = 0; i < extraCredits.length; ++i) {
+      const credit = extraCredits[i];
+      credits.push(new Credit(credit.html, tileset._showCreditsOnScreen));
+    }
+  }
+
+  // Save the original, untransformed bounding volume position so we can apply
+  // the tile transform and model matrix at run time
+  const boundingVolume = tileset._root.createBoundingVolume(
+    tileset._rootJson.boundingVolume,
+    Matrix4.IDENTITY
+  );
+  const clippingPlanesOrigin = boundingVolume.boundingSphere.center;
+  // If this origin is above the surface of the earth
+  // we want to apply an ENU orientation as our best guess of orientation.
+  // Otherwise, we assume it gets its position/orientation completely from the
+  // root tile transform and the tileset's model matrix
+  const originCartographic = tileset._ellipsoid.cartesianToCartographic(
+    clippingPlanesOrigin
+  );
+  if (
+    defined(originCartographic) &&
+    originCartographic.height >
+      ApproximateTerrainHeights._defaultMinTerrainHeight
+  ) {
+    tileset._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(
+      clippingPlanesOrigin
+    );
+  }
+
+  tileset._clippingPlanesOriginMatrix = Matrix4.clone(
+    tileset._initialClippingPlanesOriginMatrix
+  );
+
+  return tileset;
+}
+
+/**
+ * Asynchronously begins loading the tileset's root tile. This returns a promise which resolves when the tile is loaded and the tileset is ready to render.
+ *
+ * @returns {Promise.<Cesium3DTileset>} A promise that resolves with the tileset object at the end of the frame before the first frame the tileset is rendered in.
+ *
+ * @example
+ * const tileset = await Cesium.Cesium3DTileset.fromUrl('http://localhost:8002/tilesets/Seattle/tileset.json');
+ * await tileset.load();
+ *
+ * // tileset.boundingSphere is not defined until load() resolves.
+ * viewer.camera.viewBoundingSphere(tileset.boundingSphere, new Cesium.HeadingPitchRange(0, -0.5, 0));
+ */
+Cesium3DTileset.prototype.load = function () {
+  if (!defined(this._loadPromise)) {
+    this._loadPromise = load(this);
+  }
+
+  return this._loadPromise;
 };
 
 /**
@@ -2005,64 +2126,20 @@ Cesium3DTileset.prototype.loadTileset = function (
   if (
     asset.version !== "0.0" &&
     asset.version !== "1.0" &&
-    asset.version !== "1.1"
+    asset.version !== "1.1" &&
+    asset.version !== "2.0"
   ) {
     throw new RuntimeError(
-      "The tileset must be 3D Tiles version 0.0, 1.0, or 1.1"
+      "The tileset must be 3D Tiles version 0.0, 1.0, 1.1, 2.0"
     );
   }
+  this._asset = asset;
 
   if (defined(tilesetJson.extensionsRequired)) {
     Cesium3DTileset.checkSupportedExtensions(tilesetJson.extensionsRequired);
   }
 
-  const statistics = this._statistics;
-
-  const tilesetVersion = asset.tilesetVersion;
-  if (defined(tilesetVersion)) {
-    // Append the tileset version to the resource
-    this._basePath += `?v=${tilesetVersion}`;
-    resource = resource.clone();
-    resource.setQueryParameters({ v: tilesetVersion });
-  }
-
-  // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
-  // Get the basePath relative to the external tileset.
-  const rootTile = makeTile(this, resource, tilesetJson.root, parentTile);
-
-  // If there is a parentTile, add the root of the currently loading tileset
-  // to parentTile's children, and update its _depth.
-  if (defined(parentTile)) {
-    parentTile.children.push(rootTile);
-    rootTile._depth = parentTile._depth + 1;
-  }
-
-  const stack = [];
-  stack.push(rootTile);
-
-  while (stack.length > 0) {
-    const tile = stack.pop();
-    ++statistics.numberOfTilesTotal;
-    this._allTilesAdditive =
-      this._allTilesAdditive && tile.refine === Cesium3DTileRefine.ADD;
-    const children = tile._header.children;
-    if (defined(children)) {
-      const length = children.length;
-      for (let i = 0; i < length; ++i) {
-        const childHeader = children[i];
-        const childTile = makeTile(this, resource, childHeader, tile);
-        tile.children.push(childTile);
-        childTile._depth = tile._depth + 1;
-        stack.push(childTile);
-      }
-    }
-
-    if (this._cullWithChildrenBounds) {
-      Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
-    }
-  }
-
-  return rootTile;
+  return loadTileset(this, resource, tilesetJson.root, parentTile);
 };
 
 /**
@@ -2913,6 +2990,8 @@ function update(tileset, frameState, passStatistics, passOptions) {
   }
 
   if (!tileset.ready) {
+    // Initialize load, if it hasn't been done already
+    tileset.load();
     return false;
   }
 

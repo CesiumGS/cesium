@@ -269,7 +269,7 @@ describe("Scene/I3SLayer", function () {
       });
   });
 
-  it("loads root node", function () {
+  it("loads root node", async function () {
     const mockI3SProvider = createMockI3SProvider();
     const testLayer = new I3SLayer(mockI3SProvider, layerData);
     testLayer._nodePages = [
@@ -278,13 +278,12 @@ describe("Scene/I3SLayer", function () {
     ];
     testLayer._nodePageFetches = [Promise.resolve()];
 
-    return testLayer._loadRootNode().then(function (result) {
-      expect(testLayer.rootNode).toBeDefined();
-      expect(testLayer.rootNode.data.index).toEqual(0);
-    });
+    await testLayer._loadRootNode();
+    expect(testLayer.rootNode).toBeDefined();
+    expect(testLayer.rootNode.data.index).toEqual(0);
   });
 
-  it("creates 3d tileset", function () {
+  it("creates 3d tileset", async function () {
     const mockI3SProvider = createMockI3SProvider();
     const testLayer = new I3SLayer(mockI3SProvider, layerData);
     testLayer._nodePages = [
@@ -293,21 +292,14 @@ describe("Scene/I3SLayer", function () {
     ];
     testLayer._nodePageFetches = [Promise.resolve()];
 
-    return testLayer
-      ._loadRootNode()
-      .then(function () {
-        testLayer._create3DTileset();
-        expect(testLayer.tileset).toBeDefined();
-
-        return testLayer.tileset.readyPromise;
-      })
-      .then(function () {
-        expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
-        expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
-      });
+    await testLayer._loadRootNode();
+    await testLayer._create3DTileset();
+    expect(testLayer.tileset).toBeDefined();
+    expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
+    expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
   });
 
-  it("creates 3d tileset with options", function () {
+  it("creates 3d tileset with options", async function () {
     const cesium3dTilesetOptions = {
       debugShowBoundingVolume: true,
       maximumScreenSpaceError: 8,
@@ -326,20 +318,14 @@ describe("Scene/I3SLayer", function () {
     ];
     testLayer._nodePageFetches = [Promise.resolve()];
 
-    return testLayer
-      ._loadRootNode()
-      .then(function () {
-        testLayer._create3DTileset();
-        expect(testLayer.tileset).toBeDefined();
-        expect(testLayer.tileset.debugShowBoundingVolume).toEqual(true);
-        expect(testLayer.tileset.maximumScreenSpaceError).toEqual(8);
+    await testLayer._loadRootNode();
+    await testLayer._create3DTileset();
+    expect(testLayer.tileset).toBeDefined();
+    expect(testLayer.tileset.debugShowBoundingVolume).toEqual(true);
+    expect(testLayer.tileset.maximumScreenSpaceError).toEqual(8);
 
-        return testLayer._tileset.readyPromise;
-      })
-      .then(function () {
-        expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
-        expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
-      });
+    expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
+    expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
   });
 
   it("loads i3s layer", function () {

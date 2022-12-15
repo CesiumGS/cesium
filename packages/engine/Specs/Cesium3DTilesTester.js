@@ -13,7 +13,7 @@ import {
   RuntimeError,
 } from "@cesium/engine";
 
-import pollToPromise from "./pollToPromise.js";
+import pollToPromise from "../../../Specs/pollToPromise.js";
 
 const mockTile = {
   contentBoundingVolume: new TileBoundingSphere(),
@@ -96,37 +96,37 @@ Cesium3DTilesTester.expectRenderTileset = function (scene, tileset) {
   });
 };
 
-Cesium3DTilesTester.waitForTilesLoaded = function (scene, tileset) {
-  return pollToPromise(function () {
+Cesium3DTilesTester.waitForTilesLoaded = async function (scene, tileset) {
+  await tileset.load();
+  await pollToPromise(function () {
     scene.renderForSpecs();
     return tileset.tilesLoaded;
-  }).then(function () {
-    scene.renderForSpecs();
-    return tileset;
   });
+
+  scene.renderForSpecs();
+  return tileset;
 };
 
-Cesium3DTilesTester.waitForReady = function (scene, tileset) {
-  return pollToPromise(function () {
+Cesium3DTilesTester.waitForReady = async function (scene, tileset) {
+  await tileset.load();
+  await pollToPromise(function () {
     scene.renderForSpecs();
     return tileset.ready;
-  }).then(function () {
-    return tileset;
   });
+
+  return tileset;
 };
 
-Cesium3DTilesTester.loadTileset = function (scene, url, options) {
+Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
   options = defaultValue(options, {});
-  options.url = url;
   options.cullRequestsWhileMoving = defaultValue(
     options.cullRequestsWhileMoving,
     false
   );
   // Load all visible tiles
-  const tileset = scene.primitives.add(new Cesium3DTileset(options));
-  return tileset.readyPromise.then(function () {
-    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-  });
+  const tileset = await Cesium3DTileset.fromUrl(url, options);
+  scene.primitives.add(tileset);
+  return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
 };
 
 Cesium3DTilesTester.loadTileExpectError = function (scene, arrayBuffer, type) {

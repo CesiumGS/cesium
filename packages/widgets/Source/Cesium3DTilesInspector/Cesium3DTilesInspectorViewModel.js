@@ -1223,12 +1223,7 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
       this.tile = undefined;
 
       if (defined(tileset)) {
-        const that = this;
-        tileset.readyPromise.then(function (t) {
-          if (!that.isDestroyed()) {
-            that._properties(t.properties);
-          }
-        });
+        this._properties(tileset.properties);
 
         // update tileset with existing settings
         const settings = [

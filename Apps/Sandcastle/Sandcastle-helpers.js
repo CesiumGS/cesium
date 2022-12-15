@@ -2,19 +2,20 @@
   "use strict";
 
   window.embedInSandcastleTemplate = function (code, addExtraLine) {
-    return (
-      `${
-        "window.startup = function (Cesium) {\n" +
-        "    'use strict';\n" +
-        "//Sandcastle_Begin\n"
-      }${addExtraLine ? "\n" : ""}${code}//Sandcastle_End\n` +
-      `    Sandcastle.finishedLoading();\n` +
-      `};\n` +
-      `if (typeof Cesium !== 'undefined') {\n` +
-      `    window.startupCalled = true;\n` +
-      `    window.startup(Cesium);\n` +
-      `}\n`
-    );
+    return `
+window.startup = function (Cesium) {
+    'use strict';
+    (async ()=> {
+    //Sandcastle_Begin
+    ${addExtraLine ? "\n" : ""}${code}//Sandcastle_End
+    })();
+    Sandcastle.finishedLoading();
+};
+
+if (typeof Cesium !== 'undefined') {
+  window.startupCalled = true;
+  window.startup(Cesium);
+};`;
   };
   window.decodeBase64Data = function (base64String, pako) {
     // data stored in the hash as:

@@ -42,6 +42,26 @@ function Cesium3DTilesetVisualizer(scene, entityCollection) {
   this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
 }
 
+async function loadTileset(visualizer, resource, entity) {
+  const primitives = visualizer._primitives;
+  const tilesetHash = visualizer._tilesetHash;
+  const tilesetData = tilesetHash[entity.id];
+
+  try {
+    const tileset = await Cesium3DTileset.fromUrl(resource);
+    tileset.id = entity;
+
+    primitives.add(tileset);
+
+    tilesetData.tilesetPrimitive = tileset;
+
+    await tileset.load();
+  } catch (e) {
+    console.error(e);
+    tilesetHash[entity.id].loadFail = true;
+  }
+}
+
 /**
  * Updates models created this visualizer to match their
  * Entity counterpart at the given time.
@@ -86,39 +106,36 @@ Cesium3DTilesetVisualizer.prototype.update = function (time) {
       continue;
     }
 
-    let tileset = defined(tilesetData)
+    const tileset = defined(tilesetData)
       ? tilesetData.tilesetPrimitive
       : undefined;
-    if (!defined(tileset) || resource.url !== tilesetData.url) {
+    if (!defined(tilesetData) || resource.url !== tilesetData.url) {
       if (defined(tileset)) {
         primitives.removeAndDestroy(tileset);
         delete tilesetHash[entity.id];
       }
-      tileset = new Cesium3DTileset({
-        url: resource,
-      });
-      tileset.id = entity;
-      primitives.add(tileset);
 
       tilesetData = {
-        tilesetPrimitive: tileset,
+        tilesetPrimitive: undefined,
         url: resource.url,
         loadFail: false,
       };
       tilesetHash[entity.id] = tilesetData;
 
-      checkLoad(tileset, entity, tilesetHash);
+      loadTileset(this, resource, entity);
     }
 
-    tileset.show = true;
-    if (defined(modelMatrix)) {
-      tileset.modelMatrix = modelMatrix;
+    if (defined(tileset)) {
+      tileset.show = true;
+      if (defined(modelMatrix)) {
+        tileset.modelMatrix = modelMatrix;
+      }
+      tileset.maximumScreenSpaceError = Property.getValueOrDefault(
+        tilesetGraphics.maximumScreenSpaceError,
+        time,
+        tileset.maximumScreenSpaceError
+      );
     }
-    tileset.maximumScreenSpaceError = Property.getValueOrDefault(
-      tilesetGraphics.maximumScreenSpaceError,
-      time,
-      tileset.maximumScreenSpaceError
-    );
   }
 
   return true;
@@ -235,15 +252,12 @@ Cesium3DTilesetVisualizer.prototype._onCollectionChanged = function (
 function removeTileset(visualizer, entity, tilesetHash, primitives) {
   const tilesetData = tilesetHash[entity.id];
   if (defined(tilesetData)) {
-    primitives.removeAndDestroy(tilesetData.tilesetPrimitive);
+    if (defined(tilesetData.tilesetPrimitive)) {
+      primitives.removeAndDestroy(tilesetData.tilesetPrimitive);
+    }
+
     delete tilesetHash[entity.id];
   }
 }
 
-function checkLoad(primitive, entity, tilesetHash) {
-  primitive.readyPromise.catch(function (error) {
-    console.error(error);
-    tilesetHash[entity.id].loadFail = true;
-  });
-}
 export default Cesium3DTilesetVisualizer;

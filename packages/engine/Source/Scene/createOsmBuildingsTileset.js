@@ -1,8 +1,6 @@
 import Color from "../Core/Color.js";
-import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import IonResource from "../Core/IonResource.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
@@ -25,19 +23,20 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * @param {Boolean} [options.enableShowOutline=true] If true, enable rendering outlines. This can be set to false to avoid the additional processing of geometry at load time.
  * @param {Boolean} [options.showOutline=true] Whether to show outlines around buildings. When true,
  *        outlines are displayed. When false, outlines are not displayed.
- * @returns {Cesium3DTileset}
+ * @returns {Promise<Cesium3DTileset>} A promise that resolves to the created {@link Cesium3DTileset} instance
  *
  * @see Ion
  *
  * @example
  * // Create Cesium OSM Buildings with default styling
  * const viewer = new Cesium.Viewer('cesiumContainer');
- * viewer.scene.primitives.add(Cesium.createOsmBuildings());
+ * const tileset = await Cesium.createOsmBuildingsTileset();
+ * viewer.scene.primitives.add(tileset);
  *
  * @example
  * // Create Cesium OSM Buildings with a custom style highlighting
  * // schools and hospitals.
- * viewer.scene.primitives.add(Cesium.createOsmBuildings({
+ * const tileset = await Cesium.createOsmBuildingsTileset({
  *   style: new Cesium.Cesium3DTileStyle({
  *     color: {
  *       conditions: [
@@ -47,19 +46,14 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  *       ]
  *     }
  *   })
- * }));
+ * });
+ * viewer.scene.primitives.add(tileset);
  */
-function createOsmBuildings(options) {
-  deprecationWarning(
-    "createOsmBuildings",
-    "createOsmBuildings was deprecated in CesiumJS 1.101.  It will be removed in 1.103.  Use createOsmBuildingsTileset instead."
+async function createOsmBuildingsTileset(options) {
+  const tileset = await Cesium3DTileset.fromUrl(
+    IonResource.fromAssetId(96188),
+    options
   );
-
-  options = combine(options, {
-    url: IonResource.fromAssetId(96188),
-  });
-
-  const tileset = new Cesium3DTileset(options);
 
   let style = options.style;
 
@@ -78,4 +72,4 @@ function createOsmBuildings(options) {
   return tileset;
 }
 
-export default createOsmBuildings;
+export default createOsmBuildingsTileset;

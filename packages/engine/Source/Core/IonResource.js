@@ -16,7 +16,7 @@ import RuntimeError from "./RuntimeError.js";
  * @augments Resource
  *
  * @param {Object} endpoint The result of the Cesium ion asset endpoint service.
- * @param {Resource} endpointResource The resource used to retreive the endpoint.
+ * @param {Resource} endpointResource The resource used to retrieve the endpoint.
  *
  * @see Ion
  * @see IonImageryProvider

@@ -178,15 +178,13 @@ I3SLayer.prototype.load = function () {
   }
 
   return this._dataProvider._geoidDataIsReadyPromise.then(function () {
-    return that._loadRootNode().then(function () {
-      that._create3DTileset();
-      return that._tileset.readyPromise.then(function () {
-        that._rootNode._tile = that._tileset._root;
-        that._tileset._root._i3sNode = that._rootNode;
-        if (that.legacyVersion16) {
-          return that._rootNode._loadChildren();
-        }
-      });
+    return that._loadRootNode().then(async function () {
+      await that._create3DTileset();
+      that._rootNode._tile = that._tileset._root;
+      that._tileset._root._i3sNode = that._rootNode;
+      if (that.legacyVersion16) {
+        return that._rootNode._loadChildren();
+      }
     });
   });
 };
@@ -378,7 +376,7 @@ I3SLayer.prototype._computeExtent = function () {
 /**
  * @private
  */
-I3SLayer.prototype._create3DTileset = function () {
+I3SLayer.prototype._create3DTileset = async function () {
   const inPlaceTileset = {
     asset: {
       version: "1.0",
@@ -401,26 +399,26 @@ I3SLayer.prototype._create3DTileset = function () {
       }
     }
   }
-  tilesetOptions.url = inPlaceTilesetURL;
   tilesetOptions.show = this._dataProvider.show;
 
-  this._tileset = new Cesium3DTileset(tilesetOptions);
+  this._tileset = await Cesium3DTileset.fromUrl(
+    inPlaceTilesetURL,
+    tilesetOptions
+  );
 
   this._tileset._isI3STileSet = true;
 
-  const that = this;
-  this._tileset.readyPromise.then(function () {
-    that._tileset.tileUnload.addEventListener(function (tile) {
-      tile._i3sNode._clearGeometryData();
-      URL.revokeObjectURL(tile._contentResource._url);
-      tile._contentResource = tile._i3sNode.resource;
-    });
+  await this._tileset.load();
+  this._tileset.tileUnload.addEventListener(function (tile) {
+    tile._i3sNode._clearGeometryData();
+    URL.revokeObjectURL(tile._contentResource._url);
+    tile._contentResource = tile._i3sNode.resource;
+  });
 
-    that._tileset.tileVisible.addEventListener(function (tile) {
-      if (defined(tile._i3sNode)) {
-        tile._i3sNode._loadChildren();
-      }
-    });
+  this._tileset.tileVisible.addEventListener(function (tile) {
+    if (defined(tile._i3sNode)) {
+      tile._i3sNode._loadChildren();
+    }
   });
 };
 
