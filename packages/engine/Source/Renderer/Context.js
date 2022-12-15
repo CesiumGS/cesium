@@ -42,9 +42,12 @@ function Context(canvas, options) {
   Check.defined("canvas", canvas);
   //>>includeEnd('debug');
 
+  const webgl2Supported = typeof WebGL2RenderingContext !== "undefined";
+
   const {
     getWebGLStub,
-    requestWebgl1 = false,
+    // Automatically fall back to WebGL1 if WebGL2 is not supported.
+    requestWebgl1 = !webgl2Supported,
     webgl: webglOptions = {},
     allowTextureFilterAnisotropic = true,
   } = defaultValue(options, {});
@@ -62,9 +65,7 @@ function Context(canvas, options) {
     : getWebGLContext(canvas, webglOptions, requestWebgl1);
 
   // Get context type. instanceof will throw if WebGL2 is not supported
-  const webgl2 =
-    typeof WebGL2RenderingContext !== "undefined" &&
-    glContext instanceof WebGL2RenderingContext;
+  const webgl2 = webgl2Supported && glContext instanceof WebGL2RenderingContext;
 
   this._canvas = canvas;
   this._originalGLContext = glContext;

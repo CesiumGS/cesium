@@ -1,6 +1,3 @@
-#ifdef WRITE_DEPTH
-#endif
-
 uniform vec3 u_radii;
 uniform vec3 u_oneOverEllipsoidRadiiSquared;
 

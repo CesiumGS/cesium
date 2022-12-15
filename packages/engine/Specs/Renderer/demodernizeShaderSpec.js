@@ -41,7 +41,7 @@ describe("Renderer/demodernizeShader", () => {
     expect(output).toContain("gl_FragData[11] = vec4(1.0, 2.0, 3.0, 4.0);");
   });
 
-  it("replaces out_FragColor with gl_FragData", () => {
+  it("replaces out_FragColor with gl_FragColor", () => {
     const input = `#version 300 es
     layout (location = 0) vec4 out_FragColor;
     
@@ -75,21 +75,6 @@ describe("Renderer/demodernizeShader", () => {
     expect(output.startsWith(expectedVersion)).toEqual(true);
 
     expect(output).toContain("vec4 tex = texture2D(u_texture, vec2(0.0));");
-  });
-
-  it("replaces czm_textureCube with textureCube", () => {
-    const input = `#version 300 es
-    uniform samplerCube u_texture;
-    void main() {
-      vec4 tex = czm_textureCube(u_texture, vec3(0.0)); // textureCube
-    }
-    `;
-    const output = demodernizeShader(input, false);
-
-    const expectedVersion = "#version 100";
-    expect(output.startsWith(expectedVersion)).toEqual(true);
-
-    expect(output).toContain("vec4 tex = textureCube(u_texture, vec3(0.0));");
   });
 
   it("replaces in with attribute in vertex shader", () => {
@@ -154,7 +139,7 @@ describe("Renderer/demodernizeShader", () => {
 
     const expectedVersion = "#version 100";
     expect(output.startsWith(expectedVersion)).toEqual(true);
-
+    expect(output).toContain("#extension GL_EXT_frag_depth : enable");
     expect(output).toContain("gl_FragDepthEXT = vec4(1.0);");
     expect(output).toContain("gl_FragDepthEXT += vec4(2.0);");
   });

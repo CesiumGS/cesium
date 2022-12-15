@@ -295,8 +295,6 @@ function combineShader(shaderSource, isFragmentShader, context) {
   if (!context.webgl2) {
     result = demodernizeShader(result, isFragmentShader);
   } else {
-    // Replace all czm_textureCube calls with texture
-    result = result.replaceAll(/czm_textureCube/g, `texture`);
     result = `#version 300 es\n${result}`;
   }
 
@@ -309,21 +307,21 @@ function combineShader(shaderSource, isFragmentShader, context) {
  * @param {Object} [options] Object with the following properties:
  * @param {String[]} [options.sources] An array of strings to combine containing GLSL code for the shader.
  * @param {String[]} [options.defines] An array of strings containing GLSL identifiers to <code>#define</code>.
- * @param {String} [options.pickColorQualifier] The GLSL qualifier, <code>uniform</code> or <code>varying</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
+ * @param {String} [options.pickColorQualifier] The GLSL qualifier, <code>uniform</code> or <code>in</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
  * @param {Boolean} [options.includeBuiltIns=true] If true, referenced built-in functions will be included with the combined shader.  Set to false if this shader will become a source in another shader, to avoid duplicating functions.
  *
- * @exception {DeveloperError} options.pickColorQualifier must be 'uniform' or 'varying'.
+ * @exception {DeveloperError} options.pickColorQualifier must be 'uniform' or 'in'.
  *
  * @example
  * // 1. Prepend #defines to a shader
  * const source = new Cesium.ShaderSource({
  *   defines : ['WHITE'],
- *   sources : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
+ *   sources : ['void main() { \n#ifdef WHITE\n out_FragColor = vec4(1.0); \n#else\n out_FragColor = vec4(0.0); \n#endif\n }']
  * });
  *
  * // 2. Modify a fragment shader for picking
  * const source2 = new Cesium.ShaderSource({
- *   sources : ['void main() { gl_FragColor = vec4(1.0); }'],
+ *   sources : ['void main() { out_FragColor = vec4(1.0); }'],
  *   pickColorQualifier : 'uniform'
  * });
  *
@@ -337,10 +335,10 @@ function ShaderSource(options) {
   if (
     defined(pickColorQualifier) &&
     pickColorQualifier !== "uniform" &&
-    pickColorQualifier !== "varying"
+    pickColorQualifier !== "in"
   ) {
     throw new DeveloperError(
-      "options.pickColorQualifier must be 'uniform' or 'varying'."
+      "options.pickColorQualifier must be 'uniform' or 'in'."
     );
   }
   //>>includeEnd('debug');
@@ -457,9 +455,7 @@ ShaderSource.createPickFragmentShaderSource = function (
     "czm_old_main"
   );
   const pickMain =
-    `${
-      pickColorQualifier === "varying" ? "in" : "uniform"
-    } vec4 czm_pickColor; \n` +
+    `${pickColorQualifier} vec4 czm_pickColor; \n` +
     `void main() \n` +
     `{ \n` +
     `    czm_old_main(); \n` +

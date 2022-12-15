@@ -53,7 +53,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *     uniform vec3 offset;
  *     void main() {
  *         vec4 color = texture(colorTexture, v_textureCoordinates);
- *         gl_FragColor = vec4(color.rgb * scale + offset, 1.0);
+ *         out_FragColor = vec4(color.rgb * scale + offset, 1.0);
  *     }`;
  * scene.postProcessStages.add(new Cesium.PostProcessStage({
  *     fragmentShader : fs,
@@ -76,9 +76,9 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *         vec4 color = texture(colorTexture, v_textureCoordinates);
  *         if (czm_selected()) {
  *             vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;
- *             gl_FragColor = vec4(highlighted, 1.0);
+ *             out_FragColor = vec4(highlighted, 1.0);
  *         } else {
- *             gl_FragColor = color;
+ *             out_FragColor = color;
  *         }
  *     }`;
  * const stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
@@ -364,7 +364,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * if (czm_selected(v_textureCoordinates)) {
    *     // apply post-process stage
    * } else {
-   *     gl_FragColor = texture(colorTexture, v_textureCoordinates);
+   *     out_FragColor = texture(colorTexture, v_textureCoordinates);
    * }
    * </code>
    * </p>

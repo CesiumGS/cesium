@@ -5,6 +5,8 @@
  * This function does not aim to provide a comprehensive transpilation from GLSL 3.00 to GLSL 1.00; only the functionality
  * used within the CesiumJS shaders is supported.
  *
+ * @private
+ *
  * @param {string} input The GLSL 3.00 shader.
  * @param {boolean} isFragmentShader True if the shader is a fragment shader.
  *
@@ -15,9 +17,6 @@ function demodernizeShader(input, isFragmentShader) {
 
   // Remove version string got GLSL 3.00.
   output = output.replaceAll(`version 300 es`, ``);
-
-  // Replace all czm_textureCube calls with textureCube
-  output = output.replaceAll(/czm_textureCube/g, `textureCube`);
 
   // Replace all texture calls with texture2D
   output = output.replaceAll(
@@ -30,7 +29,7 @@ function demodernizeShader(input, isFragmentShader) {
     output = output.replaceAll(/(in)\s+(vec\d|mat\d|float)/g, `varying $2`);
 
     if (/out_FragData_(\d+)/.test(output)) {
-      output = `#extension GL_EXT_draw_buffers : enable\n ${output}`;
+      output = `#extension GL_EXT_draw_buffers : enable\n${output}`;
 
       // Remove all layout declarations for out_FragData.
       output = output.replaceAll(
@@ -42,7 +41,7 @@ function demodernizeShader(input, isFragmentShader) {
       output = output.replaceAll(/out_FragData_(\d+)/g, `gl_FragData[$1]`);
     }
 
-    // Replace out_FragColor with out_FragColor.
+    // Replace out_FragColor with gl_FragColor.
     output = output.replaceAll(/out_FragColor/g, `gl_FragColor`);
     output = output.replaceAll(/out_FragColor\[(\d+)\]/g, `gl_FragColor[$1]`);
 
@@ -53,7 +52,7 @@ function demodernizeShader(input, isFragmentShader) {
     );
 
     if (/gl_FragDepth/.test(output)) {
-      output = `#extension GL_EXT_frag_depth : enable\n ${output}`;
+      output = `#extension GL_EXT_frag_depth : enable\n${output}`;
       // Replace gl_FragDepth with gl_FragDepthEXT.
       output = output.replaceAll(/gl_FragDepth/g, `gl_FragDepthEXT`);
     }
@@ -63,7 +62,7 @@ function demodernizeShader(input, isFragmentShader) {
 
     // Replace the out with varying.
     output = output.replaceAll(
-      /(out)\s+(vec\d|mat\d|float)\s+([A-z_0-9]+);/g,
+      /(out)\s+(vec\d|mat\d|float)\s+([\w]+);/g,
       `varying $2 $3;`
     );
   }

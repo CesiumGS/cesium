@@ -111,9 +111,8 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
     get: function () {
       let vs = this._vertexShaderSource;
       if (
-        this.material.shaderSource.search(
-          /varying\s+float\s+v_polylineAngle;/g
-        ) !== -1
+        this.material.shaderSource.search(/in\s+float\s+v_polylineAngle;/g) !==
+        -1
       ) {
         vs = `#define POLYLINE_DASH\n${vs}`;
       }

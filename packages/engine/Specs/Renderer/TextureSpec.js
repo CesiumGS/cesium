@@ -1468,6 +1468,44 @@ describe(
       }
     });
 
+    describe("WebGL1", function () {
+      let webgl1Context;
+
+      beforeAll(() => {
+        webgl1Context = createContext({
+          requestWebgl1: true,
+        });
+      });
+
+      afterAll(() => {
+        webgl1Context.destroyForSpecs();
+      });
+
+      it("throws when generating mipmaps with a non-power of two width", function () {
+        texture = new Texture({
+          context: webgl1Context,
+          width: 3,
+          height: 2,
+        });
+
+        expect(function () {
+          texture.generateMipmap();
+        }).toThrowDeveloperError();
+      });
+
+      it("throws when generating mipmaps with a non-power of two height", function () {
+        texture = new Texture({
+          context: webgl1Context,
+          width: 2,
+          height: 3,
+        });
+
+        expect(function () {
+          texture.generateMipmap();
+        }).toThrowDeveloperError();
+      });
+    });
+
     it("throws when generating mipmaps with an invalid hint", function () {
       texture = new Texture({
         context: context,

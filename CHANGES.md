@@ -1,5 +1,11 @@
 # Change Log
 
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.102, CesiumJS will default to using a WebGL2 context for rendering.
+  - Any custom materials, custom primitive or custom shaders will need to be upgraded to use GLSL 300.
+  - WebGL1 will still be supported.
+
 ### 1.101 - 2023-01-01
 
 ### engine

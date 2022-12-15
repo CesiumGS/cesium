@@ -1476,6 +1476,68 @@ describe(
         command.execute(context);
       }).toThrowDeveloperError();
     });
+
+    describe("WebGL1", function () {
+      let webgl1Context;
+
+      beforeAll(() => {
+        webgl1Context = createContext({
+          requestWebgl1: true,
+        });
+      });
+
+      afterAll(() => {
+        webgl1Context.destroyForSpecs();
+      });
+
+      it("throws when instanceCount is greater than one and instancing is disabled", function () {
+        const webgl1Context = createContext({
+          requestWebgl1: true,
+        });
+        // disable extension
+        const instancedArrays = webgl1Context._instancedArrays;
+        webgl1Context._instancedArrays = undefined;
+
+        const vs =
+          "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        const fs = "void main() { out_FragColor = vec4(1.0); }";
+        sp = ShaderProgram.fromCache({
+          context: webgl1Context,
+          vertexShaderSource: vs,
+          fragmentShaderSource: fs,
+          attributeLocations: {
+            position: 0,
+          },
+        });
+
+        va = new VertexArray({
+          context: webgl1Context,
+          attributes: [
+            {
+              index: 0,
+              vertexBuffer: Buffer.createVertexBuffer({
+                context: webgl1Context,
+                typedArray: new Float32Array([0, 0, 0, 1]),
+                usage: BufferUsage.STATIC_DRAW,
+              }),
+              componentsPerAttribute: 4,
+            },
+          ],
+        });
+
+        const command = new DrawCommand({
+          primitiveType: PrimitiveType.POINTS,
+          shaderProgram: sp,
+          vertexArray: va,
+          instanceCount: 2,
+        });
+
+        expect(function () {
+          command.execute(webgl1Context);
+        }).toThrowDeveloperError();
+        context._instancedArrays = instancedArrays;
+      });
+    });
   },
   "WebGL"
 );

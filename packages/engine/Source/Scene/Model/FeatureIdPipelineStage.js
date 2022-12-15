@@ -295,13 +295,13 @@ function processImplicitRange(
   );
 
   // Declare the vertex attribute in the shader
-  // Example: attribute float a_implicit_feature_id_n;
+  // Example: in float a_implicit_feature_id_n;
   const shaderBuilder = renderResources.shaderBuilder;
   const implicitAttributeName = `a_implicit_${variableName}`;
   shaderBuilder.addAttribute("float", implicitAttributeName);
 
   // Also declare the corresponding varyings
-  // Example: varying float v_implicit_feature_id_n;
+  // Example: in float v_implicit_feature_id_n;
   const implicitVaryingName = `v_implicit_${variableName}`;
   shaderBuilder.addVarying("float", implicitVaryingName);
 

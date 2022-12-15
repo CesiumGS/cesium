@@ -53,7 +53,7 @@ describe("Renderer/ShaderSource", function () {
   it("creates a pick shader with a varying", function () {
     const source = new ShaderSource({
       sources: ["void main() { out_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "varying",
+      pickColorQualifier: "in",
     });
     const shaderText = source.createCombinedVertexShader(mockContext);
     expect(shaderText).toContain("in vec4 czm_pickColor;");
@@ -80,7 +80,7 @@ describe("Renderer/ShaderSource", function () {
     const source = new ShaderSource({
       defines: ["A"],
       sources: ["void main() { out_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "varying",
+      pickColorQualifier: "in",
       includeBuiltIns: false,
     });
     const clone = source.clone();
@@ -103,12 +103,12 @@ describe("Renderer/ShaderSource", function () {
     const source = new ShaderSource({
       defines: ["A", "B", "C"],
       sources: ["void main() { out_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "varying",
+      pickColorQualifier: "in",
       includeBuiltIns: false,
     });
 
     expect(source.getCacheKey()).toBe(
-      "A,B,C:varying:false:void main() { out_FragColor = vec4(1.0); }"
+      "A,B,C:in:false:void main() { out_FragColor = vec4(1.0); }"
     );
   });
 
@@ -140,7 +140,7 @@ describe("Renderer/ShaderSource", function () {
     const source = new ShaderSource({
       defines: ["A"],
       sources: ["void main() { out_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "varying",
+      pickColorQualifier: "in",
       includeBuiltIns: false,
     });
     const shaderText = source.createCombinedFragmentShader(mockContext);
@@ -155,7 +155,7 @@ describe("Renderer/ShaderSource", function () {
       sources: [
         "layout (location = 0) out vec4 out_FragColor; void main() { out_FragColor = vec4(1.0); }",
       ],
-      pickColorQualifier: "varying",
+      pickColorQualifier: "in",
       includeBuiltIns: false,
     });
     const shaderText = source.createCombinedFragmentShader(mockContext);

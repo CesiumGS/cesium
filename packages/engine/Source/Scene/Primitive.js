@@ -771,7 +771,7 @@ Primitive._modifyShaderPosition = function (
     if (!defined(primitive.rtcCenter)) {
       // Use GPU RTE
       if (!scene3DOnly) {
-        attributes += `in vec3 ${name}2DHigh;\n` + `in vec3 ${name}2DLow;\n`;
+        attributes += `in vec3 ${name}2DHigh;\nin vec3 ${name}2DLow;\n`;
 
         computeFunctions +=
           `${functionName}\n` +

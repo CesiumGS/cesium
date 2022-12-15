@@ -43,9 +43,9 @@ import ShaderFunction from "./ShaderFunction.js";
  *  "void main()",
  *  "{",
  *  "    #ifdef SOLID_COLOR",
- *  "    gl_FragColor = vec4(u_color, 1.0);",
+ *  "    out_FragColor = vec4(u_color, 1.0);",
  *  "    #else",
- *  "    gl_FragColor = vec4(v_color, 1.0);",
+ *  "    out_FragColor = vec4(v_color, 1.0);",
  *  "    #endif",
  *  "}"
  * ]);
@@ -428,9 +428,9 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
  *  "void main()",
  *  "{",
  *  "    #ifdef SOLID_COLOR",
- *  "    gl_FragColor = vec4(u_color, 1.0);",
+ *  "    out_FragColor = vec4(u_color, 1.0);",
  *  "    #else",
- *  "    gl_FragColor = vec4(v_color, 1.0);",
+ *  "    out_FragColor = vec4(v_color, 1.0);",
  *  "    #endif",
  *  "}"
  * ]);

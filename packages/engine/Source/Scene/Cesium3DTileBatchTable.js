@@ -578,7 +578,7 @@ function getDefaultShader(source, applyHighlight) {
   }
 
   // The color blend mode is intended for the RGB channels so alpha is always just multiplied.
-  // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
+  // out_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
   return (
     `${source}uniform float tile_colorBlend; \n` +
     `void tile_color(vec4 tile_featureColor) \n` +
@@ -668,7 +668,7 @@ function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
     "} \n";
 
   // The color blend mode is intended for the RGB channels so alpha is always just multiplied.
-  // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
+  // out_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
   const highlight =
     "    tile_featureColor = czm_gammaCorrect(tile_featureColor); \n" +
     "    out_FragColor.a *= tile_featureColor.a; \n" +

@@ -947,7 +947,7 @@ function createShaders(pointCloud, frameState, style) {
       attributeType = `vec${componentCount}`;
     }
 
-    attributeDeclarations += `attribute ${attributeType} ${attributeName}; \n`;
+    attributeDeclarations += `in ${attributeType} ${attributeName}; \n`;
     attributeLocations[attributeName] = attribute.location;
   }
 
