@@ -4,10 +4,17 @@
 
 #### Major Announcements :loudspeaker:
 
-- Starting with version 1.102, CesiumJS will default to using a WebGL2 context for rendering.
-  - Any custom materials, custom primitive or custom shaders will need to be upgraded to use GLSL 300.
+- Starting with version 1.102, CesiumJS will default to using a WebGL2 context for rendering. WebGL2 is widely supported on all platforms and this change will result in better feature support across devices, especially mobile.
   - WebGL1 will still be supported. If WebGL2 is not available, CesiumJS will automatically fall back to WebGL1.
-  - To request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions`.
+  - In order to work in a WebGL2 context, any custom materials, custom primitive or custom shaders will need to be upgraded to use GLSL 300.
+  - Otherwise to request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions` as shown below:
+    ```js
+    const viewer = new Viewer("cesiumContainer", {
+      contextOptions: {
+        requestWebgl1: true,
+      },
+    });
+    ```
 
 #### engine
 
