@@ -44,7 +44,6 @@
         });
         viewer.extend(Cesium.viewerVoxelInspectorMixin);
         viewer.scene.debugShowFramesPerSecond = true;
-        let voxelPrimitive;
 
         function ProceduralSingleTileVoxelProvider(shape) {
           switch (shape) {
@@ -60,10 +59,6 @@
               );
               const west = minBounds.x;
               const east = maxBounds.x;
-              //const west = -Cesium.Math.PI + 0.4;
-              //const east = -Cesium.Math.PI + 0.7;
-              // const south = -Cesium.Math.PI_OVER_TWO + 0.1;
-              // const north = Cesium.Math.PI_OVER_TWO - 0.1;
               const south = minBounds.y;
               const north = maxBounds.y;
               const minimumHeight = 1000000.0;
@@ -84,24 +79,12 @@
               break;
             }
             case Cesium.VoxelShapeType.CYLINDER: {
-              // this.minBounds = new Cesium.Cartesian3(
-              //   0.0,
-              //   -1.0,
-              //   -Cesium.Math.PI
-              // );
-              // this.maxBounds = new Cesium.Cartesian3(1.0, +1.0, -Cesium.Math.PI + 0.5);
               break;
             }
           }
 
           this.shape = shape;
           this.dimensions = new Cesium.Cartesian3(8, 8, 8);
-          // this.names = ["color", "shininess"];
-          // this.types = [Cesium.MetadataType.VEC4, Cesium.MetadataType.SCALAR];
-          // this.componentTypes = [
-          //   Cesium.MetadataComponentType.FLOAT32,
-          //   Cesium.MetadataComponentType.FLOAT32,
-          // ];
           this.names = ["color"];
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
@@ -147,28 +130,15 @@
                 const index =
                   z * dimensions.y * dimensions.x + y * dimensions.x + x;
 
-                // if (tileLevel === 0) {
-                //   dataColor[index * channelCount + 0] = Math.random();
-                //   dataColor[index * channelCount + 1] = Math.random();
-                //   dataColor[index * channelCount + 2] = Math.random();
-                //   dataColor[index * channelCount + 3] = 1.0;
-                // } else {
                 dataColor[index * channelCount + 0] = color.red;
                 dataColor[index * channelCount + 1] = color.green;
                 dataColor[index * channelCount + 2] = color.blue;
                 dataColor[index * channelCount + 3] = 0.75;
-                // }
-                // dataColor[index * channelCount + 0] = lerperX;
-                // dataColor[index * channelCount + 1] = lerperY;
-                // dataColor[index * channelCount + 2] = lerperZ;
-                // dataColor[index * channelCount + 3] = 1.0; //0.75;
               }
             }
           }
 
-          // return Promise.resolve([dataColor, dataShininess]);
           return Promise.resolve([dataColor]);
-          // return Promise.resolve(dataColor);
         };
 
         function ProceduralMultiTileVoxelProvider(shape) {
@@ -359,7 +329,7 @@
         function createPrimitive(provider, customShader) {
           viewer.scene.primitives.removeAll();
 
-          voxelPrimitive = viewer.scene.primitives.add(
+          const voxelPrimitive = viewer.scene.primitives.add(
             new Cesium.VoxelPrimitive({
               provider: provider,
               customShader: customShader,
@@ -413,11 +383,6 @@
                 Cesium.VoxelShapeType.ELLIPSOID
               );
               const primitive = createPrimitive(provider, customShaderColor);
-              primitive.readyPromise.then(function () {
-                viewer.camera.flyToBoundingSphere(primitive.boundingSphere, {
-                  duration: 0.0,
-                });
-              });
             },
           },
           {
@@ -437,22 +402,6 @@
               );
               const primitive = createPrimitive(provider, customShaderColor);
               primitive.readyPromise.then(function () {
-                viewer.camera.flyToBoundingSphere(primitive.boundingSphere, {
-                  duration: 0.0,
-                });
-                // viewer.camera.position = new Cesium.Cartesian3(
-                //   20210315.04663869,
-                //   22200569.010404103,
-                //   16940652.047713447
-                // );
-                viewer.camera.flyTo({
-                  destination: new Cesium.Cartesian3(
-                    22489095.52149246,
-                    15457085.667961657,
-                    20334893.228182133
-                  ),
-                  duration: 0.0,
-                });
                 primitive.maxClippingBounds.x = 0.99999999;
               });
             },

@@ -1,4 +1,4 @@
-import buildVoxelDrawCommands from "./VoxelDrawCommands.js";
+import buildVoxelDrawCommands from "./buildVoxelDrawCommands.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
@@ -15,6 +15,7 @@ import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import Material from "./Material.js";
 import MetadataComponentType from "./MetadataComponentType.js";
@@ -547,19 +548,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Matrix4}
    * @readonly
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   compoundModelMatrix: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "compoundModelMatrix must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._compoundModelMatrix;
     },
   },
@@ -849,29 +840,14 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   minBounds: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minBounds must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._minBounds;
     },
     set: function (minBounds) {
       //>>includeStart('debug', pragmas.debug);
       Check.defined("minBounds", minBounds);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minBounds must not be called before the primitive is ready."
-        );
-      }
       //>>includeEnd('debug');
 
       this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
@@ -883,29 +859,14 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   maxBounds: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maxBounds must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._maxBounds;
     },
     set: function (maxBounds) {
       //>>includeStart('debug', pragmas.debug);
       Check.defined("maxBounds", maxBounds);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maxBounds must not be called before the primitive is ready."
-        );
-      }
       //>>includeEnd('debug');
 
       this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
@@ -919,29 +880,14 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   minClippingBounds: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minClippingBounds must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._minClippingBounds;
     },
     set: function (minClippingBounds) {
       //>>includeStart('debug', pragmas.debug);
       Check.defined("minClippingBounds", minClippingBounds);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minClippingBounds must not be called before the primitive is ready."
-        );
-      }
       //>>includeEnd('debug');
 
       this._minClippingBounds = Cartesian3.clone(
@@ -958,29 +904,14 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   maxClippingBounds: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maxClippingBounds must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._maxClippingBounds;
     },
     set: function (maxClippingBounds) {
       //>>includeStart('debug', pragmas.debug);
       Check.defined("maxClippingBounds", maxClippingBounds);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maxClippingBounds must not be called before the primitive is ready."
-        );
-      }
       //>>includeEnd('debug');
 
       this._maxClippingBounds = Cartesian3.clone(
@@ -1059,7 +990,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 // TODO 3-channel + 1-channel metadata is a problem right now
 // Individually, they both work, but together the 1-channel is messed up
 
-const scratchTotalDimensions = new Cartesian3();
+const scratchDimensions = new Cartesian3();
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
 const scratchScale = new Cartesian3();
@@ -1089,18 +1020,14 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
  * @private
  */
 VoxelPrimitive.prototype.update = function (frameState) {
-  const context = frameState.context;
-  const provider = this._provider;
-  const uniforms = this._uniforms;
-  const customShader = this._customShader;
-
   // Update the provider, if applicable.
+  const provider = this._provider;
   if (defined(provider.update)) {
     provider.update(frameState);
   }
 
   // Update the custom shader in case it has texture uniforms.
-  customShader.update(frameState);
+  this._customShader.update(frameState);
 
   // Exit early if it's not ready yet.
   if (!this._ready && !provider.ready) {
@@ -1108,6 +1035,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
   }
 
   // Initialize from the ready provider. This only happens once.
+  const context = frameState.context;
   if (!this._ready) {
     // Don't make the primitive ready until after its first update because
     // external code may want to change some of its properties before it's rendered.
@@ -1117,522 +1045,553 @@ VoxelPrimitive.prototype.update = function (frameState) {
       primitive._readyPromise.resolve(primitive);
     });
 
-    // Create pickId here instead of the constructor because it needs the context object.
-    this._pickId = context.createPickId({
-      primitive: this,
-    });
-    uniforms.pickColor = Color.clone(this._pickId.color, uniforms.pickColor);
-
-    const dimensions = provider.dimensions;
-    const shapeType = provider.shape;
-
-    // Set the bounds
-    const defaultMinBounds = VoxelShapeType.getMinBounds(shapeType);
-    const defaultMaxBounds = VoxelShapeType.getMaxBounds(shapeType);
-    const minBounds = defaultValue(provider.minBounds, defaultMinBounds);
-    const maxBounds = defaultValue(provider.maxBounds, defaultMaxBounds);
-    this._minBounds = Cartesian3.clone(minBounds, this._minBounds);
-    this._maxBounds = Cartesian3.clone(maxBounds, this._maxBounds);
-    this._minBoundsOld = Cartesian3.clone(this._minBounds, this._minBoundsOld);
-    this._maxBoundsOld = Cartesian3.clone(this._maxBounds, this._maxBoundsOld);
-    this._minClippingBounds = Cartesian3.clone(
-      defaultMinBounds,
-      this._minClippingBounds
-    );
-    this._maxClippingBounds = Cartesian3.clone(
-      defaultMaxBounds,
-      this._maxClippingBounds
-    );
-    this._minClippingBoundsOld = Cartesian3.clone(
-      this._minClippingBounds,
-      this._minClippingBoundsOld
-    );
-    this._maxClippingBoundsOld = Cartesian3.clone(
-      this._maxClippingBounds,
-      this._maxClippingBoundsOld
-    );
-
-    // Create the shape object
-    const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
-    this._shape = new ShapeConstructor();
-
-    const shape = this._shape;
-    const shapeDefines = shape.shaderDefines;
-    this._shapeDefinesOld = clone(shapeDefines, true);
-
-    // Add shape uniforms to the uniform map
-    const shapeUniforms = shape.shaderUniforms;
-    const uniformMap = this._uniformMap;
-    for (const key in shapeUniforms) {
-      if (shapeUniforms.hasOwnProperty(key)) {
-        const name = `u_${key}`;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(uniformMap[name])) {
-          throw new DeveloperError(`Uniform name "${name}" is already defined`);
-        }
-        //>>includeEnd('debug');
-
-        uniformMap[name] = function () {
-          return shapeUniforms[key];
-        };
-      }
-    }
-
-    this._paddingBefore = Cartesian3.clone(
-      defaultValue(provider.paddingBefore, Cartesian3.ZERO),
-      this._paddingBefore
-    );
-    this._paddingAfter = Cartesian3.clone(
-      defaultValue(provider.paddingAfter, Cartesian3.ZERO),
-      this._paddingBefore
-    );
-
-    // Set uniforms that come from the provider.
-    // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
-    uniforms.dimensions = Cartesian3.clone(dimensions, uniforms.dimensions);
-    uniforms.paddingBefore = Cartesian3.clone(
-      this._paddingBefore,
-      uniforms.paddingBefore
-    );
-    uniforms.paddingAfter = Cartesian3.clone(
-      this._paddingAfter,
-      uniforms.paddingAfter
-    );
+    initFromProvider(this, provider, context);
+    return;
   }
 
   // Check if the shape is dirty before updating it. This needs to happen every
   // frame because the member variables can be modified externally via the
   // getters.
-  const primitiveTransform = this._modelMatrix;
+  const shapeDirty = checkTransformAndBounds(this, provider);
+  const shape = this._shape;
+  if (shapeDirty) {
+    this._shapeVisible = updateShapeAndTransforms(this, shape, provider);
+    if (checkShapeDefines(this, shape)) {
+      this._shaderDirty = true;
+    }
+  }
+  if (!this._shapeVisible) {
+    return;
+  }
+
+  // Update the traversal and prepare for rendering.
+  const keyframeLocation = getKeyframeLocation(
+    provider.timeIntervalCollection,
+    this._clock
+  );
+
+  const traversal = this._traversal;
+  const sampleCountOld = traversal._sampleCount;
+
+  traversal.update(
+    frameState,
+    keyframeLocation,
+    shapeDirty, // recomputeBoundingVolumes
+    this._disableUpdate // pauseUpdate
+  );
+
+  if (sampleCountOld !== traversal._sampleCount) {
+    this._shaderDirty = true;
+  }
+
+  if (!traversal.isRenderable(traversal.rootNode)) {
+    return;
+  }
+
+  if (this._debugDraw) {
+    // Debug draw bounding boxes and other things. Must go after traversal update
+    // because that's what updates the tile bounding boxes.
+    debugDraw(this, frameState);
+  }
+
+  if (this._disableRender) {
+    return;
+  }
+
+  // Check if log depth changed
+  if (this._useLogDepth !== frameState.useLogDepth) {
+    this._useLogDepth = frameState.useLogDepth;
+    this._shaderDirty = true;
+  }
+
+  // Check if clipping planes changed
+  const clippingPlanesChanged = updateClippingPlanes(this, frameState);
+  if (clippingPlanesChanged) {
+    this._shaderDirty = true;
+  }
+
+  const leafNodeTexture = traversal.leafNodeTexture;
+  const uniforms = this._uniforms;
+  if (defined(leafNodeTexture)) {
+    uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
+    uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
+      traversal.leafNodeTexelSizeUv,
+      uniforms.octreeLeafNodeTexelSizeUv
+    );
+    uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
+  }
+
+  // Rebuild shaders
+  if (this._shaderDirty) {
+    buildVoxelDrawCommands(this, context);
+    this._shaderDirty = false;
+  }
+
+  // Calculate the NDC-space AABB to "scissor" the fullscreen quad
+  const transformPositionWorldToProjection =
+    context.uniformState.viewProjection;
+  const orientedBoundingBox = shape.orientedBoundingBox;
+  const ndcAabb = orientedBoundingBoxToNdcAabb(
+    orientedBoundingBox,
+    transformPositionWorldToProjection,
+    scratchNdcAabb
+  );
+
+  // If the object is offscreen, don't render it.
+  const offscreen =
+    ndcAabb.x === +1.0 ||
+    ndcAabb.y === +1.0 ||
+    ndcAabb.z === -1.0 ||
+    ndcAabb.w === -1.0;
+  if (offscreen) {
+    return;
+  }
+
+  // Prepare to render: update uniforms that can change every frame
+  // Using a uniform instead of going through RenderState's scissor because the viewport is not accessible here, and the scissor command needs pixel coordinates.
+  uniforms.ndcSpaceAxisAlignedBoundingBox = Cartesian4.clone(
+    ndcAabb,
+    uniforms.ndcSpaceAxisAlignedBoundingBox
+  );
+  const transformPositionViewToWorld = context.uniformState.inverseView;
+  uniforms.transformPositionViewToUv = Matrix4.multiply(
+    this._transformPositionWorldToUv,
+    transformPositionViewToWorld,
+    uniforms.transformPositionViewToUv
+  );
+  const transformPositionWorldToView = context.uniformState.view;
+  uniforms.transformPositionUvToView = Matrix4.multiply(
+    transformPositionWorldToView,
+    this._transformPositionUvToWorld,
+    uniforms.transformPositionUvToView
+  );
+  const transformDirectionViewToWorld =
+    context.uniformState.inverseViewRotation;
+  uniforms.transformDirectionViewToLocal = Matrix3.multiply(
+    this._transformDirectionWorldToLocal,
+    transformDirectionViewToWorld,
+    uniforms.transformDirectionViewToLocal
+  );
+  uniforms.transformNormalLocalToWorld = Matrix3.clone(
+    this._transformNormalLocalToWorld,
+    uniforms.transformNormalLocalToWorld
+  );
+  const cameraPositionWorld = frameState.camera.positionWC;
+  uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
+    this._transformPositionWorldToUv,
+    cameraPositionWorld,
+    uniforms.cameraPositionUv
+  );
+  uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
+
+  // Render the primitive
+  const command = frameState.passes.pick
+    ? this._drawCommandPick
+    : this._drawCommand;
+  command.boundingVolume = shape.boundingSphere;
+  frameState.commandList.push(command);
+};
+
+/**
+ * Initialize primitive properties that are derived from the voxel provider
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelProvider} provider
+ * @param {Context} context
+ * @private
+ */
+function initFromProvider(primitive, provider, context) {
+  const uniforms = primitive._uniforms;
+
+  primitive._pickId = context.createPickId({ primitive });
+  uniforms.pickColor = Color.clone(primitive._pickId.color, uniforms.pickColor);
+
+  // Set the bounds
+  const {
+    shape: shapeType,
+    minBounds = VoxelShapeType.getMinBounds(shapeType),
+    maxBounds = VoxelShapeType.getMaxBounds(shapeType),
+  } = provider;
+
+  primitive.minBounds = minBounds;
+  primitive.maxBounds = maxBounds;
+  primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
+  primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
+
+  checkTransformAndBounds(primitive, provider);
+
+  // Create the shape object, and update it so it is valid for VoxelTraversal
+  const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
+  primitive._shape = new ShapeConstructor();
+  primitive._shapeVisible = updateShapeAndTransforms(
+    primitive,
+    primitive._shape,
+    provider
+  );
+
+  const { shaderDefines, shaderUniforms: shapeUniforms } = primitive._shape;
+  primitive._shapeDefinesOld = clone(shaderDefines, true);
+
+  // Add shape uniforms to the uniform map
+  const uniformMap = primitive._uniformMap;
+  for (const key in shapeUniforms) {
+    if (shapeUniforms.hasOwnProperty(key)) {
+      const name = `u_${key}`;
+
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(uniformMap[name])) {
+        oneTimeWarning(
+          `VoxelPrimitive: Uniform name "${name}" is already defined`
+        );
+      }
+      //>>includeEnd('debug');
+
+      uniformMap[name] = function () {
+        return shapeUniforms[key];
+      };
+    }
+  }
+
+  // Set uniforms that come from the provider.
+  // Note that minBounds and maxBounds can be set dynamically, so their uniforms aren't set here.
+  uniforms.dimensions = Cartesian3.clone(
+    provider.dimensions,
+    uniforms.dimensions
+  );
+  primitive._paddingBefore = Cartesian3.clone(
+    defaultValue(provider.paddingBefore, Cartesian3.ZERO),
+    primitive._paddingBefore
+  );
+  uniforms.paddingBefore = Cartesian3.clone(
+    primitive._paddingBefore,
+    uniforms.paddingBefore
+  );
+  primitive._paddingAfter = Cartesian3.clone(
+    defaultValue(provider.paddingAfter, Cartesian3.ZERO),
+    primitive._paddingBefore
+  );
+  uniforms.paddingAfter = Cartesian3.clone(
+    primitive._paddingAfter,
+    uniforms.paddingAfter
+  );
+
+  // Create the VoxelTraversal, and set related uniforms
+  primitive._traversal = setupTraversal(primitive, provider, context);
+  setTraversalUniforms(primitive._traversal, uniforms);
+}
+
+/**
+ * Track changes in provider transform and primitive bounds
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelProvider} provider
+ * @returns {Boolean} Whether any of the transform or bounds changed
+ * @private
+ */
+function checkTransformAndBounds(primitive, provider) {
   const providerTransform = defaultValue(
     provider.modelMatrix,
     Matrix4.IDENTITY
   );
-  const compoundTransform = Matrix4.multiplyTransformation(
+  primitive._compoundModelMatrix = Matrix4.multiplyTransformation(
     providerTransform,
-    primitiveTransform,
-    this._compoundModelMatrix
+    primitive._modelMatrix,
+    primitive._compoundModelMatrix
   );
-  const compoundTransformOld = this._compoundModelMatrixOld;
-  const compoundTransformDirty = !Matrix4.equals(
-    compoundTransform,
-    compoundTransformOld
-  );
+  const numChanges =
+    updateBound(primitive, "_compoundModelMatrix", "_compoundModelMatrixOld") +
+    updateBound(primitive, "_minBounds", "_minBoundsOld") +
+    updateBound(primitive, "_maxBounds", "_maxBoundsOld") +
+    updateBound(primitive, "_minClippingBounds", "_minClippingBoundsOld") +
+    updateBound(primitive, "_maxClippingBounds", "_maxClippingBoundsOld");
+  return numChanges > 0;
+}
 
-  const shape = this._shape;
-  const minBounds = this._minBounds;
-  const maxBounds = this._maxBounds;
-  const minBoundsOld = this._minBoundsOld;
-  const maxBoundsOld = this._maxBoundsOld;
-  const minBoundsDirty = !Cartesian3.equals(minBounds, minBoundsOld);
-  const maxBoundsDirty = !Cartesian3.equals(maxBounds, maxBoundsOld);
-  const clipMinBounds = this._minClippingBounds;
-  const clipMaxBounds = this._maxClippingBounds;
-  const clipMinBoundsOld = this._minClippingBoundsOld;
-  const clipMaxBoundsOld = this._maxClippingBoundsOld;
-  const clipMinBoundsDirty = !Cartesian3.equals(
-    clipMinBounds,
-    clipMinBoundsOld
-  );
-  const clipMaxBoundsDirty = !Cartesian3.equals(
-    clipMaxBounds,
-    clipMaxBoundsOld
-  );
+/**
+ * Compare old and new values of a bound and update the old if it is different.
+ * @param {VoxelPrimitive} The primitive with bounds properties
+ * @param {String} oldBoundKey A key pointing to a bounds property of type Cartesian3 or Matrix4
+ * @param {String} newBoundKey A key pointing to a bounds property of the same type as the property at oldBoundKey
+ * @returns {Number} 1 if the bound value changed, 0 otherwise
+ *
+ * @private
+ */
+function updateBound(primitive, newBoundKey, oldBoundKey) {
+  const newBound = primitive[newBoundKey];
+  const BoundClass = newBound.constructor;
+  const changed = !BoundClass.equals(newBound, primitive[oldBoundKey]);
+  if (changed) {
+    primitive[oldBoundKey] = BoundClass.clone(newBound, primitive[oldBoundKey]);
+  }
+  return changed ? 1 : 0;
+}
 
-  const shapeDirty =
-    compoundTransformDirty ||
-    minBoundsDirty ||
-    maxBoundsDirty ||
-    clipMinBoundsDirty ||
-    clipMaxBoundsDirty;
-
-  if (shapeDirty) {
-    if (compoundTransformDirty) {
-      this._compoundModelMatrixOld = Matrix4.clone(
-        compoundTransform,
-        this._compoundModelMatrixOld
-      );
-    }
-    if (minBoundsDirty) {
-      this._minBoundsOld = Cartesian3.clone(minBounds, this._minBoundsOld);
-    }
-    if (maxBoundsDirty) {
-      this._maxBoundsOld = Cartesian3.clone(maxBounds, this._maxBoundsOld);
-    }
-    if (clipMinBoundsDirty) {
-      this._minClippingBoundsOld = Cartesian3.clone(
-        clipMinBounds,
-        this._minClippingBoundsOld
-      );
-    }
-    if (clipMaxBoundsDirty) {
-      this._maxClippingBoundsOld = Cartesian3.clone(
-        clipMaxBounds,
-        this._maxClippingBoundsOld
-      );
-    }
+/**
+ * Update the shape and related transforms
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelShape} shape
+ * @param {VoxelProvider} provider
+ * @returns {Boolean} True if the shape is visible
+ * @private
+ */
+function updateShapeAndTransforms(primitive, shape, provider) {
+  const visible = shape.update(
+    primitive.compoundModelMatrix,
+    primitive.minBounds,
+    primitive.maxBounds,
+    primitive.minClippingBounds,
+    primitive.maxClippingBounds
+  );
+  if (!visible) {
+    return false;
   }
 
-  // Update the shape on the first frame or if it's dirty.
-  // If the shape is visible it will need to do some extra work.
+  const transformPositionLocalToWorld = shape.shapeTransform;
+  const transformPositionWorldToLocal = Matrix4.inverse(
+    transformPositionLocalToWorld,
+    scratchTransformPositionWorldToLocal
+  );
+  const rotation = Matrix4.getRotation(
+    transformPositionLocalToWorld,
+    scratchRotation
+  );
+  // Note that inverse(rotation) is the same as transpose(rotation)
+  const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
+  const maximumScaleComponent = Cartesian3.maximumComponent(scale);
+  const localScale = Cartesian3.divideByScalar(
+    scale,
+    maximumScaleComponent,
+    scratchLocalScale
+  );
+  const rotationAndLocalScale = Matrix3.multiplyByScale(
+    rotation,
+    localScale,
+    scratchRotationAndLocalScale
+  );
+
+  // Set member variables when the shape is dirty
+  const dimensions = provider.dimensions;
+  primitive._stepSizeUv = shape.computeApproximateStepSize(dimensions);
+  //  TODO: check which of the `multiply` can be `multiplyTransformation`
+  primitive._transformPositionWorldToUv = Matrix4.multiply(
+    transformPositionLocalToUv,
+    transformPositionWorldToLocal,
+    primitive._transformPositionWorldToUv
+  );
+  primitive._transformPositionUvToWorld = Matrix4.multiply(
+    transformPositionLocalToWorld,
+    transformPositionUvToLocal,
+    primitive._transformPositionUvToWorld
+  );
+  primitive._transformDirectionWorldToLocal = Matrix4.getMatrix3(
+    transformPositionWorldToLocal,
+    primitive._transformDirectionWorldToLocal
+  );
+  primitive._transformNormalLocalToWorld = Matrix3.inverseTranspose(
+    rotationAndLocalScale,
+    primitive._transformNormalLocalToWorld
+  );
+
+  return true;
+}
+
+/**
+ * Set up a VoxelTraversal based on dimensions and types from the primitive and provider
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelProvider} provider
+ * @param {Context} context
+ * @returns {VoxelTraversal}
+ * @private
+ */
+function setupTraversal(primitive, provider, context) {
+  const dimensions = Cartesian3.clone(provider.dimensions, scratchDimensions);
+  Cartesian3.add(dimensions, primitive._paddingBefore, dimensions);
+  Cartesian3.add(dimensions, primitive._paddingAfter, dimensions);
+
+  // It's ok for memory byte length to be undefined.
+  // The system will choose a default memory size.
+  const maximumTileCount = provider.maximumTileCount;
+  const maximumTextureMemoryByteLength = defined(maximumTileCount)
+    ? VoxelTraversal.getApproximateTextureMemoryByteLength(
+        maximumTileCount,
+        dimensions,
+        provider.types,
+        provider.componentTypes
+      )
+    : undefined;
+
+  const keyframeCount = defaultValue(provider.keyframeCount, 1);
+
+  return new VoxelTraversal(
+    primitive,
+    context,
+    dimensions,
+    provider.types,
+    provider.componentTypes,
+    keyframeCount,
+    maximumTextureMemoryByteLength
+  );
+}
+
+/**
+ * Set uniforms that come from the traversal.
+ * TODO: should this be done in VoxelTraversal?
+ * @param {VoxelTraversal} traversal
+ * @param {Object} uniforms
+ * @private
+ */
+function setTraversalUniforms(traversal, uniforms) {
+  uniforms.octreeInternalNodeTexture = traversal.internalNodeTexture;
+  uniforms.octreeInternalNodeTexelSizeUv = Cartesian2.clone(
+    traversal.internalNodeTexelSizeUv,
+    uniforms.octreeInternalNodeTexelSizeUv
+  );
+  uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
+
+  const megatextures = traversal.megatextures;
+  const megatexture = megatextures[0];
+  const megatextureLength = megatextures.length;
+  uniforms.megatextureTextures = new Array(megatextureLength);
+  for (let i = 0; i < megatextureLength; i++) {
+    uniforms.megatextureTextures[i] = megatextures[i].texture;
+  }
+
+  uniforms.megatextureSliceDimensions = Cartesian2.clone(
+    megatexture.sliceCountPerRegion,
+    uniforms.megatextureSliceDimensions
+  );
+  uniforms.megatextureTileDimensions = Cartesian2.clone(
+    megatexture.regionCountPerMegatexture,
+    uniforms.megatextureTileDimensions
+  );
+  uniforms.megatextureVoxelSizeUv = Cartesian2.clone(
+    megatexture.voxelSizeUv,
+    uniforms.megatextureVoxelSizeUv
+  );
+  uniforms.megatextureSliceSizeUv = Cartesian2.clone(
+    megatexture.sliceSizeUv,
+    uniforms.megatextureSliceSizeUv
+  );
+  uniforms.megatextureTileSizeUv = Cartesian2.clone(
+    megatexture.regionSizeUv,
+    uniforms.megatextureTileSizeUv
+  );
+}
+
+/**
+ * Track changes in shape-related shader defines
+ * @param {VoxelPrimitive} primitive
+ * @param {VoxelShape} shape
+ * @returns {Boolean} True if any of the shape defines changed, requiring a shader rebuild
+ * @private
+ */
+function checkShapeDefines(primitive, shape) {
+  const shapeDefines = shape.shaderDefines;
+  const shapeDefinesChanged = Object.keys(shapeDefines).some(
+    (key) => shapeDefines[key] !== primitive._shapeDefinesOld[key]
+  );
+  if (shapeDefinesChanged) {
+    primitive._shapeDefinesOld = clone(shapeDefines, true);
+  }
+  return shapeDefinesChanged;
+}
+
+/**
+ * Find the keyframe location to render at. Doesn't need to be a whole number.
+ * @param {TimeIntervalCollection} timeIntervalCollection
+ * @param {Clock} clock
+ * @returns {Number}
+ *
+ * @private
+ */
+function getKeyframeLocation(timeIntervalCollection, clock) {
+  if (!defined(timeIntervalCollection) || !defined(clock)) {
+    return 0.0;
+  }
+  let date = clock.currentTime;
+  let timeInterval;
+  let timeIntervalIndex = timeIntervalCollection.indexOf(date);
+  if (timeIntervalIndex >= 0) {
+    timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+  } else {
+    // Date fell outside the range
+    timeIntervalIndex = ~timeIntervalIndex;
+    if (timeIntervalIndex === timeIntervalCollection.length) {
+      // Date past range
+      timeIntervalIndex = timeIntervalCollection.length - 1;
+      timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+      date = timeInterval.stop;
+    } else {
+      // Date before range
+      timeInterval = timeIntervalCollection.get(timeIntervalIndex);
+      date = timeInterval.start;
+    }
+  }
+  // De-lerp between the start and end of the interval
+  const totalSeconds = JulianDate.secondsDifference(
+    timeInterval.stop,
+    timeInterval.start
+  );
+  const secondsDifferenceStart = JulianDate.secondsDifference(
+    date,
+    timeInterval.start
+  );
+  const t = secondsDifferenceStart / totalSeconds;
+
+  return timeIntervalIndex + t;
+}
+
+/**
+ * Update the clipping planes state and associated uniforms
+ *
+ * @param {VoxelPrimitive} primitive
+ * @param {FrameState} frameState
+ * @returns {Boolean} Whether the clipping planes changed, requiring a shader rebuild
+ * @private
+ */
+function updateClippingPlanes(primitive, frameState) {
+  const clippingPlanes = primitive.clippingPlanes;
+  if (!defined(clippingPlanes)) {
+    return false;
+  }
+
+  clippingPlanes.update(frameState);
+
+  const { clippingPlanesState, enabled } = clippingPlanes;
+
+  if (enabled) {
+    const uniforms = primitive._uniforms;
+    uniforms.clippingPlanesTexture = clippingPlanes.texture;
+
+    // Compute the clipping plane's transformation to uv space and then take the inverse
+    // transpose to properly transform the hessian normal form of the plane.
+
+    // transpose(inverse(worldToUv * clippingPlaneLocalToWorld))
+    // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToUv))
+    // transpose(inverse(clippingPlaneLocalToWorld) * uvToWorld)
+
+    uniforms.clippingPlanesMatrix = Matrix4.transpose(
+      Matrix4.multiplyTransformation(
+        Matrix4.inverse(
+          clippingPlanes.modelMatrix,
+          uniforms.clippingPlanesMatrix
+        ),
+        primitive._transformPositionUvToWorld,
+        uniforms.clippingPlanesMatrix
+      ),
+      uniforms.clippingPlanesMatrix
+    );
+  }
+
   if (
-    (!this._ready || shapeDirty) &&
-    (this._shapeVisible = shape.update(
-      compoundTransform,
-      minBounds,
-      maxBounds,
-      clipMinBounds,
-      clipMaxBounds
-    ))
+    primitive._clippingPlanesState === clippingPlanesState &&
+    primitive._clippingPlanesEnabled === enabled
   ) {
-    // Rebuild the shader if any of the shape defines changed.
-    const shapeDefines = shape.shaderDefines;
-    const shapeDefinesOld = this._shapeDefinesOld;
-    let shapeDefinesChanged = false;
-    for (const property in shapeDefines) {
-      if (shapeDefines.hasOwnProperty(property)) {
-        const value = shapeDefines[property];
-        const valueOld = shapeDefinesOld[property];
-        if (value !== valueOld) {
-          shapeDefinesChanged = true;
-          break;
-        }
-      }
-    }
-    if (shapeDefinesChanged) {
-      this._shaderDirty = true;
-      this._shapeDefinesOld = clone(shapeDefines, true);
-    }
-
-    const transformPositionLocalToWorld = shape.shapeTransform;
-    const transformPositionWorldToLocal = Matrix4.inverse(
-      transformPositionLocalToWorld,
-      scratchTransformPositionWorldToLocal
-    );
-    const rotation = Matrix4.getRotation(
-      transformPositionLocalToWorld,
-      scratchRotation
-    );
-    // Note that inverse(rotation) is the same as transpose(rotation)
-    const scale = Matrix4.getScale(transformPositionLocalToWorld, scratchScale);
-    const maximumScaleComponent = Cartesian3.maximumComponent(scale);
-    const localScale = Cartesian3.divideByScalar(
-      scale,
-      maximumScaleComponent,
-      scratchLocalScale
-    );
-    const rotationAndLocalScale = Matrix3.multiplyByScale(
-      rotation,
-      localScale,
-      scratchRotationAndLocalScale
-    );
-
-    // Set member variables when the shape is dirty
-    const dimensions = provider.dimensions;
-    this._stepSizeUv = shape.computeApproximateStepSize(dimensions);
-    //  TODO: check which of the `multiply` can be `multiplyTransformation`
-    this._transformPositionWorldToUv = Matrix4.multiply(
-      transformPositionLocalToUv,
-      transformPositionWorldToLocal,
-      this._transformPositionWorldToUv
-    );
-    this._transformPositionUvToWorld = Matrix4.multiply(
-      transformPositionLocalToWorld,
-      transformPositionUvToLocal,
-      this._transformPositionUvToWorld
-    );
-    this._transformDirectionWorldToLocal = Matrix4.getMatrix3(
-      transformPositionWorldToLocal,
-      this._transformDirectionWorldToLocal
-    );
-    this._transformNormalLocalToWorld = Matrix3.inverseTranspose(
-      rotationAndLocalScale,
-      this._transformNormalLocalToWorld
-    );
+    return false;
   }
+  primitive._clippingPlanesState = clippingPlanesState;
+  primitive._clippingPlanesEnabled = enabled;
 
-  // Initialize from the ready shape. This only happens once.
-  if (!this._ready) {
-    const dimensions = provider.dimensions;
-    const paddingBefore = this._paddingBefore;
-    const paddingAfter = this._paddingAfter;
-    const totalDimensions = Cartesian3.clone(
-      dimensions,
-      scratchTotalDimensions
-    );
-    Cartesian3.add(totalDimensions, paddingBefore, totalDimensions);
-    Cartesian3.add(totalDimensions, paddingAfter, totalDimensions);
-
-    const types = provider.types;
-    const componentTypes = provider.componentTypes;
-
-    // Traversal setup
-    // It's ok for memory byte length to be undefined.
-    // The system will choose a default memory size.
-    const maximumTileCount = provider.maximumTileCount;
-    const maximumTextureMemoryByteLength = defined(maximumTileCount)
-      ? VoxelTraversal.getApproximateTextureMemoryByteLength(
-          maximumTileCount,
-          totalDimensions,
-          types,
-          componentTypes
-        )
-      : undefined;
-
-    const keyframeCount = defaultValue(provider.keyframeCount, 1);
-
-    this._traversal = new VoxelTraversal(
-      this,
-      context,
-      totalDimensions,
-      types,
-      componentTypes,
-      keyframeCount,
-      maximumTextureMemoryByteLength
-    );
-
-    // Set uniforms that come from the traversal.
-    // TODO: should this be done in VoxelTraversal?
-    const traversal = this._traversal;
-
-    uniforms.octreeInternalNodeTexture = traversal.internalNodeTexture;
-    uniforms.octreeInternalNodeTexelSizeUv = Cartesian2.clone(
-      traversal.internalNodeTexelSizeUv,
-      uniforms.octreeInternalNodeTexelSizeUv
-    );
-    uniforms.octreeInternalNodeTilesPerRow = traversal.internalNodeTilesPerRow;
-
-    const megatextures = traversal.megatextures;
-    const megatexture = megatextures[0];
-    const megatextureLength = megatextures.length;
-    uniforms.megatextureTextures = new Array(megatextureLength);
-    for (let i = 0; i < megatextureLength; i++) {
-      uniforms.megatextureTextures[i] = megatextures[i].texture;
-    }
-
-    uniforms.megatextureSliceDimensions = Cartesian2.clone(
-      megatexture.sliceCountPerRegion,
-      uniforms.megatextureSliceDimensions
-    );
-    uniforms.megatextureTileDimensions = Cartesian2.clone(
-      megatexture.regionCountPerMegatexture,
-      uniforms.megatextureTileDimensions
-    );
-    uniforms.megatextureVoxelSizeUv = Cartesian2.clone(
-      megatexture.voxelSizeUv,
-      uniforms.megatextureVoxelSizeUv
-    );
-    uniforms.megatextureSliceSizeUv = Cartesian2.clone(
-      megatexture.sliceSizeUv,
-      uniforms.megatextureSliceSizeUv
-    );
-    uniforms.megatextureTileSizeUv = Cartesian2.clone(
-      megatexture.regionSizeUv,
-      uniforms.megatextureTileSizeUv
-    );
-  }
-
-  // Update the traversal and prepare for rendering.
-  // This doesn't happen on the first update frame. It needs to wait until the
-  // primitive is made ready after the end of the first update frame.
-  if (this._ready && this._shapeVisible) {
-    const traversal = this._traversal;
-    const clock = this._clock;
-    const timeIntervalCollection = provider.timeIntervalCollection;
-
-    // Find the keyframe location to render at. Doesn't need to be a whole number.
-    let keyframeLocation = 0.0;
-    if (defined(timeIntervalCollection) && defined(clock)) {
-      let date = clock.currentTime;
-      let timeInterval;
-      let timeIntervalIndex = timeIntervalCollection.indexOf(date);
-      if (timeIntervalIndex >= 0) {
-        timeInterval = timeIntervalCollection.get(timeIntervalIndex);
-      } else {
-        // Date fell outside the range
-        timeIntervalIndex = ~timeIntervalIndex;
-        if (timeIntervalIndex === timeIntervalCollection.length) {
-          // Date past range
-          timeIntervalIndex = timeIntervalCollection.length - 1;
-          timeInterval = timeIntervalCollection.get(timeIntervalIndex);
-          date = timeInterval.stop;
-        } else {
-          // Date before range
-          timeInterval = timeIntervalCollection.get(timeIntervalIndex);
-          date = timeInterval.start;
-        }
-      }
-
-      // De-lerp between the start and end of the interval
-      const totalSeconds = JulianDate.secondsDifference(
-        timeInterval.stop,
-        timeInterval.start
-      );
-      const secondsDifferenceStart = JulianDate.secondsDifference(
-        date,
-        timeInterval.start
-      );
-      const t = secondsDifferenceStart / totalSeconds;
-      keyframeLocation = timeIntervalIndex + t;
-    }
-
-    const sampleCountOld = traversal._sampleCount;
-
-    // Update the voxel traversal
-    traversal.update(
-      frameState,
-      keyframeLocation,
-      shapeDirty, // recomputeBoundingVolumes
-      this._disableUpdate // pauseUpdate
-    );
-
-    if (sampleCountOld !== traversal._sampleCount) {
-      this._shaderDirty = true;
-    }
-
-    const hasLoadedData = traversal.isRenderable(traversal.rootNode);
-
-    if (hasLoadedData && this._debugDraw) {
-      // Debug draw bounding boxes and other things. Must go after traversal update
-      // because that's what updates the tile bounding boxes.
-      debugDraw(this, frameState);
-    }
-
-    if (hasLoadedData && !this._disableRender) {
-      // Check if log depth changed
-      if (this._useLogDepth !== frameState.useLogDepth) {
-        this._useLogDepth = frameState.useLogDepth;
-        this._shaderDirty = true;
-      }
-
-      // Check if clipping planes changed
-      const clippingPlanes = this._clippingPlanes;
-      if (defined(clippingPlanes)) {
-        clippingPlanes.update(frameState);
-        const clippingPlanesState = clippingPlanes.clippingPlanesState;
-        const clippingPlanesEnabled = clippingPlanes.enabled;
-        if (
-          this._clippingPlanesState !== clippingPlanesState ||
-          this._clippingPlanesEnabled !== clippingPlanesEnabled
-        ) {
-          this._clippingPlanesState = clippingPlanesState;
-          this._clippingPlanesEnabled = clippingPlanesEnabled;
-          if (clippingPlanesEnabled) {
-            uniforms.clippingPlanesTexture = clippingPlanes.texture;
-
-            // Compute the clipping plane's transformation to uv space and then take the inverse
-            // transpose to properly transform the hessian normal form of the plane.
-
-            // transpose(inverse(worldToUv * clippingPlaneLocalToWorld))
-            // transpose(inverse(clippingPlaneLocalToWorld) * inverse(worldToUv))
-            // transpose(inverse(clippingPlaneLocalToWorld) * uvToWorld)
-
-            const transformPositionUvToWorld = this._transformPositionUvToWorld;
-            uniforms.clippingPlanesMatrix = Matrix4.transpose(
-              Matrix4.multiplyTransformation(
-                Matrix4.inverse(
-                  clippingPlanes.modelMatrix,
-                  uniforms.clippingPlanesMatrix
-                ),
-                transformPositionUvToWorld,
-                uniforms.clippingPlanesMatrix
-              ),
-              uniforms.clippingPlanesMatrix
-            );
-          }
-          this._shaderDirty = true;
-        }
-      }
-
-      const leafNodeTexture = traversal.leafNodeTexture;
-      if (defined(leafNodeTexture)) {
-        uniforms.octreeLeafNodeTexture = traversal.leafNodeTexture;
-        uniforms.octreeLeafNodeTexelSizeUv = Cartesian2.clone(
-          traversal.leafNodeTexelSizeUv,
-          uniforms.octreeLeafNodeTexelSizeUv
-        );
-        uniforms.octreeLeafNodeTilesPerRow = traversal.leafNodeTilesPerRow;
-      }
-
-      // Rebuild shaders
-      if (this._shaderDirty) {
-        buildVoxelDrawCommands(this, context);
-        this._shaderDirty = false;
-      }
-
-      // Calculate the NDC-space AABB to "scissor" the fullscreen quad
-      const transformPositionWorldToProjection =
-        context.uniformState.viewProjection;
-      const orientedBoundingBox = shape.orientedBoundingBox;
-      const ndcAabb = orientedBoundingBoxToNdcAabb(
-        orientedBoundingBox,
-        transformPositionWorldToProjection,
-        scratchNdcAabb
-      );
-
-      // If the object is offscreen, don't render it.
-      const offscreen =
-        ndcAabb.x === +1.0 ||
-        ndcAabb.y === +1.0 ||
-        ndcAabb.z === -1.0 ||
-        ndcAabb.w === -1.0;
-
-      if (!offscreen) {
-        const transformPositionWorldToView = context.uniformState.view;
-        const transformPositionViewToWorld = context.uniformState.inverseView;
-        const transformDirectionViewToWorld =
-          context.uniformState.inverseViewRotation;
-        const transformDirectionWorldToLocal = this
-          ._transformDirectionWorldToLocal;
-        const transformPositionUvToWorld = this._transformPositionUvToWorld;
-        const transformPositionWorldToUv = this._transformPositionWorldToUv;
-        const transformNormalLocalToWorld = this._transformNormalLocalToWorld;
-        const cameraPositionWorld = frameState.camera.positionWC;
-
-        // Update uniforms that can change every frame
-        uniforms.transformPositionViewToUv = Matrix4.multiply(
-          transformPositionWorldToUv,
-          transformPositionViewToWorld,
-          uniforms.transformPositionViewToUv
-        );
-        uniforms.transformPositionUvToView = Matrix4.multiply(
-          transformPositionWorldToView,
-          transformPositionUvToWorld,
-          uniforms.transformPositionUvToView
-        );
-        uniforms.transformDirectionViewToLocal = Matrix3.multiply(
-          transformDirectionWorldToLocal,
-          transformDirectionViewToWorld,
-          uniforms.transformDirectionViewToLocal
-        );
-        uniforms.transformNormalLocalToWorld = Matrix3.clone(
-          transformNormalLocalToWorld,
-          uniforms.transformNormalLocalToWorld
-        );
-        uniforms.cameraPositionUv = Matrix4.multiplyByPoint(
-          transformPositionWorldToUv,
-          cameraPositionWorld,
-          uniforms.cameraPositionUv
-        );
-        uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
-
-        // Using a uniform instead of going through RenderState's scissor because the viewport is not accessible here, and the scissor command needs pixel coordinates.
-        uniforms.ndcSpaceAxisAlignedBoundingBox = Cartesian4.clone(
-          ndcAabb,
-          uniforms.ndcSpaceAxisAlignedBoundingBox
-        );
-
-        // Render the primitive
-        const command = frameState.passes.pick
-          ? this._drawCommandPick
-          : this._drawCommand;
-        command.boundingVolume = shape.boundingSphere;
-        frameState.commandList.push(command);
-      }
-    }
-  }
-};
+  return true;
+}
 
 /**
  * Returns true if this object was destroyed; otherwise, false.

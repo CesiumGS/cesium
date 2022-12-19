@@ -108,7 +108,7 @@ function GltfVoxelProvider(options) {
    * TODO: mark this optional
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
-   * @type {Number|undefined}
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   this.paddingBefore = undefined;
@@ -118,7 +118,7 @@ function GltfVoxelProvider(options) {
    * This should not be called before {@link VoxelProvider#ready} returns true.
    * TODO: mark this optional
    *
-   * @type {Number|undefined}
+   * @type {Cartesian3|undefined}
    * @readonly
    */
   this.paddingAfter = undefined;

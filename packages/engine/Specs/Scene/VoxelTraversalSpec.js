@@ -23,51 +23,51 @@ function turnCameraAround(scene) {
 describe(
   "Scene/VoxelTraversal",
   function () {
-    const scene = createScene();
+    const keyframeCount = 1;
+    const textureMemory = 500;
 
+    let scene;
     let provider;
-    beforeAll(function () {
+    let camera;
+    let primitive;
+    let traversal;
+    beforeEach(function () {
+      scene = createScene();
       provider = new Cesium3DTilesVoxelProvider({
         url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       });
 
-      return pollToPromise(function () {
-        provider.update(scene.frameState);
-        return provider.ready;
-      }).then(() => {
-        scene.primitives.removeAll();
-      });
-    });
-
-    const frameState = scene.frameState;
-    const camera = scene.camera;
-    const context = scene.context;
-    const keyframeCount = 1;
-    const textureMemory = 500;
-
-    let primitive;
-    let traversal;
-    beforeEach(function () {
+      camera = scene.camera;
       camera.position = Cartesian3.fromElements(-10, -10, -10);
       camera.direction = Cartesian3.fromElements(1, 1, 1);
       camera.frustum.fov = CesiumMath.PI_OVER_TWO;
-      scene.primitives.removeAll();
       primitive = new VoxelPrimitive({
         voxelProvider: provider,
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      return primitive.readyPromise.then(function () {
-        traversal = new VoxelTraversal(
-          primitive,
-          context,
-          provider.dimensions,
-          provider.types,
-          provider.componentTypes,
-          keyframeCount,
-          textureMemory
-        );
-      });
+      return pollToPromise(function () {
+        provider.update(scene.frameState);
+        return provider.ready;
+      })
+        .then(function () {
+          return primitive.ready;
+        })
+        .then(function () {
+          traversal = new VoxelTraversal(
+            primitive,
+            scene.context,
+            provider.dimensions,
+            provider.types,
+            provider.componentTypes,
+            keyframeCount,
+            textureMemory
+          );
+        });
+    });
+
+    afterEach(function () {
+      scene.destroyForSpecs();
     });
 
     it("constructs with arguments", function () {
@@ -93,7 +93,7 @@ describe(
       const recomputeBoundingVolumes = true;
       const pauseUpdate = false;
       traversal.update(
-        frameState,
+        scene.frameState,
         keyFrameLocation,
         recomputeBoundingVolumes,
         pauseUpdate
@@ -109,21 +109,18 @@ describe(
     });
 
     it("computes screen space error for root tile", function () {
-      const rootNode = traversal.rootNode;
-      const cameraPosition = frameState.camera.positionWC;
-      const screenSpaceErrorDenominator =
-        frameState.camera.frustum.sseDenominator;
-      const screenHeight =
-        frameState.context.drawingBufferHeight / frameState.pixelRatio;
+      const { context, pixelRatio } = scene.frameState;
+      const screenHeight = context.drawingBufferHeight / pixelRatio;
       const screenSpaceErrorMultiplier =
-        screenHeight / screenSpaceErrorDenominator;
+        screenHeight / camera.frustum.sseDenominator;
+      const rootNode = traversal.rootNode;
       rootNode.computeScreenSpaceError(
-        cameraPosition,
+        camera.positionWC,
         screenSpaceErrorMultiplier
       );
 
       let distanceToCamera = Math.sqrt(
-        rootNode.orientedBoundingBox.distanceSquaredTo(cameraPosition)
+        rootNode.orientedBoundingBox.distanceSquaredTo(camera.positionWC)
       );
       distanceToCamera = Math.max(distanceToCamera, CesiumMath.EPSILON7);
       const error =
@@ -137,17 +134,24 @@ describe(
       const visibilityPlaneMask = CullingVolume.MASK_INDETERMINATE;
 
       const visibilityWhenLookingAtRoot = rootNode.visibility(
-        frameState,
+        scene.frameState,
         visibilityPlaneMask
       );
       expect(visibilityWhenLookingAtRoot).toBe(CullingVolume.MASK_INSIDE);
+      // expect(traversal.isRenderable(rootNode)).toBe(true);
 
       turnCameraAround(scene);
       const visibilityWhenLookingAway = rootNode.visibility(
-        frameState,
+        scene.frameState,
         visibilityPlaneMask
       );
       expect(visibilityWhenLookingAway).toBe(CullingVolume.MASK_OUTSIDE);
+    });
+
+    it("destroys", function () {
+      expect(traversal.isDestroyed()).toBe(false);
+      traversal.destroy();
+      expect(traversal.isDestroyed()).toBe(true);
     });
 
     xit("loads tiles into megatexture", function () {
@@ -155,7 +159,7 @@ describe(
       const recomputeBoundingVolumes = true;
       const pauseUpdate = false;
       traversal.update(
-        frameState,
+        scene.frameState,
         keyFrameLocation,
         recomputeBoundingVolumes,
         pauseUpdate
@@ -169,7 +173,7 @@ describe(
       traversal.megatexture.remove(0);
       turnCameraAround(scene);
       traversal.update(
-        frameState,
+        scene.frameState,
         keyFrameLocation,
         recomputeBoundingVolumes,
         pauseUpdate
@@ -187,7 +191,7 @@ describe(
         // to fully fetch data and copy to texture
         function updateTraversal() {
           traversal.update(
-            frameState,
+            scene.frameState,
             keyFrameLocation,
             recomputeBoundingVolumes,
             pauseUpdate

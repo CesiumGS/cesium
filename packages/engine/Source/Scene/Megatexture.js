@@ -100,7 +100,6 @@ function Megatexture(
     textureDimension / voxelCountPerRegionY
   );
 
-  // TODO can this happen?
   if (regionCountPerMegatextureX === 0 || regionCountPerMegatextureY === 0) {
     throw new RuntimeError("Tileset is too large to fit into megatexture");
   }
@@ -394,35 +393,14 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
  * @param {Float32Array|Uint16Array|Uint8Array} data
  */
 Megatexture.prototype.writeDataToTexture = function (index, data) {
-  const texture = this.texture;
-  const channelCount = this.channelCount;
-  const regionDimensionsPerMegatexture = this.regionCountPerMegatexture;
-  const voxelDimensionsPerRegion = this.voxelCountPerRegion;
+  // Unsigned short textures not allowed in webgl 1, so treat as float
+  const tileData =
+    data.constructor === Uint16Array ? new Float32Array(data) : data;
+
   const voxelDimensionsPerTile = this.voxelCountPerTile;
   const sliceDimensionsPerRegion = this.sliceCountPerRegion;
-
-  let tileData = data;
-
-  // Unsigned short textures not allowed in webgl 1, so treat as float
-  if (data.constructor === Uint16Array) {
-    const elementCount = data.length;
-    tileData = new Float32Array(elementCount);
-    for (let i = 0; i < elementCount / channelCount; i++) {
-      for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
-        const dataIndex = i * channelCount + channelIndex;
-        const minimumValue = this.minimumValues[channelIndex];
-        const maximumValue = this.maximumValues[channelIndex];
-        // TODO extrema are unnormalized, but we are normalizing to [0, 1] here. what do we want to do? will the user expect to get normalized samples and extrema in the style function?
-        tileData[dataIndex] =
-          (data[dataIndex] - minimumValue) / (maximumValue - minimumValue);
-        // tileData[dataIndex] = CesiumMath.lerp(
-        //   minimumValue,
-        //   maximumValue,
-        //   data[dataIndex] / 65535
-        // );
-      }
-    }
-  }
+  const voxelDimensionsPerRegion = this.voxelCountPerRegion;
+  const channelCount = this.channelCount;
 
   const tileVoxelData = this.tileVoxelDataTemp;
   for (let z = 0; z < voxelDimensionsPerTile.z; z++) {
@@ -447,6 +425,7 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
     }
   }
 
+  const regionDimensionsPerMegatexture = this.regionCountPerMegatexture;
   const voxelWidth = voxelDimensionsPerRegion.x;
   const voxelHeight = voxelDimensionsPerRegion.y;
   const voxelOffsetX =
@@ -467,7 +446,7 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
     yOffset: voxelOffsetY,
   };
 
-  texture.copyFrom(copyOptions);
+  this.texture.copyFrom(copyOptions);
 };
 
 /**

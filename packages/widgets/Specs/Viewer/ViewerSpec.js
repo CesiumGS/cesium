@@ -1746,6 +1746,92 @@ describe(
       });
     });
 
+    it("flyTo flies to VoxelPrimitive with default offset when options not defined", function () {
+      viewer = createViewer(container);
+
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const promise = viewer.flyTo(voxelPrimitive);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.offset).toBeDefined();
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
+    it("flyTo flies to VoxelPrimitive with default offset when offset not defined", function () {
+      viewer = createViewer(container);
+      const options = {};
+
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const promise = viewer.flyTo(voxelPrimitive, options);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.offset).toBeDefined();
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
+    it("flyTo flies to VoxelPrimitive when options are defined", function () {
+      viewer = createViewer(container);
+
+      // load tileset to test
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const offsetVal = new HeadingPitchRange(3.0, 0.2, 2.3);
+        const options = {
+          offset: offsetVal,
+          duration: 3.0,
+          maximumHeight: 5.0,
+        };
+
+        const promise = viewer.flyTo(voxelPrimitive, options);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.duration).toBeDefined();
+          expect(options.maximumHeight).toBeDefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
     it("flyTo flies to entity with default offset when options not defined", function () {
       viewer = createViewer(container);
 

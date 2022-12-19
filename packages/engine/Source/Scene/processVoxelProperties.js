@@ -1,156 +1,36 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
-import BlendingState from "./BlendingState.js";
-import CullFace from "./CullFace.js";
-import getClippingFunction from "./getClippingFunction.js";
-import DrawCommand from "../Renderer/DrawCommand.js";
-import Pass from "../Renderer/Pass.js";
-import RenderState from "../Renderer/RenderState.js";
-import ShaderBuilder from "../Renderer/ShaderBuilder.js";
-import ShaderDestination from "../Renderer/ShaderDestination.js";
-import VoxelFS from "../Shaders/Voxels/VoxelFS.js";
-import VoxelVS from "../Shaders/Voxels/VoxelVS.js";
-import IntersectionUtils from "../Shaders/Voxels/IntersectionUtils.js";
-import IntersectDepth from "../Shaders/Voxels/IntersectDepth.js";
-import IntersectClippingPlanes from "../Shaders/Voxels/IntersectClippingPlanes.js";
-import IntersectBox from "../Shaders/Voxels/IntersectBox.js";
-import IntersectCylinder from "../Shaders/Voxels/IntersectCylinder.js";
-import IntersectEllipsoid from "../Shaders/Voxels/IntersectEllipsoid.js";
-import Intersection from "../Shaders/Voxels/Intersection.js";
-import convertUvToBox from "../Shaders/Voxels/convertUvToBox.js";
-import convertUvToCylinder from "../Shaders/Voxels/convertUvToCylinder.js";
-import convertUvToEllipsoid from "../Shaders/Voxels/convertUvToEllipsoid.js";
-import Octree from "../Shaders/Voxels/Octree.js";
-import Megatexture from "../Shaders/Voxels/Megatexture.js";
 import MetadataType from "./MetadataType.js";
+import ShaderDestination from "../Renderer/ShaderDestination.js";
 
 /**
+ * Update the shader with defines, structs, and functions to handle
+ * voxel properties and statistics
  * @function
  *
- * @param {VoxelPrimitive} that
- * @param {Context} context
+ * @param {VoxelRenderResources} renderResources
+ * @param {VoxelPrimitive} primitive
  *
  * @private
  */
-function buildVoxelDrawCommands(that, context) {
-  const provider = that._provider;
-  const traversal = that._traversal;
-  const shapeType = provider.shape;
-  const names = provider.names;
-  const types = provider.types;
-  const componentTypes = provider.componentTypes;
-  const depthTest = that._depthTest;
-  const useLogDepth = that._useLogDepth;
-  const paddingBefore = that.paddingBefore;
-  const paddingAfter = that.paddingAfter;
-  const shape = that._shape;
-  const shapeDefines = shape.shaderDefines;
-  const minimumValues = provider.minimumValues;
-  const maximumValues = provider.maximumValues;
-  const jitter = that._jitter;
-  const nearestSampling = that._nearestSampling;
-  const sampleCount = traversal._sampleCount;
-  const customShader = that._customShader;
+function processVoxelProperties(renderResources, primitive) {
+  const { shaderBuilder } = renderResources;
+
+  const {
+    names,
+    types,
+    componentTypes,
+    minimumValues,
+    maximumValues,
+  } = primitive._provider;
+
   const attributeLength = types.length;
   const hasStatistics = defined(minimumValues) && defined(maximumValues);
-  const clippingPlanes = that._clippingPlanes;
-  const clippingPlanesLength =
-    defined(clippingPlanes) && clippingPlanes.enabled
-      ? clippingPlanes.length
-      : 0;
-  const clippingPlanesUnion = defined(clippingPlanes)
-    ? clippingPlanes.unionClippingRegions
-    : false;
-
-  let uniformMap = that._uniformMap;
-
-  // Build shader
-
-  const shaderBuilder = new ShaderBuilder();
-
-  // Vertex shader
-
-  shaderBuilder.addVertexLines([VoxelVS]);
-
-  // Fragment shader
-
-  shaderBuilder.addFragmentLines([
-    customShader.fragmentShaderText,
-    "#line 0",
-    IntersectionUtils,
-  ]);
-  if (depthTest) {
-    shaderBuilder.addFragmentLines([IntersectDepth]);
-  }
-  if (clippingPlanesLength > 0) {
-    shaderBuilder.addFragmentLines([IntersectClippingPlanes]);
-  }
-  if (shapeType === "BOX") {
-    shaderBuilder.addFragmentLines([
-      IntersectBox,
-      Intersection,
-      convertUvToBox,
-    ]);
-  } else if (shapeType === "CYLINDER") {
-    shaderBuilder.addFragmentLines([
-      IntersectCylinder,
-      Intersection,
-      convertUvToCylinder,
-    ]);
-  } else if (shapeType === "ELLIPSOID") {
-    shaderBuilder.addFragmentLines([
-      IntersectEllipsoid,
-      Intersection,
-      convertUvToEllipsoid,
-    ]);
-  }
-  shaderBuilder.addFragmentLines([Octree, Megatexture, VoxelFS]);
-
-  // Fragment shader defines
 
   shaderBuilder.addDefine(
     "METADATA_COUNT",
     attributeLength,
     ShaderDestination.FRAGMENT
   );
-
-  if (
-    !Cartesian3.equals(paddingBefore, Cartesian3.ZERO) ||
-    !Cartesian3.equals(paddingAfter, Cartesian3.ZERO)
-  ) {
-    shaderBuilder.addDefine("PADDING", undefined, ShaderDestination.FRAGMENT);
-  }
-  if (depthTest) {
-    shaderBuilder.addDefine(
-      "DEPTH_TEST",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-
-  // Allow reading from log depth texture, but don't write log depth anywhere.
-  // Note: This needs to be set even if depthTest is off because it affects the
-  // derived command system.
-  if (useLogDepth) {
-    shaderBuilder.addDefine(
-      "LOG_DEPTH_READ_ONLY",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
-  if (jitter) {
-    shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
-  }
-
-  if (nearestSampling) {
-    shaderBuilder.addDefine(
-      "NEAREST_SAMPLING",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-  }
 
   if (hasStatistics) {
     shaderBuilder.addDefine(
@@ -159,110 +39,6 @@ function buildVoxelDrawCommands(that, context) {
       ShaderDestination.FRAGMENT
     );
   }
-
-  if (clippingPlanesLength > 0) {
-    shaderBuilder.addDefine(
-      "CLIPPING_PLANES",
-      undefined,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addDefine(
-      "CLIPPING_PLANES_COUNT",
-      clippingPlanesLength,
-      ShaderDestination.FRAGMENT
-    );
-    if (clippingPlanesUnion) {
-      shaderBuilder.addDefine(
-        "CLIPPING_PLANES_UNION",
-        undefined,
-        ShaderDestination.FRAGMENT
-      );
-    }
-  }
-
-  // Count how many intersections the shader will do.
-  let intersectionCount = shape.shaderMaximumIntersectionsLength;
-
-  if (clippingPlanesLength > 0) {
-    shaderBuilder.addDefine(
-      "CLIPPING_PLANES_INTERSECTION_INDEX",
-      intersectionCount,
-      ShaderDestination.FRAGMENT
-    );
-    if (clippingPlanesLength === 1) {
-      intersectionCount += 1;
-    } else if (clippingPlanesUnion) {
-      intersectionCount += 2;
-    } else {
-      intersectionCount += 1;
-    }
-  }
-
-  if (depthTest) {
-    shaderBuilder.addDefine(
-      "DEPTH_INTERSECTION_INDEX",
-      intersectionCount,
-      ShaderDestination.FRAGMENT
-    );
-    intersectionCount += 1;
-  }
-
-  shaderBuilder.addDefine(
-    "INTERSECTION_COUNT",
-    intersectionCount,
-    ShaderDestination.FRAGMENT
-  );
-
-  shaderBuilder.addDefine(
-    "SAMPLE_COUNT",
-    `${sampleCount}`,
-    ShaderDestination.FRAGMENT
-  );
-
-  // Shape specific defines
-  shaderBuilder.addDefine(
-    `SHAPE_${shapeType}`,
-    undefined,
-    ShaderDestination.FRAGMENT
-  );
-
-  for (const key in shapeDefines) {
-    if (shapeDefines.hasOwnProperty(key)) {
-      let value = shapeDefines[key];
-      // if value is undefined, don't define it
-      // if value is true, define it to nothing
-      if (defined(value)) {
-        value = value === true ? undefined : value;
-        shaderBuilder.addDefine(key, value, ShaderDestination.FRAGMENT);
-      }
-    }
-  }
-
-  // Fragment shader uniforms
-
-  // Custom shader uniforms
-  const customShaderUniforms = customShader.uniforms;
-  uniformMap = that._uniformMap = combine(uniformMap, customShader.uniformMap);
-  for (const uniformName in customShaderUniforms) {
-    if (customShaderUniforms.hasOwnProperty(uniformName)) {
-      const uniform = customShaderUniforms[uniformName];
-      shaderBuilder.addUniform(
-        uniform.type,
-        uniformName,
-        ShaderDestination.FRAGMENT
-      );
-    }
-  }
-
-  // The reason this uniform is added by shader builder is because some of the
-  // dynamically generated shader code reads from it.
-  shaderBuilder.addUniform(
-    "sampler2D",
-    "u_megatextureTextures[METADATA_COUNT]",
-    ShaderDestination.FRAGMENT
-  );
-
-  // Fragment shader structs
 
   // PropertyStatistics structs
   for (let i = 0; i < attributeLength; i++) {
@@ -571,91 +347,7 @@ function buildVoxelDrawCommands(that, context) {
       `return ${propertiesFieldName};`,
     ]);
   }
-
-  if (clippingPlanesLength > 0) {
-    // Extract the getClippingPlane function from the getClippingFunction string.
-    // This is a bit of a hack.
-    const functionId = "getClippingPlane";
-    const entireFunction = getClippingFunction(clippingPlanes, context);
-    const functionSignatureBegin = 0;
-    const functionSignatureEnd = entireFunction.indexOf(")") + 1;
-    const functionBodyBegin =
-      entireFunction.indexOf("{", functionSignatureEnd) + 1;
-    const functionBodyEnd = entireFunction.indexOf("}", functionBodyBegin);
-    const functionSignature = entireFunction.slice(
-      functionSignatureBegin,
-      functionSignatureEnd
-    );
-    const functionBody = entireFunction.slice(
-      functionBodyBegin,
-      functionBodyEnd
-    );
-    shaderBuilder.addFunction(
-      functionId,
-      functionSignature,
-      ShaderDestination.FRAGMENT
-    );
-    shaderBuilder.addFunctionLines(functionId, [functionBody]);
-  }
-
-  // Compile shaders
-  const shaderBuilderPick = shaderBuilder.clone();
-  shaderBuilderPick.addDefine("PICKING", undefined, ShaderDestination.FRAGMENT);
-  const shaderProgram = shaderBuilder.buildShaderProgram(context);
-  const shaderProgramPick = shaderBuilderPick.buildShaderProgram(context);
-  const renderState = RenderState.fromCache({
-    cull: {
-      enabled: true,
-      face: CullFace.BACK,
-    },
-    depthTest: {
-      enabled: false,
-    },
-    depthMask: false,
-    // internally the shader does premultiplied alpha, so it makes sense to blend that way too
-    blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
-  });
-
-  // Create the draw commands
-  const viewportQuadVertexArray = context.getViewportQuadVertexArray();
-  const drawCommand = new DrawCommand({
-    vertexArray: viewportQuadVertexArray,
-    primitiveType: PrimitiveType.TRIANGLES,
-    renderState: renderState,
-    shaderProgram: shaderProgram,
-    uniformMap: uniformMap,
-    pass: Pass.VOXELS,
-    executeInClosestFrustum: true,
-    owner: this,
-    cull: depthTest, // don't cull or occlude if depth testing is off
-    occlude: depthTest, // don't cull or occlude if depth testing is off
-  });
-
-  // Create the pick draw command
-  const drawCommandPick = DrawCommand.shallowClone(
-    drawCommand,
-    new DrawCommand()
-  );
-  drawCommandPick.shaderProgram = shaderProgramPick;
-  drawCommandPick.pickOnly = true;
-
-  // Delete the old shader programs
-  if (defined(that._drawCommand)) {
-    const command = that._drawCommand;
-    command.shaderProgram =
-      command.shaderProgram && command.shaderProgram.destroy();
-  }
-  if (defined(that._drawCommandPick)) {
-    const command = that._drawCommandPick;
-    command.shaderProgram =
-      command.shaderProgram && command.shaderProgram.destroy();
-  }
-
-  that._drawCommand = drawCommand;
-  that._drawCommandPick = drawCommandPick;
 }
-
-// Shader builder helpers
 
 /**
  * Converts a {@link MetadataType} to a GLSL type.
@@ -760,4 +452,4 @@ function getGlslField(type, index) {
   return `[${index}]`;
 }
 
-export default buildVoxelDrawCommands;
+export default processVoxelProperties;

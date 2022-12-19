@@ -309,26 +309,27 @@ VoxelTraversal.prototype.update = function (
     recomputeBoundingVolumesRecursive(this, this.rootNode);
   }
 
-  if (!pauseUpdate) {
-    this._frameNumber = frameState.frameNumber;
-    const timestamp0 = getTimestamp();
-    loadAndUnload(this, frameState);
-    const timestamp1 = getTimestamp();
-    generateOctree(this, sampleCount, levelBlendFactor);
-    const timestamp2 = getTimestamp();
+  if (pauseUpdate) {
+    return;
+  }
 
-    const debugStatistics = this._debugPrint;
-    if (debugStatistics) {
-      const loadAndUnloadTimeMs = timestamp1 - timestamp0;
-      const generateOctreeTimeMs = timestamp2 - timestamp1;
-      const totalTimeMs = timestamp2 - timestamp0;
-      printDebugInformation(
-        this,
-        loadAndUnloadTimeMs,
-        generateOctreeTimeMs,
-        totalTimeMs
-      );
-    }
+  this._frameNumber = frameState.frameNumber;
+  const timestamp0 = getTimestamp();
+  loadAndUnload(this, frameState);
+  const timestamp1 = getTimestamp();
+  generateOctree(this, sampleCount, levelBlendFactor);
+  const timestamp2 = getTimestamp();
+
+  if (this._debugPrint) {
+    const loadAndUnloadTimeMs = timestamp1 - timestamp0;
+    const generateOctreeTimeMs = timestamp2 - timestamp1;
+    const totalTimeMs = timestamp2 - timestamp0;
+    printDebugInformation(
+      this,
+      loadAndUnloadTimeMs,
+      generateOctreeTimeMs,
+      totalTimeMs
+    );
   }
 };
 
@@ -431,7 +432,7 @@ function requestData(that, keyframeNode) {
   const tileY = spatialNode.y;
   const tileZ = spatialNode.z;
 
-  const postRequestSuccess = function (result) {
+  function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
     const length = primitive._provider.types.length;
 
@@ -445,14 +446,12 @@ function requestData(that, keyframeNode) {
     } else {
       const megatextures = that.megatextures;
       for (let i = 0; i < length; i++) {
-        const megatexture = megatextures[i];
-        const tileVoxelCount =
-          megatexture.voxelCountPerTile.x *
-          megatexture.voxelCountPerTile.y *
-          megatexture.voxelCountPerTile.z;
+        const { voxelCountPerTile, channelCount } = megatextures[i];
+        const { x, y, z } = voxelCountPerTile;
+        const tileVoxelCount = x * y * z;
 
         const data = result[i];
-        const expectedLength = tileVoxelCount * megatexture.channelCount;
+        const expectedLength = tileVoxelCount * channelCount;
         if (data.length === expectedLength) {
           keyframeNode.metadatas[i] = data;
           // State is received only when all metadata requests have been received
@@ -463,12 +462,12 @@ function requestData(that, keyframeNode) {
         }
       }
     }
-  };
+  }
 
-  const postRequestFailure = function () {
+  function postRequestFailure() {
     that._simultaneousRequestCount--;
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
-  };
+  }
 
   const promise = provider.requestData({
     tileLevel: tileLevel,
@@ -555,44 +554,18 @@ function loadAndUnload(that, frameState) {
     // If they already exist, nothing will be created.
     if (keyframeCount === 1) {
       spatialNode.createKeyframeNode(0);
-    } else {
-      // // Always keep two keyframes loaded even if the playhead is directly on a keyframe.
-      // spatialNode.createKeyframeNode(previousKeyframe);
-      // spatialNode.createKeyframeNode(nextKeyframe);
-
-      // Create all keyframes
-      // eslint-disable-next-line no-lonely-if
-      if (spatialNode.keyframeNodes.length !== keyframeCount) {
-        for (let k = 0; k < keyframeCount; k++) {
-          spatialNode.createKeyframeNode(k);
-        }
+    } else if (spatialNode.keyframeNodes.length !== keyframeCount) {
+      for (let k = 0; k < keyframeCount; k++) {
+        spatialNode.createKeyframeNode(k);
       }
     }
     const ssePriority = mapInfiniteRangeToZeroOne(spatialNode.screenSpaceError);
 
     let hasLoadedKeyframe = false;
     const keyframeNodes = spatialNode.keyframeNodes;
-    for (
-      let keyframeIndex = 0;
-      keyframeIndex < keyframeNodes.length;
-      keyframeIndex++
-    ) {
-      const keyframeNode = keyframeNodes[keyframeIndex];
+    for (let i = 0; i < keyframeNodes.length; i++) {
+      const keyframeNode = keyframeNodes[i];
       const keyframe = keyframeNode.keyframe;
-
-      // // Prioritize all keyframes equally
-      // keyframeNode.priority = ssePriority;
-
-      // // Prioritize ONLY keyframes adjacent to the playhead
-      // keyframeNode.priority = ssePriority;
-      // if (keyframe !== previousKeyframe && keyframe !== nextKeyframe) {
-      //     keyframeNode.priority = -Number.MAX_VALUE;
-      // }
-
-      // // Prioritize keyframes closest to the playhead
-      // keyframeNode.priority = ssePriority;
-      // const keyframeDifference = Math.min(Math.abs(keyframe - previousKeyframe), Math.abs(keyframe - nextKeyframe));
-      // keyframeNode.priority -= keyframeDifference;
 
       // Balanced prioritization
       const keyframeDifference = Math.min(
@@ -632,98 +605,30 @@ function loadAndUnload(that, frameState) {
 
     const meetsScreenSpaceError =
       spatialNode.screenSpaceError < targetScreenSpaceError;
-    if (!meetsScreenSpaceError && hasLoadedKeyframe) {
-      if (!defined(spatialNode.children)) {
-        const childLevel = spatialNode.level + 1;
-        const childXMin = spatialNode.x * 2 + 0;
-        const childXMax = spatialNode.x * 2 + 1;
-        const childYMin = spatialNode.y * 2 + 0;
-        const childYMax = spatialNode.y * 2 + 1;
-        const childZMin = spatialNode.z * 2 + 0;
-        const childZMax = spatialNode.z * 2 + 1;
-
-        spatialNode.children = new Array(
-          new SpatialNode(
-            childLevel,
-            childXMin,
-            childYMin,
-            childZMin,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMax,
-            childYMin,
-            childZMin,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMin,
-            childYMax,
-            childZMin,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMax,
-            childYMax,
-            childZMin,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMin,
-            childYMin,
-            childZMax,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMax,
-            childYMin,
-            childZMax,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMin,
-            childYMax,
-            childZMax,
-            spatialNode,
-            shape,
-            voxelDimensions
-          ),
-          new SpatialNode(
-            childLevel,
-            childXMax,
-            childYMax,
-            childZMax,
-            spatialNode,
-            shape,
-            voxelDimensions
-          )
-        );
-      }
-      for (let childIndex = 0; childIndex < 8; childIndex++) {
-        const child = spatialNode.children[childIndex];
-        addToQueueRecursive(child, visibilityPlaneMask);
-      }
-    } else {
+    if (meetsScreenSpaceError || !hasLoadedKeyframe) {
       // Free up memory
       spatialNode.children = undefined;
+      return;
+    }
+
+    if (!defined(spatialNode.children)) {
+      const childCoords = getChildCoords(spatialNode);
+      const childLevel = spatialNode.level + 1;
+      spatialNode.children = childCoords.map(([x, y, z]) => {
+        return new SpatialNode(
+          childLevel,
+          x,
+          y,
+          z,
+          spatialNode,
+          shape,
+          voxelDimensions
+        );
+      });
+    }
+    for (let childIndex = 0; childIndex < 8; childIndex++) {
+      const child = spatialNode.children[childIndex];
+      addToQueueRecursive(child, visibilityPlaneMask);
     }
   }
 
@@ -799,6 +704,33 @@ function loadAndUnload(that, frameState) {
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
   }
+}
+
+/**
+ * Compute the X, Y, Z coordinates of the children of a node
+ * @param {SpatialNode} spatialNode The parent node
+ * @returns {Array[]} Child coordinate arrays
+ * @private
+ */
+function getChildCoords(spatialNode) {
+  const { x, y, z } = spatialNode;
+  const xMin = x * 2;
+  const yMin = y * 2;
+  const zMin = z * 2;
+  const yMax = yMin + 1;
+  const xMax = xMin + 1;
+  const zMax = zMin + 1;
+
+  return [
+    [xMin, yMin, zMin],
+    [xMax, yMin, zMin],
+    [xMin, yMax, zMin],
+    [xMax, yMax, zMin],
+    [xMin, yMin, zMax],
+    [xMax, yMin, zMax],
+    [xMin, yMax, zMax],
+    [xMax, yMax, zMax],
+  ];
 }
 
 /**
@@ -936,7 +868,7 @@ const GpuOctreeFlag = {
  * @private
  */
 function generateOctree(that, sampleCount, levelBlendFactor) {
-  const primitive = that._primitive;
+  const targetSse = that._primitive._screenSpaceError;
   const keyframeLocation = that._keyframeLocation;
   const frameNumber = that._frameNumber;
   const useLeafNodes = sampleCount >= 2;
@@ -999,52 +931,25 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
       // Recursion stops here because there are no renderable children
       if (useLeafNodes) {
         const baseIdx = leafNodeCount * 5;
+        const keyframeNode = node.renderableKeyframeNodePrevious;
+        const levelDifference = node.level - keyframeNode.spatialNode.level;
 
-        const useTimeDynamic = false;
-        if (useTimeDynamic) {
-          const previousKeyframeNode = node.renderableKeyframeNodePrevious;
-          const nextKeyframeNode = node.renderableKeyframeNodeNext;
-          const prevKeyframeLevel = previousKeyframeNode.spatialNode.level;
-          const nextKeyframeLevel = nextKeyframeNode.spatialNode.level;
-          const prevKeyframeLevelDifference = node.level - prevKeyframeLevel;
-          const nextKeyframeLevelDifference = node.level - nextKeyframeLevel;
+        const parentNode = keyframeNode.spatialNode.parent;
+        const parentKeyframeNode = defined(parentNode)
+          ? parentNode.renderableKeyframeNodePrevious
+          : keyframeNode;
 
-          leafNodeOctreeData[baseIdx + 0] = node.renderableKeyframeNodeLerp;
-          leafNodeOctreeData[baseIdx + 1] = prevKeyframeLevelDifference;
-          leafNodeOctreeData[baseIdx + 2] = nextKeyframeLevelDifference;
-          leafNodeOctreeData[baseIdx + 3] =
-            previousKeyframeNode.megatextureIndex;
-          leafNodeOctreeData[baseIdx + 4] = nextKeyframeNode.megatextureIndex;
-        } else {
-          const keyframeNode = node.renderableKeyframeNodePrevious;
-          const levelDifference = node.level - keyframeNode.spatialNode.level;
+        const lodLerp = getLodLerp(node, targetSse, levelBlendFactor);
+        const levelDifferenceChild = levelDifference;
+        const levelDifferenceParent = 1;
+        const megatextureIndexChild = keyframeNode.megatextureIndex;
+        const megatextureIndexParent = parentKeyframeNode.megatextureIndex;
 
-          const parentNode = keyframeNode.spatialNode.parent;
-          const parentKeyframeNode = defined(parentNode)
-            ? parentNode.renderableKeyframeNodePrevious
-            : keyframeNode;
-
-          let lodLerp = 0.0;
-          if (node.parent !== undefined) {
-            const sse = node.screenSpaceError;
-            const parentSse = node.parent.screenSpaceError;
-            const targetSse = primitive._screenSpaceError;
-            lodLerp = (targetSse - sse) / (parentSse - sse);
-            lodLerp = (lodLerp + levelBlendFactor - 1.0) / levelBlendFactor;
-            lodLerp = CesiumMath.clamp(lodLerp, 0.0, 1.0);
-          }
-
-          const levelDifferenceChild = levelDifference;
-          const levelDifferenceParent = 1;
-          const megatextureIndexChild = keyframeNode.megatextureIndex;
-          const megatextureIndexParent = parentKeyframeNode.megatextureIndex;
-
-          leafNodeOctreeData[baseIdx + 0] = lodLerp;
-          leafNodeOctreeData[baseIdx + 1] = levelDifferenceChild;
-          leafNodeOctreeData[baseIdx + 2] = levelDifferenceParent;
-          leafNodeOctreeData[baseIdx + 3] = megatextureIndexChild;
-          leafNodeOctreeData[baseIdx + 4] = megatextureIndexParent;
-        }
+        leafNodeOctreeData[baseIdx + 0] = lodLerp;
+        leafNodeOctreeData[baseIdx + 1] = levelDifferenceChild;
+        leafNodeOctreeData[baseIdx + 2] = levelDifferenceParent;
+        leafNodeOctreeData[baseIdx + 3] = megatextureIndexChild;
+        leafNodeOctreeData[baseIdx + 4] = megatextureIndexParent;
 
         internalNodeOctreeData[parentEntryIndex] =
           (GpuOctreeFlag.LEAF << 16) | leafNodeCount;
@@ -1068,111 +973,6 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
     buildOctree(rootNode, 0, 0, 0, 0);
   }
 
-  /**
-   * @ignore
-   * @param {Number[]} data
-   * @param {Number} texelsPerTile
-   * @param {Number} tilesPerRow
-   * @param {Texture} texture
-   */
-  function copyToInternalNodeTexture(
-    data,
-    texelsPerTile,
-    tilesPerRow,
-    texture
-  ) {
-    const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
-    const tileCount = Math.ceil(data.length / texelsPerTile);
-    const copyWidth = Math.max(
-      1,
-      texelsPerTile * Math.min(tileCount, tilesPerRow)
-    );
-    const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
-
-    const textureData = new Uint8Array(copyWidth * copyHeight * channelCount);
-    for (let i = 0; i < data.length; i++) {
-      const val = data[i];
-      const startIndex = i * channelCount;
-      for (let j = 0; j < channelCount; j++) {
-        textureData[startIndex + j] = (val >>> (j * 8)) & 0xff;
-      }
-    }
-
-    const source = {
-      arrayBufferView: textureData,
-      width: copyWidth,
-      height: copyHeight,
-    };
-
-    const copyOptions = {
-      source: source,
-      xOffset: 0,
-      yOffset: 0,
-    };
-
-    texture.copyFrom(copyOptions);
-  }
-
-  /**
-   * @ignore
-   * @param {Number[]} data
-   * @param {Number} texelsPerTile
-   * @param {Number} tilesPerRow
-   * @param {Texture} texture
-   */
-  function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
-    const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
-    const datasPerTile = 5;
-    const tileCount = Math.ceil(data.length / datasPerTile);
-    const copyWidth = Math.max(
-      1,
-      texelsPerTile * Math.min(tileCount, tilesPerRow)
-    );
-    const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
-
-    const textureData = new Uint8Array(copyWidth * copyHeight * channelCount);
-    for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
-      const timeLerp = data[tileIndex * datasPerTile + 0];
-      const previousKeyframeLevelsAbove = data[tileIndex * datasPerTile + 1];
-      const nextKeyframeLevelsAbove = data[tileIndex * datasPerTile + 2];
-      const previousKeyframeMegatextureIndex =
-        data[tileIndex * datasPerTile + 3];
-      const nextKeyframeMegatextureIndex = data[tileIndex * datasPerTile + 4];
-
-      const timeLerpCompressed = CesiumMath.clamp(
-        Math.floor(65536 * timeLerp),
-        0,
-        65535
-      );
-      textureData[tileIndex * 8 + 0] = (timeLerpCompressed >>> 0) & 0xff;
-      textureData[tileIndex * 8 + 1] = (timeLerpCompressed >>> 8) & 0xff;
-      textureData[tileIndex * 8 + 2] = previousKeyframeLevelsAbove & 0xff;
-      textureData[tileIndex * 8 + 3] = nextKeyframeLevelsAbove & 0xff;
-      textureData[tileIndex * 8 + 4] =
-        (previousKeyframeMegatextureIndex >>> 0) & 0xff;
-      textureData[tileIndex * 8 + 5] =
-        (previousKeyframeMegatextureIndex >>> 8) & 0xff;
-      textureData[tileIndex * 8 + 6] =
-        (nextKeyframeMegatextureIndex >>> 0) & 0xff;
-      textureData[tileIndex * 8 + 7] =
-        (nextKeyframeMegatextureIndex >>> 8) & 0xff;
-    }
-
-    const source = {
-      arrayBufferView: textureData,
-      width: copyWidth,
-      height: copyHeight,
-    };
-
-    const copyOptions = {
-      source: source,
-      xOffset: 0,
-      yOffset: 0,
-    };
-
-    texture.copyFrom(copyOptions);
-  }
-
   copyToInternalNodeTexture(
     internalNodeOctreeData,
     9,
@@ -1187,6 +987,127 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
       that.leafNodeTexture
     );
   }
+}
+
+/**
+ * Compute an interpolation factor between a node and its parent
+ * @param {SpatialNode} node
+ * @param {Number} targetSse
+ * @param {Number} levelBlendFactor
+ * @returns {Number}
+ * @private
+ */
+function getLodLerp(node, targetSse, levelBlendFactor) {
+  if (node.parent === undefined) {
+    return 0.0;
+  }
+  const sse = node.screenSpaceError;
+  const parentSse = node.parent.screenSpaceError;
+  const lodLerp = (targetSse - sse) / (parentSse - sse);
+  const blended = (lodLerp + levelBlendFactor - 1.0) / levelBlendFactor;
+
+  return CesiumMath.clamp(blended, 0.0, 1.0);
+}
+
+/**
+ *
+ * @param {Number[]} data
+ * @param {Number} texelsPerTile
+ * @param {Number} tilesPerRow
+ * @param {Texture} texture
+ * @private
+ */
+function copyToInternalNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
+  const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
+  const tileCount = Math.ceil(data.length / texelsPerTile);
+  const copyWidth = Math.max(
+    1,
+    texelsPerTile * Math.min(tileCount, tilesPerRow)
+  );
+  const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
+
+  const textureData = new Uint8Array(copyWidth * copyHeight * channelCount);
+  for (let i = 0; i < data.length; i++) {
+    const val = data[i];
+    const startIndex = i * channelCount;
+    for (let j = 0; j < channelCount; j++) {
+      textureData[startIndex + j] = (val >>> (j * 8)) & 0xff;
+    }
+  }
+
+  const source = {
+    arrayBufferView: textureData,
+    width: copyWidth,
+    height: copyHeight,
+  };
+
+  const copyOptions = {
+    source: source,
+    xOffset: 0,
+    yOffset: 0,
+  };
+
+  texture.copyFrom(copyOptions);
+}
+
+/**
+ *
+ * @param {Number[]} data
+ * @param {Number} texelsPerTile
+ * @param {Number} tilesPerRow
+ * @param {Texture} texture
+ * @private
+ */
+function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
+  const channelCount = PixelFormat.componentsLength(texture.pixelFormat);
+  const datasPerTile = 5;
+  const tileCount = Math.ceil(data.length / datasPerTile);
+  const copyWidth = Math.max(
+    1,
+    texelsPerTile * Math.min(tileCount, tilesPerRow)
+  );
+  const copyHeight = Math.max(1, Math.ceil(tileCount / tilesPerRow));
+
+  const textureData = new Uint8Array(copyWidth * copyHeight * channelCount);
+  for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
+    const timeLerp = data[tileIndex * datasPerTile + 0];
+    const previousKeyframeLevelsAbove = data[tileIndex * datasPerTile + 1];
+    const nextKeyframeLevelsAbove = data[tileIndex * datasPerTile + 2];
+    const previousKeyframeMegatextureIndex = data[tileIndex * datasPerTile + 3];
+    const nextKeyframeMegatextureIndex = data[tileIndex * datasPerTile + 4];
+
+    const timeLerpCompressed = CesiumMath.clamp(
+      Math.floor(65536 * timeLerp),
+      0,
+      65535
+    );
+    textureData[tileIndex * 8 + 0] = (timeLerpCompressed >>> 0) & 0xff;
+    textureData[tileIndex * 8 + 1] = (timeLerpCompressed >>> 8) & 0xff;
+    textureData[tileIndex * 8 + 2] = previousKeyframeLevelsAbove & 0xff;
+    textureData[tileIndex * 8 + 3] = nextKeyframeLevelsAbove & 0xff;
+    textureData[tileIndex * 8 + 4] =
+      (previousKeyframeMegatextureIndex >>> 0) & 0xff;
+    textureData[tileIndex * 8 + 5] =
+      (previousKeyframeMegatextureIndex >>> 8) & 0xff;
+    textureData[tileIndex * 8 + 6] =
+      (nextKeyframeMegatextureIndex >>> 0) & 0xff;
+    textureData[tileIndex * 8 + 7] =
+      (nextKeyframeMegatextureIndex >>> 8) & 0xff;
+  }
+
+  const source = {
+    arrayBufferView: textureData,
+    width: copyWidth,
+    height: copyHeight,
+  };
+
+  const copyOptions = {
+    source: source,
+    xOffset: 0,
+    yOffset: 0,
+  };
+
+  texture.copyFrom(copyOptions);
 }
 
 /**
