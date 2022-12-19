@@ -2247,6 +2247,7 @@ function updateZoomTarget(viewer) {
           boundingSphere.radius
         );
       }
+
       options = {
         offset: zoomOptions.offset,
         duration: zoomOptions.duration,
@@ -2258,14 +2259,17 @@ function updateZoomTarget(viewer) {
           viewer._completeZoom(false);
         },
       };
+
       if (viewer._zoomIsFlight) {
         camera.flyToBoundingSphere(boundingSphere, options);
       } else {
         camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
         camera.lookAtTransform(Matrix4.IDENTITY);
+
         // Finish the promise
         viewer._completeZoom(true);
       }
+
       clearZoom(viewer);
     });
   }
