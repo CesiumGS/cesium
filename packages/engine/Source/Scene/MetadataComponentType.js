@@ -1,5 +1,6 @@
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 
@@ -107,15 +108,11 @@ const MetadataComponentType = {
  * @param {MetadataComponentType} type The type.
  * @returns {Number|BigInt} The minimum value.
  *
- * @exception {DeveloperError} type must be a numeric type
- *
  * @private
  */
 MetadataComponentType.getMinimum = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
-    throw new DeveloperError("type must be a numeric type");
-  }
+  Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
   switch (type) {
@@ -159,15 +156,11 @@ MetadataComponentType.getMinimum = function (type) {
  * @param {MetadataComponentType} type The type.
  * @returns {Number|BigInt} The maximum value.
  *
- * @exception {DeveloperError} type must be a numeric type
- *
  * @private
  */
 MetadataComponentType.getMaximum = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
-    throw new DeveloperError("type must be a numeric type");
-  }
+  Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
   switch (type) {
@@ -200,36 +193,6 @@ MetadataComponentType.getMaximum = function (type) {
       return 340282346638528859811704183484516925440.0;
     case MetadataComponentType.FLOAT64:
       return Number.MAX_VALUE;
-  }
-};
-
-/**
- * Returns whether the type is a numeric type.
- *
- * @param {MetadataComponentType} type The type.
- * @returns {Boolean} Whether the type is a numeric type.
- *
- * @private
- */
-MetadataComponentType.isNumericType = function (type) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
-  //>>includeEnd('debug');
-
-  switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
-    case MetadataComponentType.FLOAT32:
-    case MetadataComponentType.FLOAT64:
-      return true;
-    default:
-      return false;
   }
 };
 
@@ -415,16 +378,13 @@ MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
  * @param {MetadataComponentType} type The type.
  * @returns {Number} The size in bytes.
  *
- * @exception {DeveloperError} type must be a numeric type
- *
  * @private
  */
 MetadataComponentType.getSizeInBytes = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
-    throw new DeveloperError("type must be a numeric type");
-  }
+  Check.typeOf.string("type", type);
   //>>includeEnd('debug');
+
   switch (type) {
     case MetadataComponentType.INT8:
     case MetadataComponentType.UINT8:
@@ -442,6 +402,72 @@ MetadataComponentType.getSizeInBytes = function (type) {
       return 4;
     case MetadataComponentType.FLOAT64:
       return 8;
+  }
+};
+
+/**
+ * Gets the {@link MetadataComponentType} from a {@link ComponentDatatype}.
+ *
+ * @param {ComponentDatatype} componentDatatype The component datatype.
+ * @returns {MetadataComponentType} The metadata component type.
+ *
+ * @private
+ */
+MetadataComponentType.fromComponentDatatype = function (componentDatatype) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("componentDatatype", componentDatatype);
+  //>>includeEnd('debug');
+
+  switch (componentDatatype) {
+    case ComponentDatatype.BYTE:
+      return MetadataComponentType.INT8;
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return MetadataComponentType.UINT8;
+    case ComponentDatatype.SHORT:
+      return MetadataComponentType.INT16;
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return MetadataComponentType.UINT16;
+    case ComponentDatatype.INT:
+      return MetadataComponentType.INT32;
+    case ComponentDatatype.UNSIGNED_INT:
+      return MetadataComponentType.UINT32;
+    case ComponentDatatype.FLOAT:
+      return MetadataComponentType.FLOAT32;
+    case ComponentDatatype.DOUBLE:
+      return MetadataComponentType.FLOAT64;
+  }
+};
+
+/**
+ * Gets the {@link ComponentDatatype} from a {@link MetadataComponentType}.
+ *
+ * @param {MetadataComponentType} type The metadata component datatype.
+ * @returns {ComponentDatatype} The component datatype.
+ *
+ * @private
+ */
+MetadataComponentType.toComponentDatatype = function (type) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("type", type);
+  //>>includeEnd('debug');
+
+  switch (type) {
+    case MetadataComponentType.INT8:
+      return ComponentDatatype.BYTE;
+    case MetadataComponentType.UINT8:
+      return ComponentDatatype.UNSIGNED_BYTE;
+    case MetadataComponentType.INT16:
+      return ComponentDatatype.SHORT;
+    case MetadataComponentType.UINT16:
+      return ComponentDatatype.UNSIGNED_SHORT;
+    case MetadataComponentType.INT32:
+      return ComponentDatatype.INT;
+    case MetadataComponentType.UINT32:
+      return ComponentDatatype.UNSIGNED_INT;
+    case MetadataComponentType.FLOAT32:
+      return ComponentDatatype.FLOAT;
+    case MetadataComponentType.FLOAT64:
+      return ComponentDatatype.DOUBLE;
   }
 };
 
