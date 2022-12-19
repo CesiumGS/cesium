@@ -1,4 +1,8 @@
-import { FeatureDetection, MetadataComponentType } from "../../index.js";
+import {
+  ComponentDatatype,
+  FeatureDetection,
+  MetadataComponentType,
+} from "../../index.js";
 
 describe("Scene/MetadataComponentType", function () {
   it("getMinimum", function () {
@@ -130,45 +134,6 @@ describe("Scene/MetadataComponentType", function () {
   it("getMaximum throws if type is not a numeric type", function () {
     expect(function () {
       MetadataComponentType.getMaximum(MetadataComponentType.STRING);
-    }).toThrowDeveloperError();
-  });
-
-  it("isNumericType", function () {
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.INT8)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.UINT8)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.INT16)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.UINT16)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.INT32)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.UINT32)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.INT64)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.UINT64)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.FLOAT32)
-    ).toBe(true);
-    expect(
-      MetadataComponentType.isNumericType(MetadataComponentType.FLOAT64)
-    ).toBe(true);
-  });
-
-  it("isNumericType throws without type", function () {
-    expect(function () {
-      MetadataComponentType.isNumericType();
     }).toThrowDeveloperError();
   });
 
@@ -522,6 +487,90 @@ describe("Scene/MetadataComponentType", function () {
   it("getSizeInBytes throws if type is not a numeric type", function () {
     expect(function () {
       MetadataComponentType.getSizeInBytes(MetadataComponentType.STRING);
+    }).toThrowDeveloperError();
+  });
+
+  it("fromComponentDatatype", function () {
+    expect(
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.BYTE)
+    ).toBe(MetadataComponentType.INT8);
+    expect(
+      MetadataComponentType.fromComponentDatatype(
+        ComponentDatatype.UNSIGNED_BYTE
+      )
+    ).toBe(MetadataComponentType.UINT8);
+    expect(
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.SHORT)
+    ).toBe(MetadataComponentType.INT16);
+    expect(
+      MetadataComponentType.fromComponentDatatype(
+        ComponentDatatype.UNSIGNED_SHORT
+      )
+    ).toBe(MetadataComponentType.UINT16);
+    expect(
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.INT)
+    ).toBe(MetadataComponentType.INT32);
+    expect(
+      MetadataComponentType.fromComponentDatatype(
+        ComponentDatatype.UNSIGNED_INT
+      )
+    ).toBe(MetadataComponentType.UINT32);
+    expect(
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.FLOAT)
+    ).toBe(MetadataComponentType.FLOAT32);
+    expect(
+      MetadataComponentType.fromComponentDatatype(ComponentDatatype.DOUBLE)
+    ).toBe(MetadataComponentType.FLOAT64);
+  });
+
+  it("fromComponentDatatype throws without componentDatatype", function () {
+    expect(function () {
+      MetadataComponentType.fromComponentDatatype();
+    }).toThrowDeveloperError();
+  });
+
+  it("toComponentDatatype", function () {
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT8)
+    ).toBe(ComponentDatatype.BYTE);
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT8)
+    ).toBe(ComponentDatatype.UNSIGNED_BYTE);
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT16)
+    ).toBe(ComponentDatatype.SHORT);
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT16)
+    ).toBe(ComponentDatatype.UNSIGNED_SHORT);
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT32)
+    ).toBe(ComponentDatatype.INT);
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT32)
+    ).toBe(ComponentDatatype.UNSIGNED_INT);
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.FLOAT32)
+    ).toBe(ComponentDatatype.FLOAT);
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.FLOAT64)
+    ).toBe(ComponentDatatype.DOUBLE);
+  });
+
+  it("toComponentDatatype returns undefined for INT64", function () {
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.INT64)
+    ).toBeUndefined();
+  });
+
+  it("toComponentDatatype returns undefined for UINT64", function () {
+    expect(
+      MetadataComponentType.toComponentDatatype(MetadataComponentType.UINT64)
+    ).toBeUndefined();
+  });
+
+  it("toComponentDatatype throws without type", function () {
+    expect(function () {
+      MetadataComponentType.toComponentDatatype();
     }).toThrowDeveloperError();
   });
 });

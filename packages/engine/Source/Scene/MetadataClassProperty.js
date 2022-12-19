@@ -450,7 +450,7 @@ function isLegacy(property) {
 
   // EXT_feature_metadata allowed numeric types as a type. Now they are
   // represented as {type: SINGLE, componentType: type}
-  if (MetadataComponentType.isNumericType(type)) {
+  if (defined(MetadataComponentType[type])) {
     return true;
   }
 
@@ -585,10 +585,7 @@ function parseType(property, enums) {
 
   // Both EXT_feature_metadata and EXT_structural_metadata allow numeric types like
   // INT32 or FLOAT64 as a componentType.
-  if (
-    defined(componentType) &&
-    MetadataComponentType.isNumericType(componentType)
-  ) {
+  if (defined(componentType) && defined(MetadataComponentType[componentType])) {
     return {
       type: MetadataType.SCALAR,
       componentType: componentType,
@@ -602,7 +599,7 @@ function parseType(property, enums) {
 
   // EXT_feature_metadata: integer and float types were allowed as types,
   // but now these are expressed as {type: SCALAR, componentType: type}
-  if (MetadataComponentType.isNumericType(type)) {
+  if (defined(MetadataComponentType[type])) {
     return {
       type: MetadataType.SCALAR,
       componentType: type,
