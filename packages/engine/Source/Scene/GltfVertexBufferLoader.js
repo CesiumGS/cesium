@@ -67,7 +67,7 @@ function GltfVertexBufferLoader(options) {
   }
 
   const hasBufferViewId = defined(bufferViewId);
-  const hasDraco = defined(draco);
+  const hasDraco = hasDracoCompression(draco, attributeSemantic);
   const hasAttributeSemantic = defined(attributeSemantic);
   const hasAccessorId = defined(accessorId);
 
@@ -196,6 +196,14 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
   },
 });
 
+function hasDracoCompression(draco, semantic) {
+  return (
+    defined(draco) &&
+    defined(draco.attributes) &&
+    defined(draco.attributes[semantic])
+  );
+}
+
 /**
  * Loads the resource.
  * @returns {Promise.<GltfVertexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
@@ -204,7 +212,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
 GltfVertexBufferLoader.prototype.load = function () {
   let promise;
 
-  if (defined(this._draco)) {
+  if (hasDracoCompression(this._draco, this._attributeSemantic)) {
     promise = loadFromDraco(this);
   } else {
     promise = loadFromBufferView(this);

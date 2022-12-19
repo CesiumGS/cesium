@@ -935,6 +935,29 @@ describe(
       });
     });
 
+    it("renders in CV after draw commands are reset", function () {
+      return loadAndZoomToModel(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+        },
+        sceneCV
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        scene.camera.moveBackward(1.0);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: sceneCV,
+        });
+
+        model._drawCommandsBuilt = false;
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: sceneCV,
+        });
+      });
+    });
+
     it("projectTo2D works for 2D", function () {
       return loadAndZoomToModel(
         {

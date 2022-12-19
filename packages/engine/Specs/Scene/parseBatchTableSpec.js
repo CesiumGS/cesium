@@ -744,4 +744,34 @@ describe("Scene/parseBatchTable", function () {
     const windProperty = properties.windDirection;
     expect(windProperty.attribute).toBe("_WINDDIRECTION");
   });
+
+  it("logs a warning and converts integer attribute property to float", function () {
+    const binaryBatchTable = {
+      height: {
+        byteOffset: 0,
+        componentType: "INT",
+        type: "SCALAR",
+      },
+    };
+
+    const heightValues = new Int32Array([10, 15, 25]);
+    const binaryBody = new Uint8Array(heightValues.buffer);
+
+    spyOn(parseBatchTable, "_oneTimeWarning");
+    const customAttributes = [];
+    parseBatchTable({
+      count: 3,
+      batchTable: binaryBatchTable,
+      binaryBody: binaryBody,
+      parseAsPropertyAttributes: true,
+      customAttributeOutput: customAttributes,
+    });
+    expect(customAttributes.length).toBe(1);
+    const [heightAttribute] = customAttributes.sort(sortByName);
+    expect(heightAttribute.name).toBe("_HEIGHT");
+    expect(heightAttribute.count).toBe(3);
+    expect(heightAttribute.type).toBe("SCALAR");
+    expect(heightAttribute.componentDatatype).toBe(ComponentDatatype.FLOAT);
+    expect(parseBatchTable._oneTimeWarning).toHaveBeenCalled();
+  });
 });
