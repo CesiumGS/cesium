@@ -108,8 +108,6 @@ const MetadataComponentType = {
  * @param {MetadataComponentType} type The type.
  * @returns {Number|BigInt} The minimum value.
  *
- * @exception {DeveloperError} type must be a numeric type
- *
  * @private
  */
 MetadataComponentType.getMinimum = function (type) {
@@ -157,8 +155,6 @@ MetadataComponentType.getMinimum = function (type) {
  *
  * @param {MetadataComponentType} type The type.
  * @returns {Number|BigInt} The maximum value.
- *
- * @exception {DeveloperError} type must be a numeric type
  *
  * @private
  */
@@ -381,8 +377,6 @@ MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
  *
  * @param {MetadataComponentType} type The type.
  * @returns {Number} The size in bytes.
- *
- * @exception {DeveloperError} type must be a numeric type
  *
  * @private
  */
