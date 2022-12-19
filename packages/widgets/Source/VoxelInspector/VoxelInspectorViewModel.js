@@ -122,6 +122,36 @@ function VoxelInspectorViewModel(scene) {
   }
 
   addProperty({
+    name: "inspectorVisible",
+    initialValue: true,
+  });
+
+  addProperty({
+    name: "displayVisible",
+    initialValue: false,
+  });
+
+  addProperty({
+    name: "transformVisible",
+    initialValue: false,
+  });
+
+  addProperty({
+    name: "boundsVisible",
+    initialValue: false,
+  });
+
+  addProperty({
+    name: "clippingVisible",
+    initialValue: false,
+  });
+
+  addProperty({
+    name: "shaderVisible",
+    initialValue: false,
+  });
+
+  addProperty({
     name: "shaderString",
     initialValue: "",
     getPrimitiveFunction: function () {
@@ -750,8 +780,49 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
 });
 
 /**
+ * Toggles the inspector visibility
+ */
+VoxelInspectorViewModel.prototype.toggleInspector = function () {
+  this.inspectorVisible = !this.inspectorVisible;
+};
+
+/**
+ * Toggles the visibility of the display section
+ */
+VoxelInspectorViewModel.prototype.toggleDisplay = function () {
+  this.displayVisible = !this.displayVisible;
+};
+
+/**
+ * Toggles the visibility of the transform section
+ */
+VoxelInspectorViewModel.prototype.toggleTransform = function () {
+  this.transformVisible = !this.transformVisible;
+};
+
+/**
+ * Toggles the visibility of the bounds section
+ */
+VoxelInspectorViewModel.prototype.toggleBounds = function () {
+  this.boundsVisible = !this.boundsVisible;
+};
+
+/**
+ * Toggles the visibility of the clipping section
+ */
+VoxelInspectorViewModel.prototype.toggleClipping = function () {
+  this.clippingVisible = !this.clippingVisible;
+};
+
+/**
+ * Toggles the visibility of the shader section
+ */
+VoxelInspectorViewModel.prototype.toggleShader = function () {
+  this.shaderVisible = !this.shaderVisible;
+};
+
+/**
  * Compiles the shader in the shader editor.
- * @private
  */
 VoxelInspectorViewModel.prototype.compileShader = function () {
   if (defined(this._voxelPrimitive)) {
@@ -765,7 +836,6 @@ VoxelInspectorViewModel.prototype.compileShader = function () {
 
 /**
  * Handles key press events on the shader editor.
- * @private
  */
 VoxelInspectorViewModel.prototype.shaderEditorKeyPress = function (
   sender,
