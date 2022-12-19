@@ -114,9 +114,7 @@ const MetadataComponentType = {
  */
 MetadataComponentType.getMinimum = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
-    throw new DeveloperError("type must be a numeric type");
-  }
+  Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
   switch (type) {
@@ -166,9 +164,7 @@ MetadataComponentType.getMinimum = function (type) {
  */
 MetadataComponentType.getMaximum = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
-    throw new DeveloperError("type must be a numeric type");
-  }
+  Check.typeOf.string("type", type);
   //>>includeEnd('debug');
 
   switch (type) {
@@ -201,36 +197,6 @@ MetadataComponentType.getMaximum = function (type) {
       return 340282346638528859811704183484516925440.0;
     case MetadataComponentType.FLOAT64:
       return Number.MAX_VALUE;
-  }
-};
-
-/**
- * Returns whether the type is a numeric type.
- *
- * @param {MetadataComponentType} type The type.
- * @returns {Boolean} Whether the type is a numeric type.
- *
- * @private
- */
-MetadataComponentType.isNumericType = function (type) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("type", type);
-  //>>includeEnd('debug');
-
-  switch (type) {
-    case MetadataComponentType.INT8:
-    case MetadataComponentType.UINT8:
-    case MetadataComponentType.INT16:
-    case MetadataComponentType.UINT16:
-    case MetadataComponentType.INT32:
-    case MetadataComponentType.UINT32:
-    case MetadataComponentType.INT64:
-    case MetadataComponentType.UINT64:
-    case MetadataComponentType.FLOAT32:
-    case MetadataComponentType.FLOAT64:
-      return true;
-    default:
-      return false;
   }
 };
 
@@ -422,10 +388,9 @@ MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
  */
 MetadataComponentType.getSizeInBytes = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
-    throw new DeveloperError("type must be a numeric type");
-  }
+  Check.typeOf.string("type", type);
   //>>includeEnd('debug');
+
   switch (type) {
     case MetadataComponentType.INT8:
     case MetadataComponentType.UINT8:
@@ -447,7 +412,7 @@ MetadataComponentType.getSizeInBytes = function (type) {
 };
 
 /**
- * Gets the type from a {@link ComponentDatatype}.
+ * Gets the {@link MetadataComponentType} from a {@link ComponentDatatype}.
  *
  * @param {ComponentDatatype} componentDatatype The component datatype.
  * @returns {MetadataComponentType} The metadata component type.
@@ -455,6 +420,10 @@ MetadataComponentType.getSizeInBytes = function (type) {
  * @private
  */
 MetadataComponentType.fromComponentDatatype = function (componentDatatype) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("componentDatatype", componentDatatype);
+  //>>includeEnd('debug');
+
   switch (componentDatatype) {
     case ComponentDatatype.BYTE:
       return MetadataComponentType.INT8;
@@ -475,12 +444,19 @@ MetadataComponentType.fromComponentDatatype = function (componentDatatype) {
   }
 };
 
+/**
+ * Gets the {@link ComponentDatatype} from a {@link MetadataComponentType}.
+ *
+ * @param {MetadataComponentType} type The metadata component datatype.
+ * @returns {ComponentDatatype} The component datatype.
+ *
+ * @private
+ */
 MetadataComponentType.toComponentDatatype = function (type) {
   //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
-    throw new DeveloperError("type must be a numeric type");
-  }
+  Check.typeOf.string("type", type);
   //>>includeEnd('debug');
+
   switch (type) {
     case MetadataComponentType.INT8:
       return ComponentDatatype.BYTE;
@@ -498,32 +474,6 @@ MetadataComponentType.toComponentDatatype = function (type) {
       return ComponentDatatype.FLOAT;
     case MetadataComponentType.FLOAT64:
       return ComponentDatatype.DOUBLE;
-  }
-};
-
-MetadataComponentType.toTypedArrayType = function (type) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!MetadataComponentType.isNumericType(type)) {
-    throw new DeveloperError("type must be a numeric type");
-  }
-  //>>includeEnd('debug');
-  switch (type) {
-    case MetadataComponentType.INT8:
-      return Int8Array;
-    case MetadataComponentType.UINT8:
-      return Uint8Array;
-    case MetadataComponentType.INT16:
-      return Int16Array;
-    case MetadataComponentType.UINT16:
-      return Uint16Array;
-    case MetadataComponentType.INT32:
-      return Int32Array;
-    case MetadataComponentType.UINT32:
-      return Uint32Array;
-    case MetadataComponentType.FLOAT32:
-      return Float32Array;
-    case MetadataComponentType.FLOAT64:
-      return Float64Array;
   }
 };
 
