@@ -12,11 +12,6 @@ ul.cesium-cesiumInspector-statistics + ul.cesium-cesiumInspector-statistics {
   margin-top: 5px;
 }
 
-.cesium-cesiumInspector-visible {
-  width: 400px;
-  height: auto;
-}
-
 .cesium-cesiumInspector-slider input[type="number"] {
   text-align: left;
   background-color: #222;
@@ -58,23 +53,23 @@ ul.cesium-cesiumInspector-statistics + ul.cesium-cesiumInspector-statistics {
   background: transparent;
   color: #edffff;
   border: none;
-  padding: 1px;
+  padding: 0;
   white-space: pre;
   overflow-wrap: normal;
   overflow-x: auto;
 }
 
-.cesium-3DTilesInspector {
+.cesium-VoxelInspector {
   width: 300px;
   pointer-events: all;
 }
 
-.cesium-3DTilesInspector-statistics {
+.cesium-VoxelInspector-statistics {
   font-size: 11px;
 }
 
-.cesium-3DTilesInspector div,
-.cesium-3DTilesInspector input[type="range"] {
+.cesium-VoxelInspector div,
+.cesium-VoxelInspector input[type="range"] {
   width: 100%;
   box-sizing: border-box;
 }
@@ -84,11 +79,11 @@ ul.cesium-cesiumInspector-statistics + ul.cesium-cesiumInspector-statistics {
   overflow: auto;
 }
 
-.cesium-3DTilesInspector .cesium-cesiumInspector-section {
+.cesium-VoxelInspector .cesium-cesiumInspector-section {
   margin-top: 3px;
 }
 
-.cesium-3DTilesInspector
+.cesium-VoxelInspector
   .cesium-cesiumInspector-sectionHeader
   + .cesium-cesiumInspector-show {
   border-top: 1px solid white;
