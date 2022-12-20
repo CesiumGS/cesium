@@ -2289,7 +2289,9 @@ describe(
         expect(tileset._tileDebugLabels).toBeDefined();
         expect(tileset._tileDebugLabels.length).toEqual(1);
 
-        const expected = "Texture Memory: 0\n" + "Geometry Memory: 0.007";
+        const expected =
+          "Texture Memory: 0\n" +
+          `Geometry Memory: ${(0.007).toLocaleString()}`;
 
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
@@ -2318,7 +2320,7 @@ describe(
           "Triangles: 120\n" +
           "Features: 10\n" +
           "Texture Memory: 0\n" +
-          "Geometry Memory: 0.007\n" +
+          `Geometry Memory: ${(0.007).toLocaleString()}\n` +
           "Url: parent.b3dm";
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
@@ -2355,7 +2357,7 @@ describe(
           "Triangles: 120\n" +
           "Features: 10\n" +
           "Texture Memory: 0\n" +
-          "Geometry Memory: 0.007\n" +
+          `Geometry Memory: ${(0.007).toLocaleString()}\n` +
           "Url: parent.b3dm";
         expect(tileset._tileDebugLabels.get(0).text).toEqual(expected);
         expect(tileset._tileDebugLabels.get(0).position).toEqual(
