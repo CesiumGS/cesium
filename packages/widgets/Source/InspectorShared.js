@@ -148,6 +148,11 @@ InspectorShared.createButton = function (
   clickedBinding,
   activeBinding
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("buttonText", buttonText);
+  Check.typeOf.string("clickedBinding", clickedBinding);
+  //>>includeEnd('debug');
+
   const button = document.createElement("button");
   button.type = "button";
   button.textContent = buttonText;
