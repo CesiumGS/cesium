@@ -15,6 +15,7 @@
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
+    "sourceType": "module",
     "plugins": [
         "./Tools/jsdoc/cesiumTags"
     ],
