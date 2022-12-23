@@ -24,7 +24,7 @@ import {
   CameraFlightPath,
   Cesium3DTileset,
   ImageryLayerCollection,
-  GltfVoxelProvider,
+  Cesium3DTilesVoxelProvider,
   SceneMode,
   ShadowMode,
   TimeDynamicPointCloud,
@@ -1403,9 +1403,8 @@ describe(
 
     function loadVoxelPrimitive(viewer) {
       const voxelPrimitive = new VoxelPrimitive({
-        provider: new GltfVoxelProvider({
-          gltf:
-            "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/0/0/0/0/tile.gltf",
+        provider: new Cesium3DTilesVoxelProvider({
+          url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
         }),
       });
       viewer.scene.primitives.add(voxelPrimitive);

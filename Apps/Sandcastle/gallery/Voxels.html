@@ -416,16 +416,6 @@
             },
           },
           {
-            text: "Box - glTF",
-            onselect: function () {
-              const provider = new Cesium.GltfVoxelProvider({
-                gltf:
-                  "../../SampleData/Cesium3DTiles/Voxel/VoxelBoxGltf/voxelBox.gltf",
-              });
-              const primitive = createPrimitive(provider, customShaderAlpha);
-            },
-          },
-          {
             text: "Box - 3D Tiles",
             onselect: function () {
               const provider = new Cesium.Cesium3DTilesVoxelProvider({
@@ -445,16 +435,6 @@
             },
           },
           {
-            text: "Ellipsoid - glTF",
-            onselect: function () {
-              const provider = new Cesium.GltfVoxelProvider({
-                gltf:
-                  "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoidGltf/voxelEllipsoid.gltf",
-              });
-              const primitive = createPrimitive(provider, customShaderAlpha);
-            },
-          },
-          {
             text: "Ellipsoid - 3D Tiles",
             onselect: function () {
               const provider = new Cesium.Cesium3DTilesVoxelProvider({
@@ -471,16 +451,6 @@
                 Cesium.VoxelShapeType.CYLINDER
               );
               const primitive = createPrimitive(provider, customShaderColor);
-            },
-          },
-          {
-            text: "Cylinder - glTF",
-            onselect: function () {
-              const provider = new Cesium.GltfVoxelProvider({
-                gltf:
-                  "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinderGltf/voxelCylinder.gltf",
-              });
-              const primitive = createPrimitive(provider, customShaderAlpha);
             },
           },
           {

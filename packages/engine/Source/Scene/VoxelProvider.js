@@ -8,7 +8,6 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @constructor
  *
  * @see Cesium3DTilesVoxelProvider
- * @see GltfVoxelProvider
  * @see VoxelPrimitive
  * @see VoxelShapeType
  *

@@ -1,12 +1,10 @@
 import DeveloperError from "../Core/DeveloperError.js";
-import PrimitiveType from "../Core/PrimitiveType.js";
 import VoxelBoxShape from "./VoxelBoxShape.js";
 import VoxelCylinderShape from "./VoxelCylinderShape.js";
 import VoxelEllipsoidShape from "./VoxelEllipsoidShape.js";
 
 /**
- * An enum of voxel shapes supported by <code>EXT_primitive_voxels</code>. The shape controls
- * how the voxel grid is mapped to 3D space.
+ * An enum of voxel shapes. The shape controls how the voxel grid is mapped to 3D space.
  *
  * @enum VoxelShapeType
  *
@@ -40,7 +38,7 @@ const VoxelShapeType = {
 };
 
 /**
- * Gets the minimum bounds as defined by <code>EXT_primitive_voxels</code>.
+ * Gets the minimum bounds.
  * @param {VoxelShapeType} shapeType The voxel shape type.
  * @returns {Cartesian3} The minimum bounds.
  */
@@ -60,7 +58,7 @@ VoxelShapeType.getMinBounds = function (shapeType) {
 };
 
 /**
- * Gets the maximum bounds as defined by <code>EXT_primitive_voxels</code>.
+ * Gets the maximum bounds.
  * @param {VoxelShapeType} shapeType The voxel shape type.
  * @returns {Cartesian3} The maximum bounds.
  */
@@ -75,30 +73,6 @@ VoxelShapeType.getMaxBounds = function (shapeType) {
     //>>includeStart('debug', pragmas.debug);
     default:
       throw new DeveloperError(`Invalid shape type ${shapeType}`);
-    //>>includeEnd('debug');
-  }
-};
-
-/**
- * Converts a primitive type to a voxel shape. glTF voxel primitive types are
- * defined by </code>EXT_primitive_voxels</code>.
- *
- * @param {PrimitiveType} primitiveType The primitive type.
- * @returns {VoxelShapeType} The shape type.
- *
- * @private
- */
-VoxelShapeType.fromPrimitiveType = function (primitiveType) {
-  switch (primitiveType) {
-    case PrimitiveType.VOXEL_BOX:
-      return VoxelShapeType.BOX;
-    case PrimitiveType.VOXEL_ELLIPSOID:
-      return VoxelShapeType.ELLIPSOID;
-    case PrimitiveType.VOXEL_CYLINDER:
-      return VoxelShapeType.CYLINDER;
-    //>>includeStart('debug', pragmas.debug);
-    default:
-      throw new DeveloperError(`Invalid primitive type ${primitiveType}`);
     //>>includeEnd('debug');
   }
 };
