@@ -7,7 +7,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -39,7 +38,6 @@ import CustomShader from "./Model/CustomShader.js";
  *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
- * @see GltfVoxelProvider
  * @see VoxelShapeType
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -52,12 +50,6 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._ready = false;
-
-  /**
-   * @type {Promise.<Boolean>}
-   * @private
-   */
-  this._readyPromise = defer();
 
   /**
    * @type {VoxelProvider}
@@ -192,6 +184,7 @@ function VoxelPrimitive(options) {
 
   /**
    * Keeps track of when the clipping planes are enabled / disabled
+   *
    * @type {Boolean}
    * @private
    */
@@ -203,9 +196,8 @@ function VoxelPrimitive(options) {
    * @type {Matrix4}
    * @private
    */
-  this._modelMatrix = defaultValue(
-    options.modelMatrix,
-    Matrix4.clone(Matrix4.IDENTITY, new Matrix4())
+  this._modelMatrix = Matrix4.clone(
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
 
   /**
@@ -430,9 +422,25 @@ function VoxelPrimitive(options) {
 
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;
-  const primitive = this;
-  provider.readyPromise.catch(function (error) {
-    primitive._readyPromise.reject(error);
+  this._completeLoad = function (primitive, frameState) {};
+  this._readyPromise = initialize(this, provider);
+}
+
+function initialize(primitive, provider) {
+  const promise = new Promise(function (resolve) {
+    primitive._completeLoad = function (primitive, frameState) {
+      // Set the primitive as ready after the first frame render since the user might set up events subscribed to
+      // the post render event, and the primitive may not be ready for those past the first frame.
+      frameState.afterRender.push(function () {
+        primitive._ready = true;
+        resolve(primitive);
+        return true;
+      });
+    };
+  });
+
+  return provider.readyPromise.then(function () {
+    return promise;
   });
 }
 
@@ -459,7 +467,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -538,20 +546,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       Check.typeOf.object("modelMatrix", modelMatrix);
       //>>includeEnd('debug');
 
-      this._modelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
-    },
-  },
-
-  /**
-   * Gets the compound model matrix
-   *
-   * @memberof VoxelPrimitive.prototype
-   * @type {Matrix4}
-   * @readonly
-   */
-  compoundModelMatrix: {
-    get: function () {
-      return this._compoundModelMatrix;
+      this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
     },
   },
 
@@ -836,7 +831,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets or sets the minimum bounds. TODO: fill in the rest later
+   * Gets or sets the minimum bounds in the shape's local coordinate system.
+   * Voxel data is stretched or squashed to fit the bounds.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -855,7 +851,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets or sets the maximum bounds. TODO: fill in the rest later.
+   * Gets or sets the maximum bounds in the shape's local coordinate system.
+   * Voxel data is stretched or squashed to fit the bounds.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -876,7 +873,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets the minimum clipping location in the shape's local coordinate system.
    * Any voxel content outside the range is clipped.
-   * The minimum value is 0 and the maximum value is 1.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -900,7 +896,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets the maximum clipping location in the shape's local coordinate system.
    * Any voxel content outside the range is clipped.
-   * The minimum value is 0 and the maximum value is 1.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -987,9 +982,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 });
 
-// TODO 3-channel + 1-channel metadata is a problem right now
-// Individually, they both work, but together the 1-channel is messed up
-
 const scratchDimensions = new Cartesian3();
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
@@ -1014,17 +1006,12 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
 
 /**
  * Updates the voxel primitive.
- * @function
  *
  * @param {FrameState} frameState
  * @private
  */
 VoxelPrimitive.prototype.update = function (frameState) {
-  // Update the provider, if applicable.
   const provider = this._provider;
-  if (defined(provider.update)) {
-    provider.update(frameState);
-  }
 
   // Update the custom shader in case it has texture uniforms.
   this._customShader.update(frameState);
@@ -1037,15 +1024,10 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Initialize from the ready provider. This only happens once.
   const context = frameState.context;
   if (!this._ready) {
-    // Don't make the primitive ready until after its first update because
-    // external code may want to change some of its properties before it's rendered.
-    const primitive = this;
-    frameState.afterRender.push(function () {
-      primitive._ready = true;
-      primitive._readyPromise.resolve(primitive);
-    });
-
     initFromProvider(this, provider, context);
+    this._completeLoad(this, frameState);
+
+    // Don't render until the next frame after the ready promise is resolved
     return;
   }
 
@@ -1307,19 +1289,20 @@ function checkTransformAndBounds(primitive, provider) {
 
 /**
  * Compare old and new values of a bound and update the old if it is different.
- * @param {VoxelPrimitive} The primitive with bounds properties
- * @param {String} oldBoundKey A key pointing to a bounds property of type Cartesian3 or Matrix4
- * @param {String} newBoundKey A key pointing to a bounds property of the same type as the property at oldBoundKey
+ * @param {VoxelPrimitive} primitive The primitive with bounds properties
+ * @param {String} newBoundKey A key pointing to a bounds property of type Cartesian3 or Matrix4
+ * @param {String} oldBoundKey A key pointing to a bounds property of the same type as the property at newBoundKey
  * @returns {Number} 1 if the bound value changed, 0 otherwise
  *
  * @private
  */
 function updateBound(primitive, newBoundKey, oldBoundKey) {
   const newBound = primitive[newBoundKey];
-  const BoundClass = newBound.constructor;
-  const changed = !BoundClass.equals(newBound, primitive[oldBoundKey]);
+  const oldBound = primitive[oldBoundKey];
+
+  const changed = !newBound.equals(oldBound);
   if (changed) {
-    primitive[oldBoundKey] = BoundClass.clone(newBound, primitive[oldBoundKey]);
+    newBound.clone(oldBound);
   }
   return changed ? 1 : 0;
 }
@@ -1334,7 +1317,7 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
  */
 function updateShapeAndTransforms(primitive, shape, provider) {
   const visible = shape.update(
-    primitive.compoundModelMatrix,
+    primitive._compoundModelMatrix,
     primitive.minBounds,
     primitive.maxBounds,
     primitive.minClippingBounds,
@@ -1370,7 +1353,6 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   // Set member variables when the shape is dirty
   const dimensions = provider.dimensions;
   primitive._stepSizeUv = shape.computeApproximateStepSize(dimensions);
-  //  TODO: check which of the `multiply` can be `multiplyTransformation`
   primitive._transformPositionWorldToUv = Matrix4.multiply(
     transformPositionLocalToUv,
     transformPositionWorldToLocal,
@@ -1433,7 +1415,6 @@ function setupTraversal(primitive, provider, context) {
 
 /**
  * Set uniforms that come from the traversal.
- * TODO: should this be done in VoxelTraversal?
  * @param {VoxelTraversal} traversal
  * @param {Object} uniforms
  * @private
