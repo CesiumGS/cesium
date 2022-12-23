@@ -53,7 +53,6 @@ function CesiumInspector(container, scene) {
   container.appendChild(this._element);
 
   const panel = document.createElement("div");
-  this._panel = panel;
   panel.className = "cesium-cesiumInspector-dropDown";
   element.appendChild(panel);
 

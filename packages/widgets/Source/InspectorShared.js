@@ -1,7 +1,7 @@
-import { Check, defined } from "@cesium/engine";
+import { Check, defaultValue, defined } from "@cesium/engine";
 
 /**
- * A static class with helper functions used by the CesiumInspector and Cesium3DTilesInspector
+ * A static class with helper functions used by CesiumInspector, Cesium3DTilesInspector, and VoxelInspector
  * @private
  */
 const InspectorShared = {};
@@ -83,4 +83,87 @@ InspectorShared.createSection = function (
   section.appendChild(sectionContent);
   return sectionContent;
 };
+
+/**
+ * Creates a range input
+ * @param {String} rangeText The text to display
+ * @param {String} sliderValueBinding The name of the variable used for slider value binding
+ * @param {Number} min The minimum value
+ * @param {Number} max The maximum value
+ * @param {Number} [step] The step size. Defaults to "any".
+ * @param {String} [inputValueBinding] The name of the variable used for input value binding
+ * @return {Element}
+ */
+InspectorShared.createRangeInput = function (
+  rangeText,
+  sliderValueBinding,
+  min,
+  max,
+  step,
+  inputValueBinding
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("rangeText", rangeText);
+  Check.typeOf.string("sliderValueBinding", sliderValueBinding);
+  Check.typeOf.number("min", min);
+  Check.typeOf.number("max", max);
+  //>>includeEnd('debug');
+
+  inputValueBinding = defaultValue(inputValueBinding, sliderValueBinding);
+  const input = document.createElement("input");
+  input.setAttribute("data-bind", `value: ${inputValueBinding}`);
+  input.type = "number";
+
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.min = min;
+  slider.max = max;
+  slider.step = defaultValue(step, "any");
+  slider.setAttribute(
+    "data-bind",
+    `valueUpdate: "input", value: ${sliderValueBinding}`
+  );
+
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(slider);
+
+  const container = document.createElement("div");
+  container.className = "cesium-cesiumInspector-slider";
+  container.appendChild(document.createTextNode(rangeText));
+  container.appendChild(input);
+  container.appendChild(wrapper);
+
+  return container;
+};
+
+/**
+ * Creates a button component
+ * @param {String} buttonText The button text
+ * @param {String} clickedBinding The name of the variable used for clicked binding
+ * @param {String} [activeBinding] The name of the variable used for active binding
+ * @return {Element}
+ */
+InspectorShared.createButton = function (
+  buttonText,
+  clickedBinding,
+  activeBinding
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("buttonText", buttonText);
+  Check.typeOf.string("clickedBinding", clickedBinding);
+  //>>includeEnd('debug');
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = buttonText;
+  button.className = "cesium-cesiumInspector-pickButton";
+  let binding = `click: ${clickedBinding}`;
+  if (defined(activeBinding)) {
+    binding += `, css: {"cesium-cesiumInspector-pickButtonHighlight" : ${activeBinding}}`;
+  }
+  button.setAttribute("data-bind", binding);
+
+  return button;
+};
+
 export default InspectorShared;
