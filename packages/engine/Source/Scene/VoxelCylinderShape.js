@@ -728,7 +728,7 @@ VoxelCylinderShape.DefaultMinBounds = new Cartesian3(0.0, -1.0, -CesiumMath.PI);
  */
 VoxelCylinderShape.DefaultMaxBounds = new Cartesian3(1.0, +1.0, +CesiumMath.PI);
 
-const maxTestAngles = 7;
+const maxTestAngles = 5;
 
 // Preallocated arrays for all of the possible test angle counts
 /**
@@ -737,18 +737,12 @@ const maxTestAngles = 7;
  */
 const scratchTestAngles = new Array(maxTestAngles);
 
-/**
- * @type {Cartesian3[][]}
- * @ignore
- */
-const scratchTestPositions = new Array(maxTestAngles + 1);
-for (let i = 0; i <= maxTestAngles; i++) {
-  const positionsLength = i * 4;
-  scratchTestPositions[i] = new Array(positionsLength);
-  for (let j = 0; j < positionsLength; j++) {
-    scratchTestPositions[i][j] = new Cartesian3();
-  }
-}
+const scratchTranslation = new Cartesian3();
+const scratchRotation = new Matrix3();
+const scratchTranslationMatrix = new Matrix4();
+const scratchRotationMatrix = new Matrix4();
+const scratchScaleMatrix = new Matrix4();
+const scratchMatrix = new Matrix4();
 
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
@@ -783,8 +777,8 @@ function getCylinderChunkObb(
   const defaultMaxRadius = defaultMaxBounds.x; // 1
   const defaultMinHeight = defaultMinBounds.y; // -1
   const defaultMaxHeight = defaultMaxBounds.y; // +1
-  const defaultMinAngle = defaultMinBounds.z; // -pi/2
-  const defaultMaxAngle = defaultMaxBounds.z; // +pi/2
+  const defaultMinAngle = defaultMinBounds.z; // -pi
+  const defaultMaxAngle = defaultMaxBounds.z; // +pi
 
   // Return early if using the default bounds
   if (
@@ -800,84 +794,93 @@ function getCylinderChunkObb(
     return result;
   }
 
-  // TODO: this is not always working. See OrientedBoundingBox.fromRectangle for ideas to improve.
-  let testAngleCount = 0;
+  const isAngleFlipped = angleEnd < angleStart;
+
+  if (isAngleFlipped) {
+    angleEnd += CesiumMath.TWO_PI;
+  }
+
+  const angleWidth = angleEnd - angleStart;
+  const angleMid = angleStart + angleWidth * 0.5;
+
   const testAngles = scratchTestAngles;
-  const halfPi = CesiumMath.PI_OVER_TWO;
+  let testAngleCount = 0;
 
   testAngles[testAngleCount++] = angleStart;
   testAngles[testAngleCount++] = angleEnd;
+  testAngles[testAngleCount++] = angleMid;
 
-  if (angleStart > angleEnd) {
-    if (angleStart <= 0.0 || angleEnd >= 0.0) {
-      testAngles[testAngleCount++] = 0.0;
-    }
-    if (angleStart <= +halfPi || angleEnd >= +halfPi) {
-      testAngles[testAngleCount++] = +halfPi;
-    }
-    if (angleStart <= -halfPi || angleEnd >= -halfPi) {
-      testAngles[testAngleCount++] = -halfPi;
-    }
-    // It will always cross the 180th meridian
-    testAngles[testAngleCount++] = CesiumMath.PI;
-  } else {
-    if (angleStart < 0.0 && angleEnd > 0.0) {
-      testAngles[testAngleCount++] = 0.0;
-    }
-    if (angleStart < +halfPi && angleEnd > +halfPi) {
-      testAngles[testAngleCount++] = +halfPi;
-    }
-    if (angleStart < -halfPi && angleEnd > -halfPi) {
-      testAngles[testAngleCount++] = -halfPi;
-    }
+  if (angleWidth > CesiumMath.PI) {
+    testAngles[testAngleCount++] = angleMid - CesiumMath.PI_OVER_TWO;
+    testAngles[testAngleCount++] = angleMid + CesiumMath.PI_OVER_TWO;
   }
 
-  const isAngleFlipped = angleEnd < angleStart;
-  const defaultAngleWidth = defaultMaxAngle - defaultMinAngle;
-  const angleWidth = angleEnd - angleStart + isAngleFlipped * defaultAngleWidth;
+  // Find bounding box in local space relative to angleMid
+  let minX = 1.0;
+  let minY = 1.0;
+  let maxX = -1.0;
+  let maxY = -1.0;
 
-  testAngles[testAngleCount++] = CesiumMath.negativePiToPi(
-    angleStart + angleWidth * 0.5
-  );
-
-  const positions = scratchTestPositions[testAngleCount];
-
-  for (let i = 0; i < testAngleCount; i++) {
-    const angle = testAngles[i];
+  for (let i = 0; i < testAngleCount; ++i) {
+    const angle = testAngles[i] - angleMid;
     const cosAngle = Math.cos(angle);
     const sinAngle = Math.sin(angle);
+    const x1 = cosAngle * radiusStart;
+    const y1 = sinAngle * radiusStart;
+    const x2 = cosAngle * radiusEnd;
+    const y2 = sinAngle * radiusEnd;
 
-    positions[i * 4 + 0] = Cartesian3.fromElements(
-      cosAngle * radiusStart,
-      sinAngle * radiusStart,
-      heightStart,
-      positions[i * 4 + 0]
-    );
-    positions[i * 4 + 1] = Cartesian3.fromElements(
-      cosAngle * radiusEnd,
-      sinAngle * radiusEnd,
-      heightStart,
-      positions[i * 4 + 1]
-    );
-    positions[i * 4 + 2] = Cartesian3.fromElements(
-      cosAngle * radiusStart,
-      sinAngle * radiusStart,
-      heightEnd,
-      positions[i * 4 + 2]
-    );
-    positions[i * 4 + 3] = Cartesian3.fromElements(
-      cosAngle * radiusEnd,
-      sinAngle * radiusEnd,
-      heightEnd,
-      positions[i * 4 + 3]
-    );
+    minX = Math.min(minX, x1);
+    minY = Math.min(minY, y1);
+    minX = Math.min(minX, x2);
+    minY = Math.min(minY, y2);
+    maxX = Math.max(maxX, x1);
+    maxY = Math.max(maxY, y1);
+    maxX = Math.max(maxX, x2);
+    maxY = Math.max(maxY, y2);
   }
 
-  for (let i = 0; i < testAngleCount * 4; i++) {
-    positions[i] = Matrix4.multiplyByPoint(matrix, positions[i], positions[i]);
-  }
+  const extentX = maxX - minX;
+  const extentY = maxY - minY;
+  const extentZ = heightEnd - heightStart;
 
-  return OrientedBoundingBox.fromPoints(positions, result);
+  const centerX = (minX + maxX) * 0.5;
+  const centerY = (minY + maxY) * 0.5;
+  const centerZ = (heightStart + heightEnd) * 0.5;
+
+  const translation = Cartesian3.fromElements(
+    centerX,
+    centerY,
+    centerZ,
+    scratchTranslation
+  );
+
+  const rotation = Matrix3.fromRotationZ(angleMid, scratchRotation);
+
+  const scale = Cartesian3.fromElements(
+    extentX,
+    extentY,
+    extentZ,
+    scratchScale
+  );
+
+  const scaleMatrix = Matrix4.fromScale(scale, scratchScaleMatrix);
+  const rotationMatrix = Matrix4.fromRotation(rotation, scratchRotationMatrix);
+  const translationMatrix = Matrix4.fromTranslation(
+    translation,
+    scratchTranslationMatrix
+  );
+
+  // Local matrix = R * T * S
+  const localMatrix = Matrix4.multiply(
+    rotationMatrix,
+    Matrix4.multiply(translationMatrix, scaleMatrix, scratchMatrix),
+    scratchMatrix
+  );
+
+  const globalMatrix = Matrix4.multiply(matrix, localMatrix, scratchMatrix);
+  const obb = OrientedBoundingBox.fromTransformation(globalMatrix, result);
+  return obb;
 }
 
 export default VoxelCylinderShape;
