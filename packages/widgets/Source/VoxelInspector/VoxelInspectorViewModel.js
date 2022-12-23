@@ -67,7 +67,6 @@ function VoxelInspectorViewModel(scene) {
   function addProperty(options) {
     const { name, initialValue } = options;
 
-    that[name] = initialValue;
     that._definedProperties.push(name);
 
     let setPrimitiveFunction = options.setPrimitiveFunction;
@@ -110,6 +109,9 @@ function VoxelInspectorViewModel(scene) {
         }
       },
     });
+
+    that[name] = initialValue;
+
     return knock;
   }
 
