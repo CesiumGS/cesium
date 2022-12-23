@@ -102,7 +102,7 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * Gets the number of padding voxels before the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage. If
+   * Gets the number of padding voxels before the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
@@ -114,7 +114,7 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * Gets the number of padding voxels after the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage. If
+   * Gets the number of padding voxels after the tile. This improves rendering quality when sampling the edge of a tile, but it increases memory usage.
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
@@ -138,26 +138,24 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * Gets the metadata types
+   * Gets the metadata types.
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {MetadataType[]}
    * @readonly
-   * @private
    */
   types: {
     get: DeveloperError.throwInstantiationError,
   },
 
   /**
-   * Gets the metadata component types
+   * Gets the metadata component types.
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {MetadataComponentType[]}
    * @readonly
-   * @private
    */
   componentTypes: {
     get: DeveloperError.throwInstantiationError,
@@ -165,6 +163,7 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata minimum values.
+   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {Number[][]|undefined}
@@ -176,6 +175,7 @@ Object.defineProperties(VoxelProvider.prototype, {
 
   /**
    * Gets the metadata maximum values.
+   * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
    * @type {Number[][]|undefined}
@@ -238,15 +238,5 @@ Object.defineProperties(VoxelProvider.prototype, {
  * @exception {DeveloperError} The provider must be ready.
  */
 VoxelProvider.prototype.requestData = DeveloperError.throwInstantiationError;
-
-/**
- * A hook to update the provider every frame, called from {@link VoxelPrimitive.update}.
- * If the provider doesn't need this functionality it should leave this function undefined.
- * @function
- *
- * @param {FrameState} frameState
- * @private
- */
-VoxelProvider.prototype.update = DeveloperError.throwInstantiationError;
 
 export default VoxelProvider;
