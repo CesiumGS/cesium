@@ -51,7 +51,7 @@ void main()
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
 
-    // TODO: 
+    // TODO:
     //  - jitter doesn't affect the first traversal?
     //  - jitter is always > 0?
     //  - jitter is only applied at one step?
@@ -71,7 +71,7 @@ void main()
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
         Properties properties = accumulatePropertiesFromMegatexture(sampleDatas);
-        
+
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
@@ -96,6 +96,11 @@ void main()
         // Stop traversing if the alpha has been fully saturated
         if (colorAccum.a > ALPHA_ACCUM_MAX) {
             colorAccum.a = ALPHA_ACCUM_MAX;
+            break;
+        }
+
+        if (traversalData.stepT == 0.0) {
+            // Shape is infinitely thin, no need to traverse further
             break;
         }
 
