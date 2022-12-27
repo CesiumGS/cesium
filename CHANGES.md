@@ -17,6 +17,7 @@
 - Fixed a bug where \*.ktx2 images loading fail. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
 - Fixed a bug where a `Model` would sometimes disappear when loaded in Columbus View. [#10945](https://github.com/CesiumGS/cesium/pull/10945)
 - Fixed a bug where `result` parameters were omitted from the TypeScript definitions. [#10864](https://github.com/CesiumGS/cesium/issues/10864)
+- Fixed a bug where `quantizationBits` in `decodeDraco` above 16 render incorrect. [#10977](https://github.com/CesiumGS/cesium/issues/10977)
 
 ### 1.100 - 2022-12-01
 
