@@ -115,8 +115,8 @@ function VoxelInspector(container, scene) {
   );
 
   // Transform
-  const maxTrans = 20000000.0;
-  const maxScale = 20000000.0;
+  const maxTrans = 10.0;
+  const maxScale = 10.0;
   const maxAngle = CesiumMath.PI;
 
   transformPanelContents.appendChild(
@@ -129,13 +129,13 @@ function VoxelInspector(container, scene) {
     createRangeInput("Translation Z", "translationZ", -maxTrans, +maxTrans)
   );
   transformPanelContents.appendChild(
-    createRangeInput("Scale X", "scaleX", -maxScale, +maxScale)
+    createRangeInput("Scale X", "scaleX", 0, +maxScale)
   );
   transformPanelContents.appendChild(
-    createRangeInput("Scale Y", "scaleY", -maxScale, +maxScale)
+    createRangeInput("Scale Y", "scaleY", 0, +maxScale)
   );
   transformPanelContents.appendChild(
-    createRangeInput("Scale Z", "scaleZ", -maxScale, +maxScale)
+    createRangeInput("Scale Z", "scaleZ", 0, +maxScale)
   );
   transformPanelContents.appendChild(
     createRangeInput("Heading", "angleX", -maxAngle, +maxAngle)

@@ -619,17 +619,9 @@ function VoxelInspectorViewModel(scene) {
 
   addProperty({
     name: "scaleX",
-    initialValue: 0.0,
-    setPrimitiveFunction: function (scaleX) {
-      const originalScale = Matrix4.getScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-      that._voxelPrimitive.modelMatrix = Matrix4.setScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(scaleX, originalScale.y, originalScale.z),
-        that._voxelPrimitive.modelMatrix
-      );
+    initialValue: 1.0,
+    setPrimitiveFunction: function () {
+      setModelMatrix(that);
     },
     getPrimitiveFunction: function () {
       that.scaleX = Matrix4.getScale(
@@ -640,17 +632,9 @@ function VoxelInspectorViewModel(scene) {
   });
   addProperty({
     name: "scaleY",
-    initialValue: 0.0,
-    setPrimitiveFunction: function (scaleY) {
-      const originalScale = Matrix4.getScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-      that._voxelPrimitive.modelMatrix = Matrix4.setScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(originalScale.x, scaleY, originalScale.z),
-        that._voxelPrimitive.modelMatrix
-      );
+    initialValue: 1.0,
+    setPrimitiveFunction: function () {
+      setModelMatrix(that);
     },
     getPrimitiveFunction: function () {
       that.scaleY = Matrix4.getScale(
@@ -661,17 +645,9 @@ function VoxelInspectorViewModel(scene) {
   });
   addProperty({
     name: "scaleZ",
-    initialValue: 0.0,
-    setPrimitiveFunction: function (scaleZ) {
-      const originalScale = Matrix4.getScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-      that._voxelPrimitive.modelMatrix = Matrix4.setScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(originalScale.x, originalScale.y, scaleZ),
-        that._voxelPrimitive.modelMatrix
-      );
+    initialValue: 1.0,
+    setPrimitiveFunction: function () {
+      setModelMatrix(that);
     },
     getPrimitiveFunction: function () {
       that.scaleZ = Matrix4.getScale(
@@ -685,13 +661,7 @@ function VoxelInspectorViewModel(scene) {
     name: "angleX",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      that._voxelPrimitive.modelMatrix = Matrix4.setRotation(
-        that._voxelPrimitive.modelMatrix,
-        Matrix3.fromHeadingPitchRoll(
-          new HeadingPitchRoll(that.angleX, that.angleY, that.angleZ)
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+      setModelMatrix(that);
     },
   });
 
@@ -699,13 +669,7 @@ function VoxelInspectorViewModel(scene) {
     name: "angleY",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      that._voxelPrimitive.modelMatrix = Matrix4.setRotation(
-        that._voxelPrimitive.modelMatrix,
-        Matrix3.fromHeadingPitchRoll(
-          new HeadingPitchRoll(that.angleX, that.angleY, that.angleZ)
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+      setModelMatrix(that);
     },
   });
 
@@ -713,15 +677,40 @@ function VoxelInspectorViewModel(scene) {
     name: "angleZ",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      that._voxelPrimitive.modelMatrix = Matrix4.setRotation(
-        that._voxelPrimitive.modelMatrix,
-        Matrix3.fromHeadingPitchRoll(
-          new HeadingPitchRoll(that.angleX, that.angleY, that.angleZ)
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+      setModelMatrix(that);
     },
   });
+}
+
+const scratchTranslation = new Cartesian3();
+const scratchScale = new Cartesian3();
+const scratchHeadingPitchRoll = new HeadingPitchRoll();
+const scratchRotation = new Matrix3();
+
+function setModelMatrix(viewModel) {
+  const translation = Cartesian3.fromElements(
+    viewModel.translationX,
+    viewModel.translationY,
+    viewModel.translationZ,
+    scratchTranslation
+  );
+  const scale = Cartesian3.fromElements(
+    viewModel.scaleX,
+    viewModel.scaleY,
+    viewModel.scaleZ,
+    scratchScale
+  );
+  const hpr = scratchHeadingPitchRoll;
+  hpr.heading = viewModel.angleX;
+  hpr.pitch = viewModel.angleY;
+  hpr.roll = viewModel.angleZ;
+  const rotation = Matrix3.fromHeadingPitchRoll(hpr, scratchRotation);
+  const rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+  viewModel._voxelPrimitive.modelMatrix = Matrix4.fromRotationTranslation(
+    rotationScale,
+    translation,
+    viewModel._voxelPrimitive.modelMatrix
+  );
 }
 
 Object.defineProperties(VoxelInspectorViewModel.prototype, {
