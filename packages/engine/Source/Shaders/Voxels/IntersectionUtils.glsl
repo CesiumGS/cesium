@@ -69,7 +69,7 @@ void initializeIntersections(inout Intersections ix) {
             // The loop should be: for (i = 0; i < n; ++i) {...} but WebGL1 cannot
             // loop with non-constant condition, so it has to break early instead
             if (i >= n) { break; }
-            
+
             vec2 intersect0 = ix.intersections[i + 0];
             vec2 intersect1 = ix.intersections[i + 1];
 
@@ -84,7 +84,7 @@ void initializeIntersections(inout Intersections ix) {
             float bmax = tmin == t0 ? b1 : b0;
 
             ix.intersections[i + 0] = vec2(tmin, bmin);
-            ix.intersections[i + 1] = vec2(tmax, bmax);            
+            ix.intersections[i + 1] = vec2(tmax, bmax);
         }
     }
 
@@ -100,12 +100,19 @@ vec2 nextIntersection(inout Intersections ix) {
     vec2 entryExitT = vec2(NO_HIT);
 
     const int passCount = INTERSECTION_COUNT * 2;
+
+    if (ix.index == passCount) {
+        return entryExitT;
+    }
+
     for (int i = 0; i < passCount; ++i) {
         // The loop should be: for (i = ix.index; i < passCount; ++i) {...} but WebGL1 cannot
         // loop with non-constant condition, so it has to continue instead.
         if (i < ix.index) {
             continue;
         }
+
+        ix.index = i + 1;
 
         vec2 intersect = ix.intersections[i];
         float t = intersect.x;
@@ -114,12 +121,12 @@ vec2 nextIntersection(inout Intersections ix) {
 
         ix.surroundCount += enter ? +1 : -1;
         ix.surroundIsPositive = currShapeIsPositive ? enter : ix.surroundIsPositive;
-        
+
         // entering positive or exiting negative
         if (ix.surroundCount == 1 && ix.surroundIsPositive && enter == currShapeIsPositive) {
             entryExitT.x = t;
         }
-        
+
         // exiting positive or entering negative after being inside positive
         // TODO: Can this be simplified?
         bool exitPositive = !enter && currShapeIsPositive && ix.surroundCount == 0;
@@ -131,9 +138,6 @@ vec2 nextIntersection(inout Intersections ix) {
             if (exitPositive) {
                 // After exiting positive shape there is nothing left to intersect, so jump to the end index.
                 ix.index = passCount;
-            } else {
-                // There could be more intersections against the positive shape in the future.
-                ix.index = i + 1;
             }
             break;
         }
