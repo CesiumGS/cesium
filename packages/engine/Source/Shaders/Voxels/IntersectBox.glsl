@@ -22,7 +22,7 @@ vec2 intersectUnitCube(Ray ray) // Unit cube from [-1, +1]
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-                
+
     vec3 dInv = 1.0 / d;
     vec3 od = -o * dInv;
     vec3 t0 = od - dInv;
@@ -31,7 +31,7 @@ vec2 intersectUnitCube(Ray ray) // Unit cube from [-1, +1]
     vec3 m1 = max(t0, t1);
     float tMin = max(max(m0.x, m0.y), m0.z);
     float tMax = min(min(m1.x, m1.y), m1.z);
-    
+
     if (tMin >= tMax) {
         return vec2(NO_HIT);
     }
@@ -70,7 +70,7 @@ void intersectShape(Ray ray, inout Intersections ix)
         #endif
     #else
         // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-        // Direction is scaled as well to be in sync with position. 
+        // Direction is scaled as well to be in sync with position.
         ray.pos = ray.pos * 2.0 - 1.0;
         ray.dir = ray.dir * 2.0;
         vec2 entryExit = intersectUnitCube(ray);

@@ -24,7 +24,7 @@
 
 #define CYLINDER_INTERSECTION_INDEX_RADIUS_MAX
 #define CYLINDER_INTERSECTION_INDEX_RADIUS_MIN
-#define CYLINDER_INTERSECTION_INDEX_ANGLE 
+#define CYLINDER_INTERSECTION_INDEX_ANGLE
 */
 
 // Cylinder uniforms
@@ -52,16 +52,16 @@ vec4 intersectHalfPlane(Ray ray, float angle) {
     vec2 p = o + t * d;
     bool outside = dot(p, planeDirection) < 0.0;
     if (outside) return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
-    
+
     return vec4(-INF_HIT, t, t, +INF_HIT);
 }
 
 vec2 intersectHalfSpace(Ray ray, float angle)
-{    
+{
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
     vec2 n = vec2(sin(angle), -cos(angle));
-    
+
     float a = dot(o, n);
     float b = dot(d, n);
     float t = -a / b;
@@ -72,17 +72,17 @@ vec2 intersectHalfSpace(Ray ray, float angle)
 }
 
 vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
-{    
+{
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
     vec2 n1 = vec2(sin(minAngle), -cos(minAngle));
     vec2 n2 = vec2(-sin(maxAngle), cos(maxAngle));
-    
+
     float a1 = dot(o, n1);
     float a2 = dot(o, n2);
     float b1 = dot(d, n1);
     float b2 = dot(d, n2);
-    
+
     float t1 = -a1 / b1;
     float t2 = -a2 / b2;
     float s1 = sign(a1);
@@ -91,13 +91,13 @@ vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
     float tmin = min(t1, t2);
     float tmax = max(t1, t2);
     float smin = tmin == t1 ? s1 : s2;
-    float smax = tmin == t1 ? s2 : s1;    
+    float smax = tmin == t1 ? s2 : s1;
 
     bool e = tmin >= 0.0;
     bool f = tmax >= 0.0;
     bool g = smin >= 0.0;
     bool h = smax >= 0.0;
-    
+
     if (e != g && f == h) return vec2(tmin, tmax);
     else if (e == g && f == h) return vec2(-INF_HIT, tmin);
     else if (e != g && f != h) return vec2(tmax, +INF_HIT);
@@ -105,7 +105,7 @@ vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
 }
 
 vec4 intersectFlippedWedge(Ray ray, float minAngle, float maxAngle)
-{    
+{
     vec2 planeIntersectMin = intersectHalfSpace(ray, minAngle);
     vec2 planeIntersectMax = intersectHalfSpace(ray, maxAngle + czm_pi);
     return vec4(planeIntersectMin, planeIntersectMax);
@@ -115,44 +115,44 @@ vec2 intersectUnitCylinder(Ray ray)
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    
+
     float a = dot(d.xy, d.xy);
     float b = dot(o.xy, d.xy);
     float c = dot(o.xy, o.xy) - 1.0;
     float det = b * b - a * c;
-    
+
     if (det < 0.0) {
         return vec2(NO_HIT);
     }
-    
+
     det = sqrt(det);
     float ta = (-b - det) / a;
     float tb = (-b + det) / a;
     float t1 = min(ta, tb);
     float t2 = max(ta, tb);
-    
+
     float z1 = o.z + t1 * d.z;
     float z2 = o.z + t2 * d.z;
-    
+
     if (abs(z1) >= 1.0)
     {
         float tCap = (sign(z1) - o.z) / d.z;
         t1 = abs(b + a * tCap) < det ? tCap : NO_HIT;
     }
-    
+
     if (abs(z2) >= 1.0)
     {
         float tCap = (sign(z2) - o.z) / d.z;
         t2 = abs(b + a * tCap) < det ? tCap : NO_HIT;
     }
-    
+
     return vec2(t1, t2);
 }
 
 vec2 intersectUnitCircle(Ray ray) {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    
+
     float t = -o.z / d.z;
     vec2 zPlanePos = o.xy + d.xy * t;
     float distSqr = dot(zPlanePos, zPlanePos);
@@ -160,7 +160,7 @@ vec2 intersectUnitCircle(Ray ray) {
     if (distSqr > 1.0) {
         return vec2(NO_HIT);
     }
-    
+
     return vec2(t, t);
 }
 
@@ -168,16 +168,16 @@ vec2 intersectInfiniteUnitCylinder(Ray ray)
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    
+
     float a = dot(d.xy, d.xy);
     float b = dot(o.xy, d.xy);
     float c = dot(o.xy, o.xy) - 1.0;
     float det = b * b - a * c;
-    
+
     if (det < 0.0) {
         return vec2(NO_HIT);
     }
-    
+
     det = sqrt(det);
     float t1 = (-b - det) / a;
     float t2 = (-b + det) / a;
@@ -214,13 +214,13 @@ void intersectShape(Ray ray, inout Intersections ix)
     #if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT)
         // When the cylinder is perfectly thin it's necessary to sandwich the
         // inner cylinder intersection inside the outer cylinder intersection.
-        
+
         // Without this special case,
         // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
         // [outerMin, innerMin, outerMax, innerMax] which will cause the back
         // side of the cylinder to be invisible because it will think the ray
         // is still inside the inner (negative) cylinder after exiting the
-        // outer (positive) cylinder. 
+        // outer (positive) cylinder.
 
         // With this special case,
         // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
