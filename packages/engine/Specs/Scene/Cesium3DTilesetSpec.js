@@ -3,6 +3,7 @@ import {
   Camera,
   Cartesian2,
   Cartesian3,
+  Cartesian4,
   Cartographic,
   Cesium3DTile,
   Cesium3DTileColorBlendMode,
@@ -6399,27 +6400,27 @@ describe(
         ).then(function (tileset) {
           const expected = {
             "parent.b3dm": {
-              color: new Cartesian3(0.5, 0.0, 1.0),
+              color: new Cartesian4(0.5, 0.0, 1.0, 1.0),
               population: 530,
               areaPercentage: 100,
             },
             "ll.b3dm": {
-              color: new Cartesian3(1.0, 1.0, 0.0),
+              color: new Cartesian4(1.0, 1.0, 0.0, 1.0),
               population: 50,
               areaPercentage: 25,
             },
             "lr.b3dm": {
-              color: new Cartesian3(1.0, 0.0, 0.5),
+              color: new Cartesian4(1.0, 0.0, 0.5, 1.0),
               population: 230,
               areaPercentage: 25,
             },
             "ur.b3dm": {
-              color: new Cartesian3(1.0, 0.5, 0.0),
+              color: new Cartesian4(1.0, 0.5, 0.0, 1.0),
               population: 150,
               areaPercentage: 25,
             },
             "ul.b3dm": {
-              color: new Cartesian3(1.0, 0.0, 0.0),
+              color: new Cartesian4(1.0, 0.0, 0.0, 1.0),
               population: 100,
               areaPercentage: 25,
             },
@@ -6892,27 +6893,27 @@ describe(
         ).then(function (tileset) {
           const expected = {
             "parent.b3dm": {
-              color: new Cartesian3(0.5, 0.0, 1.0),
+              color: new Cartesian4(0.5, 0.0, 1.0, 1.0),
               population: 530,
               areaPercentage: 100,
             },
             "ll.b3dm": {
-              color: new Cartesian3(1.0, 1.0, 0.0),
+              color: new Cartesian4(1.0, 1.0, 0.0, 1.0),
               population: 50,
               areaPercentage: 25,
             },
             "lr.b3dm": {
-              color: new Cartesian3(1.0, 0.0, 0.5),
+              color: new Cartesian4(1.0, 0.0, 0.5, 1.0),
               population: 230,
               areaPercentage: 25,
             },
             "ur.b3dm": {
-              color: new Cartesian3(1.0, 0.5, 0.0),
+              color: new Cartesian4(1.0, 0.5, 0.0, 1.0),
               population: 150,
               areaPercentage: 25,
             },
             "ul.b3dm": {
-              color: new Cartesian3(1.0, 0.0, 0.0),
+              color: new Cartesian4(1.0, 0.0, 0.0, 1.0),
               population: 100,
               areaPercentage: 25,
             },
