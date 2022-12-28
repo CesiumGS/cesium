@@ -7,6 +7,7 @@ import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
+import Cartesian4 from "../Core/Cartesian4.js";
 
 /**
  * A cylinder {@link VoxelShape}.
@@ -281,8 +282,8 @@ VoxelCylinderShape.prototype.update = function (
   this._maximumRadius = shapeMaxRadius; // [0,1]
   this._minimumHeight = shapeMinHeight; // [-1,+1]
   this._maximumHeight = shapeMaxHeight; // [-1,+1]
-  this._minimumAngle = shapeMinAngle; // [-halfPi,+halfPi]
-  this._maximumAngle = shapeMaxAngle; // [-halfPi,+halfPi]
+  this._minimumAngle = shapeMinAngle; // [-pi,+pi]
+  this._maximumAngle = shapeMaxAngle; // [-pi,+pi]
 
   this.shapeTransform = Matrix4.clone(modelMatrix, this.shapeTransform);
 
@@ -743,6 +744,48 @@ const scratchTranslationMatrix = new Matrix4();
 const scratchRotationMatrix = new Matrix4();
 const scratchScaleMatrix = new Matrix4();
 const scratchMatrix = new Matrix4();
+const scratchColumn0 = new Cartesian3();
+const scratchColumn1 = new Cartesian3();
+const scratchColumn2 = new Cartesian3();
+const scratchCorners = new Array(8);
+for (let i = 0; i < 8; i++) {
+  scratchCorners[i] = new Cartesian3();
+}
+
+function orthogonal(a, b, epsilon) {
+  return Math.abs(Cartesian4.dot(a, b)) < epsilon;
+}
+
+function isValidOrientedBoundingBoxTransformation(matrix) {
+  const column0 = Matrix4.getColumn(matrix, 0, scratchColumn0);
+  const column1 = Matrix4.getColumn(matrix, 1, scratchColumn1);
+  const column2 = Matrix4.getColumn(matrix, 2, scratchColumn2);
+
+  const epsilon = CesiumMath.EPSILON4;
+
+  return (
+    orthogonal(column0, column1, epsilon) &&
+    orthogonal(column1, column2, epsilon)
+  );
+}
+
+function computeLooseOrientedBoundingBox(matrix, result) {
+  const corners = scratchCorners;
+  Cartesian3.fromElements(-0.5, -0.5, -0.5, corners[0]);
+  Cartesian3.fromElements(-0.5, -0.5, 0.5, corners[1]);
+  Cartesian3.fromElements(-0.5, 0.5, -0.5, corners[2]);
+  Cartesian3.fromElements(-0.5, 0.5, 0.5, corners[3]);
+  Cartesian3.fromElements(0.5, -0.5, -0.5, corners[4]);
+  Cartesian3.fromElements(0.5, -0.5, 0.5, corners[5]);
+  Cartesian3.fromElements(0.5, 0.5, -0.5, corners[6]);
+  Cartesian3.fromElements(0.5, 0.5, 0.5, corners[7]);
+
+  for (let i = 0; i < 8; ++i) {
+    Matrix4.multiplyByPoint(matrix, corners[i], corners[i]);
+  }
+
+  return OrientedBoundingBox.fromPoints(corners, result);
+}
 
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
@@ -879,8 +922,12 @@ function getCylinderChunkObb(
   );
 
   const globalMatrix = Matrix4.multiply(matrix, localMatrix, scratchMatrix);
-  const obb = OrientedBoundingBox.fromTransformation(globalMatrix, result);
-  return obb;
+
+  if (!isValidOrientedBoundingBoxTransformation(globalMatrix)) {
+    return computeLooseOrientedBoundingBox(globalMatrix, result);
+  }
+
+  return OrientedBoundingBox.fromTransformation(globalMatrix, result);
 }
 
 export default VoxelCylinderShape;
