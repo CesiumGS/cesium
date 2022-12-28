@@ -1781,10 +1781,6 @@ function orientedBoundingBoxToNdcAabb(
   return result;
 }
 
-const colorRed = new Color(1.0, 0.0, 0.0);
-const colorGreen = new Color(0.0, 1.0, 0.0);
-const colorBlue = new Color(0.0, 0.0, 1.0);
-
 const polylineAxisDistance = 30000000.0;
 const polylineXAxis = new Cartesian3(polylineAxisDistance, 0.0, 0.0);
 const polylineYAxis = new Cartesian3(0.0, polylineAxisDistance, 0.0);
@@ -1841,7 +1837,7 @@ function debugDraw(that, frameState) {
     const level = tile.level;
     const startThickness = 5.0;
     const thickness = Math.max(1.0, startThickness / Math.pow(2.0, level));
-    const colors = [colorRed, colorGreen, colorBlue];
+    const colors = [Color.RED, Color.LIME, Color.BLUE];
     const color = colors[level % 3];
 
     makePolylineBox(tile.orientedBoundingBox, color, thickness);
@@ -1853,25 +1849,27 @@ function debugDraw(that, frameState) {
     }
   }
 
+  makePolylineBox(that._shape.orientedBoundingBox, Color.WHITE, 5.0);
+
   drawTile(traversal.rootNode);
 
   const axisThickness = 10.0;
   makePolylineLineSegment(
     Cartesian3.ZERO,
     polylineXAxis,
-    colorRed,
+    Color.RED,
     axisThickness
   );
   makePolylineLineSegment(
     Cartesian3.ZERO,
     polylineYAxis,
-    colorGreen,
+    Color.LIME,
     axisThickness
   );
   makePolylineLineSegment(
     Cartesian3.ZERO,
     polylineZAxis,
-    colorBlue,
+    Color.BLUE,
     axisThickness
   );
 
