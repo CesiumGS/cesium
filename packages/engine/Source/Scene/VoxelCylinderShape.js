@@ -815,7 +815,7 @@ function getCylinderChunkObb(
     testAngles[testAngleCount++] = angleMid + CesiumMath.PI_OVER_TWO;
   }
 
-  // Find bounding box in local space relative to angleMid
+  // Find bounding box in shape space relative to angleMid
   let minX = 1.0;
   let minY = 1.0;
   let maxX = -1.0;
@@ -871,7 +871,7 @@ function getCylinderChunkObb(
     scratchTranslationMatrix
   );
 
-  // Local matrix = R * T * S
+  // Shape space matrix = R * T * S
   const localMatrix = Matrix4.multiply(
     rotationMatrix,
     Matrix4.multiply(translationMatrix, scaleMatrix, scratchMatrix),

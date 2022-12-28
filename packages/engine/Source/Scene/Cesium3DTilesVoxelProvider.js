@@ -51,7 +51,10 @@ function Cesium3DTilesVoxelProvider(options) {
   this.ready = false;
 
   /** @inheritdoc */
-  this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+  this.shapeTransform = Matrix4.clone(Matrix4.IDENTITY);
+
+  /** @inheritdoc */
+  this.globalTransform = Matrix4.clone(Matrix4.IDENTITY);
 
   /** @inheritdoc */
   this.shape = undefined;
@@ -127,7 +130,13 @@ function Cesium3DTilesVoxelProvider(options) {
 
         const voxel = root.content.extensions["3DTILES_content_voxels"];
 
-        const { shape, transform, minBounds, maxBounds } = getShape(root);
+        const {
+          shape,
+          minBounds,
+          maxBounds,
+          shapeTransform,
+          globalTransform,
+        } = getShape(root);
 
         that.shape = shape;
         that.minBounds = minBounds;
@@ -135,7 +144,8 @@ function Cesium3DTilesVoxelProvider(options) {
         that.dimensions = Cartesian3.unpack(voxel.dimensions);
         that.paddingBefore = Cartesian3.unpack(voxel.padding.before);
         that.paddingAfter = Cartesian3.unpack(voxel.padding.after);
-        that.modelMatrix = transform;
+        that.shapeTransform = shapeTransform;
+        that.globalTransform = globalTransform;
 
         // TODO: this tile class stuff needs to be documented
         that.maximumTileCount = metadata.statistics.classes.tile?.count;
@@ -188,9 +198,11 @@ function validate(tileset) {
 function getShape(tile) {
   const boundingVolume = tile.boundingVolume;
 
-  let tileTransform = Matrix4.IDENTITY;
+  let tileTransform;
   if (defined(tile.transform)) {
     tileTransform = Matrix4.unpack(tile.transform);
+  } else {
+    tileTransform = Matrix4.clone(Matrix4.IDENTITY);
   }
 
   if (defined(boundingVolume.box)) {
@@ -239,7 +251,8 @@ function getEllipsoidShape(region) {
     shape: VoxelShapeType.ELLIPSOID,
     minBounds: minBounds,
     maxBounds: maxBounds,
-    transform: shapeTransform,
+    shapeTransform: shapeTransform,
+    globalTransform: Matrix4.clone(Matrix4.IDENTITY),
   };
 }
 
@@ -250,17 +263,12 @@ function getBoxShape(box, tileTransform) {
     obb.center
   );
 
-  const transform = Matrix4.multiply(
-    tileTransform,
-    shapeTransform,
-    new Matrix4()
-  );
-
   return {
     shape: VoxelShapeType.BOX,
     minBounds: Cartesian3.clone(VoxelBoxShape.DefaultMinBounds),
     maxBounds: Cartesian3.clone(VoxelBoxShape.DefaultMaxBounds),
-    transform: transform,
+    shapeTransform: shapeTransform,
+    globalTransform: tileTransform,
   };
 }
 
@@ -271,17 +279,12 @@ function getCylinderShape(cylinder, tileTransform) {
     obb.center
   );
 
-  const transform = Matrix4.multiply(
-    tileTransform,
-    shapeTransform,
-    new Matrix4()
-  );
-
   return {
     shape: VoxelShapeType.CYLINDER,
     minBounds: Cartesian3.clone(VoxelCylinderShape.DefaultMinBounds),
     maxBounds: Cartesian3.clone(VoxelCylinderShape.DefaultMaxBounds),
-    transform: transform,
+    shapeTransform: shapeTransform,
+    globalTransform: tileTransform,
   };
 }
 

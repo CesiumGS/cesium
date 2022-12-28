@@ -48,7 +48,7 @@ describe(
       }).then(function () {
         expect(provider).toBeDefined();
         expect(provider.ready).toBeTrue();
-        expect(provider.modelMatrix).toEqualEpsilon(
+        expect(provider.globalTransform).toEqualEpsilon(
           Matrix4.fromScale(Ellipsoid.WGS84.radii),
           CesiumMath.EPSILON10
         );

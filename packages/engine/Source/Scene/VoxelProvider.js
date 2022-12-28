@@ -41,13 +41,24 @@ Object.defineProperties(VoxelProvider.prototype, {
   },
 
   /**
-   * A model matrix that is applied to all tiles. If undefined, the identity matrix will be used instead.
+   * A transform from local space to global space. If undefined, the identity matrix will be used instead.
    *
    * @memberof VoxelProvider.prototype
    * @type {Matrix4|undefined}
    * @readonly
    */
-  modelMatrix: {
+  globalTransform: {
+    get: DeveloperError.throwInstantiationError,
+  },
+
+  /**
+   * A transform from shape space to local space. If undefined, the identity matrix will be used instead.
+   *
+   * @memberof VoxelProvider.prototype
+   * @type {Matrix4|undefined}
+   * @readonly
+   */
+  shapeTransform: {
     get: DeveloperError.throwInstantiationError,
   },
 

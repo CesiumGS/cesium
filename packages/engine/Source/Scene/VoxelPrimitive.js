@@ -1269,13 +1269,24 @@ function initFromProvider(primitive, provider, context) {
  * @private
  */
 function checkTransformAndBounds(primitive, provider) {
-  const providerTransform = defaultValue(
-    provider.modelMatrix,
+  const shapeTransform = defaultValue(
+    provider.shapeTransform,
     Matrix4.IDENTITY
   );
-  primitive._compoundModelMatrix = Matrix4.multiplyTransformation(
-    providerTransform,
+  const globalTransform = defaultValue(
+    provider.globalTransform,
+    Matrix4.IDENTITY
+  );
+
+  // Compound model matrix = global transform * model matrix * shape transform
+  Matrix4.multiplyTransformation(
+    globalTransform,
     primitive._modelMatrix,
+    primitive._compoundModelMatrix
+  );
+  Matrix4.multiplyTransformation(
+    primitive._compoundModelMatrix,
+    shapeTransform,
     primitive._compoundModelMatrix
   );
   const numChanges =
