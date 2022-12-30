@@ -229,20 +229,14 @@ function getEllipsoidShape(region) {
   const minHeight = region[4];
   const maxHeight = region[5];
 
-  const scale = Cartesian3.clone(Ellipsoid.WGS84.radii);
-  const scaleFromHeight = new Cartesian3(maxHeight, maxHeight, maxHeight);
-  Cartesian3.add(scale, scaleFromHeight);
-
-  const shapeTransform = Matrix4.fromScale(scale);
+  const shapeTransform = Matrix4.fromScale(Ellipsoid.WGS84.radii);
 
   const minBoundsX = west;
   const maxBoundsX = east;
   const minBoundsY = south;
   const maxBoundsY = north;
-  const minBoundsZ =
-    (minHeight + Ellipsoid.WGS84.maximumRadius) /
-    (maxHeight + Ellipsoid.WGS84.maximumRadius);
-  const maxBoundsZ = 1.0;
+  const minBoundsZ = minHeight;
+  const maxBoundsZ = maxHeight;
 
   const minBounds = new Cartesian3(minBoundsX, minBoundsY, minBoundsZ);
   const maxBounds = new Cartesian3(maxBoundsX, maxBoundsY, maxBoundsZ);
