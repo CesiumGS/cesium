@@ -62,6 +62,7 @@ function VoxelInspectorViewModel(scene) {
 
   this._definedProperties = [];
   this._getPrimitiveFunctions = [];
+  this._modelMatrixReady = false;
 
   const that = this;
   function addProperty(options) {
@@ -542,20 +543,10 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "translationX",
     initialValue: 0.0,
-    setPrimitiveFunction: function (translationX) {
-      const originalTranslation = Matrix4.getTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-      that._voxelPrimitive.modelMatrix = Matrix4.setTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(
-          translationX,
-          originalTranslation.y,
-          originalTranslation.z
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.translationX = Matrix4.getTranslation(
@@ -567,21 +558,10 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "translationY",
     initialValue: 0.0,
-    setPrimitiveFunction: function (translationY) {
-      const originalTranslation = Matrix4.getTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-
-      that._voxelPrimitive.modelMatrix = Matrix4.setTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(
-          originalTranslation.x,
-          translationY,
-          originalTranslation.z
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.translationY = Matrix4.getTranslation(
@@ -593,21 +573,10 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "translationZ",
     initialValue: 0.0,
-    setPrimitiveFunction: function (translationZ) {
-      const originalTranslation = Matrix4.getTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-
-      that._voxelPrimitive.modelMatrix = Matrix4.setTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(
-          originalTranslation.x,
-          originalTranslation.y,
-          translationZ
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.translationZ = Matrix4.getTranslation(
@@ -621,7 +590,9 @@ function VoxelInspectorViewModel(scene) {
     name: "scaleX",
     initialValue: 1.0,
     setPrimitiveFunction: function () {
-      setModelMatrix(that);
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.scaleX = Matrix4.getScale(
@@ -634,7 +605,9 @@ function VoxelInspectorViewModel(scene) {
     name: "scaleY",
     initialValue: 1.0,
     setPrimitiveFunction: function () {
-      setModelMatrix(that);
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.scaleY = Matrix4.getScale(
@@ -647,7 +620,9 @@ function VoxelInspectorViewModel(scene) {
     name: "scaleZ",
     initialValue: 1.0,
     setPrimitiveFunction: function () {
-      setModelMatrix(that);
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.scaleZ = Matrix4.getScale(
@@ -661,7 +636,9 @@ function VoxelInspectorViewModel(scene) {
     name: "angleX",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      setModelMatrix(that);
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
   });
 
@@ -669,7 +646,9 @@ function VoxelInspectorViewModel(scene) {
     name: "angleY",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      setModelMatrix(that);
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
   });
 
@@ -677,7 +656,9 @@ function VoxelInspectorViewModel(scene) {
     name: "angleZ",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      setModelMatrix(that);
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
   });
 }
@@ -761,9 +742,12 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
               }
             }
           );
+          that._modelMatrixReady = false;
           for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
             that._getPrimitiveFunctions[i]();
           }
+          that._modelMatrixReady = true;
+          setModelMatrix(that);
         });
       }
     },
