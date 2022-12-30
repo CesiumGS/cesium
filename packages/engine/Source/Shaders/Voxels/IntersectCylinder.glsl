@@ -9,15 +9,15 @@
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF
-#define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_HALF
-#define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_ZERO
+#define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF
+#define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO
 
 #define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS
 #define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT
 #define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT
 #define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_ZERO
+#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_EQUAL_ZERO
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED
@@ -246,10 +246,10 @@ void intersectShape(Ray ray, inout Intersections ix)
         vec4 wedgeIntersect = intersectFlippedWedge(ray, u_cylinderRenderAngleMinMax.x, u_cylinderRenderAngleMinMax.y);
         setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersect.xy);
         setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersect.zw);
-    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_HALF)
+    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF)
         vec2 wedgeIntersect = intersectHalfSpace(ray, u_cylinderRenderAngleMinMax.x);
         setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE, wedgeIntersect);
-    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_ZERO)
+    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO)
         vec4 wedgeIntersect = intersectHalfPlane(ray, u_cylinderRenderAngleMinMax.x);
         setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersect.xy);
         setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersect.zw);

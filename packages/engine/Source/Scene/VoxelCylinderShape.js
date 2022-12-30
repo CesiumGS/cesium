@@ -104,7 +104,7 @@ function VoxelCylinderShape() {
     cylinderUvToShapeUvHeight: new Cartesian2(),
     cylinderUvToShapeUvAngle: new Cartesian2(),
     cylinderShapeUvAngleMinMax: new Cartesian2(),
-    cylinderShapeUvAngleEmptyMid: 0.0,
+    cylinderShapeUvAngleRangeZeroMid: 0.0,
   };
 
   /**
@@ -118,17 +118,17 @@ function VoxelCylinderShape() {
     CYLINDER_HAS_RENDER_BOUNDS_HEIGHT: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE: undefined,
+    CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF: undefined,
+    CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF: undefined,
-    CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_HALF: undefined,
-    CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_ZERO: undefined,
 
     CYLINDER_HAS_SHAPE_BOUNDS_RADIUS: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_ANGLE: undefined,
-    CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_ZERO: undefined,
+    CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_EQUAL_ZERO: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED: undefined,
@@ -152,6 +152,7 @@ const scratchBoundsScale = new Cartesian3();
 const scratchBoundsScaleMatrix = new Matrix3();
 const scratchTransformLocalToBounds = new Matrix4();
 const scratchTransformUvToBounds = new Matrix4();
+
 const transformUvToLocal = Matrix4.fromRotationTranslation(
   Matrix3.fromUniformScale(2.0, new Matrix3()),
   new Cartesian3(-1.0, -1.0, -1.0),
@@ -196,11 +197,11 @@ VoxelCylinderShape.prototype.update = function (
   const defaultMinAngle = VoxelCylinderShape.DefaultMinBounds.z;
   const defaultMaxAngle = VoxelCylinderShape.DefaultMaxBounds.z;
   const defaultAngleRange = defaultMaxAngle - defaultMinAngle;
-  const defaultHalfAngleRange = 0.5 * defaultAngleRange;
+  const defaultAngleRangeHalf = 0.5 * defaultAngleRange;
 
-  const zeroScaleEpsilon = CesiumMath.EPSILON10;
-  const angleDiscontinuityEpsilon = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
-  const angleEpsilon = CesiumMath.EPSILON10;
+  const epsilonZeroScale = CesiumMath.EPSILON10;
+  const epsilonAngleDiscontinuity = CesiumMath.EPSILON3; // 0.001 radians = 0.05729578 degrees
+  const epsilonAngle = CesiumMath.EPSILON10;
 
   // Clamp the radii to the valid range
   const shapeMinRadius = CesiumMath.clamp(
@@ -272,9 +273,9 @@ VoxelCylinderShape.prototype.update = function (
     renderMaxRadius === 0.0 ||
     renderMinRadius > renderMaxRadius ||
     renderMinHeight > renderMaxHeight ||
-    CesiumMath.equalsEpsilon(scale.x, 0.0, undefined, zeroScaleEpsilon) ||
-    CesiumMath.equalsEpsilon(scale.y, 0.0, undefined, zeroScaleEpsilon) ||
-    CesiumMath.equalsEpsilon(scale.z, 0.0, undefined, zeroScaleEpsilon)
+    CesiumMath.equalsEpsilon(scale.x, 0.0, undefined, epsilonZeroScale) ||
+    CesiumMath.equalsEpsilon(scale.y, 0.0, undefined, epsilonZeroScale) ||
+    CesiumMath.equalsEpsilon(scale.z, 0.0, undefined, epsilonZeroScale)
   ) {
     return false;
   }
@@ -310,67 +311,66 @@ VoxelCylinderShape.prototype.update = function (
     this.boundingSphere
   );
 
-  const isDefaultMaxRadiusShape = shapeMaxRadius === defaultMaxRadius;
-  const isDefaultMinRadiusShape = shapeMinRadius === defaultMinRadius;
-  const isDefaultRadiusShape =
-    isDefaultMinRadiusShape && isDefaultMaxRadiusShape;
-  const isDefaultMaxRadiusRender = renderMaxRadius === defaultMaxRadius;
-  const isDefaultMinRadiusRender = renderMinRadius === defaultMinRadius;
-  const isDefaultHeightShape =
+  const shapeIsDefaultMaxRadius = shapeMaxRadius === defaultMaxRadius;
+  const shapeIsDefaultMinRadius = shapeMinRadius === defaultMinRadius;
+  const shapeIsDefaultRadius =
+    shapeIsDefaultMinRadius && shapeIsDefaultMaxRadius;
+  const shapeIsDefaultHeight =
     shapeMinHeight === defaultMinHeight && shapeMaxHeight === defaultMaxHeight;
-  const isDefaultHeightRender =
-    renderMinHeight === defaultMinHeight &&
-    renderMaxHeight === defaultMaxHeight;
-
-  const isAngleReversedShape = shapeMaxAngle < shapeMinAngle;
+  const shapeIsAngleReversed = shapeMaxAngle < shapeMinAngle;
   const shapeAngleRange =
-    shapeMaxAngle - shapeMinAngle + isAngleReversedShape * defaultAngleRange;
-  const hasAngleRegularShape =
-    shapeAngleRange > defaultHalfAngleRange + angleEpsilon &&
-    shapeAngleRange < defaultAngleRange - angleEpsilon;
-  const hasAngleFlippedShape =
-    shapeAngleRange > angleEpsilon &&
-    shapeAngleRange < defaultHalfAngleRange - angleEpsilon;
-  const hasAngleFlatShape =
-    shapeAngleRange >= defaultHalfAngleRange - angleEpsilon &&
-    shapeAngleRange <= defaultHalfAngleRange + angleEpsilon;
-  const hasAngleEmptyShape = shapeAngleRange <= angleEpsilon;
-  const hasAngleShape =
-    hasAngleRegularShape ||
-    hasAngleFlippedShape ||
-    hasAngleFlatShape ||
-    hasAngleEmptyShape;
-  const hasAngleMinDiscontinuityShape = CesiumMath.equalsEpsilon(
+    shapeMaxAngle - shapeMinAngle + shapeIsAngleReversed * defaultAngleRange;
+  const shapeIsAngleRegular =
+    shapeAngleRange > defaultAngleRangeHalf + epsilonAngle &&
+    shapeAngleRange < defaultAngleRange - epsilonAngle;
+  const shapeIsAngleFlipped =
+    shapeAngleRange > epsilonAngle &&
+    shapeAngleRange < defaultAngleRangeHalf - epsilonAngle;
+  const shapeIsAngleRangeHalf =
+    shapeAngleRange >= defaultAngleRangeHalf - epsilonAngle &&
+    shapeAngleRange <= defaultAngleRangeHalf + epsilonAngle;
+  const shapeIsAngleRangeZero = shapeAngleRange <= epsilonAngle;
+  const shapeHasAngle =
+    shapeIsAngleRegular ||
+    shapeIsAngleFlipped ||
+    shapeIsAngleRangeHalf ||
+    shapeIsAngleRangeZero;
+  const shapeIsMinAngleDiscontinuity = CesiumMath.equalsEpsilon(
     shapeMinAngle,
     defaultMinAngle,
     undefined,
-    angleDiscontinuityEpsilon
+    epsilonAngleDiscontinuity
   );
-  const hasAngleMaxDiscontinuityShape = CesiumMath.equalsEpsilon(
+  const shapeIsMaxAngleDiscontinuity = CesiumMath.equalsEpsilon(
     shapeMaxAngle,
     defaultMaxAngle,
     undefined,
-    angleDiscontinuityEpsilon
+    epsilonAngleDiscontinuity
   );
 
-  const isAngleReversedRender = renderMaxAngle < renderMinAngle;
+  const renderIsDefaultMaxRadius = renderMaxRadius === defaultMaxRadius;
+  const renderIsDefaultMinRadius = renderMinRadius === defaultMinRadius;
+  const renderIsDefaultHeight =
+    renderMinHeight === defaultMinHeight &&
+    renderMaxHeight === defaultMaxHeight;
+  const renderIsAngleReversed = renderMaxAngle < renderMinAngle;
   const renderAngleRange =
-    renderMaxAngle - renderMinAngle + isAngleReversedRender * defaultAngleRange;
-  const hasAngleRegularRender =
-    renderAngleRange > defaultHalfAngleRange + angleEpsilon &&
-    renderAngleRange < defaultAngleRange - angleEpsilon;
-  const hasAngleFlippedRender =
-    renderAngleRange > angleEpsilon &&
-    renderAngleRange < defaultHalfAngleRange - angleEpsilon;
-  const hasAngleFlatRender =
-    renderAngleRange >= defaultHalfAngleRange - angleEpsilon &&
-    renderAngleRange <= defaultHalfAngleRange + angleEpsilon;
-  const hasAngleEmptyRender = renderAngleRange <= angleEpsilon;
-  const hasAngleRender =
-    hasAngleRegularRender ||
-    hasAngleFlippedRender ||
-    hasAngleFlatRender ||
-    hasAngleEmptyRender;
+    renderMaxAngle - renderMinAngle + renderIsAngleReversed * defaultAngleRange;
+  const renderIsAngleRegular =
+    renderAngleRange > defaultAngleRangeHalf + epsilonAngle &&
+    renderAngleRange < defaultAngleRange - epsilonAngle;
+  const renderIsAngleFlipped =
+    renderAngleRange > epsilonAngle &&
+    renderAngleRange < defaultAngleRangeHalf - epsilonAngle;
+  const renderIsAngleRangeHalf =
+    renderAngleRange >= defaultAngleRangeHalf - epsilonAngle &&
+    renderAngleRange <= defaultAngleRangeHalf + epsilonAngle;
+  const renderIsAngleRangeZero = renderAngleRange <= epsilonAngle;
+  const renderHasAngle =
+    renderIsAngleRegular ||
+    renderIsAngleFlipped ||
+    renderIsAngleRangeHalf ||
+    renderIsAngleRangeZero;
 
   const shaderUniforms = this.shaderUniforms;
   const shaderDefines = this.shaderDefines;
@@ -388,7 +388,7 @@ VoxelCylinderShape.prototype.update = function (
   shaderDefines["CYLINDER_INTERSECTION_INDEX_RADIUS_MAX"] = intersectionCount;
   intersectionCount += 1;
 
-  if (!isDefaultMinRadiusRender) {
+  if (!renderIsDefaultMinRadius) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN"] = true;
     shaderDefines["CYLINDER_INTERSECTION_INDEX_RADIUS_MIN"] = intersectionCount;
     intersectionCount += 1;
@@ -396,13 +396,13 @@ VoxelCylinderShape.prototype.update = function (
     shaderUniforms.cylinderUvToRenderRadiusMin =
       renderMaxRadius / renderMinRadius;
   }
-  if (!isDefaultMaxRadiusRender) {
+  if (!renderIsDefaultMaxRadius) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX"] = true;
   }
   if (renderMinRadius === renderMaxRadius) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT"] = true;
   }
-  if (!isDefaultHeightRender) {
+  if (!renderIsDefaultHeight) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_HEIGHT"] = true;
   }
   if (renderMinHeight === renderMaxHeight) {
@@ -414,7 +414,7 @@ VoxelCylinderShape.prototype.update = function (
   if (shapeMinRadius === shapeMaxRadius) {
     shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT"] = true;
   }
-  if (!isDefaultRadiusShape) {
+  if (!shapeIsDefaultRadius) {
     shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_RADIUS"] = true;
 
     // delerp(radius, minRadius, maxRadius)
@@ -432,7 +432,7 @@ VoxelCylinderShape.prototype.update = function (
     );
   }
 
-  if (!isDefaultHeightShape) {
+  if (!shapeIsDefaultHeight) {
     shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT"] = true;
 
     // delerp(heightUv, minHeightUv, maxHeightUv)
@@ -455,7 +455,7 @@ VoxelCylinderShape.prototype.update = function (
     );
   }
 
-  if (!isDefaultMaxRadiusRender || !isDefaultHeightRender) {
+  if (!renderIsDefaultMaxRadius || !renderIsDefaultHeight) {
     const heightScale = 0.5 * (renderMaxHeight - renderMinHeight);
     const scaleLocalToBounds = Cartesian3.fromElements(
       1.0 / renderMaxRadius,
@@ -491,25 +491,25 @@ VoxelCylinderShape.prototype.update = function (
     );
   }
 
-  if (isAngleReversedShape) {
+  if (shapeIsAngleReversed) {
     shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED"] = true;
   }
 
-  if (hasAngleRender) {
+  if (renderHasAngle) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE"] = true;
     shaderDefines["CYLINDER_INTERSECTION_INDEX_ANGLE"] = intersectionCount;
 
-    if (hasAngleRegularRender) {
+    if (renderIsAngleRegular) {
       shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF"] = true;
       intersectionCount += 1;
-    } else if (hasAngleFlippedRender) {
+    } else if (renderIsAngleFlipped) {
       shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF"] = true;
       intersectionCount += 2;
-    } else if (hasAngleFlatRender) {
-      shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_HALF"] = true;
+    } else if (renderIsAngleRangeHalf) {
+      shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF"] = true;
       intersectionCount += 1;
-    } else if (hasAngleEmptyRender) {
-      shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_ZERO"] = true;
+    } else if (renderIsAngleRangeZero) {
+      shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO"] = true;
       intersectionCount += 2;
     }
 
@@ -520,37 +520,37 @@ VoxelCylinderShape.prototype.update = function (
     );
   }
 
-  if (hasAngleShape) {
+  if (shapeHasAngle) {
     shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE"] = true;
-    if (hasAngleEmptyShape) {
-      shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_ZERO"] = true;
+    if (shapeIsAngleRangeZero) {
+      shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_EQUAL_ZERO"] = true;
     }
-    if (hasAngleMinDiscontinuityShape) {
+    if (shapeIsMinAngleDiscontinuity) {
       shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY"] = true;
     }
-    if (hasAngleMaxDiscontinuityShape) {
+    if (shapeIsMaxAngleDiscontinuity) {
       shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY"] = true;
     }
 
-    const minAngleUv = (shapeMinAngle - defaultMinAngle) / defaultAngleRange;
-    const maxAngleUv = (shapeMaxAngle - defaultMinAngle) / defaultAngleRange;
-    const emptyAngleRangeUv = 1.0 - shapeAngleRange / defaultAngleRange;
+    const uvMinAngle = (shapeMinAngle - defaultMinAngle) / defaultAngleRange;
+    const uvMaxAngle = (shapeMaxAngle - defaultMinAngle) / defaultAngleRange;
+    const uvAngleRangeZero = 1.0 - shapeAngleRange / defaultAngleRange;
 
     shaderUniforms.cylinderShapeUvAngleMinMax = Cartesian2.fromElements(
-      minAngleUv,
-      maxAngleUv,
+      uvMinAngle,
+      uvMaxAngle,
       shaderUniforms.cylinderShapeUvAngleMinMax
     );
-    shaderUniforms.cylinderShapeUvAngleEmptyMid =
-      (maxAngleUv + 0.5 * emptyAngleRangeUv) % 1.0;
+    shaderUniforms.cylinderShapeUvAngleRangeZeroMid =
+      (uvMaxAngle + 0.5 * uvAngleRangeZero) % 1.0;
 
-    // delerp(angleUv, minAngleUv, maxAngleUv)
-    // (angelUv - minAngleUv) / (maxAngleUv - minAngleUv)
-    // angleUv / (maxAngleUv - minAngleUv) - minAngleUv / (maxAngleUv - minAngleUv)
-    // scale = 1.0 / (maxAngleUv - minAngleUv)
+    // delerp(angleUv, uvMinAngle, uvMaxAngle)
+    // (angelUv - uvMinAngle) / (uvMaxAngle - uvMinAngle)
+    // angleUv / (uvMaxAngle - uvMinAngle) - uvMinAngle / (uvMaxAngle - uvMinAngle)
+    // scale = 1.0 / (uvMaxAngle - uvMinAngle)
     // scale = 1.0 / (((maxAngle - pi) / (2.0 * pi)) - ((minAngle - pi) / (2.0 * pi)))
     // scale = 2.0 * pi / (maxAngle - minAngle)
-    // offset = -minAngleUv / (maxAngleUv - minAngleUv)
+    // offset = -uvMinAngle / (uvMaxAngle - uvMinAngle)
     // offset = -((minAngle - pi) / (2.0 * pi)) / (((maxAngle - pi) / (2.0 * pi)) - ((minAngle - pi) / (2.0 * pi)))
     // offset = -(minAngle - pi) / (maxAngle - minAngle)
     const scale = defaultAngleRange / shapeAngleRange;
@@ -829,9 +829,9 @@ function getCylinderChunkObb(
     return result;
   }
 
-  const isAngleFlipped = angleEnd < angleStart;
+  const isAngleReversed = angleEnd < angleStart;
 
-  if (isAngleFlipped) {
+  if (isAngleReversed) {
     angleEnd += CesiumMath.TWO_PI;
   }
 

@@ -14,7 +14,7 @@
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN
-#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO
+#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_INTERSECTION_INDEX_LONGITUDE
 #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX
 #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN
@@ -239,7 +239,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     }
 
     // Inner ellipsoid
-    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO)
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
         // When the ellipsoid is perfectly thin it's necessary to sandwich the
         // inner ellipsoid intersection inside the outer ellipsoid intersection.
 

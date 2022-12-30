@@ -8,9 +8,9 @@
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO
-#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO
+#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN
-#define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO
+#define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_IS_SPHERE
 */
 
@@ -27,7 +27,7 @@ uniform vec3 u_ellipsoidRadiiUv; // [0,1]
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
     uniform vec2 u_ellipsoidUvToShapeUvLatitude; // x = scale, y = offset
 #endif
-#if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN) && !defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO)
+#if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN) && !defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
     uniform float u_ellipsoidInverseHeightDifferenceUv;
     uniform vec2 u_ellipseInnerRadiiUv; // [0,1]
 #endif
@@ -104,7 +104,7 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     #endif
 
     // Compute height
-    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO)
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
         // TODO: This breaks down when minBounds == maxBounds. To fix it, this
         // function would have to know if ray is intersecting the front or back of the shape
         // and set the shape space position to 1 (front) or 0 (back) accordingly.
