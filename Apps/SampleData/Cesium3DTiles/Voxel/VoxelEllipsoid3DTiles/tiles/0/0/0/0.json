@@ -1,0 +1,27 @@
+{
+  "buffers": [
+    {
+      "uri": "a.bin",
+      "byteLength": 32
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 32
+    }
+  ],
+  "propertyTables": [
+    {
+      "class": "voxel",
+      "count": 8,
+      "properties": {
+        "a": {
+          "values": 0
+        }
+      }
+    }
+  ],
+  "voxelTable": 0
+}
