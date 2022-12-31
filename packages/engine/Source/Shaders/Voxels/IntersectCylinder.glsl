@@ -56,6 +56,9 @@ vec4 intersectHalfPlane(Ray ray, float angle) {
     return vec4(-INF_HIT, t, t, +INF_HIT);
 }
 
+#define POSITIVE_HIT vec2(t, +INF_HIT);
+#define NEGATIVE_HIT vec2(-INF_HIT, t);
+
 vec2 intersectHalfSpace(Ray ray, float angle)
 {
     vec2 o = ray.pos.xy;
@@ -67,8 +70,20 @@ vec2 intersectHalfSpace(Ray ray, float angle)
     float t = -a / b;
     float s = sign(a);
 
-    if (t >= 0.0 != s >= 0.0) return vec2(t, +INF_HIT);
-    else return vec2(-INF_HIT, t);
+    // Half space cuts right through the camera, pick the side to intersect
+    if (a == 0.0) {
+        if (b >= 0.0) {
+            return POSITIVE_HIT;
+        } else {
+            return NEGATIVE_HIT;
+        }
+    }
+
+    if (t >= 0.0 != s >= 0.0) {
+        return POSITIVE_HIT;
+    } else {
+        return NEGATIVE_HIT;
+    }
 }
 
 vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
