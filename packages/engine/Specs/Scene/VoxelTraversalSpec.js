@@ -11,7 +11,6 @@ import {
   Cesium3DTilesVoxelProvider,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 const towardPrimitive = Cartesian3.fromElements(1.0, 1.0, 1.0);
 
@@ -46,24 +45,17 @@ describe(
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      return pollToPromise(function () {
-        provider.update(scene.frameState);
-        return provider.ready;
-      })
-        .then(function () {
-          return primitive.ready;
-        })
-        .then(function () {
-          traversal = new VoxelTraversal(
-            primitive,
-            scene.context,
-            provider.dimensions,
-            provider.types,
-            provider.componentTypes,
-            keyframeCount,
-            textureMemory
-          );
-        });
+      return provider.readyPromise.then(function () {
+        traversal = new VoxelTraversal(
+          primitive,
+          scene.context,
+          provider.dimensions,
+          provider.types,
+          provider.componentTypes,
+          keyframeCount,
+          textureMemory
+        );
+      });
     });
 
     afterEach(function () {

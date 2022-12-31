@@ -42,12 +42,6 @@ describe("Scene/VoxelShapeType", function () {
     }).toThrowDeveloperError();
   });
 
-  it("fromPrimitiveType throws for invalid type", function () {
-    expect(function () {
-      return VoxelShapeType.fromPrimitiveType("NOT_A_PRIMITIVE_TYPE");
-    }).toThrowDeveloperError();
-  });
-
   it("getShapeConstructor works", function () {
     expect(VoxelShapeType.getShapeConstructor(VoxelShapeType.BOX)).toBe(
       VoxelBoxShape

@@ -6,7 +6,6 @@ import {
   VoxelPrimitive,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/VoxelPrimitive",
@@ -20,10 +19,7 @@ describe(
         url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       });
 
-      return pollToPromise(function () {
-        provider.update(scene.frameState);
-        return provider.ready;
-      });
+      return provider.readyPromise;
     });
 
     afterEach(function () {
