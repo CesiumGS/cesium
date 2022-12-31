@@ -51,10 +51,10 @@ function Cesium3DTilesVoxelProvider(options) {
   this.ready = false;
 
   /** @inheritdoc */
-  this.shapeTransform = Matrix4.clone(Matrix4.IDENTITY);
+  this.shapeTransform = undefined;
 
   /** @inheritdoc */
-  this.globalTransform = Matrix4.clone(Matrix4.IDENTITY);
+  this.globalTransform = undefined;
 
   /** @inheritdoc */
   this.shape = undefined;
@@ -109,6 +109,8 @@ function Cesium3DTilesVoxelProvider(options) {
       })
       .then(function (schemaLoader) {
         const root = tilesetJson.root;
+        const voxel = root.content.extensions["3DTILES_content_voxels"];
+        const className = voxel.class;
 
         const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
           ? tilesetJson.extensions["3DTILES_metadata"]
@@ -120,15 +122,13 @@ function Cesium3DTilesVoxelProvider(options) {
           schema: metadataSchema,
         });
 
-        addAttributeInfo(metadata, that);
+        addAttributeInfo(that, metadata, className);
 
         const implicitTileset = new ImplicitTileset(
           resource,
           root,
           metadataSchema
         );
-
-        const voxel = root.content.extensions["3DTILES_content_voxels"];
 
         const {
           shape,
@@ -142,15 +142,24 @@ function Cesium3DTilesVoxelProvider(options) {
         that.minBounds = minBounds;
         that.maxBounds = maxBounds;
         that.dimensions = Cartesian3.unpack(voxel.dimensions);
-        that.paddingBefore = Cartesian3.unpack(voxel.padding.before);
-        that.paddingAfter = Cartesian3.unpack(voxel.padding.after);
         that.shapeTransform = shapeTransform;
         that.globalTransform = globalTransform;
 
-        // TODO: this tile class stuff needs to be documented
-        that.maximumTileCount = metadata.statistics.classes.tile?.count;
+        let paddingBefore;
+        let paddingAfter;
+
+        if (defined(voxel.padding)) {
+          paddingBefore = Cartesian3.unpack(voxel.padding.before);
+          paddingAfter = Cartesian3.unpack(voxel.padding.after);
+        }
+
+        that.paddingBefore = paddingBefore;
+        that.paddingAfter = paddingAfter;
 
         that._implicitTileset = implicitTileset;
+
+        ResourceCache.unload(schemaLoader);
+
         that.ready = true;
         return that;
       });
@@ -294,29 +303,23 @@ function getMetadataSchemaLoader(tilesetJson, resource) {
   });
 }
 
-function addAttributeInfo(metadata, provider) {
+function addAttributeInfo(provider, metadata, className) {
   const { schema, statistics } = metadata;
+  const classStatistics = statistics?.classes[className];
+  const properties = schema.classes[className].properties;
 
-  // Collect a flattened array of info from all properties in all classes.
-  const propertyInfo = Object.entries(schema.classes).flatMap(getPropertyInfo);
+  const propertyInfo = Object.entries(properties).map(([id, property]) => {
+    const { type, componentType } = property;
+    const min = classStatistics?.properties[id].min;
+    const max = classStatistics?.properties[id].max;
+    const componentCount = MetadataType.getComponentCount(type);
+    const minValue = copyArray(min, componentCount);
+    const maxValue = copyArray(max, componentCount);
 
-  function getPropertyInfo([className, classInfo]) {
-    const classStatistics = statistics.classes[className];
-    const { properties } = classInfo;
-    return Object.entries(properties).map(([name, property]) => {
-      const { type, componentType } = property;
+    return { id, type, componentType, minValue, maxValue };
+  });
 
-      const min = classStatistics?.properties[name].min;
-      const max = classStatistics?.properties[name].max;
-      const componentCount = MetadataType.getComponentCount(type);
-      const minValue = copyArray(min, componentCount);
-      const maxValue = copyArray(max, componentCount);
-
-      return { name, type, componentType, minValue, maxValue };
-    });
-  }
-
-  provider.names = propertyInfo.map((info) => info.name);
+  provider.names = propertyInfo.map((info) => info.id);
   provider.types = propertyInfo.map((info) => info.type);
   provider.componentTypes = propertyInfo.map((info) => info.componentType);
 
