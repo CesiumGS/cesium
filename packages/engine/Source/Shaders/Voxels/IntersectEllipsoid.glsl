@@ -263,7 +263,25 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
         Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
         vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
+
+        if (innerIntersect == vec2(NO_HIT)) {
+            setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
+        } else {
+            // When the ellipsoid is very large and thin it's possible for floating
+            // point math to cause the ray to intersect the inner ellipsoid before
+            // the outer ellipsoid. To prevent this from happening, clamp innerIntersect
+            // to outerIntersect and sandwhich the intersections like described above.
+            //
+            // In theory a similar fix is needed for cylinders, however it's more
+            // complicated to implement because the inner shape is allowed to be
+            // intersected first.
+            innerIntersect.x = max(innerIntersect.x, outerIntersect.x);
+            innerIntersect.y = min(innerIntersect.y, outerIntersect.y);
+            setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
+            setIntersection(ix, 1, innerIntersect.x, false, true);  // negative, enter
+            setIntersection(ix, 2, innerIntersect.y, false, false); // negative, exit
+            setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
+        }
     #endif
 
     // Flip the ray because the intersection function expects a cone growing towards +Z.
