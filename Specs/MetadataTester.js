@@ -67,7 +67,7 @@ function createProperties(options) {
     }
   }
 
-  const classDefinition = new MetadataClass({
+  const classDefinition = MetadataClass.fromJson({
     id: classId,
     class: schema.classes[classId],
     enums: enumDefinitions,

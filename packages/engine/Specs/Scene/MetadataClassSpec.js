@@ -7,7 +7,7 @@ import {
 
 describe("Scene/MetadataClass", function () {
   it("creates class with default values", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {},
     });
@@ -31,7 +31,7 @@ describe("Scene/MetadataClass", function () {
       EXT_other_extension: {},
     };
 
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         name: "Building",
@@ -107,7 +107,7 @@ describe("Scene/MetadataClass", function () {
       color: colorEnum,
     };
 
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -127,7 +127,7 @@ describe("Scene/MetadataClass", function () {
 
   it("constructor throws without id", function () {
     expect(function () {
-      return new MetadataClass({
+      return MetadataClass.fromJson({
         class: {},
       });
     }).toThrowDeveloperError();
@@ -135,7 +135,7 @@ describe("Scene/MetadataClass", function () {
 
   it("constructor throws without class", function () {
     expect(function () {
-      return new MetadataClass({
+      return MetadataClass.fromJson({
         id: "classId",
       });
     }).toThrowDeveloperError();

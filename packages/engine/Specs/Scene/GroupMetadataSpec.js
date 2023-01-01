@@ -1,7 +1,7 @@
 import { Cartesian3, MetadataClass, GroupMetadata } from "../../index.js";
 
 describe("Scene/GroupMetadata", function () {
-  const buildingClassWithNoProperties = new MetadataClass({
+  const buildingClassWithNoProperties = MetadataClass.fromJson({
     id: "building",
     class: {},
   });
@@ -19,7 +19,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("creates group metadata", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -92,7 +92,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasProperty returns false when there's no property with the given property ID", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -117,7 +117,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasProperty returns true when there's a property with the given property ID", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -142,7 +142,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasProperty returns true when the class has a default value for a missing property", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -187,7 +187,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -212,7 +212,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -238,7 +238,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -285,7 +285,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -315,7 +315,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyIds includes properties with default values", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -345,7 +345,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyIds uses results argument", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -379,7 +379,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getProperty throws when there's no property with the given property ID", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -406,7 +406,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getProperty returns the property value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -436,7 +436,7 @@ describe("Scene/GroupMetadata", function () {
 
   it("getProperty returns the default value when the property is missing", function () {
     const position = [0.0, 0.0, 0.0];
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -484,7 +484,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setProperty sets property value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -546,7 +546,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -572,7 +572,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("getPropertyBySemantic returns the property value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -611,7 +611,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -639,7 +639,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setPropertyBySemantic returns false if the semantic does not exist", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -677,7 +677,7 @@ describe("Scene/GroupMetadata", function () {
   });
 
   it("setPropertyBySemantic throws without value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {

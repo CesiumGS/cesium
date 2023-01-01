@@ -37,7 +37,7 @@ function MetadataSchema(schema) {
   if (defined(schema.classes)) {
     for (const classId in schema.classes) {
       if (schema.classes.hasOwnProperty(classId)) {
-        classes[classId] = new MetadataClass({
+        classes[classId] = MetadataClass.fromJson({
           id: classId,
           class: schema.classes[classId],
           enums: enums,
