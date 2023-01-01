@@ -7,7 +7,7 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * A metadata class.
  *
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -34,7 +34,7 @@ function MetadataClass(options) {
   const propertiesBySemantic = {};
   for (const propertyId in classDefinition.properties) {
     if (classDefinition.properties.hasOwnProperty(propertyId)) {
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: propertyId,
         property: classDefinition.properties[propertyId],
         enums: options.enums,
