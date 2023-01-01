@@ -82,7 +82,7 @@ MetadataEnum.fromJson = function (options) {
   //>>includeEnd('debug');
 
   const values = enumDefinition.values.map(function (value) {
-    return new MetadataEnumValue(value);
+    return MetadataEnumValue.fromJson(value);
   });
 
   return new MetadataEnum({
