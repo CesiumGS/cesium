@@ -207,12 +207,6 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: true,
   });
   addProperty({
-    name: "levelBlendFactor",
-    initialValue: 1.0,
-    setPrimitiveFunction: true,
-    getPrimitiveFunction: true,
-  });
-  addProperty({
     name: "screenSpaceError",
     initialValue: 4.0,
     setPrimitiveFunction: true,

@@ -103,10 +103,6 @@ function VoxelInspector(container, scene) {
   );
 
   displayPanelContents.appendChild(
-    createRangeInput("Level Blend Factor", "levelBlendFactor", 0.0, 1.0)
-  );
-
-  displayPanelContents.appendChild(
     createRangeInput("Screen Space Error", "screenSpaceError", 0, 128)
   );
 

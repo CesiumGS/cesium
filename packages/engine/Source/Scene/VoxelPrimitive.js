@@ -600,7 +600,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Gets the minimum value per channel of the voxel data.
    *
    * @memberof VoxelPrimitive.prototype
-   * @type {Number[]}
+   * @type {Number[][]}
    * @readonly
    *
    * @exception {DeveloperError} If the primitive is not ready.
@@ -623,7 +623,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Gets the maximum value per channel of the voxel data.
    *
    * @memberof VoxelPrimitive.prototype
-   * @type {Number[]}
+   * @type {Number[][]}
    * @readonly
    *
    * @exception {DeveloperError} If the primitive is not ready.
@@ -773,6 +773,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Number}
+   * @private
    */
   levelBlendFactor: {
     get: function () {

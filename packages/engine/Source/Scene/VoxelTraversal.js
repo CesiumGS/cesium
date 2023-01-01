@@ -261,9 +261,9 @@ VoxelTraversal.prototype.update = function (
   const keyframeCount = this._keyframeCount;
 
   const levelBlendFactor = primitive._levelBlendFactor;
-  const haslevelBlendFactor = levelBlendFactor > 0.0;
+  const hasLevelBlendFactor = levelBlendFactor > 0.0;
   const hasKeyframes = keyframeCount > 1;
-  const sampleCount = (haslevelBlendFactor ? 2 : 1) * (hasKeyframes ? 2 : 1);
+  const sampleCount = (hasLevelBlendFactor ? 2 : 1) * (hasKeyframes ? 2 : 1);
   this._sampleCount = sampleCount;
 
   const useLeafNodes = sampleCount >= 2;

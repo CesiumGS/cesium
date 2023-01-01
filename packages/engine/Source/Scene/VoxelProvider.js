@@ -215,6 +215,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * @memberof VoxelProvider.prototype
    * @type {Number}
    * @readonly
+   * @private
    */
   keyframeCount: {
     get: DeveloperError.throwInstantiationError,
@@ -227,6 +228,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * @memberof VoxelProvider.prototype
    * @type {TimeIntervalCollection}
    * @readonly
+   * @private
    */
   timeIntervalCollection: {
     get: DeveloperError.throwInstantiationError,
@@ -243,8 +245,8 @@ Object.defineProperties(VoxelProvider.prototype, {
  * @param {Number} [options.tileX=0] The tile's X coordinate.
  * @param {Number} [options.tileY=0] The tile's Y coordinate.
  * @param {Number} [options.tileZ=0] The tile's Z coordinate.
- * @param {Number} [options.keyframe=0] The requested keyframe.
- * @returns {Promise<Array[]>|undefined} An array of promises for the requested voxel data or undefined if there was a problem loading the data.
+ * @privateparam {Number} [options.keyframe=0] The requested keyframe.
+ * @returns {Promise<Array[]>|undefined} A promise to an array of typed arrays containing the requested voxel data or undefined if there was a problem loading the data.
  *
  * @exception {DeveloperError} The provider must be ready.
  */
