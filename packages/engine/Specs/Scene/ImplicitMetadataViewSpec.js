@@ -196,7 +196,7 @@ describe("Scene/ImplicitMetadataView", function () {
 
     mockTilesetWithMetadata = {
       metadata: {
-        schema: new MetadataSchema(schema),
+        schema: MetadataSchema.fromJson(schema),
       },
     };
 

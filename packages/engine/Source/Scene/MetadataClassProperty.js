@@ -14,6 +14,9 @@ import MetadataComponentType from "./MetadataComponentType.js";
 
 /**
  * A metadata property, as part of a {@link MetadataClass}.
+ * <p>
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the property.
@@ -120,7 +123,7 @@ function MetadataClassProperty(options) {
 }
 
 /**
- * Creates a @link MetadataClassProperty} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
+ * Creates a {@link MetadataClassProperty} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the property.

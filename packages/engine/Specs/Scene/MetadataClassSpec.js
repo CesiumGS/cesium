@@ -61,8 +61,8 @@ describe("Scene/MetadataClass", function () {
     expect(buildingClass.id).toBe("building");
     expect(buildingClass.name).toBe("Building");
     expect(buildingClass.description).toBe("Building Class");
-    expect(buildingClass.extras).toBe(extras);
-    expect(buildingClass.extensions).toBe(extensions);
+    expect(buildingClass.extras).toEqual(extras);
+    expect(buildingClass.extensions).toEqual(extensions);
 
     const properties = buildingClass.properties;
     const heightProperty = properties.height;

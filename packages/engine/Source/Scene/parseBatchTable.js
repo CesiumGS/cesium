@@ -264,7 +264,7 @@ function transcodeBinaryProperties(
     properties: classProperties,
   };
 
-  const transcodedSchema = new MetadataSchema(schemaJson);
+  const transcodedSchema = MetadataSchema.fromJson(schemaJson);
 
   const featureTableJson = {
     class: className,
@@ -387,7 +387,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     properties: classProperties,
   };
 
-  const transcodedSchema = new MetadataSchema(schemaJson);
+  const transcodedSchema = MetadataSchema.fromJson(schemaJson);
 
   const propertyAttributeJson = {
     properties: propertyAttributeProperties,

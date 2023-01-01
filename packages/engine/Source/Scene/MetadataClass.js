@@ -31,7 +31,7 @@ function MetadataClass(options) {
   Check.typeOf.string("options.id", id);
   //>>includeEnd('debug');
 
-  const properties = options.properties;
+  const properties = defaultValue(options.properties, {});
   const propertiesBySemantic = {};
   for (const propertyId in properties) {
     if (properties.hasOwnProperty(propertyId)) {
@@ -52,7 +52,7 @@ function MetadataClass(options) {
 }
 
 /**
- * Creates a @link MetadataClass} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
+ * Creates a {@link MetadataClass} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the class.
