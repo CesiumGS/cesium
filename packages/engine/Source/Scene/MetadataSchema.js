@@ -12,7 +12,7 @@ import MetadataEnum from "./MetadataEnum.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {String} options.id The ID of the schema
+ * @param {String} [options.id] The ID of the schema
  * @param {String} [options.name] The name of the schema.
  * @param {String} [options.description] The description of the schema.
  * @param {String} [options.version] The application-specific version of the schema.
@@ -27,18 +27,13 @@ import MetadataEnum from "./MetadataEnum.js";
  */
 function MetadataSchema(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const id = options.id;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.id", id);
-  //>>includeEnd('debug');
 
   const classes = defaultValue(options.classes, {});
   const enums = defaultValue(options.enums, {});
 
   this._classes = classes;
   this._enums = enums;
-  this._id = id;
+  this._id = options.id;
   this._name = options.name;
   this._description = options.description;
   this._version = options.version;

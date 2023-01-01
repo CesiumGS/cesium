@@ -32,9 +32,9 @@ function MetadataEnumValue(options) {
 
   this._value = value;
   this._name = name;
-  this._description = value.description;
-  this._extras = clone(value.extras, true);
-  this._extensions = clone(value.extensions, true);
+  this._description = options.description;
+  this._extras = clone(options.extras, true);
+  this._extensions = clone(options.extensions, true);
 }
 
 /**

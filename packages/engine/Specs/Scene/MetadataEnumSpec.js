@@ -74,8 +74,8 @@ describe("Scene/MetadataEnum", function () {
     expect(colorEnum.id).toBe("color");
     expect(colorEnum.name).toBe("Color");
     expect(colorEnum.description).toBe("Common colors");
-    expect(colorEnum.extras).toBe(extras);
-    expect(colorEnum.extensions).toBe(extensions);
+    expect(colorEnum.extras).toEqual(extras);
+    expect(colorEnum.extensions).toEqual(extensions);
   });
 
   it("constructor throws without id", function () {

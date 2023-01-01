@@ -21,8 +21,8 @@ describe("Scene/MetadataEnumValue", function () {
     expect(enumValue.name).toBe("RED");
     expect(enumValue.description).toBe("Red color");
     expect(enumValue.value).toBe(0);
-    expect(enumValue.extras).toBe(extras);
-    expect(enumValue.extensions).toBe(extensions);
+    expect(enumValue.extras).toEqual(extras);
+    expect(enumValue.extensions).toEqual(extensions);
   });
 
   it("constructor throws without value", function () {

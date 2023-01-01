@@ -123,8 +123,8 @@ describe("Scene/MetadataSchema", function () {
     expect(schema.description).toBe("My Schema Description");
     expect(schema.version).toBe("3.1.0");
 
-    expect(schema.extras).toBe(extras);
-    expect(schema.extensions).toBe(extensions);
+    expect(schema.extras).toEqual(extras);
+    expect(schema.extensions).toEqual(extensions);
   });
 
   it("constructor throws without schema", function () {
