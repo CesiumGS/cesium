@@ -65,7 +65,7 @@ MetadataSchema.fromJson = function (schema) {
   if (defined(schema.enums)) {
     for (const enumId in schema.enums) {
       if (schema.enums.hasOwnProperty(enumId)) {
-        enums[enumId] = new MetadataEnum({
+        enums[enumId] = MetadataEnum.fromJson({
           id: enumId,
           enum: schema.enums[enumId],
         });
@@ -178,7 +178,7 @@ Object.defineProperties(MetadataSchema.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof MetadataSchema.prototype
    * @type {*}
@@ -191,7 +191,7 @@ Object.defineProperties(MetadataSchema.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof MetadataSchema.prototype
    * @type {Object}

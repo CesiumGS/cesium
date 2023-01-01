@@ -165,7 +165,7 @@ Object.defineProperties(MetadataClass.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof MetadataClass.prototype
    * @type {*}
@@ -178,7 +178,7 @@ Object.defineProperties(MetadataClass.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof MetadataClass.prototype
    * @type {Object}

@@ -146,7 +146,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates enum property", function () {
-    const colorEnum = new MetadataEnum({
+    const colorEnum = MetadataEnum.fromJson({
       id: "color",
       enum: {
         values: [
@@ -184,7 +184,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates array of enums with EXT_feature_metadata", function () {
-    const colorEnum = new MetadataEnum({
+    const colorEnum = MetadataEnum.fromJson({
       id: "color",
       enum: {
         valueType: "UINT32",
@@ -792,7 +792,7 @@ describe("Scene/MetadataClassProperty", function () {
         ],
       };
 
-      myEnum = new MetadataEnum({
+      myEnum = MetadataEnum.fromJson({
         id: "myEnum",
         enum: {
           values: [
@@ -1369,7 +1369,7 @@ describe("Scene/MetadataClassProperty", function () {
         ],
       };
 
-      myEnum = new MetadataEnum({
+      myEnum = MetadataEnum.fromJson({
         id: "myEnum",
         enum: {
           values: [
@@ -2798,7 +2798,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if enum name is invalid", function () {
-    const myEnum = new MetadataEnum({
+    const myEnum = MetadataEnum.fromJson({
       id: "myEnum",
       enum: {
         values: [

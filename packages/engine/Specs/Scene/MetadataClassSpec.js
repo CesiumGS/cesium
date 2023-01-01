@@ -91,7 +91,7 @@ describe("Scene/MetadataClass", function () {
   });
 
   it("creates class with enum property", function () {
-    const colorEnum = new MetadataEnum({
+    const colorEnum = MetadataEnum.fromJson({
       id: "color",
       enum: {
         values: [
