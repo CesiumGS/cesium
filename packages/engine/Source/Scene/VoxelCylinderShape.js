@@ -715,7 +715,9 @@ VoxelCylinderShape.prototype.computeApproximateStepSize = function (
  *
  * @private
  */
-VoxelCylinderShape.DefaultMinBounds = new Cartesian3(0.0, -1.0, -CesiumMath.PI);
+VoxelCylinderShape.DefaultMinBounds = Object.freeze(
+  new Cartesian3(0.0, -1.0, -CesiumMath.PI)
+);
 
 /**
  * Defines the maximum bounds of the shape. Corresponds to maximum radius, height, angle.
@@ -726,7 +728,9 @@ VoxelCylinderShape.DefaultMinBounds = new Cartesian3(0.0, -1.0, -CesiumMath.PI);
  *
  * @private
  */
-VoxelCylinderShape.DefaultMaxBounds = new Cartesian3(1.0, +1.0, +CesiumMath.PI);
+VoxelCylinderShape.DefaultMaxBounds = Object.freeze(
+  new Cartesian3(1.0, +1.0, +CesiumMath.PI)
+);
 
 const maxTestAngles = 5;
 const scratchTestAngles = new Array(maxTestAngles);

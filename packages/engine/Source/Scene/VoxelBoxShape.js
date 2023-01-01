@@ -464,7 +464,9 @@ VoxelBoxShape.prototype.computeApproximateStepSize = function (dimensions) {
  * @constant
  * @readonly
  */
-VoxelBoxShape.DefaultMinBounds = new Cartesian3(-1.0, -1.0, -1.0);
+VoxelBoxShape.DefaultMinBounds = Object.freeze(
+  new Cartesian3(-1.0, -1.0, -1.0)
+);
 
 /**
  * Defines the maximum bounds of the shape. Corresponds to maximum X, Y, Z.
@@ -473,7 +475,9 @@ VoxelBoxShape.DefaultMinBounds = new Cartesian3(-1.0, -1.0, -1.0);
  * @constant
  * @readonly
  */
-VoxelBoxShape.DefaultMaxBounds = new Cartesian3(+1.0, +1.0, +1.0);
+VoxelBoxShape.DefaultMaxBounds = Object.freeze(
+  new Cartesian3(+1.0, +1.0, +1.0)
+);
 
 /**
  * Computes an {@link OrientedBoundingBox} for a subregion of the shape.
