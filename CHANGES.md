@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.102 - 2023-02-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
+
 ### 1.101 - 2023-01-02
 
 #### Major Announcements :loudspeaker:
