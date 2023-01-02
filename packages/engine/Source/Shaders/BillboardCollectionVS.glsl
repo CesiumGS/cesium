@@ -67,7 +67,7 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
         float angle = rotation;
         if (validAlignedAxis)
         {
-            vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
+            vec4 projectedAlignedAxis = czm_modelView3D * vec4(alignedAxis, 0.0);
             angle += sign(-projectedAlignedAxis.x) * acos(sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
                     (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y));
         }

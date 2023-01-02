@@ -232,14 +232,20 @@ const serveResult = (result, fileName, res, next) => {
       ignoreInitial: true,
     });
     workerWatcher.on("all", async () => {
-      const start = performance.now();
-      await bundleWorkers({
-        path: outputDirectory,
-        sourcemap: true,
-      });
-      console.log(
-        `Rebuilt Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
-      );
+      try {
+        const start = performance.now();
+        await bundleWorkers({
+          input: ["packages/engine/Source/Workers/**"],
+          inputES6: workerSourceFiles,
+          path: outputDirectory,
+          sourcemap: true,
+        });
+        console.log(
+          `Rebuilt Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
+        );
+      } catch (e) {
+        console.error(e);
+      }
     });
 
     app.get("/Build/CesiumUnminified/Cesium.js", async function (

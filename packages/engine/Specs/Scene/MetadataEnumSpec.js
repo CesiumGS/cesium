@@ -2,7 +2,7 @@ import { MetadataComponentType, MetadataEnum } from "../../index.js";
 
 describe("Scene/MetadataEnum", function () {
   it("creates enum with default values", function () {
-    const colorEnum = new MetadataEnum({
+    const colorEnum = MetadataEnum.fromJson({
       id: "color",
       enum: {
         values: [
@@ -42,7 +42,7 @@ describe("Scene/MetadataEnum", function () {
       EXT_other_extension: {},
     };
 
-    const colorEnum = new MetadataEnum({
+    const colorEnum = MetadataEnum.fromJson({
       id: "color",
       enum: {
         name: "Color",
@@ -74,13 +74,13 @@ describe("Scene/MetadataEnum", function () {
     expect(colorEnum.id).toBe("color");
     expect(colorEnum.name).toBe("Color");
     expect(colorEnum.description).toBe("Common colors");
-    expect(colorEnum.extras).toBe(extras);
-    expect(colorEnum.extensions).toBe(extensions);
+    expect(colorEnum.extras).toEqual(extras);
+    expect(colorEnum.extensions).toEqual(extensions);
   });
 
   it("constructor throws without id", function () {
     expect(function () {
-      return new MetadataEnum({
+      return MetadataEnum.fromJson({
         enum: {
           values: [
             {
@@ -95,7 +95,7 @@ describe("Scene/MetadataEnum", function () {
 
   it("constructor throws without enum", function () {
     expect(function () {
-      return new MetadataEnum({
+      return MetadataEnum.fromJson({
         id: "enumId",
       });
     }).toThrowDeveloperError();

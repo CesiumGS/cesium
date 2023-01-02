@@ -1628,10 +1628,10 @@ describe("Scene/ImplicitSubtree", function () {
         url: "https://example.com/0.0.0.json",
       });
 
-      tileMetadataSchema = new MetadataSchema(tileSchema);
-      subtreeMetadataSchema = new MetadataSchema(subtreeSchema);
-      buildingMetadataSchema = new MetadataSchema(buildingSchema);
-      multipleContentsMetadataSchema = new MetadataSchema(
+      tileMetadataSchema = MetadataSchema.fromJson(tileSchema);
+      subtreeMetadataSchema = MetadataSchema.fromJson(subtreeSchema);
+      buildingMetadataSchema = MetadataSchema.fromJson(buildingSchema);
+      multipleContentsMetadataSchema = MetadataSchema.fromJson(
         multipleContentsSchema
       );
 
@@ -2895,7 +2895,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
       };
 
-      const metadataSchema = new MetadataSchema(arraySchema);
+      const metadataSchema = MetadataSchema.fromJson(arraySchema);
 
       const arrayQuadtree = new ImplicitTileset(
         tilesetResource,
@@ -3008,7 +3008,7 @@ describe("Scene/ImplicitSubtree", function () {
         },
       };
 
-      const metadataSchema = new MetadataSchema(arraySchema);
+      const metadataSchema = MetadataSchema.fromJson(arraySchema);
 
       const arrayQuadtree = new ImplicitTileset(
         tilesetResource,

@@ -4,7 +4,7 @@ describe("Scene/findTileMetadata", function () {
   let tileClass;
   let mockTileset;
   beforeAll(function () {
-    tileClass = new MetadataClass({
+    tileClass = MetadataClass.fromJson({
       id: "tile",
       class: {
         properties: {

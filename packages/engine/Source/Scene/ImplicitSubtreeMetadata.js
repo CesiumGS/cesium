@@ -54,7 +54,7 @@ Object.defineProperties(ImplicitSubtreeMetadata.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof ImplicitSubtreeMetadata.prototype
    * @type {Object}
@@ -68,7 +68,7 @@ Object.defineProperties(ImplicitSubtreeMetadata.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof ImplicitSubtreeMetadata.prototype
    * @type {Object}

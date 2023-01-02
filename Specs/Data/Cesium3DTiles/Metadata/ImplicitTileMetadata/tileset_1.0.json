@@ -3,7 +3,8 @@
     "version": "1.0"
   },
   "extensionsUsed": [
-    "3DTILES_implicit_tiling"
+    "3DTILES_implicit_tiling",
+    "3DTILES_metadata"
   ],
   "extensionsRequired": [
     "3DTILES_implicit_tiling"
@@ -11,6 +12,7 @@
   "extensions": {
     "3DTILES_metadata": {
       "schema": {
+        "id": "ImplicitTileMetadataSchemaId",
         "classes": {
           "tile": {
             "properties": {

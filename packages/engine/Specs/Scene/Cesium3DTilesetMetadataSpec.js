@@ -28,7 +28,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
   };
 
   it("creates 3D Tiles metadata with default values", function () {
-    const schema = new MetadataSchema(schemaJson);
+    const schema = MetadataSchema.fromJson(schemaJson);
 
     const metadata = new Cesium3DTilesetMetadata({
       metadataJson: {},
@@ -94,7 +94,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
       extensions: extensions,
     };
 
-    const schema = new MetadataSchema(schemaJson);
+    const schema = MetadataSchema.fromJson(schemaJson);
 
     const metadata = new Cesium3DTilesetMetadata({
       metadataJson: tilesetJson,
@@ -176,7 +176,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
       extensions: extensions,
     };
 
-    const schema = new MetadataSchema(schemaJson);
+    const schema = MetadataSchema.fromJson(schemaJson);
 
     const metadata = new Cesium3DTilesetMetadata({
       metadataJson: extension,
@@ -211,7 +211,7 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
   });
 
   it("constructor throws without metadataJson", function () {
-    const schema = new MetadataSchema(schemaJson);
+    const schema = MetadataSchema.fromJson(schemaJson);
 
     expect(function () {
       return new Cesium3DTilesetMetadata({

@@ -76,6 +76,14 @@ function preprocess3DTileContent(arrayBuffer) {
     };
   }
 
+  if (defined(json.voxelTable)) {
+    // Most likely a voxel JSON
+    return {
+      contentType: Cesium3DTileContentType.VOXEL_JSON,
+      jsonPayload: json,
+    };
+  }
+
   throw new RuntimeError("Invalid tile content.");
 }
 

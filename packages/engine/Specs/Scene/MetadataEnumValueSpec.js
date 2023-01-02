@@ -10,7 +10,7 @@ describe("Scene/MetadataEnumValue", function () {
       EXT_other_extension: {},
     };
 
-    const enumValue = new MetadataEnumValue({
+    const enumValue = MetadataEnumValue.fromJson({
       name: "RED",
       description: "Red color",
       value: 0,
@@ -21,13 +21,13 @@ describe("Scene/MetadataEnumValue", function () {
     expect(enumValue.name).toBe("RED");
     expect(enumValue.description).toBe("Red color");
     expect(enumValue.value).toBe(0);
-    expect(enumValue.extras).toBe(extras);
-    expect(enumValue.extensions).toBe(extensions);
+    expect(enumValue.extras).toEqual(extras);
+    expect(enumValue.extensions).toEqual(extensions);
   });
 
   it("constructor throws without value", function () {
     expect(function () {
-      return new MetadataEnumValue();
+      return MetadataEnumValue.fromJson();
     }).toThrowDeveloperError();
   });
 });

@@ -17,7 +17,7 @@
     "geometricError": 500,
     "refine": "REPLACE",
     "content": {
-      "url": "parent.vctr"
+      "uri": "parent.vctr"
     },
     "children": [
       {
@@ -33,7 +33,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "ul.vctr"
+          "uri": "ul.vctr"
         }
       },
       {
@@ -49,7 +49,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "ur.vctr"
+          "uri": "ur.vctr"
         }
       },
       {
@@ -65,7 +65,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "ll.vctr"
+          "uri": "ll.vctr"
         }
       },
       {
@@ -81,7 +81,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "lr.vctr"
+          "uri": "lr.vctr"
         }
       }
     ]

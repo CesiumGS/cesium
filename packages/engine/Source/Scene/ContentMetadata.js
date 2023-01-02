@@ -50,7 +50,7 @@ Object.defineProperties(ContentMetadata.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof ContentMetadata.prototype
    * @type {Object}
@@ -64,7 +64,7 @@ Object.defineProperties(ContentMetadata.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof ContentMetadata.prototype
    * @type {Object}
