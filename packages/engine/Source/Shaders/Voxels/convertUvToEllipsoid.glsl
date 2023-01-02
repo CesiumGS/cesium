@@ -1,4 +1,4 @@
-/* Ellipsoid defines:
+/* Ellipsoid defines (set in Scene/VoxelEllipsoidShape.js)
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY
@@ -131,5 +131,3 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
 
     return vec3(longitude, latitude, height);
 }
-
-// export { convertUvToShapeUvSpace };

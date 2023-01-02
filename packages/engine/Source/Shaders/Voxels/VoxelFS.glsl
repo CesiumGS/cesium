@@ -1,8 +1,12 @@
-// import { intersectScene } from "./Intersection.glsl";
-// import { nextIntersection } from "./IntersectionUtils.glsl";
-// import { convertUvToShapeUvSpace } from ("./convertUvToBox.glsl", "./convertUvToCylinder.glsl", "./convertUvToEllipsoid.glsl");
-// import { TraversalData, SampleData, traverseOctreeFromBeginning, traverseOctreeFromExisting } from "./Octree.glsl";
-// import { accumulatePropertiesFromMegatexture } from "./Megatexture.glsl";
+// See Intersection.glsl for the definition of intersectScene
+// See IntersectionUtils.glsl for the definition of nextIntersection
+// See convertUvToBox.glsl, convertUvToCylinder.glsl, or convertUvToEllipsoid.glsl
+// for the definition of convertUvToShapeUvSpace. The appropriate function is 
+// selected based on the VoxelPrimitive shape type, and added to the shader in
+// Scene/VoxelRenderResources.js.
+// See Octree.glsl for the definitions of TraversalData, SampleData,
+// traverseOctreeFromBeginning, and traverseOctreeFromExisting
+// See Megatexture.glsl for the definition of accumulatePropertiesFromMegatexture
 
 #define STEP_COUNT_MAX 1000 // Harcoded value because GLSL doesn't like variable length loops
 #define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0

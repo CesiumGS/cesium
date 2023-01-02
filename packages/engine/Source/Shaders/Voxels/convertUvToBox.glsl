@@ -1,8 +1,7 @@
-/* Box defines:
+/* Box defines (set in Scene/VoxelBoxShape.js)
 #define BOX_HAS_SHAPE_BOUNDS
 */
 
-// Box uniforms:
 #if defined(BOX_HAS_SHAPE_BOUNDS)
     uniform vec3 u_boxUvToShapeUvScale;
     uniform vec3 u_boxUvToShapeUvTranslate;

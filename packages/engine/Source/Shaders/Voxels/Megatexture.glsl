@@ -1,6 +1,6 @@
-// import { SampleData, intMod } from "./Octree.glsl";
+// See Octree.glsl for the definitions of SampleData and intMod
 
-/* Megatexture defines:
+/* Megatexture defines (set in Scene/VoxelRenderResources.js)
 #define SAMPLE_COUNT ###
 #define NEAREST_SAMPLING
 #define PADDING
@@ -134,5 +134,3 @@ Properties accumulatePropertiesFromMegatexture(in SampleData sampleDatas[SAMPLE_
         return properties;
     #endif
 }
-
-// export { accumulatePropertiesFromMegatexture };

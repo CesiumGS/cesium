@@ -1,4 +1,4 @@
-/* Cylinder defines:
+/* Cylinder defines (set in Scene/VoxelCylinderShape.js)
 #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT
 #define CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO
@@ -77,5 +77,3 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
 
     return vec3(radius, height, angle);
 }
-
-// export { convertUvToShapeUvSpace };

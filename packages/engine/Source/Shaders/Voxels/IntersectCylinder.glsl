@@ -1,6 +1,7 @@
-// import { Ray, setIntersection, setIntersectionPair } from "./IntersectionUtils.glsl";
+// See IntersectionUtils.glsl for the definitions of Ray, setIntersection,
+// setIntersectionPair
 
-/* Cylinder defines:
+/* Cylinder defines (set in Scene/VoxelCylinderShape.js)
 #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN
 #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX
 #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT
@@ -270,5 +271,3 @@ void intersectShape(Ray ray, inout Intersections ix)
         setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersect.zw);
     #endif
 }
-
-// export { intersectShape };
