@@ -12,6 +12,7 @@
   "extensions": {
     "3DTILES_metadata": {
       "schema": {
+        "id": "ImplicitTileBoundingVolumeSemanticsMetadataSchemaId",
         "classes": {
           "tile": {
             "properties": {
@@ -62,7 +63,7 @@
             "subtreeLevels": 4,
             "availableLevels": 4,
             "subtrees": {
-              "uri": "subtrees/1.0/{level}.{x}.{y}.json"
+              "uri": "subtrees/1.0/{level}.{x}.{y}.{z}.json"
             }
           }
         }

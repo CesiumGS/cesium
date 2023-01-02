@@ -36,6 +36,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
     - [Testing Exceptions](#testing-exceptions)
     - [Before and After Tests and Suites](#before-and-after-tests-and-suites)
     - [Rendering Tests](#rendering-tests)
+      - [Debugging Rendering Tests](#debugging-rendering-tests)
     - [GLSL](#glsl)
     - [Spies](#spies)
     - [Test Data and Services](#test-data-and-services)
@@ -502,6 +503,56 @@ it("can declare automatic uniforms", function () {
 });
 ```
 
+#### Debugging Rendering Tests
+
+Rendering tests typically render to a 1x1 pixel canvas. This is so each test runs as
+quickly as possible. However, when regressions happen, it is difficult to tell why the test is failing since the
+image is too small to see. To make debugging tests easier, the `debugCanvasWidth` and `debugCanvasHeight` arguments can
+be used to increase the canvas size as desired.
+
+Example using the command line:
+
+```bash
+# Render tests will use a 400x300 canvas
+npm run test -- --debugCanvasWidth 400 --debugCanvasHeight 300
+```
+
+Example using SpecRunner:
+
+```text
+http://localhost:8080/Specs/SpecRunner.html?debugCanvasWidth=400&debugCanvasHeight=300
+```
+
+For ease of use, `debugCanvasHeight` can be omitted to produce a square canvas. For example:
+
+```bash
+# Render tests will use a 300x300 canvas
+npm run test -- --debugCanvasWidth 300
+```
+
+An example debug workflow might look like this:
+
+1. Use `fit()` to focus on the test that is failing.
+2. Create a breakpoint where the first rendering code happens, such as a call of `scene.renderForSpecs()`.
+3. Run the tests using the debug options described above
+4. Step through the test. After each render, check the browser window to see the frame that was just rendered.
+
+```js
+// Focus the test that is failing
+fit("test that is failing", function () {
+  // Start a breakpoint here
+  scene.renderForSpecs();
+  // After each render call, check the browser for the frame that was just rendered.
+
+  // ...
+  scene.renderForSpecs();
+  // Check the browser again for the next frame
+
+  // ... and so on
+  scene.renderForSpecs();
+});
+```
+
 ### GLSL
 
 GLSL is the shading language used by WebGL to run small graphics programs in parallel on the GPU. Under-the-hood, CesiumJS contains a library of GLSL identifiers and functions. These are unit tested by writing a simple fragment shader that outputs white if the test passes. For example, here is an excerpt from [BuiltinFunctionsSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Renderer/BuiltinFunctionsSpec.js);
@@ -589,13 +640,12 @@ it("Zooms to longitude, latitude, height", function () {
 
 Here, `spyOn` is used to replace `Camera.flyTo` (prototype function on instances) with a spy. When the Geocoder is used to search for a location, the test expects that `Camera.flyTo` was called with the right arguments.
 
-Spies can also be used on non-prototype functions. Here is an excerpt from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/ModelSpec.js):
+Spies can also be used on non-prototype functions. For example,
 
 ```javascript
 it("Applies the right render state", function () {
   spyOn(RenderState, "fromCache").and.callThrough();
-
-  return loadModelJson(texturedBoxModel.gltf).then(function (model) {
+  return loadAndZoomToModel({ gltf: gltfUrl }, scene).then(function (model) {
     const rs = {
       frontFace: WebGLConstants.CCW,
       cull: {
@@ -606,7 +656,6 @@ it("Applies the right render state", function () {
     };
 
     expect(RenderState.fromCache).toHaveBeenCalledWith(rs);
-    primitives.remove(model);
   });
 });
 ```
@@ -621,7 +670,7 @@ Beware of too tightly coupling a test with an implementation; it makes engine co
 
 Sometimes, a test requires sample data, like a CZML file or glTF model, or a service. When possible, we try to procedurally create data or mock a response in the test instead of reading a local file or making an external request. For example, [loadArrayBufferSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Core/loadArrayBufferSpec.js) uses a spy to simulate an XHR response.
 
-When external data can't be avoided, prefer storing a small file in a subdirectory of [Specs/Data](https://github.com/CesiumGS/cesium/tree/main/Specs/Data). Avoid bloating the repo with an unnecessarily large file. Update [LICENSE.md](https://github.com/CesiumGS/cesium/blob/main/LICENSE.md) if the data requires a license or attribution. Include a README file when useful, for example, see [Specs/Data/Models/Box-Textured-Custom](https://github.com/CesiumGS/cesium/tree/main/Specs/Data/Models/Box-Textured-Custom).
+When external data can't be avoided, prefer storing a small file in a subdirectory of [Specs/Data](https://github.com/CesiumGS/cesium/tree/main/Specs/Data). Avoid bloating the repo with an unnecessarily large file. Update [LICENSE.md](https://github.com/CesiumGS/cesium/blob/main/LICENSE.md) if the data requires a license or attribution. Include a README file when useful, for example, see [Specs/Data/Models/glTF-2.0/BoomBox](https://github.com/CesiumGS/cesium/tree/main/Specs/Data/Models/glTF-2.0/BoomBox).
 
 Make external requests that assume the tests are being used with an Internet connection very sparingly. We anticipate being able to run the tests offline.
 
@@ -631,56 +680,37 @@ Make external requests that assume the tests are being used with an Internet con
 
 For asynchronous testing, Jasmine's `it` function uses a `done` callback. For better integration with CesiumJS's asynchronous patterns, CesiumJS replaces `it` with a function that can return promises.
 
-Here is an excerpt from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/ModelSpec.js):
+Here is a simplified example of a test from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/Model/ModelSpec.js):
 
 ```javascript
-const texturedBoxUrl = "./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf";
-const texturedBoxModel;
+const modelUrl = "./Data/Models/glTF-2.0/Box/glTF/Box.gltf";
 
-const cesiumAirUrl = "./Data/Models/CesiumAir/Cesium_Air.gltf";
-const cesiumAirModel;
-
+let scene;
 beforeAll(function () {
-  const modelPromises = [];
-  modelPromises.push(
-    loadModel(texturedBoxUrl).then(function (model) {
-      texturedBoxModel = model;
-    })
-  );
-  modelPromises.push(
-    loadModel(cesiumAirUrl).then(function (model) {
-      cesiumAirModel = model;
-    })
-  );
+  scene = createScene();
+});
 
-  return Promise.all(modelPromises);
+afterAll(function () {
+  scene.destroyForSpecs();
+});
+
+it("renders glTF model", function () {
+  return loadAndZoomToModel({ gltf: modelUrl }, scene).then(function (model) {
+    expect(scene).toRenderAndCall(function (rgba) {
+      expect(rgba[0]).toBeGreaterThan(0);
+      expect(rgba[1]).toBeGreaterThan(0);
+      expect(rgba[2]).toBeGreaterThan(0);
+      expect(rgba[3]).toBe(255);
+    });
+  });
 });
 ```
 
-Given a model's url, `loadModel` (detailed below) returns a promise that resolves when a model is loaded. Here, `beforeAll` is used to ensure that two models, stored in suite-scoped variables, `texturedBoxModel` and `cesiumAirModel`, are loaded before any tests are run.
+Given a model's url and other options, [`loadAndZoomToModel`](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/Model/loadAndZoomToModel.js) loads a model, configures the camera, and returns a promise that resolves when a model's `readyPromise` resolves.
 
-Here is an implementation of `loadModel`:
+Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's [`pollToPromise`](https://github.com/CesiumGS/cesium/blob/main/Specs/pollToPromise.js) is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.readyPromise` resolves or the `timeout` is reached. `loadAndZoomToModel` uses `pollToPromise` to wait until the model is finished loading.
 
-```javascript
-function loadModelJson(gltf) {
-  const model = primitives.add(new Model());
-
-  return pollToPromise(
-    function () {
-      // Render scene to progressively load the model
-      scene.renderForSpecs();
-      return model.ready;
-    },
-    { timeout: 10000 }
-  ).then(function () {
-    return model;
-  });
-}
-```
-
-Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's `pollToPromise` is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.ready` is `true` or the `timeout` is reached.
-
-`pollToPromise` is used in many places where a test needs to wait for an asynchronous event before testing its expectations. Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/BillboardCollectionSpec.js):
+`pollToPromise` is also used in many places where a test needs to wait for an asynchronous event before testing its expectations. Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/BillboardCollectionSpec.js):
 
 ```javascript
 it("can create a billboard using a URL", function () {

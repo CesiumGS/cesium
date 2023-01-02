@@ -329,16 +329,16 @@
             );
 
             // enumerate nodes and add options
-            const options = Object.keys(model._runtime.nodesByName).map(
-              function (nodeName) {
-                return {
-                  text: nodeName,
-                  onselect: function () {
-                    viewModel.nodeName = nodeName;
-                  },
-                };
-              }
-            );
+            const options = Object.keys(model._nodesByName).map(function (
+              nodeName
+            ) {
+              return {
+                text: nodeName,
+                onselect: function () {
+                  viewModel.nodeName = nodeName;
+                },
+              };
+            });
             options[0].onselect();
             Sandcastle.addToolbarMenu(options);
 

@@ -1,4 +1,4 @@
-export default function concatTypedArrays(arrays) {
+function concatTypedArrays(arrays) {
   let i;
   const length = arrays.length;
 
@@ -21,3 +21,5 @@ export default function concatTypedArrays(arrays) {
   }
   return buffer;
 }
+
+export default concatTypedArrays;

@@ -1,14 +1,183 @@
 # Change Log
 
+### 1.102 - 2023-02-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
+
+### 1.101 - 2023-01-02
+
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.102, CesiumJS will default to using a WebGL2 context for rendering. WebGL2 is widely supported on all platforms and this change will result in better feature support across devices, especially mobile.
+  - WebGL1 will still be supported. If WebGL2 is not available, CesiumJS will automatically fall back to WebGL1.
+  - In order to work in a WebGL2 context, any custom materials, custom primitive or custom shaders will need to be upgraded to use GLSL 300.
+  - Otherwise to request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions` as shown below:
+    ```js
+    const viewer = new Viewer("cesiumContainer", {
+      contextOptions: {
+        requestWebgl1: true,
+      },
+    });
+    ```
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `vertexShadowDarkness` parameter to `Globe` to control the amount of darkness of the vertex shadow when terrain lighting is enabled. [#10914](https://github.com/CesiumGS/cesium/pull/10914)
+- Added experimental support for 3D Tiles voxels with the [`3DTILES_content_voxels`](https://github.com/CesiumGS/3d-tiles/tree/voxels/extensions/3DTILES_content_voxels) extension. The current implementation is intended for development use, as the voxel format has not yet been finalized and is subject to breaking changes without deprecation.
+
+##### Fixes :wrench:
+
+- Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar`. [#10912](https://github.com/CesiumGS/cesium/pull/10912)
+- Fixed glTF models with a mix of Draco and non-Draco attributes. [#10936](https://github.com/CesiumGS/cesium/pull/10936)
+- Fixed a bug where billboards with `alignedAxis` properties were not properly aligned in 2D and Columbus View. [#10965](https://github.com/CesiumGS/cesium/issues/10965)
+- Fixed a bug where \*.ktx2 image loading from a URI failed. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
+- Fixed a bug where a `Model` would sometimes disappear when loaded in Columbus View. [#10945](https://github.com/CesiumGS/cesium/pull/10945)
+- Fixed a bug where the entity collection of a `GpxDataSource` did not have the `owner` property set. [#10921](https://github.com/CesiumGS/cesium/issues/10921)
+- Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
+- Fixed a bug where `result` parameters were omitted from the TypeScript definitions. [#10864](https://github.com/CesiumGS/cesium/issues/10864)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- `ContextOptions.requestWebgl2` was deprecated in CesiumJS 1.101 and will be removed in 1.102. Instead, CesiumJS will default to using a WebGL2 context for rendering. Use `ContextOptions.requestWebgl1` to request a WebGL1 or WebGL2 context.
+
+#### @cesium/widgets
+
+##### Additions :tada:
+
+- Added `viewerVoxelInspectorMixin` and `VoxelInspector` to support experimental 3D Tiles voxels.
+
+### 1.100 - 2022-12-01
+
+#### Major Announcements :loudspeaker:
+
+- CesiumJS is now published alongside two smaller packages `@cesium/engine` and `@cesium/widgets` [#10824](https://github.com/CesiumGS/cesium/pull/10824):
+  - The source code has been paritioned into two folders: `packages/engine` and `packages/widgets`.
+  - These workspaces packages will follow semantic versioning.
+  - These workspaces packages will be published as ES modules with TypeScript definitions.
+  - In the combined CesiumJS release, the `Source` folder only contains the following:
+    - `Cesium.js`
+    - `Cesium.d.ts`
+    - `Assets`
+    - `ThirdParty`
+    - `Widgets`(CSS files only)
+  - The ability to import modules and TypeScript definitions from individual files has been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
+
+### 1.99 - 2022-11-01
+
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.100, CesiumJS will be published alongside two smaller packages `@cesium/engine` and `@cesium/widgets` [#10824](https://github.com/CesiumGS/cesium/pull/10824):
+  - The source code will been paritioned into two folders: `packages/engine` and `packages/widgets`.
+  - These workspaces packages will follow semantic versioning.
+  - These workspaces packages will be published as ES modules with TypeScript definitions.
+  - The combined CesiumJS release will continue to be published, however, the `Source` folder will only contain the following:
+    - `Cesium.js`
+    - `Cesium.d.ts`
+    - `Assets`
+    - `ThirdParty`
+    - `Widgets`(CSS files only)
+  - The ability to import modules and TypeScript definitions from individual files will been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
+
+##### Additions :tada:
+
+- Added support for I3S 3D Object and IntegratedMesh Layers. [#9634](https://github.com/CesiumGS/cesium/pull/9634)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- The viewer parameter in `KmlTour.prototype.play` was deprecated in Cesium 1.99. It will be removed in 1.100. Instead of a `Viewer`, pass a `CesiumWidget` instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
+
+##### Fixes :wrench:
+
+- Fixed a bug where the scale of a `Model` was being incorrectly applied to its bounding sphere. [#10855](https://github.com/CesiumGS/cesium/pull/10855)
+- Fixed a bug where rendering a `Model` with image-based lighting while specular environment maps were unsupported caused a crash. [#10859](https://github.com/CesiumGS/cesium/pull/10859)
+- Fixed a bug where request render mode was broken when a ground primitive is added. [#10756](https://github.com/CesiumGS/cesium/issues/10756)
+
+### 1.98.1 - 2022-10-03
+
+- This is an npm only release to fix the improperly published 1.98.
+
+### 1.98 - 2022-10-03
+
+#### Breaking Changes :mega:
+
+- As of the previous release (1.97), `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
+
+##### Additions :tada:
+
+- Added support for the `WEB3D_quantized_attributes` extension found in some glTF 1.0 models. [#10758](https://github.com/CesiumGS/cesium/pull/10758)
+
+##### Fixes :wrench:
+
+- Fixed a bug where instanced models without normals would not render. [#10765](https://github.com/CesiumGS/cesium/pull/10765)
+- Fixed a regression where `i3dm` with scale and without rotation would render incorrectly. [#10808](https://github.com/CesiumGS/cesium/pull/10808)
+- Fixed a regression where instanced feature IDs were not processed correctly [#10771](https://github.com/CesiumGS/cesium/pull/10771)
+- Fixed a regression where `Cesium3DTileFeature.setProperty()` was not creating properties for unknown property IDs. [#10775](https://github.com/CesiumGS/cesium/pull/10775)
+- Fixed a regression where `pnts` tiles with `3DTILES_draco_point_compression` and <= 8 quantization bits were being rendered incorrectly. [#10794](https://github.com/CesiumGS/cesium/pull/10794)
+- Fixed a regression where glTF models with unused nodes would crash [#10813](https://github.com/CesiumGS/cesium/pull/10813)
+- Fixed a regression where tilesets would not load in multiple `Viewer`s. [#10828](https://github.com/CesiumGS/cesium/pull/10828)
+- Fixed a bug where camera would not follow the `Viewer.trackedEntity` if it had a model with a `HeightReference` other than `NONE`. [#10805](https://github.com/CesiumGS/cesium/pull/10805)
+- Fixed a bug where calling `removeAll` on a `ClippingPlaneCollection` attached to a `Model` would cause a crash. [#10827](https://github.com/CesiumGS/cesium/pull/10827)
+- Fixed a bug where replacing a `Model`'s `ClippingPlaneCollection` with one of the same length would cause a crash. [#10831](https://github.com/CesiumGS/cesium/pull/10831)
+- Fixed a bug where KMLs with a NetworkLink with viewRefreshMode=='onRegion' would cause Cesium to make numerous resource requests and possibly trigger an out of memory error. [#10790](https://github.com/CesiumGS/cesium/pull/10790)
+- Fixed a bug where calling `Vector3DTileContent.getFeature` before a render update could result in no feature being returned. [#10819](https://github.com/CesiumGS/cesium/pull/10819)
+
+### 1.97 - 2022-09-01
+
+#### Major Announcements :loudspeaker:
+
+- CesiumJS has switched to a new architecture for loading glTF models and tilesets to enable:
+  - User-defined GLSL shaders via [`CustomShader`](Documentation/CustomShaderGuide/README.md)
+  - Support for [3D Tiles Next](https://cesium.com/blog/2021/11/10/introducing-3d-tiles-next/) metadata extensions: [`EXT_structural_metadata`](https://github.com/CesiumGS/glTF/tree/proposal-EXT_structural_metadata/extensions/2.0/Vendor/EXT_structural_metadata), [`EXT_mesh_features`](https://github.com/CesiumGS/glTF/tree/proposal-EXT_mesh_features/extensions/2.0/Vendor/EXT_mesh_features) and [`EXT_instance_features`](https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_instance_features)
+  - Support for [`EXT_mesh_gpu_instancing`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_mesh_gpu_instancing)
+  - Support for [`EXT_meshopt_compression`](https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Vendor/EXT_meshopt_compression)
+  - Texture caching across different tiles
+  - Numerous bug fixes
+- Usage notes for the new glTF architecture:
+  - Those using `ModelExperimental.fromGltf()` should now use `Model.fromGltf()`.
+  - The `enableModelExperimental` flag was removed, as tilesets and entities always use the new architecture.
+  - The new implementation of `Model` uses the same public API as before, so no other changes are necessary.
+
+#### Breaking Changes :mega:
+
+- glTF 1.0 assets are no longer fully supported. glTF 1.0 techniques are converted to PBR materials where possible, but more complex techniques will no longer function correctly. If custom GLSL shaders are needed, use `CustomShader` instead. [#10648](https://github.com/CesiumGS/cesium/pull/10648)
+- The glTF 2.0 extension `KHR_techniques_webgl` and `KHR_materials_common` are also no longer fully supported. Materials are converted to PBR materials where possible.
+- Support for rendering instanced models on the CPU has been removed.
+- `Model.gltf`, `Model.basePath`, `Model.pendingTextureLoads` (properties), and `Model.dequantizeInShader` (constructor option) have been removed.
+- `ModelMesh` and `ModelMaterial` have been removed.
+- `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
+
+##### Additions :tada:
+
+- `Model` can now classify other assets with a given `classificationType`. [#10623](https://github.com/CesiumGS/cesium/pull/10623)
+- `Model` now supports back face culling for point clouds. [#10703](https://github.com/CesiumGS/cesium/pull/10703)
+- Export asset files such as CSS in `package.json`, allowing bundlers to import without additional configuration. [#9212](https://github.com/CesiumGS/cesium/pull/9212)
+- The `sideEffects` field in `package.json` is now specified, allowing more conservative bundlers like Webpack to enable tree shaking by default. [#10714](https://github.com/CesiumGS/cesium/pull/10714)
+- Model entities now support `CustomShader`. [#10747](https://github.com/CesiumGS/cesium/pull/10747)
+
+##### Fixes :wrench:
+
+- Fixed bug with `Viewer.flyTo` where camera could go underground when target is an `Entity` with `ModelGraphics` with `HeightReference.CLAMP_TO_GROUND` or `HeightReference.RELATIVE_TO_GROUND`. [#10631](https://github.com/CesiumGS/cesium/pull/10631)
+- Fixed issues running CesiumJS under Node.js when using ES modules. [#10684](https://github.com/CesiumGS/cesium/issues/10684)
+- Fixed the incorrect lighting of instanced models. [#10690](https://github.com/CesiumGS/cesium/pull/10690)
+- Fixed developer error with `Camera.flyTo` with an `orientation` and a `Rectangle` value for `destination`. [#10704](https://github.com/CesiumGS/cesium/issues/10704)
+- Fixed rendering bug with points in .vctr format, where points wouldn't show until picked or styled. [#10707](https://github.com/CesiumGS/cesium/pull/10707)
+- Fixed bounding volume calculations for glTF models with `KHR_mesh_quantization` and normalized positions. [#10741](https://github.com/CesiumGS/cesium/pull/10741)
+
 ### 1.96 - 2022-08-01
 
 ##### Major Announcements :loudspeaker:
 
-- Built `Cesium.js` is no longer AMD format. This may or may not be a breaking change depending on how you use Cesium in your app. See our [blog post](TODO) for the full details. [#10399](https://github.com/CesiumGS/cesium/pull/10399)
+- Built `Cesium.js` is no longer AMD format. This may or may not be a breaking change depending on how you use Cesium in your app. See our [blog post](https://cesium.com/blog/2022/07/19/build-tooling-updates-coming-to-cesiumjs/) for the full details. [#10399](https://github.com/CesiumGS/cesium/pull/10399)
   - Built `Cesium.js` has gone from `12.5MB` to `8.4MB` unminified and from `4.3MB` to `3.6MB` minified. `Cesium.js.map` has gone from `22MB` to `17.2MB`.
   - If you were ingesting individual ESM-style modules from the combined file `Build/Cesium/Cesium.js` or `Build/CesiumUnminified/Cesium.js`, instead use `Build/Cesium/index.js` or `Build/CesiumUnminified/index.js` respectively.
   - Using ESM from `Source` will require a bundler to resolve third party node dependencies.
-  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminfied`.
+  - `CESIUM_BASE_URL` should be set to either `Build/Cesium` or `Build/CesiumUnminified`.
 
 ##### Breaking Changes :mega:
 
@@ -20,6 +189,7 @@
 - Added optional `blurActiveElementOnCanvasFocus` option to set the behavior of blurring the active element when interacting with the canvas. [#10518](https://github.com/CesiumGS/cesium/pull/10518)
 - Added `ModelExperimental.getNode` to allow users to modify the transforms of model nodes at runtime. [#10540](https://github.com/CesiumGS/cesium/pull/10540)
 - Added support for point cloud styling for tilesets loaded with `ModelExperimental`. [#10569](https://github.com/CesiumGS/cesium/pull/10569)
+- Upgraded earcut from version 2.2.2 to version 2.2.4 which includes 10-15% better performance in triangulation. [#10593](https://github.com/CesiumGS/cesium/pull/10593)
 
 ##### Fixes :wrench:
 
@@ -33,11 +203,13 @@
 - Fixed error in `loadAndExecuteScript` and favorite icon lost in sandcaslte when CesiumJS was running in cross-origin isloated evironment.[#10515](https://github.com/CesiumGS/cesium/pull/10515)
 - Fixed a bug where `Viewer.zoomTo` would continuously throw errors if a `Cesium3DTileset` failed to load.[#10523](https://github.com/CesiumGS/cesium/pull/10523)
 - Fixed a bug where styles would not apply to tilesets if they were applied while the tileset was hidden. [#10582](https://github.com/CesiumGS/cesium/pull/10582)
+- Fixed a bug where `.i3dm` models with quantized positions were not being correctly loaded by `ModelExperimental`. [#10598](https://github.com/CesiumGS/cesium/pull/10598)
+- Fixed a bug where dynamic geometry was not marked as `ready`. [#10517](https://github.com/CesiumGS/cesium/issues/10517)
 
 ##### Deprecated :hourglass_flowing_sand:
 
 - Support for rendering instanced models on the CPU has been deprecated and will be removed in CesiumJS 1.97. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
-- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead.
+- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been deprecated and will be removed in 1.99. Use the native browser methods instead. [#10579](https://github.com/CesiumGS/cesium/pull/10579)
 
 ### 1.95 - 2022-07-01
 
