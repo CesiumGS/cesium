@@ -13,6 +13,7 @@ describe(
   "Renderer/Context",
   function () {
     let context;
+    const webglStub = !!window.webglStub;
 
     beforeAll(function () {
       context = createContext();
@@ -333,24 +334,28 @@ describe(
       });
       expect(c1._webgl2).toBe(false);
 
-      const c2 = createContext({
-        requestWebgl1: false,
-      });
-      expect(c2._webgl2).toBe(true);
+      if (!webglStub) {
+        const c2 = createContext({
+          requestWebgl1: false,
+        });
+        expect(c2._webgl2).toBe(true);
+      }
     });
 
     it("prints deprecation warning when using requestWebgl2 instead of requestWebgl1", function () {
       const c1 = createContext({
-        requestWebgl2: true,
-      });
-      expect(c1._webgl2).toBe(true);
-      expect(Context._deprecationWarning).toHaveBeenCalled();
-
-      const c2 = createContext({
         requestWebgl2: false,
       });
-      expect(c2._webgl2).toBe(false);
+      expect(c1._webgl2).toBe(false);
       expect(Context._deprecationWarning).toHaveBeenCalled();
+
+      if (!webglStub) {
+        const c2 = createContext({
+          requestWebgl2: true,
+        });
+        expect(c2._webgl2).toBe(true);
+        expect(Context._deprecationWarning).toHaveBeenCalled();
+      }
     });
   },
   "WebGL"
