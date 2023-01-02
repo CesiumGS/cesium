@@ -40,16 +40,19 @@
     "bitstream": 0,
     "availableCount": 4
   },
-  "contentAvailability": {
-    "bitstream": 0,
-    "availableCount": 4
-  },
+  "contentAvailability": [
+    {
+      "bitstream": 0,
+      "availableCount": 4
+    }
+  ],
   "childSubtreeAvailability": {
     "constant": 0
   },
   "propertyTables": [
     {
       "class": "building",
+      "count": 4,
       "properties": {
         "height": {
           "values": 3
@@ -61,6 +64,7 @@
     },
     {
       "class": "tile",
+      "count": 4,
       "properties": {
         "quadrant": {
           "values": 1
