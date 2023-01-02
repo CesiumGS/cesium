@@ -2,6 +2,20 @@
 
 ### 1.101 - 2023-01-02
 
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.102, CesiumJS will default to using a WebGL2 context for rendering. WebGL2 is widely supported on all platforms and this change will result in better feature support across devices, especially mobile.
+  - WebGL1 will still be supported. If WebGL2 is not available, CesiumJS will automatically fall back to WebGL1.
+  - In order to work in a WebGL2 context, any custom materials, custom primitive or custom shaders will need to be upgraded to use GLSL 300.
+  - Otherwise to request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions` as shown below:
+    ```js
+    const viewer = new Viewer("cesiumContainer", {
+      contextOptions: {
+        requestWebgl1: true,
+      },
+    });
+    ```
+
 #### engine
 
 ##### Additions :tada:
@@ -12,11 +26,16 @@
 
 - Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar` [#10912](https://github.com/CesiumGS/cesium/pull/10912)
 - Fixed glTF models with a mix of Draco and non-Draco attributes. [#10936](https://github.com/CesiumGS/cesium/pull/10936)
+- Fixed a bug where billboards with `alignedAxis`properties were not properly aligned in 2D and Columbus View. [#10965](https://github.com/CesiumGS/cesium/issues/10965)
 - Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
 - Fixed a bug where the entity collection of a `GpxDataSource` did not have the `owner` property set. [#10921](https://github.com/CesiumGS/cesium/issues/10921)
 - Fixed a bug where \*.ktx2 images loading fail. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
 - Fixed a bug where a `Model` would sometimes disappear when loaded in Columbus View. [#10945](https://github.com/CesiumGS/cesium/pull/10945)
 - Fixed a bug where `result` parameters were omitted from the TypeScript definitions. [#10864](https://github.com/CesiumGS/cesium/issues/10864)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- `ContextOptions.requestWebgl2` was deprecated in CesiumJS 1.101 and will be removed in 1.102. Instead, CesiumJS will default to using a WebGL2 context for rendering. Use `ContextOptions.requestWebgl1` to request a WebGL1 or WebGL2 context.
 
 ### 1.100 - 2022-12-01
 

@@ -659,7 +659,7 @@ function parseCall(expression, ast) {
     const object = ast.callee.object;
     if (call === "test" || call === "exec") {
       // Make sure this is called on a valid type
-      if (object.callee.name !== "regExp") {
+      if (!defined(object.callee) || object.callee.name !== "regExp") {
         throw new RuntimeError(`${call} is not a function.`);
       }
       if (argsLength === 0) {
