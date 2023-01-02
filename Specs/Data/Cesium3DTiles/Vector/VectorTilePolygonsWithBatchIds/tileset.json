@@ -17,7 +17,7 @@
     "geometricError": 500,
     "refine": "REPLACE",
     "content": {
-      "url": "parent.vctr"
+      "uri": "parent.vctr"
     },
     "children": [
       {
@@ -33,7 +33,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "children.vctr"
+          "uri": "children.vctr"
         }
       }
     ]

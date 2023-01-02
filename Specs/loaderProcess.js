@@ -1,4 +1,4 @@
-export default function loaderProcess(loader, scene) {
+function loaderProcess(loader, scene) {
   // Normally scene is responsible for resetting the job scheduler every frame
   // but since we're not calling scene.renderForSpecs we need to reset budgets
   // explicitly. This is only required for loaders that use the job scheduler
@@ -7,3 +7,5 @@ export default function loaderProcess(loader, scene) {
   loader.process(scene.frameState);
   scene.jobScheduler.resetBudgets();
 }
+
+export default loaderProcess;

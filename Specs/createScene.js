@@ -4,7 +4,7 @@ import {
   defaultValue,
   defined,
   Scene,
-} from "../../Source/Cesium.js";
+} from "@cesium/engine";
 
 import createCanvas from "./createCanvas.js";
 import getWebGLStub from "./getWebGLStub.js";
@@ -12,8 +12,19 @@ import getWebGLStub from "./getWebGLStub.js";
 function createScene(options) {
   options = defaultValue(options, {});
 
+  // Render tests can be difficult to debug. Let the caller choose a larger
+  // canvas size temporarily. By stepping through a render test, you can see
+  // what the camera sees after each render call.
+  const debugWidth = window.debugCanvasWidth;
+  const debugHeight = defaultValue(
+    window.debugCanvasHeight,
+    window.debugCanvasWidth
+  );
+
   // save the canvas so we don't try to clone an HTMLCanvasElement
-  const canvas = defined(options.canvas) ? options.canvas : createCanvas();
+  const canvas = defined(options.canvas)
+    ? options.canvas
+    : createCanvas(debugWidth, debugHeight);
   options.canvas = undefined;
 
   options = clone(options, true);

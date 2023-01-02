@@ -4,11 +4,13 @@
     },
     "source": {
         "include": [
-            "Source"
+            "packages/engine/Source",
+            "packages/widgets/Source"
         ],
         "exclude": [
-            "Source/ThirdParty",
-            "Source/Workers"
+            "packages/engine/Source/ThirdParty",
+            "packages/engine/Source/Workers",
+            "packages/widgets/Source/ThirdParty"
         ],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
@@ -21,7 +23,7 @@
         "default": {
             "outputSourceFiles": false
         },
-        "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
+        "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/packages/{filename}"
     },
     "opts": {
         "destination": "Build/Documentation",

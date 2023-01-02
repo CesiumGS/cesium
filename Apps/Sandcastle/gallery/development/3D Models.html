@@ -195,7 +195,7 @@
               model.colorBlendMode = getColorBlendMode(
                 viewModel.colorBlendMode
               );
-              model.colorBlendAmount = viewModel.colorBlendAmount;
+              model.colorBlendAmount = Number(viewModel.colorBlendAmount);
               // Play and loop all animations at half-speed
               model.activeAnimations.addAll({
                 multiplier: 0.5,

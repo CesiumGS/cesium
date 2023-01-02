@@ -1,11 +1,12 @@
 import customizeJasmine from "./customizeJasmine.js";
-import defined from "../Source/Core/defined.js";
-import queryToObject from "../Source/Core/queryToObject.js";
+import { defined, queryToObject } from "../packages/engine/index.js";
 
 const queryString = queryToObject(window.location.search.substring(1));
 
 let webglValidation = false;
 let webglStub = false;
+let debugCanvasWidth;
+let debugCanvasHeight;
 const release = window.location.search.indexOf("release") !== -1;
 const categoryString = queryString.category;
 const excludeCategoryString = queryString.not;
@@ -16,6 +17,14 @@ if (defined(queryString.webglValidation)) {
 
 if (defined(queryString.webglStub)) {
   webglStub = true;
+}
+
+if (defined(queryString.debugCanvasWidth)) {
+  debugCanvasWidth = parseInt(queryString.debugCanvasWidth);
+}
+
+if (defined(queryString.debugCanvasHeight)) {
+  debugCanvasHeight = parseInt(queryString.debugCanvasHeight);
 }
 
 if (release) {
@@ -56,5 +65,7 @@ customizeJasmine(
   excludeCategoryString,
   webglValidation,
   webglStub,
-  release
+  release,
+  debugCanvasWidth,
+  debugCanvasHeight
 );

@@ -1,4 +1,4 @@
-export default function dataUriToBuffer(dataUri) {
+function dataUriToBuffer(dataUri) {
   const binaryString = atob(dataUri.split(",")[1]);
   const length = binaryString.length;
   const bytes = new Uint8Array(length);
@@ -7,3 +7,5 @@ export default function dataUriToBuffer(dataUri) {
   }
   return bytes;
 }
+
+export default dataUriToBuffer;

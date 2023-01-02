@@ -17,7 +17,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "uri": "../../../Models/GltfLoader/BuildingsMetadata/glTF/buildings-metadata.gltf",
+      "uri": "../../../Models/glTF-2.0/BuildingsMetadata/glTF/buildings-metadata.gltf",
       "boundingVolume": {
         "region": [
           -1.3197004795898053,

@@ -1,4 +1,4 @@
-import { defined, defaultValue } from "../Source/Cesium.js";
+import { defined, defaultValue } from "@cesium/engine";
 import concatTypedArrays from "./concatTypedArrays.js";
 import MetadataTester from "./MetadataTester.js";
 
@@ -6,7 +6,7 @@ import MetadataTester from "./MetadataTester.js";
  * Class to generate implicit subtrees for implicit tiling unit tests
  * @private
  */
-export default function ImplicitTilingTester() {}
+function ImplicitTilingTester() {}
 
 /**
  * Description of a single availability bitstream
@@ -602,3 +602,5 @@ function makeBuffers(bufferViewsU8, subtreeJson) {
     external: externalBufferU8,
   };
 }
+
+export default ImplicitTilingTester;

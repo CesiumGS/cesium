@@ -137,41 +137,42 @@
               new Cesium.HeadingPitchRange(heading, pitch, r * 0.8)
             );
 
-            viewModel.articulations = Object.keys(
-              model._runtime.articulationsByName
-            ).map(function (articulationName) {
+            const articulations = model.sceneGraph._runtimeArticulations;
+            viewModel.articulations = Object.keys(articulations).map(function (
+              articulationName
+            ) {
               return {
                 name: articulationName,
-                stages: model._runtime.articulationsByName[
-                  articulationName
-                ].stages.map(function (stage) {
-                  const stageModel = {
-                    name: stage.name,
-                    minimum: stage.minimumValue,
-                    maximum: stage.maximumValue,
-                    current: stage.currentValue,
-                  };
-                  Cesium.knockout.track(stageModel);
-                  Cesium.knockout.defineProperty(stageModel, "currentText", {
-                    get: function () {
-                      return stageModel.current.toString();
-                    },
-                    set: function (value) {
-                      // coerce values to number
-                      stageModel.current = +value;
-                    },
-                  });
-                  Cesium.knockout
-                    .getObservable(stageModel, "current")
-                    .subscribe(function (newValue) {
-                      model.setArticulationStage(
-                        `${articulationName} ${stage.name}`,
-                        +stageModel.current
-                      );
-                      model.applyArticulations();
+                stages: articulations[articulationName]._runtimeStages.map(
+                  function (stage) {
+                    const stageModel = {
+                      name: stage.name,
+                      minimum: stage.minimumValue,
+                      maximum: stage.maximumValue,
+                      current: stage.currentValue,
+                    };
+                    Cesium.knockout.track(stageModel);
+                    Cesium.knockout.defineProperty(stageModel, "currentText", {
+                      get: function () {
+                        return stageModel.current.toString();
+                      },
+                      set: function (value) {
+                        // coerce values to number
+                        stageModel.current = +value;
+                      },
                     });
-                  return stageModel;
-                }),
+                    Cesium.knockout
+                      .getObservable(stageModel, "current")
+                      .subscribe(function (newValue) {
+                        model.setArticulationStage(
+                          `${articulationName} ${stage.name}`,
+                          +stageModel.current
+                        );
+                        model.applyArticulations();
+                      });
+                    return stageModel;
+                  }
+                ),
               };
             });
             viewModel.selectedArticulation = viewModel.articulations[0];

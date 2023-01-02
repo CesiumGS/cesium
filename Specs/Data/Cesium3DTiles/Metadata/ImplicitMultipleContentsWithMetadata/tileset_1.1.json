@@ -6,6 +6,7 @@
     "name": "Sample Implicit Tileset"
   },
   "schema": {
+    "id": "ImplicitMultipleContentsWithMetadataSchemaId",
     "classes": {
       "building": {
         "properties": {

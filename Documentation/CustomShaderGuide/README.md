@@ -31,8 +31,9 @@ const customShader = new Cesium.CustomShader({
   // either PBR (physically-based rendering) or UNLIT depending on the desired
   // results.
   lightingModel: Cesium.LightingModel.PBR,
-  // required when setting material.alpha in the fragment shader
-  isTranslucent: true,
+  // Force the shader to render as transparent, even if the primitive had
+  // an opaque material
+  translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
   // Custom vertex shader. This is a function from model space -> model space.
   // VertexInput is documented below
   vertexShaderText: `
@@ -59,7 +60,7 @@ const customShader = new Cesium.CustomShader({
 
 ## Applying A Custom Shader
 
-Custom shaders can be applied to either 3D Tiles or `ModelExperimental` as
+Custom shaders can be applied to either 3D Tiles or a `Model` as
 follows:
 
 ```js
@@ -68,14 +69,11 @@ const customShader = new Cesium.CustomShader(/* ... */);
 // Applying to all tiles in a tileset.
 const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
   url: "http://example.com/tileset.json",
-  customShader: customShader,
-  // This is only needed for b3dm and i3dm tilesets. for glTF,
-  // ModelExperimental is always used.
-  enableModelExperimental: true,
+  customShader: customShader
 }));
 
 // Applying to a model directly
-const model = Cesium.ModelExperimental.fromGltf({,
+const model = Cesium.Model.fromGltf({,
   url: "http://example.com/model.gltf",
   customShader: customShader
 });
@@ -203,8 +201,10 @@ struct VertexInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
-    // Metadata class information. See the MetadataClass Struct section below.
+    // Metadata class properties. See the MetadataClass Struct section below.
     MetadataClass metadataClass;
+    // Metadata statistics. See the Metadata Statistics Struct section below
+    MetadataStatistics metadataStatistics;
 };
 ```
 
@@ -221,8 +221,10 @@ struct FragmentInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
-    // Metadata class information. See the MetadataClass Struct section below.
+    // Metadata class properties. See the MetadataClass Struct section below.
     MetadataClass metadataClass;
+    // Metadata statistics. See the Metadata Statistics Struct section below
+    MetadataStatistics metadataStatistics;
 };
 ```
 
@@ -250,7 +252,7 @@ with an `N`.
 | `POSITION`                       | `positionWC`       | `vec3`  | No                          | Yes                           | Position in world coordinates (WGS84 ECEF `(x, y, z)`). Low precision.                                                                                                   |
 | `POSITION`                       | `positionEC`       | `vec3`  | No                          | Yes                           | Position in eye coordinates.                                                                                                                                             |
 | `NORMAL`                         | `normalMC`         | `vec3`  | Yes                         | No                            | Unit-length normal vector in model coordinates. Only available in the vertex shader                                                                                      |
-| `NORMAL`                         | `normalEC`         | `vec3`  | No                          | Yes                           | Unit-length normal vector in eye coordinates. Only available in the vertex shader                                                                                        |
+| `NORMAL`                         | `normalEC`         | `vec3`  | No                          | Yes                           | Unit-length normal vector in eye coordinates. Only available in the fragment shader                                                                                      |
 | `TANGENT`                        | `tangentMC`        | `vec3`  | Yes                         | No                            | Unit-length tangent vector in model coordinates. This is always a `vec3`. For models that provide a `w` component, that is removed after computing the bitangent vector. |
 | `TANGENT`                        | `tangentEC`        | `vec3`  | No                          | Yes                           | Unit-length tangent vector in eye coordinates. This is always a `vec3`. For models that provide a `w` component, that is removed after computing the bitangent vector.   |
 | `NORMAL` & `TANGENT`             | `bitangentMC`      | `vec3`  | Yes                         | No                            | Unit-length bitangent vector in model coordinates. Only available when both normal and tangent vectors are available.                                                    |
@@ -706,9 +708,8 @@ property IDs, the behavior is undefined. For example:
 - Two properties with names `temperature ℃` and `temperature ℉` would both
   map to `metadata.temperature`, so the behavior is undefined
 
-When using the Point Cloud (`.pnts`) format in `ModelExperimental`, per-point
-properties are transcoded as property attributes. These property IDs follow
-the same convention.
+When using the Point Cloud (`.pnts`) format, per-point properties are transcoded
+as property attributes. These property IDs follow the same convention.
 
 ## `MetadataClass` struct
 
@@ -716,9 +717,9 @@ This struct contains constants for each metadata property, as defined
 in the class schema.
 
 Regardless of the source of metadata, the properties are collected into a single
-struct by property ID. For example, if the metadata class looked like this:
+struct by property ID. Consider the following metadata class:
 
-```jsonc
+```json
 "schema": {
   "classes": {
     "wall": {
@@ -766,6 +767,73 @@ float maxTemp = vsInput.metadataClass.temperature.maxValue;         // == 500.0
 ```
 
 or similarly from the `fsInput` struct in the fragment shader.
+
+## `MetadataStatistics` struct
+
+If the model was loaded from a [3D Tiles tileset](https://github.com/CesiumGS/3d-tiles/tree/main/specification), it may have statistics defined in the `statistics` property of the tileset.json. These will be available in a Custom Shader from the `MetadataStatistics` struct.
+
+### Organization
+
+Regardless of the source of the metadata, the properties are collected into a single source by property ID. Consider the following metadata class:
+
+```json
+  "statistics": {
+    "classes": {
+      "exampleMetadataClass": {
+        "count": 29338,
+        "properties": {
+          "intensity": {
+            "min": 0.0,
+            "max": 0.6333333849906921,
+            "mean": 0.28973701532415364,
+            "median": 0.25416669249534607,
+            "standardDeviation": 0.18222664489583626,
+            "variance": 0.03320655011,
+            "sum": 8500.30455558002,
+          },
+          "classification": {
+            "occurrences": {
+              "MediumVegetation": 6876,
+              "Buildings": 22462
+            }
+          }
+        }
+      }
+    }
+  }
+```
+
+This will show up in the shader in the struct field as follows:
+
+```glsl
+struct floatMetadataStatistics {
+  float minValue; // 'min' is a reserved word in GLSL
+  float maxValue; // 'max' is a reserved word in GLSL
+  float mean;
+  float median;
+  float standardDeviation;
+  float variance;
+  float sum;
+}
+struct MetadataStatistics {
+  floatMetadataStatistics intensity;
+}
+```
+
+The statistics values can be accessed from within the vertex shader as follows:
+
+```glsl
+float minValue = vsInput.metadataStatistics.intensity.minValue;
+float mean = vsInput.metadataStatistics.intensity.mean;
+```
+
+or similarly from the `fsInput` struct in the fragment shader.
+
+### Types
+
+For `SCALAR`, `VECN`, and `MATN` type properties, the statistics struct fields `minValue`, `maxValue`, `median`, and `sum` will be declared with the same type as the metadata property they describe. The fields `mean`, `standardDeviation`, and `variance` are declared with a type of the same dimension as the metadata property, but with floating-point components.
+
+For `ENUM` type metadata, the statistics struct for that property should contain an `occurrence` field, but this field is not yet implemented.
 
 ## `czm_modelVertexOutput` struct
 
