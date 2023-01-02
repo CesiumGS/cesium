@@ -1,4 +1,6 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataClass from "./MetadataClass.js";
 import MetadataEnum from "./MetadataEnum.js";
@@ -6,17 +8,50 @@ import MetadataEnum from "./MetadataEnum.js";
 /**
  * A schema containing classes and enums.
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
  *
- * @param {Object} schema The schema JSON object.
+ * @param {Object} options Object with the following properties:
+ * @param {String} [options.id] The ID of the schema
+ * @param {String} [options.name] The name of the schema.
+ * @param {String} [options.description] The description of the schema.
+ * @param {String} [options.version] The application-specific version of the schema.
+ * @param {Object.<String, MetadataClass>} [options.classes] Classes defined in the schema, where each key is the class ID.
+ * @param {Object.<String, MetadataEnum>} [options.enums] Enums defined in the schema, where each key is the enum ID.
+ * @param {*} [options.extras] Extra user-defined properties.
+ * @param {Object} [options.extensions] An object containing extensions.
  *
  * @alias MetadataSchema
  * @constructor
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+function MetadataSchema(options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  const classes = defaultValue(options.classes, {});
+  const enums = defaultValue(options.enums, {});
+
+  this._classes = classes;
+  this._enums = enums;
+  this._id = options.id;
+  this._name = options.name;
+  this._description = options.description;
+  this._version = options.version;
+  this._extras = clone(options.extras, true);
+  this._extensions = clone(options.extensions, true);
+}
+
+/**
+ * Creates a {@link MetadataSchema} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
+ *
+ * @param {Object} schema The schema JSON object.
+ *
+ * @returns {MetadataSchema} The newly created metadata schema
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataSchema(schema) {
+MetadataSchema.fromJson = function (schema) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("schema", schema);
   //>>includeEnd('debug');
@@ -25,7 +60,7 @@ function MetadataSchema(schema) {
   if (defined(schema.enums)) {
     for (const enumId in schema.enums) {
       if (schema.enums.hasOwnProperty(enumId)) {
-        enums[enumId] = new MetadataEnum({
+        enums[enumId] = MetadataEnum.fromJson({
           id: enumId,
           enum: schema.enums[enumId],
         });
@@ -37,7 +72,7 @@ function MetadataSchema(schema) {
   if (defined(schema.classes)) {
     for (const classId in schema.classes) {
       if (schema.classes.hasOwnProperty(classId)) {
-        classes[classId] = new MetadataClass({
+        classes[classId] = MetadataClass.fromJson({
           id: classId,
           class: schema.classes[classId],
           enums: enums,
@@ -46,15 +81,17 @@ function MetadataSchema(schema) {
     }
   }
 
-  this._classes = classes;
-  this._enums = enums;
-  this._id = schema.id;
-  this._name = schema.name;
-  this._description = schema.description;
-  this._version = schema.version;
-  this._extras = schema.extras;
-  this._extensions = schema.extensions;
-}
+  return new MetadataSchema({
+    id: schema.id,
+    name: schema.name,
+    description: schema.description,
+    version: schema.version,
+    classes: classes,
+    enums: enums,
+    extras: schema.extras,
+    extensions: schema.extensions,
+  });
+};
 
 Object.defineProperties(MetadataSchema.prototype, {
   /**
@@ -63,7 +100,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {Object.<String, MetadataClass>}
    * @readonly
-   * @private
    */
   classes: {
     get: function () {
@@ -77,7 +113,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {Object.<String, MetadataEnum>}
    * @readonly
-   * @private
    */
   enums: {
     get: function () {
@@ -91,7 +126,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   id: {
     get: function () {
@@ -105,7 +139,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -119,7 +152,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -133,7 +165,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   version: {
     get: function () {
@@ -142,12 +173,11 @@ Object.defineProperties(MetadataSchema.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof MetadataSchema.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -156,12 +186,11 @@ Object.defineProperties(MetadataSchema.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof MetadataSchema.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {

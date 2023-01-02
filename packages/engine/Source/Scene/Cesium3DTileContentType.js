@@ -132,6 +132,24 @@ const Cesium3DTileContentType = {
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    */
   GEOJSON: "geoJson",
+  /**
+   * Binary voxel content for <code>3DTILES_content_voxels</code> extension.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  VOXEL_BINARY: "voxl",
+  /**
+   * Binary voxel content for <code>3DTILES_content_voxels</code> extension.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  VOXEL_JSON: "voxelJson",
 };
 
 /**
@@ -150,6 +168,7 @@ Cesium3DTileContentType.isBinaryFormat = function (contentType) {
     case Cesium3DTileContentType.VECTOR:
     case Cesium3DTileContentType.GEOMETRY:
     case Cesium3DTileContentType.IMPLICIT_SUBTREE:
+    case Cesium3DTileContentType.VOXEL_BINARY:
     case Cesium3DTileContentType.GLTF_BINARY:
       return true;
     default:

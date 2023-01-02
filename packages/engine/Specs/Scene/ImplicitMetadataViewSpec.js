@@ -179,24 +179,24 @@ describe("Scene/ImplicitMetadataView", function () {
       url: "https://example.com/test.subtree",
     });
 
-    tileClass = new MetadataClass({
+    tileClass = MetadataClass.fromJson({
       id: "tile",
       class: schema.classes.tile,
     });
 
-    buildingClass = new MetadataClass({
+    buildingClass = MetadataClass.fromJson({
       id: "building",
       class: schema.classes.building,
     });
 
-    treeClass = new MetadataClass({
+    treeClass = MetadataClass.fromJson({
       id: "tree",
       class: schema.classes.tree,
     });
 
     mockTilesetWithMetadata = {
       metadata: {
-        schema: new MetadataSchema(schema),
+        schema: MetadataSchema.fromJson(schema),
       },
     };
 

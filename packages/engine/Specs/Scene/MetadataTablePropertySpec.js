@@ -51,7 +51,7 @@ describe("Scene/MetadataTableProperty", function () {
         extras: extras,
         extensions: extensions,
       },
-      classProperty: new MetadataClassProperty({
+      classProperty: MetadataClassProperty.fromJson({
         id: "property",
         property: {
           type: "SCALAR",
@@ -94,7 +94,7 @@ describe("Scene/MetadataTableProperty", function () {
         arrayOffsetType: "UINT8",
         arrayOffsets: 2,
       },
-      classProperty: new MetadataClassProperty({
+      classProperty: MetadataClassProperty.fromJson({
         id: "property",
         property: {
           type: "STRING",
@@ -146,7 +146,7 @@ describe("Scene/MetadataTableProperty", function () {
         stringOffsetBufferView: 1,
         arrayOffsetBufferView: 2,
       },
-      classProperty: new MetadataClassProperty({
+      classProperty: MetadataClassProperty.fromJson({
         id: "property",
         property: {
           type: "STRING",
@@ -187,7 +187,7 @@ describe("Scene/MetadataTableProperty", function () {
           [2, 2],
         ],
       },
-      classProperty: new MetadataClassProperty({
+      classProperty: MetadataClassProperty.fromJson({
         id: "property",
         property: {
           type: "VEC2",
@@ -222,7 +222,7 @@ describe("Scene/MetadataTableProperty", function () {
       property: {
         values: 0,
       },
-      classProperty: new MetadataClassProperty({
+      classProperty: MetadataClassProperty.fromJson({
         id: "property",
         property: {
           type: "VEC2",
@@ -257,7 +257,7 @@ describe("Scene/MetadataTableProperty", function () {
       property: {
         values: 0,
       },
-      classProperty: new MetadataClassProperty({
+      classProperty: MetadataClassProperty.fromJson({
         id: "property",
         property: {
           type: "VEC2",
