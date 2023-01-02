@@ -26,6 +26,7 @@
 
 - Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar` [#10912](https://github.com/CesiumGS/cesium/pull/10912)
 - Fixed glTF models with a mix of Draco and non-Draco attributes. [#10936](https://github.com/CesiumGS/cesium/pull/10936)
+- Fixed a bug where billboards with `alignedAxis`properties were not properly aligned in 2D and Columbus View. [#10965](https://github.com/CesiumGS/cesium/issues/10965)
 - Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
 - Fixed a bug where the entity collection of a `GpxDataSource` did not have the `owner` property set. [#10921](https://github.com/CesiumGS/cesium/issues/10921)
 - Fixed a bug where \*.ktx2 images loading fail. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
