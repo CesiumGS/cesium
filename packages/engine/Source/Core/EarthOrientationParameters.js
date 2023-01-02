@@ -15,6 +15,7 @@ import TimeStandard from "./TimeStandard.js";
  * These Earth Orientation Parameters (EOP) are primarily used in the transformation from
  * the International Celestial Reference Frame (ICRF) to the International Terrestrial
  * Reference Frame (ITRF).
+ * This object is normally not instantiated directly, use {@link EarthOrientationParameters.fromUrl}.
  *
  * @alias EarthOrientationParameters
  * @constructor
