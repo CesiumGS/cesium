@@ -397,124 +397,96 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   promises[0] = subtreePromise;
   promises[1] = glbPromise;
   // @ts-ignore
-  return Promise.all(promises)
-    .then(
-      function (results) {
-        /** @type {ImplicitSubtree} */
-        const subtree = results[0];
-        /** @type {ArrayBuffer} */
-        const glbBuffer = results[1];
+  return Promise.all(promises).then(
+    function (results) {
+      /** @type {ImplicitSubtree} */
+      const subtree = results[0];
+      /** @type {ArrayBuffer} */
+      const glbBuffer = results[1];
 
-        /** @type {ImplicitMetadataView} */
-        const metadataView = subtree.getTileMetadataView(tileCoord);
+      /** @type {ImplicitMetadataView} */
+      const metadataView = subtree.getTileMetadataView(tileCoord);
 
-        // @ts-ignore
-        const minimumHeight = metadataView.getPropertyBySemantic(
-          MetadataSemantic.TILE_MINIMUM_HEIGHT
-        );
+      // @ts-ignore
+      const minimumHeight = metadataView.getPropertyBySemantic(
+        MetadataSemantic.TILE_MINIMUM_HEIGHT
+      );
 
-        // @ts-ignore
-        const maximumHeight = metadataView.getPropertyBySemantic(
-          MetadataSemantic.TILE_MAXIMUM_HEIGHT
-        );
+      // @ts-ignore
+      const maximumHeight = metadataView.getPropertyBySemantic(
+        MetadataSemantic.TILE_MAXIMUM_HEIGHT
+      );
 
-        // @ts-ignore
-        const boundingSphereArray = metadataView.getPropertyBySemantic(
-          MetadataSemantic.TILE_BOUNDING_SPHERE
-        );
-        const boundingSphere = BoundingSphere.unpack(
-          boundingSphereArray,
-          0,
-          new BoundingSphere()
-        );
+      // @ts-ignore
+      const boundingSphereArray = metadataView.getPropertyBySemantic(
+        MetadataSemantic.TILE_BOUNDING_SPHERE
+      );
+      const boundingSphere = BoundingSphere.unpack(
+        boundingSphereArray,
+        0,
+        new BoundingSphere()
+      );
 
-        // @ts-ignore
-        const horizonOcclusionPoint = metadataView.getPropertyBySemantic(
-          MetadataSemantic.TILE_HORIZON_OCCLUSION_POINT
-        );
+      // @ts-ignore
+      const horizonOcclusionPoint = metadataView.getPropertyBySemantic(
+        MetadataSemantic.TILE_HORIZON_OCCLUSION_POINT
+      );
 
-        const tilingScheme = that._tilingScheme;
+      const tilingScheme = that._tilingScheme;
 
-        // The tiling scheme uses geographic coords, not implicit coords
-        const rectangle = tilingScheme.tileXYToRectangle(
-          x,
-          y,
-          level,
-          new Rectangle()
-        );
+      // The tiling scheme uses geographic coords, not implicit coords
+      const rectangle = tilingScheme.tileXYToRectangle(
+        x,
+        y,
+        level,
+        new Rectangle()
+      );
 
-        const ellipsoid = that._ellipsoid;
+      const ellipsoid = that._ellipsoid;
 
-        const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-          rectangle,
-          minimumHeight,
-          maximumHeight,
-          ellipsoid,
-          new OrientedBoundingBox()
-        );
+      const orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+        rectangle,
+        minimumHeight,
+        maximumHeight,
+        ellipsoid,
+        new OrientedBoundingBox()
+      );
 
-        const skirtHeight = that.getLevelMaximumGeometricError(level) * 5.0;
+      const skirtHeight = that.getLevelMaximumGeometricError(level) * 5.0;
 
-        const hasSW = isChildAvailable(
-          implicitTileset,
-          subtree,
-          tileCoord,
-          0,
-          0
-        );
-        const hasSE = isChildAvailable(
-          implicitTileset,
-          subtree,
-          tileCoord,
-          1,
-          0
-        );
-        const hasNW = isChildAvailable(
-          implicitTileset,
-          subtree,
-          tileCoord,
-          0,
-          1
-        );
-        const hasNE = isChildAvailable(
-          implicitTileset,
-          subtree,
-          tileCoord,
-          1,
-          1
-        );
-        const childTileMask =
-          (hasSW ? 1 : 0) | (hasSE ? 2 : 0) | (hasNW ? 4 : 0) | (hasNE ? 8 : 0);
+      const hasSW = isChildAvailable(implicitTileset, subtree, tileCoord, 0, 0);
+      const hasSE = isChildAvailable(implicitTileset, subtree, tileCoord, 1, 0);
+      const hasNW = isChildAvailable(implicitTileset, subtree, tileCoord, 0, 1);
+      const hasNE = isChildAvailable(implicitTileset, subtree, tileCoord, 1, 1);
+      const childTileMask =
+        (hasSW ? 1 : 0) | (hasSE ? 2 : 0) | (hasNW ? 4 : 0) | (hasNE ? 8 : 0);
 
-        const terrainData = new Cesium3DTilesTerrainData({
-          buffer: glbBuffer,
-          minimumHeight: minimumHeight,
-          maximumHeight: maximumHeight,
-          boundingSphere: boundingSphere,
-          orientedBoundingBox: orientedBoundingBox,
-          horizonOcclusionPoint: horizonOcclusionPoint,
-          skirtHeight: skirtHeight,
-          requestVertexNormals: that._requestVertexNormals,
-          childTileMask: childTileMask,
-          credits: that._tileCredits,
-        });
+      const terrainData = new Cesium3DTilesTerrainData({
+        buffer: glbBuffer,
+        minimumHeight: minimumHeight,
+        maximumHeight: maximumHeight,
+        boundingSphere: boundingSphere,
+        orientedBoundingBox: orientedBoundingBox,
+        horizonOcclusionPoint: horizonOcclusionPoint,
+        skirtHeight: skirtHeight,
+        requestVertexNormals: that._requestVertexNormals,
+        childTileMask: childTileMask,
+        credits: that._tileCredits,
+      });
 
-        return Promise.resolve(terrainData);
-      },
-      function (/**@type {any}*/ err) {
-        console.log(
-          `Could not load subtree: ${rootId} ${subtreeCoord.level} ${subtreeCoord.x} ${subtreeCoord.y}: ${err}`
-        );
+      return Promise.resolve(terrainData);
+    },
+    function (/**@type {any}*/ err) {
+      console.log(
+        `Could not load subtree: ${rootId} ${subtreeCoord.level} ${subtreeCoord.x} ${subtreeCoord.y}: ${err}`
+      );
 
-        console.log(
-          `Could not load tile: ${rootId} ${tileCoord.level} ${tileCoord.x} ${tileCoord.y}: ${err}`
-        );
-        return undefined;
-      }
-    )
-    .catch(function (error) {
-      console.log(error);
-    });
+      console.log(
+        `Could not load tile: ${rootId} ${tileCoord.level} ${tileCoord.x} ${tileCoord.y}: ${err}`
+      );
+      return undefined;
+    }
+  );
 };
 
 /**
