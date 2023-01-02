@@ -427,8 +427,12 @@ function getWebGLContext(canvas, webglOptions, requestWebgl1) {
     );
   }
 
-  requestWebgl1 =
-    requestWebgl1 && typeof WebGL2RenderingContext !== "undefined";
+  // Ensure that WebGL 2 is supported when it is requested. Otherwise, fall back to WebGL 1.
+  const webgl2Supported = typeof WebGL2RenderingContext !== "undefined";
+  if (!requestWebgl1 && !webgl2Supported) {
+    requestWebgl1 = true;
+  }
+
   const contextType = requestWebgl1 ? "webgl" : "webgl2";
   const glContext = canvas.getContext(contextType, webglOptions);
 
