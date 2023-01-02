@@ -6,7 +6,7 @@
 
 ##### Fixes :wrench:
 
-- Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#10977](https://github.com/CesiumGS/cesium/issues/10977)
+- Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
 
 ### 1.101 - 2023-01-02
 
