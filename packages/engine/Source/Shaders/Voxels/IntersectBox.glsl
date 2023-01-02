@@ -1,12 +1,11 @@
-// import { Ray, NO_HIT } from "./IntersectionUtils.glsl";
+// See IntersectionUtils.glsl for the definitions of Ray and NO_HIT
 
-/* Box defines:
+/* Box defines (set in Scene/VoxelBoxShape.js)
 #define BOX_INTERSECTION_INDEX ### // always 0
 #define BOX_HAS_RENDER_BOUNDS
 #define BOX_IS_2D
 */
 
-// Box uniforms:
 #if defined(BOX_HAS_RENDER_BOUNDS)
     #if defined(BOX_IS_2D)
         // This matrix bakes in an axis conversion so that the math works for XY plane.

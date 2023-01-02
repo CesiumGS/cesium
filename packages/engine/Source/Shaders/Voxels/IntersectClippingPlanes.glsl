@@ -1,6 +1,7 @@
-// import { Ray, Intersections, INF_HIT, NO_HIT, setIntersectionPair } from "./IntersectionUtils.glsl";
+// See IntersectionUtils.glsl for the definitions of Ray, Intersections, INF_HIT,
+// NO_HIT, setIntersectionPair
 
-/* Clipping plane defines
+/* Clipping plane defines (set in Scene/VoxelRenderResources.js)
 #define CLIPPING_PLANES_UNION
 #define CLIPPING_PLANES_COUNT
 #define CLIPPING_PLANES_INTERSECTION_INDEX
@@ -67,5 +68,3 @@ void intersectClippingPlanes(Ray ray, inout Intersections ix) {
         }
     #endif
 }
-
-// export { intersectClippingPlanes };

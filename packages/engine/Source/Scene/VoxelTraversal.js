@@ -179,7 +179,7 @@ function VoxelTraversal(
   );
 
   const internalNodeTexelCount = 9;
-  const internalNodeTextureDimensionX = 1024;
+  const internalNodeTextureDimensionX = 2048;
   const internalNodeTilesPerRow = Math.floor(
     internalNodeTextureDimensionX / internalNodeTexelCount
   );

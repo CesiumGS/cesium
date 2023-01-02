@@ -1,6 +1,7 @@
-// import { Ray, Intersections, setIntersection, setIntersectionPair, INF_HIT, NO_HIT } from "./IntersectionUtils.glsl";
+// See IntersectionUtils.glsl for the definitions of Ray, Intersections,
+// setIntersection, setIntersectionPair, INF_HIT, NO_HIT
 
-/* Ellipsoid defines:
+/* Ellipsoid defines (set in Scene/VoxelEllipsoidShape.js)
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF
@@ -334,5 +335,3 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersect.zw);
     #endif
 }
-
-// export { intersectShape };

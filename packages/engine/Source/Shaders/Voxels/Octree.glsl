@@ -219,5 +219,3 @@ void traverseOctreeFromExisting(in vec3 shapePosition, inout TraversalData trave
         traverseOctreeDownwards(shapePosition, traversalData, sampleDatas);
     }
 }
-
-// export { SampleData, traverseOctreeFromBeginning, traverseOctreeFromExisting };

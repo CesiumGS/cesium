@@ -1,6 +1,7 @@
-// import { Ray, Intersections, setIntersectionPair, INF_HIT, NO_HIT } from "./IntersectionUtils.glsl";
+// See IntersectionUtils.glsl for the definitions of Ray, Intersections,
+// setIntersectionPair, INF_HIT, NO_HIT
 
-/* intersectDepth defines
+/* intersectDepth defines (set in Scene/VoxelRenderResources.js)
 #define DEPTH_INTERSECTION_INDEX ###
 */
 
@@ -20,5 +21,3 @@ void intersectDepth(vec2 screenCoord, Ray ray, inout Intersections ix) {
         setIntersectionPair(ix, DEPTH_INTERSECTION_INDEX, vec2(NO_HIT));
     }
 }
-
-// export { intersectDepth };
