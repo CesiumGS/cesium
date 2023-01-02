@@ -13,9 +13,11 @@ describe(
   "Renderer/Context",
   function () {
     let context;
+    const webglStub = !!window.webglStub;
 
     beforeAll(function () {
       context = createContext();
+      spyOn(Context, "_deprecationWarning");
     });
 
     afterAll(function () {
@@ -324,6 +326,20 @@ describe(
       const c = createContext(undefined, 1024, 768);
       expect(c.drawingBufferHeight).toBe(768);
       c.destroyForSpecs();
+    });
+
+    it("requestWebgl1 works", function () {
+      const c1 = createContext({
+        requestWebgl1: true,
+      });
+      expect(c1._webgl2).toBe(false);
+
+      if (!webglStub) {
+        const c2 = createContext({
+          requestWebgl1: false,
+        });
+        expect(c2._webgl2).toBe(true);
+      }
     });
   },
   "WebGL"
