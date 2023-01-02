@@ -74,6 +74,7 @@ const scratchGeodeticSurfaceNormalSkirt = new Cartesian3();
 const scratchGeodeticSurfaceNormalUpsample = new Cartesian3();
 
 /**
+ * @private
  * @param {Object.<string,*>} gltf
  * @returns {Float32Array}
  */
@@ -141,6 +142,7 @@ function decodePositions(gltf) {
 }
 
 /**
+ * @private
  * @param {Object.<string,*>} gltf
  * @returns {Float32Array}
  */
@@ -222,6 +224,7 @@ function decodeNormals(gltf) {
 }
 
 /**
+ * @private
  * @param {Object.<string,*>} gltf
  * @returns {Uint16Array|Uint32Array}
  */
@@ -278,6 +281,7 @@ function decodeIndices(gltf) {
 }
 
 /**
+ * @private
  * @param {Object.<string,*>} gltf
  * @param {String} name
  * @returns {Uint16Array|Uint32Array}
@@ -359,6 +363,7 @@ const scratchGltfInfo = {
 };
 
 /**
+ * @private
  * @param {Object.<string,*>} gltf
  * @param {Boolean} hasNormals
  * @param {GltfInfo} result
@@ -376,6 +381,7 @@ function decodeGltf(gltf, hasNormals, result) {
 }
 
 /**
+ * @private
  * @param {Number} a
  * @param {Number} b
  * @returns {Number}

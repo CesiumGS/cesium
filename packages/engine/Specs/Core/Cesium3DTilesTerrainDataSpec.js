@@ -413,6 +413,7 @@ function normalEqual(normalA, normalB) {
 }
 
 /**
+ * @private
  * @param {Object} options
  * @param {TerrainMesh} options.mesh
  * @param {Cartographic[]} options.positionsCartographic

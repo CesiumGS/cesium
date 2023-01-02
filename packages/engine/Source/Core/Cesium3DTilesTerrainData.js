@@ -115,7 +115,10 @@ function Cesium3DTilesTerrainData(options) {
   /** @type {Object.<string,*>} */
   this._gltf = gltf;
 
-  /** @type {TerrainMesh|undefined} */
+  /**
+   * @private
+   * @type {TerrainMesh|undefined}
+   */
   this._mesh = undefined;
 }
 
@@ -739,7 +742,7 @@ const upsampleTaskProcessor = new TaskProcessor(
 
 /**
  * Upsamples this terrain data for use by a descendant tile.
- *
+ * @private
  * @param {Boolean} synchronous
  * @param {TerrainMesh} thisMesh The mesh that is being upsampled
  * @param {Number} thisSkirtHeight The mesh's skirt height
