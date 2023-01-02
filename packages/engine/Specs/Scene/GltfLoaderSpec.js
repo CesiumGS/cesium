@@ -102,6 +102,8 @@ describe(
     const boxInstancedTranslationMinMax =
       "./Data/Models/glTF-2.0/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
     const duckDraco = "./Data/Models/glTF-2.0/Duck/glTF-Draco/Duck.gltf";
+    const boxMixedCompression =
+      "./Data/Models/glTF-2.0/BoxMixedCompression/glTF/BoxMixedCompression.gltf";
     const boomBoxSpecularGlossiness =
       "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
@@ -2847,6 +2849,33 @@ describe(
         expect(positionAttribute.buffer.sizeInBytes).toBe(14394);
         expect(normalAttribute.buffer.sizeInBytes).toBe(4798);
         expect(texcoordAttribute.buffer.sizeInBytes).toBe(9596);
+      });
+    });
+
+    it("loads BoxMixedCompression", function () {
+      return loadGltf(boxMixedCompression).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texcoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute.quantization).toBeDefined();
+        expect(normalAttribute.quantization).toBeUndefined();
+        expect(texcoordAttribute.quantization).toBeDefined();
       });
     });
 

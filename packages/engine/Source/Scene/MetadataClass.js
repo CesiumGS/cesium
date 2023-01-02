@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataClassProperty from "./MetadataClassProperty.js";
@@ -7,20 +8,63 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * A metadata class.
  *
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {String} options.id The ID of the class.
+ * @param {String} [options.name] The name of the class.
+ * @param {String} [options.description] The description of the class.
+ * @param {Object.<String, MetadataClassProperty>} [options.properties] The class properties, where each key is the property ID.
+ * @param {*} [options.extras] Extra user-defined properties.
+ * @param {Object} [options.extensions] An object containing extensions.
+ *
+ * @alias MetadataClass
+ * @constructor
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+function MetadataClass(options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const id = options.id;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  //>>includeEnd('debug');
+
+  const properties = defaultValue(options.properties, {});
+  const propertiesBySemantic = {};
+  for (const propertyId in properties) {
+    if (properties.hasOwnProperty(propertyId)) {
+      const property = properties[propertyId];
+      if (defined(property.semantic)) {
+        propertiesBySemantic[property.semantic] = property;
+      }
+    }
+  }
+
+  this._id = id;
+  this._name = options.name;
+  this._description = options.description;
+  this._properties = properties;
+  this._propertiesBySemantic = propertiesBySemantic;
+  this._extras = clone(options.extras, true);
+  this._extensions = clone(options.extensions, true);
+}
+
+/**
+ * Creates a {@link MetadataClass} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the class.
  * @param {Object} options.class The class JSON object.
  * @param {Object.<String, MetadataEnum>} [options.enums] A dictionary of enums.
  *
- * @alias MetadataClass
- * @constructor
+ * @returns {MetadataClass} The newly created metadata class.
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataClass(options) {
+MetadataClass.fromJson = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const id = options.id;
   const classDefinition = options.class;
@@ -31,29 +75,26 @@ function MetadataClass(options) {
   //>>includeEnd('debug');
 
   const properties = {};
-  const propertiesBySemantic = {};
   for (const propertyId in classDefinition.properties) {
     if (classDefinition.properties.hasOwnProperty(propertyId)) {
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: propertyId,
         property: classDefinition.properties[propertyId],
         enums: options.enums,
       });
       properties[propertyId] = property;
-      if (defined(property.semantic)) {
-        propertiesBySemantic[property.semantic] = property;
-      }
     }
   }
 
-  this._properties = properties;
-  this._propertiesBySemantic = propertiesBySemantic;
-  this._id = id;
-  this._name = classDefinition.name;
-  this._description = classDefinition.description;
-  this._extras = classDefinition.extras;
-  this._extensions = classDefinition.extensions;
-}
+  return new MetadataClass({
+    id: id,
+    name: classDefinition.name,
+    description: classDefinition.description,
+    properties: properties,
+    extras: classDefinition.extras,
+    extensions: classDefinition.extensions,
+  });
+};
 
 Object.defineProperties(MetadataClass.prototype, {
   /**
@@ -62,7 +103,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {Object.<String, MetadataClassProperty>}
    * @readonly
-   * @private
    */
   properties: {
     get: function () {
@@ -91,7 +131,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   id: {
     get: function () {
@@ -105,7 +144,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -119,7 +157,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -128,12 +165,11 @@ Object.defineProperties(MetadataClass.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof MetadataClass.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -142,12 +178,11 @@ Object.defineProperties(MetadataClass.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof MetadataClass.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {

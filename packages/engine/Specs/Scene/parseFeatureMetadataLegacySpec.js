@@ -62,7 +62,7 @@ describe(
       expect(function () {
         return parseFeatureMetadataLegacy({
           extension: undefined,
-          schema: new MetadataSchema(featureTablesSchema),
+          schema: MetadataSchema.fromJson(featureTablesSchema),
         });
       }).toThrowDeveloperError();
     });
@@ -79,7 +79,7 @@ describe(
     it("parses extension with default values", function () {
       const metadata = parseFeatureMetadataLegacy({
         extension: {},
-        schema: new MetadataSchema(featureTablesSchema),
+        schema: MetadataSchema.fromJson(featureTablesSchema),
       });
 
       expect(metadata.schema).toBeDefined();
@@ -119,7 +119,7 @@ describe(
 
       const metadata = parseFeatureMetadataLegacy({
         extension: extension,
-        schema: new MetadataSchema(featureTablesSchema),
+        schema: MetadataSchema.fromJson(featureTablesSchema),
         bufferViews: featureTableResults.bufferViews,
       });
 
@@ -220,7 +220,7 @@ describe(
 
       const metadata = parseFeatureMetadataLegacy({
         extension: extension,
-        schema: new MetadataSchema(featureTexturesSchema),
+        schema: MetadataSchema.fromJson(featureTexturesSchema),
         textures: textures,
       });
 
@@ -264,7 +264,7 @@ describe(
       };
       const metadata = parseFeatureMetadataLegacy({
         extension: extension,
-        schema: new MetadataSchema(featureTexturesSchema),
+        schema: MetadataSchema.fromJson(featureTexturesSchema),
       });
       expect(metadata.statistics).toBe(statistics);
     });
@@ -278,7 +278,7 @@ describe(
       };
       const metadata = parseFeatureMetadataLegacy({
         extension: extension,
-        schema: new MetadataSchema(featureTexturesSchema),
+        schema: MetadataSchema.fromJson(featureTexturesSchema),
       });
       expect(metadata.extras).toBe(extras);
     });
@@ -292,7 +292,7 @@ describe(
       };
       const metadata = parseFeatureMetadataLegacy({
         extension: extension,
-        schema: new MetadataSchema(featureTexturesSchema),
+        schema: MetadataSchema.fromJson(featureTexturesSchema),
       });
 
       expect(metadata.extensions).toBe(extensions);

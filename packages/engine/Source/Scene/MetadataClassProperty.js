@@ -2,6 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -12,68 +13,87 @@ import MetadataType from "./MetadataType.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 
 /**
- * A metadata property, as part of a {@link MetadataClass}
+ * A metadata property, as part of a {@link MetadataClass}.
+ * <p>
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the property.
- * @param {Object} options.property The property JSON object.
- * @param {Object.<String, MetadataEnum>} [options.enums] A dictionary of enums.
+ * @param {MetadataType} options.type The type of the property such as SCALAR, VEC2, VEC3.
+ * @param {MetadataComponentType} [options.componentType] The component type of the property. This includes integer (e.g. INT8 or UINT16), and floating point (FLOAT32 and FLOAT64) values.
+ * @param {MetadataEnum} [options.enumType] The enum type of the property. Only defined when type is ENUM.
+ * @param {Boolean} [options.isArray=false] True if a property is an array (either fixed length or variable length), false otherwise.
+ * @param {Boolean} [options.isVariableLengthArray=false] True if a property is a variable length array, false otherwise.
+ * @param {Number} [options.arrayLength] The number of array elements. Only defined for fixed length arrays.
+ * @param {Boolean} [options.normalized=false] Whether the property is normalized.
+ * @param {Number|Number[]|Number[][]} [options.min] A number or an array of numbers storing the minimum allowable value of this property. Only defined when type is a numeric type.
+ * @param {Number|Number[]|Number[][]} [options.max] A number or an array of numbers storing the maximum allowable value of this property. Only defined when type is a numeric type.
+ * @param {Number|Number[]|Number[][]} [options.offset] The offset to be added to property values as part of the value transform.
+ * @param {Number|Number[]|Number[][]} [options.scale] The scale to be multiplied to property values as part of the value transform.
+ * @param {Boolean|Number|String|Array} [options.noData] The no-data sentinel value that represents null values.
+ * @param {Boolean|Number|String|Array} [options.default] A default value to use when an entity's property value is not defined.
+ * @param {Boolean} [options.required=false] Whether the property is required.
+ * @param {String} [options.name] The name of the property.
+ * @param {String} [options.description] The description of the property.
+ * @param {String} [options.semantic] An identifier that describes how this property should be interpreted.
+ * @param {*} [options.extras] Extra user-defined properties.
+ * @param {Object} [options.extensions] An object containing extensions.
  *
  * @alias MetadataClassProperty
  * @constructor
- * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function MetadataClassProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const id = options.id;
-  const property = options.property;
+  const type = options.type;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.id", id);
-  Check.typeOf.object("options.property", property);
-  Check.typeOf.string("options.property.type", property.type);
+  Check.typeOf.string("options.type", type);
   //>>includeEnd('debug');
 
-  // Try to determine if this is the legacy extension. This is not
-  // always possible, as there are some types that are valid in both
-  // extensions.
-  const isLegacyExtension = isLegacy(property);
-  const parsedType = parseType(property, options.enums);
-  const componentType = parsedType.componentType;
+  const componentType = options.componentType;
+  const enumType = options.enumType;
 
   const normalized =
     defined(componentType) &&
     MetadataComponentType.isIntegerType(componentType) &&
-    defaultValue(property.normalized, false);
+    defaultValue(options.normalized, false);
 
   // Basic information about this property
   this._id = id;
-  this._name = property.name;
-  this._description = property.description;
-  this._semantic = property.semantic;
-  this._isLegacyExtension = isLegacyExtension;
+  this._name = options.name;
+  this._description = options.description;
+  this._semantic = options.semantic;
+
+  // Only for unit testing purposes, not documented in the API
+  this._isLegacyExtension = options.isLegacyExtension;
 
   // Details about basic types
-  this._type = parsedType.type;
+  this._type = type;
   this._componentType = componentType;
-  this._enumType = parsedType.enumType;
-  this._valueType = parsedType.valueType;
+  this._enumType = enumType;
+  this._valueType = defined(enumType) ? enumType.valueType : componentType;
 
   // Details about arrays
-  this._isArray = parsedType.isArray;
-  this._isVariableLengthArray = parsedType.isVariableLengthArray;
-  this._arrayLength = parsedType.arrayLength;
+  this._isArray = defaultValue(options.isArray, false);
+  this._isVariableLengthArray = defaultValue(
+    options.isVariableLengthArray,
+    false
+  );
+  this._arrayLength = options.arrayLength;
 
   // min and max allowed values
-  this._min = property.min;
-  this._max = property.max;
+  this._min = clone(options.min, true);
+  this._max = clone(options.max, true);
 
   // properties that adjust the range of metadata values
   this._normalized = normalized;
 
-  let offset = property.offset;
-  let scale = property.scale;
+  let offset = clone(options.offset, true);
+  let scale = clone(options.scale, true);
   const hasValueTransform = defined(offset) || defined(scale);
 
   const enableNestedArrays = true;
@@ -91,9 +111,46 @@ function MetadataClassProperty(options) {
 
   // sentinel value for missing data, and a default value to use
   // in its place if needed.
-  this._noData = property.noData;
+  this._noData = clone(options.noData, true);
   // For vector and array types, this is stored as an array of values.
-  this._default = property.default;
+  this._default = clone(options.default, true);
+
+  this._required = defaultValue(options.required, true);
+
+  // extras and extensions
+  this._extras = clone(options.extras, true);
+  this._extensions = clone(options.extensions, true);
+}
+
+/**
+ * Creates a {@link MetadataClassProperty} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {String} options.id The ID of the property.
+ * @param {Object} options.property The property JSON object.
+ * @param {Object.<String, MetadataEnum>} [options.enums] A dictionary of enums.
+ *
+ * @returns {MetadataClassProperty} The newly created metadata class property.
+ *
+ * @private
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+MetadataClassProperty.fromJson = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const id = options.id;
+  const property = options.property;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  Check.typeOf.object("options.property", property);
+  Check.typeOf.string("options.property.type", property.type);
+  //>>includeEnd('debug');
+
+  // Try to determine if this is the legacy extension. This is not
+  // always possible, as there are some types that are valid in both
+  // extensions.
+  const isLegacyExtension = isLegacy(property);
+  const parsedType = parseType(property, options.enums);
 
   // EXT_feature_metadata had an optional flag, while EXT_structural_metadata
   // has a required flag. The defaults are not the same, and there's some cases
@@ -109,12 +166,31 @@ function MetadataClassProperty(options) {
   } else {
     required = defaultValue(property.required, false);
   }
-  this._required = required;
 
-  // extras and extensions
-  this._extras = property.extras;
-  this._extensions = property.extensions;
-}
+  return new MetadataClassProperty({
+    id: id,
+    type: parsedType.type,
+    componentType: parsedType.componentType,
+    enumType: parsedType.enumType,
+    isArray: parsedType.isArray,
+    isVariableLengthArray: parsedType.isVariableLengthArray,
+    arrayLength: parsedType.arrayLength,
+    normalized: property.normalized,
+    min: property.min,
+    max: property.max,
+    offset: property.offset,
+    scale: property.scale,
+    noData: property.noData,
+    default: property.default,
+    required: required,
+    name: property.name,
+    description: property.description,
+    semantic: property.semantic,
+    extras: property.extras,
+    extensions: property.extensions,
+    isLegacyExtension: isLegacyExtension,
+  });
+};
 
 Object.defineProperties(MetadataClassProperty.prototype, {
   /**
@@ -123,7 +199,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   id: {
     get: function () {
@@ -137,7 +212,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -151,7 +225,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -162,11 +235,9 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   /**
    * The type of the property such as SCALAR, VEC2, VEC3
    *
-   *
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
-   * @private
    */
   type: {
     get: function () {
@@ -180,7 +251,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataEnum}
    * @readonly
-   * @private
    */
   enumType: {
     get: function () {
@@ -195,7 +265,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataComponentType}
    * @readonly
-   * @private
    */
   componentType: {
     get: function () {
@@ -226,7 +295,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
-   * @private
    */
   isArray: {
     get: function () {
@@ -240,7 +308,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
-   * @private
    */
   isVariableLengthArray: {
     get: function () {
@@ -255,7 +322,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number}
    * @readonly
-   * @private
    */
   arrayLength: {
     get: function () {
@@ -269,7 +335,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
-   * @private
    */
   normalized: {
     get: function () {
@@ -278,12 +343,11 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * A number or an array of numbers storing the maximum allowable value of this property. Only defined when type or componentType is a numeric type.
+   * A number or an array of numbers storing the maximum allowable value of this property. Only defined when type is a numeric type.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Number[]}
+   * @type {Number|Number[]|Number[][]}
    * @readonly
-   * @private
    */
   max: {
     get: function () {
@@ -292,12 +356,11 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * A number or an array of numbers storing the minimum allowable value of this property. Only defined when type or componentType is a numeric type.
+   * A number or an array of numbers storing the minimum allowable value of this property. Only defined when type is a numeric type.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Number[]}
+   * @type {Number|Number[]|Number[][]}
    * @readonly
-   * @private
    */
   min: {
     get: function () {
@@ -311,7 +374,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean|Number|String|Array}
    * @readonly
-   * @private
    */
   noData: {
     get: function () {
@@ -325,7 +387,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean|Number|String|Array}
    * @readonly
-   * @private
    */
   default: {
     get: function () {
@@ -339,7 +400,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
-   * @private
    */
   required: {
     get: function () {
@@ -353,7 +413,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   semantic: {
     get: function () {
@@ -382,7 +441,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number|Number[]|Number[][]}
    * @readonly
-   * @private
    */
   offset: {
     get: function () {
@@ -396,7 +454,6 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {Number|Number[]|Number[][]}
    * @readonly
-   * @private
    */
   scale: {
     get: function () {
@@ -405,12 +462,11 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -419,12 +475,11 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof MetadataClassProperty.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {
@@ -450,7 +505,7 @@ function isLegacy(property) {
 
   // EXT_feature_metadata allowed numeric types as a type. Now they are
   // represented as {type: SINGLE, componentType: type}
-  if (MetadataComponentType.isNumericType(type)) {
+  if (defined(MetadataComponentType[type])) {
     return true;
   }
 
@@ -585,10 +640,7 @@ function parseType(property, enums) {
 
   // Both EXT_feature_metadata and EXT_structural_metadata allow numeric types like
   // INT32 or FLOAT64 as a componentType.
-  if (
-    defined(componentType) &&
-    MetadataComponentType.isNumericType(componentType)
-  ) {
+  if (defined(componentType) && defined(MetadataComponentType[componentType])) {
     return {
       type: MetadataType.SCALAR,
       componentType: componentType,
@@ -602,7 +654,7 @@ function parseType(property, enums) {
 
   // EXT_feature_metadata: integer and float types were allowed as types,
   // but now these are expressed as {type: SCALAR, componentType: type}
-  if (MetadataComponentType.isNumericType(type)) {
+  if (defined(MetadataComponentType[type])) {
     return {
       type: MetadataType.SCALAR,
       componentType: type,
@@ -687,6 +739,9 @@ MetadataClassProperty.prototype.unnormalize = function (value) {
   );
 };
 
+/**
+ * @private
+ */
 MetadataClassProperty.prototype.applyValueTransform = function (value) {
   // variable length arrays do not have a well-defined offset/scale so this
   // is forbidden by the spec
@@ -702,6 +757,9 @@ MetadataClassProperty.prototype.applyValueTransform = function (value) {
   );
 };
 
+/**
+ * @private
+ */
 MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
   // variable length arrays do not have a well-defined offset/scale so this
   // is forbidden by the spec
@@ -717,6 +775,9 @@ MetadataClassProperty.prototype.unapplyValueTransform = function (value) {
   );
 };
 
+/**
+ * @private
+ */
 MetadataClassProperty.prototype.expandConstant = function (
   constant,
   enableNestedArrays
@@ -1077,6 +1138,9 @@ function normalizeInPlace(values, valueType, normalizeFunction) {
   return values;
 }
 
+/**
+ * @private
+ */
 MetadataClassProperty.valueTransformInPlace = function (
   values,
   offsets,

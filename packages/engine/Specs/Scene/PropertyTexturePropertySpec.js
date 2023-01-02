@@ -19,7 +19,7 @@ describe(
     let propertyTextureProperty;
 
     beforeAll(function () {
-      classProperty = new MetadataClassProperty({
+      classProperty = MetadataClassProperty.fromJson({
         id: "color",
         property: {
           array: true,
@@ -77,7 +77,7 @@ describe(
     });
 
     function makeProperty(options) {
-      const classProperty = new MetadataClassProperty({
+      const classProperty = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: options.property,
       });

@@ -455,7 +455,7 @@ describe("Scene/ImplicitTileset", function () {
         },
       };
 
-      const metadataSchema = new MetadataSchema(schema);
+      const metadataSchema = MetadataSchema.fromJson(schema);
 
       const implicitTileset = new ImplicitTileset(
         baseResource,

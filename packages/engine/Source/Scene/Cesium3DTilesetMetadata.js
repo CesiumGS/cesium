@@ -168,7 +168,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {*}
@@ -182,7 +182,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
    * @type {Object}

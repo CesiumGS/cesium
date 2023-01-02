@@ -143,11 +143,9 @@ const autolinker = new Autolinker({
   stripPrefix: false,
   email: false,
   replaceFn: function (match) {
-    if (!match.protocolUrlMatch) {
-      //Prevent matching of non-explicit urls.
-      //i.e. foo.id won't match but http://foo.id will
-      return false;
-    }
+    //Prevent matching of non-explicit urls.
+    //i.e. foo.id won't match but http://foo.id will
+    return match.urlMatchType === "scheme" || match.urlMatchType === "www";
   },
 });
 

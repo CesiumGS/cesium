@@ -11,7 +11,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("creates tileset metadata", function () {
-    const cityClass = new MetadataClass({
+    const cityClass = MetadataClass.fromJson({
       id: "city",
       class: {
         properties: {
@@ -77,7 +77,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasProperty returns false when there's no property with the given property ID", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -101,7 +101,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasProperty returns true when there's a property with the given property ID", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -125,7 +125,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasProperty returns true when the class has a default value for a missing property", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -166,7 +166,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -190,7 +190,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -215,7 +215,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -258,7 +258,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -290,7 +290,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyIds includes properties with default values", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -322,7 +322,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyIds uses results argument", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -355,7 +355,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getProperty returns undefined when there's no property with the given property ID", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -381,7 +381,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getProperty returns the property value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -410,7 +410,7 @@ describe("Scene/TilesetMetadata", function () {
 
   it("getProperty returns the default value when the property is missing", function () {
     const position = [0.0, 0.0, 0.0];
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -455,7 +455,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setProperty sets property value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -513,7 +513,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -538,7 +538,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("getPropertyBySemantic returns the property value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -575,7 +575,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -602,7 +602,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setPropertyBySemantic returns false if semantic does not exist", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -638,7 +638,7 @@ describe("Scene/TilesetMetadata", function () {
   });
 
   it("setPropertyBySemantic throws without value", function () {
-    const buildingClass = new MetadataClass({
+    const buildingClass = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {

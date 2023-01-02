@@ -29,6 +29,7 @@ import {
   SceneMode,
   ScreenSpaceEventType,
   TimeDynamicPointCloud,
+  VoxelPrimitive,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import Animation from "../Animation/Animation.js";
@@ -2028,7 +2029,7 @@ Viewer.prototype._onDataSourceRemoved = function (
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
  * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
  */
@@ -2054,7 +2055,7 @@ Viewer.prototype.zoomTo = function (target, offset) {
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
@@ -2109,14 +2110,11 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
       return;
     }
 
-    //If the zoom target is a Cesium3DTileset
-    if (zoomTarget instanceof Cesium3DTileset) {
-      that._zoomTarget = zoomTarget;
-      return;
-    }
-
-    //If the zoom target is a TimeDynamicPointCloud
-    if (zoomTarget instanceof TimeDynamicPointCloud) {
+    if (
+      zoomTarget instanceof Cesium3DTileset ||
+      zoomTarget instanceof TimeDynamicPointCloud ||
+      zoomTarget instanceof VoxelPrimitive
+    ) {
       that._zoomTarget = zoomTarget;
       return;
     }
@@ -2195,7 +2193,7 @@ function updateZoomTarget(viewer) {
   let options;
 
   // If zoomTarget was Cesium3DTileset
-  if (target instanceof Cesium3DTileset) {
+  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
     return target.readyPromise
       .then(function () {
         const boundingSphere = target.boundingSphere;

@@ -2099,9 +2099,8 @@ function updateComputedScale(model, modelMatrix, frameState) {
       context.drawingBufferWidth,
       context.drawingBufferHeight
     );
-    scratchPosition.x = modelMatrix[12];
-    scratchPosition.y = modelMatrix[13];
-    scratchPosition.z = modelMatrix[14];
+
+    Matrix4.getTranslation(modelMatrix, scratchPosition);
 
     if (model._sceneMode !== SceneMode.SCENE3D) {
       SceneTransforms.computeActualWgs84Position(
