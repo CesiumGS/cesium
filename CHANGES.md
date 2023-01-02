@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.102 - 2023-02-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#10977](https://github.com/CesiumGS/cesium/issues/10977)
+
 ### 1.101 - 2023-01-02
 
 #### Major Announcements :loudspeaker:
@@ -33,7 +41,6 @@
 - Fixed a bug where the entity collection of a `GpxDataSource` did not have the `owner` property set. [#10921](https://github.com/CesiumGS/cesium/issues/10921)
 - Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
 - Fixed a bug where `result` parameters were omitted from the TypeScript definitions. [#10864](https://github.com/CesiumGS/cesium/issues/10864)
-- Fixed a bug where `quantizationBits` in `decodeDraco` above 16 render incorrect. [#10977](https://github.com/CesiumGS/cesium/issues/10977)
 
 #### Deprecated :hourglass_flowing_sand:
 
