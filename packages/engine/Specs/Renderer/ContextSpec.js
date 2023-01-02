@@ -16,6 +16,7 @@ describe(
 
     beforeAll(function () {
       context = createContext();
+      spyOn(Context, "_deprecationWarning");
     });
 
     afterAll(function () {
@@ -324,6 +325,32 @@ describe(
       const c = createContext(undefined, 1024, 768);
       expect(c.drawingBufferHeight).toBe(768);
       c.destroyForSpecs();
+    });
+
+    it("requestWebgl1 works", function () {
+      const c1 = createContext({
+        requestWebgl1: true,
+      });
+      expect(c1._webgl2).toBe(false);
+
+      const c2 = createContext({
+        requestWebgl1: false,
+      });
+      expect(c2._webgl2).toBe(true);
+    });
+
+    it("prints deprecation warning when using requestWebgl2 instead of requestWebgl1", function () {
+      const c1 = createContext({
+        requestWebgl2: true,
+      });
+      expect(c1._webgl2).toBe(true);
+      expect(Context._deprecationWarning).toHaveBeenCalled();
+
+      const c2 = createContext({
+        requestWebgl2: false,
+      });
+      expect(c2._webgl2).toBe(false);
+      expect(Context._deprecationWarning).toHaveBeenCalled();
     });
   },
   "WebGL"

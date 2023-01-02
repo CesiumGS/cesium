@@ -32,6 +32,10 @@
 - Fixed a bug where a `Model` would sometimes disappear when loaded in Columbus View. [#10945](https://github.com/CesiumGS/cesium/pull/10945)
 - Fixed a bug where `result` parameters were omitted from the TypeScript definitions. [#10864](https://github.com/CesiumGS/cesium/issues/10864)
 
+#### Deprecated :hourglass_flowing_sand:
+
+- The `ContextOptions.requestWebgl2` was deprecated in Cesium 1.101. It will be removed in Cesium 1.102. Use `ContextOptions.requestWebgl1` instead to choose between a WebGL1 and WebGL2 context. [#10962](https://github.com/CesiumGS/cesium/pull/10962)
+
 ### 1.100 - 2022-12-01
 
 #### Major Announcements :loudspeaker:

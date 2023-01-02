@@ -27,7 +27,7 @@ describe(
     let framebuffer;
 
     beforeAll(function () {
-      context = createContext({ requestWebgl2: true });
+      context = createContext({ requestWebgl1: false });
     });
 
     afterAll(function () {

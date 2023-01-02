@@ -4,6 +4,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
@@ -42,9 +43,18 @@ function Context(canvas, options) {
   Check.defined("canvas", canvas);
   //>>includeEnd('debug');
 
+  let requestWebgl2 = false;
+  if (defined(options) && defined(options.requestWebgl2)) {
+    requestWebgl2 = options.requestWebgl2;
+    Context._deprecationWarning(
+      "ContextOptions.requestWebgl2",
+      "Cesium.requestWebgl2 was deprecated in CesiumJS 1.101 and will be removed in 1.102. Use Cesium.requestWebgl1 to request a WebGL1 or WebGL2 context."
+    );
+  }
+
   const {
     getWebGLStub,
-    requestWebgl2 = false,
+    requestWebgl1 = !requestWebgl2,
     webgl: webglOptions = {},
     allowTextureFilterAnisotropic = true,
   } = defaultValue(options, {});
@@ -59,7 +69,7 @@ function Context(canvas, options) {
 
   const glContext = defined(getWebGLStub)
     ? getWebGLStub(canvas, webglOptions)
-    : getWebGLContext(canvas, webglOptions, requestWebgl2);
+    : getWebGLContext(canvas, webglOptions, requestWebgl1);
 
   // Get context type. instanceof will throw if WebGL2 is not supported
   const webgl2 =
@@ -367,7 +377,7 @@ function Context(canvas, options) {
    */
   this.options = {
     getWebGLStub: getWebGLStub,
-    requestWebgl2: requestWebgl2,
+    requestWebgl1: requestWebgl1,
     webgl: webglOptions,
     allowTextureFilterAnisotropic: allowTextureFilterAnisotropic,
   };
@@ -397,7 +407,7 @@ function Context(canvas, options) {
  * especially for horizon views.
  * </p>
  *
- * @property {Boolean} [requestWebGl2 = false] If true and the browser supports it, use a WebGL 2 rendering context
+ * @property {Boolean} [requestWebgl1 = true] If true and the browser supports it, use a WebGL 1 rendering context
  * @property {Boolean} [allowTextureFilterAnisotropic=true] If true, use anisotropic filtering during texture sampling
  * @property {WebGLOptions} [webgl] WebGL options to be passed on to canvas.getContext
  * @property {Function} [getWebGLStub] A function to create a WebGL stub for testing
@@ -407,19 +417,19 @@ function Context(canvas, options) {
  * @private
  * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
  * @param {WebGLOptions} webglOptions WebGL options to be passed on to HTMLCanvasElement.getContext()
- * @param {Boolean} requestWebgl2 Whether to request a WebGL2RenderingContext
+ * @param {Boolean} requestWebgl1 Whether to request a WebGLRenderingContext or a WebGL2RenderingContext.
  * @returns {WebGLRenderingContext|WebGL2RenderingContext}
  */
-function getWebGLContext(canvas, webglOptions, requestWebgl2) {
+function getWebGLContext(canvas, webglOptions, requestWebgl1) {
   if (typeof WebGLRenderingContext === "undefined") {
     throw new RuntimeError(
       "The browser does not support WebGL.  Visit http://get.webgl.org."
     );
   }
 
-  requestWebgl2 =
-    requestWebgl2 && typeof WebGL2RenderingContext !== "undefined";
-  const contextType = requestWebgl2 ? "webgl2" : "webgl";
+  requestWebgl1 =
+    requestWebgl1 && typeof WebGL2RenderingContext !== "undefined";
+  const contextType = requestWebgl1 ? "webgl" : "webgl2";
   const glContext = canvas.getContext(contextType, webglOptions);
 
   if (!defined(glContext)) {
@@ -1633,4 +1643,8 @@ Context.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+// Used for specs.
+Context._deprecationWarning = deprecationWarning;
+
 export default Context;
