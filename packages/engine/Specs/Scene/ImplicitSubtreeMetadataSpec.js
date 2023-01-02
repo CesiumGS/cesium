@@ -12,7 +12,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("creates subtree metadata", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -67,7 +67,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("hasProperty throws when there's no property with the given property ID", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -93,7 +93,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("hasProperty returns true when there's a property with the given property ID", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -117,7 +117,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("hasProperty returns true when the class has a default value for a missing property", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -152,7 +152,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns false when there's no property with the given semantic", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -177,7 +177,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns true when there's a property with the given semantic", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -202,7 +202,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("hasPropertyBySemantic returns true when the class has a default value for a missing property", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -249,7 +249,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("getPropertyIds returns array of property IDs", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -286,7 +286,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("getPropertyIds includes properties with default values", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -323,7 +323,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("getPropertyIds uses results argument", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -360,7 +360,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("getProperty throws when there's no property with the given property ID", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -385,7 +385,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("getProperty returns the property value", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -412,7 +412,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
 
   it("getProperty returns the default value when the property is missing", function () {
     const defaultAuthor = "none";
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -460,7 +460,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("setProperty sets property value", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -512,7 +512,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("getPropertyBySemantic returns undefined when there's no property with the given semantic", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -537,7 +537,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("getPropertyBySemantic returns the property value", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -575,7 +575,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("setPropertyBySemantic sets property value", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -602,7 +602,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("setPropertyBySemantic returns false if semantic does not exist", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {
@@ -640,7 +640,7 @@ describe("Scene/ImplicitSubtreeMetadata", function () {
   });
 
   it("setPropertyBySemantic throws without value", function () {
-    const subtreeClass = new MetadataClass({
+    const subtreeClass = MetadataClass.fromJson({
       id: "subtree",
       class: {
         properties: {

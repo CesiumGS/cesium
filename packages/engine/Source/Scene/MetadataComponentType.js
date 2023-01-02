@@ -7,8 +7,7 @@ import FeatureDetection from "../Core/FeatureDetection.js";
 /**
  * An enum of metadata component types.
  *
- * @enum MetadataComponentType
- * @private
+ * @enum {String}
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 const MetadataComponentType = {
@@ -17,7 +16,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   INT8: "INT8",
   /**
@@ -25,7 +23,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   UINT8: "UINT8",
   /**
@@ -33,7 +30,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   INT16: "INT16",
   /**
@@ -41,7 +37,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   UINT16: "UINT16",
   /**
@@ -49,7 +44,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   INT32: "INT32",
   /**
@@ -57,7 +51,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   UINT32: "UINT32",
   /**
@@ -67,7 +60,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   INT64: "INT64",
   /**
@@ -77,7 +69,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   UINT64: "UINT64",
   /**
@@ -85,7 +76,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   FLOAT32: "FLOAT32",
   /**
@@ -93,7 +83,6 @@ const MetadataComponentType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   FLOAT64: "FLOAT64",
 };
@@ -358,10 +347,16 @@ MetadataComponentType.unnormalize = function (value, type) {
   return value;
 };
 
+/**
+ * @private
+ */
 MetadataComponentType.applyValueTransform = function (value, offset, scale) {
   return scale * value + offset;
 };
 
+/**
+ * @private
+ */
 MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
   // if the scale is 0, avoid a divide by zero error. The result can be any
   // finite number, so 0.0 will do nicely.
@@ -409,7 +404,7 @@ MetadataComponentType.getSizeInBytes = function (type) {
  * Gets the {@link MetadataComponentType} from a {@link ComponentDatatype}.
  *
  * @param {ComponentDatatype} componentDatatype The component datatype.
- * @returns {MetadataComponentType} The metadata component type.
+ * @returns {MetadataComponentType} The type.
  *
  * @private
  */
@@ -441,7 +436,7 @@ MetadataComponentType.fromComponentDatatype = function (componentDatatype) {
 /**
  * Gets the {@link ComponentDatatype} from a {@link MetadataComponentType}.
  *
- * @param {MetadataComponentType} type The metadata component datatype.
+ * @param {MetadataComponentType} type The type.
  * @returns {ComponentDatatype} The component datatype.
  *
  * @private

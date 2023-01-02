@@ -113,7 +113,7 @@ Object.defineProperties(PropertyTable.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof PropertyTable.prototype
    * @type {*}
@@ -127,7 +127,7 @@ Object.defineProperties(PropertyTable.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof PropertyTable.prototype
    * @type {Object}

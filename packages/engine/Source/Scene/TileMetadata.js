@@ -50,7 +50,7 @@ Object.defineProperties(TileMetadata.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof TileMetadata.prototype
    * @type {Object}
@@ -64,7 +64,7 @@ Object.defineProperties(TileMetadata.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof TileMetadata.prototype
    * @type {Object}

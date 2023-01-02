@@ -89,7 +89,7 @@ describe(
       expect(function () {
         return parseStructuralMetadata({
           extension: undefined,
-          schema: new MetadataSchema(propertyTablesSchema),
+          schema: MetadataSchema.fromJson(propertyTablesSchema),
         });
       }).toThrowDeveloperError();
     });
@@ -106,7 +106,7 @@ describe(
     it("parses extension with default values", function () {
       const metadata = parseStructuralMetadata({
         extension: {},
-        schema: new MetadataSchema(propertyTablesSchema),
+        schema: MetadataSchema.fromJson(propertyTablesSchema),
       });
 
       expect(metadata.schema).toBeDefined();
@@ -148,7 +148,7 @@ describe(
 
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(propertyTablesSchema),
+        schema: MetadataSchema.fromJson(propertyTablesSchema),
         bufferViews: propertyTableResults.bufferViews,
       });
 
@@ -245,7 +245,7 @@ describe(
 
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(propertyTexturesSchema),
+        schema: MetadataSchema.fromJson(propertyTexturesSchema),
         textures: textures,
       });
 
@@ -294,7 +294,7 @@ describe(
 
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(propertyAttributesSchema),
+        schema: MetadataSchema.fromJson(propertyAttributesSchema),
       });
 
       const pointsClass = metadata.schema.classes.points;
@@ -332,7 +332,7 @@ describe(
       };
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(propertyTexturesSchema),
+        schema: MetadataSchema.fromJson(propertyTexturesSchema),
       });
       expect(metadata.statistics).toBe(statistics);
     });
@@ -346,7 +346,7 @@ describe(
       };
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(propertyTexturesSchema),
+        schema: MetadataSchema.fromJson(propertyTexturesSchema),
       });
       expect(metadata.extras).toBe(extras);
     });
@@ -360,7 +360,7 @@ describe(
       };
       const metadata = parseStructuralMetadata({
         extension: extension,
-        schema: new MetadataSchema(propertyTexturesSchema),
+        schema: MetadataSchema.fromJson(propertyTexturesSchema),
       });
 
       expect(metadata.extensions).toBe(extensions);

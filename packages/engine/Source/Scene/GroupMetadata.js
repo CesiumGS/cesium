@@ -69,7 +69,7 @@ Object.defineProperties(GroupMetadata.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof GroupMetadata.prototype
    * @type {*}
@@ -83,7 +83,7 @@ Object.defineProperties(GroupMetadata.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof GroupMetadata.prototype
    * @type {Object}

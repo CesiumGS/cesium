@@ -15,7 +15,7 @@ import {
 
 describe("Scene/MetadataClassProperty", function () {
   it("creates property with default values", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "height",
       property: {
         type: "SCALAR",
@@ -55,7 +55,7 @@ describe("Scene/MetadataClassProperty", function () {
       EXT_other_extension: {},
     };
 
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         name: "Position",
@@ -86,20 +86,20 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.isVariableLengthArray).toBe(false);
     expect(property.arrayLength).toBe(3);
     expect(property.normalized).toBe(true);
-    expect(property.max).toBe(max);
-    expect(property.min).toBe(min);
-    expect(property.default).toBe(propertyDefault);
+    expect(property.max).toEqual(max);
+    expect(property.min).toEqual(min);
+    expect(property.default).toEqual(propertyDefault);
     expect(property.required).toBe(true);
     expect(property.semantic).toBe("_POSITION");
-    expect(property.extras).toBe(extras);
-    expect(property.extensions).toBe(extensions);
+    expect(property.extras).toEqual(extras);
+    expect(property.extensions).toEqual(extensions);
     expect(property._isLegacyExtension).toBe(false);
   });
 
   it("transcodes single properties from EXT_feature_metadata", function () {
     const max = [32767, 0, 100];
     const min = [-32768, 0, -100];
-    const propertyDefault = 0;
+    const propertyDefault = [0, 0, 0];
     const extras = {
       coordinates: [0, 1, 2],
     };
@@ -107,7 +107,7 @@ describe("Scene/MetadataClassProperty", function () {
       EXT_other_extension: {},
     };
 
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "population",
       property: {
         name: "Population",
@@ -135,18 +135,18 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.isVariableLengthArray).toBe(false);
     expect(property.arrayLength).not.toBeDefined();
     expect(property.normalized).toBe(true);
-    expect(property.max).toBe(max);
-    expect(property.min).toBe(min);
-    expect(property.default).toBe(propertyDefault);
+    expect(property.max).toEqual(max);
+    expect(property.min).toEqual(min);
+    expect(property.default).toEqual(propertyDefault);
     expect(property.required).toBe(true);
     expect(property.semantic).toBe("_POSITION");
-    expect(property.extras).toBe(extras);
-    expect(property.extensions).toBe(extensions);
+    expect(property.extras).toEqual(extras);
+    expect(property.extensions).toEqual(extensions);
     expect(property._isLegacyExtension).toBe(true);
   });
 
   it("creates enum property", function () {
-    const colorEnum = new MetadataEnum({
+    const colorEnum = MetadataEnum.fromJson({
       id: "color",
       enum: {
         values: [
@@ -162,7 +162,7 @@ describe("Scene/MetadataClassProperty", function () {
       color: colorEnum,
     };
 
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "color",
       property: {
         type: "ENUM",
@@ -184,7 +184,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates array of enums with EXT_feature_metadata", function () {
-    const colorEnum = new MetadataEnum({
+    const colorEnum = MetadataEnum.fromJson({
       id: "color",
       enum: {
         valueType: "UINT32",
@@ -201,7 +201,7 @@ describe("Scene/MetadataClassProperty", function () {
       color: colorEnum,
     };
 
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "color",
       property: {
         type: "ARRAY",
@@ -223,7 +223,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates vector and matrix types", function () {
-    let property = new MetadataClassProperty({
+    let property = MetadataClassProperty.fromJson({
       id: "speed",
       property: {
         type: "VEC2",
@@ -240,7 +240,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
     expect(property._isLegacyExtension).toBe(false);
 
-    property = new MetadataClassProperty({
+    property = MetadataClassProperty.fromJson({
       id: "scale",
       property: {
         type: "MAT3",
@@ -259,7 +259,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates arrays of BOOLEAN and STRING with EXT_feature_metadata", function () {
-    let property = new MetadataClassProperty({
+    let property = MetadataClassProperty.fromJson({
       id: "booleanArray",
       property: {
         type: "ARRAY",
@@ -276,7 +276,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.valueType).not.toBeDefined();
     expect(property._isLegacyExtension).toBe(true);
 
-    property = new MetadataClassProperty({
+    property = MetadataClassProperty.fromJson({
       id: "stringArray",
       property: {
         type: "ARRAY",
@@ -296,7 +296,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("creates arrays of vector and matrix types", function () {
-    let property = new MetadataClassProperty({
+    let property = MetadataClassProperty.fromJson({
       id: "speeds",
       property: {
         type: "VEC2",
@@ -314,7 +314,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.valueType).toBe(MetadataComponentType.FLOAT32);
     expect(property._isLegacyExtension).toBe(false);
 
-    property = new MetadataClassProperty({
+    property = MetadataClassProperty.fromJson({
       id: "scaleFactors",
       property: {
         type: "MAT3",
@@ -335,7 +335,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("handles ambiguous extension gracefully", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "name",
       property: {
         // this is valid in both EXT_structural_metadata and EXT_feature_metadata
@@ -356,7 +356,7 @@ describe("Scene/MetadataClassProperty", function () {
 
   it("constructor throws with invalid type definition", function () {
     expect(function () {
-      return new MetadataClassProperty({
+      return MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           type: "NOT_A_TYPE",
@@ -367,7 +367,7 @@ describe("Scene/MetadataClassProperty", function () {
 
   it("constructor throws without id", function () {
     expect(function () {
-      return new MetadataClassProperty({
+      return MetadataClassProperty.fromJson({
         id: undefined,
         property: {
           type: "VEC2",
@@ -379,7 +379,7 @@ describe("Scene/MetadataClassProperty", function () {
 
   it("constructor throws without property", function () {
     expect(function () {
-      return new MetadataClassProperty({
+      return MetadataClassProperty.fromJson({
         id: "propertyId",
         property: undefined,
       });
@@ -388,7 +388,7 @@ describe("Scene/MetadataClassProperty", function () {
 
   it("constructor throws without property.type", function () {
     expect(function () {
-      return new MetadataClassProperty({
+      return MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           type: undefined,
@@ -400,7 +400,7 @@ describe("Scene/MetadataClassProperty", function () {
 
   describe("expandConstant", function () {
     it("works for scalars", function () {
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           type: "SCALAR",
@@ -412,7 +412,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     it("works for vectors and matrices", function () {
-      let property = new MetadataClassProperty({
+      let property = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           type: "VEC3",
@@ -422,7 +422,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       expect(property.expandConstant(1)).toEqual([1, 1, 1]);
 
-      property = new MetadataClassProperty({
+      property = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           type: "MAT3",
@@ -434,7 +434,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     it("works for arrays of scalars", function () {
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           array: true,
@@ -448,7 +448,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     it("works for arrays of vectors and matrices", function () {
-      let property = new MetadataClassProperty({
+      let property = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           array: true,
@@ -471,7 +471,7 @@ describe("Scene/MetadataClassProperty", function () {
         1,
       ]);
 
-      property = new MetadataClassProperty({
+      property = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           array: true,
@@ -504,7 +504,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     it("works for nested arrays of vectors and matrices", function () {
-      let property = new MetadataClassProperty({
+      let property = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           array: true,
@@ -521,7 +521,7 @@ describe("Scene/MetadataClassProperty", function () {
         [1, 1, 1],
       ]);
 
-      property = new MetadataClassProperty({
+      property = MetadataClassProperty.fromJson({
         id: "propertyId",
         property: {
           array: true,
@@ -792,7 +792,7 @@ describe("Scene/MetadataClassProperty", function () {
         ],
       };
 
-      myEnum = new MetadataEnum({
+      myEnum = MetadataEnum.fromJson({
         id: "myEnum",
         enum: {
           values: [
@@ -845,7 +845,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       for (const propertyId in scalarProperties) {
         if (scalarProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: scalarProperties[propertyId],
           });
@@ -868,7 +868,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       for (const propertyId in scalarProperties) {
         if (scalarProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: scalarProperties[propertyId],
           });
@@ -885,7 +885,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("normalizes array values", function () {
       for (const propertyId in arrayProperties) {
         if (arrayProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: arrayProperties[propertyId],
           });
@@ -904,7 +904,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("unnormalizes array values", function () {
       for (const propertyId in arrayProperties) {
         if (arrayProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: arrayProperties[propertyId],
           });
@@ -921,7 +921,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("normalizes vector and matrix values", function () {
       for (const propertyId in vectorProperties) {
         if (vectorProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: vectorProperties[propertyId],
           });
@@ -940,7 +940,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("unnormalizes vector and matrix values", function () {
       for (const propertyId in vectorProperties) {
         if (vectorProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: vectorProperties[propertyId],
           });
@@ -957,7 +957,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("normalizes nested arrays of vectors", function () {
       for (const propertyId in arrayOfVectorProperties) {
         if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: arrayOfVectorProperties[propertyId],
           });
@@ -976,7 +976,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("unnormalizes nested arrays of vectors", function () {
       for (const propertyId in arrayOfVectorProperties) {
         if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: arrayOfVectorProperties[propertyId],
           });
@@ -994,7 +994,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("does not normalize non integer types", function () {
       for (const propertyId in nonIntegerProperties) {
         if (nonIntegerProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: nonIntegerProperties[propertyId],
             enums: {
@@ -1014,7 +1014,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("does not unnormalize non integer types", function () {
       for (const propertyId in nonIntegerProperties) {
         if (nonIntegerProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: nonIntegerProperties[propertyId],
             enums: {
@@ -1369,7 +1369,7 @@ describe("Scene/MetadataClassProperty", function () {
         ],
       };
 
-      myEnum = new MetadataEnum({
+      myEnum = MetadataEnum.fromJson({
         id: "myEnum",
         enum: {
           values: [
@@ -1429,7 +1429,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       for (const propertyId in scalarProperties) {
         if (scalarProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: scalarProperties[propertyId],
           });
@@ -1452,7 +1452,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       for (const propertyId in scalarProperties) {
         if (scalarProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: scalarProperties[propertyId],
           });
@@ -1467,7 +1467,7 @@ describe("Scene/MetadataClassProperty", function () {
     });
 
     it("unapplyValueTransform returns 0 when scale is 0", function () {
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: "zeroScale",
         property: {
           type: "SCALAR",
@@ -1485,7 +1485,7 @@ describe("Scene/MetadataClassProperty", function () {
         MetadataClassProperty,
         "valueTransformInPlace"
       );
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: "identityTransform",
         property: {
           type: "SCALAR",
@@ -1501,7 +1501,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("applies value transform for array values", function () {
       for (const propertyId in arrayProperties) {
         if (arrayProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: arrayProperties[propertyId],
           });
@@ -1522,7 +1522,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("un-applies value transform for array values", function () {
       for (const propertyId in arrayProperties) {
         if (arrayProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: arrayProperties[propertyId],
           });
@@ -1544,7 +1544,7 @@ describe("Scene/MetadataClassProperty", function () {
         "valueTransformInPlace"
       );
 
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: "zeroScale",
         property: {
           type: "SCALAR",
@@ -1568,7 +1568,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("applies value transform for vector and matrix values", function () {
       for (const propertyId in vectorProperties) {
         if (vectorProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: vectorProperties[propertyId],
           });
@@ -1589,7 +1589,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("un-applies value transform for vector and matrix values", function () {
       for (const propertyId in vectorProperties) {
         if (vectorProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: vectorProperties[propertyId],
           });
@@ -1608,7 +1608,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("applies value transform for arrays of vectors", function () {
       for (const propertyId in arrayOfVectorProperties) {
         if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: arrayOfVectorProperties[propertyId],
           });
@@ -1629,7 +1629,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("un-applies value transform for arrays of vectors", function () {
       for (const propertyId in arrayOfVectorProperties) {
         if (arrayOfVectorProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: arrayOfVectorProperties[propertyId],
           });
@@ -1649,7 +1649,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("does not apply transform to other types", function () {
       for (const propertyId in otherProperties) {
         if (otherProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: otherProperties[propertyId],
             enums: {
@@ -1669,7 +1669,7 @@ describe("Scene/MetadataClassProperty", function () {
     it("does not unaapply transform to other types", function () {
       for (const propertyId in otherProperties) {
         if (otherProperties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: otherProperties[propertyId],
             enums: {
@@ -1734,7 +1734,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       for (const propertyId in properties) {
         if (properties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: properties[propertyId],
           });
@@ -1758,7 +1758,7 @@ describe("Scene/MetadataClassProperty", function () {
 
       for (const propertyId in properties) {
         if (properties.hasOwnProperty(propertyId)) {
-          const property = new MetadataClassProperty({
+          const property = MetadataClassProperty.fromJson({
             id: propertyId,
             property: properties[propertyId],
           });
@@ -1868,7 +1868,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: propertyId,
           property: properties[propertyId],
         });
@@ -1990,7 +1990,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: propertyId,
           property: properties[propertyId],
         });
@@ -2111,7 +2111,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: propertyId,
           property: properties[propertyId],
         });
@@ -2168,7 +2168,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: propertyId,
           property: properties[propertyId],
         });
@@ -2280,7 +2280,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: propertyId,
           property: properties[propertyId],
         });
@@ -2402,7 +2402,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: propertyId,
           property: properties[propertyId],
         });
@@ -2523,7 +2523,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: propertyId,
           property: properties[propertyId],
         });
@@ -2580,7 +2580,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (const propertyId in properties) {
       if (properties.hasOwnProperty(propertyId)) {
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: propertyId,
           property: properties[propertyId],
         });
@@ -2595,7 +2595,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns undefined if the value is valid", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC3",
@@ -2607,7 +2607,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns undefined for valid arrays of vectors", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC3",
@@ -2627,7 +2627,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns undefined for valid arrays of matrices", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "MAT3",
@@ -2647,7 +2647,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if property is required but value is undefined", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "SCALAR",
@@ -2662,7 +2662,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns undefined if value is undefined but a default is available", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "SCALAR",
@@ -2676,7 +2676,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is ARRAY and value is not an array", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "SCALAR",
@@ -2690,7 +2690,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is a vector and the component type is not vector-compatibile", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC2",
@@ -2704,7 +2704,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is a matrix and the component type is not vector-compatibile", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "MAT3",
@@ -2718,7 +2718,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is a vector and value is not a Cartesian", function () {
-    let property = new MetadataClassProperty({
+    let property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC2",
@@ -2728,7 +2728,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.validate(8.0)).toBe("vector value 8 must be a Cartesian2");
 
-    property = new MetadataClassProperty({
+    property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC3",
@@ -2738,7 +2738,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.validate(8.0)).toBe("vector value 8 must be a Cartesian3");
 
-    property = new MetadataClassProperty({
+    property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "VEC4",
@@ -2750,7 +2750,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if type is a matrix and value is not a Matrix", function () {
-    let property = new MetadataClassProperty({
+    let property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "MAT2",
@@ -2760,7 +2760,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.validate(8.0)).toBe("matrix value 8 must be a Matrix2");
 
-    property = new MetadataClassProperty({
+    property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "MAT3",
@@ -2770,7 +2770,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.validate(8.0)).toBe("matrix value 8 must be a Matrix3");
 
-    property = new MetadataClassProperty({
+    property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "MAT4",
@@ -2782,7 +2782,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message for an array that doesn't match the count", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "position",
       property: {
         type: "SCALAR",
@@ -2798,7 +2798,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if enum name is invalid", function () {
-    const myEnum = new MetadataEnum({
+    const myEnum = MetadataEnum.fromJson({
       id: "myEnum",
       enum: {
         values: [
@@ -2818,7 +2818,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "myEnum",
       property: {
         type: "ENUM",
@@ -2852,7 +2852,7 @@ describe("Scene/MetadataClassProperty", function () {
     ];
 
     for (let i = 0; i < types.length; ++i) {
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: "property",
         property: {
           type: "SCALAR",
@@ -2866,7 +2866,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if value does not match the type (BOOLEAN)", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "property",
       property: {
         type: "BOOLEAN",
@@ -2878,7 +2878,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if value does not match the type (STRING)", function () {
-    const property = new MetadataClassProperty({
+    const property = MetadataClassProperty.fromJson({
       id: "property",
       property: {
         type: "STRING",
@@ -2915,7 +2915,7 @@ describe("Scene/MetadataClassProperty", function () {
     for (const type in outOfRangeValues) {
       if (outOfRangeValues.hasOwnProperty(type)) {
         const values = outOfRangeValues[type];
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: "property",
           property: {
             type: "SCALAR",
@@ -2956,7 +2956,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     for (let i = 0; i < types.length; i++) {
       const type = types[i];
-      const property = new MetadataClassProperty({
+      const property = MetadataClassProperty.fromJson({
         id: "property",
         property: {
           type: "SCALAR",
@@ -2997,7 +2997,7 @@ describe("Scene/MetadataClassProperty", function () {
     for (const componentType in outOfRangeValues) {
       if (outOfRangeValues.hasOwnProperty(componentType)) {
         const values = outOfRangeValues[componentType];
-        const property = new MetadataClassProperty({
+        const property = MetadataClassProperty.fromJson({
           id: "property",
           property: {
             array: true,
@@ -3015,7 +3015,7 @@ describe("Scene/MetadataClassProperty", function () {
   });
 
   it("validate returns error message if value is outside the normalized range", function () {
-    const propertyInt8 = new MetadataClassProperty({
+    const propertyInt8 = MetadataClassProperty.fromJson({
       id: "property",
       property: {
         type: "SCALAR",
@@ -3024,7 +3024,7 @@ describe("Scene/MetadataClassProperty", function () {
       },
     });
 
-    const propertyUint8 = new MetadataClassProperty({
+    const propertyUint8 = MetadataClassProperty.fromJson({
       id: "property",
       property: {
         type: "SCALAR",

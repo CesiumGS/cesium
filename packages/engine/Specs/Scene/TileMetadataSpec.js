@@ -1,12 +1,12 @@
 import { MetadataClass, TileMetadata } from "../../index.js";
 
 describe("Scene/TileMetadata", function () {
-  const tileClassWithNoProperties = new MetadataClass({
+  const tileClassWithNoProperties = MetadataClass.fromJson({
     id: "tile",
     class: {},
   });
 
-  const tileClass = new MetadataClass({
+  const tileClass = MetadataClass.fromJson({
     id: "tile",
     class: {
       properties: {

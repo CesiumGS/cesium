@@ -12,7 +12,7 @@ describe("Scene/PropertyAttributeProperty", function () {
   let propertyAttributeProperty;
 
   beforeAll(function () {
-    classProperty = new MetadataClassProperty({
+    classProperty = MetadataClassProperty.fromJson({
       id: "intensity",
       property: {
         type: "SCALAR",
@@ -69,7 +69,7 @@ describe("Scene/PropertyAttributeProperty", function () {
   });
 
   it("creates property with value transform from class definition", function () {
-    const classProperty = new MetadataClassProperty({
+    const classProperty = MetadataClassProperty.fromJson({
       id: "transformed",
       property: {
         type: "SCALAR",
@@ -94,7 +94,7 @@ describe("Scene/PropertyAttributeProperty", function () {
   });
 
   it("creates property with value transform override", function () {
-    const classProperty = new MetadataClassProperty({
+    const classProperty = MetadataClassProperty.fromJson({
       id: "transformed",
       property: {
         type: "SCALAR",
@@ -121,7 +121,7 @@ describe("Scene/PropertyAttributeProperty", function () {
   });
 
   it("unpacks property and scale for vectors and matrices", function () {
-    let classProperty = new MetadataClassProperty({
+    let classProperty = MetadataClassProperty.fromJson({
       id: "transformed",
       property: {
         type: "VEC2",
@@ -144,7 +144,7 @@ describe("Scene/PropertyAttributeProperty", function () {
     expect(propertyAttributeProperty.offset).toEqual(new Cartesian2(1, 2));
     expect(propertyAttributeProperty.scale).toEqual(new Cartesian2(2, 4));
 
-    classProperty = new MetadataClassProperty({
+    classProperty = MetadataClassProperty.fromJson({
       id: "transformed",
       property: {
         type: "MAT2",

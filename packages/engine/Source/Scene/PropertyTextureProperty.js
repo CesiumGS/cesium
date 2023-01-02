@@ -150,7 +150,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof PropertyTextureProperty.prototype
    * @type {*}
@@ -164,7 +164,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof PropertyTextureProperty.prototype
    * @type {*}

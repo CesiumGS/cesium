@@ -20,7 +20,8 @@ const Pass = {
   CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW: 6,
   OPAQUE: 7,
   TRANSLUCENT: 8,
-  OVERLAY: 9,
-  NUMBER_OF_PASSES: 10,
+  VOXELS: 9,
+  OVERLAY: 10,
+  NUMBER_OF_PASSES: 11,
 };
 export default Object.freeze(Pass);

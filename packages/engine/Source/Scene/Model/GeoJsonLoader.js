@@ -606,7 +606,7 @@ function parse(geoJson, frameState) {
   });
   const propertyTables = [propertyTable];
 
-  const schema = new MetadataSchema({});
+  const schema = MetadataSchema.fromJson({});
 
   const structuralMetadata = new StructuralMetadata({
     schema: schema,

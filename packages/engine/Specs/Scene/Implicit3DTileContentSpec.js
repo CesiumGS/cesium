@@ -1149,7 +1149,7 @@ describe(
       let groupMetadataClass;
       let groupMetadata;
       beforeAll(function () {
-        groupMetadataClass = new MetadataClass({
+        groupMetadataClass = MetadataClass.fromJson({
           id: "test",
           class: {
             properties: {
