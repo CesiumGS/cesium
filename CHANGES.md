@@ -34,7 +34,7 @@
 
 #### Deprecated :hourglass_flowing_sand:
 
-- The `ContextOptions.requestWebgl2` was deprecated in Cesium 1.101. It will be removed in Cesium 1.102. Use `ContextOptions.requestWebgl1` instead to choose between a WebGL1 and WebGL2 context. [#10962](https://github.com/CesiumGS/cesium/pull/10962)
+- `ContextOptions.requestWebgl2` was deprecated in CesiumJS 1.101 and will be removed in 1.102. Instead, CesiumJS will default to using a WebGL2 context for rendering. Use `ContextOptions.requestWebgl1` to request a WebGL1 or WebGL2 context.
 
 ### 1.100 - 2022-12-01
 
