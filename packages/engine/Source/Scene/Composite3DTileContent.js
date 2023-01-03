@@ -17,14 +17,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @private
  */
-function Composite3DTileContent(
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-  byteOffset,
-  factory
-) {
+function Composite3DTileContent(tileset, tile, resource) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -33,7 +26,7 @@ function Composite3DTileContent(
   this._metadata = undefined;
   this._group = undefined;
 
-  this._readyPromise = initialize(this, arrayBuffer, byteOffset, factory);
+  this._cachedPromise = undefined;
 }
 
 Object.defineProperties(Composite3DTileContent.prototype, {
@@ -130,12 +123,6 @@ Object.defineProperties(Composite3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
-    },
-  },
-
   tileset: {
     get: function () {
       return this._tileset;
@@ -210,7 +197,7 @@ Object.defineProperties(Composite3DTileContent.prototype, {
 
 const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-function initialize(content, arrayBuffer, byteOffset, factory) {
+function load(content, arrayBuffer, byteOffset, factory) {
   byteOffset = defaultValue(byteOffset, 0);
 
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -287,6 +274,25 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
     return content;
   });
 }
+
+/**
+ * TODO
+ * @param {*} arrayBuffer
+ * @param {*} byteOffset
+ * @param {*} factory
+ * @returns {Promise<Composite3DTileContent>}
+ */
+Composite3DTileContent.prototype.load = function (
+  arrayBuffer,
+  byteOffset,
+  factory
+) {
+  if (!defined(this._cachedPromise)) {
+    this._cachedPromise = load(this, arrayBuffer, byteOffset, factory);
+  }
+
+  return this._cachedPromise;
+};
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>

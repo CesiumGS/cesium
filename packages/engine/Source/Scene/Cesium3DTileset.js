@@ -2381,14 +2381,18 @@ function requestContent(tileset, tile) {
 
   tileset._requestedTilesInFlight.push(tile);
 
-  tile.contentReadyToProcessPromise
-    .then(addToProcessingQueue(tileset, tile))
-    .catch(function (e) {
-      // Any error will propagate through contentReadyPromise and will be handled below
-    });
-  tile.contentReadyPromise
-    .then(handleTileSuccess(tileset, tile))
-    .catch(handleTileFailure(tileset, tile));
+  async function finishLoading() {
+    try {
+      await tile.contentReadyToProcessPromise;
+      addToProcessingQueue(tileset, tile);
+      const result = await tile.processContent();
+      handleTileSuccess(tileset, tile)(result);
+    } catch (error) {
+      handleTileFailure(tileset, tile)(error);
+    }
+  }
+
+  return finishLoading();
 }
 
 function sortRequestByPriority(a, b) {

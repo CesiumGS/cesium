@@ -726,23 +726,6 @@ Object.defineProperties(Cesium3DTile.prototype, {
   },
 
   /**
-   * Gets the promise that will be resolved when the tile's content is ready to render.
-   * <p>
-   * The promise remains <code>undefined</code> until the tile's content is requested.
-   * </p>
-   *
-   * @type {Promise.<Cesium3DTileContent>}
-   * @readonly
-   *
-   * @private
-   */
-  contentReadyPromise: {
-    get: function () {
-      return this._contentReadyPromise;
-    },
-  },
-
-  /**
    * Returns the number of draw commands used by this tile.
    *
    * @readonly
@@ -1055,7 +1038,7 @@ function createPriorityFunction(tile) {
 Cesium3DTile.prototype.requestContent = function () {
   // empty contents don't require any HTTP requests
   if (this.hasEmptyContent) {
-    return 0;
+    return 0; // TODO: Return a promise
   }
 
   if (this.hasMultipleContents) {
@@ -1063,6 +1046,25 @@ Cesium3DTile.prototype.requestContent = function () {
   }
 
   return requestSingleContent(this);
+};
+
+/**
+ * Process the tile's content after the request has resolved.
+ *
+ * @return {Promise|undefined} A promise which resolves after content is finished processing.
+ * @private
+ */
+Cesium3DTile.prototype.processContent = function () {
+  // empty contents don't require any HTTP requests
+  if (this.hasEmptyContent) {
+    return;
+  }
+
+  if (this.hasMultipleContents) {
+    return processMultipleContents(this);
+  }
+
+  return processSingleContent(this);
 };
 
 /**
@@ -1076,8 +1078,10 @@ Cesium3DTile.prototype.requestContent = function () {
  * </p>
  *
  * @private
+ *
+ * @returns {Promise<Multiple3DTileContent|undefined>} A promise that resolves to
  */
-function requestMultipleContents(tile) {
+async function requestMultipleContents(tile) {
   let multipleContents = tile._content;
   const tileset = tile._tileset;
 
@@ -1103,68 +1107,66 @@ function requestMultipleContents(tile) {
   }
 
   tile._contentState = Cesium3DTileContentState.LOADING;
-  const contentReadyToProcessPromise = multipleContents.contentsFetchedPromise.then(
-    function () {
-      if (
-        tile._contentState !== Cesium3DTileContentState.LOADING ||
-        !defined(multipleContents.readyPromise)
-      ) {
-        // The tile or one of the inner content requests was canceled,
-        // short circuit.
-        return;
-      }
+  await multipleContents.contentsFetchedPromise;
+  if (
+    tile._contentState !== Cesium3DTileContentState.LOADING ||
+    !defined(multipleContents.readyPromise) // TODO: No
+  ) {
+    // The tile or one of the inner content requests was canceled
+    return;
+  }
 
-      if (tile.isDestroyed()) {
-        multipleContentFailed(
-          tile,
-          tileset,
-          "Tile was unloaded while content was loading"
-        );
-        return;
-      }
+  if (tile.isDestroyed()) {
+    // TODO: Handle error
+    multipleContentFailed(
+      tile,
+      tileset,
+      "Tile was unloaded while content was loading"
+    );
+    return;
+  }
 
-      tile._contentState = Cesium3DTileContentState.PROCESSING;
-      return multipleContents;
-    }
-  );
-  tile._contentReadyToProcessPromise = contentReadyToProcessPromise;
-  tile._contentReadyPromise = contentReadyToProcessPromise
-    .then(function (content) {
-      if (!defined(content)) {
-        // request was canceled, short circuit.
-        return;
-      }
+  tile._contentState = Cesium3DTileContentState.PROCESSING;
+  // TODO: At this point, the tileset and tile should be added to the processing queue
 
-      return multipleContents.readyPromise;
-    })
-    .then(function (content) {
-      if (!defined(content)) {
-        // tile was canceled, short circuit.
-        return;
-      }
+  return multipleContents;
+}
 
-      if (tile.isDestroyed()) {
-        multipleContentFailed(
-          tile,
-          tileset,
-          "Tile was unloaded while content was processing"
-        );
-        return;
-      }
+async function processMultipleContents(tile, content) {
+  const tileset = tile._tileset;
+  if (!defined(content)) {
+    // request was canceled, short circuit.
+    return;
+  }
 
-      // Refresh style for expired content
-      tile._selectedFrame = 0;
-      tile.lastStyleTime = 0.0;
+  let contents;
+  try {
+    contents = await content.readyPromise; // TODO: Bad
+  } catch (error) {
+    multipleContentFailed(tile, tileset, error);
+  }
 
-      JulianDate.now(tile._loadTimestamp);
-      tile._contentState = Cesium3DTileContentState.READY;
-      return content;
-    })
-    .catch(function (error) {
-      multipleContentFailed(tile, tileset, error);
-    });
+  if (!defined(contents)) {
+    // tile was canceled, short circuit.
+    return;
+  }
 
-  return 0;
+  if (tile.isDestroyed()) {
+    multipleContentFailed(
+      tile,
+      tileset,
+      "Tile was unloaded while content was processing"
+    );
+    return;
+  }
+
+  // Refresh style for expired content
+  tile._selectedFrame = 0;
+  tile.lastStyleTime = 0.0;
+
+  JulianDate.now(tile._loadTimestamp);
+  tile._contentState = Cesium3DTileContentState.READY;
+  return contents;
 }
 
 function multipleContentFailed(tile, tileset, error) {
@@ -1177,6 +1179,11 @@ function multipleContentFailed(tile, tileset, error) {
   tile._contentState = Cesium3DTileContentState.FAILED;
 }
 
+/**
+ *
+ * @param {*} tile
+ * @returns {Number|Promise<>}
+ */
 function requestSingleContent(tile) {
   // it is important to clone here. The fetchArrayBuffer() below uses
   // throttling, but other uses of the resources do not.
@@ -1209,11 +1216,20 @@ function requestSingleContent(tile) {
   const tileset = tile._tileset;
   tile._contentState = Cesium3DTileContentState.LOADING;
   ++tileset.statistics.numberOfPendingRequests;
-  const contentReadyToProcessPromise = promise.then(function (arrayBuffer) {
+  return promise.then(function (arrayBuffer) {
     if (tile.isDestroyed()) {
       // Tile is unloaded before the content finishes loading
       singleContentFailed(tile, tileset);
       return;
+    }
+
+    // TODO
+    if (request.state === RequestState.CANCELLED) {
+      // Cancelled due to low priority - try again later.
+      tile._contentState = previousState;
+      --tileset.statistics.numberOfPendingRequests;
+      ++tileset.statistics.numberOfAttemptedRequests;
+      return Promise.reject("Cancelled");
     }
 
     const content = makeContent(tile, arrayBuffer);
@@ -1226,49 +1242,49 @@ function requestSingleContent(tile) {
     tile._contentState = Cesium3DTileContentState.PROCESSING;
     return content;
   });
-  tile._contentReadyToProcessPromise = contentReadyToProcessPromise;
-  tile._contentReadyPromise = contentReadyToProcessPromise
-    .then(function (content) {
-      if (!defined(content)) {
-        return;
-      }
+}
 
-      --tileset.statistics.numberOfPendingRequests;
-      return content.readyPromise;
-    })
-    .then(function (content) {
-      if (!defined(content)) {
-        return;
-      }
+async function processSingleContent(tile, content) {
+  const tileset = tile._tileset;
+  --tileset.statistics.numberOfPendingRequests;
 
-      if (tile.isDestroyed()) {
-        // Tile is unloaded before the content finishes processing
-        singleContentFailed(tile, tileset);
-        return;
-      }
-      updateExpireDate(tile);
+  if (!defined(content)) {
+    return;
+  }
 
-      // Refresh style for expired content
-      tile._selectedFrame = 0;
-      tile.lastStyleTime = 0.0;
+  if (tile.isDestroyed()) {
+    // Tile is unloaded before the content finishes processing
+    singleContentFailed(tile, tileset);
+    return;
+  }
 
-      JulianDate.now(tile._loadTimestamp);
-      tile._contentState = Cesium3DTileContentState.READY;
-      return content;
-    })
-    .catch(function (error) {
-      if (request.state === RequestState.CANCELLED) {
-        // Cancelled due to low priority - try again later.
-        tile._contentState = previousState;
-        --tileset.statistics.numberOfPendingRequests;
-        ++tileset.statistics.numberOfAttemptedRequests;
-        return Promise.reject("Cancelled");
-      }
-      singleContentFailed(tile, tileset);
-      return Promise.reject(error);
-    });
+  let contents;
+  try {
+    contents = await content.load();
+  } catch (error) {
+    singleContentFailed(tile, tileset);
+    throw error;
+  }
 
-  return 0;
+  if (!defined(contents)) {
+    // TODO: ?
+    return;
+  }
+
+  if (tile.isDestroyed()) {
+    // Tile is unloaded before the content finishes processing
+    singleContentFailed(tile, tileset);
+    return;
+  }
+  updateExpireDate(tile);
+
+  // Refresh style for expired content
+  tile._selectedFrame = 0;
+  tile.lastStyleTime = 0.0;
+
+  JulianDate.now(tile._loadTimestamp);
+  tile._contentState = Cesium3DTileContentState.READY;
+  return contents;
 }
 
 function singleContentFailed(tile, tileset) {

@@ -290,11 +290,37 @@ describe("Scene/Cesium3DTileset", function () {
     expect(tileset.extensions).toBeUndefined();
   });
 
-  // TODO: load loads
+  it("load loads the root tile and resolves", async function () {
+    const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
+    const result = await tileset.load();
 
-  // TODO: repeated load calls do nothing
+    expect(result).toBeInstanceOf(Cesium3DTileset);
+    expect(result.root).toBeInstanceOf(Cesium3DTile);
+  });
 
-  // TODO: load rejects
+  it("load loads returns cached promise on repeat calls", async function () {
+    const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
+    const promise1 = tileset.load();
+    const promise2 = tileset.load();
+
+    expect(promise1).toBe(promise2);
+    await expectAsync(promise1).toBeResolved();
+    await expectAsync(promise2).toBeResolved();
+  });
+
+  it("load resolves to undefined if tileset is destroyed", async function () {
+    let tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
+    let promise = tileset.load();
+    tileset.destroy();
+
+    await expectAsync(promise).toBeResolvedWith(undefined);
+
+    tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
+    tileset.destroy();
+    promise = tileset.load();
+
+    await expectAsync(promise).toBeResolvedWith(undefined);
+  });
 
   it("load loads tiles with extras", async function () {
     const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);

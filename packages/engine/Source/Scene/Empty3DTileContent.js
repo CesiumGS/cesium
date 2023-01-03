@@ -64,12 +64,6 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
-    get: function () {
-      return undefined;
-    },
-  },
-
   tileset: {
     get: function () {
       return this._tileset;
@@ -118,6 +112,14 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 });
+
+/**
+ * TODO
+ * @returns {Promise<Empty3DTileContent>}
+ */
+Empty3DTileContent.prototype.load = function () {
+  return Promise.resolve(this);
+};
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>

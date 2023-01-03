@@ -19,13 +19,7 @@ import Vector3DTileGeometry from "./Vector3DTileGeometry.js";
  *
  * @private
  */
-function Geometry3DTileContent(
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-  byteOffset
-) {
+function Geometry3DTileContent(tileset, tile, resource) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -42,7 +36,7 @@ function Geometry3DTileContent(
   this.featurePropertiesDirty = false;
   this._group = undefined;
 
-  this._readyPromise = initialize(this, arrayBuffer, byteOffset);
+  this._cachedPromise = undefined;
 }
 
 Object.defineProperties(Geometry3DTileContent.prototype, {
@@ -93,12 +87,6 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
   innerContents: {
     get: function () {
       return undefined;
-    },
-  },
-
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 
@@ -271,7 +259,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
 const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-function initialize(content, arrayBuffer, byteOffset) {
+async function load(content, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
 
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -290,8 +278,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
-    content._readyPromise.resolve(content);
-    return;
+    return content;
   }
 
   const featureTableJSONByteLength = view.getUint32(byteOffset, true);
@@ -451,12 +438,10 @@ function initialize(content, arrayBuffer, byteOffset) {
       boundingVolume: content.tile.boundingVolume.boundingVolume,
     });
 
-    return content._geometries.readyPromise.then(function () {
-      return content;
-    });
+    await content._geometries.readyPromise;
   }
 
-  return Promise.resolve(content);
+  return content;
 }
 
 function createFeatures(content) {
@@ -469,6 +454,20 @@ function createFeatures(content) {
     content._features = features;
   }
 }
+
+/**
+ * TODO
+ * @param {*} arrayBuffer
+ * @param {*} byteOffset
+ * @returns {Promise<Composite3DTileContent>}
+ */
+Geometry3DTileContent.prototype.load = function (arrayBuffer, byteOffset) {
+  if (!defined(this._cachedPromise)) {
+    this._cachedPromise = load(this, arrayBuffer, byteOffset);
+  }
+
+  return this._cachedPromise;
+};
 
 Geometry3DTileContent.prototype.hasProperty = function (batchId, name) {
   return this._batchTable.hasProperty(batchId, name);

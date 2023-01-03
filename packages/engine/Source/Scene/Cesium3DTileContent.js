@@ -272,6 +272,14 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 });
 
 /**
+ * TODO
+ * @returns {Promise<Cesium3DTileContent>}
+ */
+Cesium3DTileContent.prototype.load = function () {
+  DeveloperError.throwInstantiationError();
+};
+
+/**
  * Returns whether the feature has this property.
  *
  * @param {Number} batchId The batchId for the feature.
