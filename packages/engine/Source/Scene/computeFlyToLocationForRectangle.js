@@ -53,7 +53,7 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
           currentMax,
           item
         ) {
-          return Math.max(item.height, currentMax);
+          return Math.max(item.height, currentMax) || 0;
         },
         -Number.MAX_VALUE);
 
