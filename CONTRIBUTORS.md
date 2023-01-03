@@ -342,3 +342,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Calogero Mauceri](https://github.com/calogeromauceri)
 - [Marcel Wendler](https://github.com/UniquePanda)
 - [JiaoJianing](https://github.com/JiaoJianing)
+- [非科班Java出身GISer](https://github.com/Southjor)
