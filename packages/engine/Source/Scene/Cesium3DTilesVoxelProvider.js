@@ -145,7 +145,7 @@ function Cesium3DTilesVoxelProvider(options) {
         that.dimensions = Cartesian3.unpack(voxel.dimensions);
         that.shapeTransform = shapeTransform;
         that.globalTransform = globalTransform;
-        that.maximumTileCount = getTileCount(tilesetJson, metadataSchema);
+        that.maximumTileCount = getTileCount(metadata);
 
         let paddingBefore;
         let paddingAfter;
@@ -177,21 +177,14 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
   },
 });
 
-function getTileCount(tilesetJson, metadataSchema) {
-  if (!defined(tilesetJson.metadata) || !defined(tilesetJson.metadata.class)) {
+function getTileCount(metadata) {
+  if (!defined(metadata.tileset)) {
     return undefined;
   }
 
-  const contentCountProperty =
-    metadataSchema.classes[tilesetJson.metadata.class].propertiesBySemantic[
-      MetadataSemantic.TILESET_TILE_COUNT
-    ];
-
-  if (!defined(contentCountProperty)) {
-    return undefined;
-  }
-
-  return tilesetJson.metadata.properties[contentCountProperty.id];
+  return metadata.tileset.getPropertyBySemantic(
+    MetadataSemantic.TILESET_TILE_COUNT
+  );
 }
 
 function validate(tileset) {
