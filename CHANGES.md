@@ -1,21 +1,57 @@
 # Change Log
 
+### 1.102 - 2023-02-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
+- Fixed a bug where return value for `Scene/computeFlyToLocationForRectangle.js`. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
+
 ### 1.101 - 2023-01-02
 
-#### engine
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.102, CesiumJS will default to using a WebGL2 context for rendering. WebGL2 is widely supported on all platforms and this change will result in better feature support across devices, especially mobile.
+  - WebGL1 will still be supported. If WebGL2 is not available, CesiumJS will automatically fall back to WebGL1.
+  - In order to work in a WebGL2 context, any custom materials, custom primitive or custom shaders will need to be upgraded to use GLSL 300.
+  - Otherwise to request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions` as shown below:
+    ```js
+    const viewer = new Viewer("cesiumContainer", {
+      contextOptions: {
+        requestWebgl1: true,
+      },
+    });
+    ```
+
+#### @cesium/engine
 
 ##### Additions :tada:
 
 - Added `vertexShadowDarkness` parameter to `Globe` to control the amount of darkness of the vertex shadow when terrain lighting is enabled. [#10914](https://github.com/CesiumGS/cesium/pull/10914)
+- Added experimental support for 3D Tiles voxels with the [`3DTILES_content_voxels`](https://github.com/CesiumGS/3d-tiles/tree/voxels/extensions/3DTILES_content_voxels) extension. The current implementation is intended for development use, as the voxel format has not yet been finalized and is subject to breaking changes without deprecation.
 
 ##### Fixes :wrench:
 
-- Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar` [#10912](https://github.com/CesiumGS/cesium/pull/10912)
+- Fixed a bug where the scale of a `PointPrimitive` was incorrect when `scaleByDistance` was set to a `NearFarScalar`. [#10912](https://github.com/CesiumGS/cesium/pull/10912)
 - Fixed glTF models with a mix of Draco and non-Draco attributes. [#10936](https://github.com/CesiumGS/cesium/pull/10936)
-- Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
+- Fixed a bug where billboards with `alignedAxis` properties were not properly aligned in 2D and Columbus View. [#10965](https://github.com/CesiumGS/cesium/issues/10965)
+- Fixed a bug where \*.ktx2 image loading from a URI failed. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
+- Fixed a bug where a `Model` would sometimes disappear when loaded in Columbus View. [#10945](https://github.com/CesiumGS/cesium/pull/10945)
 - Fixed a bug where the entity collection of a `GpxDataSource` did not have the `owner` property set. [#10921](https://github.com/CesiumGS/cesium/issues/10921)
-- Fixed a bug where \*.ktx2 images loading fail. [#10869](https://github.com/CesiumGS/cesium/pull/10869)
-- Fixed a bug where return value for `Scene/computeFlyToLocationForRectangle.js`. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
+- Fixed the JSDoc and TypeScript definitions of arguments in `Matrix2.multiplyByScalar`, `Matrix3.multiplyByScalar`, and several functions in the `S2Cell` class. [#10899](https://github.com/CesiumGS/cesium/pull/10899)
+- Fixed a bug where `result` parameters were omitted from the TypeScript definitions. [#10864](https://github.com/CesiumGS/cesium/issues/10864)
+
+#### Deprecated :hourglass_flowing_sand:
+
+- `ContextOptions.requestWebgl2` was deprecated in CesiumJS 1.101 and will be removed in 1.102. Instead, CesiumJS will default to using a WebGL2 context for rendering. Use `ContextOptions.requestWebgl1` to request a WebGL1 or WebGL2 context.
+
+#### @cesium/widgets
+
+##### Additions :tada:
+
+- Added `viewerVoxelInspectorMixin` and `VoxelInspector` to support experimental 3D Tiles voxels.
 
 ### 1.100 - 2022-12-01
 
