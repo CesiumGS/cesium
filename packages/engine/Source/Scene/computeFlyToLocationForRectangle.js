@@ -53,7 +53,11 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
           currentMax,
           item
         ) {
-          return Math.max(item.height, currentMax) || 0;
+          let itemHeight = Math.max(item.height, currentMax);
+          if(isNaN(itemHeight)){
+            itemHeight = 0;
+          }
+          return itemHeight;
         },
         -Number.MAX_VALUE);
 
