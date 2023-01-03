@@ -81,7 +81,7 @@ describe("Scene/StructuralMetadata", function () {
 
   it("creates structural metadata with default values", function () {
     const metadata = new StructuralMetadata({
-      schema: new MetadataSchema(propertyTablesSchema),
+      schema: MetadataSchema.fromJson(propertyTablesSchema),
     });
 
     expect(metadata.schema).toBeDefined();
@@ -96,7 +96,7 @@ describe("Scene/StructuralMetadata", function () {
       { id: 1, name: "Trees", byteLength: 16 },
     ];
     const metadata = new StructuralMetadata({
-      schema: new MetadataSchema(propertyTablesSchema),
+      schema: MetadataSchema.fromJson(propertyTablesSchema),
       propertyTables: mockPropertyTables,
     });
 
@@ -118,7 +118,7 @@ describe("Scene/StructuralMetadata", function () {
   });
 
   it("creates structural metadata with property textures", function () {
-    const schema = new MetadataSchema(propertyTexturesSchema);
+    const schema = MetadataSchema.fromJson(propertyTexturesSchema);
     const mapClass = schema.classes.map;
     const orthoClass = schema.classes.ortho;
 
@@ -157,7 +157,7 @@ describe("Scene/StructuralMetadata", function () {
   });
 
   it("creates structural metadata with property attributes", function () {
-    const schema = new MetadataSchema(propertyAttributesSchema);
+    const schema = MetadataSchema.fromJson(propertyAttributesSchema);
     const pointsClass = schema.classes.points;
 
     const propertyAttributes = [
@@ -211,7 +211,7 @@ describe("Scene/StructuralMetadata", function () {
 
     const metadata = new StructuralMetadata({
       extras: extras,
-      schema: new MetadataSchema(propertyTablesSchema),
+      schema: MetadataSchema.fromJson(propertyTablesSchema),
     });
 
     expect(metadata.extras).toBe(extras);
@@ -224,7 +224,7 @@ describe("Scene/StructuralMetadata", function () {
 
     const metadata = new StructuralMetadata({
       extensions: extensions,
-      schema: new MetadataSchema(propertyTablesSchema),
+      schema: MetadataSchema.fromJson(propertyTablesSchema),
     });
 
     expect(metadata.extensions).toBe(extensions);
@@ -247,7 +247,7 @@ describe("Scene/StructuralMetadata", function () {
 
     const metadata = new StructuralMetadata({
       statistics: statistics,
-      schema: new MetadataSchema(propertyTablesSchema),
+      schema: MetadataSchema.fromJson(propertyTablesSchema),
     });
 
     expect(metadata.statistics).toBe(statistics);
@@ -256,7 +256,7 @@ describe("Scene/StructuralMetadata", function () {
   it("getPropertyTable throws without propertyTableId", function () {
     const metadata = new StructuralMetadata({
       extension: {},
-      schema: new MetadataSchema(propertyTablesSchema),
+      schema: MetadataSchema.fromJson(propertyTablesSchema),
     });
 
     expect(function () {
@@ -267,7 +267,7 @@ describe("Scene/StructuralMetadata", function () {
   it("getPropertyTexture throws without propertyTextureId", function () {
     const metadata = new StructuralMetadata({
       extension: {},
-      schema: new MetadataSchema(propertyTexturesSchema),
+      schema: MetadataSchema.fromJson(propertyTexturesSchema),
     });
 
     expect(function () {
@@ -278,7 +278,7 @@ describe("Scene/StructuralMetadata", function () {
   it("getPropertyAttribute throws without propertyAttributeId", function () {
     const metadata = new StructuralMetadata({
       extension: {},
-      schema: new MetadataSchema(propertyAttributesSchema),
+      schema: MetadataSchema.fromJson(propertyAttributesSchema),
     });
 
     expect(function () {

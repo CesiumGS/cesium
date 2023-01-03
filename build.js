@@ -349,7 +349,7 @@ export async function bundleCombinedWorkers(options) {
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = false;
   workerConfig.banner = {
-    js: options.copyrightHeader,
+    js: combinedCopyrightHeader,
   };
   workerConfig.entryPoints = workers;
   workerConfig.outdir = options.path;
@@ -421,7 +421,7 @@ export async function bundleWorkers(options) {
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = false;
   workerConfig.banner = {
-    js: options.copyrightHeader,
+    js: combinedCopyrightHeader,
   };
   workerConfig.entryPoints = workers;
   workerConfig.outdir = options.path;

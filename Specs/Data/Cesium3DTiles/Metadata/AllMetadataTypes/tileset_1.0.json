@@ -9,6 +9,7 @@
   "extensions": {
     "3DTILES_metadata": {
       "schema": {
+        "id": "AllMetadataTypesSchemaId",
         "classes": {
           "tileset": {
             "properties": {

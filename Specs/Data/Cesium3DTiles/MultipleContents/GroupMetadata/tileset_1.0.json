@@ -25,6 +25,7 @@
   "extensions": {
     "3DTILES_metadata": {
       "schema": {
+        "id": "GroupMetadataSchemaId",
         "classes": {
           "layer": {
             "properties": {

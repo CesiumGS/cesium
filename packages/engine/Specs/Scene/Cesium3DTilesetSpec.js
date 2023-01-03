@@ -3,6 +3,7 @@ import {
   Camera,
   Cartesian2,
   Cartesian3,
+  Cartesian4,
   Cartographic,
   Cesium3DTile,
   Cesium3DTileColorBlendMode,
@@ -2289,7 +2290,9 @@ describe(
         expect(tileset._tileDebugLabels).toBeDefined();
         expect(tileset._tileDebugLabels.length).toEqual(1);
 
-        const expected = "Texture Memory: 0\n" + "Geometry Memory: 0.007";
+        const expected =
+          "Texture Memory: 0\n" +
+          `Geometry Memory: ${(0.007).toLocaleString()}`;
 
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
@@ -2318,7 +2321,7 @@ describe(
           "Triangles: 120\n" +
           "Features: 10\n" +
           "Texture Memory: 0\n" +
-          "Geometry Memory: 0.007\n" +
+          `Geometry Memory: ${(0.007).toLocaleString()}\n` +
           "Url: parent.b3dm";
         expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
@@ -2355,7 +2358,7 @@ describe(
           "Triangles: 120\n" +
           "Features: 10\n" +
           "Texture Memory: 0\n" +
-          "Geometry Memory: 0.007\n" +
+          `Geometry Memory: ${(0.007).toLocaleString()}\n` +
           "Url: parent.b3dm";
         expect(tileset._tileDebugLabels.get(0).text).toEqual(expected);
         expect(tileset._tileDebugLabels.get(0).position).toEqual(
@@ -6399,27 +6402,27 @@ describe(
         ).then(function (tileset) {
           const expected = {
             "parent.b3dm": {
-              color: new Cartesian3(0.5, 0.0, 1.0),
+              color: new Cartesian4(0.5, 0.0, 1.0, 1.0),
               population: 530,
               areaPercentage: 100,
             },
             "ll.b3dm": {
-              color: new Cartesian3(1.0, 1.0, 0.0),
+              color: new Cartesian4(1.0, 1.0, 0.0, 1.0),
               population: 50,
               areaPercentage: 25,
             },
             "lr.b3dm": {
-              color: new Cartesian3(1.0, 0.0, 0.5),
+              color: new Cartesian4(1.0, 0.0, 0.5, 1.0),
               population: 230,
               areaPercentage: 25,
             },
             "ur.b3dm": {
-              color: new Cartesian3(1.0, 0.5, 0.0),
+              color: new Cartesian4(1.0, 0.5, 0.0, 1.0),
               population: 150,
               areaPercentage: 25,
             },
             "ul.b3dm": {
-              color: new Cartesian3(1.0, 0.0, 0.0),
+              color: new Cartesian4(1.0, 0.0, 0.0, 1.0),
               population: 100,
               areaPercentage: 25,
             },
@@ -6892,27 +6895,27 @@ describe(
         ).then(function (tileset) {
           const expected = {
             "parent.b3dm": {
-              color: new Cartesian3(0.5, 0.0, 1.0),
+              color: new Cartesian4(0.5, 0.0, 1.0, 1.0),
               population: 530,
               areaPercentage: 100,
             },
             "ll.b3dm": {
-              color: new Cartesian3(1.0, 1.0, 0.0),
+              color: new Cartesian4(1.0, 1.0, 0.0, 1.0),
               population: 50,
               areaPercentage: 25,
             },
             "lr.b3dm": {
-              color: new Cartesian3(1.0, 0.0, 0.5),
+              color: new Cartesian4(1.0, 0.0, 0.5, 1.0),
               population: 230,
               areaPercentage: 25,
             },
             "ur.b3dm": {
-              color: new Cartesian3(1.0, 0.5, 0.0),
+              color: new Cartesian4(1.0, 0.5, 0.0, 1.0),
               population: 150,
               areaPercentage: 25,
             },
             "ul.b3dm": {
-              color: new Cartesian3(1.0, 0.0, 0.0),
+              color: new Cartesian4(1.0, 0.0, 0.0, 1.0),
               population: 100,
               areaPercentage: 25,
             },

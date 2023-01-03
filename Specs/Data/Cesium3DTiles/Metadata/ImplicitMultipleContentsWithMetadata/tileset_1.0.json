@@ -16,6 +16,7 @@
   "extensions": {
     "3DTILES_metadata": {
       "schema": {
+        "id": "ImplicitMultipleContentsWithMetadataSchemaId",
         "classes": {
           "building": {
             "properties": {

@@ -24,9 +24,11 @@ import {
   CameraFlightPath,
   Cesium3DTileset,
   ImageryLayerCollection,
+  Cesium3DTilesVoxelProvider,
   SceneMode,
   ShadowMode,
   TimeDynamicPointCloud,
+  VoxelPrimitive,
 } from "@cesium/engine";
 
 import {
@@ -1399,6 +1401,76 @@ describe(
       });
     });
 
+    function loadVoxelPrimitive(viewer) {
+      const voxelPrimitive = new VoxelPrimitive({
+        provider: new Cesium3DTilesVoxelProvider({
+          url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
+        }),
+      });
+      viewer.scene.primitives.add(voxelPrimitive);
+      return voxelPrimitive.readyPromise;
+    }
+
+    it("zoomTo zooms to VoxelPrimitive with default offset when offset not defined", function () {
+      viewer = createViewer(container);
+
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const expectedBoundingSphere = voxelPrimitive.boundingSphere;
+        const expectedOffset = new HeadingPitchRange(
+          0.0,
+          -0.5,
+          expectedBoundingSphere.radius
+        );
+
+        const promise = viewer.zoomTo(voxelPrimitive);
+        let wasCompleted = false;
+        spyOn(viewer.camera, "viewBoundingSphere").and.callFake(function (
+          boundingSphere,
+          offset
+        ) {
+          expect(boundingSphere).toEqual(expectedBoundingSphere);
+          expect(offset).toEqual(expectedOffset);
+          wasCompleted = true;
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
+    it("zoomTo zooms to VoxelPrimitive with offset", function () {
+      viewer = createViewer(container);
+
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const expectedBoundingSphere = voxelPrimitive.boundingSphere;
+        const expectedOffset = new HeadingPitchRange(
+          0.4,
+          1.2,
+          4.0 * expectedBoundingSphere.radius
+        );
+
+        const promise = viewer.zoomTo(voxelPrimitive, expectedOffset);
+        let wasCompleted = false;
+        spyOn(viewer.camera, "viewBoundingSphere").and.callFake(function (
+          boundingSphere,
+          offset
+        ) {
+          expect(boundingSphere).toEqual(expectedBoundingSphere);
+          expect(offset).toEqual(expectedOffset);
+          wasCompleted = true;
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
     it("zoomTo zooms to entity with undefined offset when offset not defined", function () {
       viewer = createViewer(container);
       viewer.entities.add({
@@ -1673,6 +1745,92 @@ describe(
       });
     });
 
+    it("flyTo flies to VoxelPrimitive with default offset when options not defined", function () {
+      viewer = createViewer(container);
+
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const promise = viewer.flyTo(voxelPrimitive);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.offset).toBeDefined();
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
+    it("flyTo flies to VoxelPrimitive with default offset when offset not defined", function () {
+      viewer = createViewer(container);
+      const options = {};
+
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const promise = viewer.flyTo(voxelPrimitive, options);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.offset).toBeDefined();
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
+    it("flyTo flies to VoxelPrimitive when options are defined", function () {
+      viewer = createViewer(container);
+
+      // load tileset to test
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const offsetVal = new HeadingPitchRange(3.0, 0.2, 2.3);
+        const options = {
+          offset: offsetVal,
+          duration: 3.0,
+          maximumHeight: 5.0,
+        };
+
+        const promise = viewer.flyTo(voxelPrimitive, options);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.duration).toBeDefined();
+          expect(options.maximumHeight).toBeDefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
     it("flyTo flies to entity with default offset when options not defined", function () {
       viewer = createViewer(container);
 
@@ -1707,6 +1865,92 @@ describe(
 
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
+      });
+    });
+
+    it("flyTo flies to VoxelPrimitive with default offset when options not defined", function () {
+      viewer = createViewer(container);
+
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const promise = viewer.flyTo(voxelPrimitive);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.offset).toBeDefined();
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
+    it("flyTo flies to VoxelPrimitive with default offset when offset not defined", function () {
+      viewer = createViewer(container);
+      const options = {};
+
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const promise = viewer.flyTo(voxelPrimitive, options);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.offset).toBeDefined();
+          expect(options.duration).toBeUndefined();
+          expect(options.maximumHeight).toBeUndefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
+      });
+    });
+
+    it("flyTo flies to VoxelPrimitive when options are defined", function () {
+      viewer = createViewer(container);
+
+      // load tileset to test
+      return loadVoxelPrimitive(viewer).then(function (voxelPrimitive) {
+        const offsetVal = new HeadingPitchRange(3.0, 0.2, 2.3);
+        const options = {
+          offset: offsetVal,
+          duration: 3.0,
+          maximumHeight: 5.0,
+        };
+
+        const promise = viewer.flyTo(voxelPrimitive, options);
+        let wasCompleted = false;
+
+        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+          target,
+          options
+        ) {
+          expect(options.duration).toBeDefined();
+          expect(options.maximumHeight).toBeDefined();
+          wasCompleted = true;
+          options.complete();
+        });
+
+        viewer._postRender();
+
+        return promise.then(function () {
+          expect(wasCompleted).toEqual(true);
+        });
       });
     });
 

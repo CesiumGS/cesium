@@ -56,7 +56,7 @@ Object.defineProperties(ImplicitMetadataView.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof ImplicitMetadataView.prototype
    * @type {Object}
@@ -69,7 +69,7 @@ Object.defineProperties(ImplicitMetadataView.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof ImplicitMetadataView.prototype
    * @type {Object}

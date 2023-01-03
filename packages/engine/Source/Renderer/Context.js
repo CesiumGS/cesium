@@ -4,6 +4,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import createGuid from "../Core/createGuid.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Geometry from "../Core/Geometry.js";
@@ -42,12 +43,9 @@ function Context(canvas, options) {
   Check.defined("canvas", canvas);
   //>>includeEnd('debug');
 
-  const webgl2Supported = typeof WebGL2RenderingContext !== "undefined";
-
   const {
     getWebGLStub,
-    // Automatically fall back to WebGL1 if WebGL2 is not supported.
-    requestWebgl1 = !webgl2Supported,
+    requestWebgl1,
     webgl: webglOptions = {},
     allowTextureFilterAnisotropic = true,
   } = defaultValue(options, {});
@@ -65,6 +63,7 @@ function Context(canvas, options) {
     : getWebGLContext(canvas, webglOptions, requestWebgl1);
 
   // Get context type. instanceof will throw if WebGL2 is not supported
+  const webgl2Supported = typeof WebGL2RenderingContext !== "undefined";
   const webgl2 = webgl2Supported && glContext instanceof WebGL2RenderingContext;
 
   this._canvas = canvas;
@@ -408,8 +407,8 @@ function Context(canvas, options) {
  * @private
  * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
  * @param {WebGLOptions} webglOptions WebGL options to be passed on to HTMLCanvasElement.getContext()
- * @param {Boolean} requestWebgl1 Whether to request a WebGLRenderingContext
- * @returns {WebGL2RenderingContext|WebGLRenderingContext}
+ * @param {Boolean} requestWebgl1 Whether to request a WebGLRenderingContext or a WebGL2RenderingContext.
+ * @returns {WebGLRenderingContext|WebGL2RenderingContext}
  */
 function getWebGLContext(canvas, webglOptions, requestWebgl1) {
   if (typeof WebGLRenderingContext === "undefined") {
@@ -418,7 +417,12 @@ function getWebGLContext(canvas, webglOptions, requestWebgl1) {
     );
   }
 
-  requestWebgl1 = requestWebgl1 && typeof WebGLRenderingContext !== "undefined";
+  // Ensure that WebGL 2 is supported when it is requested. Otherwise, fall back to WebGL 1.
+  const webgl2Supported = typeof WebGL2RenderingContext !== "undefined";
+  if (!requestWebgl1 && !webgl2Supported) {
+    requestWebgl1 = true;
+  }
+
   const contextType = requestWebgl1 ? "webgl" : "webgl2";
   const glContext = canvas.getContext(contextType, webglOptions);
 
@@ -1633,4 +1637,8 @@ Context.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+// Used for specs.
+Context._deprecationWarning = deprecationWarning;
+
 export default Context;

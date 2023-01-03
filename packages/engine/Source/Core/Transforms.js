@@ -659,9 +659,8 @@ const j2000ttDays = 2451545.0;
  *
  * @example
  * const interval = new Cesium.TimeInterval(...);
- * Promise.resolve(Cesium.Transforms.preloadIcrfFixed(interval)).then(function() {
- *     // the data is now loaded
- * });
+ * await Cesium.Transforms.preloadIcrfFixed(interval));
+ * // the data is now loaded
  *
  * @see Transforms.computeIcrfToFixedMatrix
  * @see Transforms.computeFixedToIcrfMatrix
@@ -672,15 +671,12 @@ Transforms.preloadIcrfFixed = function (timeInterval) {
   const stopDayTT = timeInterval.stop.dayNumber;
   const stopSecondTT = timeInterval.stop.secondsOfDay + ttMinusTai;
 
-  const xysPromise = Transforms.iau2006XysData.preload(
+  return Transforms.iau2006XysData.preload(
     startDayTT,
     startSecondTT,
     stopDayTT,
     stopSecondTT
   );
-  const eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
-
-  return Promise.all([xysPromise, eopPromise]);
 };
 
 /**

@@ -44,7 +44,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
   });
 
   it("parses minimum and maximum height", function () {
-    const tileClass = new MetadataClass({
+    const tileClass = MetadataClass.fromJson({
       id: "tile",
       class: {
         properties: {
@@ -99,7 +99,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
   });
 
   it("parses bounding volumes", function () {
-    const tileClass = new MetadataClass({
+    const tileClass = MetadataClass.fromJson({
       id: "tile",
       class: {
         properties: {
@@ -150,7 +150,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
   });
 
   it("bounding volumes are parsed with the precedence box, region, then sphere", function () {
-    const tileClass = new MetadataClass({
+    const tileClass = MetadataClass.fromJson({
       id: "tile",
       class: {
         properties: {

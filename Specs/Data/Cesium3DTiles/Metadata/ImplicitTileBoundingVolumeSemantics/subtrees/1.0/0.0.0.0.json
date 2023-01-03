@@ -2,34 +2,35 @@
   "buffers": [
     {
       "uri": "../metadata.bin",
-      "byteLength": 2336
+      "byteLength": 56160
     }
   ],
   "bufferViews": [
     {
       "buffer": 0,
       "byteOffset": 0,
-      "byteLength": 2336
+      "byteLength": 56160
     }
   ],
   "tileAvailability": {
     "constant": 1
   },
-  "contentAvailability": {
-    "constant": 1
-  },
+  "contentAvailability": [ 
+    {
+      "constant": 0
+    } 
+  ],
   "childSubtreeAvailability": {
     "constant": 0
   },
-  "propertyTables": [
-    {
+  "extensions": {
+    "3DTILES_metadata": {
       "class": "tile",
       "properties": {
-        "contentBounds": {
-          "values": 0
+        "tileBounds": {
+          "bufferView": 0
         }
       }
     }
-  ],
-  "tileMetadata": 0
+  }
 }

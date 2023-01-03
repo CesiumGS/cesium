@@ -1633,6 +1633,7 @@ const scaleScratch4 = new Cartesian3();
  *
  * @param {Matrix4} matrix The matrix.
  * @param {Matrix3} rotation The rotation matrix.
+ * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
  *
  * @see Matrix4.fromRotation

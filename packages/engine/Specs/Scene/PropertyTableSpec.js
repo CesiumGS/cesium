@@ -298,7 +298,7 @@ describe("Scene/PropertyTable", function () {
         },
       },
     };
-    const schema = new MetadataSchema(schemaJson);
+    const schema = MetadataSchema.fromJson(schemaJson);
 
     const propertyTableJson = {
       count: 3,

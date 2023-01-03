@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import MetadataEnumValue from "./MetadataEnumValue.js";
 import MetadataComponentType from "./MetadataComponentType.js";
@@ -6,19 +7,71 @@ import MetadataComponentType from "./MetadataComponentType.js";
 /**
  * A metadata enum.
  * <p>
- * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
+ * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {String} options.id The ID of the enum.
+ * @param {MetadataEnumValue[]} options.values The enum values.
+ * @param {MetadataComponentType} [options.valueType=MetadataComponentType.UINT16] The enum value type.
+ * @param {String} [options.name] The name of the enum.
+ * @param {String} [options.description] The description of the enum.
+ * @param {*} [options.extras] Extra user-defined properties.
+ * @param {Object} [options.extensions] An object containing extensions.
+ *
+ * @alias MetadataEnum
+ * @constructor
+ * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+function MetadataEnum(options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const id = options.id;
+  const values = options.values;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("options.id", id);
+  Check.defined("options.values", values);
+  //>>includeEnd('debug');
+
+  const namesByValue = {};
+  const valuesByName = {};
+
+  const valuesLength = values.length;
+  for (let i = 0; i < valuesLength; ++i) {
+    const value = values[i];
+    namesByValue[value.value] = value.name;
+    valuesByName[value.name] = value.value;
+  }
+
+  const valueType = defaultValue(
+    options.valueType,
+    MetadataComponentType.UINT16
+  );
+
+  this._values = values;
+  this._namesByValue = namesByValue;
+  this._valuesByName = valuesByName;
+  this._valueType = valueType;
+  this._id = id;
+  this._name = options.name;
+  this._description = options.description;
+  this._extras = clone(options.extras, true);
+  this._extensions = clone(options.extensions, true);
+}
+
+/**
+ * Creates a {@link MetadataEnum} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the enum.
  * @param {Object} options.enum The enum JSON object.
  *
- * @alias MetadataEnum
- * @constructor
+ * @returns {MetadataEnum} The newly created metadata enum.
+ *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function MetadataEnum(options) {
+MetadataEnum.fromJson = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const id = options.id;
   const enumDefinition = options.enum;
@@ -28,29 +81,20 @@ function MetadataEnum(options) {
   Check.typeOf.object("options.enum", enumDefinition);
   //>>includeEnd('debug');
 
-  const namesByValue = {};
-  const valuesByName = {};
   const values = enumDefinition.values.map(function (value) {
-    namesByValue[value.value] = value.name;
-    valuesByName[value.name] = value.value;
-    return new MetadataEnumValue(value);
+    return MetadataEnumValue.fromJson(value);
   });
 
-  const valueType = defaultValue(
-    MetadataComponentType[enumDefinition.valueType],
-    MetadataComponentType.UINT16
-  );
-
-  this._values = values;
-  this._namesByValue = namesByValue;
-  this._valuesByName = valuesByName;
-  this._valueType = valueType;
-  this._id = id;
-  this._name = enumDefinition.name;
-  this._description = enumDefinition.description;
-  this._extras = enumDefinition.extras;
-  this._extensions = enumDefinition.extensions;
-}
+  return new MetadataEnum({
+    id: id,
+    values: values,
+    valueType: MetadataComponentType[enumDefinition.valueType],
+    name: enumDefinition.name,
+    description: enumDefinition.description,
+    extras: enumDefinition.extras,
+    extensions: enumDefinition.extensions,
+  });
+};
 
 Object.defineProperties(MetadataEnum.prototype, {
   /**
@@ -59,7 +103,6 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {MetadataEnumValue[]}
    * @readonly
-   * @private
    */
   values: {
     get: function () {
@@ -103,8 +146,6 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {MetadataComponentType}
    * @readonly
-   *
-   * @private
    */
   valueType: {
     get: function () {
@@ -118,7 +159,6 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   id: {
     get: function () {
@@ -132,7 +172,6 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -146,7 +185,6 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -155,12 +193,11 @@ Object.defineProperties(MetadataEnum.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof MetadataEnum.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -169,12 +206,11 @@ Object.defineProperties(MetadataEnum.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof MetadataEnum.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {

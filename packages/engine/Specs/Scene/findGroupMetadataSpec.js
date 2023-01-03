@@ -9,7 +9,7 @@ describe("Scene/findGroupMetadata", function () {
   let mockTileset;
 
   beforeAll(function () {
-    layerClass = new MetadataClass({
+    layerClass = MetadataClass.fromJson({
       id: "layer",
       class: {
         properties: {
