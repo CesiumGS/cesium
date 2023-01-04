@@ -83,7 +83,7 @@ Properties getPropertiesFromMegatexture(in SampleData sampleData) {
 
     #if defined(NEAREST_SAMPLING)
         // Round to the center of the nearest voxel
-        voxelCoord = floor(voxelCoord + vec3(0.5));
+        voxelCoord = floor(voxelCoord) + vec3(0.5);
     #endif
 
     // Tile location
