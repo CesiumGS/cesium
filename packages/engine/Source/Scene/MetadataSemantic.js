@@ -33,6 +33,14 @@ const MetadataSemantic = {
    */
   DESCRIPTION: "DESCRIPTION",
   /**
+   * The number of tiles in a tileset, stored as a <code>UINT64</code>.
+   *
+   * @type {String}
+   * @constant
+   * @private
+   */
+  TILESET_TILE_COUNT: "TILESET_TILE_COUNT",
+  /**
    * A bounding box for a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in implicit tiling.
    *
    * @type {String}
