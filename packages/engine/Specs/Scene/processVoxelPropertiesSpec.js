@@ -6,7 +6,6 @@ import {
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../Specs/ShaderBuilderTester.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/processVoxelProperties", function () {
   let scene;
@@ -19,10 +18,11 @@ describe("Scene/processVoxelProperties", function () {
       url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
     });
 
-    return pollToPromise(function () {
-      provider.update(scene.frameState);
-      return provider.ready;
-    });
+    return provider.readyPromise;
+  });
+
+  afterAll(function () {
+    scene.destroyForSpecs();
   });
 
   it("adds shader defines and structs", function () {

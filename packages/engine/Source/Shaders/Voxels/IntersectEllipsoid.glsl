@@ -1,6 +1,7 @@
-// import { Ray, Intersections, setIntersection, setIntersectionPair, INF_HIT, NO_HIT } from "./IntersectionUtils.glsl";
+// See IntersectionUtils.glsl for the definitions of Ray, Intersections,
+// setIntersection, setIntersectionPair, INF_HIT, NO_HIT
 
-/* Ellipsoid defines:
+/* Ellipsoid defines (set in Scene/VoxelEllipsoidShape.js)
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF
@@ -14,7 +15,7 @@
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN
-#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO
+#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_INTERSECTION_INDEX_LONGITUDE
 #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX
 #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN
@@ -56,16 +57,16 @@ vec4 intersectHalfPlane(Ray ray, float angle) {
     vec2 p = o + t * d;
     bool outside = dot(p, planeDirection) < 0.0;
     if (outside) return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
-    
+
     return vec4(-INF_HIT, t, t, +INF_HIT);
 }
 
 vec2 intersectHalfSpace(Ray ray, float angle)
-{    
+{
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
     vec2 n = vec2(sin(angle), -cos(angle));
-    
+
     float a = dot(o, n);
     float b = dot(d, n);
     float t = -a / b;
@@ -76,17 +77,17 @@ vec2 intersectHalfSpace(Ray ray, float angle)
 }
 
 vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
-{    
+{
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
     vec2 n1 = vec2(sin(minAngle), -cos(minAngle));
     vec2 n2 = vec2(-sin(maxAngle), cos(maxAngle));
-    
+
     float a1 = dot(o, n1);
     float a2 = dot(o, n2);
     float b1 = dot(d, n1);
     float b2 = dot(d, n2);
-    
+
     float t1 = -a1 / b1;
     float t2 = -a2 / b2;
     float s1 = sign(a1);
@@ -95,13 +96,13 @@ vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
     float tmin = min(t1, t2);
     float tmax = max(t1, t2);
     float smin = tmin == t1 ? s1 : s2;
-    float smax = tmin == t1 ? s2 : s1;    
+    float smax = tmin == t1 ? s2 : s1;
 
     bool e = tmin >= 0.0;
     bool f = tmax >= 0.0;
     bool g = smin >= 0.0;
     bool h = smax >= 0.0;
-    
+
     if (e != g && f == h) return vec2(tmin, tmax);
     else if (e == g && f == h) return vec2(-INF_HIT, tmin);
     else if (e != g && f != h) return vec2(tmax, +INF_HIT);
@@ -109,7 +110,7 @@ vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
 }
 
 vec4 intersectFlippedWedge(Ray ray, float minAngle, float maxAngle)
-{    
+{
     vec2 planeIntersectMin = intersectHalfSpace(ray, minAngle);
     vec2 planeIntersectMax = intersectHalfSpace(ray, maxAngle + czm_pi);
     return vec4(planeIntersectMin, planeIntersectMax);
@@ -119,21 +120,21 @@ vec2 intersectUnitSphere(Ray ray)
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    
+
     float b = dot(d, o);
     float c = dot(o, o) - 1.0;
     float det = b * b - c;
-    
+
     if (det < 0.0) {
         return vec2(NO_HIT);
     }
-    
+
     det = sqrt(det);
     float t1 = -b - det;
     float t2 = -b + det;
     float tmin = min(t1, t2);
     float tmax = max(t1, t2);
-    
+
     return vec2(tmin, tmax);
 }
 
@@ -141,22 +142,22 @@ vec2 intersectUnitSphereUnnormalizedDirection(Ray ray)
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    
+
     float a = dot(d, d);
     float b = dot(d, o);
     float c = dot(o, o) - 1.0;
     float det = b * b - a * c;
-    
+
     if (det < 0.0) {
         return vec2(NO_HIT);
     }
-    
+
     det = sqrt(det);
     float t1 = (-b - det) / a;
     float t2 = (-b + det) / a;
     float tmin = min(t1, t2);
     float tmax = max(t1, t2);
-    
+
     return vec2(tmin, tmax);
 }
 
@@ -168,11 +169,11 @@ vec2 intersectDoubleEndedCone(Ray ray, float cosSqrHalfAngle)
     float b = d.z * o.z - dot(o, d) * cosSqrHalfAngle;
     float c = o.z * o.z - dot(o, o) * cosSqrHalfAngle;
     float det = b * b - a * c;
-    
+
     if (det < 0.0) {
         return vec2(NO_HIT);
     }
-    
+
     det = sqrt(det);
     float t1 = (-b - det) / a;
     float t2 = (-b + det) / a;
@@ -225,10 +226,10 @@ vec2 intersectRegularCone(Ray ray, float cosSqrHalfAngle) {
 
 void intersectShape(in Ray ray, inout Intersections ix) {
     // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-    // Direction is scaled as well to be in sync with position. 
+    // Direction is scaled as well to be in sync with position.
     ray.pos = ray.pos * 2.0 - 1.0;
     ray.dir *= 2.0;
-    
+
     // Outer ellipsoid
     vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(ray);
     setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
@@ -239,16 +240,16 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     }
 
     // Inner ellipsoid
-    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_RANGE_EQUAL_ZERO) 
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
         // When the ellipsoid is perfectly thin it's necessary to sandwich the
         // inner ellipsoid intersection inside the outer ellipsoid intersection.
-        
+
         // Without this special case,
         // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
         // [outerMin, innerMin, outerMax, innerMax] which will cause the back
         // side of the ellipsoid to be invisible because it will think the ray
         // is still inside the inner (negative) ellipsoid after exiting the
-        // outer (positive) ellipsoid. 
+        // outer (positive) ellipsoid.
 
         // With this special case,
         // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
@@ -263,9 +264,27 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
         Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
         vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
+
+        if (innerIntersect == vec2(NO_HIT)) {
+            setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
+        } else {
+            // When the ellipsoid is very large and thin it's possible for floating
+            // point math to cause the ray to intersect the inner ellipsoid before
+            // the outer ellipsoid. To prevent this from happening, clamp innerIntersect
+            // to outerIntersect and sandwhich the intersections like described above.
+            //
+            // In theory a similar fix is needed for cylinders, however it's more
+            // complicated to implement because the inner shape is allowed to be
+            // intersected first.
+            innerIntersect.x = max(innerIntersect.x, outerIntersect.x);
+            innerIntersect.y = min(innerIntersect.y, outerIntersect.y);
+            setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
+            setIntersection(ix, 1, innerIntersect.x, false, true);  // negative, enter
+            setIntersection(ix, 2, innerIntersect.y, false, false); // negative, exit
+            setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
+        }
     #endif
-        
+
     // Flip the ray because the intersection function expects a cone growing towards +Z.
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
         Ray flippedRay = ray;
@@ -286,7 +305,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 1, bottomConeIntersection.zw);
     #endif
 
-    // Top cone        
+    // Top cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
         vec4 topConeIntersection = intersectFlippedCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y);
         setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 0, topConeIntersection.xy);
@@ -316,5 +335,3 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersect.zw);
     #endif
 }
-
-// export { intersectShape };

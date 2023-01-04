@@ -27,7 +27,7 @@ describe(
       scene = createScene();
       sceneWithWebgl2 = createScene({
         contextOptions: {
-          requestWebgl2: true,
+          requestWebgl1: false,
         },
       });
     });

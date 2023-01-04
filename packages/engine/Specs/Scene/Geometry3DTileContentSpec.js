@@ -872,7 +872,7 @@ describe(
       let contentMetadata;
 
       beforeAll(function () {
-        metadataClass = new MetadataClass({
+        metadataClass = MetadataClass.fromJson({
           id: "test",
           class: {
             properties: {
@@ -898,7 +898,7 @@ describe(
           class: metadataClass,
         });
 
-        contentMetadataClass = new MetadataClass({
+        contentMetadataClass = MetadataClass.fromJson({
           id: "contentTest",
           class: {
             properties: {

@@ -2,26 +2,34 @@
   "asset": {
     "version": "1.1"
   },
-  "schemaUri": "schema.json",
+  "schema": {
+    "id": "voxel",
+    "classes": {
+      "voxel": {
+        "properties": {
+          "a": {
+            "type": "SCALAR",
+            "componentType": "FLOAT32"
+          }
+        }
+      }
+    }
+  },
   "statistics": {
     "classes": {
       "voxel": {
+        "count": 8,
         "properties": {
           "a": {
             "min": 0.0,
             "max": 1.0
           }
         }
-      },
-      "tile": {
-        "count": 1
       }
     }
   },
   "geometricError": 0.0,
   "root": {
-    "geometricError": 0.0,
-    "refine": "REPLACE",
     "boundingVolume": {
       "box": [
         0.0,
@@ -38,34 +46,34 @@
         1.0
       ]
     },
+    "geometricError": 0.0,
+    "refine": "REPLACE",
     "content": {
-      "uri": "{level}/{x}/{y}/{z}/tile.gltf"
+      "uri": "tiles/{level}/{x}/{y}/{z}.json",
+      "extensions": {
+        "3DTILES_content_voxels": {
+          "dimensions": [
+            2,
+            2,
+            2
+          ],
+          "class": "voxel"
+        }
+      }
     },
     "implicitTiling": {
       "subdivisionScheme": "OCTREE",
       "subtreeLevels": 3,
       "availableLevels": 1,
       "subtrees": {
-        "uri": "{level}/{x}/{y}/{z}/subtree.bin"
+        "uri": "subtrees/{level}/{x}/{y}/{z}.json"
       }
-    },
-    "transform": [
-      2.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      2.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      2.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      1.0
-    ]
-  }
+    }
+  },
+  "extensionsUsed": [
+    "3DTILES_content_voxels"
+  ],
+  "extensionsRequired": [
+    "3DTILES_content_voxels"
+  ]
 }

@@ -2055,7 +2055,7 @@ Viewer.prototype.zoomTo = function (target, offset) {
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
@@ -2192,11 +2192,8 @@ function updateZoomTarget(viewer) {
   const zoomOptions = defaultValue(viewer._zoomOptions, {});
   let options;
 
-  if (
-    target instanceof Cesium3DTileset ||
-    target instanceof TimeDynamicPointCloud ||
-    target instanceof VoxelPrimitive
-  ) {
+  // If zoomTarget was Cesium3DTileset
+  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
     return target.readyPromise
       .then(function () {
         const boundingSphere = target.boundingSphere;
@@ -2236,6 +2233,45 @@ function updateZoomTarget(viewer) {
       .catch(() => {
         cancelZoom(viewer);
       });
+  }
+
+  // If zoomTarget was TimeDynamicPointCloud
+  if (target instanceof TimeDynamicPointCloud) {
+    return target.readyPromise.then(function () {
+      const boundingSphere = target.boundingSphere;
+      // If offset was originally undefined then give it base value instead of empty object
+      if (!defined(zoomOptions.offset)) {
+        zoomOptions.offset = new HeadingPitchRange(
+          0.0,
+          -0.5,
+          boundingSphere.radius
+        );
+      }
+
+      options = {
+        offset: zoomOptions.offset,
+        duration: zoomOptions.duration,
+        maximumHeight: zoomOptions.maximumHeight,
+        complete: function () {
+          viewer._completeZoom(true);
+        },
+        cancel: function () {
+          viewer._completeZoom(false);
+        },
+      };
+
+      if (viewer._zoomIsFlight) {
+        camera.flyToBoundingSphere(boundingSphere, options);
+      } else {
+        camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+        camera.lookAtTransform(Matrix4.IDENTITY);
+
+        // Finish the promise
+        viewer._completeZoom(true);
+      }
+
+      clearZoom(viewer);
+    });
   }
 
   // If zoomTarget was an ImageryLayer

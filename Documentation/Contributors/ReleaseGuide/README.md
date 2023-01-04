@@ -19,7 +19,7 @@ There is no release manager; instead, our community shares the responsibility. A
 1. Verify there are no [`priority - next release` issues](https://github.com/CesiumGS/cesium/issues?q=is%3Aopen+is%3Aissue+label%3A%22priority+-+next+release%22) or [`priority - next release` pull requests](https://github.com/CesiumGS/cesium/pulls?q=is%3Apr+is%3Aopen+label%3A"priority+-+next+release").
 2. Verify there are no [`remove in [this version number]` issues](https://github.com/CesiumGS/cesium/labels). Delete the label. Create a new label with the next highest `remove in [version]` relative to the existing labels.
 3. Make sure you are using the latest drivers for your video card.
-4. Pull down the latest `main` branch.
+4. Pull down the latest `main` branch and run `npm install`.
 5. Update the Cesium ion demo token in `Ion.js` with a new token from the CesiumJS ion team account with read and geocode permissions. These tokens are named like this: `1.85 Release - Delete on November 1st, 2021`. Delete the token from 2 releases ago.
 6. Proofread [`CHANGES.md`](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first. Ensure each change is in the section for the relevant workspace.
 7. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,

@@ -396,6 +396,18 @@ describe(
       });
     });
 
+    it("match the ktx2 url with the ktx2Regex", function () {
+      const ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
+      const r = new Resource({
+        url: "../../textures/test.ktx2",
+        queryParameters: {
+          v: "123-435-456-000",
+        },
+      });
+      const uri = r.getUrlComponent(false, true);
+      expect(ktx2Regex.test(uri)).toBe(true);
+    });
+
     it("destroys image loader", function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(pngBuffer)

@@ -1,16 +1,15 @@
-/* Box defines:
-#define BOX_HAS_SHAPE_BOUND
+/* Box defines (set in Scene/VoxelBoxShape.js)
+#define BOX_HAS_SHAPE_BOUNDS
 */
 
-// Box uniforms:
-#if defined(BOX_HAS_SHAPE_BOUND)
-    uniform vec3 u_boxScaleUvToShapeBoundsUv;
-    uniform vec3 u_boxOffsetUvToShapeBoundsUv;
+#if defined(BOX_HAS_SHAPE_BOUNDS)
+    uniform vec3 u_boxUvToShapeUvScale;
+    uniform vec3 u_boxUvToShapeUvTranslate;
 #endif
 
 vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
-    #if defined(BOX_HAS_SHAPE_BOUND)
-        return positionUv * u_boxScaleUvToShapeBoundsUv + u_boxOffsetUvToShapeBoundsUv;
+    #if defined(BOX_HAS_SHAPE_BOUNDS)
+        return positionUv * u_boxUvToShapeUvScale + u_boxUvToShapeUvTranslate;
     #else
         return positionUv;
     #endif

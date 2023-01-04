@@ -6,25 +6,24 @@ import {
   VoxelPrimitive,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/VoxelPrimitive",
   function () {
-    const scene = createScene();
+    let scene;
     let provider;
 
     beforeEach(function () {
+      scene = createScene();
       provider = new Cesium3DTilesVoxelProvider({
         url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       });
 
-      return pollToPromise(function () {
-        provider.update(scene.frameState);
-        return provider.ready;
-      }).then(() => {
-        scene.primitives.removeAll();
-      });
+      return provider.readyPromise;
+    });
+
+    afterEach(function () {
+      scene.destroyForSpecs();
     });
 
     it("constructs a primitive", function () {
@@ -47,7 +46,6 @@ describe(
         expect(primitive.dimensions.equals(provider.dimensions)).toBe(true);
         expect(primitive._tileCount).toBe(provider._tileCount);
         expect(primitive._traversal).toBeDefined();
-        // TODO should we test writing glsl functions? i.e. sample functions, setting style input values for each metadata
       });
     });
 
@@ -127,7 +125,7 @@ describe(
         expect(primitive._pickId).toBeDefined();
         expect(primitive._traversal).toBeDefined();
 
-        primitive.destroy();
+        scene.primitives.remove(primitive);
         expect(primitive.isDestroyed()).toBe(true);
         expect(primitive._pickId).toBeUndefined();
         expect(primitive._traversal).toBeUndefined();

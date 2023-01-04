@@ -65,30 +65,6 @@ const PrimitiveType = {
    * @constant
    */
   TRIANGLE_FAN: WebGLConstants.TRIANGLE_FAN,
-
-  /**
-   * Box voxel primitive from <code>EXT_primitive_voxels</code>.
-   *
-   * @type {Number}
-   * @constant
-   */
-  VOXEL_BOX: 0x80000000,
-
-  /**
-   * Ellipsoid voxel primitive from <code>EXT_primitive_voxels</code>.
-   *
-   * @type {Number}
-   * @constant
-   */
-  VOXEL_ELLIPSOID: 0x80000001,
-
-  /**
-   * Cylinder voxel primitive from <code>EXT_primitive_voxels</code>.
-   *
-   * @type {Number}
-   * @constant
-   */
-  VOXEL_CYLINDER: 0x80000002,
 };
 
 /**
@@ -124,10 +100,7 @@ PrimitiveType.validate = function (primitiveType) {
     primitiveType === PrimitiveType.LINE_STRIP ||
     primitiveType === PrimitiveType.TRIANGLES ||
     primitiveType === PrimitiveType.TRIANGLE_STRIP ||
-    primitiveType === PrimitiveType.TRIANGLE_FAN ||
-    primitiveType === PrimitiveType.VOXEL_BOX ||
-    primitiveType === PrimitiveType.VOXEL_CYLINDER ||
-    primitiveType === PrimitiveType.VOXEL_ELLIPSOID
+    primitiveType === PrimitiveType.TRIANGLE_FAN
   );
 };
 

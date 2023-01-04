@@ -62,12 +62,12 @@ function VoxelInspectorViewModel(scene) {
 
   this._definedProperties = [];
   this._getPrimitiveFunctions = [];
+  this._modelMatrixReady = false;
 
   const that = this;
   function addProperty(options) {
     const { name, initialValue } = options;
 
-    that[name] = initialValue;
     that._definedProperties.push(name);
 
     let setPrimitiveFunction = options.setPrimitiveFunction;
@@ -110,6 +110,9 @@ function VoxelInspectorViewModel(scene) {
         }
       },
     });
+
+    that[name] = initialValue;
+
     return knock;
   }
 
@@ -120,6 +123,36 @@ function VoxelInspectorViewModel(scene) {
       that._voxelPrimitive[boundKey] = bound;
     };
   }
+
+  addProperty({
+    name: "inspectorVisible",
+    initialValue: true,
+  });
+
+  addProperty({
+    name: "displayVisible",
+    initialValue: false,
+  });
+
+  addProperty({
+    name: "transformVisible",
+    initialValue: false,
+  });
+
+  addProperty({
+    name: "boundsVisible",
+    initialValue: false,
+  });
+
+  addProperty({
+    name: "clippingVisible",
+    initialValue: false,
+  });
+
+  addProperty({
+    name: "shaderVisible",
+    initialValue: false,
+  });
 
   addProperty({
     name: "shaderString",
@@ -170,12 +203,6 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "nearestSampling",
     initialValue: true,
-    setPrimitiveFunction: true,
-    getPrimitiveFunction: true,
-  });
-  addProperty({
-    name: "levelBlendFactor",
-    initialValue: 1.0,
     setPrimitiveFunction: true,
     getPrimitiveFunction: true,
   });
@@ -510,20 +537,10 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "translationX",
     initialValue: 0.0,
-    setPrimitiveFunction: function (translationX) {
-      const originalTranslation = Matrix4.getTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-      that._voxelPrimitive.modelMatrix = Matrix4.setTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(
-          translationX,
-          originalTranslation.y,
-          originalTranslation.z
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.translationX = Matrix4.getTranslation(
@@ -535,21 +552,10 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "translationY",
     initialValue: 0.0,
-    setPrimitiveFunction: function (translationY) {
-      const originalTranslation = Matrix4.getTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-
-      that._voxelPrimitive.modelMatrix = Matrix4.setTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(
-          originalTranslation.x,
-          translationY,
-          originalTranslation.z
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.translationY = Matrix4.getTranslation(
@@ -561,21 +567,10 @@ function VoxelInspectorViewModel(scene) {
   addProperty({
     name: "translationZ",
     initialValue: 0.0,
-    setPrimitiveFunction: function (translationZ) {
-      const originalTranslation = Matrix4.getTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-
-      that._voxelPrimitive.modelMatrix = Matrix4.setTranslation(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(
-          originalTranslation.x,
-          originalTranslation.y,
-          translationZ
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.translationZ = Matrix4.getTranslation(
@@ -587,17 +582,11 @@ function VoxelInspectorViewModel(scene) {
 
   addProperty({
     name: "scaleX",
-    initialValue: 0.0,
-    setPrimitiveFunction: function (scaleX) {
-      const originalScale = Matrix4.getScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-      that._voxelPrimitive.modelMatrix = Matrix4.setScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(scaleX, originalScale.y, originalScale.z),
-        that._voxelPrimitive.modelMatrix
-      );
+    initialValue: 1.0,
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.scaleX = Matrix4.getScale(
@@ -608,17 +597,11 @@ function VoxelInspectorViewModel(scene) {
   });
   addProperty({
     name: "scaleY",
-    initialValue: 0.0,
-    setPrimitiveFunction: function (scaleY) {
-      const originalScale = Matrix4.getScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-      that._voxelPrimitive.modelMatrix = Matrix4.setScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(originalScale.x, scaleY, originalScale.z),
-        that._voxelPrimitive.modelMatrix
-      );
+    initialValue: 1.0,
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.scaleY = Matrix4.getScale(
@@ -629,17 +612,11 @@ function VoxelInspectorViewModel(scene) {
   });
   addProperty({
     name: "scaleZ",
-    initialValue: 0.0,
-    setPrimitiveFunction: function (scaleZ) {
-      const originalScale = Matrix4.getScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3()
-      );
-      that._voxelPrimitive.modelMatrix = Matrix4.setScale(
-        that._voxelPrimitive.modelMatrix,
-        new Cartesian3(originalScale.x, originalScale.y, scaleZ),
-        that._voxelPrimitive.modelMatrix
-      );
+    initialValue: 1.0,
+    setPrimitiveFunction: function () {
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
     getPrimitiveFunction: function () {
       that.scaleZ = Matrix4.getScale(
@@ -653,13 +630,9 @@ function VoxelInspectorViewModel(scene) {
     name: "angleX",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      that._voxelPrimitive.modelMatrix = Matrix4.setRotation(
-        that._voxelPrimitive.modelMatrix,
-        Matrix3.fromHeadingPitchRoll(
-          new HeadingPitchRoll(that.angleX, that.angleY, that.angleZ)
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
   });
 
@@ -667,13 +640,9 @@ function VoxelInspectorViewModel(scene) {
     name: "angleY",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      that._voxelPrimitive.modelMatrix = Matrix4.setRotation(
-        that._voxelPrimitive.modelMatrix,
-        Matrix3.fromHeadingPitchRoll(
-          new HeadingPitchRoll(that.angleX, that.angleY, that.angleZ)
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
   });
 
@@ -681,15 +650,42 @@ function VoxelInspectorViewModel(scene) {
     name: "angleZ",
     initialValue: 0.0,
     setPrimitiveFunction: function () {
-      that._voxelPrimitive.modelMatrix = Matrix4.setRotation(
-        that._voxelPrimitive.modelMatrix,
-        Matrix3.fromHeadingPitchRoll(
-          new HeadingPitchRoll(that.angleX, that.angleY, that.angleZ)
-        ),
-        that._voxelPrimitive.modelMatrix
-      );
+      if (that._modelMatrixReady) {
+        setModelMatrix(that);
+      }
     },
   });
+}
+
+const scratchTranslation = new Cartesian3();
+const scratchScale = new Cartesian3();
+const scratchHeadingPitchRoll = new HeadingPitchRoll();
+const scratchRotation = new Matrix3();
+
+function setModelMatrix(viewModel) {
+  const translation = Cartesian3.fromElements(
+    viewModel.translationX,
+    viewModel.translationY,
+    viewModel.translationZ,
+    scratchTranslation
+  );
+  const scale = Cartesian3.fromElements(
+    viewModel.scaleX,
+    viewModel.scaleY,
+    viewModel.scaleZ,
+    scratchScale
+  );
+  const hpr = scratchHeadingPitchRoll;
+  hpr.heading = viewModel.angleX;
+  hpr.pitch = viewModel.angleY;
+  hpr.roll = viewModel.angleZ;
+  const rotation = Matrix3.fromHeadingPitchRoll(hpr, scratchRotation);
+  const rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+  viewModel._voxelPrimitive.modelMatrix = Matrix4.fromRotationTranslation(
+    rotationScale,
+    translation,
+    viewModel._voxelPrimitive.modelMatrix
+  );
 }
 
 Object.defineProperties(VoxelInspectorViewModel.prototype, {
@@ -740,9 +736,12 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
               }
             }
           );
+          that._modelMatrixReady = false;
           for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
             that._getPrimitiveFunctions[i]();
           }
+          that._modelMatrixReady = true;
+          setModelMatrix(that);
         });
       }
     },
@@ -750,8 +749,49 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
 });
 
 /**
+ * Toggles the inspector visibility
+ */
+VoxelInspectorViewModel.prototype.toggleInspector = function () {
+  this.inspectorVisible = !this.inspectorVisible;
+};
+
+/**
+ * Toggles the visibility of the display section
+ */
+VoxelInspectorViewModel.prototype.toggleDisplay = function () {
+  this.displayVisible = !this.displayVisible;
+};
+
+/**
+ * Toggles the visibility of the transform section
+ */
+VoxelInspectorViewModel.prototype.toggleTransform = function () {
+  this.transformVisible = !this.transformVisible;
+};
+
+/**
+ * Toggles the visibility of the bounds section
+ */
+VoxelInspectorViewModel.prototype.toggleBounds = function () {
+  this.boundsVisible = !this.boundsVisible;
+};
+
+/**
+ * Toggles the visibility of the clipping section
+ */
+VoxelInspectorViewModel.prototype.toggleClipping = function () {
+  this.clippingVisible = !this.clippingVisible;
+};
+
+/**
+ * Toggles the visibility of the shader section
+ */
+VoxelInspectorViewModel.prototype.toggleShader = function () {
+  this.shaderVisible = !this.shaderVisible;
+};
+
+/**
  * Compiles the shader in the shader editor.
- * @private
  */
 VoxelInspectorViewModel.prototype.compileShader = function () {
   if (defined(this._voxelPrimitive)) {
@@ -765,7 +805,6 @@ VoxelInspectorViewModel.prototype.compileShader = function () {
 
 /**
  * Handles key press events on the shader editor.
- * @private
  */
 VoxelInspectorViewModel.prototype.shaderEditorKeyPress = function (
   sender,

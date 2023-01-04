@@ -7,9 +7,8 @@ import {
   buildVoxelDrawCommands,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
-describe("Scene/VoxelDrawCommands", function () {
+describe("Scene/buildVoxelDrawCommands", function () {
   let scene;
   let provider;
 
@@ -20,10 +19,11 @@ describe("Scene/VoxelDrawCommands", function () {
       url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
     });
 
-    return pollToPromise(function () {
-      provider.update(scene.frameState);
-      return provider.ready;
-    });
+    return provider._readyPromise;
+  });
+
+  afterAll(function () {
+    scene.destroyForSpecs();
   });
 
   it("sets up basic voxel draw commands", function () {

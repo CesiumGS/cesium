@@ -1,10 +1,4 @@
-import {
-  Check,
-  defaultValue,
-  defined,
-  destroyObject,
-  getElement,
-} from "@cesium/engine";
+import { Check, destroyObject, getElement } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import InspectorShared from "../InspectorShared.js";
 import Cesium3DTilesInspectorViewModel from "./Cesium3DTilesInspectorViewModel.js";
@@ -50,12 +44,13 @@ function Cesium3DTilesInspector(container, scene) {
   container.appendChild(element);
 
   const panel = document.createElement("div");
-  this._panel = panel;
   panel.className = "cesium-cesiumInspector-dropDown";
   element.appendChild(panel);
 
   const createSection = InspectorShared.createSection;
   const createCheckbox = InspectorShared.createCheckbox;
+  const createRangeInput = InspectorShared.createRangeInput;
+  const createButton = InspectorShared.createButton;
 
   const tilesetPanelContents = createSection(
     panel,
@@ -111,15 +106,15 @@ function Cesium3DTilesInspector(container, scene) {
   properties.appendChild(propertiesField);
   tilesetPanelContents.appendChild(properties);
   tilesetPanelContents.appendChild(
-    makeButton("togglePickTileset", "Pick Tileset", "pickActive")
+    createButton("Pick Tileset", "togglePickTileset", "pickActive")
   );
   tilesetPanelContents.appendChild(
-    makeButton("trimTilesCache", "Trim Tiles Cache")
+    createButton("Trim Tiles Cache", "trimTilesCache")
   );
   tilesetPanelContents.appendChild(createCheckbox("Enable Picking", "picking"));
 
   displayPanelContents.appendChild(createCheckbox("Colorize", "colorize"));
-  displayPanelContents.appendChild(
+  const wireframeCheckbox = displayPanelContents.appendChild(
     createCheckbox(
       "Wireframe",
       "wireframe",
@@ -127,7 +122,7 @@ function Cesium3DTilesInspector(container, scene) {
     )
   );
 
-  //Create warning text when the Wireframe checkbox is disabled
+  // Create warning text when the Wireframe checkbox is disabled
   const warningText = document.createElement("p");
   warningText.setAttribute(
     "data-bind",
@@ -139,7 +134,7 @@ function Cesium3DTilesInspector(container, scene) {
   );
   warningText.innerText =
     "Set enableDebugWireframe to true in the tileset constructor to enable this option.";
-  displayPanelContents.lastChild.appendChild(warningText);
+  wireframeCheckbox.appendChild(warningText);
 
   displayPanelContents.appendChild(
     createCheckbox("Bounding Volumes", "showBoundingVolumes")
@@ -160,13 +155,13 @@ function Cesium3DTilesInspector(container, scene) {
     "visible: pointCloudShading"
   );
   pointCloudShadingContainer.appendChild(
-    makeRangeInput("geometricErrorScale", 0, 2, 0.01, "Geometric Error Scale")
+    createRangeInput("Geometric Error Scale", "geometricErrorScale", 0, 2, 0.01)
   );
   pointCloudShadingContainer.appendChild(
-    makeRangeInput("maximumAttenuation", 0, 32, 1, "Maximum Attenuation")
+    createRangeInput("Maximum Attenuation", "maximumAttenuation", 0, 32, 1)
   );
   pointCloudShadingContainer.appendChild(
-    makeRangeInput("baseResolution", 0, 1, 0.01, "Base Resolution")
+    createRangeInput("Base Resolution", "baseResolution", 0, 1, 0.01)
   );
   pointCloudShadingContainer.appendChild(
     createCheckbox("Eye Dome Lighting (EDL)", "eyeDomeLighting")
@@ -176,10 +171,10 @@ function Cesium3DTilesInspector(container, scene) {
   const edlContainer = document.createElement("div");
   edlContainer.setAttribute("data-bind", "visible: eyeDomeLighting");
   edlContainer.appendChild(
-    makeRangeInput("eyeDomeLightingStrength", 0, 2.0, 0.1, "EDL Strength")
+    createRangeInput("EDL Strength", "eyeDomeLightingStrength", 0, 2.0, 0.1)
   );
   edlContainer.appendChild(
-    makeRangeInput("eyeDomeLightingRadius", 0, 4.0, 0.1, "EDL Radius")
+    createRangeInput("EDL Radius", "eyeDomeLightingRadius", 0, 4.0, 0.1)
   );
   pointCloudShadingContainer.appendChild(edlContainer);
 
@@ -191,12 +186,12 @@ function Cesium3DTilesInspector(container, scene) {
   );
   const sseContainer = document.createElement("div");
   sseContainer.appendChild(
-    makeRangeInput(
+    createRangeInput(
+      "Maximum Screen Space Error",
       "maximumScreenSpaceError",
       0,
       128,
-      1,
-      "Maximum Screen Space Error"
+      1
     )
   );
   updatePanelContents.appendChild(sseContainer);
@@ -206,22 +201,22 @@ function Cesium3DTilesInspector(container, scene) {
     "visible: dynamicScreenSpaceError"
   );
   dynamicScreenSpaceErrorContainer.appendChild(
-    makeRangeInput(
+    createRangeInput(
+      "Screen Space Error Density",
       "dynamicScreenSpaceErrorDensitySliderValue",
       0,
       1,
       0.005,
-      "Screen Space Error Density",
       "dynamicScreenSpaceErrorDensity"
     )
   );
   dynamicScreenSpaceErrorContainer.appendChild(
-    makeRangeInput(
+    createRangeInput(
+      "Screen Space Error Factor",
       "dynamicScreenSpaceErrorFactor",
       1,
       10,
-      0.1,
-      "Screen Space Error Factor"
+      0.1
     )
   );
   updatePanelContents.appendChild(dynamicScreenSpaceErrorContainer);
@@ -280,7 +275,7 @@ function Cesium3DTilesInspector(container, scene) {
   );
   stylePanelEditor.className = "cesium-cesiumInspector-styleEditor";
   stylePanelEditor.appendChild(styleEditor);
-  const closeStylesBtn = makeButton("compileStyle", "Compile (Ctrl+Enter)");
+  const closeStylesBtn = createButton("Compile (Ctrl+Enter)", "compileStyle");
   stylePanelEditor.appendChild(closeStylesBtn);
   const errorBox = document.createElement("div");
   errorBox.className = "cesium-cesiumInspector-error";
@@ -306,23 +301,23 @@ function Cesium3DTilesInspector(container, scene) {
   );
   const skipScreenSpaceErrorFactorContainer = document.createElement("div");
   skipScreenSpaceErrorFactorContainer.appendChild(
-    makeRangeInput("skipScreenSpaceErrorFactor", 1, 50, 1, "Skip SSE Factor")
+    createRangeInput("Skip SSE Factor", "skipScreenSpaceErrorFactor", 1, 50, 1)
   );
   optimizationPanelContents.appendChild(skipScreenSpaceErrorFactorContainer);
   const baseScreenSpaceError = document.createElement("div");
   baseScreenSpaceError.appendChild(
-    makeRangeInput(
+    createRangeInput(
+      "SSE before skipping LOD",
       "baseScreenSpaceError",
       0,
       4096,
-      1,
-      "SSE before skipping LOD"
+      1
     )
   );
   optimizationPanelContents.appendChild(baseScreenSpaceError);
   const skipLevelsContainer = document.createElement("div");
   skipLevelsContainer.appendChild(
-    makeRangeInput("skipLevels", 0, 10, 1, "Min. levels to skip")
+    createRangeInput("Min. levels to skip", "skipLevels", 0, 10, 1)
   );
   optimizationPanelContents.appendChild(skipLevelsContainer);
   optimizationPanelContents.appendChild(
@@ -383,42 +378,4 @@ Cesium3DTilesInspector.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-function makeRangeInput(property, min, max, step, text, displayProperty) {
-  displayProperty = defaultValue(displayProperty, property);
-  const input = document.createElement("input");
-  input.setAttribute("data-bind", `value: ${displayProperty}`);
-  input.type = "number";
-
-  const slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = min;
-  slider.max = max;
-  slider.step = step;
-  slider.setAttribute("data-bind", `valueUpdate: "input", value: ${property}`);
-
-  const wrapper = document.createElement("div");
-  wrapper.appendChild(slider);
-
-  const container = document.createElement("div");
-  container.className = "cesium-cesiumInspector-slider";
-  container.appendChild(document.createTextNode(text));
-  container.appendChild(input);
-  container.appendChild(wrapper);
-
-  return container;
-}
-
-function makeButton(action, text, active) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = text;
-  button.className = "cesium-cesiumInspector-pickButton";
-  let binding = `click: ${action}`;
-  if (defined(active)) {
-    binding += `, css: {"cesium-cesiumInspector-pickButtonHighlight" : ${active}}`;
-  }
-  button.setAttribute("data-bind", binding);
-
-  return button;
-}
 export default Cesium3DTilesInspector;

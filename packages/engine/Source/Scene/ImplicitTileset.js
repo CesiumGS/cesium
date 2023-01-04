@@ -64,10 +64,11 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   if (
     !defined(boundingVolume.box) &&
     !defined(boundingVolume.region) &&
-    !hasExtension(boundingVolume, "3DTILES_bounding_volume_S2")
+    !hasExtension(boundingVolume, "3DTILES_bounding_volume_S2") &&
+    !hasExtension(boundingVolume, "3DTILES_bounding_volume_cylinder")
   ) {
     throw new RuntimeError(
-      "Only box, region and 3DTILES_bounding_volume_S2 are supported for implicit tiling"
+      "Only box, region, 3DTILES_bounding_volume_S2, and 3DTILES_bounding_volume_cylinder are supported for implicit tiling"
     );
   }
 

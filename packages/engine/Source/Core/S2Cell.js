@@ -264,7 +264,7 @@ S2Cell.getIdFromToken = function (token) {
  * Converts a 64-bit S2 cell ID to an S2 cell token.
  *
  * @param {BigInt} [cellId] The S2 cell ID.
- * @returns {BigInt} Returns hexadecimal representation of an S2CellId.
+ * @returns {string} Returns hexadecimal representation of an S2CellId.
  * @private
  */
 S2Cell.getTokenFromId = function (cellId) {
@@ -378,7 +378,7 @@ S2Cell.prototype.getParentAtLevel = function (level) {
  * Get center of the S2 cell.
  *
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
- * @returns {Cartesian} The position of center of the S2 cell.
+ * @returns {Cartesian3} The position of center of the S2 cell.
  * @private
  */
 S2Cell.prototype.getCenter = function (ellipsoid) {
@@ -400,7 +400,7 @@ S2Cell.prototype.getCenter = function (ellipsoid) {
  *
  * @param {Number} index An integer index of the vertex. Must be in the range [0-3].
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
- * @returns {Cartesian} The position of the vertex of the S2 cell.
+ * @returns {Cartesian3} The position of the vertex of the S2 cell.
  * @private
  */
 S2Cell.prototype.getVertex = function (index, ellipsoid) {

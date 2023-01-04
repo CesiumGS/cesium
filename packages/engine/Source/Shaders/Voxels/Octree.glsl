@@ -50,7 +50,7 @@ float normU8x2_toFloat(in vec2 value) {
 
 OctreeNodeData getOctreeNodeData(in vec2 octreeUv) {
     vec4 texData = texture2D(u_octreeInternalNodeTexture, octreeUv);
-    
+
     OctreeNodeData data;
     data.data = normU8x2_toInt(texData.xy);
     data.flag = normU8x2_toInt(texData.zw);
@@ -207,7 +207,7 @@ void traverseOctreeFromExisting(in vec3 shapePosition, inout TraversalData trave
         {
             traversalData.octreeCoords.xyz /= 2;
             traversalData.octreeCoords.w -= 1;
-            
+
             if (!insideTile(shapePosition, traversalData.octreeCoords)) {
                 traversalData.parentOctreeIndex = getOctreeParentIndex(traversalData.parentOctreeIndex);
             } else {
@@ -219,5 +219,3 @@ void traverseOctreeFromExisting(in vec3 shapePosition, inout TraversalData trave
         traverseOctreeDownwards(shapePosition, traversalData, sampleDatas);
     }
 }
-
-// export { SampleData, traverseOctreeFromBeginning, traverseOctreeFromExisting };

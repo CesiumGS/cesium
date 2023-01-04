@@ -1,5 +1,4 @@
 import {
-  PrimitiveType,
   VoxelBoxShape,
   VoxelCylinderShape,
   VoxelEllipsoidShape,
@@ -40,24 +39,6 @@ describe("Scene/VoxelShapeType", function () {
   it("getMaxBounds throws for invalid type", function () {
     expect(function () {
       return VoxelShapeType.getMaxBounds("NOT_A_SHAPE_TYPE");
-    }).toThrowDeveloperError();
-  });
-
-  it("fromPrimitiveType works", function () {
-    expect(VoxelShapeType.fromPrimitiveType(PrimitiveType.VOXEL_BOX)).toBe(
-      VoxelShapeType.BOX
-    );
-    expect(
-      VoxelShapeType.fromPrimitiveType(PrimitiveType.VOXEL_ELLIPSOID)
-    ).toBe(VoxelShapeType.ELLIPSOID);
-    expect(VoxelShapeType.fromPrimitiveType(PrimitiveType.VOXEL_CYLINDER)).toBe(
-      VoxelShapeType.CYLINDER
-    );
-  });
-
-  it("fromPrimitiveType throws for invalid type", function () {
-    expect(function () {
-      return VoxelShapeType.fromPrimitiveType("NOT_A_PRIMITIVE_TYPE");
     }).toThrowDeveloperError();
   });
 

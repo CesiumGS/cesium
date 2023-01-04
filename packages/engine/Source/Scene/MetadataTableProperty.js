@@ -265,7 +265,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof MetadataTableProperty.prototype
    * @type {*}
@@ -279,7 +279,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof MetadataTableProperty.prototype
    * @type {*}

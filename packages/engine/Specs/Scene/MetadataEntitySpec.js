@@ -12,12 +12,12 @@ describe("Scene/MetadataEntity", function () {
   let properties;
   let classWithNoDataValues;
   beforeAll(function () {
-    classWithNoPropertiesDefinition = new MetadataClass({
+    classWithNoPropertiesDefinition = MetadataClass.fromJson({
       id: "building",
       class: {},
     });
 
-    classDefinition = new MetadataClass({
+    classDefinition = MetadataClass.fromJson({
       id: "building",
       class: {
         properties: {
@@ -67,7 +67,7 @@ describe("Scene/MetadataEntity", function () {
       },
     });
 
-    classWithNoDataValues = new MetadataClass({
+    classWithNoDataValues = MetadataClass.fromJson({
       id: "noData",
       class: {
         properties: {

@@ -7,7 +7,6 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -39,7 +38,6 @@ import CustomShader from "./Model/CustomShader.js";
  *
  * @see VoxelProvider
  * @see Cesium3DTilesVoxelProvider
- * @see GltfVoxelProvider
  * @see VoxelShapeType
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
@@ -52,12 +50,6 @@ function VoxelPrimitive(options) {
    * @private
    */
   this._ready = false;
-
-  /**
-   * @type {Promise.<Boolean>}
-   * @private
-   */
-  this._readyPromise = defer();
 
   /**
    * @type {VoxelProvider}
@@ -192,6 +184,7 @@ function VoxelPrimitive(options) {
 
   /**
    * Keeps track of when the clipping planes are enabled / disabled
+   *
    * @type {Boolean}
    * @private
    */
@@ -203,9 +196,8 @@ function VoxelPrimitive(options) {
    * @type {Matrix4}
    * @private
    */
-  this._modelMatrix = defaultValue(
-    options.modelMatrix,
-    Matrix4.clone(Matrix4.IDENTITY, new Matrix4())
+  this._modelMatrix = Matrix4.clone(
+    defaultValue(options.modelMatrix, Matrix4.IDENTITY)
   );
 
   /**
@@ -430,9 +422,25 @@ function VoxelPrimitive(options) {
 
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;
-  const primitive = this;
-  provider.readyPromise.catch(function (error) {
-    primitive._readyPromise.reject(error);
+  this._completeLoad = function (primitive, frameState) {};
+  this._readyPromise = initialize(this, provider);
+}
+
+function initialize(primitive, provider) {
+  const promise = new Promise(function (resolve) {
+    primitive._completeLoad = function (primitive, frameState) {
+      // Set the primitive as ready after the first frame render since the user might set up events subscribed to
+      // the post render event, and the primitive may not be ready for those past the first frame.
+      frameState.afterRender.push(function () {
+        primitive._ready = true;
+        resolve(primitive);
+        return true;
+      });
+    };
+  });
+
+  return provider.readyPromise.then(function () {
+    return promise;
   });
 }
 
@@ -459,7 +467,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise.promise;
+      return this._readyPromise;
     },
   },
 
@@ -538,20 +546,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       Check.typeOf.object("modelMatrix", modelMatrix);
       //>>includeEnd('debug');
 
-      this._modelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
-    },
-  },
-
-  /**
-   * Gets the compound model matrix
-   *
-   * @memberof VoxelPrimitive.prototype
-   * @type {Matrix4}
-   * @readonly
-   */
-  compoundModelMatrix: {
-    get: function () {
-      return this._compoundModelMatrix;
+      this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
     },
   },
 
@@ -605,7 +600,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Gets the minimum value per channel of the voxel data.
    *
    * @memberof VoxelPrimitive.prototype
-   * @type {Number[]}
+   * @type {Number[][]}
    * @readonly
    *
    * @exception {DeveloperError} If the primitive is not ready.
@@ -628,7 +623,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * Gets the maximum value per channel of the voxel data.
    *
    * @memberof VoxelPrimitive.prototype
-   * @type {Number[]}
+   * @type {Number[][]}
    * @readonly
    *
    * @exception {DeveloperError} If the primitive is not ready.
@@ -778,6 +773,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Number}
+   * @private
    */
   levelBlendFactor: {
     get: function () {
@@ -836,7 +832,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets or sets the minimum bounds. TODO: fill in the rest later
+   * Gets or sets the minimum bounds in the shape's local coordinate system.
+   * Voxel data is stretched or squashed to fit the bounds.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -855,7 +852,8 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 
   /**
-   * Gets or sets the maximum bounds. TODO: fill in the rest later.
+   * Gets or sets the maximum bounds in the shape's local coordinate system.
+   * Voxel data is stretched or squashed to fit the bounds.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -876,7 +874,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets the minimum clipping location in the shape's local coordinate system.
    * Any voxel content outside the range is clipped.
-   * The minimum value is 0 and the maximum value is 1.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -900,7 +897,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   /**
    * Gets or sets the maximum clipping location in the shape's local coordinate system.
    * Any voxel content outside the range is clipped.
-   * The minimum value is 0 and the maximum value is 1.
    *
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
@@ -987,9 +983,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   },
 });
 
-// TODO 3-channel + 1-channel metadata is a problem right now
-// Individually, they both work, but together the 1-channel is messed up
-
 const scratchDimensions = new Cartesian3();
 const scratchIntersect = new Cartesian4();
 const scratchNdcAabb = new Cartesian4();
@@ -1014,17 +1007,12 @@ const transformPositionUvToLocal = Matrix4.fromRotationTranslation(
 
 /**
  * Updates the voxel primitive.
- * @function
  *
  * @param {FrameState} frameState
  * @private
  */
 VoxelPrimitive.prototype.update = function (frameState) {
-  // Update the provider, if applicable.
   const provider = this._provider;
-  if (defined(provider.update)) {
-    provider.update(frameState);
-  }
 
   // Update the custom shader in case it has texture uniforms.
   this._customShader.update(frameState);
@@ -1037,15 +1025,10 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Initialize from the ready provider. This only happens once.
   const context = frameState.context;
   if (!this._ready) {
-    // Don't make the primitive ready until after its first update because
-    // external code may want to change some of its properties before it's rendered.
-    const primitive = this;
-    frameState.afterRender.push(function () {
-      primitive._ready = true;
-      primitive._readyPromise.resolve(primitive);
-    });
-
     initFromProvider(this, provider, context);
+    this._completeLoad(this, frameState);
+
+    // Don't render until the next frame after the ready promise is resolved
     return;
   }
 
@@ -1154,13 +1137,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
     uniforms.ndcSpaceAxisAlignedBoundingBox
   );
   const transformPositionViewToWorld = context.uniformState.inverseView;
-  uniforms.transformPositionViewToUv = Matrix4.multiply(
+  uniforms.transformPositionViewToUv = Matrix4.multiplyTransformation(
     this._transformPositionWorldToUv,
     transformPositionViewToWorld,
     uniforms.transformPositionViewToUv
   );
   const transformPositionWorldToView = context.uniformState.view;
-  uniforms.transformPositionUvToView = Matrix4.multiply(
+  uniforms.transformPositionUvToView = Matrix4.multiplyTransformation(
     transformPositionWorldToView,
     this._transformPositionUvToWorld,
     uniforms.transformPositionUvToView
@@ -1287,13 +1270,24 @@ function initFromProvider(primitive, provider, context) {
  * @private
  */
 function checkTransformAndBounds(primitive, provider) {
-  const providerTransform = defaultValue(
-    provider.modelMatrix,
+  const shapeTransform = defaultValue(
+    provider.shapeTransform,
     Matrix4.IDENTITY
   );
-  primitive._compoundModelMatrix = Matrix4.multiplyTransformation(
-    providerTransform,
+  const globalTransform = defaultValue(
+    provider.globalTransform,
+    Matrix4.IDENTITY
+  );
+
+  // Compound model matrix = global transform * model matrix * shape transform
+  Matrix4.multiplyTransformation(
+    globalTransform,
     primitive._modelMatrix,
+    primitive._compoundModelMatrix
+  );
+  Matrix4.multiplyTransformation(
+    primitive._compoundModelMatrix,
+    shapeTransform,
     primitive._compoundModelMatrix
   );
   const numChanges =
@@ -1307,19 +1301,20 @@ function checkTransformAndBounds(primitive, provider) {
 
 /**
  * Compare old and new values of a bound and update the old if it is different.
- * @param {VoxelPrimitive} The primitive with bounds properties
- * @param {String} oldBoundKey A key pointing to a bounds property of type Cartesian3 or Matrix4
- * @param {String} newBoundKey A key pointing to a bounds property of the same type as the property at oldBoundKey
+ * @param {VoxelPrimitive} primitive The primitive with bounds properties
+ * @param {String} newBoundKey A key pointing to a bounds property of type Cartesian3 or Matrix4
+ * @param {String} oldBoundKey A key pointing to a bounds property of the same type as the property at newBoundKey
  * @returns {Number} 1 if the bound value changed, 0 otherwise
  *
  * @private
  */
 function updateBound(primitive, newBoundKey, oldBoundKey) {
   const newBound = primitive[newBoundKey];
-  const BoundClass = newBound.constructor;
-  const changed = !BoundClass.equals(newBound, primitive[oldBoundKey]);
+  const oldBound = primitive[oldBoundKey];
+
+  const changed = !newBound.equals(oldBound);
   if (changed) {
-    primitive[oldBoundKey] = BoundClass.clone(newBound, primitive[oldBoundKey]);
+    newBound.clone(oldBound);
   }
   return changed ? 1 : 0;
 }
@@ -1334,7 +1329,7 @@ function updateBound(primitive, newBoundKey, oldBoundKey) {
  */
 function updateShapeAndTransforms(primitive, shape, provider) {
   const visible = shape.update(
-    primitive.compoundModelMatrix,
+    primitive._compoundModelMatrix,
     primitive.minBounds,
     primitive.maxBounds,
     primitive.minClippingBounds,
@@ -1370,13 +1365,12 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   // Set member variables when the shape is dirty
   const dimensions = provider.dimensions;
   primitive._stepSizeUv = shape.computeApproximateStepSize(dimensions);
-  //  TODO: check which of the `multiply` can be `multiplyTransformation`
-  primitive._transformPositionWorldToUv = Matrix4.multiply(
+  primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
     transformPositionLocalToUv,
     transformPositionWorldToLocal,
     primitive._transformPositionWorldToUv
   );
-  primitive._transformPositionUvToWorld = Matrix4.multiply(
+  primitive._transformPositionUvToWorld = Matrix4.multiplyTransformation(
     transformPositionLocalToWorld,
     transformPositionUvToLocal,
     primitive._transformPositionUvToWorld
@@ -1433,7 +1427,6 @@ function setupTraversal(primitive, provider, context) {
 
 /**
  * Set uniforms that come from the traversal.
- * TODO: should this be done in VoxelTraversal?
  * @param {VoxelTraversal} traversal
  * @param {Object} uniforms
  * @private
@@ -1789,10 +1782,6 @@ function orientedBoundingBoxToNdcAabb(
   return result;
 }
 
-const colorRed = new Color(1.0, 0.0, 0.0);
-const colorGreen = new Color(0.0, 1.0, 0.0);
-const colorBlue = new Color(0.0, 0.0, 1.0);
-
 const polylineAxisDistance = 30000000.0;
 const polylineXAxis = new Cartesian3(polylineAxisDistance, 0.0, 0.0);
 const polylineYAxis = new Cartesian3(0.0, polylineAxisDistance, 0.0);
@@ -1849,7 +1838,7 @@ function debugDraw(that, frameState) {
     const level = tile.level;
     const startThickness = 5.0;
     const thickness = Math.max(1.0, startThickness / Math.pow(2.0, level));
-    const colors = [colorRed, colorGreen, colorBlue];
+    const colors = [Color.RED, Color.LIME, Color.BLUE];
     const color = colors[level % 3];
 
     makePolylineBox(tile.orientedBoundingBox, color, thickness);
@@ -1861,25 +1850,27 @@ function debugDraw(that, frameState) {
     }
   }
 
+  makePolylineBox(that._shape.orientedBoundingBox, Color.WHITE, 5.0);
+
   drawTile(traversal.rootNode);
 
   const axisThickness = 10.0;
   makePolylineLineSegment(
     Cartesian3.ZERO,
     polylineXAxis,
-    colorRed,
+    Color.RED,
     axisThickness
   );
   makePolylineLineSegment(
     Cartesian3.ZERO,
     polylineYAxis,
-    colorGreen,
+    Color.LIME,
     axisThickness
   );
   makePolylineLineSegment(
     Cartesian3.ZERO,
     polylineZAxis,
-    colorBlue,
+    Color.BLUE,
     axisThickness
   );
 

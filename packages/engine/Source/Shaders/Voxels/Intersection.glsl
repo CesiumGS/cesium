@@ -1,15 +1,19 @@
-// import { Ray, NO_HIT, getIntersectionPair, initializeIntersections, nextIntersection } from "./IntersectionUtils.glsl";
-// import { intersectShape } from ("./IntersectBox.glsl", "./IntersectCylinder.glsl", "IntersectEllipsoid.glsl");
-// import { intersectClippingPlanes } from "./IntersectClippingPlane.glsl";
-// import { intersectDepth } from "./IntersectDepth.glsl";
+// Main intersection function for Voxel scenes.
+// See IntersectBox.glsl, IntersectCylinder.glsl, or IntersectEllipsoid.glsl
+// for the definition of intersectShape. The appropriate function is selected
+// based on the VoxelPrimitive shape type, and added to the shader in
+// Scene/VoxelRenderResources.js.
+// See also IntersectClippingPlane.glsl and IntersectDepth.glsl.
+// See IntersectionUtils.glsl for the definitions of Ray, NO_HIT,
+// getIntersectionPair, initializeIntersections, nextIntersection.
 
-/* Intersection defines
+/* Intersection defines (set in Scene/VoxelRenderResources.js)
 #define INTERSECTION_COUNT ###
 */
 
 vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Intersections ix) {
     Ray ray = Ray(positionUv, directionUv);
-    
+
     // Do a ray-shape intersection to find the exact starting and ending points.
     intersectShape(ray, ix);
 
@@ -48,5 +52,3 @@ vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Int
 
     return entryExitT;
 }
-
-// export { intersectScene };

@@ -6,12 +6,11 @@ import {
   Cartesian3,
   OrientedBoundingBox,
   Math as CesiumMath,
+  MetadataType,
   CullingVolume,
   Cesium3DTilesVoxelProvider,
 } from "../../index.js";
-import MetadataType from "../../Source/Scene/MetadataType.js";
 import createScene from "../../../../Specs/createScene.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 const towardPrimitive = Cartesian3.fromElements(1.0, 1.0, 1.0);
 
@@ -23,39 +22,30 @@ function turnCameraAround(scene) {
 describe(
   "Scene/VoxelTraversal",
   function () {
-    const scene = createScene();
+    const keyframeCount = 1;
+    const textureMemory = 500;
 
+    let scene;
     let provider;
-    beforeAll(function () {
+    let camera;
+    let primitive;
+    let traversal;
+    beforeEach(function () {
+      scene = createScene();
       provider = new Cesium3DTilesVoxelProvider({
         url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       });
 
-      return pollToPromise(function () {
-        provider.update(scene.frameState);
-        return provider.ready;
-      }).then(() => {
-        scene.primitives.removeAll();
-      });
-    });
-
-    const camera = scene.camera;
-    const keyframeCount = 1;
-    const textureMemory = 500;
-
-    let primitive;
-    let traversal;
-    beforeEach(function () {
+      camera = scene.camera;
       camera.position = Cartesian3.fromElements(-10, -10, -10);
       camera.direction = Cartesian3.fromElements(1, 1, 1);
       camera.frustum.fov = CesiumMath.PI_OVER_TWO;
-      scene.primitives.removeAll();
       primitive = new VoxelPrimitive({
         voxelProvider: provider,
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      return primitive.readyPromise.then(function () {
+      return provider.readyPromise.then(function () {
         traversal = new VoxelTraversal(
           primitive,
           scene.context,
@@ -66,6 +56,10 @@ describe(
           textureMemory
         );
       });
+    });
+
+    afterEach(function () {
+      scene.destroyForSpecs();
     });
 
     it("constructs with arguments", function () {

@@ -2,15 +2,14 @@ import {
   Cartesian3,
   Math as CesiumMath,
   Check,
-  defaultValue,
   destroyObject,
   Ellipsoid,
-  VoxelShapeType,
   getElement,
+  VoxelShapeType,
 } from "@cesium/engine";
+import knockout from "../ThirdParty/knockout.js";
 import InspectorShared from "../InspectorShared.js";
 import VoxelInspectorViewModel from "./VoxelInspectorViewModel.js";
-import knockout from "../ThirdParty/knockout.js";
 
 /**
  * Inspector widget to aid in debugging voxels
@@ -31,89 +30,120 @@ function VoxelInspector(container, scene) {
   const element = document.createElement("div");
   const viewModel = new VoxelInspectorViewModel(scene);
 
+  this._viewModel = viewModel;
+  this._container = container;
+  this._element = element;
+
   const text = document.createElement("div");
   text.textContent = "Voxel Inspector";
   text.className = "cesium-cesiumInspector-button";
+  text.setAttribute("data-bind", "click: toggleInspector");
   element.appendChild(text);
-
-  element.className =
-    "cesium-cesiumInspector cesium-VoxelInspector cesium-cesiumInspector-hidden";
-  text.addEventListener("click", function () {
-    element.classList.toggle("cesium-cesiumInspector-visible");
-    element.classList.toggle("cesium-cesiumInspector-hidden");
-  });
-
+  element.className = "cesium-cesiumInspector cesium-VoxelInspector";
+  element.setAttribute(
+    "data-bind",
+    'css: { "cesium-cesiumInspector-visible" : inspectorVisible, "cesium-cesiumInspector-hidden" : !inspectorVisible}'
+  );
   container.appendChild(element);
 
   const panel = document.createElement("div");
   panel.className = "cesium-cesiumInspector-dropDown";
   element.appendChild(panel);
 
+  const createSection = InspectorShared.createSection;
+  const createCheckbox = InspectorShared.createCheckbox;
+  const createRangeInput = InspectorShared.createRangeInput;
+  const createButton = InspectorShared.createButton;
+
+  const displayPanelContents = createSection(
+    panel,
+    "Display",
+    "displayVisible",
+    "toggleDisplay"
+  );
+
+  const transformPanelContents = createSection(
+    panel,
+    "Transform",
+    "transformVisible",
+    "toggleTransform"
+  );
+
+  const boundsPanelContents = createSection(
+    panel,
+    "Bounds",
+    "boundsVisible",
+    "toggleBounds"
+  );
+
+  const clippingPanelContents = createSection(
+    panel,
+    "Clipping",
+    "clippingVisible",
+    "toggleClipping"
+  );
+
+  const shaderPanelContents = createSection(
+    panel,
+    "Shader",
+    "shaderVisible",
+    "toggleShader"
+  );
+
   // Display
-  const displayPanelContents = createSection(panel, "Display");
-
-  const { createCheckbox } = InspectorShared;
-  [
-    ["Depth Test", "depthTest"],
-    ["Show", "show"],
-    ["Disable Update", "disableUpdate"],
-    ["Debug Draw", "debugDraw"],
-    ["Jitter", "jitter"],
-    ["Nearest Sampling", "nearestSampling"],
-  ].forEach(([title, variable]) => {
-    displayPanelContents.appendChild(createCheckbox(title, variable));
-  });
-
+  displayPanelContents.appendChild(createCheckbox("Depth Test", "depthTest"));
+  displayPanelContents.appendChild(createCheckbox("Show", "show"));
   displayPanelContents.appendChild(
-    makeRangeInput("Level Blend Factor", "levelBlendFactor", 0.0, 1.0)
+    createCheckbox("Disable Update", "disableUpdate")
+  );
+  displayPanelContents.appendChild(createCheckbox("Debug Draw", "debugDraw"));
+  displayPanelContents.appendChild(createCheckbox("Jitter", "jitter"));
+  displayPanelContents.appendChild(
+    createCheckbox("Nearest Sampling", "nearestSampling")
   );
 
   displayPanelContents.appendChild(
-    makeRangeInput("Screen Space Error", "screenSpaceError", 0, 128)
+    createRangeInput("Screen Space Error", "screenSpaceError", 0, 128)
   );
 
   displayPanelContents.appendChild(
-    makeRangeInput("Step Size", "stepSize", 0.0, 2.0)
+    createRangeInput("Step Size", "stepSize", 0.0, 2.0)
   );
 
   // Transform
-  const transformPanelContents = createSection(panel, "Transform");
-
-  const maxTrans = 20000000.0;
-  const maxScale = 20000000.0;
+  const maxTrans = 10.0;
+  const maxScale = 10.0;
   const maxAngle = CesiumMath.PI;
 
   transformPanelContents.appendChild(
-    makeRangeInput("Translation X", "translationX", -maxTrans, +maxTrans)
+    createRangeInput("Translation X", "translationX", -maxTrans, +maxTrans)
   );
   transformPanelContents.appendChild(
-    makeRangeInput("Translation Y", "translationY", -maxTrans, +maxTrans)
+    createRangeInput("Translation Y", "translationY", -maxTrans, +maxTrans)
   );
   transformPanelContents.appendChild(
-    makeRangeInput("Translation Z", "translationZ", -maxTrans, +maxTrans)
+    createRangeInput("Translation Z", "translationZ", -maxTrans, +maxTrans)
   );
   transformPanelContents.appendChild(
-    makeRangeInput("Scale X", "scaleX", -maxScale, +maxScale)
+    createRangeInput("Scale X", "scaleX", 0, +maxScale)
   );
   transformPanelContents.appendChild(
-    makeRangeInput("Scale Y", "scaleY", -maxScale, +maxScale)
+    createRangeInput("Scale Y", "scaleY", 0, +maxScale)
   );
   transformPanelContents.appendChild(
-    makeRangeInput("Scale Z", "scaleZ", -maxScale, +maxScale)
+    createRangeInput("Scale Z", "scaleZ", 0, +maxScale)
   );
   transformPanelContents.appendChild(
-    makeRangeInput("Heading", "angleX", -maxAngle, +maxAngle)
+    createRangeInput("Heading", "angleX", -maxAngle, +maxAngle)
   );
   transformPanelContents.appendChild(
-    makeRangeInput("Pitch", "angleY", -maxAngle, +maxAngle)
+    createRangeInput("Pitch", "angleY", -maxAngle, +maxAngle)
   );
   transformPanelContents.appendChild(
-    makeRangeInput("Roll", "angleZ", -maxAngle, +maxAngle)
+    createRangeInput("Roll", "angleZ", -maxAngle, +maxAngle)
   );
 
   // Bounds
-  const boundsPanelContents = createSection(panel, "Bounds");
-
   const boxMinBounds = VoxelShapeType.getMinBounds(VoxelShapeType.BOX);
   const boxMaxBounds = VoxelShapeType.getMaxBounds(VoxelShapeType.BOX);
 
@@ -195,8 +225,6 @@ function VoxelInspector(container, scene) {
   );
 
   // Clipping
-  const clippingPanelContents = createSection(panel, "Clipping");
-
   makeCoordinateRange(
     "Max X",
     "Min X",
@@ -255,7 +283,6 @@ function VoxelInspector(container, scene) {
   );
 
   // Shader
-  const shaderPanelContents = createSection(panel, "Shader");
   const shaderPanelEditor = document.createElement("div");
   shaderPanelContents.appendChild(shaderPanelEditor);
 
@@ -266,9 +293,9 @@ function VoxelInspector(container, scene) {
   );
   shaderPanelEditor.className = "cesium-cesiumInspector-styleEditor";
   shaderPanelEditor.appendChild(shaderEditor);
-  const compileShaderButton = makeButton(
-    "compileShader",
-    "Compile (Ctrl+Enter)"
+  const compileShaderButton = createButton(
+    "Compile (Ctrl+Enter)",
+    "compileShader"
   );
   shaderPanelEditor.appendChild(compileShaderButton);
 
@@ -281,11 +308,6 @@ function VoxelInspector(container, scene) {
   shaderPanelEditor.appendChild(compilationText);
 
   knockout.applyBindings(viewModel, element);
-
-  this._viewModel = viewModel;
-  this._container = container;
-  this._element = element;
-  this._panel = panel;
 }
 
 Object.defineProperties(VoxelInspector.prototype, {
@@ -333,74 +355,6 @@ VoxelInspector.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-/**
- * Creates a hide-able section element in an Inspector panel
- * Similar to InspectorShared.createSection, but without the knockout dependency
- * @param {HTMLElement} panel The parent element
- * @param {String} headerText The text to display at the top of the section
- * @returns {HTMLElement} An element containing the section content
- * @private
- */
-function createSection(panel, headerText) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("panel", panel);
-  Check.typeOf.string("headerText", headerText);
-  //>>includeEnd('debug');
-
-  const section = document.createElement("div");
-  section.className =
-    "cesium-cesiumInspector-section cesium-cesiumInspector-section-collapsed";
-  panel.appendChild(section);
-
-  const sectionHeader = document.createElement("h3");
-  sectionHeader.className = "cesium-cesiumInspector-sectionHeader";
-  sectionHeader.appendChild(document.createTextNode(headerText));
-  sectionHeader.addEventListener("click", function () {
-    section.classList.toggle("cesium-cesiumInspector-section-collapsed");
-  });
-  section.appendChild(sectionHeader);
-
-  const sectionContent = document.createElement("div");
-  sectionContent.className = "cesium-cesiumInspector-sectionContent";
-  section.appendChild(sectionContent);
-  return sectionContent;
-}
-
-function makeRangeInput(text, property, min, max, step, displayProperty) {
-  displayProperty = defaultValue(displayProperty, property);
-  const input = document.createElement("input");
-  input.setAttribute("data-bind", `value: ${displayProperty}`);
-  input.type = "number";
-
-  const slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = min;
-  slider.max = max;
-  slider.step = defaultValue(step, "any");
-  slider.setAttribute("data-bind", `valueUpdate: "input", value: ${property}`);
-
-  const wrapper = document.createElement("div");
-  wrapper.appendChild(slider);
-
-  const container = document.createElement("div");
-  container.className = "cesium-cesiumInspector-slider";
-  container.appendChild(document.createTextNode(text));
-  container.appendChild(input);
-  container.appendChild(wrapper);
-
-  return container;
-}
-
-function makeButton(action, text) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = text;
-  button.className = "cesium-cesiumInspector-pickButton";
-  const binding = `click: ${action}`;
-  button.setAttribute("data-bind", binding);
-  return button;
-}
-
 function makeCoordinateRange(
   maxXTitle,
   minXTitle,
@@ -419,18 +373,20 @@ function makeCoordinateRange(
   allowedShape,
   parentContainer
 ) {
+  const createRangeInput = InspectorShared.createRangeInput;
+
   const min = defaultMinBounds;
   const max = defaultMaxBounds;
   const boundsElement = parentContainer.appendChild(
     document.createElement("div")
   );
   boundsElement.setAttribute("data-bind", `if: ${allowedShape}`);
-  boundsElement.appendChild(makeRangeInput(maxXTitle, maxXVar, min.x, max.x));
-  boundsElement.appendChild(makeRangeInput(minXTitle, minXVar, min.x, max.x));
-  boundsElement.appendChild(makeRangeInput(maxYTitle, maxYVar, min.y, max.y));
-  boundsElement.appendChild(makeRangeInput(minYTitle, minYVar, min.y, max.y));
-  boundsElement.appendChild(makeRangeInput(maxZTitle, maxZVar, min.z, max.z));
-  boundsElement.appendChild(makeRangeInput(minZTitle, minZVar, min.z, max.z));
+  boundsElement.appendChild(createRangeInput(maxXTitle, maxXVar, min.x, max.x));
+  boundsElement.appendChild(createRangeInput(minXTitle, minXVar, min.x, max.x));
+  boundsElement.appendChild(createRangeInput(maxYTitle, maxYVar, min.y, max.y));
+  boundsElement.appendChild(createRangeInput(minYTitle, minYVar, min.y, max.y));
+  boundsElement.appendChild(createRangeInput(maxZTitle, maxZVar, min.z, max.z));
+  boundsElement.appendChild(createRangeInput(minZTitle, minZVar, min.z, max.z));
 }
 
 export default VoxelInspector;
