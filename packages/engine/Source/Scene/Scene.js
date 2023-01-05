@@ -2724,64 +2724,77 @@ function executeOverlayCommands(scene, passState) {
   }
 }
 
+/**
+ * Insert commands for casting shadows
+ * @private
+ *
+ * @param {Scene} scene
+ * @param {DrawCommand[]} commandList
+ * @param {ShadowMap} shadowMap
+ */
 function insertShadowCastCommands(scene, commandList, shadowMap) {
-  const shadowVolume = shadowMap.shadowMapCullingVolume;
-  const isPointLight = shadowMap.isPointLight;
-  const passes = shadowMap.passes;
+  const { shadowMapCullingVolume, isPointLight, passes } = shadowMap;
   const numberOfPasses = passes.length;
 
-  const length = commandList.length;
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < commandList.length; ++i) {
     const command = commandList[i];
     scene.updateDerivedCommands(command);
 
     if (
-      command.castShadows &&
-      (command.pass === Pass.GLOBE ||
+      !command.castShadows ||
+      !(
+        command.pass === Pass.GLOBE ||
         command.pass === Pass.CESIUM_3D_TILE ||
         command.pass === Pass.OPAQUE ||
-        command.pass === Pass.TRANSLUCENT)
+        command.pass === Pass.TRANSLUCENT
+      ) ||
+      !scene.isVisible(command, shadowMapCullingVolume)
     ) {
-      if (scene.isVisible(command, shadowVolume)) {
-        if (isPointLight) {
-          for (let k = 0; k < numberOfPasses; ++k) {
-            passes[k].commandList.push(command);
-          }
-        } else if (numberOfPasses === 1) {
-          passes[0].commandList.push(command);
-        } else {
-          let wasVisible = false;
-          // Loop over cascades from largest to smallest
-          for (let j = numberOfPasses - 1; j >= 0; --j) {
-            const cascadeVolume = passes[j].cullingVolume;
-            if (scene.isVisible(command, cascadeVolume)) {
-              passes[j].commandList.push(command);
-              wasVisible = true;
-            } else if (wasVisible) {
-              // If it was visible in the previous cascade but now isn't
-              // then there is no need to check any more cascades
-              break;
-            }
-          }
+      continue;
+    }
+
+    if (isPointLight) {
+      for (let k = 0; k < numberOfPasses; ++k) {
+        passes[k].commandList.push(command);
+      }
+    } else if (numberOfPasses === 1) {
+      passes[0].commandList.push(command);
+    } else {
+      let wasVisible = false;
+      // Loop over cascades from largest to smallest
+      for (let j = numberOfPasses - 1; j >= 0; --j) {
+        const cascadeVolume = passes[j].cullingVolume;
+        if (scene.isVisible(command, cascadeVolume)) {
+          passes[j].commandList.push(command);
+          wasVisible = true;
+        } else if (wasVisible) {
+          // If it was visible in the previous cascade but now isn't
+          // then there is no need to check any more cascades
+          break;
         }
       }
     }
   }
 }
 
+/**
+ * Execute commands for casting shadows
+ * @private
+ *
+ * @param {Scene} scene
+ */
 function executeShadowMapCastCommands(scene) {
-  const frameState = scene.frameState;
-  const shadowMaps = frameState.shadowState.shadowMaps;
-  const shadowMapLength = shadowMaps.length;
+  const { frameState, context } = scene;
+  const { shadowState, commandList: sceneCommands } = frameState;
+  const { shadowsEnabled, shadowMaps } = shadowState;
 
-  if (!frameState.shadowState.shadowsEnabled) {
+  if (!shadowsEnabled) {
     return;
   }
 
-  const context = scene.context;
-  const uniformState = context.uniformState;
+  const { uniformState } = context;
 
-  for (let i = 0; i < shadowMapLength; ++i) {
+  for (let i = 0; i < shadowMaps.length; ++i) {
     const shadowMap = shadowMaps[i];
     if (shadowMap.outOfView) {
       continue;
@@ -2795,7 +2808,6 @@ function executeShadowMapCastCommands(scene) {
     }
 
     // Insert the primitive/model commands into the command lists
-    const sceneCommands = scene.frameState.commandList;
     insertShadowCastCommands(scene, sceneCommands, shadowMap);
 
     for (let j = 0; j < numberOfPasses; ++j) {
@@ -2911,10 +2923,15 @@ const scratch2DViewportEyePoint = new Cartesian3();
 const scratch2DViewportWindowCoords = new Cartesian3();
 const scratch2DViewport = new BoundingRectangle();
 
+/**
+ * Execute commands for a 2D viewport
+ * @private
+ *
+ * @param {Scene} scene
+ * @param {*} passState
+ */
 function execute2DViewportCommands(scene, passState) {
-  const context = scene.context;
-  const frameState = scene.frameState;
-  const camera = scene.camera;
+  const { context, frameState, camera } = scene;
 
   const originalViewport = passState.viewport;
   const viewport = BoundingRectangle.clone(originalViewport, scratch2DViewport);
@@ -3239,7 +3256,7 @@ Scene.prototype.updateEnvironment = function () {
 };
 
 function updateDebugFrustumPlanes(scene) {
-  const frameState = scene._frameState;
+  const { frameState } = scene;
   if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
     if (scene.debugShowFrustumPlanes) {
       scene._debugFrustumPlanes = new DebugCameraPrimitive({
@@ -3260,19 +3277,19 @@ function updateDebugFrustumPlanes(scene) {
 }
 
 function updateShadowMaps(scene) {
-  const frameState = scene._frameState;
-  const shadowMaps = frameState.shadowMaps;
+  const { frameState } = scene;
+  const { shadowState, shadowMaps, passes } = frameState;
   const length = shadowMaps.length;
 
   const shadowsEnabled =
-    length > 0 && !frameState.passes.pick && scene.mode === SceneMode.SCENE3D;
-  if (shadowsEnabled !== frameState.shadowState.shadowsEnabled) {
+    length > 0 && !passes.pick && scene.mode === SceneMode.SCENE3D;
+  if (shadowsEnabled !== shadowState.shadowsEnabled) {
     // Update derived commands when shadowsEnabled changes
-    ++frameState.shadowState.lastDirtyTime;
-    frameState.shadowState.shadowsEnabled = shadowsEnabled;
+    ++shadowState.lastDirtyTime;
+    shadowState.shadowsEnabled = shadowsEnabled;
   }
 
-  frameState.shadowState.lightShadowsEnabled = false;
+  shadowState.lightShadowsEnabled = false;
 
   if (!shadowsEnabled) {
     return;
@@ -3281,28 +3298,28 @@ function updateShadowMaps(scene) {
   // Check if the shadow maps are different than the shadow maps last frame.
   // If so, the derived commands need to be updated.
   for (let j = 0; j < length; ++j) {
-    if (shadowMaps[j] !== frameState.shadowState.shadowMaps[j]) {
-      ++frameState.shadowState.lastDirtyTime;
+    if (shadowMaps[j] !== shadowState.shadowMaps[j]) {
+      ++shadowState.lastDirtyTime;
       break;
     }
   }
 
-  frameState.shadowState.shadowMaps.length = 0;
-  frameState.shadowState.lightShadowMaps.length = 0;
+  shadowState.shadowMaps.length = 0;
+  shadowState.lightShadowMaps.length = 0;
 
   for (let i = 0; i < length; ++i) {
     const shadowMap = shadowMaps[i];
     shadowMap.update(frameState);
 
-    frameState.shadowState.shadowMaps.push(shadowMap);
+    shadowState.shadowMaps.push(shadowMap);
 
     if (shadowMap.fromLightSource) {
-      frameState.shadowState.lightShadowMaps.push(shadowMap);
-      frameState.shadowState.lightShadowsEnabled = true;
+      shadowState.lightShadowMaps.push(shadowMap);
+      shadowState.lightShadowsEnabled = true;
     }
 
     if (shadowMap.dirty) {
-      ++frameState.shadowState.lastDirtyTime;
+      ++shadowState.lastDirtyTime;
       shadowMap.dirty = false;
     }
   }
@@ -3322,14 +3339,18 @@ function updateAndRenderPrimitives(scene) {
   }
 }
 
+/**
+ * Update and clear framebuffers
+ * @private
+ *
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {Color} clearColor
+ */
 function updateAndClearFramebuffers(scene, passState, clearColor) {
-  const context = scene._context;
-  const frameState = scene._frameState;
-  const environmentState = scene._environmentState;
-  const view = scene._view;
+  const { context, frameState, environmentState, view } = scene;
 
-  const passes = scene._frameState.passes;
-  const picking = passes.pick;
+  const picking = frameState.passes.pick;
   if (defined(view.globeDepth)) {
     view.globeDepth.picking = picking;
   }
@@ -3534,11 +3555,16 @@ Scene.prototype.resolveFramebuffers = function (passState) {
   }
 };
 
+/**
+ * Functions are queued up during primitive update and executed here in case
+ * the function modifies scene state that should remain constant over the frame.
+ * @private
+ *
+ * @param {Scene} scene
+ */
 function callAfterRenderFunctions(scene) {
-  // Functions are queued up during primitive update and executed here in case
-  // the function modifies scene state that should remain constant over the frame.
   const functions = scene._frameState.afterRender;
-  for (let i = 0, length = functions.length; i < length; ++i) {
+  for (let i = 0; i < functions.length; ++i) {
     const shouldRequestRender = functions[i]();
     if (shouldRequestRender) {
       scene.requestRender();
@@ -3549,8 +3575,7 @@ function callAfterRenderFunctions(scene) {
 }
 
 function getGlobeHeight(scene) {
-  const globe = scene._globe;
-  const camera = scene.camera;
+  const { globe, camera } = scene;
   const cartographic = camera.positionCartographic;
   if (defined(globe) && globe.show && defined(cartographic)) {
     return globe.getHeight(cartographic);
@@ -3558,10 +3583,15 @@ function getGlobeHeight(scene) {
   return undefined;
 }
 
+/**
+ * Check if the camera is underground
+ * @private
+ *
+ * @param {Scene} scene
+ * @returns {Boolean} True if the camera is below the globe height
+ */
 function isCameraUnderground(scene) {
-  const camera = scene.camera;
-  const mode = scene._mode;
-  const globe = scene.globe;
+  const { camera, mode, globe } = scene;
   const cameraController = scene._screenSpaceCameraController;
   const cartographic = camera.positionCartographic;
 
@@ -3643,12 +3673,11 @@ function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
 function prePassesUpdate(scene) {
   scene._jobScheduler.resetBudgets();
 
-  const frameState = scene._frameState;
-  const primitives = scene.primitives;
+  const { frameState, primitives, globe } = scene;
   primitives.prePassesUpdate(frameState);
 
-  if (defined(scene.globe)) {
-    scene.globe.update(frameState);
+  if (defined(globe)) {
+    globe.update(frameState);
   }
 
   scene._picking.update();
@@ -3656,8 +3685,7 @@ function prePassesUpdate(scene) {
 }
 
 function postPassesUpdate(scene) {
-  const frameState = scene._frameState;
-  const primitives = scene.primitives;
+  const { frameState, primitives } = scene;
   primitives.postPassesUpdate(frameState);
 
   RequestScheduler.update();
@@ -3666,10 +3694,8 @@ function postPassesUpdate(scene) {
 const scratchBackgroundColor = new Color();
 
 function render(scene) {
-  const frameState = scene._frameState;
-
-  const context = scene.context;
-  const us = context.uniformState;
+  const { frameState, context, shadowMap } = scene;
+  const { uniformState } = context;
 
   const view = scene._defaultView;
   scene._view = view;
@@ -3690,13 +3716,15 @@ function render(scene) {
 
   scene.fog.update(frameState);
 
-  us.update(frameState);
+  uniformState.update(frameState);
 
-  const shadowMap = scene.shadowMap;
   if (defined(shadowMap) && shadowMap.enabled) {
     if (!defined(scene.light) || scene.light instanceof SunLight) {
       // Negate the sun direction so that it is from the Sun, not to the Sun
-      Cartesian3.negate(us.sunDirectionWC, scene._shadowMapCamera.direction);
+      Cartesian3.negate(
+        uniformState.sunDirectionWC,
+        scene._shadowMapCamera.direction
+      );
     } else {
       Cartesian3.clone(scene.light.direction, scene._shadowMapCamera.direction);
     }
@@ -3994,8 +4022,7 @@ function updatePreloadPass(scene) {
 }
 
 function updatePreloadFlightPass(scene) {
-  const frameState = scene._frameState;
-  const camera = frameState.camera;
+  const { frameState, camera } = scene;
   if (!camera.canPreloadFlight()) {
     return;
   }
