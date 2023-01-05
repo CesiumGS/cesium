@@ -1,14 +1,11 @@
 /* Ellipsoid defines (set in Scene/VoxelEllipsoidShape.js)
-#define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED
-#define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO
-#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_IS_SPHERE
@@ -69,7 +66,7 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     #endif
 
     // Compute longitude
-    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO)
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO)
         float longitude = 1.0;
     #else
         float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi;
@@ -94,7 +91,7 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     #endif
 
     // Compute latitude
-    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO)
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO)
         float latitude = 1.0;
     #else
         float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi;
@@ -104,7 +101,7 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     #endif
 
     // Compute height
-    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
         // TODO: This breaks down when minBounds == maxBounds. To fix it, this
         // function would have to know if ray is intersecting the front or back of the shape
         // and set the shape space position to 1 (front) or 0 (back) accordingly.
