@@ -44,7 +44,11 @@ describe(
     const gltfLoaders = [];
 
     beforeAll(function () {
-      scene = createScene();
+      scene = createScene({
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
     });
 
     afterAll(function () {

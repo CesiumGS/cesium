@@ -20,11 +20,7 @@ describe(
     let scene;
 
     beforeAll(function () {
-      scene = createScene({
-        contextOptions: {
-          requestWebgl1: true,
-        },
-      });
+      scene = createScene();
       scene.postProcessStages.fxaa.enabled = false;
     });
 
@@ -153,7 +149,7 @@ describe(
         return stage.ready;
       }).then(function () {
         expect(scene).toRender([0, 255, 0, 255]);
-        stage.uniforms.texture = "./Data/Images/Blue2x2.png";
+        stage.uniforms.inputTexture = "./Data/Images/Blue2x2.png";
         return pollToPromise(function () {
           scene.renderForSpecs();
           return stage.ready;
