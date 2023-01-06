@@ -1640,6 +1640,8 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
 
 /**
  * @private
+ *
+ * @param {DrawCommand} command
  */
 Scene.prototype.updateDerivedCommands = function (command) {
   if (!defined(command.derivedCommands)) {
@@ -1647,8 +1649,8 @@ Scene.prototype.updateDerivedCommands = function (command) {
     return;
   }
 
-  const frameState = this._frameState;
-  const context = this._context;
+  const { frameState, context } = this;
+  const { useLogDepth, shadowState } = frameState;
 
   // Update derived commands when any shadow maps become dirty
   let shadowsDirty = false;
@@ -1659,7 +1661,6 @@ Scene.prototype.updateDerivedCommands = function (command) {
     shadowsDirty = true;
   }
 
-  const useLogDepth = frameState.useLogDepth;
   const useHdr = this._hdr;
   const derivedCommands = command.derivedCommands;
   const hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
@@ -1678,8 +1679,7 @@ Scene.prototype.updateDerivedCommands = function (command) {
   if (command.dirty) {
     command.dirty = false;
 
-    const shadowMaps = frameState.shadowState.shadowMaps;
-    const shadowsEnabled = frameState.shadowState.shadowsEnabled;
+    const { shadowMaps, shadowsEnabled } = shadowState;
     if (shadowsEnabled && command.castShadows) {
       derivedCommands.shadows = ShadowMap.createCastDerivedCommand(
         shadowMaps,
@@ -1708,14 +1708,18 @@ Scene.prototype.updateDerivedCommands = function (command) {
   }
 };
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {DrawCommand} command
+ * @param {Boolean} shadowsDirty
+ */
 function updateDerivedCommands(scene, command, shadowsDirty) {
-  const frameState = scene._frameState;
-  const context = scene._context;
+  const { frameState, context } = scene;
   const oit = scene._view.oit;
-  const lightShadowMaps = frameState.shadowState.lightShadowMaps;
-  const lightShadowsEnabled = frameState.shadowState.lightShadowsEnabled;
+  const { lightShadowMaps, lightShadowsEnabled } = frameState.shadowState;
 
-  let derivedCommands = command.derivedCommands;
+  let { derivedCommands } = command;
 
   if (defined(command.pickId)) {
     derivedCommands.picking = DerivedCommand.createPickDerivedCommand(
@@ -1832,7 +1836,7 @@ Scene.prototype.clearPasses = function (passes) {
 };
 
 function updateFrameNumber(scene, frameNumber, time) {
-  const frameState = scene._frameState;
+  const { frameState } = scene;
   frameState.frameNumber = frameNumber;
   frameState.time = JulianDate.clone(time, frameState.time);
 }
@@ -1841,9 +1845,8 @@ function updateFrameNumber(scene, frameNumber, time) {
  * @private
  */
 Scene.prototype.updateFrameState = function () {
-  const camera = this.camera;
+  const { camera, frameState, context } = this;
 
-  const frameState = this._frameState;
   frameState.commandList.length = 0;
   frameState.shadowMaps.length = 0;
   frameState.brdfLutGenerator = this._brdfLutGenerator;
@@ -1893,7 +1896,7 @@ Scene.prototype.updateFrameState = function () {
     this.invertClassificationColor,
     this._actualInvertClassificationColor
   );
-  if (!InvertClassification.isTranslucencySupported(this._context)) {
+  if (!InvertClassification.isTranslucencySupported(context)) {
     this._actualInvertClassificationColor.alpha = 1.0;
   }
 
@@ -1949,12 +1952,20 @@ transformFrom2D = Matrix4.inverseTransformation(
   transformFrom2D
 );
 
+/**
+ * Debug code to draw bounding volume for command.  Not optimized!
+ * Assumes bounding volume is a bounding sphere or box
+ *
+ * @private
+ * @param {DrawCommand} command
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {*} debugFramebuffer
+ */
 function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
-  // Debug code to draw bounding volume for command.  Not optimized!
-  // Assumes bounding volume is a bounding sphere or box
-  const frameState = scene._frameState;
-  const context = frameState.context;
-  const boundingVolume = command.boundingVolume;
+  const { frameState } = scene;
+  const { context } = frameState;
+  const { boundingVolume } = command;
 
   if (defined(scene._debugVolume)) {
     scene._debugVolume.destroy();
@@ -2054,6 +2065,13 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
   frameState.commandList = savedCommandList;
 }
 
+/**
+ * @private
+ * @param {DrawCommand} command
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {*} debugFramebuffer
+ */
 function executeCommand(command, scene, passState, debugFramebuffer) {
   const { frameState, context } = scene;
 
@@ -2124,6 +2142,12 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
   }
 }
 
+/**
+ * @private
+ * @param {DrawCommand} command
+ * @param {Scene} scene
+ * @param {PassState} passState
+ */
 function executeIdCommand(command, scene, passState) {
   const { frameState, context } = scene;
   let derivedCommands = command.derivedCommands;
@@ -2253,6 +2277,11 @@ function getWorkingFrustum(frustum) {
     : frustum.clone(scratchOrthographicOffCenterFrustum);
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ */
 function executeCommands(scene, passState) {
   const { camera, context, frameState, view } = scene;
   const { uniformState } = context;
@@ -2696,6 +2725,10 @@ function executeIdCommands(scene, passId, passState, frustumCommands) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function executeComputeCommands(scene) {
   scene.context.uniformState.updatePass(Pass.COMPUTE);
 
@@ -2710,6 +2743,11 @@ function executeComputeCommands(scene) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ */
 function executeOverlayCommands(scene, passState) {
   const { context } = scene;
   context.uniformState.updatePass(Pass.OVERLAY);
@@ -2831,13 +2869,14 @@ const scratchEyeTranslation = new Cartesian3();
 
 /**
  * @private
+ * @param {PassState} passState
+ * @param {Color} backgroundColor
  */
 Scene.prototype.updateAndExecuteCommands = function (
   passState,
   backgroundColor
 ) {
-  const frameState = this._frameState;
-  const mode = frameState.mode;
+  const { mode } = this.frameState;
   const useWebVR = this._environmentState.useWebVR;
 
   if (useWebVR) {
@@ -2853,6 +2892,12 @@ Scene.prototype.updateAndExecuteCommands = function (
   }
 };
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {Color} backgroundColor
+ */
 function executeWebVRCommands(scene, passState, backgroundColor) {
   const view = scene._view;
   const camera = view.camera;
@@ -2925,7 +2970,7 @@ const scratch2DViewport = new BoundingRectangle();
  * @private
  *
  * @param {Scene} scene
- * @param {*} passState
+ * @param {PassState} passState
  */
 function execute2DViewportCommands(scene, passState) {
   const { context, frameState, camera } = scene;
@@ -3125,8 +3170,7 @@ const scratchCullingVolume = new CullingVolume();
  * @private
  */
 Scene.prototype.updateEnvironment = function () {
-  const frameState = this._frameState;
-  const view = this._view;
+  const { frameState, view } = this;
 
   // Update celestial and terrestrial environment effects.
   const environmentState = this._environmentState;
@@ -3252,6 +3296,10 @@ Scene.prototype.updateEnvironment = function () {
   }
 };
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function updateDebugFrustumPlanes(scene) {
   const { frameState } = scene;
   if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
@@ -3273,6 +3321,10 @@ function updateDebugFrustumPlanes(scene) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function updateShadowMaps(scene) {
   const { frameState } = scene;
   const { shadowState, shadowMaps, passes } = frameState;
@@ -3322,17 +3374,21 @@ function updateShadowMaps(scene) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function updateAndRenderPrimitives(scene) {
-  const frameState = scene._frameState;
+  const { frameState } = scene;
 
   scene._groundPrimitives.update(frameState);
-  scene._primitives.update(frameState);
+  scene.primitives.update(frameState);
 
   updateDebugFrustumPlanes(scene);
   updateShadowMaps(scene);
 
-  if (scene._globe) {
-    scene._globe.render(frameState);
+  if (scene.globe) {
+    scene.globe.render(frameState);
   }
 }
 
@@ -3492,19 +3548,16 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
 
 /**
  * @private
+ * @param {PassState} passState
  */
 Scene.prototype.resolveFramebuffers = function (passState) {
-  const context = this._context;
-  const environmentState = this._environmentState;
-  const view = this._view;
-  const globeDepth = view.globeDepth;
+  const { context, environmentState, view } = this;
+  const { globeDepth, translucentTileClassification } = view;
   if (defined(globeDepth)) {
     globeDepth.prepareColorTextures(context);
   }
 
-  const useOIT = environmentState.useOIT;
-  const useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
-  const usePostProcess = environmentState.usePostProcess;
+  const { useOIT, useGlobeDepthFramebuffer, usePostProcess } = environmentState;
 
   const defaultFramebuffer = environmentState.originalFramebuffer;
   const globeFramebuffer = useGlobeDepthFramebuffer
@@ -3520,7 +3573,6 @@ Scene.prototype.resolveFramebuffers = function (passState) {
     view.oit.execute(context, passState);
   }
 
-  const translucentTileClassification = view.translucentTileClassification;
   if (
     translucentTileClassification.hasTranslucentDepth &&
     translucentTileClassification.isSupported()
@@ -3560,7 +3612,7 @@ Scene.prototype.resolveFramebuffers = function (passState) {
  * @param {Scene} scene
  */
 function callAfterRenderFunctions(scene) {
-  const functions = scene._frameState.afterRender;
+  const functions = scene.frameState.afterRender;
   for (let i = 0; i < functions.length; ++i) {
     const shouldRequestRender = functions[i]();
     if (shouldRequestRender) {
@@ -3571,6 +3623,11 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
+/**
+ * Get the height of the globe at the current camera position
+ * @param {Scene} scene
+ * @returns {Number|undefined}
+ */
 function getGlobeHeight(scene) {
   const { globe, camera } = scene;
   const cartographic = camera.positionCartographic;
@@ -3667,6 +3724,10 @@ function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function prePassesUpdate(scene) {
   scene._jobScheduler.resetBudgets();
 
@@ -3681,6 +3742,10 @@ function prePassesUpdate(scene) {
   frameState.creditDisplay.update();
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function postPassesUpdate(scene) {
   const { frameState, primitives } = scene;
   primitives.postPassesUpdate(frameState);
@@ -3690,6 +3755,10 @@ function postPassesUpdate(scene) {
 
 const scratchBackgroundColor = new Color();
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function render(scene) {
   const { frameState, context, shadowMap } = scene;
   const { uniformState } = context;
@@ -3778,7 +3847,7 @@ Scene.prototype.render = function (time) {
    */
   this._preUpdate.raiseEvent(this, time);
 
-  const frameState = this._frameState;
+  const { frameState } = this;
   frameState.newFrame = false;
 
   if (!defined(time)) {
@@ -3862,6 +3931,11 @@ Scene.prototype.render = function (time) {
   }
 };
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {Function} functionToExecute
+ */
 function tryAndCatchError(scene, functionToExecute) {
   try {
     functionToExecute(scene);
@@ -4009,8 +4083,12 @@ Scene.prototype.drillPick = function (windowPosition, limit, width, height) {
   return this._picking.drillPick(this, windowPosition, limit, width, height);
 };
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function updatePreloadPass(scene) {
-  const frameState = scene._frameState;
+  const { frameState } = scene;
   preloadTilesetPassState.camera = frameState.camera;
   preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
 
@@ -4018,6 +4096,10 @@ function updatePreloadPass(scene) {
   primitives.updateForPass(frameState, preloadTilesetPassState);
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function updatePreloadFlightPass(scene) {
   const { frameState, camera } = scene;
   if (!camera.canPreloadFlight()) {
@@ -4032,6 +4114,10 @@ function updatePreloadFlightPass(scene) {
   primitives.updateForPass(frameState, preloadFlightTilesetPassState);
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ */
 function updateRequestRenderModeDeferCheckPass(scene) {
   // Check if any ignored requests are ready to go (to wake rendering up again)
   scene.primitives.updateForPass(
