@@ -636,7 +636,6 @@ describe("Scene/GlobeTranslucencyState", function () {
     expect(executeCommand).toHaveBeenCalledWith(
       command.derivedCommands.globeTranslucency.opaqueBackFaceCommand,
       scene,
-      context,
       passState
     );
     expect(
@@ -703,13 +702,11 @@ describe("Scene/GlobeTranslucencyState", function () {
     expect(executeCommand).toHaveBeenCalledWith(
       classificationCommand,
       scene,
-      context,
       passState
     );
     expect(executeCommand).toHaveBeenCalledWith(
       command.derivedCommands.globeTranslucency.depthOnlyFrontFaceCommand,
       scene,
-      context,
       passState
     );
 
