@@ -966,7 +966,6 @@ function executeCommandsMatchingType(
   commandsLength,
   executeCommandFunction,
   scene,
-  context,
   passState,
   types
 ) {
@@ -974,7 +973,7 @@ function executeCommandsMatchingType(
     const command = commands[i];
     const type = command.derivedCommands.type;
     if (!defined(types) || types.indexOf(type) > -1) {
-      executeCommandFunction(command, scene, context, passState);
+      executeCommandFunction(command, scene, passState);
     }
   }
 }
@@ -984,11 +983,10 @@ function executeCommands(
   commandsLength,
   executeCommandFunction,
   scene,
-  context,
   passState
 ) {
   for (let i = 0; i < commandsLength; ++i) {
-    executeCommandFunction(commands[i], scene, context, passState);
+    executeCommandFunction(commands[i], scene, passState);
   }
 }
 
@@ -1026,7 +1024,6 @@ GlobeTranslucencyState.prototype.executeGlobeCommands = function (
     globeCommandsLength,
     executeCommandFunction,
     scene,
-    context,
     passState,
     opaqueTypes
   );
@@ -1061,7 +1058,6 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
       classificationCommandsLength,
       executeCommandFunction,
       scene,
-      context,
       passState
     );
   }
@@ -1085,7 +1081,6 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
     globeCommandsLength,
     executeCommandFunction,
     scene,
-    context,
     passState,
     depthOnlyTypes
   );
@@ -1105,7 +1100,6 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
     classificationCommandsLength,
     executeCommandFunction,
     scene,
-    context,
     passState
   );
 

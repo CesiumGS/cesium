@@ -660,13 +660,13 @@ function executeTranslucentCommandsSortedMultipass(
   let derivedCommand;
   let j;
 
-  const context = scene.context;
-  const useLogDepth = scene.frameState.useLogDepth;
+  const { context, frameState } = scene;
+  const { useLogDepth, shadowState } = frameState;
   const useHdr = scene._hdr;
   const framebuffer = passState.framebuffer;
   const length = commands.length;
 
-  const lightShadowsEnabled = scene.frameState.shadowState.lightShadowsEnabled;
+  const lightShadowsEnabled = shadowState.lightShadowsEnabled;
 
   passState.framebuffer = oit._adjustTranslucentFBO.framebuffer;
   oit._adjustTranslucentCommand.execute(context, passState);
@@ -684,13 +684,7 @@ function executeTranslucentCommandsSortedMultipass(
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.translucentCommand
         : command.derivedCommands.oit.translucentCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   if (defined(invertClassification)) {
@@ -699,13 +693,7 @@ function executeTranslucentCommandsSortedMultipass(
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.translucentCommand
         : command.derivedCommands.oit.translucentCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   passState.framebuffer = oit._alphaFBO.framebuffer;
@@ -718,13 +706,7 @@ function executeTranslucentCommandsSortedMultipass(
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.alphaCommand
         : command.derivedCommands.oit.alphaCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   if (defined(invertClassification)) {
@@ -733,13 +715,7 @@ function executeTranslucentCommandsSortedMultipass(
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.alphaCommand
         : command.derivedCommands.oit.alphaCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   passState.framebuffer = framebuffer;
@@ -753,13 +729,13 @@ function executeTranslucentCommandsSortedMRT(
   commands,
   invertClassification
 ) {
-  const context = scene.context;
-  const useLogDepth = scene.frameState.useLogDepth;
+  const { context, frameState } = scene;
+  const { useLogDepth, shadowState } = frameState;
   const useHdr = scene._hdr;
   const framebuffer = passState.framebuffer;
   const length = commands.length;
 
-  const lightShadowsEnabled = scene.frameState.shadowState.lightShadowsEnabled;
+  const lightShadowsEnabled = shadowState.lightShadowsEnabled;
 
   passState.framebuffer = oit._adjustTranslucentFBO.framebuffer;
   oit._adjustTranslucentCommand.execute(context, passState);
@@ -778,13 +754,7 @@ function executeTranslucentCommandsSortedMRT(
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.translucentCommand
         : command.derivedCommands.oit.translucentCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   if (defined(invertClassification)) {
@@ -793,13 +763,7 @@ function executeTranslucentCommandsSortedMRT(
       lightShadowsEnabled && command.receiveShadows
         ? command.derivedCommands.oit.shadows.translucentCommand
         : command.derivedCommands.oit.translucentCommand;
-    executeFunction(
-      derivedCommand,
-      scene,
-      context,
-      passState,
-      debugFramebuffer
-    );
+    executeFunction(derivedCommand, scene, passState, debugFramebuffer);
   }
 
   passState.framebuffer = framebuffer;

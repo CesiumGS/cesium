@@ -2124,8 +2124,8 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
   }
 }
 
-function executeIdCommand(command, scene, context, passState) {
-  const frameState = scene._frameState;
+function executeIdCommand(command, scene, passState) {
+  const { frameState, context } = scene;
   let derivedCommands = command.derivedCommands;
   if (!defined(derivedCommands)) {
     return;
@@ -2687,19 +2687,17 @@ function executeVoxelCommands(scene, passState, frustumCommands) {
 }
 
 function executeIdCommands(scene, passId, passState, frustumCommands) {
-  const { context } = scene;
-  context.uniformState.updatePass(passId);
+  scene.context.uniformState.updatePass(passId);
 
   const commands = frustumCommands.commands[passId];
   const length = frustumCommands.indices[passId];
   for (let j = 0; j < length; ++j) {
-    executeIdCommand(commands[j], scene, context, passState);
+    executeIdCommand(commands[j], scene, passState);
   }
 }
 
 function executeComputeCommands(scene) {
-  const { context } = scene;
-  context.uniformState.updatePass(Pass.COMPUTE);
+  scene.context.uniformState.updatePass(Pass.COMPUTE);
 
   const { sunComputeCommand } = scene.environmentState;
   if (defined(sunComputeCommand)) {
@@ -2713,10 +2711,9 @@ function executeComputeCommands(scene) {
 }
 
 function executeOverlayCommands(scene, passState) {
-  const us = scene.context.uniformState;
-  us.updatePass(Pass.OVERLAY);
+  const { context } = scene;
+  context.uniformState.updatePass(Pass.OVERLAY);
 
-  const context = scene.context;
   const commandList = scene._overlayCommandList;
   const length = commandList.length;
   for (let i = 0; i < length; ++i) {
