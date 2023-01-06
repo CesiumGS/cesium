@@ -1137,13 +1137,13 @@ VoxelPrimitive.prototype.update = function (frameState) {
     uniforms.ndcSpaceAxisAlignedBoundingBox
   );
   const transformPositionViewToWorld = context.uniformState.inverseView;
-  uniforms.transformPositionViewToUv = Matrix4.multiply(
+  uniforms.transformPositionViewToUv = Matrix4.multiplyTransformation(
     this._transformPositionWorldToUv,
     transformPositionViewToWorld,
     uniforms.transformPositionViewToUv
   );
   const transformPositionWorldToView = context.uniformState.view;
-  uniforms.transformPositionUvToView = Matrix4.multiply(
+  uniforms.transformPositionUvToView = Matrix4.multiplyTransformation(
     transformPositionWorldToView,
     this._transformPositionUvToWorld,
     uniforms.transformPositionUvToView
@@ -1365,12 +1365,12 @@ function updateShapeAndTransforms(primitive, shape, provider) {
   // Set member variables when the shape is dirty
   const dimensions = provider.dimensions;
   primitive._stepSizeUv = shape.computeApproximateStepSize(dimensions);
-  primitive._transformPositionWorldToUv = Matrix4.multiply(
+  primitive._transformPositionWorldToUv = Matrix4.multiplyTransformation(
     transformPositionLocalToUv,
     transformPositionWorldToLocal,
     primitive._transformPositionWorldToUv
   );
-  primitive._transformPositionUvToWorld = Matrix4.multiply(
+  primitive._transformPositionUvToWorld = Matrix4.multiplyTransformation(
     transformPositionLocalToWorld,
     transformPositionUvToLocal,
     primitive._transformPositionUvToWorld
