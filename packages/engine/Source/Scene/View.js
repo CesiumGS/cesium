@@ -21,27 +21,17 @@ import SceneMode from "./SceneMode.js";
 import ShadowMap from "./ShadowMap.js";
 import TranslucentTileClassification from "./TranslucentTileClassification.js";
 
-function CommandExtent() {
-  this.command = undefined;
-  this.near = undefined;
-  this.far = undefined;
-}
-
 /**
  * @private
+ * @constructor
+ *
+ * @param {Scene} scene
+ * @param {Camera} camera
+ * @param {BoundingRectangle} viewport
  */
 function View(scene, camera, viewport) {
-  const context = scene.context;
-
-  let globeDepth;
-  if (context.depthTexture) {
-    globeDepth = new GlobeDepth();
-  }
-
-  let oit;
-  if (scene._useOIT && context.depthTexture) {
-    oit = new OIT(context);
-  }
+  const { context } = scene;
+  const { depthTexture } = context;
 
   const passState = new PassState(context);
   passState.viewport = BoundingRectangle.clone(viewport);
@@ -56,9 +46,9 @@ function View(scene, camera, viewport) {
   this.pickFramebuffer = new PickFramebuffer(context);
   this.pickDepthFramebuffer = new PickDepthFramebuffer();
   this.sceneFramebuffer = new SceneFramebuffer();
-  this.globeDepth = globeDepth;
+  this.globeDepth = depthTexture ? new GlobeDepth() : undefined;
   this.globeTranslucencyFramebuffer = new GlobeTranslucencyFramebuffer();
-  this.oit = oit;
+  this.oit = scene._useOIT && depthTexture ? new OIT(context) : undefined;
   this.translucentTileClassification = new TranslucentTileClassification(
     context
   );
@@ -73,16 +63,32 @@ function View(scene, camera, viewport) {
 
 const scratchPosition0 = new Cartesian3();
 const scratchPosition1 = new Cartesian3();
-function maxComponent(a, b) {
-  const x = Math.max(Math.abs(a.x), Math.abs(b.x));
-  const y = Math.max(Math.abs(a.y), Math.abs(b.y));
-  const z = Math.max(Math.abs(a.z), Math.abs(b.z));
-  return Math.max(Math.max(x, y), z);
+
+/**
+ * Compute the L-infinity norm of a Cartesian3, equal to the absolute value
+ * of the component with the greatest magnitude
+ * @private
+ *
+ * @param {Cartesian3} cartesian
+ * @returns {Number} The L-infinity norm of the input
+ */
+function infNorm(cartesian) {
+  const absoluteComponents = Cartesian3.abs(cartesian, scratchPosition0);
+  return Cartesian3.maximumComponent(absoluteComponents);
 }
 
+/**
+ * Check if two cameras are within an epsilon of each other
+ * @private
+ *
+ * @param {Camera} camera0
+ * @param {Camera} camera1
+ * @param {Number} epsilon
+ * @returns {Boolean}
+ */
 function cameraEqual(camera0, camera1, epsilon) {
   const scalar =
-    1 / Math.max(1, maxComponent(camera0.position, camera1.position));
+    1 / Math.max(1, infNorm(camera0.position), infNorm(camera1.position));
   Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
   Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
   return (
@@ -95,6 +101,12 @@ function cameraEqual(camera0, camera1, epsilon) {
   );
 }
 
+/**
+ * Check if the camera has changed
+ * @private
+ * @param {Scene} scene
+ * @returns {Boolean}
+ */
 View.prototype.checkForCameraUpdates = function (scene) {
   const camera = this.camera;
   const cameraClone = this._cameraClone;
@@ -120,10 +132,16 @@ View.prototype.checkForCameraUpdates = function (scene) {
   return false;
 };
 
+/**
+ * @private
+ * @param {View} view
+ * @param {Scene} scene
+ * @param {Number} near
+ * @param {Number} far
+ */
 function updateFrustums(view, scene, near, far) {
-  const frameState = scene.frameState;
-  const camera = frameState.camera;
-  const farToNearRatio = frameState.useLogDepth
+  const { camera, useLogDepth } = scene.frameState;
+  const farToNearRatio = useLogDepth
     ? scene.logarithmicDepthFarToNearRatio
     : scene.farToNearRatio;
   const is2D = scene.mode === SceneMode.SCENE2D;
@@ -182,15 +200,32 @@ function updateFrustums(view, scene, near, far) {
   }
 }
 
-function insertIntoBin(view, scene, command, commandNear, commandFar) {
+/**
+ * @private
+ * @constructor
+ */
+function CommandExtent() {
+  this.command = undefined;
+  this.near = undefined;
+  this.far = undefined;
+}
+
+/**
+ * @private
+ * @param {View} view
+ * @param {Scene} scene
+ * @param {CommandExtent} commandExtent
+ */
+function insertIntoBin(view, scene, commandExtent) {
+  const { command, near: commandNear, far: commandFar } = commandExtent;
+
   if (scene.debugShowFrustums) {
     command.debugOverlappingFrustums = 0;
   }
 
-  const frustumCommandsList = view.frustumCommandsList;
-  const length = frustumCommandsList.length;
+  const { frustumCommandsList } = view;
 
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < frustumCommandsList.length; ++i) {
     const frustumCommands = frustumCommandsList[i];
     const curNear = frustumCommands.near;
     const curFar = frustumCommands.far;
@@ -233,14 +268,9 @@ const scratchCullingVolume = new CullingVolume();
 const scratchNearFarInterval = new Interval();
 
 View.prototype.createPotentiallyVisibleSet = function (scene) {
-  const frameState = scene.frameState;
-  const camera = frameState.camera;
-  const direction = camera.directionWC;
-  const position = camera.positionWC;
-
-  const computeList = scene._computeCommandList;
-  const overlayList = scene._overlayCommandList;
-  const commandList = frameState.commandList;
+  const { frameState } = scene;
+  const { commandList, shadowState } = frameState;
+  const { directionWC, positionWC, frustum } = frameState.camera;
 
   if (scene.debugShowFrustums) {
     this.debugFrustumStatistics = {
@@ -250,14 +280,15 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   }
 
   const frustumCommandsList = this.frustumCommandsList;
-  const numberOfFrustums = frustumCommandsList.length;
   const numberOfPasses = Pass.NUMBER_OF_PASSES;
-  for (let n = 0; n < numberOfFrustums; ++n) {
+  for (let n = 0; n < frustumCommandsList.length; ++n) {
     for (let p = 0; p < numberOfPasses; ++p) {
       frustumCommandsList[n].indices[p] = 0;
     }
   }
 
+  const computeList = scene._computeCommandList;
+  const overlayList = scene._overlayCommandList;
   computeList.length = 0;
   overlayList.length = 0;
 
@@ -268,7 +299,7 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   let near = +Number.MAX_VALUE;
   let far = -Number.MAX_VALUE;
 
-  const shadowsEnabled = frameState.shadowState.shadowsEnabled;
+  const shadowsEnabled = shadowState.shadowsEnabled;
   let shadowNear = +Number.MAX_VALUE;
   let shadowFar = -Number.MAX_VALUE;
   let shadowClosestObjectSize = Number.MAX_VALUE;
@@ -284,114 +315,108 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   }
   cullingVolume = scratchCullingVolume;
 
-  const length = commandList.length;
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < commandList.length; ++i) {
     const command = commandList[i];
     const pass = command.pass;
 
     if (pass === Pass.COMPUTE) {
       computeList.push(command);
+      continue;
     } else if (pass === Pass.OVERLAY) {
       overlayList.push(command);
-    } else {
-      let commandNear;
-      let commandFar;
-
-      const boundingVolume = command.boundingVolume;
-      if (defined(boundingVolume)) {
-        if (!scene.isVisible(command, cullingVolume, occluder)) {
-          continue;
-        }
-
-        const nearFarInterval = boundingVolume.computePlaneDistances(
-          position,
-          direction,
-          scratchNearFarInterval
-        );
-        commandNear = nearFarInterval.start;
-        commandFar = nearFarInterval.stop;
-        near = Math.min(near, commandNear);
-        far = Math.max(far, commandFar);
-
-        // Compute a tight near and far plane for commands that receive shadows. This helps compute
-        // good splits for cascaded shadow maps. Ignore commands that exceed the maximum distance.
-        // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
-        // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
-        // camera isn't inside.
-        if (
-          shadowsEnabled &&
-          command.receiveShadows &&
-          commandNear < ShadowMap.MAXIMUM_DISTANCE &&
-          !(pass === Pass.GLOBE && commandNear < -100.0 && commandFar > 100.0)
-        ) {
-          // Get the smallest bounding volume the camera is near. This is used to place more shadow detail near the object.
-          const size = commandFar - commandNear;
-          if (pass !== Pass.GLOBE && commandNear < 100.0) {
-            shadowClosestObjectSize = Math.min(shadowClosestObjectSize, size);
-          }
-          shadowNear = Math.min(shadowNear, commandNear);
-          shadowFar = Math.max(shadowFar, commandFar);
-        }
-      } else if (command instanceof ClearCommand) {
-        // Clear commands don't need a bounding volume - just add the clear to all frustums.
-        commandNear = camera.frustum.near;
-        commandFar = camera.frustum.far;
-      } else {
-        // If command has no bounding volume we need to use the camera's
-        // worst-case near and far planes to avoid clipping something important.
-        commandNear = camera.frustum.near;
-        commandFar = camera.frustum.far;
-        near = Math.min(near, commandNear);
-        far = Math.max(far, commandFar);
-      }
-
-      let extent = commandExtents[commandExtentCount];
-      if (!defined(extent)) {
-        extent = commandExtents[commandExtentCount] = new CommandExtent();
-      }
-      extent.command = command;
-      extent.near = commandNear;
-      extent.far = commandFar;
-      commandExtentCount++;
+      continue;
     }
+
+    let commandNear;
+    let commandFar;
+
+    const boundingVolume = command.boundingVolume;
+    if (defined(boundingVolume)) {
+      if (!scene.isVisible(command, cullingVolume, occluder)) {
+        continue;
+      }
+
+      const nearFarInterval = boundingVolume.computePlaneDistances(
+        positionWC,
+        directionWC,
+        scratchNearFarInterval
+      );
+      commandNear = nearFarInterval.start;
+      commandFar = nearFarInterval.stop;
+      near = Math.min(near, commandNear);
+      far = Math.max(far, commandFar);
+
+      // Compute a tight near and far plane for commands that receive shadows. This helps compute
+      // good splits for cascaded shadow maps. Ignore commands that exceed the maximum distance.
+      // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
+      // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
+      // camera isn't inside.
+      if (
+        shadowsEnabled &&
+        command.receiveShadows &&
+        commandNear < ShadowMap.MAXIMUM_DISTANCE &&
+        !(pass === Pass.GLOBE && commandNear < -100.0 && commandFar > 100.0)
+      ) {
+        // Get the smallest bounding volume the camera is near. This is used to place more shadow detail near the object.
+        const size = commandFar - commandNear;
+        if (pass !== Pass.GLOBE && commandNear < 100.0) {
+          shadowClosestObjectSize = Math.min(shadowClosestObjectSize, size);
+        }
+        shadowNear = Math.min(shadowNear, commandNear);
+        shadowFar = Math.max(shadowFar, commandFar);
+      }
+    } else if (command instanceof ClearCommand) {
+      // Clear commands don't need a bounding volume - just add the clear to all frustums.
+      commandNear = frustum.near;
+      commandFar = frustum.far;
+    } else {
+      // If command has no bounding volume we need to use the camera's
+      // worst-case near and far planes to avoid clipping something important.
+      commandNear = frustum.near;
+      commandFar = frustum.far;
+      near = Math.min(near, commandNear);
+      far = Math.max(far, commandFar);
+    }
+
+    let extent = commandExtents[commandExtentCount];
+    if (!defined(extent)) {
+      extent = commandExtents[commandExtentCount] = new CommandExtent();
+    }
+    extent.command = command;
+    extent.near = commandNear;
+    extent.far = commandFar;
+    commandExtentCount++;
   }
 
   if (shadowsEnabled) {
-    shadowNear = Math.min(
-      Math.max(shadowNear, camera.frustum.near),
-      camera.frustum.far
-    );
-    shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+    shadowNear = Math.min(Math.max(shadowNear, frustum.near), frustum.far);
+    shadowFar = Math.max(Math.min(shadowFar, frustum.far), shadowNear);
   }
 
   // Use the computed near and far for shadows
   if (shadowsEnabled) {
-    frameState.shadowState.nearPlane = shadowNear;
-    frameState.shadowState.farPlane = shadowFar;
-    frameState.shadowState.closestObjectSize = shadowClosestObjectSize;
+    shadowState.nearPlane = shadowNear;
+    shadowState.farPlane = shadowFar;
+    shadowState.closestObjectSize = shadowClosestObjectSize;
   }
 
   updateFrustums(this, scene, near, far);
 
-  let c;
-  let ce;
-
-  for (c = 0; c < commandExtentCount; c++) {
-    ce = commandExtents[c];
-    insertIntoBin(this, scene, ce.command, ce.near, ce.far);
+  for (let c = 0; c < commandExtentCount; c++) {
+    insertIntoBin(this, scene, commandExtents[c]);
   }
 
   // Dereference old commands
   if (commandExtentCount < commandExtentCapacity) {
-    for (c = commandExtentCount; c < commandExtentCapacity; c++) {
-      ce = commandExtents[c];
-      if (!defined(ce.command)) {
+    for (let c = commandExtentCount; c < commandExtentCapacity; c++) {
+      const commandExtent = commandExtents[c];
+      if (!defined(commandExtent.command)) {
         // If the command is undefined, it's assumed that all
         // subsequent commmands were set to undefined as well,
         // so no need to loop over them all
         break;
       }
-      ce.command = undefined;
+      commandExtent.command = undefined;
     }
   }
 
@@ -428,4 +453,5 @@ View.prototype.destroy = function () {
     pickDepths[i].destroy();
   }
 };
+
 export default View;
