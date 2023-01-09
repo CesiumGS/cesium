@@ -14,6 +14,7 @@
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF
+#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX
 #define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN
 #define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_INTERSECTION_INDEX_LONGITUDE
@@ -28,6 +29,9 @@
 #endif
 #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF)
     uniform vec2 u_ellipsoidRenderLatitudeCosSqrHalfMinMax;
+#endif
+#if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX)
+    uniform float u_ellipsoidInverseOuterScaleUv;
 #endif
 #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
     uniform float u_ellipsoidInverseInnerScaleUv;
@@ -230,8 +234,14 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     ray.pos = ray.pos * 2.0 - 1.0;
     ray.dir *= 2.0;
 
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX)
+        Ray outerRay = Ray(ray.pos * u_ellipsoidInverseOuterScaleUv, ray.dir * u_ellipsoidInverseOuterScaleUv);
+    #else
+        Ray outerRay = ray;
+    #endif
+
     // Outer ellipsoid
-    vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(ray);
+    vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(outerRay);
     setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
 
     // Exit early if the outer ellipsoid was missed.
@@ -287,7 +297,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
 
     // Flip the ray because the intersection function expects a cone growing towards +Z.
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
-        Ray flippedRay = ray;
+        Ray flippedRay = outerRay;
         flippedRay.dir.z *= -1.0;
         flippedRay.pos.z *= -1.0;
     #endif

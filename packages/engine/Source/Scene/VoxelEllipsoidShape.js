@@ -104,6 +104,7 @@ function VoxelEllipsoidShape() {
     ellipsoidInverseHeightDifferenceUv: 0.0,
     ellipseInnerRadiiUv: new Cartesian2(),
     ellipsoidInverseInnerScaleUv: 0.0,
+    ellipsoidInverseOuterScaleUv: 0.0,
   };
 
   /**
@@ -131,7 +132,9 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE_RANGE_EQUAL_ZERO: undefined,
+    ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN: undefined,
+    ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT: undefined,
     ELLIPSOID_IS_SPHERE: undefined,
@@ -305,7 +308,6 @@ VoxelEllipsoidShape.prototype.update = function (
     ),
     scratchRenderOuterExtent
   );
-  const renderMaxExtent = Cartesian3.maximumComponent(renderOuterExtent);
 
   // Exit early if the shape is not visible.
   // Note that minLongitude may be greater than maxLongitude when crossing the 180th meridian.
@@ -355,7 +357,7 @@ VoxelEllipsoidShape.prototype.update = function (
   );
 
   this.shapeTransform = Matrix4.fromRotationTranslation(
-    Matrix3.setScale(this._rotation, renderOuterExtent, scratchRotationScale),
+    Matrix3.setScale(this._rotation, shapeOuterExtent, scratchRotationScale),
     this._translation,
     this.shapeTransform
   );
@@ -393,7 +395,7 @@ VoxelEllipsoidShape.prototype.update = function (
     renderIsLongitudeRangeHalf ||
     renderIsLongitudeRangeOverHalf;
 
-  const shapeIsLongitudeReversed = renderMaxLongitude < renderMinLongitude;
+  const shapeIsLongitudeReversed = shapeMaxLongitude < shapeMinLongitude;
   const shapeLongitudeRange =
     shapeMaxLongitude -
     shapeMinLongitude +
@@ -532,12 +534,18 @@ VoxelEllipsoidShape.prototype.update = function (
       ] = intersectionCount;
       intersectionCount += 1;
 
-      // The inverse of the percent of space that is taken up by the inner ellipsoid.
+      // The inverse of the percent of space that is taken up by the inner ellipsoid, relative to the shape bounds
       // 1.0 / (1.0 - thickness) // thickness = percent of space that is between the min and max height.
-      // 1.0 / (1.0 - (renderMaxHeight - renderMinHeight) / renderMaxExtent)
-      // renderMaxExtent / (renderMaxExtent - (renderMaxHeight - renderMinHeight))
+      // 1.0 / (1.0 - (shapeMaxHeight - renderMinHeight) / shapeMaxExtent)
+      // shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMinHeight))
       shaderUniforms.ellipsoidInverseInnerScaleUv =
-        renderMaxExtent / (renderMaxExtent - renderHeightRange);
+        shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMinHeight));
+    }
+
+    if (renderHasMaxHeight) {
+      shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX"] = true;
+      shaderUniforms.ellipsoidInverseOuterScaleUv =
+        shapeMaxExtent / (shapeMaxExtent - (shapeMaxHeight - renderMaxHeight));
     }
   }
 
