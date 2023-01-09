@@ -2333,6 +2333,14 @@ function executeCommands(scene, passState) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {PerspectiveFrustum|PerspectiveOffCenterFrustum|OrthographicFrustum|OrthographicOffCenterFrustum} frustum
+ * @param {FrustumCommands} frustumCommands
+ * @param {Number} index
+ */
 function processFrustum(scene, passState, frustum, frustumCommands, index) {
   const { context, frameState, environmentState, view } = scene;
   const { uniformState } = context;
@@ -2370,10 +2378,13 @@ function processFrustum(scene, passState, frustum, frustumCommands, index) {
     scene._stencilClearCommand.execute(context, passState);
   }
 
-  // 4. Opaque pass
+  // 4. Voxels
+  executeVoxelCommands(scene, passState, frustumCommands);
+
+  // 5. Opaque pass
   executePassCommands(scene, Pass.OPAQUE, passState, frustumCommands);
 
-  // 5. Translucent pass
+  // 6. Translucent pass
   if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
     // Do not overlap frustums in the translucent pass to avoid blending artifacts
     frustum.near = frustumCommands.near;
@@ -2397,7 +2408,7 @@ function processFrustum(scene, passState, frustum, frustumCommands, index) {
   commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
   executeTranslucentCommands(scene, passState, commands, invertClassification);
 
-  // 6. Classification for translucent 3D Tiles
+  // 7. Classification for translucent 3D Tiles
   const has3DTilesClassificationCommands =
     frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
   const { translucentTileClassification, globeDepth } = view;
@@ -2420,7 +2431,7 @@ function processFrustum(scene, passState, frustum, frustumCommands, index) {
     );
   }
 
-  // 7. Picking
+  // 8. Picking
   if (
     context.depthTexture &&
     scene.useDepthPicking &&
@@ -2432,9 +2443,6 @@ function processFrustum(scene, passState, frustum, frustumCommands, index) {
     pickDepth.update(context, depthStencilTexture);
     pickDepth.executeCopyDepth(context, passState);
   }
-
-  // 8. Voxels
-  executeVoxelCommands(scene, passState, frustumCommands);
 
   if (picking || !environmentState.usePostProcessSelected) {
     return;
@@ -2451,6 +2459,12 @@ function processFrustum(scene, passState, frustum, frustumCommands, index) {
   processIdCommands(scene, passState, frustumCommands);
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ */
 function drawGlobeAndClassification(scene, passState, frustumCommands) {
   const { context, environmentState, view } = scene;
   const { globeTranslucencyFramebuffer, globeDepth } = view;
@@ -2495,6 +2509,13 @@ function drawGlobeAndClassification(scene, passState, frustumCommands) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ * @returns {Number} The number of frustum commands executed
+ */
 function draw3DTilesAndClassification(scene, passState, frustumCommands) {
   // Common/fastest path. Draw 3D Tiles and classification normally.
   const { context, environmentState, view } = scene;
@@ -2531,6 +2552,13 @@ function draw3DTilesAndClassification(scene, passState, frustumCommands) {
   return count;
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ * @returns {Number} The number of classification commands executed
+ */
 function draw3DTilesInvertClassification(scene, passState, frustumCommands) {
   const { context, frameState, environmentState, view } = scene;
 
@@ -2610,6 +2638,12 @@ function draw3DTilesInvertClassification(scene, passState, frustumCommands) {
   return executePassCommands(scene, passId, passState, frustumCommands);
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ */
 function processIdCommands(scene, passState, frustumCommands) {
   const { context, view, environmentState } = scene;
 
@@ -2691,6 +2725,14 @@ function executeEnvironmentCommands(scene, passState) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {String} passId
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ * @returns {Number} The number of frustum commands executed
+ */
 function executePassCommands(scene, passId, passState, frustumCommands) {
   scene.context.uniformState.updatePass(passId);
 
@@ -2703,6 +2745,12 @@ function executePassCommands(scene, passId, passState, frustumCommands) {
   return length;
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ */
 function executeVoxelCommands(scene, passState, frustumCommands) {
   const passId = Pass.VOXELS;
   scene.context.uniformState.updatePass(passId);
@@ -2715,6 +2763,13 @@ function executeVoxelCommands(scene, passState, frustumCommands) {
   }
 }
 
+/**
+ * @private
+ * @param {Scene} scene
+ * @param {String} passId
+ * @param {PassState} passState
+ * @param {FrustumCommands} frustumCommands
+ */
 function executeIdCommands(scene, passId, passState, frustumCommands) {
   scene.context.uniformState.updatePass(passId);
 
@@ -3134,6 +3189,13 @@ function execute2DViewportCommands(scene, passState) {
   passState.viewport = originalViewport;
 }
 
+/**
+ * @private
+ * @param {Boolean} firstViewport True if this is the first viewport rendered
+ * @param {Scene} scene
+ * @param {PassState} passState
+ * @param {Color} backgroundColor
+ */
 function executeCommandsInViewport(
   firstViewport,
   scene,
@@ -3976,6 +4038,7 @@ Scene.prototype.requestRender = function () {
 
 /**
  * @private
+ * @param {Number} width
  */
 Scene.prototype.clampLineWidth = function (width) {
   return Math.max(
