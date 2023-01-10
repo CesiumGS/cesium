@@ -54,8 +54,8 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
           currentMax,
           item
         ) {
-         if (!defined(item.height)) {
-              return currentMax;
+          if (!defined(item.height)) {
+            return currentMax;
           }
           heightFound = true;
           return Math.max(item.height, currentMax);
@@ -63,11 +63,11 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
         -Number.MAX_VALUE);
 
         const finalPosition = positionWithoutTerrain;
-        
+
         if (heightFound) {
           finalPosition.height += maxHeight;
         }
-        
+
         return finalPosition;
       });
   });

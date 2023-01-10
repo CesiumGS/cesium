@@ -7,7 +7,7 @@
 ##### Fixes :wrench:
 
 - Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
-- Fixed a bug where return value for `Scene/computeFlyToLocationForRectangle.js`. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
+- Fixed an edge case in `viewer.flyTo` when flying to a imagery layer with certain terrain providers. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
 
 ### 1.101 - 2023-01-02
 
