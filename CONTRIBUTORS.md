@@ -343,4 +343,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Marcel Wendler](https://github.com/UniquePanda)
 - [JiaoJianing](https://github.com/JiaoJianing)
 - [Southjor](https://github.com/Southjor)
-
