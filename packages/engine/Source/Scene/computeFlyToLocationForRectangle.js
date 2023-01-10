@@ -62,7 +62,9 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
         },
         -Number.MAX_VALUE);
 
+
         const finalPosition = positionWithoutTerrain;
+        
         
         if (heightFound) {
           finalPosition.height += maxHeight;
