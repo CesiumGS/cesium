@@ -86,7 +86,7 @@ void main()
     out_FragColor = mix(insideFaceColor, outsideFaceColor, outsideFaceColor.a);
     out_FragColor.a = 1.0 - (1.0 - insideFaceColor.a) * (1.0 - outsideFaceColor.a);
 
-#ifdef WRITE_DEPTH
+#if (defined(WRITE_DEPTH) && (__VERSION__ == 300 || defined(GL_EXT_frag_depth)))
     t = (intersection.start != 0.0) ? intersection.start : intersection.stop;
     vec3 positionEC = czm_pointAlongRay(ray, t);
     vec4 positionCC = czm_projection * vec4(positionEC, 1.0);

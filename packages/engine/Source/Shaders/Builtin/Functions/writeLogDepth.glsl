@@ -27,7 +27,7 @@ uniform vec2 u_polygonOffset;
  */
 void czm_writeLogDepth(float depth)
 {
-#if defined(LOG_DEPTH)
+#if (defined(LOG_DEPTH) && (__VERSION__ == 300 || defined(GL_EXT_frag_depth)))
     // Discard the vertex if it's not between the near and far planes.
     // We allow a bit of epsilon on the near plane comparison because a 1.0
     // from the vertex shader (indicating the vertex should be _on_ the near

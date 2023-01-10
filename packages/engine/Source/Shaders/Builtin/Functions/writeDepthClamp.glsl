@@ -18,7 +18,7 @@ in float v_WindowZ;
  */
 void czm_writeDepthClamp()
 {
-#if !defined(LOG_DEPTH)
+#if (!defined(LOG_DEPTH) && (__VERSION__ == 300 || defined(GL_EXT_frag_depth)))
     gl_FragDepth = clamp(v_WindowZ * gl_FragCoord.w, 0.0, 1.0);
 #endif
 }
