@@ -66,6 +66,7 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
         if (heightFound) {
           finalPosition.height += maxHeight;
         }
+        
         return finalPosition;
       });
   });
