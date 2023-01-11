@@ -4,7 +4,7 @@ if (window.CESIUM_BASE_URL === undefined) {
 
 import {
   Cartesian3,
-  createWorldTerrain,
+  createWorldTerrainAsync,
   defined,
   formatError,
   Math as CesiumMath,
@@ -53,21 +53,27 @@ function main() {
   let viewer;
   try {
     const hasBaseLayerPicker = !defined(imageryProvider);
+
+    let terrainProvider;
+    if (hasBaseLayerPicker) {
+      terrainProvider = createWorldTerrainAsync({
+        requestWaterMask: true,
+        requestVertexNormals: true,
+      });
+    }
+
     viewer = new Viewer("cesiumContainer", {
       imageryProvider: imageryProvider,
       baseLayerPicker: hasBaseLayerPicker,
       scene3DOnly: endUserOptions.scene3DOnly,
       requestRenderMode: true,
+      terrainProvider: terrainProvider,
     });
 
     if (hasBaseLayerPicker) {
-      const viewModel = viewer.baseLayerPicker.viewModel;
-      viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
-    } else {
-      viewer.terrainProvider = createWorldTerrain({
-        // TODO
-        requestWaterMask: true,
-        requestVertexNormals: true,
+      Promise.resolve(terrainProvider).then(() => {
+        const viewModel = viewer.baseLayerPicker.viewModel;
+        viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
       });
     }
   } catch (exception) {
