@@ -14,6 +14,7 @@ import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitSubtreeCache from "./ImplicitSubtreeCache.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import ImplicitTileset from "./ImplicitTileset.js";
+import MetadataSemantic from "./MetadataSemantic.js";
 import MetadataType from "./MetadataType.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import ResourceCache from "./ResourceCache.js";
@@ -144,6 +145,7 @@ function Cesium3DTilesVoxelProvider(options) {
         that.dimensions = Cartesian3.unpack(voxel.dimensions);
         that.shapeTransform = shapeTransform;
         that.globalTransform = globalTransform;
+        that.maximumTileCount = getTileCount(metadata);
 
         let paddingBefore;
         let paddingAfter;
@@ -174,6 +176,16 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
     },
   },
 });
+
+function getTileCount(metadata) {
+  if (!defined(metadata.tileset)) {
+    return undefined;
+  }
+
+  return metadata.tileset.getPropertyBySemantic(
+    MetadataSemantic.TILESET_TILE_COUNT
+  );
+}
 
 function validate(tileset) {
   const root = tileset.root;

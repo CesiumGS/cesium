@@ -37,10 +37,11 @@ import {
   buildWidgets,
   bundleWorkers,
   glslToJavaScript,
-  createSpecList,
+  createCombinedSpecList,
   createJsHintOptions,
   defaultESBuildOptions,
   bundleCombinedWorkers,
+  bundleCombinedSpecs,
 } from "./build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -215,7 +216,7 @@ export const buildWatch = gulp.series(build, async function () {
       events: ["add", "unlink"],
     },
     async () => {
-      createSpecList();
+      createCombinedSpecList();
       specResult = await specResult.rebuild();
     }
   );
@@ -1496,6 +1497,9 @@ export async function coverage() {
 }
 
 export async function test() {
+  await createCombinedSpecList();
+  await bundleCombinedSpecs();
+
   const enableAllBrowsers = argv.all ? true : false;
   const includeCategory = argv.include ? argv.include : "";
   const excludeCategory = argv.exclude ? argv.exclude : "";
