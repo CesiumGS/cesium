@@ -10,11 +10,11 @@ import SceneMode from "./SceneMode.js";
  * @param {Rectangle} rectangle The rectangle being zoomed to.
  * @param {Scene} scene The scene being used.
  *
- * @returns {Cartographic} The optimal location to place the camera so that the entire rectangle is in view.
+ * @returns {Promise<Cartographic>} The optimal location to place the camera so that the entire rectangle is in view.
  *
  * @private
  */
-function computeFlyToLocationForRectangle(rectangle, scene) {
+async function computeFlyToLocationForRectangle(rectangle, scene) {
   const terrainProvider = scene.terrainProvider;
   const mapProjection = scene.mapProjection;
   const ellipsoid = mapProjection.ellipsoid;
@@ -28,40 +28,34 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
   }
 
   if (!defined(terrainProvider)) {
-    return Promise.resolve(positionWithoutTerrain);
+    return positionWithoutTerrain;
   }
 
-  return terrainProvider.readyPromise.then(function () {
-    const availability = terrainProvider.availability;
+  const availability = terrainProvider.availability;
 
-    if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {
-      return positionWithoutTerrain;
-    }
+  if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {
+    return positionWithoutTerrain;
+  }
 
-    const cartographics = [
-      Rectangle.center(rectangle),
-      Rectangle.southeast(rectangle),
-      Rectangle.southwest(rectangle),
-      Rectangle.northeast(rectangle),
-      Rectangle.northwest(rectangle),
-    ];
+  const cartographics = [
+    Rectangle.center(rectangle),
+    Rectangle.southeast(rectangle),
+    Rectangle.southwest(rectangle),
+    Rectangle.northeast(rectangle),
+    Rectangle.northwest(rectangle),
+  ];
 
-    return computeFlyToLocationForRectangle
-      ._sampleTerrainMostDetailed(terrainProvider, cartographics)
-      .then(function (positionsOnTerrain) {
-        const maxHeight = positionsOnTerrain.reduce(function (
-          currentMax,
-          item
-        ) {
-          return Math.max(item.height, currentMax);
-        },
-        -Number.MAX_VALUE);
+  const positionsOnTerrain = await computeFlyToLocationForRectangle._sampleTerrainMostDetailed(
+    terrainProvider,
+    cartographics
+  );
+  const maxHeight = positionsOnTerrain.reduce(function (currentMax, item) {
+    return Math.max(item.height, currentMax);
+  }, -Number.MAX_VALUE);
 
-        const finalPosition = positionWithoutTerrain;
-        finalPosition.height += maxHeight;
-        return finalPosition;
-      });
-  });
+  const finalPosition = positionWithoutTerrain;
+  finalPosition.height += maxHeight;
+  return finalPosition;
 }
 
 //Exposed for testing.

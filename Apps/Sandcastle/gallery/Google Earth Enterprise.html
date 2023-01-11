@@ -35,27 +35,37 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const geeMetadata = new Cesium.GoogleEarthEnterpriseMetadata(
-          new Cesium.Resource({
-            url: "http://www.earthenterprise.org/3d",
-            proxy: new Cesium.DefaultProxy("/proxy/"),
-          })
-        );
 
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          imageryProvider: new Cesium.GoogleEarthEnterpriseImageryProvider({
-            metadata: geeMetadata,
-          }),
-          terrainProvider: new Cesium.GoogleEarthEnterpriseTerrainProvider({
-            metadata: geeMetadata,
-          }),
-          baseLayerPicker: false,
-        });
+        async function createGoogleEarthEnterpriseProviders() {
+          const geeMetadata = await Cesium.GoogleEarthEnterpriseMetadata.fromUrl(
+            new Cesium.Resource({
+              url: "http://www.earthenterprise.org/3d",
+              proxy: new Cesium.DefaultProxy("/proxy/"),
+            })
+          );
 
-        // Start off looking at San Francisco.
-        viewer.camera.setView({
-          destination: Cesium.Rectangle.fromDegrees(-123.0, 36.0, -121.7, 39.0),
-        });
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            imageryProvider: new Cesium.GoogleEarthEnterpriseImageryProvider({
+              metadata: geeMetadata,
+            }),
+            terrainProvider: Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+              geeMetadata
+            ),
+            baseLayerPicker: false,
+          });
+
+          // Start off looking at San Francisco.
+          viewer.camera.setView({
+            destination: Cesium.Rectangle.fromDegrees(
+              -123.0,
+              36.0,
+              -121.7,
+              39.0
+            ),
+          });
+        }
+
+        createGoogleEarthEnterpriseProviders();
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

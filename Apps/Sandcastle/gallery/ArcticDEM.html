@@ -38,9 +38,9 @@
         // High-resolution arctic terrain from the Arctic DEM project (Release 4), tiled and hosted by Cesium ion.
         // https://www.pgc.umn.edu/data/arcticdem/
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: new Cesium.CesiumTerrainProvider({
-            url: Cesium.IonResource.fromAssetId(3956),
-          }),
+          terrainProvider: Cesium.CesiumTerrainProvider.fromUrl(
+            Cesium.IonResource.fromAssetId(3956)
+          ),
         });
 
         // Add Alaskan locations

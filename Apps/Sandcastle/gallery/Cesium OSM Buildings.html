@@ -39,7 +39,7 @@
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
 
         viewer.scene.primitives.add(Cesium.createOsmBuildings());

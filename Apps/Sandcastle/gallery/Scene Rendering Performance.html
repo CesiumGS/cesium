@@ -146,7 +146,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           requestRenderMode: true,
           maximumRenderTimeChange: Infinity,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
 
         const scene = viewer.scene;

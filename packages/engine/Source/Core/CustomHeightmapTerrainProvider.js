@@ -2,6 +2,7 @@ import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import deprecationWarning from "./deprecationWarning.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
@@ -137,9 +138,14 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "CustomHeightmapTerrainProvider.ready",
+        "CustomHeightmapTerrainProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return true;
     },
   },
@@ -149,9 +155,14 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * @memberof CustomHeightmapTerrainProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "CustomHeightmapTerrainProvider.readyPromise",
+        "CustomHeightmapTerrainProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return this._readyPromise;
     },
   },

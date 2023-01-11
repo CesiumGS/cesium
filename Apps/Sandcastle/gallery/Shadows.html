@@ -41,7 +41,7 @@
           shadows: true,
           terrainShadows: Cesium.ShadowMode.ENABLED,
           shouldAnimate: true,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
 
         const shadowMap = viewer.shadowMap;

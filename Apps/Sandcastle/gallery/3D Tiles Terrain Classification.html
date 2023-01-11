@@ -37,7 +37,7 @@
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
 
         const geocoder = viewer.geocoder.viewModel;

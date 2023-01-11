@@ -65,6 +65,7 @@ function main() {
       viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
     } else {
       viewer.terrainProvider = createWorldTerrain({
+        // TODO
         requestWaterMask: true,
         requestVertexNormals: true,
       });

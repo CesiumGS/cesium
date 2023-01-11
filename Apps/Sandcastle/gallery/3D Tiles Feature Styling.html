@@ -57,7 +57,7 @@
         // How to use the 3D Tiles Styling language to style individual features, like buildings.
         // Styling language specification: https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 

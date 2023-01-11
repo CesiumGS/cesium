@@ -11,23 +11,9 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     this.terrainProvider = new EllipsoidTerrainProvider();
   }
 
-  const testProvider = {
-    isReady: function () {
-      return false;
-    },
-  };
-
-  const testProvider2 = {
-    isReady: function () {
-      return false;
-    },
-  };
-
-  const testProvider3 = {
-    isReady: function () {
-      return false;
-    },
-  };
+  const testProvider = {};
+  const testProvider2 = {};
+  const testProvider3 = {};
 
   const testProviderViewModel = new ProviderViewModel({
     name: "name",
@@ -166,7 +152,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     expect(viewModel.dropDownVisible).toEqual(false);
   });
 
-  it("selecting terrain closes the dropDown", function () {
+  it("selecting terrain closes the dropDown", async function () {
     const imageryViewModels = [testProviderViewModel];
     const globe = new MockGlobe();
     const viewModel = new BaseLayerPickerViewModel({
@@ -176,10 +162,11 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
 
     viewModel.dropDownVisible = true;
     viewModel.selectedTerrain = testProviderViewModel;
+    await testProviderViewModel.creationCommand();
     expect(viewModel.dropDownVisible).toEqual(false);
   });
 
-  it("tooltip, buttonImageUrl, and selectedImagery all return expected values", function () {
+  it("tooltip, buttonImageUrl, and selectedImagery all return expected values", async function () {
     const imageryViewModels = [testProviderViewModel];
     const terrainViewModels = [testProviderViewModel3];
     const globe = new MockGlobe();
@@ -191,6 +178,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     });
 
     viewModel.selectedImagery = testProviderViewModel;
+    await testProviderViewModel.creationCommand();
     expect(viewModel.buttonTooltip).toEqual(
       `${testProviderViewModel.name}\n${testProviderViewModel3.name}`
     );
@@ -199,6 +187,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     expect(viewModel.buttonTooltip).toEqual(testProviderViewModel3.name);
 
     viewModel.selectedImagery = testProviderViewModel;
+    await testProviderViewModel.creationCommand();
     viewModel.selectedTerrain = undefined;
     expect(viewModel.buttonTooltip).toEqual(testProviderViewModel.name);
 
@@ -226,7 +215,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     expect(imageryLayers.get(1).imageryProvider).toBe(testProvider2);
   });
 
-  it("selectedTerrain actually sets terrainPRovider", function () {
+  it("selectedTerrain actually sets terrainProvider", async function () {
     const terrainProviderViewModels = [
       testProviderViewModel,
       testProviderViewModel3,
@@ -238,6 +227,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     });
 
     viewModel.selectedTerrain = testProviderViewModel3;
+    await testProviderViewModel3.creationCommand();
     expect(globe.terrainProvider).toBe(testProvider3);
   });
 

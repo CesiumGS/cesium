@@ -223,11 +223,13 @@ describe(
         });
     });
 
-    it("terrainProviderChanged event fires", function () {
-      const terrainProvider = new CesiumTerrainProvider({
-        url: "made/up/url",
-        requestVertexNormals: true,
-      });
+    it("terrainProviderChanged event fires", async function () {
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
+          requestVertexNormals: true,
+        }
+      );
 
       const spyListener = jasmine.createSpy("listener");
       globe.terrainProviderChanged.addEventListener(spyListener);
@@ -237,7 +239,7 @@ describe(
       expect(spyListener).toHaveBeenCalledWith(terrainProvider);
     });
 
-    it("tilesLoaded return true when tile load queue is empty", function () {
+    it("tilesLoaded return true when tile load queue is empty", async function () {
       expect(globe.tilesLoaded).toBe(true);
 
       globe._surface._tileLoadQueueHigh.length = 2;
@@ -258,17 +260,19 @@ describe(
       globe._surface._tileLoadQueueLow.length = 0;
       expect(globe.tilesLoaded).toBe(true);
 
-      const terrainProvider = new CesiumTerrainProvider({
-        url: "made/up/url",
-        requestVertexNormals: true,
-      });
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
+          requestVertexNormals: true,
+        }
+      );
 
       globe.terrainProvider = terrainProvider;
       scene.render();
       expect(globe.tilesLoaded).toBe(false);
     });
 
-    it("renders terrain with enableLighting", function () {
+    it("renders terrain with enableLighting", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2557522.0),
@@ -281,48 +285,48 @@ describe(
         url: "Data/Images/Red16x16.png",
       });
       layerCollection.addImageryProvider(imageryProvider);
-      return imageryProvider.readyPromise.then(function () {
-        Resource._Implementations.loadWithXhr = function (
-          url,
+      await imageryProvider.readyPromise;
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
-          overrideMimeType
-        ) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred
-          );
-        };
+          deferred
+        );
+      };
 
-        returnVertexNormalTileJson();
+      returnVertexNormalTileJson();
 
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
           requestVertexNormals: true,
-        });
+        }
+      );
 
-        globe.terrainProvider = terrainProvider;
-        scene.camera.setView({
-          destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
-        });
-
-        return updateUntilDone(globe).then(function () {
-          expect(renderOptions).notToRender([0, 0, 0, 255]);
-
-          scene.globe.show = false;
-          expect(renderOptions).toRender([0, 0, 0, 255]);
-        });
+      globe.terrainProvider = terrainProvider;
+      scene.camera.setView({
+        destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
+
+      await updateUntilDone(globe);
+      expect(renderOptions).notToRender([0, 0, 0, 255]);
+
+      scene.globe.show = false;
+      expect(renderOptions).toRender([0, 0, 0, 255]);
     });
 
-    it("renders terrain with lambertDiffuseMultiplier", function () {
+    it("renders terrain with lambertDiffuseMultiplier", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2557522.0),
@@ -335,51 +339,52 @@ describe(
         url: "Data/Images/Red16x16.png",
       });
       layerCollection.addImageryProvider(imageryProvider);
-      return imageryProvider.readyPromise.then(function () {
-        Resource._Implementations.loadWithXhr = function (
-          url,
+      await imageryProvider.readyPromise;
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
-          overrideMimeType
-        ) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred
-          );
-        };
+          deferred
+        );
+      };
 
-        returnVertexNormalTileJson();
+      returnVertexNormalTileJson();
 
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
           requestVertexNormals: true,
-        });
+        }
+      );
 
-        globe.terrainProvider = terrainProvider;
-        scene.camera.setView({
-          destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
-        });
-
-        return updateUntilDone(globe).then(function () {
-          let initialRgba;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            initialRgba = rgba;
-            expect(renderOptions).notToRender([0, 0, 0, 255]);
-          });
-          globe.lambertDiffuseMultiplier = 10.0;
-          expect(renderOptions).notToRender(initialRgba);
-        });
+      globe.terrainProvider = terrainProvider;
+      scene.camera.setView({
+        destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
+
+      await updateUntilDone(globe);
+
+      let initialRgba;
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        initialRgba = rgba;
+        expect(renderOptions).notToRender([0, 0, 0, 255]);
+      });
+      globe.lambertDiffuseMultiplier = 10.0;
+      expect(renderOptions).notToRender(initialRgba);
     });
 
-    it("renders terrain with vertexShadowDarkness", function () {
+    it("renders terrain with vertexShadowDarkness", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2557522.0),
@@ -392,47 +397,47 @@ describe(
         url: "Data/Images/Red16x16.png",
       });
       layerCollection.addImageryProvider(imageryProvider);
-      return imageryProvider.readyPromise.then(function () {
-        Resource._Implementations.loadWithXhr = function (
-          url,
+      await imageryProvider.readyPromise;
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
-          overrideMimeType
-        ) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred
-          );
-        };
+          deferred
+        );
+      };
 
-        returnVertexNormalTileJson();
+      returnVertexNormalTileJson();
 
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
           requestVertexNormals: true,
-        });
+        }
+      );
 
-        globe.terrainProvider = terrainProvider;
-        scene.camera.setView({
-          destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
-        });
+      globe.terrainProvider = terrainProvider;
+      scene.camera.setView({
+        destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+      });
 
-        return updateUntilDone(globe).then(function () {
-          let initialRgba;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            initialRgba = rgba;
-            expect(renderOptions).notToRender([0, 0, 0, 255]);
-            globe.vertexShadowDarkness = 0.1;
-            expect(renderOptions).notToRender(initialRgba);
-          });
-        });
+      await updateUntilDone(globe);
+      let initialRgba;
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        initialRgba = rgba;
+        expect(renderOptions).notToRender([0, 0, 0, 255]);
+        globe.vertexShadowDarkness = 0.1;
+        expect(renderOptions).notToRender(initialRgba);
       });
     });
 

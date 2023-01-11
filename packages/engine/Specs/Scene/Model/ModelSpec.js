@@ -2231,8 +2231,8 @@ describe(
         });
       });
 
-      it("height reference accounts for change in terrain provider", function () {
-        return loadAndZoomToModel(
+      it("height reference accounts for change in terrain provider", async function () {
+        const model = await loadAndZoomToModel(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2242,17 +2242,18 @@ describe(
             scene: sceneWithMockGlobe,
           },
           sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model._heightDirty).toBe(false);
-          const terrainProvider = new CesiumTerrainProvider({
-            url: "made/up/url",
+        );
+        expect(model._heightDirty).toBe(false);
+        const terrainProvider = await CesiumTerrainProvider.fromUrl(
+          "made/up/url",
+          {
             requestVertexNormals: true,
-          });
-          sceneWithMockGlobe.terrainProvider = terrainProvider;
+          }
+        );
+        sceneWithMockGlobe.terrainProvider = terrainProvider;
 
-          expect(model._heightDirty).toBe(true);
-          sceneWithMockGlobe.terrainProvider = undefined;
-        });
+        expect(model._heightDirty).toBe(true);
+        sceneWithMockGlobe.terrainProvider = undefined;
       });
 
       it("throws when initializing height reference with no scene", function () {

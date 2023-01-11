@@ -314,7 +314,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ImageryProvider} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false.
- * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
+ * @property {TerrainProvider|Promise<TerrainProvider>} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @property {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
@@ -374,7 +374,7 @@ function enableVRUI(viewer, enabled) {
  *     //Start in Columbus Viewer
  *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
  *     //Use Cesium World Terrain
- *     terrainProvider : Cesium.createWorldTerrain(),
+ *     terrainProvider : Cesium.createWorldTerrainAsync(),
  *     //Hide the base layer picker
  *     baseLayerPicker : false,
  *     //Use OpenStreetMaps
@@ -680,10 +680,21 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     scene.imageryLayers.addImageryProvider(options.imageryProvider);
   }
   if (defined(options.terrainProvider)) {
-    if (createBaseLayerPicker) {
-      baseLayerPicker.viewModel.selectedTerrain = undefined;
+    // options.terrainProvider is a promise
+    // Promise.resolve is not used so that synchronous code can immediately execute
+    if (defined(options.terrainProvider.then)) {
+      options.terrainProvider.then((provider) => {
+        if (createBaseLayerPicker) {
+          baseLayerPicker.viewModel.selectedTerrain = undefined;
+        }
+        scene.terrainProvider = provider;
+      });
+    } else {
+      if (createBaseLayerPicker) {
+        baseLayerPicker.viewModel.selectedTerrain = undefined;
+      }
+      scene.terrainProvider = options.terrainProvider;
     }
-    scene.terrainProvider = options.terrainProvider;
   }
 
   // Navigation Help Button

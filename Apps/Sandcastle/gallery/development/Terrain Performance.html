@@ -35,13 +35,13 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer");
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrainAsync(),
+        });
         const scene = viewer.scene;
         const camera = scene.camera;
         const globe = scene.globe;
         const statistics = Cesium.RequestScheduler.statistics;
-
-        viewer.terrainProvider = Cesium.createWorldTerrain();
 
         let startTime;
         let flightComplete;

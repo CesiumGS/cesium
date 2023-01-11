@@ -248,11 +248,12 @@
         }
 
         let terrainProvider;
-        function disableDepthTest() {
+        async function disableDepthTest() {
           Sandcastle.declare(disableDepthTest);
 
           terrainProvider = viewer.terrainProvider;
-          viewer.terrainProvider = Cesium.createWorldTerrain();
+          const worldTerrainProvider = await Cesium.createWorldTerrainAsync();
+          viewer.terrainProvider = worldTerrainProvider;
           viewer.scene.globe.depthTestAgainstTerrain = true;
 
           viewer.entities.add({

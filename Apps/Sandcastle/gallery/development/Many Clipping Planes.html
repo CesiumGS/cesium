@@ -72,7 +72,7 @@
           selectionIndicator: false,
           shouldAnimate: true,
           projectionPicker: true,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
 
         viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);

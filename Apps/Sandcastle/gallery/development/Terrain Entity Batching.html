@@ -35,13 +35,11 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const worldTerrain = Cesium.createWorldTerrain({
-          requestWaterMask: true,
-          requestVertexNormals: true,
-        });
-
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: worldTerrain,
+          terrainProvider: Cesium.createWorldTerrainAsync({
+            requestWaterMask: true,
+            requestVertexNormals: true,
+          }),
         });
 
         const concavePositions = [

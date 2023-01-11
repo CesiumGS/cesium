@@ -23,7 +23,7 @@ import {
   CustomShader,
   Globe,
   Cartographic,
-  createWorldTerrain,
+  createWorldTerrainAsync,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -380,7 +380,7 @@ describe(
       });
     });
 
-    it("Computes bounding sphere with height reference clamp to ground", function () {
+    it("Computes bounding sphere with height reference clamp to ground", async function () {
       // Setup a position for the model.
       const position = Cartesian3.fromDegrees(149.515332, -34.984799);
       const positionCartographic = Cartographic.fromCartesian(position);
@@ -411,48 +411,43 @@ describe(
       // Assign a tiled terrain provider to the globe.
       const globe = scene.globe;
       const previousTerrainProvider = globe.terrainProvider;
-      globe.terrainProvider = createWorldTerrain();
+      globe.terrainProvider = await createWorldTerrainAsync();
 
-      let sampledResultCartographic;
-      let sampledResult;
+      const updatedCartographics = await ModelVisualizer._sampleTerrainMostDetailed(
+        globe.terrainProvider,
+        [positionCartographic]
+      );
+      const sampledResultCartographic = updatedCartographics[0];
+      const sampledResult = globe.ellipsoid.cartographicToCartesian(
+        sampledResultCartographic
+      );
 
-      return ModelVisualizer._sampleTerrainMostDetailed(globe.terrainProvider, [
-        positionCartographic,
-      ])
-        .then((updatedCartographics) => {
-          sampledResultCartographic = updatedCartographics[0];
-          sampledResult = globe.ellipsoid.cartographicToCartesian(
-            sampledResultCartographic
-          );
+      // Repeatedly request the bounding sphere until it's ready.
+      await pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      });
 
-          // Repeatedly request the bounding sphere until it's ready.
-          return pollToPromise(function () {
-            scene.render();
-            state = visualizer.getBoundingSphere(testObject, result);
-            return state !== BoundingSphereState.PENDING;
-          });
-        })
-        .then(() => {
-          expect(state).toBe(BoundingSphereState.DONE);
+      expect(state).toBe(BoundingSphereState.DONE);
 
-          // Ensure that flags and results computed for this model are reset.
-          const modelData = visualizer._modelHash[testObject.id];
-          expect(modelData.awaitingSampleTerrain).toBe(false);
-          expect(modelData.clampedBoundingSphere).toBeUndefined();
+      // Ensure that flags and results computed for this model are reset.
+      const modelData = visualizer._modelHash[testObject.id];
+      expect(modelData.awaitingSampleTerrain).toBe(false);
+      expect(modelData.clampedBoundingSphere).toBeUndefined();
 
-          // Ensure that we only sample the terrain once from the visualizer.
-          // We check for 2 calls here because we call it once in the test.
-          expect(sampleTerrainSpy).toHaveBeenCalledTimes(2);
+      // Ensure that we only sample the terrain once from the visualizer.
+      // We check for 2 calls here because we call it once in the test.
+      expect(sampleTerrainSpy).toHaveBeenCalledTimes(2);
 
-          // Calculate the distance of the bounding sphere returned from the position returned from sample terrain.
-          // Since sampleTerrainMostDetailed isn't always precise, we account for some error.
-          const distance = Cartesian3.distance(result.center, sampledResult);
-          const errorMargin = 100.0;
-          expect(distance).toBeLessThan(errorMargin);
+      // Calculate the distance of the bounding sphere returned from the position returned from sample terrain.
+      // Since sampleTerrainMostDetailed isn't always precise, we account for some error.
+      const distance = Cartesian3.distance(result.center, sampledResult);
+      const errorMargin = 100.0;
+      expect(distance).toBeLessThan(errorMargin);
 
-          // Reset the terrain provider.
-          globe.terrainProvider = previousTerrainProvider;
-        });
+      // Reset the terrain provider.
+      globe.terrainProvider = previousTerrainProvider;
     });
 
     it("Computes bounding sphere with height reference clamp to ground on terrain provider without availability", function () {
@@ -507,7 +502,7 @@ describe(
       });
     });
 
-    it("Computes bounding sphere with height reference relative to ground", function () {
+    it("Computes bounding sphere with height reference relative to ground", async function () {
       // Setup a position for the model.
       const heightOffset = 1000.0;
       const position = Cartesian3.fromDegrees(
@@ -543,49 +538,44 @@ describe(
       // Assign a tiled terrain provider to the globe.
       const globe = scene.globe;
       const previousTerrainProvider = globe.terrainProvider;
-      globe.terrainProvider = createWorldTerrain();
+      globe.terrainProvider = await createWorldTerrainAsync();
 
-      let sampledResultCartographic;
-      let sampledResult;
+      const updatedCartographics = await ModelVisualizer._sampleTerrainMostDetailed(
+        globe.terrainProvider,
+        [positionCartographic]
+      );
+      const sampledResultCartographic = updatedCartographics[0];
+      const sampledResult = globe.ellipsoid.cartographicToCartesian(
+        sampledResultCartographic
+      );
 
-      return ModelVisualizer._sampleTerrainMostDetailed(globe.terrainProvider, [
-        positionCartographic,
-      ])
-        .then((updatedCartographics) => {
-          sampledResultCartographic = updatedCartographics[0];
-          sampledResult = globe.ellipsoid.cartographicToCartesian(
-            sampledResultCartographic
-          );
+      // Repeatedly request the bounding sphere until it's ready.
+      await pollToPromise(function () {
+        scene.render();
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      });
 
-          // Repeatedly request the bounding sphere until it's ready.
-          return pollToPromise(function () {
-            scene.render();
-            state = visualizer.getBoundingSphere(testObject, result);
-            return state !== BoundingSphereState.PENDING;
-          });
-        })
-        .then(() => {
-          expect(state).toBe(BoundingSphereState.DONE);
+      expect(state).toBe(BoundingSphereState.DONE);
 
-          // Ensure that flags and results computed for this model are reset.
-          const modelData = visualizer._modelHash[testObject.id];
-          expect(modelData.awaitingSampleTerrain).toBe(false);
-          expect(modelData.clampedBoundingSphere).toBeUndefined();
+      // Ensure that flags and results computed for this model are reset.
+      const modelData = visualizer._modelHash[testObject.id];
+      expect(modelData.awaitingSampleTerrain).toBe(false);
+      expect(modelData.clampedBoundingSphere).toBeUndefined();
 
-          // Ensure that we only sample the terrain once from the visualizer.
-          // We check for 2 calls here because we call it once in the test.
-          expect(sampleTerrainSpy).toHaveBeenCalledTimes(2);
+      // Ensure that we only sample the terrain once from the visualizer.
+      // We check for 2 calls here because we call it once in the test.
+      expect(sampleTerrainSpy).toHaveBeenCalledTimes(2);
 
-          // Calculate the distance of the bounding sphere returned from the position returned from sample terrain.
-          // Since sampleTerrainMostDetailed isn't always precise, we account for some error.
-          const distance =
-            Cartesian3.distance(result.center, sampledResult) - heightOffset;
-          const errorMargin = 100.0;
-          expect(distance).toBeLessThan(errorMargin);
+      // Calculate the distance of the bounding sphere returned from the position returned from sample terrain.
+      // Since sampleTerrainMostDetailed isn't always precise, we account for some error.
+      const distance =
+        Cartesian3.distance(result.center, sampledResult) - heightOffset;
+      const errorMargin = 100.0;
+      expect(distance).toBeLessThan(errorMargin);
 
-          // Reset the terrain provider.
-          globe.terrainProvider = previousTerrainProvider;
-        });
+      // Reset the terrain provider.
+      globe.terrainProvider = previousTerrainProvider;
     });
 
     it("Computes bounding sphere with height reference relative to ground on terrain provider without availability", function () {
@@ -670,7 +660,7 @@ describe(
       });
     });
 
-    it("Fails bounding sphere when sampleTerrainMostDetailed fails.", function () {
+    it("Fails bounding sphere when sampleTerrainMostDetailed fails.", async function () {
       // Setup a position for the model.
       const heightOffset = 1000.0;
       const position = Cartesian3.fromDegrees(
@@ -702,29 +692,28 @@ describe(
       // Assign a tiled terrain provider to the globe.
       const globe = scene.globe;
       const previousTerrainProvider = globe.terrainProvider;
-      globe.terrainProvider = createWorldTerrain();
+      globe.terrainProvider = await createWorldTerrainAsync();
 
       // Request the bounding sphere once.
       const result = new BoundingSphere();
       let state;
 
       // Repeatedly request the bounding sphere until it's ready.
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.render();
         state = visualizer.getBoundingSphere(testObject, result);
         return state !== BoundingSphereState.PENDING;
-      }).then(() => {
-        expect(state).toBe(BoundingSphereState.FAILED);
-
-        // Ensure that flags and results computed for this model are reset.
-        const modelData = visualizer._modelHash[testObject.id];
-        expect(modelData.sampleTerrainFailed).toBe(false);
-
-        // Ensure that we only sample the terrain once from the visualizer.
-        expect(sampleTerrainSpy).toHaveBeenCalledTimes(1);
-        // Reset the terrain provider.
-        globe.terrainProvider = previousTerrainProvider;
       });
+      expect(state).toBe(BoundingSphereState.FAILED);
+
+      // Ensure that flags and results computed for this model are reset.
+      const modelData = visualizer._modelHash[testObject.id];
+      expect(modelData.sampleTerrainFailed).toBe(false);
+
+      // Ensure that we only sample the terrain once from the visualizer.
+      expect(sampleTerrainSpy).toHaveBeenCalledTimes(1);
+      // Reset the terrain provider.
+      globe.terrainProvider = previousTerrainProvider;
     });
 
     it("Compute bounding sphere throws without entity.", function () {

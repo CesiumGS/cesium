@@ -33,10 +33,9 @@
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: new Cesium.ArcGISTiledElevationTerrainProvider({
-            url:
-              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
-          }),
+          terrainProvider: Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+          ),
         }); //Sandcastle_End
         Sandcastle.finishedLoading();
       };

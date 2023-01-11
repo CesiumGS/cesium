@@ -35,12 +35,12 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const cesiumTerrainProvider = Cesium.createWorldTerrain();
+        const cesiumTerrainProviderPromise = Cesium.createWorldTerrainAsync();
         const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayerPicker: false,
-          terrainProvider: cesiumTerrainProvider,
+          terrainProvider: cesiumTerrainProviderPromise,
         });
 
         // depth test against terrain is required to make the polygons clamp to terrain
@@ -67,7 +67,8 @@
         Sandcastle.addToolbarMenu([
           {
             text: "Terrain Enabled",
-            onselect: function () {
+            onselect: async function () {
+              const cesiumTerrainProvider = await cesiumTerrainProviderPromise;
               viewer.scene.terrainProvider = cesiumTerrainProvider;
             },
           },

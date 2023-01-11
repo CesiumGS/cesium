@@ -237,9 +237,8 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   ready: {
     get: function () {
       return (
-        this._terrainProvider.ready &&
-        (this._imageryLayers.length === 0 ||
-          this._imageryLayers.get(0).imageryProvider.ready)
+        this._imageryLayers.length === 0 ||
+        this._imageryLayers.get(0).imageryProvider.ready
       );
     },
   },
@@ -348,10 +347,7 @@ GlobeSurfaceTileProvider.prototype.update = function (frameState) {
 
 function updateCredits(surface, frameState) {
   const creditDisplay = frameState.creditDisplay;
-  if (
-    surface._terrainProvider.ready &&
-    defined(surface._terrainProvider.credit)
-  ) {
+  if (defined(surface._terrainProvider.credit)) {
     creditDisplay.addCredit(surface._terrainProvider.credit);
   }
 
@@ -2123,9 +2119,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     tileProvider.hasWaterMask && defined(waterMaskTexture);
   const oceanNormalMap = tileProvider.oceanNormalMap;
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
-  const hasVertexNormals =
-    tileProvider.terrainProvider.ready &&
-    tileProvider.terrainProvider.hasVertexNormals;
+  const hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
   const enableFog =
     frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;
   const showGroundAtmosphere =

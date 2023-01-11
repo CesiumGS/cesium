@@ -92,8 +92,8 @@ function TileProviderError(
  * @param {TileProviderError} previousError The error instance returned by this function the last
  *        time it was called for this error, or undefined if this is the first time this error has
  *        occurred.
- * @param {ImageryProvider|TerrainProvider} provider The imagery or terrain provider that encountered the error.
- * @param {Event} event The event to raise to inform listeners of the error.
+ * @param {ImageryProvider|TerrainProvider} [provider] The imagery or terrain provider that encountered the error.
+ * @param {Event} [event] The event to raise to inform listeners of the error.
  * @param {String} message The message describing the error.
  * @param {Number} x The X coordinate of the tile that experienced the error, or undefined if the
  *        error is not specific to a particular tile.
@@ -138,9 +138,9 @@ TileProviderError.reportError = function (
     ++error.timesRetried;
   }
 
-  if (event.numberOfListeners > 0) {
+  if (defined(event) && event.numberOfListeners > 0) {
     event.raiseEvent(error);
-  } else {
+  } else if (defined(provider)) {
     console.log(
       `An error occurred in "${provider.constructor.name}": ${formatError(
         message

@@ -1,7 +1,8 @@
+import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import deprecationWarning from "./deprecationWarning.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import GoogleEarthEnterpriseMetadata from "./GoogleEarthEnterpriseMetadata.js";
@@ -67,46 +68,40 @@ TerrainCache.prototype.tidy = function () {
 };
 
 /**
+ * @typedef {Object} GoogleEarthEnterpriseTerrainProvider.ConstructorOptions
+ *
+ * Initialization options for GoogleEarthEnterpriseTerrainProvider constructor
+ *
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
+ * <div class="notice">
+ * To construct a GoogleEarthEnterpriseTerrainProvider, call {@link  GoogleEarthEnterpriseTerrainProvider.fromMetadata}. Do not call the constructor directly.
+ * </div>
+ *
  * Provides tiled terrain using the Google Earth Enterprise REST API.
  *
  * @alias GoogleEarthEnterpriseTerrainProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
- * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param { GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
  *
+ * @see GoogleEarthEnterpriseTerrainProvider.fromMetadata
+ * @see GoogleEarthEnterpriseMetadata.fromUrl
  * @see GoogleEarthEnterpriseImageryProvider
  * @see CesiumTerrainProvider
  *
  * @example
- * const geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.example.com');
- * const gee = new Cesium.GoogleEarthEnterpriseTerrainProvider({
- *     metadata : geeMetadata
- * });
+ * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl('http://www.example.com');
+ * const gee = Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(geeMetadata);
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseTerrainProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  //>>includeStart('debug', pragmas.debug);
-  if (!(defined(options.url) || defined(options.metadata))) {
-    throw new DeveloperError("options.url or options.metadata is required.");
-  }
-  //>>includeEnd('debug');
-
-  let metadata;
-  if (defined(options.metadata)) {
-    metadata = options.metadata;
-  } else {
-    const resource = Resource.createIfNeeded(options.url);
-    metadata = new GoogleEarthEnterpriseMetadata(resource);
-  }
-
-  this._metadata = metadata;
   this._tilingScheme = new GeographicTilingScheme({
     numberOfLevelZeroTilesX: 2,
     numberOfLevelZeroTilesY: 2,
@@ -133,16 +128,41 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
   this._terrainRequests = {};
 
   this._errorEvent = new Event();
-
   this._ready = false;
-  const that = this;
-  let metadataError;
-  this._readyPromise = metadata.readyPromise
-    .then(function (result) {
-      if (!metadata.terrainPresent) {
-        const e = new RuntimeError(
-          `The server ${metadata.url} doesn't have terrain`
-        );
+
+  if (defined(options.url)) {
+    deprecationWarning(
+      "GoogleEarthEnterpriseTerrainProvider options.url",
+      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use GoogleEarthEnterpriseTerrainProvider.fromMetadata instead."
+    );
+    const resource = Resource.createIfNeeded(options.url);
+    const that = this;
+    let metadataError;
+    this._readyPromise = GoogleEarthEnterpriseMetadata.fromUrl(resource)
+      .then((metadata) => {
+        if (!metadata.terrainPresent) {
+          const e = new RuntimeError(
+            `The server ${metadata.url} doesn't have terrain`
+          );
+          metadataError = TileProviderError.reportError(
+            metadataError,
+            that,
+            that._errorEvent,
+            e.message,
+            undefined,
+            undefined,
+            undefined,
+            e
+          );
+          return Promise.reject(e);
+        }
+
+        TileProviderError.reportSuccess(metadataError);
+        that._metadata = metadata;
+        that._ready = true;
+        return true;
+      })
+      .catch((e) => {
         metadataError = TileProviderError.reportError(
           metadataError,
           that,
@@ -153,26 +173,29 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
           undefined,
           e
         );
-        return Promise.reject(e);
-      }
 
-      TileProviderError.reportSuccess(metadataError);
-      that._ready = result;
-      return result;
-    })
-    .catch(function (e) {
-      metadataError = TileProviderError.reportError(
-        metadataError,
-        that,
-        that._errorEvent,
-        e.message,
-        undefined,
-        undefined,
-        undefined,
-        e
-      );
-      return Promise.reject(e);
-    });
+        throw e;
+      });
+  } else if (defined(options.metadata)) {
+    deprecationWarning(
+      "GoogleEarthEnterpriseTerrainProvider options.metadata",
+      "options.metadata was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use GoogleEarthEnterpriseTerrainProvider.fromMetadata instead."
+    );
+    const metadata = options.metadata;
+    this._metadata = metadata;
+    const that = this;
+    this._readyPromise = Promise.resolve(this._metadata._readyPromise).then(
+      () => {
+        if (!metadata.terrainPresent) {
+          throw new RuntimeError(
+            `The server ${metadata.url} doesn't have terrain`
+          );
+        }
+
+        that._ready = true;
+      }
+    );
+  }
 }
 
 Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
@@ -201,22 +224,13 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {TilingScheme}
    * @readonly
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme;
     },
   },
@@ -240,9 +254,14 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseTerrainProvider.ready",
+        "GoogleEarthEnterpriseTerrainProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return this._ready;
     },
   },
@@ -252,16 +271,21 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseTerrainProvider.readyPromise",
+        "GoogleEarthEnterpriseTerrainProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-   * the source of the terrain.  This function should not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
+   * the source of the terrain.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Credit}
    * @readonly
@@ -275,8 +299,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
    * indicates which areas of the globe are water rather than land, so they can be rendered
-   * as a reflective surface with animated waves.  This function should not be
-   * called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
+   * as a reflective surface with animated waves.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Boolean}
    * @readonly
@@ -289,7 +312,6 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
 
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
-   * This function should not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {Boolean}
    * @readonly
@@ -302,8 +324,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
 
   /**
    * Gets an object that can be used to determine availability of terrain from this provider, such as
-   * at points and in rectangles.  This function should not be called before
-   * {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.  This property may be undefined if availability
+   * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
    * @type {TileAvailability}
@@ -315,6 +336,41 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
     },
   },
 });
+
+/**
+ * Creates a GoogleEarthTerrainProvider from GoogleEarthEnterpriseMetadata
+ *
+ * @param {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
+ * @param {CesiumTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @returns {GoogleEarthEnterpriseTerrainProvider}
+ *
+ * @see GoogleEarthEnterpriseMetadata.fromUrl
+ *
+ * @exception {RuntimeError} metadata does not specify terrain
+ *
+ * @example
+ * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl('http://www.example.com');
+ * const gee = Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(geeMetadata);
+ */
+GoogleEarthEnterpriseTerrainProvider.fromMetadata = function (
+  metadata,
+  options
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("metadata", metadata);
+  //>>includeEnd('debug');
+
+  if (!metadata.terrainPresent) {
+    throw new RuntimeError(`The server ${metadata.url} doesn't have terrain`);
+  }
+
+  const provider = new GoogleEarthEnterpriseTerrainProvider(options);
+  provider._metadata = metadata;
+  provider._readyPromise = Promise.resolve(true);
+  provider._ready = true;
+
+  return provider;
+};
 
 const taskProcessor = new TaskProcessor("decodeGoogleEarthEnterprisePacket");
 
@@ -338,8 +394,7 @@ function computeChildMask(quadKey, info, metadata) {
 }
 
 /**
- * Requests the geometry for a given tile.  This function should not be called before
- * {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.  The result must include terrain data and
+ * Requests the geometry for a given tile.   The result must include terrain data and
  * may optionally include a water mask and an indication of which child tiles are available.
  *
  * @param {Number} x The X coordinate of the tile for which to request geometry.
@@ -349,9 +404,6 @@ function computeChildMask(quadKey, info, metadata) {
  * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
- *
- * @exception {DeveloperError} This function must not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready}
- *            returns true.
  */
 GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   x,
@@ -359,14 +411,6 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug)
-  if (!this._ready) {
-    throw new DeveloperError(
-      "requestTileGeometry must not be called before the terrain provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   const quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
   const terrainCache = this._terrainCache;
   const metadata = this._metadata;

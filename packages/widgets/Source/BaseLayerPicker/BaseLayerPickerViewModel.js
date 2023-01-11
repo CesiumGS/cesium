@@ -253,12 +253,22 @@ function BaseLayerPickerViewModel(options) {
         newProvider = value.creationCommand();
       }
 
-      this._globe.depthTestAgainstTerrain = !(
-        newProvider instanceof EllipsoidTerrainProvider
-      );
-      this._globe.terrainProvider = newProvider;
       selectedTerrainViewModel(value);
-      this.dropDownVisible = false;
+
+      const updateTerrainProvider = async () => {
+        const provider = await Promise.resolve(newProvider);
+        if (!defined(provider)) {
+          return;
+        }
+
+        this._globe.depthTestAgainstTerrain = !(
+          provider instanceof EllipsoidTerrainProvider
+        );
+        this._globe.terrainProvider = provider;
+        this.dropDownVisible = false;
+      };
+
+      updateTerrainProvider();
     },
   });
 
@@ -271,10 +281,15 @@ function BaseLayerPickerViewModel(options) {
     options.selectedImageryProviderViewModel,
     imageryProviderViewModels[0]
   );
-  this.selectedTerrain = defaultValue(
-    options.selectedTerrainProviderViewModel,
-    terrainProviderViewModels[0]
-  );
+
+  Promise.resolve(
+    defaultValue(
+      options.selectedTerrainProviderViewModel,
+      terrainProviderViewModels[0]
+    )
+  ).then((provider) => {
+    this.selectedTerrain = provider;
+  });
 }
 
 Object.defineProperties(BaseLayerPickerViewModel.prototype, {

@@ -131,25 +131,6 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
     });
   });
 
-  it("waits for terrain to become ready", function () {
-    const terrainProvider = new MockTerrainProvider();
-    spyOn(terrainProvider.readyPromise, "then").and.callThrough();
-
-    scene.globe = new Globe();
-    scene.terrainProvider = terrainProvider;
-
-    const rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
-    const expectedResult = scene.mapProjection.ellipsoid.cartesianToCartographic(
-      scene.camera.getRectangleCameraCoordinates(rectangle)
-    );
-    return computeFlyToLocationForRectangle(rectangle, scene).then(function (
-      result
-    ) {
-      expect(result).toEqual(expectedResult);
-      expect(terrainProvider.readyPromise.then).toHaveBeenCalled();
-    });
-  });
-
   it("returns height above ellipsoid when terrain undefined", function () {
     scene.terrainProvider = undefined;
     const rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);

@@ -37,7 +37,7 @@
         //Sandcastle_Begin
         // San Francisco Ferry Building photogrammetry model provided by Aerometrex
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
           infoBox: false,
           orderIndependentTranslucency: false,
         });

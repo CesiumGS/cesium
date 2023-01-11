@@ -982,10 +982,7 @@ Globe.prototype.beginFrame = function (frameState) {
   const surface = this._surface;
   const tileProvider = surface.tileProvider;
   const terrainProvider = this.terrainProvider;
-  const hasWaterMask =
-    this.showWaterEffect &&
-    terrainProvider.ready &&
-    terrainProvider.hasWaterMask;
+  const hasWaterMask = this.showWaterEffect && terrainProvider.hasWaterMask;
 
   if (hasWaterMask && this._oceanNormalMapResourceDirty) {
     // url changed, load new normal map asynchronously

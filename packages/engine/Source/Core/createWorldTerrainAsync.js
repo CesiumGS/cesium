@@ -1,6 +1,5 @@
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
 import defaultValue from "./defaultValue.js";
-import deprecationWarning from "./deprecationWarning.js";
 import IonResource from "./IonResource.js";
 
 /**
@@ -11,48 +10,32 @@ import IonResource from "./IonResource.js";
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
  * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
- * @returns {CesiumTerrainProvider}
+ * @returns {Promise<CesiumTerrainProvider>} A promise that resolves to the created CesiumTerrainProvider
  *
  * @see Ion
  *
  * @example
  * // Create Cesium World Terrain with default settings
  * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     terrainProvider : Cesium.createWorldTerrain();
+ *     terrainProvider : Cesium.createWorldTerrainAsync();
  * });
  *
  * @example
  * // Create Cesium World Terrain with water and normals.
  * const viewer1 = new Cesium.Viewer('cesiumContainer', {
- *     terrainProvider : Cesium.createWorldTerrain({
+ *     terrainProvider : Cesium.createWorldTerrainAsync({
  *         requestWaterMask : true,
  *         requestVertexNormals : true
  *     });
  * });
  *
  */
-function createWorldTerrain(options) {
-  deprecationWarning(
-    "createWorldTerrain",
-    "createWorldTerrain was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use createWorldTerrainAsync instead."
-  );
-
+function createWorldTerrainAsync(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  const provider = new CesiumTerrainProvider({
+  return CesiumTerrainProvider.fromUrl(IonResource.fromAssetId(1), {
     requestVertexNormals: defaultValue(options.requestVertexNormals, false),
     requestWaterMask: defaultValue(options.requestWaterMask, false),
   });
-
-  provider._readyPromise = CesiumTerrainProvider._initializeReadyPromise(
-    {
-      url: IonResource.fromAssetId(1),
-      requestVertexNormals: defaultValue(options.requestVertexNormals, false),
-      requestWaterMask: defaultValue(options.requestWaterMask, false),
-    },
-    provider
-  );
-
-  return provider;
 }
-export default createWorldTerrain;
+export default createWorldTerrainAsync;

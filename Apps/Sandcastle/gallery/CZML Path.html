@@ -7244,7 +7244,7 @@
         ];
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
           baseLayerPicker: false,
           shouldAnimate: true,
         });

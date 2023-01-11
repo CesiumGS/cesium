@@ -38,7 +38,7 @@
         //Sandcastle_Begin
         // An example of using a b3dm tileset to classify another b3dm tileset.
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
 
         // A normal b3dm tileset containing photogrammetry

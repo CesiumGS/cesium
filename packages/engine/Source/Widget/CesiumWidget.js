@@ -124,7 +124,7 @@ function configureCameraFrustum(widget) {
  * @param {Object} [options] Object with the following properties:
  * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
  * @param {ImageryProvider | false} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
- * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+ * @param {TerrainProvider|Promise<TerrainProvider>} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
  * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
@@ -162,7 +162,7 @@ function configureCameraFrustum(widget) {
  * //Widget with ion imagery and Cesium World Terrain.
  * const widget2 = new Cesium.CesiumWidget('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery(),
- *     terrainProvider : Cesium.createWorldTerrain(),
+ *     terrainProvider : Cesium.createWorldTerrainAsync(),
  *     skyBox : new Cesium.SkyBox({
  *         sources : {
  *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
@@ -353,7 +353,15 @@ function CesiumWidget(container, options) {
 
     //Set the terrain provider if one is provided.
     if (defined(options.terrainProvider) && options.globe !== false) {
-      scene.terrainProvider = options.terrainProvider;
+      // options.terrainProvider is a promise
+      // Promise.resolve is not used so that synchronous code can immediately execute
+      if (defined(options.terrainProvider.then)) {
+        options.terrainProvider.then((provider) => {
+          scene.terrainProvider = provider;
+        });
+      } else {
+        scene.terrainProvider = options.terrainProvider;
+      }
     }
 
     this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
