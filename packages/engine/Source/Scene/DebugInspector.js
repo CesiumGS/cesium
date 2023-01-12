@@ -31,7 +31,7 @@ function createDebugShowFrustumsShaderProgram(scene, shaderProgram) {
   const targets = [];
   fs.sources = fs.sources.map(function (source) {
     source = ShaderSource.replaceMain(source, "czm_Debug_main");
-    const re = /gl_FragData\[(\d+)\]/g;
+    const re = /out_FragData_(\d+)/g;
     let match;
     while ((match = re.exec(source)) !== null) {
       if (targets.indexOf(match[1]) === -1) {
@@ -52,8 +52,8 @@ function createDebugShowFrustumsShaderProgram(scene, shaderProgram) {
   let i;
   if (length > 0) {
     for (i = 0; i < length; ++i) {
-      newMain += `    gl_FragData[${targets[i]}].rgb *= debugShowCommandsColor;\n`;
-      newMain += `    gl_FragData[${targets[i]}].rgb *= debugShowFrustumsColor;\n`;
+      newMain += `    out_FragData_${targets[i]}.rgb *= debugShowCommandsColor;\n`;
+      newMain += `    out_FragData_${targets[i]}.rgb *= debugShowFrustumsColor;\n`;
     }
   } else {
     newMain += "    out_FragColor.rgb *= debugShowCommandsColor;\n";
