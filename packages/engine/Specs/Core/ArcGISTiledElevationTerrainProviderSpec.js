@@ -1,6 +1,5 @@
 import {
   ArcGISTiledElevationTerrainProvider,
-  DeveloperError,
   GeographicTilingScheme,
   HeightmapTerrainData,
   Request,
@@ -204,8 +203,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
   it("fromUrl throws without url", async function () {
     await expectAsync(
       ArcGISTiledElevationTerrainProvider.fromUrl()
-    ).toBeRejectedWithError(
-      DeveloperError,
+    ).toBeRejectedWithDeveloperError(
       "url is required, actual value was undefined"
     );
   });

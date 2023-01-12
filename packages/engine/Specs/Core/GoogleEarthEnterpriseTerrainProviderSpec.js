@@ -1,6 +1,5 @@
 import {
   defaultValue,
-  DeveloperError,
   Ellipsoid,
   GeographicTilingScheme,
   GoogleEarthEnterpriseMetadata,
@@ -84,10 +83,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
     installMockGetQuadTreePacket();
     expect(() =>
       GoogleEarthEnterpriseTerrainProvider.fromMetadata()
-    ).toThrowError(
-      DeveloperError,
-      "metadata is required, actual value was undefined"
-    );
+    ).toThrowDeveloperError("metadata is required, actual value was undefined");
   });
 
   it("fromMetadata throws if there isn't terrain", async function () {

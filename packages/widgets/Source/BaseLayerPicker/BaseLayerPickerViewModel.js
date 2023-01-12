@@ -296,7 +296,6 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of the drop down.
    * @memberof BaseLayerPickerViewModel.prototype
-   *
    * @type {Command}
    */
   toggleDropDown: {
@@ -308,7 +307,6 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
   /**
    * Gets the globe.
    * @memberof BaseLayerPickerViewModel.prototype
-   *
    * @type {Globe}
    */
   globe: {

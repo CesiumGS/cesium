@@ -319,7 +319,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
  * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
  *
- * @param {Resource|String} options.url The URL of the VR-TheWorld TileMap.
+ * @param {Resource|String} url The URL of the VR-TheWorld TileMap.
  * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
  * @returns {Promise<VRTheWorldTerrainProvider>}
  *

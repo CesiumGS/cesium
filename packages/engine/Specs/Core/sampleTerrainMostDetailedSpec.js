@@ -2,7 +2,6 @@ import {
   Cartographic,
   CesiumTerrainProvider,
   createWorldTerrainAsync,
-  DeveloperError,
   sampleTerrainMostDetailed,
 } from "../../index.js";
 
@@ -41,8 +40,7 @@ describe("Core/sampleTerrainMostDetailed", function () {
 
     await expectAsync(
       sampleTerrainMostDetailed(terrainProvider, positions)
-    ).toBeRejectedWithError(
-      DeveloperError,
+    ).toBeRejectedWithDeveloperError(
       "sampleTerrainMostDetailed requires a terrain provider that has tile availability."
     );
   });
@@ -68,13 +66,13 @@ describe("Core/sampleTerrainMostDetailed", function () {
 
     await expectAsync(
       sampleTerrainMostDetailed(undefined, positions)
-    ).toBeRejectedWithError(DeveloperError, "terrainProvider is required.");
+    ).toBeRejectedWithDeveloperError("terrainProvider is required.");
   });
 
   it("throws without positions", async function () {
     await expectAsync(
       sampleTerrainMostDetailed(worldTerrain, undefined)
-    ).toBeRejectedWithError(DeveloperError, "positions is required.");
+    ).toBeRejectedWithDeveloperError("positions is required.");
   });
 
   it("works for a dodgy point right near the edge of a tile", async function () {

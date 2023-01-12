@@ -14,7 +14,7 @@ async function test() {
   const provider = await CesiumTerrainProvider.fromUrl(
     "https://s3.amazonaws.com/cesiumjs/smallTerrain"
   );
-  const results = sampleTerrain(provider, 11, [
+  const results = await sampleTerrain(provider, 11, [
     Cartographic.fromDegrees(86.925145, 27.988257),
     Cartographic.fromDegrees(87.0, 28.0),
   ]);

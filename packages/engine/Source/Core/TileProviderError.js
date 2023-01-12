@@ -94,12 +94,12 @@ function TileProviderError(
  *        occurred.
  * @param {ImageryProvider|TerrainProvider} [provider] The imagery or terrain provider that encountered the error.
  * @param {Event} [event] The event to raise to inform listeners of the error.
- * @param {String} message The message describing the error.
- * @param {Number} x The X coordinate of the tile that experienced the error, or undefined if the
+ * @param {String} [message] The message describing the error.
+ * @param {Number} [x] The X coordinate of the tile that experienced the error, or undefined if the
  *        error is not specific to a particular tile.
- * @param {Number} y The Y coordinate of the tile that experienced the error, or undefined if the
+ * @param {Number} [y] The Y coordinate of the tile that experienced the error, or undefined if the
  *        error is not specific to a particular tile.
- * @param {Number} level The level-of-detail of the tile that experienced the error, or undefined if the
+ * @param {Number} [level] The level-of-detail of the tile that experienced the error, or undefined if the
  *        error is not specific to a particular tile.
  * @param {Error} [errorDetails] The error or exception that occurred, if any.
  * @returns {TileProviderError} The error instance that was passed to the event listeners and that

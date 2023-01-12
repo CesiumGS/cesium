@@ -86,7 +86,7 @@ TerrainCache.prototype.tidy = function () {
  * @alias GoogleEarthEnterpriseTerrainProvider
  * @constructor
  *
- * @param { GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
  *
  * @see GoogleEarthEnterpriseTerrainProvider.fromMetadata
  * @see GoogleEarthEnterpriseMetadata.fromUrl
@@ -341,7 +341,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
  * Creates a GoogleEarthTerrainProvider from GoogleEarthEnterpriseMetadata
  *
  * @param {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
- * @param {CesiumTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
  * @returns {GoogleEarthEnterpriseTerrainProvider}
  *
  * @see GoogleEarthEnterpriseMetadata.fromUrl

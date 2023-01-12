@@ -1,5 +1,4 @@
 import {
-  DeveloperError,
   GeographicTilingScheme,
   HeightmapTerrainData,
   Math as CesiumMath,
@@ -89,7 +88,9 @@ describe("Core/VRTheWorldTerrainProvider", function () {
   it("fromUrl rejects without url", async function () {
     await expectAsync(
       VRTheWorldTerrainProvider.fromUrl()
-    ).toBeRejectedWithError(DeveloperError);
+    ).toBeRejectedWithDeveloperError(
+      "url is required, actual value was undefined"
+    );
   });
 
   it("fromUrl resolves to new VRTheWorldTerrainProvider", async function () {

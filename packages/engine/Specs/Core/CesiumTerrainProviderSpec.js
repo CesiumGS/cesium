@@ -1,7 +1,6 @@
 import {
   CesiumTerrainProvider,
   Credit,
-  DeveloperError,
   Ellipsoid,
   GeographicTilingScheme,
   getAbsoluteUri,
@@ -155,8 +154,9 @@ describe("Core/CesiumTerrainProvider", function () {
   });
 
   it("fromUrl throws without url", async function () {
-    await expectAsync(CesiumTerrainProvider.fromUrl()).toBeRejectedWithError(
-      DeveloperError,
+    await expectAsync(
+      CesiumTerrainProvider.fromUrl()
+    ).toBeRejectedWithDeveloperError(
       "url is required, actual value was undefined"
     );
   });
