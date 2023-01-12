@@ -41,8 +41,6 @@ void czm_writeLogDepth(float depth)
     float factor = u_polygonOffset[0];
     float units = u_polygonOffset[1];
 
-// If we can't compute derivatives, just leave out the factor I guess?
-#ifdef GL_OES_standard_derivatives
     if (factor != 0.0) {
         // m = sqrt(dZdX^2 + dZdY^2);
         float x = dFdx(depth);
@@ -52,7 +50,6 @@ void czm_writeLogDepth(float depth)
         // Apply the factor before computing the log depth.
         depth += m * factor;
     }
-#endif
 
 #endif
 

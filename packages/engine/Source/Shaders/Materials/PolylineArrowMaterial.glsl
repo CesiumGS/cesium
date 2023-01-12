@@ -16,11 +16,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
     vec2 st = materialInput.st;
 
-#ifdef GL_OES_standard_derivatives
     float base = 1.0 - abs(fwidth(st.s)) * 10.0 * czm_pixelRatio;
-#else
-    float base = 0.975; // 2.5% of the line will be the arrow head
-#endif
 
     vec2 center = vec2(1.0, 0.5);
     float ptOnUpperLine = getPointOnLine(vec2(base, 1.0), center, st.s);

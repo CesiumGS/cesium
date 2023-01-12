@@ -99,7 +99,6 @@ void main()
     // Get the current distance
     float distance = getDistance(v_textureCoordinates);
 
-#ifdef GL_OES_standard_derivatives
     float smoothing = fwidth(distance);
     // Get an offset that is approximately half the distance to the neighbor pixels
     // 0.354 is approximately half of 1/sqrt(2)
@@ -116,11 +115,6 @@ void main()
 
     // Equally weight the center sample and the 4 neighboring samples
     color = (center + color1 + color2 + color3 + color4)/5.0;
-#else
-    // Just do a single sample
-    float smoothing = 1.0/32.0;
-    color = getSDFColor(v_textureCoordinates, outlineWidth, outlineColor, smoothing);
-#endif
 
     color = czm_gammaCorrect(color);
 #else

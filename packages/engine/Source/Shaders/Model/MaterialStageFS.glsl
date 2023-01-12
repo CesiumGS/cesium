@@ -36,7 +36,7 @@ vec3 computeNormal(ProcessedAttributes attributes)
         mat3 tbn = mat3(t, b, ng);
         vec3 n = texture(u_normalTexture, normalTexCoords).rgb;
         normal = normalize(tbn * (2.0 * n - 1.0));
-        #elif defined(GL_OES_standard_derivatives)
+        #else
         // Compute tangents
         vec3 positionEC = attributes.positionEC;
         vec3 pos_dx = dFdx(positionEC);

@@ -20,7 +20,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     scaledHeight = abs(scaledHeight - floor(scaledHeight + 0.5));
 
     float value;
-#ifdef GL_OES_standard_derivatives
+
     // Fuzz Factor - Controls blurriness of lines
     const float fuzz = 1.2;
     vec2 thickness = (lineThickness * czm_pixelRatio) - 1.0;
@@ -32,15 +32,6 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     value = min(
         smoothstep(dF.s * thickness.s, dF.s * (fuzz + thickness.s), scaledWidth),
         smoothstep(dF.t * thickness.t, dF.t * (fuzz + thickness.t), scaledHeight));
-#else
-    // Fuzz Factor - Controls blurriness of lines
-    const float fuzz = 0.05;
-
-    vec2 range = 0.5 - (lineThickness * 0.05);
-    value = min(
-        1.0 - smoothstep(range.s, range.s + fuzz, scaledWidth),
-        1.0 - smoothstep(range.t, range.t + fuzz, scaledHeight));
-#endif
 
     // Edges taken from RimLightingMaterial.glsl
     // See http://www.fundza.com/rman_shaders/surface/fake_rim/fake_rim1.html
