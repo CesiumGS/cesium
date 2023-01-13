@@ -32,6 +32,22 @@ const PixelFormat = {
   ALPHA: WebGLConstants.ALPHA,
 
   /**
+   * A pixel format containing a red channel
+   *
+   * @type {Number}
+   * @constant
+   */
+  RED: WebGLConstants.RED,
+
+  /**
+   * A pixel format containing red and green channels.
+   *
+   * @type {Number}
+   * @constant
+   */
+  RG: WebGLConstants.RG,
+
+  /**
    * A pixel format containing red, green, and blue channels.
    *
    * @type {Number}
@@ -178,8 +194,10 @@ PixelFormat.componentsLength = function (pixelFormat) {
     case PixelFormat.RGBA:
       return 4;
     case PixelFormat.LUMINANCE_ALPHA:
+    case PixelFormat.RG:
       return 2;
     case PixelFormat.ALPHA:
+    case PixelFormat.RED:
     case PixelFormat.LUMINANCE:
       return 1;
     default:
@@ -195,6 +213,8 @@ PixelFormat.validate = function (pixelFormat) {
     pixelFormat === PixelFormat.DEPTH_COMPONENT ||
     pixelFormat === PixelFormat.DEPTH_STENCIL ||
     pixelFormat === PixelFormat.ALPHA ||
+    pixelFormat === PixelFormat.RED ||
+    pixelFormat === PixelFormat.RG ||
     pixelFormat === PixelFormat.RGB ||
     pixelFormat === PixelFormat.RGBA ||
     pixelFormat === PixelFormat.LUMINANCE ||
@@ -469,7 +489,7 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
         return WebGLConstants.RGB32F;
       case PixelFormat.RG:
         return WebGLConstants.RG32F;
-      case PixelFormat.R:
+      case PixelFormat.RED:
         return WebGLConstants.R32F;
     }
   }
@@ -482,7 +502,7 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
         return WebGLConstants.RGB16F;
       case PixelFormat.RG:
         return WebGLConstants.RG16F;
-      case PixelFormat.R:
+      case PixelFormat.RED:
         return WebGLConstants.R16F;
     }
   }
