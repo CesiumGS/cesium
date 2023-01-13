@@ -493,22 +493,17 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
     return vertexShaderSource;
   }
 
-  if (
-    vertexShaderSource.search(/attribute\s+vec3\s+extrudeDirection;/g) !== -1
-  ) {
+  if (vertexShaderSource.search(/in\s+vec3\s+extrudeDirection;/g) !== -1) {
     const attributeName = "compressedAttributes";
 
     //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
-    const attributeDecl = `attribute vec2 ${attributeName};`;
+    const attributeDecl = `in vec2 ${attributeName};`;
 
     const globalDecl = "vec3 extrudeDirection;\n";
     const decode = `    extrudeDirection = czm_octDecode(${attributeName}, 65535.0);\n`;
 
     let modifiedVS = vertexShaderSource;
-    modifiedVS = modifiedVS.replace(
-      /attribute\s+vec3\s+extrudeDirection;/g,
-      ""
-    );
+    modifiedVS = modifiedVS.replace(/in\s+vec3\s+extrudeDirection;/g, "");
     modifiedVS = ShaderSource.replaceMain(
       modifiedVS,
       "czm_non_compressed_main"

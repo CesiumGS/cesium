@@ -62,6 +62,9 @@ describe(
     beforeAll(function () {
       scene = createScene({
         canvas: createCanvas(10, 10),
+        contextOptions: {
+          requestWebgl1: true,
+        },
       });
       primitives = scene.primitives;
       camera = scene.camera;

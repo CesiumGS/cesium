@@ -1,6 +1,6 @@
-attribute vec4 position;
+in vec4 position;
 
-varying vec4 positionEC;
+out vec4 positionEC;
 
 void main()
 {

@@ -1,16 +1,16 @@
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
-attribute vec3 prevPosition3DHigh;
-attribute vec3 prevPosition3DLow;
-attribute vec3 nextPosition3DHigh;
-attribute vec3 nextPosition3DLow;
-attribute vec2 expandAndWidth;
-attribute vec2 st;
-attribute float batchId;
+in vec3 position3DHigh;
+in vec3 position3DLow;
+in vec3 prevPosition3DHigh;
+in vec3 prevPosition3DLow;
+in vec3 nextPosition3DHigh;
+in vec3 nextPosition3DLow;
+in vec2 expandAndWidth;
+in vec2 st;
+in float batchId;
 
-varying float v_width;
-varying vec2 v_st;
-varying float v_polylineAngle;
+out float v_width;
+out vec2 v_st;
+out float v_polylineAngle;
 
 void main()
 {

@@ -1,36 +1,36 @@
 #ifdef INSTANCED
-attribute vec2 direction;
+in vec2 direction;
 #endif
-attribute vec4 positionHighAndScale;
-attribute vec4 positionLowAndRotation;
-attribute vec4 compressedAttribute0;                       // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates (texture offset)
-attribute vec4 compressedAttribute1;                       // aligned axis, translucency by distance, image width
-attribute vec4 compressedAttribute2;                       // label horizontal origin, image height, color, pick color, size in meters, valid aligned axis, 13 bits free
-attribute vec4 eyeOffset;                                  // eye offset in meters, 4 bytes free (texture range)
-attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
-attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
-attribute vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
-attribute vec2 sdf;                                        // sdf outline color (rgb) and width (w)
+in vec4 positionHighAndScale;
+in vec4 positionLowAndRotation;
+in vec4 compressedAttribute0;                       // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates (texture offset)
+in vec4 compressedAttribute1;                       // aligned axis, translucency by distance, image width
+in vec4 compressedAttribute2;                       // label horizontal origin, image height, color, pick color, size in meters, valid aligned axis, 13 bits free
+in vec4 eyeOffset;                                  // eye offset in meters, 4 bytes free (texture range)
+in vec4 scaleByDistance;                            // near, nearScale, far, farScale
+in vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
+in vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
+in vec2 sdf;                                        // sdf outline color (rgb) and width (w)
 #if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
-attribute vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
+in vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
 #endif
 #ifdef VECTOR_TILE
-attribute float a_batchId;
+in float a_batchId;
 #endif
 
-varying vec2 v_textureCoordinates;
+out vec2 v_textureCoordinates;
 #ifdef FRAGMENT_DEPTH_CHECK
-varying vec4 v_textureCoordinateBounds;
-varying vec4 v_originTextureCoordinateAndTranslate;
-varying vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
-varying mat2 v_rotationMatrix;
+out vec4 v_textureCoordinateBounds;
+out vec4 v_originTextureCoordinateAndTranslate;
+out vec4 v_compressed;                                 // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
+out mat2 v_rotationMatrix;
 #endif
 
-varying vec4 v_pickColor;
-varying vec4 v_color;
+out vec4 v_pickColor;
+out vec4 v_color;
 #ifdef SDF
-varying vec4 v_outlineColor;
-varying float v_outlineWidth;
+out vec4 v_outlineColor;
+out float v_outlineWidth;
 #endif
 
 const float UPPER_BOUND = 32768.0;
@@ -95,7 +95,7 @@ float getGlobeDepth(vec4 positionEC)
 {
     vec4 posWC = czm_eyeToWindowCoordinates(positionEC);
 
-    float globeDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, posWC.xy / czm_viewport.zw));
+    float globeDepth = czm_unpackDepth(texture(czm_globeDepthTexture, posWC.xy / czm_viewport.zw));
 
     if (globeDepth == 0.0)
     {

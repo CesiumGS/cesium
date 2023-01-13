@@ -2,7 +2,7 @@ uniform vec4 color;
 uniform vec4 outlineColor;
 uniform float outlineWidth;
 
-varying float v_width;
+in float v_width;
 
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {

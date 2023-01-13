@@ -452,7 +452,7 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
 
   // Get a GLSL expression for the value of the property
   const texCoordVariable = `attributes.texCoord_${texCoord}`;
-  const valueExpression = `texture2D(${textureUniformName}, ${texCoordVariable}).${channels}`;
+  const valueExpression = `texture(${textureUniformName}, ${texCoordVariable}).${channels}`;
 
   // Some types need an unpacking step or two. For example, since texture reads
   // are always normalized, UINT8 (not normalized) properties need to be

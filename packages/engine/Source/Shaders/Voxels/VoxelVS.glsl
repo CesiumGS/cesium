@@ -1,4 +1,4 @@
-attribute vec2 position;
+in vec2 position;
 
 uniform vec4 u_ndcSpaceAxisAlignedBoundingBox;
 

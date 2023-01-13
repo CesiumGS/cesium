@@ -1,6 +1,6 @@
 uniform float u_radiusTS;
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 vec2 rotate(vec2 p, vec2 direction)
 {
@@ -51,5 +51,5 @@ void main()
 
     color += clamp(burst, vec4(0.0), vec4(1.0)) * 0.15;
 
-    gl_FragColor = clamp(color, vec4(0.0), vec4(1.0));
+    out_FragColor = clamp(color, vec4(0.0), vec4(1.0));
 }

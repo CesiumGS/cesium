@@ -26,15 +26,15 @@ describe(
       "uniform float maxLod;" +
       "void main() {" +
       "   vec3 color = czm_sampleOctahedralProjection(projectedMap, textureSize, direction, lod, maxLod);" +
-      "   gl_FragColor = vec4(color, 1.0);" +
+      "   out_FragColor = vec4(color, 1.0);" +
       "}";
 
     const fsCubeMap =
       "uniform samplerCube cubeMap;" +
       "uniform vec3 direction;" +
       "void main() {" +
-      "   vec4 rgba = textureCube(cubeMap, direction);" +
-      "   gl_FragColor = vec4(rgba.rgb, 1.0);" +
+      "   vec4 rgba = czm_textureCube(cubeMap, direction);" +
+      "   out_FragColor = vec4(rgba.rgb, 1.0);" +
       "}";
 
     beforeAll(function () {

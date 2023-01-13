@@ -133,8 +133,8 @@ const textureWithSampler = new Cesium.TextureUniform({
 ## Varyings
 
 Varyings are declared in the `CustomShader` constructor. This automatically
-adds a line such as `varying float v_userDefinedVarying;` to the top of the
-GLSL shader.
+adds lines such as `out float v_userDefinedVarying;` and `in float v_userDefinedVarying;` to the top of the
+GLSL vertex and fragment shaders respectively.
 
 The user is responsible for assigning a value to this varying in
 `vertexShaderText` and using it in `fragmentShaderText`. For example:

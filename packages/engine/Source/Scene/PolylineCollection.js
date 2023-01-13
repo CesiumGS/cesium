@@ -1294,8 +1294,7 @@ PolylineBucket.prototype.updateShader = function (
 
   // Check for use of v_polylineAngle in material shader
   if (
-    this.material.shaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !==
-    -1
+    this.material.shaderSource.search(/in\s+float\s+v_polylineAngle;/g) !== -1
   ) {
     defines.push("POLYLINE_DASH");
   }
@@ -1306,11 +1305,7 @@ PolylineBucket.prototype.updateShader = function (
 
   const fs = new ShaderSource({
     defines: defines,
-    sources: [
-      "varying vec4 v_pickColor;\n",
-      this.material.shaderSource,
-      PolylineFS,
-    ],
+    sources: ["in vec4 v_pickColor;\n", this.material.shaderSource, PolylineFS],
   });
 
   const vsSource = batchTable.getVertexShaderCallback()(PolylineVS);

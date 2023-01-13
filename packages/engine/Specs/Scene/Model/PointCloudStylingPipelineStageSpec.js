@@ -174,7 +174,7 @@ describe(
       );
 
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying vec4 v_pointCloudColor;",
+        "vec4 v_pointCloudColor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -221,7 +221,7 @@ describe(
       );
 
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying vec4 v_pointCloudColor;",
+        "vec4 v_pointCloudColor;",
       ]);
 
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [

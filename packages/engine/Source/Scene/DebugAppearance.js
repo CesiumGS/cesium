@@ -88,14 +88,12 @@ function DebugAppearance(options) {
 
   const vs =
     `${
-      "attribute vec3 position3DHigh;\n" +
-      "attribute vec3 position3DLow;\n" +
-      "attribute float batchId;\n"
+      "in vec3 position3DHigh;\n" +
+      "in vec3 position3DLow;\n" +
+      "in float batchId;\n"
     }${
-      perInstanceAttribute
-        ? ""
-        : `attribute ${glslDatatype} ${attributeName};\n`
-    }varying ${glslDatatype} ${varyingName};\n` +
+      perInstanceAttribute ? "" : `in ${glslDatatype} ${attributeName};\n`
+    }out ${glslDatatype} ${varyingName};\n` +
     `void main()\n` +
     `{\n` +
     `vec4 p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n${
@@ -105,10 +103,10 @@ function DebugAppearance(options) {
     }gl_Position = czm_modelViewProjectionRelativeToEye * p;\n` +
     `}`;
   const fs =
-    `varying ${glslDatatype} ${varyingName};\n${getColor}\n` +
+    `in ${glslDatatype} ${varyingName};\n${getColor}\n` +
     `void main()\n` +
     `{\n` +
-    `gl_FragColor = getColor();\n` +
+    `out_FragColor = getColor();\n` +
     `}`;
 
   /**

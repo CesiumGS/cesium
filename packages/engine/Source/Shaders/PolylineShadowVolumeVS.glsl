@@ -1,40 +1,40 @@
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
+in vec3 position3DHigh;
+in vec3 position3DLow;
 
 // In 2D and in 3D, texture coordinate normalization component signs encodes:
 // * X sign - sidedness relative to right plane
 // * Y sign - is negative OR magnitude is greater than 1.0 if vertex is on bottom of volume
 #ifndef COLUMBUS_VIEW_2D
-attribute vec4 startHiAndForwardOffsetX;
-attribute vec4 startLoAndForwardOffsetY;
-attribute vec4 startNormalAndForwardOffsetZ;
-attribute vec4 endNormalAndTextureCoordinateNormalizationX;
-attribute vec4 rightNormalAndTextureCoordinateNormalizationY;
+in vec4 startHiAndForwardOffsetX;
+in vec4 startLoAndForwardOffsetY;
+in vec4 startNormalAndForwardOffsetZ;
+in vec4 endNormalAndTextureCoordinateNormalizationX;
+in vec4 rightNormalAndTextureCoordinateNormalizationY;
 #else
-attribute vec4 startHiLo2D;
-attribute vec4 offsetAndRight2D;
-attribute vec4 startEndNormals2D;
-attribute vec2 texcoordNormalization2D;
+in vec4 startHiLo2D;
+in vec4 offsetAndRight2D;
+in vec4 startEndNormals2D;
+in vec2 texcoordNormalization2D;
 #endif
 
-attribute float batchId;
+in float batchId;
 
-varying vec4 v_startPlaneNormalEcAndHalfWidth;
-varying vec4 v_endPlaneNormalEcAndBatchId;
-varying vec4 v_rightPlaneEC;
-varying vec4 v_endEcAndStartEcX;
-varying vec4 v_texcoordNormalizationAndStartEcYZ;
+out vec4 v_startPlaneNormalEcAndHalfWidth;
+out vec4 v_endPlaneNormalEcAndBatchId;
+out vec4 v_rightPlaneEC;
+out vec4 v_endEcAndStartEcX;
+out vec4 v_texcoordNormalizationAndStartEcYZ;
 
 // For materials
 #ifdef WIDTH_VARYING
-varying float v_width;
+out float v_width;
 #endif
 #ifdef ANGLE_VARYING
-varying float v_polylineAngle;
+out float v_polylineAngle;
 #endif
 
 #ifdef PER_INSTANCE_COLOR
-varying vec4 v_color;
+out vec4 v_color;
 #endif
 
 void main()

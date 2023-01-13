@@ -235,7 +235,7 @@ describe(
       Primitive.prototype.update = function (frameState) {
         if (!defined(this._sp)) {
           let vs = "";
-          vs += "attribute vec4 position;";
+          vs += "in vec4 position;";
           vs += "void main()";
           vs += "{";
           vs += "    gl_Position = czm_modelViewProjection * position;";
@@ -247,7 +247,7 @@ describe(
           fs += "uniform vec4 u_color;";
           fs += "void main()";
           fs += "{";
-          fs += "    gl_FragColor = u_color;";
+          fs += "    out_FragColor = u_color;";
           fs += "}";
 
           const dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);

@@ -37,16 +37,16 @@ describe(
     createPolygonSpecs({});
 
     if (testInWebGL2) {
-      const c = createContext({ requestWebgl1: false });
+      const c = createContext({});
       // Don't repeat WebGL 1 tests when WebGL 2 is not supported
       if (c.webgl2) {
-        createPolygonSpecs({ requestWebgl1: false });
+        createPolygonSpecs({});
       }
       c.destroyForSpecs();
     }
 
     function createPolygonSpecs(contextOptions) {
-      const webglMessage = contextOptions.requestWebgl1 ? "" : ": WebGL 2";
+      const webglMessage = contextOptions.requestWebgl1 ? "" : "WebGL 2";
 
       let scene;
       let rectangle;

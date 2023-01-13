@@ -340,7 +340,7 @@ function processVoxelProperties(renderResources, primitive) {
       const componentType = componentTypes[i];
       const glslTextureSwizzle = getGlslTextureSwizzle(type, componentType);
       shaderBuilder.addFunctionLines(functionId, [
-        `properties.${name} = texture2D(u_megatextureTextures[${i}], texcoord)${glslTextureSwizzle};`,
+        `properties.${name} = texture(u_megatextureTextures[${i}], texcoord)${glslTextureSwizzle};`,
       ]);
     }
     shaderBuilder.addFunctionLines(functionId, [

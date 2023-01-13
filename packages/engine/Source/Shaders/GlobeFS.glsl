@@ -105,26 +105,26 @@ uniform float u_lambertDiffuseMultiplier;
 uniform float u_vertexShadowDarkness;
 #endif
 
-varying vec3 v_positionMC;
-varying vec3 v_positionEC;
-varying vec3 v_textureCoordinates;
-varying vec3 v_normalMC;
-varying vec3 v_normalEC;
+in vec3 v_positionMC;
+in vec3 v_positionEC;
+in vec3 v_textureCoordinates;
+in vec3 v_normalMC;
+in vec3 v_normalEC;
 
 #ifdef APPLY_MATERIAL
-varying float v_height;
-varying float v_slope;
-varying float v_aspect;
+in float v_height;
+in float v_slope;
+in float v_aspect;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
-varying float v_distance;
+in float v_distance;
 #endif
 
 #if defined(GROUND_ATMOSPHERE) || defined(FOG)
-varying vec3 v_atmosphereRayleighColor;
-varying vec3 v_atmosphereMieColor;
-varying float v_atmosphereOpacity;
+in vec3 v_atmosphereRayleighColor;
+in vec3 v_atmosphereMieColor;
+in float v_atmosphereOpacity;
 #endif
 
 #if defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
@@ -195,7 +195,7 @@ vec4 sampleAndBlend(
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
-    vec4 value = texture2D(textureToSample, textureCoordinates);
+    vec4 value = texture(textureToSample, textureCoordinates);
     vec3 color = value.rgb;
     float alpha = value.a;
 
@@ -376,7 +376,7 @@ void main()
     vec2 waterMaskTextureCoordinates = v_textureCoordinates.xy * waterMaskScale + waterMaskTranslation;
     waterMaskTextureCoordinates.y = 1.0 - waterMaskTextureCoordinates.y;
 
-    float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
+    float mask = texture(u_waterMask, waterMaskTextureCoordinates).r;
 
     if (mask > 0.0)
     {
@@ -545,7 +545,7 @@ void main()
     }
 #endif
     
-    gl_FragColor =  finalColor;
+    out_FragColor =  finalColor;
 }
 
 

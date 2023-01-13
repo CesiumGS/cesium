@@ -1264,8 +1264,8 @@ Material._materialCache.addMaterial(Material.ImageType, {
     },
     components: {
       diffuse:
-        "texture2D(image, fract(repeat * materialInput.st)).rgb * color.rgb",
-      alpha: "texture2D(image, fract(repeat * materialInput.st)).a * color.a",
+        "texture(image, fract(repeat * materialInput.st)).rgb * color.rgb",
+      alpha: "texture(image, fract(repeat * materialInput.st)).a * color.a",
     },
   },
   translucent: function (material) {
@@ -1288,7 +1288,7 @@ Material._materialCache.addMaterial(Material.DiffuseMapType, {
       repeat: new Cartesian2(1.0, 1.0),
     },
     components: {
-      diffuse: "texture2D(image, fract(repeat * materialInput.st)).channels",
+      diffuse: "texture(image, fract(repeat * materialInput.st)).channels",
     },
   },
   translucent: false,
@@ -1309,7 +1309,7 @@ Material._materialCache.addMaterial(Material.AlphaMapType, {
       repeat: new Cartesian2(1.0, 1.0),
     },
     components: {
-      alpha: "texture2D(image, fract(repeat * materialInput.st)).channel",
+      alpha: "texture(image, fract(repeat * materialInput.st)).channel",
     },
   },
   translucent: true,
@@ -1330,7 +1330,7 @@ Material._materialCache.addMaterial(Material.SpecularMapType, {
       repeat: new Cartesian2(1.0, 1.0),
     },
     components: {
-      specular: "texture2D(image, fract(repeat * materialInput.st)).channel",
+      specular: "texture(image, fract(repeat * materialInput.st)).channel",
     },
   },
   translucent: false,
@@ -1351,7 +1351,7 @@ Material._materialCache.addMaterial(Material.EmissionMapType, {
       repeat: new Cartesian2(1.0, 1.0),
     },
     components: {
-      emission: "texture2D(image, fract(repeat * materialInput.st)).channels",
+      emission: "texture(image, fract(repeat * materialInput.st)).channels",
     },
   },
   translucent: false,

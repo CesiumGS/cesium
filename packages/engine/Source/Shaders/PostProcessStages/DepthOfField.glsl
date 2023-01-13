@@ -3,7 +3,7 @@ uniform sampler2D blurTexture;
 uniform sampler2D depthTexture;
 uniform float focalDistance;
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 vec4 toEye(vec2 uv, float depth)
 {
@@ -35,5 +35,5 @@ void main(void)
     float depth = czm_readDepth(depthTexture, v_textureCoordinates);
     vec4 posInCamera = toEye(v_textureCoordinates, depth);
     float d = computeDepthBlur(-posInCamera.z);
-    gl_FragColor = mix(texture2D(colorTexture, v_textureCoordinates), texture2D(blurTexture, v_textureCoordinates), d);
+    out_FragColor = mix(texture(colorTexture, v_textureCoordinates), texture(blurTexture, v_textureCoordinates), d);
 }

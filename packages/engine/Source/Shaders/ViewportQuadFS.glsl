@@ -1,5 +1,5 @@
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 void main()
 {
@@ -12,5 +12,5 @@ void main()
     
     czm_material material = czm_getMaterial(materialInput);
 
-    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
+    out_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 }
