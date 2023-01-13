@@ -63,9 +63,9 @@ function Megatexture(
 
   let pixelFormat;
   if (channelCount === 1) {
-    pixelFormat = PixelFormat.LUMINANCE;
+    pixelFormat = context.webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE;
   } else if (channelCount === 2) {
-    pixelFormat = PixelFormat.LUMINANCE_ALPHA;
+    pixelFormat = context.webgl2 ? PixelFormat.RG : PixelFormat.LUMINANCE_ALPHA;
   } else if (channelCount === 3) {
     pixelFormat = PixelFormat.RGB;
   } else if (channelCount === 4) {
