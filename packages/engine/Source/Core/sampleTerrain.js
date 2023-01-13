@@ -1,4 +1,5 @@
 import Check from "./Check.js";
+import defined from "./defined.js";
 
 /**
  * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -132,6 +133,10 @@ function doSampling(terrainProvider, level, positions) {
   const tileRequestSet = {}; // A unique set
   for (i = 0; i < positions.length; ++i) {
     const xy = tilingScheme.positionToTileXY(positions[i], level);
+    if (!defined(xy)) {
+      continue;
+    }
+
     const key = xy.toString();
 
     if (!tileRequestSet.hasOwnProperty(key)) {
