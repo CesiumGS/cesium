@@ -1,4 +1,5 @@
 import Check from "./Check.js";
+import defined from "./defined.js";
 
 /**
  * Initiates a terrain height query for an array of {@link Cartographic} positions by
