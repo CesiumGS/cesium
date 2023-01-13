@@ -76,7 +76,7 @@ Object.defineProperties(StructuralMetadata.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof StructuralMetadata.prototype
    * @type {*}
@@ -90,7 +90,7 @@ Object.defineProperties(StructuralMetadata.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof StructuralMetadata.prototype
    * @type {Object}

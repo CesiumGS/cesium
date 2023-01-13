@@ -4,6 +4,7 @@
     "tilesetVersion": "1.2.3"
   },
   "schema": {
+    "id": "AllMetadataTypesSchemaId",
     "classes": {
       "tileset": {
         "properties": {

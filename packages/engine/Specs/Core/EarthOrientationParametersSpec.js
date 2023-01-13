@@ -3,6 +3,7 @@ import {
   EarthOrientationParameters,
   JulianDate,
   TimeStandard,
+  RuntimeError,
 } from "../../index.js";
 
 describe("Core/EarthOrientationParameters", function () {
@@ -165,7 +166,6 @@ describe("Core/EarthOrientationParameters", function () {
 
     it("interpolates data correctly under normal circumstances", function () {
       const eopDescription = {
-        url: undefined,
         data: {
           columnNames: [
             "dateIso8601",
@@ -253,7 +253,6 @@ describe("Core/EarthOrientationParameters", function () {
 
     it("interpolates UT1 correctly over a leap second", function () {
       const eopDescription = {
-        url: undefined,
         data: {
           columnNames: [
             "dateIso8601",
@@ -354,5 +353,43 @@ describe("Core/EarthOrientationParameters", function () {
         Math.abs(resultBefore.ut1MinusUtc - resultAfter.ut1MinusUtc) > 0.5
       ).toEqual(true);
     });
+  });
+
+  it("fromUrl loads EOP data", async function () {
+    const eop = await EarthOrientationParameters.fromUrl(
+      "Data/EarthOrientationParameters/EOP-2011-July.json"
+    );
+    expect(eop).toBeInstanceOf(EarthOrientationParameters);
+
+    // 2011-07-03 00:00:00 UTC
+    const time = new JulianDate(2455745, 43200);
+    const result = eop.compute(time);
+    expect(result.xPoleWander).not.toEqual(0);
+    expect(result.yPoleWander).not.toEqual(0);
+    expect(result.xPoleOffset).not.toEqual(0);
+    expect(result.yPoleOffset).not.toEqual(0);
+    expect(result.ut1MinusUtc).not.toEqual(0);
+  });
+
+  it("fromUrl throws a RuntimeError when loading invalid EOP data", async function () {
+    await expectAsync(
+      EarthOrientationParameters.fromUrl(
+        "Data/EarthOrientationParameters/EOP-Invalid.json"
+      )
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "Error in loaded EOP data: The columnNames property is required."
+    );
+  });
+
+  it("fromUrl throws a RuntimeError when using a missing EOP data file", async function () {
+    await expectAsync(
+      EarthOrientationParameters.fromUrl(
+        "Data/EarthOrientationParameters/EOP-DoesNotExist.json"
+      )
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "An error occurred while retrieving the EOP data from the URL Data/EarthOrientationParameters/EOP-DoesNotExist.json."
+    );
   });
 });

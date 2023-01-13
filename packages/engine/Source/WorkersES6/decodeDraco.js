@@ -49,10 +49,18 @@ function decodeQuantizedDracoTypedArray(
       dracoAttribute,
       attributeData
     );
-  } else {
+  } else if (quantization.quantizationBits <= 16) {
     attributeData = new draco.DracoUInt16Array();
     vertexArray = new Uint16Array(vertexArrayLength);
     dracoDecoder.GetAttributeUInt16ForAllPoints(
+      dracoGeometry,
+      dracoAttribute,
+      attributeData
+    );
+  } else {
+    attributeData = new draco.DracoFloat32Array();
+    vertexArray = new Float32Array(vertexArrayLength);
+    dracoDecoder.GetAttributeFloatForAllPoints(
       dracoGeometry,
       dracoAttribute,
       attributeData

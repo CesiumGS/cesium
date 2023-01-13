@@ -371,7 +371,7 @@ describe(
       let groupMetadata;
 
       beforeAll(function () {
-        metadataClass = new MetadataClass({
+        metadataClass = MetadataClass.fromJson({
           id: "test",
           class: {
             properties: {

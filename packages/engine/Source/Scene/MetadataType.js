@@ -11,8 +11,7 @@ import Matrix4 from "../Core/Matrix4.js";
  * An enum of metadata types. These metadata types are containers containing
  * one or more components of type {@link MetadataComponentType}
  *
- * @enum MetadataType
- * @private
+ * @enum {String}
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 const MetadataType = {
@@ -21,7 +20,6 @@ const MetadataType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   SCALAR: "SCALAR",
   /**
@@ -29,7 +27,6 @@ const MetadataType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   VEC2: "VEC2",
   /**
@@ -37,7 +34,6 @@ const MetadataType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   VEC3: "VEC3",
   /**
@@ -45,7 +41,6 @@ const MetadataType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   VEC4: "VEC4",
   /**
@@ -53,23 +48,20 @@ const MetadataType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   MAT2: "MAT2",
   /**
-   * A 2x2 matrix, stored in column-major format.
+   * A 3x3 matrix, stored in column-major format.
    *
    * @type {String}
    * @constant
-   * @private
    */
   MAT3: "MAT3",
   /**
-   * A 2x2 matrix, stored in column-major format.
+   * A 4x4 matrix, stored in column-major format.
    *
    * @type {String}
    * @constant
-   * @private
    */
   MAT4: "MAT4",
   /**
@@ -77,7 +69,6 @@ const MetadataType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   BOOLEAN: "BOOLEAN",
   /**
@@ -85,7 +76,6 @@ const MetadataType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   STRING: "STRING",
   /**
@@ -95,7 +85,6 @@ const MetadataType = {
    *
    * @type {String}
    * @constant
-   * @private
    */
   ENUM: "ENUM",
 };
@@ -105,6 +94,7 @@ const MetadataType = {
  *
  * @param {MetadataType} type The type
  * @return {Boolean} <code>true</code> if the type is a vector, <code>false</code> otherwise
+ * @private
  */
 MetadataType.isVectorType = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -126,6 +116,7 @@ MetadataType.isVectorType = function (type) {
  *
  * @param {MetadataType} type The type
  * @return {Boolean} <code>true</code> if the type is a matrix, <code>false</code> otherwise
+ * @private
  */
 MetadataType.isMatrixType = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -148,6 +139,7 @@ MetadataType.isMatrixType = function (type) {
  *
  * @param {MetadataType} type The type to get the component count for
  * @return {Number} The number of components
+ * @private
  */
 MetadataType.getComponentCount = function (type) {
   //>>includeStart('debug', pragmas.debug);

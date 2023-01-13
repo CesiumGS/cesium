@@ -212,6 +212,11 @@ function getExtensionStub(name) {
     return instancedArraysStub;
   }
 
+  // Voxel tests rely on floating point textures
+  if (name === "OES_texture_float") {
+    return {};
+  }
+
   // No other extensions are stubbed.
   return null;
 }

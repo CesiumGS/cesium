@@ -347,7 +347,7 @@ function prepareVertexAttribute(typedArray, name) {
   ) {
     oneTimeWarning(
       "Cast pnts property to floats",
-      `Point cloud property "${name}" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`
+      `Point cloud property "${name}" will be cast to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`
     );
     return new Float32Array(typedArray);
   }

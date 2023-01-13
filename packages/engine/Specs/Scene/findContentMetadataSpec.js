@@ -5,7 +5,7 @@ describe("Scene/findContentMetadata", function () {
   let mockTileset;
 
   beforeAll(function () {
-    contentClass = new MetadataClass({
+    contentClass = MetadataClass.fromJson({
       id: "content",
       class: {
         properties: {

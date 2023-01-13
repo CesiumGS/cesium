@@ -39,7 +39,7 @@ function MetadataSchemaLoader(options) {
   }
   //>>includeEnd('debug');
 
-  this._schema = defined(schema) ? new MetadataSchema(schema) : undefined;
+  this._schema = defined(schema) ? MetadataSchema.fromJson(schema) : undefined;
   this._resource = resource;
   this._cacheKey = cacheKey;
   this._state = ResourceLoaderState.UNLOADED;
@@ -120,7 +120,7 @@ function loadExternalSchema(schemaLoader) {
       if (schemaLoader.isDestroyed()) {
         return;
       }
-      schemaLoader._schema = new MetadataSchema(json);
+      schemaLoader._schema = MetadataSchema.fromJson(json);
       schemaLoader._state = ResourceLoaderState.READY;
       return schemaLoader;
     })

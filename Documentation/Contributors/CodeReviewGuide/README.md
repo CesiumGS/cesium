@@ -6,7 +6,7 @@ This guide describes best practices for code reviewers.
 
 - [General](#general)
 - [Reviewing](#reviewing)
-- [Changes to the Public CesiumJS API](#changes-to-the-public-cesium-api)
+- [Changes to the Public CesiumJS API](#changes-to-the-public-cesiumjs-api)
 - [Testing](#testing)
 - [Merging](#merging)
 - [Useful Git Commit Management](#useful-git-commit-management)

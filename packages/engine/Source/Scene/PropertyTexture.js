@@ -116,7 +116,7 @@ Object.defineProperties(PropertyTexture.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof PropertyTexture.prototype
    * @type {*}
@@ -130,7 +130,7 @@ Object.defineProperties(PropertyTexture.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof PropertyTexture.prototype
    * @type {Object}

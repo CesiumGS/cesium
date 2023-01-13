@@ -16,6 +16,7 @@ import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
 import ModelComponents from "./ModelComponents.js";
 import ModelUtility from "./Model/ModelUtility.js";
+import oneTimeWarning from "../Core/oneTimeWarning.js";
 
 /**
  * An object that parses the the 3D Tiles 1.0 batch table and transcodes it to
@@ -263,7 +264,7 @@ function transcodeBinaryProperties(
     properties: classProperties,
   };
 
-  const transcodedSchema = new MetadataSchema(schemaJson);
+  const transcodedSchema = MetadataSchema.fromJson(schemaJson);
 
   const featureTableJson = {
     class: className,
@@ -353,6 +354,20 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     attribute.name = customAttributeName;
     attribute.count = featureCount;
     attribute.type = property.type;
+    const componentDatatype = ComponentDatatype.fromTypedArray(
+      attributeTypedArray
+    );
+    if (
+      componentDatatype === ComponentDatatype.INT ||
+      componentDatatype === ComponentDatatype.UNSIGNED_INT ||
+      componentDatatype === ComponentDatatype.DOUBLE
+    ) {
+      parseBatchTable._oneTimeWarning(
+        "Cast pnts property to floats",
+        `Point cloud property "${customAttributeName}" will be cast to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.`
+      );
+      attributeTypedArray = new Float32Array(attributeTypedArray);
+    }
     attribute.componentDatatype = ComponentDatatype.fromTypedArray(
       attributeTypedArray
     );
@@ -372,7 +387,7 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
     properties: classProperties,
   };
 
-  const transcodedSchema = new MetadataSchema(schemaJson);
+  const transcodedSchema = MetadataSchema.fromJson(schemaJson);
 
   const propertyAttributeJson = {
     properties: propertyAttributeProperties,
@@ -435,5 +450,6 @@ function transcodeComponentType(componentType) {
 
 // exposed for testing
 parseBatchTable._deprecationWarning = deprecationWarning;
+parseBatchTable._oneTimeWarning = oneTimeWarning;
 
 export default parseBatchTable;
