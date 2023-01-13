@@ -27,6 +27,7 @@ function DataRectangle(rectangle, maxLevel) {
  *
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Resource|String} [url] The URL of the VR-TheWorld TileMap. Deprecated.
  */
 
 /**
@@ -35,7 +36,7 @@ function DataRectangle(rectangle, maxLevel) {
  * @constructor
  * @private
  *
- * @param {VRTheWorldTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @param {VRTheWorldTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
 function TerrainProviderBuilder(options) {
   this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -143,7 +144,7 @@ async function requestMetadata(terrainProviderBuilder, resource, provider) {
  * @alias VRTheWorldTerrainProvider
  * @constructor
  *
- * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
+ * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  *
  * @example
  * const terrainProvider = await Cesium.VRTheWorldTerrainProvider.fromUrl(
@@ -320,7 +321,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
  * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
  *
  * @param {Resource|String} url The URL of the VR-TheWorld TileMap.
- * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
+ * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<VRTheWorldTerrainProvider>}
  *
  * @example

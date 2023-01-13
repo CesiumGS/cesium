@@ -47,6 +47,7 @@ function LayerInformation(layer) {
  * @property {Boolean} [requestMetadata=true] Flag that indicates if the client should request per tile metadata from the server, if available.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Resource|String|Promise<Resource>|Promise<String>} [url] The URL of the Cesium terrain server. Deprecated.
  */
 
 /**
@@ -55,7 +56,7 @@ function LayerInformation(layer) {
  * @constructor
  * @private
  *
- * @param {CesiumTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @param {CesiumTerrainProvider.ConstructorOptions} options An object describing initialization options
  */
 function TerrainProviderBuilder(options) {
   this.requestVertexNormals = defaultValue(options.requestVertexNormals, false);
@@ -460,7 +461,7 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  * @alias CesiumTerrainProvider
  * @constructor
  *
- * @param {CesiumTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options
+ * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options
  *
  * @example
  * // Create Arctic DEM terrain with normals.
@@ -523,6 +524,8 @@ function CesiumTerrainProvider(options) {
 
   this._availability = undefined;
   this._tilingScheme = undefined;
+  this._levelZeroMaximumGeometricError = undefined;
+  this._layers = undefined;
 
   this._ready = false;
   this._tileCredits = undefined;
@@ -1202,7 +1205,7 @@ CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
  * </ul>
  *
  * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the Cesium terrain server.
- * @param {CesiumTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
+ * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<CesiumTerrainProvider>}
  *
  * @example

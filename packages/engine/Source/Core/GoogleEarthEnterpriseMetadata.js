@@ -41,6 +41,8 @@ const defaultKey = stringToBuffer(
  * @alias GoogleEarthEnterpriseMetadata
  * @constructor
  *
+ * @param {Resource|String} [resourceOrUrl] The url of the Google Earth Enterprise server hosting the imagery.
+ *
  * @see GoogleEarthEnterpriseImageryProvider
  * @see GoogleEarthEnterpriseTerrainProvider
  *
@@ -94,8 +96,8 @@ function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
    */
   this.key = undefined;
 
+  this._resource = undefined;
   this._quadPacketVersion = 1;
-
   this._tileInfo = {};
   this._subtreePromises = {};
 

@@ -31,6 +31,7 @@ const ALL_CHILDREN = 15;
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
  *                    If neither parameter is specified, the WGS84 ellipsoid is used.
+ * @property {Resource|String|Promise<Resource>|Promise<String>} [url] The URL of the ArcGIS ImageServer service. Deprecated.
  */
 
 /**
@@ -39,7 +40,7 @@ const ALL_CHILDREN = 15;
  * @constructor
  * @private
  *
- * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  */
 function TerrainProviderBuilder(options) {
   this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -224,7 +225,7 @@ async function requestMetadata(
  * @alias ArcGISTiledElevationTerrainProvider
  * @constructor
  *
- * @param {CesiumTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @param {CesiumTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options
  *
  * @example
  * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
@@ -243,16 +244,17 @@ function ArcGISTiledElevationTerrainProvider(options) {
   this._levelZeroMaximumGeometricError = undefined;
   this._maxLevel = undefined;
   this._terrainDataStructure = undefined;
-  this._ready = false;
   this._width = undefined;
   this._height = undefined;
   this._encoding = undefined;
+  this._lodCount = undefined;
   const token = options.token;
 
   this._hasAvailability = false;
   this._tilesAvailable = undefined;
   this._tilesAvailabilityLoaded = undefined;
   this._availableCache = {};
+  this._ready = false;
 
   this._errorEvent = new Event();
 

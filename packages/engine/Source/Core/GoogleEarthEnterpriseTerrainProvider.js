@@ -74,6 +74,8 @@ TerrainCache.prototype.tidy = function () {
  *
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Resource|String} [url] The url of the Google Earth Enterprise server hosting the imagery. Deprecated.
+ * @property {GoogleEarthEnterpriseMetadata} [metadata] A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider. Deprecated.
  */
 
 /**
@@ -86,7 +88,7 @@ TerrainCache.prototype.tidy = function () {
  * @alias GoogleEarthEnterpriseTerrainProvider
  * @constructor
  *
- * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options An object describing initialization options
  *
  * @see GoogleEarthEnterpriseTerrainProvider.fromMetadata
  * @see GoogleEarthEnterpriseMetadata.fromUrl
@@ -341,7 +343,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
  * Creates a GoogleEarthTerrainProvider from GoogleEarthEnterpriseMetadata
  *
  * @param {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
- * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options A url or an object describing initialization options
+ * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options An object describing initialization options
  * @returns {GoogleEarthEnterpriseTerrainProvider}
  *
  * @see GoogleEarthEnterpriseMetadata.fromUrl
