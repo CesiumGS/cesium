@@ -7,7 +7,6 @@ const path = require("path");
 if (process.env.NODE_ENV === "production") {
   // eslint-disable-next-line global-require
   module.exports = require(path.join(__dirname, "Build/Cesium/index.cjs"));
-  //return;
 } else {
   // eslint-disable-next-line global-require
   module.exports = require(path.join(
