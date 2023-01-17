@@ -804,6 +804,8 @@ describe(
         expect(coordinates[index4].y).toEqual(0.5 / atlasHeight);
         expect(coordinates[index4].width).toEqual(0.5 / atlasWidth);
         expect(coordinates[index4].height).toEqual(0.5 / atlasHeight);
+
+        expect(atlas._indexHash[greenGuid]).toEqual(3);
       });
     });
 
