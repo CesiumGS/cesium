@@ -1,3 +1,4 @@
+import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -418,6 +419,10 @@ FeatureDetection.supportsWebAssembly = function () {
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext|WebGL2RenderingContext}
  */
 FeatureDetection.supportsWebgl2 = function (scene) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("scene", scene);
+  //>>includeEnd('debug');
+
   return scene.context.webgl2;
 };
 
