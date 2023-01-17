@@ -133,9 +133,9 @@
               source:
                 "czm_material czm_getMaterial(czm_materialInput materialInput) {" +
                 "czm_material material = czm_getDefaultMaterial(materialInput);" +
-                "float heightValue = texture2D(heightField, materialInput.st).r;" +
+                "float heightValue = texture(heightField, materialInput.st).r;" +
                 "material.diffuse = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue);" +
-                "material.alpha = (1.0 - texture2D(image, materialInput.st).r) * 0.7;" +
+                "material.alpha = (1.0 - texture(image, materialInput.st).r) * 0.7;" +
                 "material.normal = bumpMap.normal;" +
                 "material.specular = step(0.1, heightValue);" + // Specular mountain tops
                 "material.shininess = 8.0;" + // Sharpen highlight

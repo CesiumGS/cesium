@@ -1,12 +1,12 @@
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
-attribute vec3 normal;
-attribute vec2 st;
-attribute float batchId;
+in vec3 position3DHigh;
+in vec3 position3DLow;
+in vec3 normal;
+in vec2 st;
+in float batchId;
 
-varying vec3 v_positionEC;
-varying vec3 v_normalEC;
-varying vec2 v_st;
+out vec3 v_positionEC;
+out vec3 v_normalEC;
+out vec2 v_st;
 
 void main()
 {

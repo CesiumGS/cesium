@@ -173,12 +173,6 @@ DepthPlane.prototype.update = function (frameState) {
       sources: [DepthPlaneFS],
     });
     if (useLogDepth) {
-      const extension =
-        "#ifdef GL_EXT_frag_depth \n" +
-        "#extension GL_EXT_frag_depth : enable \n" +
-        "#endif \n\n";
-
-      fs.sources.push(extension);
       fs.defines.push("LOG_DEPTH");
       vs.defines.push("LOG_DEPTH");
     }

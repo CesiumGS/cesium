@@ -30,7 +30,7 @@ vec3 proceduralIBL(
 
     float inverseRoughness = 1.04 - roughness;
     inverseRoughness *= inverseRoughness;
-    vec3 sceneSkyBox = textureCube(czm_environmentMap, r).rgb * inverseRoughness;
+    vec3 sceneSkyBox = czm_textureCube(czm_environmentMap, r).rgb * inverseRoughness;
 
     float atmosphereHeight = 0.05;
     float blendRegionSize = 0.1 * ((1.0 - inverseRoughness) * 8.0 + 1.1 - horizonDotNadir);
@@ -67,7 +67,7 @@ vec3 proceduralIBL(
     float luminance = model_luminanceAtZenith * (numerator / denominator);
     #endif 
 
-    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;
+    vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
     vec3 iblColor = (diffuseIrradiance * diffuseColor * model_iblFactor.x) + (specularIrradiance * czm_srgbToLinear(specularColor * brdfLut.x + brdfLut.y) * model_iblFactor.y);
     float maximumComponent = max(max(lightColorHdr.x, lightColorHdr.y), lightColorHdr.z);
     vec3 lightColor = lightColorHdr / max(maximumComponent, 1.0);
@@ -122,7 +122,7 @@ vec3 textureIBL(
     vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));
     vec3 F = fresnelSchlick2(r0, r90, VdotH);
     
-    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;
+    vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, roughness)).rg;
       #ifdef CUSTOM_SPECULAR_IBL 
       vec3 specularIBL = czm_sampleOctahedralProjection(model_specularEnvironmentMaps, model_specularEnvironmentMapsSize, cubeDir, roughness * model_specularEnvironmentMapsMaximumLOD, model_specularEnvironmentMapsMaximumLOD);
       #else 

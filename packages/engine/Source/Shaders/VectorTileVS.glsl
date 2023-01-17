@@ -1,5 +1,5 @@
-attribute vec3 position;
-attribute float a_batchId;
+in vec3 position;
+in float a_batchId;
 
 uniform mat4 u_modifiedModelViewProjection;
 

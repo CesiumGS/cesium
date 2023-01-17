@@ -421,7 +421,7 @@ const PolylineFS =
   "uniform vec4 u_highlightColor; \n" +
   "void main()\n" +
   "{\n" +
-  "    gl_FragColor = u_highlightColor;\n" +
+  "    out_FragColor = u_highlightColor;\n" +
   "}\n";
 
 function createShaders(primitive, context) {

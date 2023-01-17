@@ -84,7 +84,7 @@ describe(
         `${
           "uniform sampler2D u_texture;" +
           "void main() {" +
-          "  gl_FragColor = texture2D(u_texture, vec2("
+          "  out_FragColor = texture(u_texture, vec2("
         }${x}, ${y}));` + `}`;
       const uniformMap = {
         u_texture: function () {

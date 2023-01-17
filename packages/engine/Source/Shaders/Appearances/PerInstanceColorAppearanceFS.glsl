@@ -1,6 +1,6 @@
-varying vec3 v_positionEC;
-varying vec3 v_normalEC;
-varying vec4 v_color;
+in vec3 v_positionEC;
+in vec3 v_normalEC;
+in vec4 v_color;
 
 void main()
 {
@@ -20,5 +20,5 @@ void main()
     material.diffuse = color.rgb;
     material.alpha = color.a;
 
-    gl_FragColor = czm_phong(normalize(positionToEyeEC), material, czm_lightDirectionEC);
+    out_FragColor = czm_phong(normalize(positionToEyeEC), material, czm_lightDirectionEC);
 }

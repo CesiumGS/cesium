@@ -6,7 +6,7 @@ uniform float lengthCap;
 uniform float stepSize;
 uniform float frustumLength;
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 vec4 clipToEye(vec2 uv, float depth)
 {
@@ -42,7 +42,7 @@ void main(void)
 
     if (posInCamera.z > frustumLength)
     {
-        gl_FragColor = vec4(1.0);
+        out_FragColor = vec4(1.0);
         return;
     }
 
@@ -58,7 +58,7 @@ void main(void)
     float gapAngle = 90.0 * czm_radiansPerDegree;
 
     // RandomNoise
-    float randomVal = texture2D(randomTexture, v_textureCoordinates).x;
+    float randomVal = texture(randomTexture, v_textureCoordinates).x;
 
     //Loop for each direction
     for (int i = 0; i < 4; i++)
@@ -111,5 +111,5 @@ void main(void)
     ao /= 4.0;
     ao = 1.0 - clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
-    gl_FragColor = vec4(vec3(ao), 1.0);
+    out_FragColor = vec4(vec3(ao), 1.0);
 }

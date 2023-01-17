@@ -401,7 +401,7 @@ function getDepthOnlyShaderProgram(vs, fs) {
   }
 
   const depthOnlyShader =
-    "void main() \n" + "{ \n" + "    gl_FragColor = vec4(1.0); \n" + "} \n";
+    "void main() \n" + "{ \n" + "    out_FragColor = vec4(1.0); \n" + "} \n";
 
   fs.sources = [depthOnlyShader];
 }
@@ -423,7 +423,7 @@ function getTranslucentShaderProgram(vs, fs) {
     "{ \n" +
     "    vec2 st = gl_FragCoord.xy / czm_viewport.zw; \n" +
     "#ifdef MANUAL_DEPTH_TEST \n" +
-    "    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, st)); \n" +
+    "    float logDepthOrDepth = czm_unpackDepth(texture(czm_globeDepthTexture, st)); \n" +
     "    if (logDepthOrDepth != 0.0) \n" +
     "    { \n" +
     "        vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, logDepthOrDepth); \n" +
@@ -435,13 +435,13 @@ function getTranslucentShaderProgram(vs, fs) {
     "    } \n" +
     "#endif \n" +
     "    czm_globe_translucency_main(); \n" +
-    "    vec4 classificationColor = texture2D(u_classificationTexture, st); \n" +
+    "    vec4 classificationColor = texture(u_classificationTexture, st); \n" +
     "    if (classificationColor.a > 0.0) \n" +
     "    { \n" +
     "        // Reverse premultiplication process to get the correct composited result of the classification primitives \n" +
     "        classificationColor.rgb /= classificationColor.a; \n" +
     "    } \n" +
-    "    gl_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n" +
+    "    out_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + out_FragColor * (1.0 - classificationColor.a); \n" +
     "} \n";
 
   sources.push(globeTranslucencyMain);
@@ -473,12 +473,12 @@ function getPickShaderProgram(vs, fs) {
     "void main() \n" +
     "{ \n" +
     "    vec2 st = gl_FragCoord.xy / czm_viewport.zw; \n" +
-    "    vec4 pickColor = texture2D(u_classificationTexture, st); \n" +
+    "    vec4 pickColor = texture(u_classificationTexture, st); \n" +
     "    if (pickColor == vec4(0.0)) \n" +
     "    { \n" +
     "        discard; \n" +
     "    } \n" +
-    "    gl_FragColor = pickColor; \n" +
+    "    out_FragColor = pickColor; \n" +
     "} \n";
 
   fs.sources = [pickShader];

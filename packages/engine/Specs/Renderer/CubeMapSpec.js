@@ -30,7 +30,7 @@ describe(
       const fs =
         "uniform samplerCube u_texture;" +
         "uniform mediump vec3 u_direction;" +
-        "void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }";
+        "void main() { out_FragColor = czm_textureCube(u_texture, normalize(u_direction)); }";
 
       let faceDirections = options.faceDirections;
       if (!defined(faceDirections)) {
@@ -596,7 +596,7 @@ describe(
 
       const fs =
         "uniform samplerCube u_texture;" +
-        "void main() { gl_FragColor = textureCube(u_texture, normalize(vec3(1.0, 1.0, 0.0))); }";
+        "void main() { out_FragColor = czm_textureCube(u_texture, normalize(vec3(1.0, 1.0, 0.0))); }";
 
       const uniformMap = {
         u_texture: function () {
@@ -753,7 +753,7 @@ describe(
 
       const fs =
         "uniform samplerCube u_texture;" +
-        "void main() { gl_FragColor = textureCube(u_texture, normalize(vec3(1.0, 1.0, 0.0))); }";
+        "void main() { out_FragColor = czm_textureCube(u_texture, normalize(vec3(1.0, 1.0, 0.0))); }";
 
       const uniformMap = {
         u_texture: function () {
@@ -1053,7 +1053,7 @@ describe(
 
       const fs =
         "uniform samplerCube u_cubeMap;" +
-        "void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
+        "void main() { out_FragColor = czm_textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
 
       const uniformMap = {
         u_cubeMap: function () {
@@ -1111,7 +1111,7 @@ describe(
       const fs =
         "uniform samplerCube u_cubeMap;" +
         "uniform sampler2D u_texture;" +
-        "void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)) + texture2D(u_texture, vec2(0.0)); }";
+        "void main() { out_FragColor = czm_textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)) + texture(u_texture, vec2(0.0)); }";
 
       const uniformMap = {
         u_cubeMap: function () {
@@ -1151,7 +1151,7 @@ describe(
 
       const fs =
         "uniform samplerCube u_cubeMap;" +
-        "void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
+        "void main() { out_FragColor = czm_textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
 
       const uniformMap = {
         u_cubeMap: function () {

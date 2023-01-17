@@ -27,7 +27,7 @@ function getClipAndStyleCode(
     `    float clippingPlanesEdgeWidth = ${styleUniformName}.a; \n` +
     `    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n` +
     `    { \n` +
-    `        gl_FragColor = clippingPlanesEdgeColor;\n` +
+    `        out_FragColor = clippingPlanesEdgeColor;\n` +
     `    } \n`;
   return shaderCode;
 }

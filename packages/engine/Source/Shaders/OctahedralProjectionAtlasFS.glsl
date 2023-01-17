@@ -1,4 +1,4 @@
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 uniform float originalSize;
 uniform sampler2D texture0;
@@ -60,30 +60,30 @@ void main()
 
     if(mipLevel == 0.0)
     {
-        gl_FragColor = texture2D(texture0, uv);
+        out_FragColor = texture(texture0, uv);
     }
     else if(mipLevel == 1.0)
     {
-        gl_FragColor = texture2D(texture1, uv);
+        out_FragColor = texture(texture1, uv);
     }
     else if(mipLevel == 2.0)
     {
-        gl_FragColor = texture2D(texture2, uv);
+        out_FragColor = texture(texture2, uv);
     }
     else if(mipLevel == 3.0)
     {
-        gl_FragColor = texture2D(texture3, uv);
+        out_FragColor = texture(texture3, uv);
     }
     else if(mipLevel == 4.0)
     {
-        gl_FragColor = texture2D(texture4, uv);
+        out_FragColor = texture(texture4, uv);
     }
     else if(mipLevel == 5.0)
     {
-        gl_FragColor = texture2D(texture5, uv);
+        out_FragColor = texture(texture5, uv);
     }
     else
     {
-        gl_FragColor = vec4(0.0);
+        out_FragColor = vec4(0.0);
     }
 }

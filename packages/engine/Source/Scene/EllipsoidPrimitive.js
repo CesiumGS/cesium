@@ -238,11 +238,6 @@ function getVertexArray(context) {
   return vertexArray;
 }
 
-const logDepthExtension =
-  "#ifdef GL_EXT_frag_depth \n" +
-  "#extension GL_EXT_frag_depth : enable \n" +
-  "#endif \n\n";
-
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
  * get the draw commands needed to render this primitive.
@@ -378,7 +373,6 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
     if (this._useLogDepth) {
       vs.defines.push("LOG_DEPTH");
       fs.defines.push("LOG_DEPTH");
-      fs.sources.push(logDepthExtension);
     }
 
     this._sp = ShaderProgram.replaceCache({
@@ -443,7 +437,6 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
       if (this._useLogDepth) {
         vs.defines.push("LOG_DEPTH");
         fs.defines.push("LOG_DEPTH");
-        fs.sources.push(logDepthExtension);
       }
 
       this._pickSP = ShaderProgram.replaceCache({

@@ -4,7 +4,7 @@ uniform float avgLuminance;
 uniform float threshold;
 uniform float offset;
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 float key(float avg)
 {
@@ -17,7 +17,7 @@ float key(float avg)
 
 void main()
 {
-    vec4 color = texture2D(colorTexture, v_textureCoordinates);
+    vec4 color = texture(colorTexture, v_textureCoordinates);
     vec3 xyz = czm_RGBToXYZ(color.rgb);
     float luminance = xyz.r;
 
@@ -26,5 +26,5 @@ void main()
     float brightness = brightLum / (offset + brightLum);
 
     xyz.r = brightness;
-    gl_FragColor = vec4(czm_XYZToRGB(xyz), 1.0);
+    out_FragColor = vec4(czm_XYZToRGB(xyz), 1.0);
 }

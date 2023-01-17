@@ -9,7 +9,7 @@ uniform float dirtAmount;
 uniform float earthRadius;
 uniform float intensity;
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 // whether it is in space or not
 // 6500000.0 is empirical value
@@ -46,22 +46,22 @@ vec4 textureDistorted(sampler2D tex, vec2 texcoord, vec2 direction, vec3 distort
     vec3 color;
     if(isSpace)
     {
-        color.r = isInEarth(texcoord + direction * distortion.r, sceneSize) * texture2D(tex, texcoord + direction * distortion.r).r;
-        color.g = isInEarth(texcoord + direction * distortion.g, sceneSize) * texture2D(tex, texcoord + direction * distortion.g).g;
-        color.b = isInEarth(texcoord + direction * distortion.b, sceneSize) * texture2D(tex, texcoord + direction * distortion.b).b;
+        color.r = isInEarth(texcoord + direction * distortion.r, sceneSize) * texture(tex, texcoord + direction * distortion.r).r;
+        color.g = isInEarth(texcoord + direction * distortion.g, sceneSize) * texture(tex, texcoord + direction * distortion.g).g;
+        color.b = isInEarth(texcoord + direction * distortion.b, sceneSize) * texture(tex, texcoord + direction * distortion.b).b;
     }
     else
     {
-        color.r = texture2D(tex, texcoord + direction * distortion.r).r;
-        color.g = texture2D(tex, texcoord + direction * distortion.g).g;
-        color.b = texture2D(tex, texcoord + direction * distortion.b).b;
+        color.r = texture(tex, texcoord + direction * distortion.r).r;
+        color.g = texture(tex, texcoord + direction * distortion.g).g;
+        color.b = texture(tex, texcoord + direction * distortion.b).b;
     }
     return vec4(clamp(color, 0.0, 1.0), 0.0);
 }
 
 void main(void)
 {
-    vec4 originalColor = texture2D(colorTexture, v_textureCoordinates);
+    vec4 originalColor = texture(colorTexture, v_textureCoordinates);
     vec3 rgb = originalColor.rgb;
     bool isSpace = length(czm_viewerPositionWC.xyz) > DISTANCE_TO_SPACE;
 
@@ -76,7 +76,7 @@ void main(void)
     {
         // Lens flare is disabled when not in space until #5932 is fixed.
         //    https://github.com/CesiumGS/cesium/issues/5932
-        gl_FragColor = originalColor;
+        out_FragColor = originalColor;
         return;
     }
 
@@ -117,7 +117,7 @@ void main(void)
     {
         dirtTexCoords.y = mod(floor(dirtTexCoords.y), 2.0) == 1.0 ? 1.0 - fract(dirtTexCoords.y) :  fract(dirtTexCoords.y);
     }
-    result += dirtAmount * texture2D(dirtTexture, dirtTexCoords);
+    result += dirtAmount * texture(dirtTexture, dirtTexCoords);
 
     // Rotating starburst texture's coordinate
     // dot(czm_view[0].xyz, vec3(0.0, 0.0, 1.0)) + dot(czm_view[1].xyz, vec3(0.0, 1.0, 0.0))
@@ -144,10 +144,10 @@ void main(void)
     else
     {
         result *= oneMinusWeightForLensFlare * intensity;
-        result *= texture2D(starTexture, lensStarTexcoord) * pow(weightForLensFlare, 1.0) * max((1.0 - length(vec3(st1.xy, 0.0))), 0.0) * 2.0;
+        result *= texture(starTexture, lensStarTexcoord) * pow(weightForLensFlare, 1.0) * max((1.0 - length(vec3(st1.xy, 0.0))), 0.0) * 2.0;
     }
 
-    result += texture2D(colorTexture, v_textureCoordinates);
+    result += texture(colorTexture, v_textureCoordinates);
 
-    gl_FragColor = result;
+    out_FragColor = result;
 }

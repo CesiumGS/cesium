@@ -37,11 +37,11 @@ describe(
         expect(cm.height).toEqual(1);
 
         const vs =
-          "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+          "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
         const fs =
           "uniform samplerCube u_texture;" +
           "uniform mediump vec3 u_direction;" +
-          "void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }";
+          "void main() { out_FragColor = czm_textureCube(u_texture, normalize(u_direction)); }";
         const sp = ShaderProgram.fromCache({
           context: context,
           vertexShaderSource: vs,

@@ -34,9 +34,6 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
-          contextOptions: {
-            requestWebgl1: false,
-          },
         });
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(

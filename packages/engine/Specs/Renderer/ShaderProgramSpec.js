@@ -24,7 +24,7 @@ describe(
       czm_testFunction2:
         "void czm_testFunction2(vec4 color) { czm_testFunction1(color); }",
       czm_testFunction1:
-        "void czm_testFunction1(vec4 color) { gl_FragColor = color; }",
+        "void czm_testFunction1(vec4 color) { out_FragColor = color; }",
       czm_testDiamondDependency1:
         "vec4 czm_testDiamondDependency1(vec4 color) { return czm_testAddAlpha(color); }",
       czm_testDiamondDependency2:
@@ -70,7 +70,7 @@ describe(
 
     it("has vertex and fragment shader source", function () {
       const vs = "void main() { gl_Position = vec4(1.0); }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -91,9 +91,8 @@ describe(
     });
 
     it("has a position vertex attribute", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -110,11 +109,11 @@ describe(
 
     it("sets attribute indices", function () {
       const vs =
-        "attribute vec4 position;" +
-        "attribute vec3 normal;" +
-        "attribute float heat;" +
+        "in vec4 position;" +
+        "in vec3 normal;" +
+        "in float heat;" +
         "void main() { gl_Position = position + vec4(normal, 0.0) + vec4(heat); }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       const attributes = {
         position: 3,
@@ -145,7 +144,7 @@ describe(
     it("has an automatic uniform", function () {
       const vs = "uniform vec4 u_vec4; void main() { gl_Position = u_vec4; }";
       const fs =
-        "void main() { gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); }";
+        "void main() { out_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -182,7 +181,7 @@ describe(
       const fs =
         "uniform sampler2D u_sampler2D;" +
         "uniform samplerCube u_samplerCube;" +
-        "void main() { gl_FragColor = texture2D(u_sampler2D, vec2(0.0)) + textureCube(u_samplerCube, vec3(1.0)); }";
+        "void main() { out_FragColor = texture(u_sampler2D, vec2(0.0)) + czm_textureCube(u_samplerCube, vec3(1.0)); }";
       sp = ShaderProgram.fromCache({
         context: d,
         vertexShaderSource: vs,
@@ -215,7 +214,7 @@ describe(
     it("has a struct uniform", function () {
       const vs =
         "uniform struct { float f; vec4 v; } u_struct; void main() { gl_Position = u_struct.f * u_struct.v; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -252,7 +251,7 @@ describe(
       const fs =
         "uniform sampler2D u_sampler2D[2];" +
         "uniform samplerCube u_samplerCube[2];" +
-        "void main() { gl_FragColor = texture2D(u_sampler2D[0], vec2(0.0)) + texture2D(u_sampler2D[1], vec2(0.0)) + textureCube(u_samplerCube[0], vec3(1.0)) + textureCube(u_samplerCube[1], vec3(1.0)); }";
+        "void main() { out_FragColor = texture(u_sampler2D[0], vec2(0.0)) + texture(u_sampler2D[1], vec2(0.0)) + czm_textureCube(u_samplerCube[0], vec3(1.0)) + czm_textureCube(u_samplerCube[1], vec3(1.0)); }";
       sp = ShaderProgram.fromCache({
         context: d,
         vertexShaderSource: vs,
@@ -314,7 +313,7 @@ describe(
         "    (czm_oneOverTwoPi > 0.0) && \n" +
         "    (czm_radiansPerDegree > 0.0) && \n" +
         "    (czm_degreesPerRadian > 0.0)) ? 1.0 : 0.0; \n" +
-        "  gl_FragColor = vec4(f); \n" +
+        "  out_FragColor = vec4(f); \n" +
         "}";
 
       expect({
@@ -331,7 +330,7 @@ describe(
         "  material.diffuse = vec3(1.0, 1.0, 1.0); \n" +
         "  material.alpha = 1.0; \n" +
         "  material.diffuse = czm_hue(material.diffuse, czm_twoPi); \n" +
-        "  gl_FragColor = vec4(material.diffuse, material.alpha); \n" +
+        "  out_FragColor = vec4(material.diffuse, material.alpha); \n" +
         "}";
 
       expect({
@@ -344,9 +343,9 @@ describe(
       const highpFloatSupported = ContextLimits.highpFloatSupported;
       ContextLimits._highpFloatSupported = false;
       const vs =
-        "attribute vec4 position; uniform float u_value; varying float v_value; void main() { gl_PointSize = 1.0; v_value = u_value * czm_viewport.z; gl_Position = position; }";
+        "in vec4 position; uniform float u_value; out float v_value; void main() { gl_PointSize = 1.0; v_value = u_value * czm_viewport.z; gl_Position = position; }";
       const fs =
-        "uniform float u_value; varying float v_value; void main() { gl_FragColor = vec4(u_value * v_value * czm_viewport.z); }";
+        "uniform float u_value; in float v_value; void main() { out_FragColor = vec4(u_value * v_value * czm_viewport.z); }";
       const uniformMap = {
         u_value: function () {
           return 1.0;
@@ -407,11 +406,12 @@ describe(
 
     it("diamond dependency", function () {
       const fs =
+        "layout (location = 0) out vec4 out_FragColor;\n" +
         "void main() { \n" +
         "  vec4 color = vec4(1.0, 1.0, 1.0, 0.8); \n" +
         "  color = czm_testDiamondDependency1(color); \n" +
         "  color = czm_testDiamondDependency2(color); \n" +
-        "  gl_FragColor = color; \n" +
+        "  out_FragColor = color; \n" +
         "}";
 
       expect({
@@ -466,9 +466,11 @@ describe(
     it("compiles with #version at the top", function () {
       const vs =
         "#version 100 \n" +
-        "attribute vec4 position; void main() { gl_Position = position; }";
+        "in vec4 position; void main() { gl_Position = position; }";
       const fs =
-        "#version 100 \n" + "void main() { gl_FragColor = vec4(1.0); }";
+        "#version 100 \n" +
+        "layout (location = 0) out vec4 out_FragColor;\n" +
+        "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -480,9 +482,12 @@ describe(
       const vs =
         "// comment before version directive. \n" +
         "#version 100 \n" +
-        "attribute vec4 position; void main() { gl_Position = position; }";
+        "in vec4 position; void main() { gl_Position = position; }";
       const fs =
-        "\n" + "#version 100 \n" + "void main() { gl_FragColor = vec4(1.0); }";
+        "\n" +
+        "#version 100 \n" +
+        "layout (location = 0) out vec4 out_FragColor;\n" +
+        "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -496,7 +501,9 @@ describe(
       }
 
       const vs = "does not compile.";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs =
+        "layout (location = 0) out vec4 out_FragColor;\n" +
+        "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -547,7 +554,8 @@ describe(
     it("fails with built-in function circular dependency", function () {
       const vs = "void main() { gl_Position = vec4(0.0); }";
       const fs =
-        "void main() { czm_circularDependency1(); gl_FragColor = vec4(1.0); }";
+        "layout (location = 0) out vec4 out_FragColor;\n" +
+        "void main() { czm_circularDependency1(); out_FragColor = vec4(1.0); }";
       expect(function () {
         sp = ShaderProgram.fromCache({
           context: context,

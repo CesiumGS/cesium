@@ -39,7 +39,7 @@ ShadowMapShader.createShadowCastVertexShader = function (
     }
 
     const shadowVS =
-      "varying vec3 v_positionEC; \n" +
+      "in vec3 v_positionEC; \n" +
       "void main() \n" +
       "{ \n" +
       "    czm_shadow_cast_main(); \n" +
@@ -80,7 +80,7 @@ ShadowMapShader.createShadowCastFragmentShader = function (
 
   if (isPointLight) {
     if (!hasPositionVarying) {
-      fsSource += "varying vec3 v_positionEC; \n";
+      fsSource += "in vec3 v_positionEC; \n";
     }
     fsSource += "uniform vec4 shadowMap_lightPositionEC; \n";
   }
@@ -92,7 +92,7 @@ ShadowMapShader.createShadowCastFragmentShader = function (
       "void main() \n" +
       "{ \n" +
       "    czm_shadow_cast_main(); \n" +
-      "    if (gl_FragColor.a == 0.0) \n" +
+      "    if (out_FragColor.a == 0.0) \n" +
       "    { \n" +
       "       discard; \n" +
       "    } \n";
@@ -106,11 +106,11 @@ ShadowMapShader.createShadowCastFragmentShader = function (
       `        discard; \n` +
       `    } \n` +
       `    distance /= shadowMap_lightPositionEC.w; // radius \n` +
-      `    gl_FragColor = czm_packDepth(distance); \n`;
+      `    out_FragColor = czm_packDepth(distance); \n`;
   } else if (usesDepthTexture) {
-    fsSource += "    gl_FragColor = vec4(1.0); \n";
+    fsSource += "    out_FragColor = vec4(1.0); \n";
   } else {
-    fsSource += "    gl_FragColor = czm_packDepth(gl_FragCoord.z); \n";
+    fsSource += "    out_FragColor = czm_packDepth(gl_FragCoord.z); \n";
   }
 
   fsSource += "} \n";
@@ -257,7 +257,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
       "uniform vec4 shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness; \n" +
       "uniform vec4 shadowMap_texelSizeDepthBiasAndNormalShadingSmooth; \n" +
       "#ifdef LOG_DEPTH \n" +
-      "varying vec3 v_logPositionEC; \n" +
+      "in vec3 v_logPositionEC; \n" +
       "#endif \n" +
       "vec4 getPositionEC() \n" +
       "{ \n"
@@ -364,7 +364,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
     }${
       debugCascadeColors
         ? "    // Draw cascade colors for debugging \n" +
-          "    gl_FragColor *= czm_cascadeColor(weights); \n"
+          "    out_FragColor *= czm_cascadeColor(weights); \n"
         : ""
     }`;
   } else {
@@ -383,7 +383,7 @@ ShadowMapShader.createShadowReceiveFragmentShader = function (
       "    float visibility = czm_shadowVisibility(shadowMap_texture, shadowParameters); \n";
   }
 
-  fsSource += "    gl_FragColor.rgb *= visibility; \n" + "} \n";
+  fsSource += "    out_FragColor.rgb *= visibility; \n" + "} \n";
 
   sources.push(fsSource);
 

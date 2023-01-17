@@ -947,15 +947,15 @@ function createShaders(pointCloud, frameState, style) {
       attributeType = `vec${componentCount}`;
     }
 
-    attributeDeclarations += `attribute ${attributeType} ${attributeName}; \n`;
+    attributeDeclarations += `in ${attributeType} ${attributeName}; \n`;
     attributeLocations[attributeName] = attribute.location;
   }
 
   createUniformMap(pointCloud, frameState);
 
   let vs =
-    "attribute vec3 a_position; \n" +
-    "varying vec4 v_color; \n" +
+    "in vec3 a_position; \n" +
+    "out vec4 v_color; \n" +
     "uniform vec4 u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier; \n" +
     "uniform vec4 u_constantColor; \n" +
     "uniform vec4 u_highlightColor; \n";
@@ -972,10 +972,10 @@ function createShaders(pointCloud, frameState, style) {
 
   if (usesColors) {
     if (isTranslucent) {
-      vs += "attribute vec4 a_color; \n";
+      vs += "in vec4 a_color; \n";
     } else if (isRGB565) {
       vs +=
-        "attribute float a_color; \n" +
+        "in float a_color; \n" +
         "const float SHIFT_RIGHT_11 = 1.0 / 2048.0; \n" +
         "const float SHIFT_RIGHT_5 = 1.0 / 32.0; \n" +
         "const float SHIFT_LEFT_11 = 2048.0; \n" +
@@ -983,19 +983,19 @@ function createShaders(pointCloud, frameState, style) {
         "const float NORMALIZE_6 = 1.0 / 64.0; \n" +
         "const float NORMALIZE_5 = 1.0 / 32.0; \n";
     } else {
-      vs += "attribute vec3 a_color; \n";
+      vs += "in vec3 a_color; \n";
     }
   }
   if (usesNormals) {
     if (isOctEncoded16P || isOctEncodedDraco) {
-      vs += "attribute vec2 a_normal; \n";
+      vs += "in vec2 a_normal; \n";
     } else {
-      vs += "attribute vec3 a_normal; \n";
+      vs += "in vec3 a_normal; \n";
     }
   }
 
   if (hasBatchIds) {
-    vs += "attribute float a_batchId; \n";
+    vs += "in float a_batchId; \n";
   }
 
   if (isQuantized || isQuantizedDraco || isOctEncodedDraco) {
@@ -1121,7 +1121,7 @@ function createShaders(pointCloud, frameState, style) {
 
   vs += "} \n";
 
-  let fs = "varying vec4 v_color; \n";
+  let fs = "in vec4 v_color; \n";
 
   if (hasClippedContent) {
     fs +=
@@ -1136,7 +1136,7 @@ function createShaders(pointCloud, frameState, style) {
   fs +=
     "void main() \n" +
     "{ \n" +
-    "    gl_FragColor = czm_gammaCorrect(v_color); \n";
+    "    out_FragColor = czm_gammaCorrect(v_color); \n";
 
   if (hasClippedContent) {
     fs += getClipAndStyleCode(
