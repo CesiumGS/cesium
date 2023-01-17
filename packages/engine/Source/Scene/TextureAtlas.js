@@ -498,17 +498,19 @@ TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
     }
     const atlasWidth = that._texture.width;
     const atlasHeight = that._texture.height;
-    const numImages = that.numberOfImages;
 
     const baseRegion = that._textureCoordinates[index];
     const x = baseRegion.x + subRegion.x / atlasWidth;
     const y = baseRegion.y + subRegion.y / atlasHeight;
     const w = subRegion.width / atlasWidth;
     const h = subRegion.height / atlasHeight;
-    that._textureCoordinates.push(new BoundingRectangle(x, y, w, h));
+    const newIndex =
+      that._textureCoordinates.push(new BoundingRectangle(x, y, w, h)) - 1;
+    that._indexHash[id] = newIndex;
+
     that._guid = createGuid();
 
-    return numImages;
+    return newIndex;
   });
 };
 
