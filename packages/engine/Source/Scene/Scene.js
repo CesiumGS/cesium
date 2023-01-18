@@ -1644,7 +1644,8 @@ Scene.prototype.getCompressedTextureFormatSupported = function (format) {
  * @param {DrawCommand} command
  */
 Scene.prototype.updateDerivedCommands = function (command) {
-  if (!defined(command.derivedCommands)) {
+  const { derivedCommands } = command;
+  if (!defined(derivedCommands)) {
     // Is not a DrawCommand
     return;
   }
@@ -1662,7 +1663,6 @@ Scene.prototype.updateDerivedCommands = function (command) {
   }
 
   const useHdr = this._hdr;
-  const derivedCommands = command.derivedCommands;
   const hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
   const hasHdrCommands = defined(derivedCommands.hdr);
   const hasDerivedCommands = defined(derivedCommands.originalCommand);
@@ -1676,35 +1676,33 @@ Scene.prototype.updateDerivedCommands = function (command) {
     needsHdrCommands ||
     needsDerivedCommands;
 
-  if (command.dirty) {
-    command.dirty = false;
+  if (!command.dirty) {
+    return;
+  }
 
-    const { shadowMaps, shadowsEnabled } = shadowState;
-    if (shadowsEnabled && command.castShadows) {
-      derivedCommands.shadows = ShadowMap.createCastDerivedCommand(
-        shadowMaps,
-        command,
-        shadowsDirty,
-        context,
-        derivedCommands.shadows
-      );
-    }
+  command.dirty = false;
 
-    if (hasLogDepthDerivedCommands || needsLogDepthDerivedCommands) {
-      derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(
-        command,
-        context,
-        derivedCommands.logDepth
-      );
-      updateDerivedCommands(
-        this,
-        derivedCommands.logDepth.command,
-        shadowsDirty
-      );
-    }
-    if (hasDerivedCommands || needsDerivedCommands) {
-      updateDerivedCommands(this, command, shadowsDirty);
-    }
+  const { shadowMaps, shadowsEnabled } = shadowState;
+  if (shadowsEnabled && command.castShadows) {
+    derivedCommands.shadows = ShadowMap.createCastDerivedCommand(
+      shadowMaps,
+      command,
+      shadowsDirty,
+      context,
+      derivedCommands.shadows
+    );
+  }
+
+  if (hasLogDepthDerivedCommands || needsLogDepthDerivedCommands) {
+    derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(
+      command,
+      context,
+      derivedCommands.logDepth
+    );
+    updateDerivedCommands(this, derivedCommands.logDepth.command, shadowsDirty);
+  }
+  if (hasDerivedCommands || needsDerivedCommands) {
+    updateDerivedCommands(this, command, shadowsDirty);
   }
 };
 
@@ -1971,8 +1969,6 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
     scene._debugVolume.destroy();
   }
 
-  let geometry;
-
   let center = Cartesian3.clone(boundingVolume.center);
   if (frameState.mode !== SceneMode.SCENE3D) {
     center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
@@ -1981,21 +1977,18 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
     center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
   }
 
-  if (defined(boundingVolume.radius)) {
-    const radius = boundingVolume.radius;
-
-    geometry = GeometryPipeline.toWireframe(
-      EllipsoidGeometry.createGeometry(
-        new EllipsoidGeometry({
-          radii: new Cartesian3(radius, radius, radius),
-          vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
-        })
-      )
+  const { radius, halfAxes } = boundingVolume;
+  if (defined(radius)) {
+    const geometry = EllipsoidGeometry.createGeometry(
+      new EllipsoidGeometry({
+        radii: new Cartesian3(radius, radius, radius),
+        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+      })
     );
 
     scene._debugVolume = new Primitive({
       geometryInstances: new GeometryInstance({
-        geometry: geometry,
+        geometry: GeometryPipeline.toWireframe(geometry),
         modelMatrix: Matrix4.fromTranslation(center),
         attributes: {
           color: new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0),
@@ -2008,20 +2001,16 @@ function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
       asynchronous: false,
     });
   } else {
-    const halfAxes = boundingVolume.halfAxes;
-
-    geometry = GeometryPipeline.toWireframe(
-      BoxGeometry.createGeometry(
-        BoxGeometry.fromDimensions({
-          dimensions: new Cartesian3(2.0, 2.0, 2.0),
-          vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
-        })
-      )
+    const geometry = BoxGeometry.createGeometry(
+      BoxGeometry.fromDimensions({
+        dimensions: new Cartesian3(2.0, 2.0, 2.0),
+        vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+      })
     );
 
     scene._debugVolume = new Primitive({
       geometryInstances: new GeometryInstance({
-        geometry: geometry,
+        geometry: GeometryPipeline.toWireframe(geometry),
         modelMatrix: Matrix4.fromRotationTranslation(
           halfAxes,
           center,
@@ -2149,23 +2138,21 @@ function executeCommand(command, scene, passState, debugFramebuffer) {
  * @param {PassState} passState
  */
 function executeIdCommand(command, scene, passState) {
-  const { frameState, context } = scene;
-  let derivedCommands = command.derivedCommands;
+  let { derivedCommands } = command;
   if (!defined(derivedCommands)) {
     return;
   }
 
+  const { frameState, context } = scene;
   if (frameState.useLogDepth && defined(derivedCommands.logDepth)) {
-    command = derivedCommands.logDepth.command;
+    derivedCommands = derivedCommands.logDepth.command.derivedCommands;
   }
 
-  derivedCommands = command.derivedCommands;
-  if (defined(derivedCommands.picking)) {
-    command = derivedCommands.picking.pickCommand;
-    command.execute(context, passState);
-  } else if (defined(derivedCommands.depth)) {
-    command = derivedCommands.depth.depthOnlyCommand;
-    command.execute(context, passState);
+  const { picking, depth } = derivedCommands;
+  if (defined(picking)) {
+    picking.pickCommand.execute(context, passState);
+  } else if (defined(depth)) {
+    depth.depthOnlyCommand.execute(context, passState);
   }
 }
 
@@ -3232,10 +3219,9 @@ const scratchCullingVolume = new CullingVolume();
  * @private
  */
 Scene.prototype.updateEnvironment = function () {
-  const { frameState, view } = this;
+  const { environmentState, frameState, view } = this;
 
   // Update celestial and terrestrial environment effects.
-  const environmentState = this._environmentState;
   const renderPass = frameState.passes.render;
   const offscreenPass = frameState.passes.offscreen;
   const skyAtmosphere = this.skyAtmosphere;
