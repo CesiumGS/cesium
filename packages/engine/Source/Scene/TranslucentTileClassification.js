@@ -347,15 +347,13 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
   globeDepthStencilTexture
 ) {
   // Check for translucent commands that should be classified
-  const length = commands.length;
   let command;
-  let i;
 
-  const useLogDepth = scene.frameState.useLogDepth;
-  const context = scene.context;
-  const framebuffer = passState.framebuffer;
+  const { frameState, context } = scene;
+  const { useLogDepth } = frameState;
+  const { framebuffer } = passState;
 
-  for (i = 0; i < length; ++i) {
+  for (let i = 0; i < commands.length; ++i) {
     command = commands[i];
     command = useLogDepth ? command.derivedCommands.logDepth.command : command;
 
@@ -377,7 +375,7 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
   // Clear depth for multifrustum
   this._clearDepthStencilCommand.execute(context, passState);
 
-  for (i = 0; i < length; ++i) {
+  for (let i = 0; i < commands.length; ++i) {
     command = commands[i];
     command = useLogDepth ? command.derivedCommands.logDepth.command : command;
 
@@ -387,7 +385,7 @@ TranslucentTileClassification.prototype.executeTranslucentCommands = function (
 
     // Depth-only commands are created for all translucent 3D Tiles commands
     const depthOnlyCommand = command.derivedCommands.depth.depthOnlyCommand;
-    executeCommand(depthOnlyCommand, scene, context, passState);
+    executeCommand(depthOnlyCommand, scene, passState);
   }
 
   this._frustumsDrawn += this._hasTranslucentDepth ? 1 : 0;
@@ -411,9 +409,9 @@ TranslucentTileClassification.prototype.executeClassificationCommands = function
     return;
   }
 
-  const context = scene.context;
-  const us = context.uniformState;
-  const framebuffer = passState.framebuffer;
+  const { context } = scene;
+  const { uniformState } = context;
+  const { framebuffer } = passState;
 
   if (this._frustumsDrawn === 2) {
     // copy classification from first frustum
@@ -426,16 +424,16 @@ TranslucentTileClassification.prototype.executeClassificationCommands = function
     this._clearColorCommand.execute(context, passState);
   }
 
-  us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-  const swapGlobeDepth = us.globeDepthTexture;
-  us.globeDepthTexture = this._packFBO.getColorTexture();
+  uniformState.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+  const swapGlobeDepth = uniformState.globeDepthTexture;
+  uniformState.globeDepthTexture = this._packFBO.getColorTexture();
   const commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
   const length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
   for (let i = 0; i < length; ++i) {
-    executeCommand(commands[i], scene, context, passState);
+    executeCommand(commands[i], scene, passState);
   }
 
-  us.globeDepthTexture = swapGlobeDepth;
+  uniformState.globeDepthTexture = swapGlobeDepth;
   passState.framebuffer = framebuffer;
 
   if (this._frustumsDrawn === 1) {
