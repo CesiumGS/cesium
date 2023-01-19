@@ -13,6 +13,7 @@
 
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
+uniform float u_stepSize;
 
 #if defined(PICKING)
     uniform vec4 u_pickColor;
@@ -54,6 +55,8 @@ void main()
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
+    float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
+    float stepT = u_stepSize / dimAtLevel;
 
     // TODO:
     //  - jitter doesn't affect the first traversal?
@@ -61,8 +64,8 @@ void main()
     //  - jitter is only applied at one step?
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
-        currT += noise * traversalData.stepT;
-        positionUv += noise * traversalData.stepT * viewDirUv;
+        currT += noise * stepT;
+        positionUv += noise * stepT * viewDirUv;
     #endif
 
     FragmentInput fragmentInput;
@@ -83,7 +86,7 @@ void main()
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
-        fragmentInput.voxel.travelDistance = traversalData.stepT;
+        fragmentInput.voxel.travelDistance = stepT;
 
         // Run the custom shader
         czm_modelMaterial materialOutput;
@@ -103,14 +106,16 @@ void main()
             break;
         }
 
-        if (traversalData.stepT == 0.0) {
+        if (stepT == 0.0) {
             // Shape is infinitely thin, no need to traverse further
+            // TODO: this doesn't happen? 
+            // Even if the shape is thin, won't we have currT >  endT? (see below)
             break;
         }
 
         // Keep raymarching
-        currT += traversalData.stepT;
-        positionUv += traversalData.stepT * viewDirUv;
+        currT += stepT;
+        positionUv += stepT * viewDirUv;
 
         // Check if there's more intersections.
         if (currT > endT) {
@@ -133,6 +138,8 @@ void main()
         // This is similar to traverseOctree but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
+        dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
+        stepT = u_stepSize / dimAtLevel;
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

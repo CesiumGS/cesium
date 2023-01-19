@@ -12,15 +12,12 @@ uniform sampler2D u_octreeLeafNodeTexture;
 uniform vec2 u_octreeLeafNodeTexelSizeUv;
 uniform int u_octreeLeafNodeTilesPerRow;
 
-uniform float u_stepSize;
-
 struct OctreeNodeData {
     int data;
     int flag;
 };
 
 struct TraversalData {
-    float stepT;
     ivec4 octreeCoords;
     int parentOctreeIndex;
 };
@@ -145,8 +142,6 @@ void traverseOctreeDownwards(in vec3 shapePosition, inout TraversalData traversa
             traversalData.parentOctreeIndex = childData.data;
         } else {
             // leaf tile - stop traversing
-            float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
-            traversalData.stepT = u_stepSize / dimAtLevel;
             #if (SAMPLE_COUNT == 1)
                 getOctreeLeafSampleData(childData, sampleDatas[0]);
                 setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[0]);
@@ -171,7 +166,6 @@ void traverseOctreeFromBeginning(in vec3 shapePosition, out TraversalData traver
     OctreeNodeData rootData = getOctreeNodeData(vec2(0.0));
     if (rootData.flag == OCTREE_FLAG_LEAF) {
         // No child data, only the root tile has data
-        traversalData.stepT = u_stepSize;
         #if (SAMPLE_COUNT == 1)
             getOctreeLeafSampleData(rootData, sampleDatas[0]);
             setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[0]);
@@ -201,21 +195,21 @@ void traverseOctreeFromExisting(in vec3 shapePosition, inout TraversalData trave
         for (int i = 0; i < SAMPLE_COUNT; i++) {
             setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[i]);
         }
-    } else {
-        // Go up tree
-        for (int i = 0; i < OCTREE_MAX_LEVELS; ++i)
-        {
-            traversalData.octreeCoords.xyz /= 2;
-            traversalData.octreeCoords.w -= 1;
+        return;
+    }
 
-            if (!insideTile(shapePosition, traversalData.octreeCoords)) {
-                traversalData.parentOctreeIndex = getOctreeParentIndex(traversalData.parentOctreeIndex);
-            } else {
-                break;
-            }
+    // Go up tree
+    for (int i = 0; i < OCTREE_MAX_LEVELS; ++i) {
+        traversalData.octreeCoords.xyz /= 2;
+        traversalData.octreeCoords.w -= 1;
+
+        if (insideTile(shapePosition, traversalData.octreeCoords)) {
+            break;
         }
 
-        // Go down tree
-        traverseOctreeDownwards(shapePosition, traversalData, sampleDatas);
+        traversalData.parentOctreeIndex = getOctreeParentIndex(traversalData.parentOctreeIndex);
     }
+
+    // Go down tree
+    traverseOctreeDownwards(shapePosition, traversalData, sampleDatas);
 }
