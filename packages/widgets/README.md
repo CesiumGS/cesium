@@ -10,8 +10,11 @@
 
 `@cesium/widgets` is a widgets library for use with CesiumJS— including the `CesiumViewer` widget plus widgets for common tasks such as animation, base layer selection and geocoding.
 
-[Examples](https://sandcastle.cesium.com/)
-:earth_africa: [Docs](https://cesium.com/learn/cesiumjs-learn/) :earth_asia: [Website](https://cesium.com/cesiumjs) :earth_americas: [Forum](https://community.cesium.com/)
+---
+
+[**Examples**](https://sandcastle.cesium.com/) :earth_asia: [**Docs**](https://cesium.com/learn/cesiumjs-learn/) :earth_americas: [**Website**](https://cesium.com/cesiumjs) :earth_africa: [**Forum**](https://community.cesium.com/) :earth_asia: [**User Stories**](https://cesium.com/user-stories/)
+
+---
 
 ## Install
 
@@ -31,14 +34,7 @@ yarn add @cesium/widgets
 
 ## Usage
 
-```js
-import * as CesiumWidgets from "@cesium/widgets";
-import "@cesium/widgets/Source/widgets.css";
-
-const viewer = new CesiumWidgets.Viewer("cesiumContainer");
-```
-
-Or, import individual modules to benefit from tree shaking optimizations through most build tools:
+Import individual modules to benefit from tree shaking optimizations through most build tools:
 
 ```js
 import { Viewer } from "@cesium/widgets";

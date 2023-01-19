@@ -10,8 +10,11 @@
 
 `@cesium/engine` includes cesiumJS's core, rendering, and data APIs. Here you'll find terrain and imagery engines, support for 3D Tiles and 3D models, geometries, and vector data.
 
-[Examples](https://sandcastle.cesium.com/)
-:earth_africa: [Docs](https://cesium.com/learn/cesiumjs-learn/) :earth_asia: [Website](https://cesium.com/cesiumjs) :earth_americas: [Forum](https://community.cesium.com/)
+---
+
+[**Examples**](https://sandcastle.cesium.com/) :earth_asia: [**Docs**](https://cesium.com/learn/cesiumjs-learn/) :earth_americas: [**Website**](https://cesium.com/cesiumjs) :earth_africa: [**Forum**](https://community.cesium.com/) :earth_asia: [**User Stories**](https://cesium.com/user-stories/)
+
+---
 
 ## Install
 
@@ -31,14 +34,7 @@ yarn add @cesium/engine
 
 ## Usage
 
-```js
-import * as Cesium from "@cesium/engine";
-import "@cesium/engine/Source/Widget/CesiumWidget.css";
-
-const cesiumWidget = new Cesium.CesiumWidget("cesiumContainer");
-```
-
-Or, import individual modules to benefit from tree shaking optimizations through most build tools:
+Import individual modules to benefit from tree shaking optimizations through most build tools:
 
 ```js
 import { CesiumWidget } from "@cesium/engine";
