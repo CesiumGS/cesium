@@ -34,110 +34,114 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
-        });
+        (async () => {
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            terrainProvider: await Cesium.createWorldTerrainAsync(),
+          });
 
-        const pinBuilder = new Cesium.PinBuilder();
+          const pinBuilder = new Cesium.PinBuilder();
 
-        Sandcastle.addToolbarMenu(
-          [
-            {
-              text: "Track with Waypoints",
-              onselect: function () {
-                viewer.dataSources
-                  .add(
-                    Cesium.GpxDataSource.load(
-                      "../../SampleData/gpx/lamina.gpx",
-                      {
-                        clampToGround: true,
-                      }
+          Sandcastle.addToolbarMenu(
+            [
+              {
+                text: "Track with Waypoints",
+                onselect: function () {
+                  viewer.dataSources
+                    .add(
+                      Cesium.GpxDataSource.load(
+                        "../../SampleData/gpx/lamina.gpx",
+                        {
+                          clampToGround: true,
+                        }
+                      )
                     )
-                  )
-                  .then(function (dataSource) {
-                    viewer.flyTo(dataSource.entities);
-                  });
+                    .then(function (dataSource) {
+                      viewer.flyTo(dataSource.entities);
+                    });
+                },
               },
-            },
-            {
-              text: "Route",
-              onselect: function () {
-                viewer.dataSources
-                  .add(
-                    Cesium.GpxDataSource.load(
-                      "../../SampleData/gpx/route.gpx",
-                      {
-                        clampToGround: true,
-                      }
+              {
+                text: "Route",
+                onselect: function () {
+                  viewer.dataSources
+                    .add(
+                      Cesium.GpxDataSource.load(
+                        "../../SampleData/gpx/route.gpx",
+                        {
+                          clampToGround: true,
+                        }
+                      )
                     )
-                  )
-                  .then(function (dataSource) {
-                    viewer.flyTo(dataSource.entities);
-                  });
+                    .then(function (dataSource) {
+                      viewer.flyTo(dataSource.entities);
+                    });
+                },
               },
-            },
-            {
-              text: "Waypoints",
-              onselect: function () {
-                viewer.dataSources
-                  .add(
-                    Cesium.GpxDataSource.load("../../SampleData/gpx/wpt.gpx", {
-                      clampToGround: true,
-                    })
-                  )
-                  .then(function (dataSource) {
-                    viewer.flyTo(dataSource.entities);
-                  });
-              },
-            },
-            {
-              text: "Multiple Tracks with Waypoints",
-              onselect: function () {
-                viewer.dataSources
-                  .add(
-                    Cesium.GpxDataSource.load(
-                      "../../SampleData/gpx/complexTrk.gpx",
-                      { clampToGround: true }
+              {
+                text: "Waypoints",
+                onselect: function () {
+                  viewer.dataSources
+                    .add(
+                      Cesium.GpxDataSource.load(
+                        "../../SampleData/gpx/wpt.gpx",
+                        {
+                          clampToGround: true,
+                        }
+                      )
                     )
-                  )
-                  .then(function (dataSource) {
-                    viewer.flyTo(dataSource.entities);
-                  });
+                    .then(function (dataSource) {
+                      viewer.flyTo(dataSource.entities);
+                    });
+                },
               },
-            },
-            {
-              text: "Symbology Options",
-              onselect: function () {
-                viewer.dataSources
-                  .add(
-                    Cesium.GpxDataSource.load(
-                      "../../SampleData/gpx/lamina.gpx",
-                      {
-                        clampToGround: true,
-                        trackColor: Cesium.Color.YELLOW,
-                        waypointImage: pinBuilder.fromMakiIconId(
-                          "bicycle",
-                          Cesium.Color.BLUE,
-                          48
-                        ),
-                      }
+              {
+                text: "Multiple Tracks with Waypoints",
+                onselect: function () {
+                  viewer.dataSources
+                    .add(
+                      Cesium.GpxDataSource.load(
+                        "../../SampleData/gpx/complexTrk.gpx",
+                        { clampToGround: true }
+                      )
                     )
-                  )
-                  .then(function (dataSource) {
-                    viewer.flyTo(dataSource.entities);
-                  });
+                    .then(function (dataSource) {
+                      viewer.flyTo(dataSource.entities);
+                    });
+                },
               },
-            },
-          ],
-          "toolbar"
-        );
+              {
+                text: "Symbology Options",
+                onselect: function () {
+                  viewer.dataSources
+                    .add(
+                      Cesium.GpxDataSource.load(
+                        "../../SampleData/gpx/lamina.gpx",
+                        {
+                          clampToGround: true,
+                          trackColor: Cesium.Color.YELLOW,
+                          waypointImage: pinBuilder.fromMakiIconId(
+                            "bicycle",
+                            Cesium.Color.BLUE,
+                            48
+                          ),
+                        }
+                      )
+                    )
+                    .then(function (dataSource) {
+                      viewer.flyTo(dataSource.entities);
+                    });
+                },
+              },
+            ],
+            "toolbar"
+          );
 
-        Sandcastle.reset = function () {
-          viewer.dataSources.removeAll();
-          viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
-          viewer.clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK;
-        };
-        //Sandcastle_End
+          Sandcastle.reset = function () {
+            viewer.dataSources.removeAll();
+            viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
+            viewer.clock.clockStep = Cesium.ClockStep.SYSTEM_CLOCK;
+          };
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

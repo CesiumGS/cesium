@@ -32,11 +32,17 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
-          ),
-        }); //Sandcastle_End
+        (async () => {
+          try {
+            const viewer = new Cesium.Viewer("cesiumContainer", {
+              terrainProvider: await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+                "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+              ),
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

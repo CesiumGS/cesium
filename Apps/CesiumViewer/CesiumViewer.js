@@ -20,7 +20,7 @@ import {
   viewerDragDropMixin,
 } from "../../Build/CesiumUnminified/index.js";
 
-function main() {
+async function main() {
   /*
      Options parsed from query string:
        source=url          The URL of a CZML/GeoJSON/KML data source to load at startup.
@@ -56,7 +56,7 @@ function main() {
 
     let terrainProvider;
     if (hasBaseLayerPicker) {
-      terrainProvider = createWorldTerrainAsync({
+      terrainProvider = await createWorldTerrainAsync({
         requestWaterMask: true,
         requestVertexNormals: true,
       });
@@ -71,10 +71,8 @@ function main() {
     });
 
     if (hasBaseLayerPicker) {
-      Promise.resolve(terrainProvider).then(() => {
-        const viewModel = viewer.baseLayerPicker.viewModel;
-        viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
-      });
+      const viewModel = viewer.baseLayerPicker.viewModel;
+      viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
     }
   } catch (exception) {
     loadingIndicator.style.display = "none";
@@ -151,25 +149,23 @@ function main() {
     }
 
     if (defined(loadPromise)) {
-      viewer.dataSources
-        .add(loadPromise)
-        .then(function (dataSource) {
-          const lookAt = endUserOptions.lookAt;
-          if (defined(lookAt)) {
-            const entity = dataSource.entities.getById(lookAt);
-            if (defined(entity)) {
-              viewer.trackedEntity = entity;
-            } else {
-              const error = `No entity with id "${lookAt}" exists in the provided data source.`;
-              showLoadError(source, error);
-            }
-          } else if (!defined(view) && endUserOptions.flyTo !== "false") {
-            viewer.flyTo(dataSource);
+      try {
+        const dataSource = await viewer.dataSources.add(loadPromise);
+        const lookAt = endUserOptions.lookAt;
+        if (defined(lookAt)) {
+          const entity = dataSource.entities.getById(lookAt);
+          if (defined(entity)) {
+            viewer.trackedEntity = entity;
+          } else {
+            const error = `No entity with id "${lookAt}" exists in the provided data source.`;
+            showLoadError(source, error);
           }
-        })
-        .catch(function (error) {
-          showLoadError(source, error);
-        });
+        } else if (!defined(view) && endUserOptions.flyTo !== "false") {
+          viewer.flyTo(dataSource);
+        }
+      } catch (error) {
+        showLoadError(source, error);
+      }
     }
   }
 

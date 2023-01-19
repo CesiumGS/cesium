@@ -42,83 +42,83 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
-        });
-        const scene = viewer.scene;
+        (async () => {
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            terrainProvider: await Cesium.createWorldTerrainAsync(),
+          });
+          const scene = viewer.scene;
 
-        scene.globe.depthTestAgainstTerrain = false;
+          scene.globe.depthTestAgainstTerrain = false;
 
-        // MAXAR OWT Muscatatuk photogrammetry dataset with property textures
-        // containing horizontal and vertical uncertainty
-        const tileset = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(905848),
-          })
-        );
+          // MAXAR OWT Muscatatuk photogrammetry dataset with property textures
+          // containing horizontal and vertical uncertainty
+          const tileset = viewer.scene.primitives.add(
+            new Cesium.Cesium3DTileset({
+              url: Cesium.IonResource.fromAssetId(905848),
+            })
+          );
 
-        viewer.zoomTo(tileset);
+          viewer.zoomTo(tileset);
 
-        const shaders = {
-          NO_TEXTURE: undefined,
-          UNCERTAINTY_CE90: new Cesium.CustomShader({
-            fragmentShaderText: `
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                int horizontalUncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum;
-                material.diffuse = vec3(float(horizontalUncertainty) / 255.0);
-              }
-            `,
-          }),
-          UNCERTAINTY_LE90: new Cesium.CustomShader({
-            fragmentShaderText: `
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                int verticalUncertainty = fsInput.metadata.r3dm_uncertainty_le90sum;
-                material.diffuse = vec3(float(verticalUncertainty) / 255.0);
-              }
-            `,
-          }),
-          // combined uncertainty
-          UNCERTAINTY: new Cesium.CustomShader({
-            fragmentShaderText: `
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                int uncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum + fsInput.metadata.r3dm_uncertainty_le90sum;
-                material.diffuse = vec3(float(uncertainty) / 255.0);
-              }
-            `,
-          }),
-        };
+          const shaders = {
+            NO_TEXTURE: undefined,
+            UNCERTAINTY_CE90: new Cesium.CustomShader({
+              fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          int horizontalUncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum;
+          material.diffuse = vec3(float(horizontalUncertainty) / 255.0);
+        }
+      `,
+            }),
+            UNCERTAINTY_LE90: new Cesium.CustomShader({
+              fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          int verticalUncertainty = fsInput.metadata.r3dm_uncertainty_le90sum;
+          material.diffuse = vec3(float(verticalUncertainty) / 255.0);
+        }
+      `,
+            }),
+            // combined uncertainty
+            UNCERTAINTY: new Cesium.CustomShader({
+              fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          int uncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum + fsInput.metadata.r3dm_uncertainty_le90sum;
+          material.diffuse = vec3(float(uncertainty) / 255.0);
+        }
+      `,
+            }),
+          };
 
-        Sandcastle.addToolbarMenu([
-          {
-            text: "Default View",
-            onselect: function () {
-              tileset.customShader = shaders.NO_TEXTURE;
+          Sandcastle.addToolbarMenu([
+            {
+              text: "Default View",
+              onselect: function () {
+                tileset.customShader = shaders.NO_TEXTURE;
+              },
             },
-          },
-          {
-            text: "Horizontal Uncertainty",
-            onselect: function () {
-              tileset.customShader = shaders.UNCERTAINTY_CE90;
+            {
+              text: "Horizontal Uncertainty",
+              onselect: function () {
+                tileset.customShader = shaders.UNCERTAINTY_CE90;
+              },
             },
-          },
-          {
-            text: "Vertical Uncertainty",
-            onselect: function () {
-              tileset.customShader = shaders.UNCERTAINTY_LE90;
+            {
+              text: "Vertical Uncertainty",
+              onselect: function () {
+                tileset.customShader = shaders.UNCERTAINTY_LE90;
+              },
             },
-          },
-          {
-            text: "Combined Uncertainty",
-            onselect: function () {
-              tileset.customShader = shaders.UNCERTAINTY;
+            {
+              text: "Combined Uncertainty",
+              onselect: function () {
+                tileset.customShader = shaders.UNCERTAINTY;
+              },
             },
-          },
-        ]);
-
-        //Sandcastle_End
+          ]);
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

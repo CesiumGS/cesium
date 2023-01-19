@@ -35,38 +35,38 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        (async () => {
+          try {
+            const geeMetadata = await Cesium.GoogleEarthEnterpriseMetadata.fromUrl(
+              new Cesium.Resource({
+                url: "http://www.earthenterprise.org/3d",
+                proxy: new Cesium.DefaultProxy("/proxy/"),
+              })
+            );
 
-        async function createGoogleEarthEnterpriseProviders() {
-          const geeMetadata = await Cesium.GoogleEarthEnterpriseMetadata.fromUrl(
-            new Cesium.Resource({
-              url: "http://www.earthenterprise.org/3d",
-              proxy: new Cesium.DefaultProxy("/proxy/"),
-            })
-          );
+            const viewer = new Cesium.Viewer("cesiumContainer", {
+              imageryProvider: new Cesium.GoogleEarthEnterpriseImageryProvider({
+                metadata: geeMetadata,
+              }),
+              terrainProvider: Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+                geeMetadata
+              ),
+              baseLayerPicker: false,
+            });
 
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            imageryProvider: new Cesium.GoogleEarthEnterpriseImageryProvider({
-              metadata: geeMetadata,
-            }),
-            terrainProvider: Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(
-              geeMetadata
-            ),
-            baseLayerPicker: false,
-          });
-
-          // Start off looking at San Francisco.
-          viewer.camera.setView({
-            destination: Cesium.Rectangle.fromDegrees(
-              -123.0,
-              36.0,
-              -121.7,
-              39.0
-            ),
-          });
-        }
-
-        createGoogleEarthEnterpriseProviders();
-        //Sandcastle_End
+            // Start off looking at San Francisco.
+            viewer.camera.setView({
+              destination: Cesium.Rectangle.fromDegrees(
+                -123.0,
+                36.0,
+                -121.7,
+                39.0
+              ),
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

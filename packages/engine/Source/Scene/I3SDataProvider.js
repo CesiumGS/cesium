@@ -512,9 +512,7 @@ I3SDataProvider.prototype._getDecoderTaskProcessor = function () {
 };
 
 function getCoveredTiles(terrainProvider, extent) {
-  return terrainProvider.readyPromise.then(function () {
-    return getTiles(terrainProvider, extent);
-  });
+  return getTiles(terrainProvider, extent);
 }
 
 const scratchCartesian2 = new Cartesian2();

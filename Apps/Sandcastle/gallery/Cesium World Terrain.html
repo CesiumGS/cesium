@@ -36,10 +36,15 @@
         "use strict";
         //Sandcastle_Begin
         // For more information on Cesium World Terrain, see https://cesium.com/platform/cesium-ion/content/cesium-world-terrain/
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
-        });
-        //Sandcastle_End
+        (async () => {
+          try {
+            const viewer = new Cesium.Viewer("cesiumContainer", {
+              terrainProvider: await Cesium.createWorldTerrainAsync(),
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

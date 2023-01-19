@@ -7243,19 +7243,19 @@
           },
         ];
 
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
-          baseLayerPicker: false,
-          shouldAnimate: true,
-        });
-
-        viewer.dataSources
-          .add(Cesium.CzmlDataSource.load(czml))
-          .then(function (ds) {
-            viewer.trackedEntity = ds.entities.getById("path");
+        (async () => {
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            terrainProvider: await Cesium.createWorldTerrainAsync(),
+            baseLayerPicker: false,
+            shouldAnimate: true,
           });
 
-        //Sandcastle_End
+          const dataSource = await viewer.dataSources.add(
+            Cesium.CzmlDataSource.load(czml)
+          );
+
+          viewer.trackedEntity = dataSource.entities.getById("path");
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

@@ -44,6 +44,8 @@ function createWorldTerrain(options) {
     requestWaterMask: defaultValue(options.requestWaterMask, false),
   });
 
+  // This is here in order to avoid throwing a second deprecation error
+  // by using the deprecated url parameter in the constructor above
   provider._readyPromise = CesiumTerrainProvider._initializeReadyPromise(
     {
       url: IonResource.fromAssetId(1),
