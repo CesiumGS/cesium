@@ -50,95 +50,100 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
         (async () => {
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            terrainProvider: await Cesium.createWorldTerrainAsync(),
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
+
+        viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
+        //The viewModel tracks the state of our mini application.
+        const viewModel = {
+          enabled: true,
+          density: 0,
+          sse: 0,
+        };
+        // Convert the viewModel members into knockout observables.
+        Cesium.knockout.track(viewModel);
+
+        // Bind the viewModel to the DOM elements of the UI that call for it.
+        const toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        Cesium.knockout
+          .getObservable(viewModel, "enabled")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.enabled = newValue;
           });
 
-          viewer.extend(Cesium.viewerCesiumInspectorMixin);
-
-          //The viewModel tracks the state of our mini application.
-          const viewModel = {
-            enabled: true,
-            density: 0,
-            sse: 0,
-          };
-          // Convert the viewModel members into knockout observables.
-          Cesium.knockout.track(viewModel);
-
-          // Bind the viewModel to the DOM elements of the UI that call for it.
-          const toolbar = document.getElementById("toolbar");
-          Cesium.knockout.applyBindings(viewModel, toolbar);
-
-          Cesium.knockout
-            .getObservable(viewModel, "enabled")
-            .subscribe(function (newValue) {
-              viewer.scene.fog.enabled = newValue;
-            });
-
-          Cesium.knockout
-            .getObservable(viewModel, "density")
-            .subscribe(function (newValue) {
-              viewer.scene.fog.density = newValue;
-            });
-
-          Cesium.knockout
-            .getObservable(viewModel, "sse")
-            .subscribe(function (newValue) {
-              viewer.scene.fog.screenSpaceErrorFactor = newValue;
-            });
-
-          viewModel.enabled = viewer.scene.fog.enabled;
-          viewModel.density = viewer.scene.fog.density;
-          viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
-
-          Sandcastle.addToolbarButton("Horizon high altitude", function () {
-            viewer.camera.setView({
-              destination: new Cesium.Cartesian3(
-                -2467730.5740817646,
-                -4390507.315824514,
-                3906155.113316938
-              ),
-              orientation: {
-                heading: 4.492211521856625,
-                pitch: -0.2687139437696304,
-              },
-            });
+        Cesium.knockout
+          .getObservable(viewModel, "density")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.density = newValue;
           });
 
-          Sandcastle.addToolbarButton("Horizon low altitude", function () {
-            viewer.camera.setView({
-              destination: new Cesium.Cartesian3(
-                -734001.9511656855,
-                -4214090.596769834,
-                4715898.125886317
-              ),
-              orientation: {
-                heading: 5.634257362559497,
-                pitch: -0.019548505785381032,
-              },
-            });
+        Cesium.knockout
+          .getObservable(viewModel, "sse")
+          .subscribe(function (newValue) {
+            viewer.scene.fog.screenSpaceErrorFactor = newValue;
           });
 
-          viewer.scene.globe._surface._debug.enableDebugOutput = true;
+        viewModel.enabled = viewer.scene.fog.enabled;
+        viewModel.density = viewer.scene.fog.density;
+        viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
 
-          Sandcastle.addToolbarButton("Snap", function () {
-            const container = document.getElementById("cesiumContainer");
-            const tmpH = container.style.height;
-            const tmpW = container.style.width;
-
-            container.style.height = "600px";
-            container.style.width = "800px";
-
-            viewer.resize();
-            viewer.render();
-            window.open(viewer.canvas.toDataURL("image/png"));
-            container.style.height = tmpH;
-            container.style.width = tmpW;
-            viewer.resize();
-            viewer.render();
+        Sandcastle.addToolbarButton("Horizon high altitude", function () {
+          viewer.camera.setView({
+            destination: new Cesium.Cartesian3(
+              -2467730.5740817646,
+              -4390507.315824514,
+              3906155.113316938
+            ),
+            orientation: {
+              heading: 4.492211521856625,
+              pitch: -0.2687139437696304,
+            },
           });
-        })(); //Sandcastle_End
+        });
+
+        Sandcastle.addToolbarButton("Horizon low altitude", function () {
+          viewer.camera.setView({
+            destination: new Cesium.Cartesian3(
+              -734001.9511656855,
+              -4214090.596769834,
+              4715898.125886317
+            ),
+            orientation: {
+              heading: 5.634257362559497,
+              pitch: -0.019548505785381032,
+            },
+          });
+        });
+
+        viewer.scene.globe._surface._debug.enableDebugOutput = true;
+
+        Sandcastle.addToolbarButton("Snap", function () {
+          const container = document.getElementById("cesiumContainer");
+          const tmpH = container.style.height;
+          const tmpW = container.style.width;
+
+          container.style.height = "600px";
+          container.style.width = "800px";
+
+          viewer.resize();
+          viewer.render();
+          window.open(viewer.canvas.toDataURL("image/png"));
+          container.style.height = tmpH;
+          container.style.width = tmpW;
+          viewer.resize();
+          viewer.render();
+        });
+        //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

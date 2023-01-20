@@ -35,79 +35,83 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        // San Francisco Ferry Building photogrammetry model provided by Aerometrex
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          infoBox: false,
+          orderIndependentTranslucency: false,
+        });
+
         (async () => {
-          // San Francisco Ferry Building photogrammetry model provided by Aerometrex
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            terrainProvider: await Cesium.createWorldTerrainAsync(),
-            infoBox: false,
-            orderIndependentTranslucency: false,
-          });
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
-          viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
-            "2021-11-09T20:27:37.016064475348684937Z"
-          );
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2021-11-09T20:27:37.016064475348684937Z"
+        );
 
-          const scene = viewer.scene;
+        const scene = viewer.scene;
 
-          const tileset = new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(775877),
-          });
+        const tileset = new Cesium.Cesium3DTileset({
+          url: Cesium.IonResource.fromAssetId(775877),
+        });
 
-          const translation = new Cesium.Cartesian3(
-            -1.398521324920626,
-            0.7823052871729486,
-            0.7015244410592609
-          );
-          tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+        const translation = new Cesium.Cartesian3(
+          -1.398521324920626,
+          0.7823052871729486,
+          0.7015244410592609
+        );
+        tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 
-          tileset.maximumScreenSpaceError = 8.0;
-          scene.pickTranslucentDepth = true;
-          scene.light.intensity = 7.0;
+        tileset.maximumScreenSpaceError = 8.0;
+        scene.pickTranslucentDepth = true;
+        scene.light.intensity = 7.0;
 
-          viewer.scene.primitives.add(tileset);
-          viewer.zoomTo(tileset);
+        viewer.scene.primitives.add(tileset);
+        viewer.zoomTo(tileset);
 
-          // Fly to a nice overview of the city.
-          viewer.camera.flyTo({
-            destination: new Cesium.Cartesian3(
-              -2703640.80485846,
-              -4261161.990345464,
-              3887439.511104276
-            ),
-            orientation: new Cesium.HeadingPitchRoll(
-              0.22426651143535548,
-              -0.2624145362506527,
-              0.000006972977223185239
-            ),
-          });
+        // Fly to a nice overview of the city.
+        viewer.camera.flyTo({
+          destination: new Cesium.Cartesian3(
+            -2703640.80485846,
+            -4261161.990345464,
+            3887439.511104276
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            0.22426651143535548,
+            -0.2624145362506527,
+            0.000006972977223185239
+          ),
+        });
 
-          // Styles =============================================================================
+        // Styles =============================================================================
 
-          const classificationStyle = new Cesium.Cesium3DTileStyle({
-            color: "color(${color})",
-          });
+        const classificationStyle = new Cesium.Cesium3DTileStyle({
+          color: "color(${color})",
+        });
 
-          const translucentWindowsStyle = new Cesium.Cesium3DTileStyle({
-            color: {
-              conditions: [
-                ["${component} === 'Windows'", "color('gray', 0.7)"],
-              ],
-            },
-          });
+        const translucentWindowsStyle = new Cesium.Cesium3DTileStyle({
+          color: {
+            conditions: [["${component} === 'Windows'", "color('gray', 0.7)"]],
+          },
+        });
 
-          // Shaders ============================================================================
+        // Shaders ============================================================================
 
-          // Dummy shader that sets the UNLIT lighting mode. For use with the classification style
-          const emptyFragmentShader =
-            "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
-          const unlitShader = new Cesium.CustomShader({
-            lightingModel: Cesium.LightingModel.UNLIT,
-            fragmentShaderText: emptyFragmentShader,
-          });
+        // Dummy shader that sets the UNLIT lighting mode. For use with the classification style
+        const emptyFragmentShader =
+          "void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {}";
+        const unlitShader = new Cesium.CustomShader({
+          lightingModel: Cesium.LightingModel.UNLIT,
+          fragmentShaderText: emptyFragmentShader,
+        });
 
-          const materialShader = new Cesium.CustomShader({
-            lightingModel: Cesium.LightingModel.PBR,
-            fragmentShaderText: `
+        const materialShader = new Cesium.CustomShader({
+          lightingModel: Cesium.LightingModel.PBR,
+          fragmentShaderText: `
       const int WINDOW = 0;
       const int FRAME = 1;
       const int WALL = 2;
@@ -154,18 +158,18 @@
         }
       }
       `,
-          });
+        });
 
-          const NOTHING_SELECTED = 12;
-          const selectFeatureShader = new Cesium.CustomShader({
-            uniforms: {
-              u_selectedFeature: {
-                type: Cesium.UniformType.INT,
-                value: NOTHING_SELECTED,
-              },
+        const NOTHING_SELECTED = 12;
+        const selectFeatureShader = new Cesium.CustomShader({
+          uniforms: {
+            u_selectedFeature: {
+              type: Cesium.UniformType.INT,
+              value: NOTHING_SELECTED,
             },
-            lightingModel: Cesium.LightingModel.PBR,
-            fragmentShaderText: `
+          },
+          lightingModel: Cesium.LightingModel.PBR,
+          fragmentShaderText: `
       const int NOTHING_SELECTED = 12;
       void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         int featureId = fsInput.featureIds.featureId_0;
@@ -176,17 +180,17 @@
         }
       }
       `,
-          });
+        });
 
-          const multipleFeatureIdsShader = new Cesium.CustomShader({
-            uniforms: {
-              u_selectedFeature: {
-                type: Cesium.UniformType.FLOAT,
-                value: NOTHING_SELECTED,
-              },
+        const multipleFeatureIdsShader = new Cesium.CustomShader({
+          uniforms: {
+            u_selectedFeature: {
+              type: Cesium.UniformType.FLOAT,
+              value: NOTHING_SELECTED,
             },
-            lightingModel: Cesium.LightingModel.UNLIT,
-            fragmentShaderText: `
+          },
+          lightingModel: Cesium.LightingModel.UNLIT,
+          fragmentShaderText: `
       const int IDS0_WINDOW = 0;
       const int IDS1_FACADE = 2;
       const int IDS1_ROOF = 3;
@@ -210,154 +214,151 @@
         material.diffuse *= tint;
       }
       `,
-          });
+        });
 
-          // Demo Functions =====================================================================
+        // Demo Functions =====================================================================
 
-          function defaults() {
-            tileset.style = undefined;
-            tileset.customShader = unlitShader;
-            tileset.colorBlendMode =
-              Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
-            tileset.colorBlendAmount = 0.5;
-            tileset.featureIdLabel = 0;
-          }
+        function defaults() {
+          tileset.style = undefined;
+          tileset.customShader = unlitShader;
+          tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
+          tileset.colorBlendAmount = 0.5;
+          tileset.featureIdLabel = 0;
+        }
 
-          const showPhotogrammetry = defaults;
+        const showPhotogrammetry = defaults;
 
-          function showClassification() {
-            defaults();
-            tileset.style = classificationStyle;
-            tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.MIX;
-          }
+        function showClassification() {
+          defaults();
+          tileset.style = classificationStyle;
+          tileset.colorBlendMode = Cesium.Cesium3DTileColorBlendMode.MIX;
+        }
 
-          function showAlternativeClassification() {
-            showClassification();
-            // This dataset has a second feature ID texture.
-            tileset.featureIdLabel = 1;
-          }
+        function showAlternativeClassification() {
+          showClassification();
+          // This dataset has a second feature ID texture.
+          tileset.featureIdLabel = 1;
+        }
 
-          function translucentWindows() {
-            defaults();
-            tileset.style = translucentWindowsStyle;
-          }
+        function translucentWindows() {
+          defaults();
+          tileset.style = translucentWindowsStyle;
+        }
 
-          function pbrMaterials() {
-            defaults();
-            tileset.customShader = materialShader;
-          }
+        function pbrMaterials() {
+          defaults();
+          tileset.customShader = materialShader;
+        }
 
-          function goldenTouch() {
-            defaults();
-            tileset.customShader = selectFeatureShader;
-          }
+        function goldenTouch() {
+          defaults();
+          tileset.customShader = selectFeatureShader;
+        }
 
-          function multipleFeatureIds() {
-            defaults();
-            tileset.customShader = multipleFeatureIdsShader;
-          }
+        function multipleFeatureIds() {
+          defaults();
+          tileset.customShader = multipleFeatureIdsShader;
+        }
 
-          // Pick Handlers ======================================================================
+        // Pick Handlers ======================================================================
 
-          // HTML overlay for showing feature name on mouseover
-          const nameOverlay = document.createElement("div");
-          viewer.container.appendChild(nameOverlay);
-          nameOverlay.className = "backdrop";
-          nameOverlay.style.display = "none";
-          nameOverlay.style.position = "absolute";
-          nameOverlay.style.bottom = "0";
-          nameOverlay.style.left = "0";
-          nameOverlay.style["pointer-events"] = "none";
-          nameOverlay.style.padding = "4px";
-          nameOverlay.style.backgroundColor = "black";
-          nameOverlay.style.whiteSpace = "pre-line";
-          nameOverlay.style.fontSize = "12px";
+        // HTML overlay for showing feature name on mouseover
+        const nameOverlay = document.createElement("div");
+        viewer.container.appendChild(nameOverlay);
+        nameOverlay.className = "backdrop";
+        nameOverlay.style.display = "none";
+        nameOverlay.style.position = "absolute";
+        nameOverlay.style.bottom = "0";
+        nameOverlay.style.left = "0";
+        nameOverlay.style["pointer-events"] = "none";
+        nameOverlay.style.padding = "4px";
+        nameOverlay.style.backgroundColor = "black";
+        nameOverlay.style.whiteSpace = "pre-line";
+        nameOverlay.style.fontSize = "12px";
 
-          let enablePicking = true;
-          const handler = new Cesium.ScreenSpaceEventHandler(
-            viewer.scene.canvas
-          );
-          handler.setInputAction(function (movement) {
-            if (enablePicking) {
-              const pickedObject = viewer.scene.pick(movement.endPosition);
-              if (pickedObject instanceof Cesium.Cesium3DTileFeature) {
-                nameOverlay.style.display = "block";
-                nameOverlay.style.bottom = `${
-                  viewer.canvas.clientHeight - movement.endPosition.y
-                }px`;
-                nameOverlay.style.left = `${movement.endPosition.x}px`;
-                const component = pickedObject.getProperty("component");
-                const message = `Component: ${component}\nFeature ID: ${pickedObject.featureId}`;
-                nameOverlay.textContent = message;
-              } else {
-                nameOverlay.style.display = "none";
-              }
+        let enablePicking = true;
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function (movement) {
+          if (enablePicking) {
+            const pickedObject = viewer.scene.pick(movement.endPosition);
+            if (pickedObject instanceof Cesium.Cesium3DTileFeature) {
+              nameOverlay.style.display = "block";
+              nameOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              nameOverlay.style.left = `${movement.endPosition.x}px`;
+              const component = pickedObject.getProperty("component");
+              const message = `Component: ${component}\nFeature ID: ${pickedObject.featureId}`;
+              nameOverlay.textContent = message;
             } else {
               nameOverlay.style.display = "none";
             }
-          }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+          } else {
+            nameOverlay.style.display = "none";
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-          const clickHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-          handler.setInputAction(function (movement) {
-            if (enablePicking) {
-              const pickedObject = scene.pick(movement.position);
-              if (
-                Cesium.defined(pickedObject) &&
-                Cesium.defined(pickedObject.featureId)
-              ) {
-                selectFeatureShader.setUniform(
-                  "u_selectedFeature",
-                  pickedObject.featureId
-                );
-              } else {
-                selectFeatureShader.setUniform(
-                  "u_selectedFeature",
-                  NOTHING_SELECTED
-                );
-              }
+        const clickHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        handler.setInputAction(function (movement) {
+          if (enablePicking) {
+            const pickedObject = scene.pick(movement.position);
+            if (
+              Cesium.defined(pickedObject) &&
+              Cesium.defined(pickedObject.featureId)
+            ) {
+              selectFeatureShader.setUniform(
+                "u_selectedFeature",
+                pickedObject.featureId
+              );
+            } else {
+              selectFeatureShader.setUniform(
+                "u_selectedFeature",
+                NOTHING_SELECTED
+              );
             }
-          }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-          // UI ============================================================================
+        // UI ============================================================================
 
-          Sandcastle.addToggleButton("Enable picking", enablePicking, function (
-            checked
-          ) {
-            enablePicking = checked;
-          });
+        Sandcastle.addToggleButton("Enable picking", enablePicking, function (
+          checked
+        ) {
+          enablePicking = checked;
+        });
 
-          const demos = [
-            {
-              text: "Photogrammetry",
-              onselect: showPhotogrammetry,
-            },
-            {
-              text: "Show Classification",
-              onselect: showClassification,
-            },
-            {
-              text: "Show Alternative Classification",
-              onselect: showAlternativeClassification,
-            },
-            {
-              text: "Translucent Windows",
-              onselect: translucentWindows,
-            },
-            {
-              text: "Stylized PBR Materials",
-              onselect: pbrMaterials,
-            },
-            {
-              text: "Golden Touch",
-              onselect: goldenTouch,
-            },
-            {
-              text: "Multiple Feature ID Sets",
-              onselect: multipleFeatureIds,
-            },
-          ];
-          Sandcastle.addToolbarMenu(demos);
-        })(); //Sandcastle_End
+        const demos = [
+          {
+            text: "Photogrammetry",
+            onselect: showPhotogrammetry,
+          },
+          {
+            text: "Show Classification",
+            onselect: showClassification,
+          },
+          {
+            text: "Show Alternative Classification",
+            onselect: showAlternativeClassification,
+          },
+          {
+            text: "Translucent Windows",
+            onselect: translucentWindows,
+          },
+          {
+            text: "Stylized PBR Materials",
+            onselect: pbrMaterials,
+          },
+          {
+            text: "Golden Touch",
+            onselect: goldenTouch,
+          },
+          {
+            text: "Multiple Feature ID Sets",
+            onselect: multipleFeatureIds,
+          },
+        ];
+        Sandcastle.addToolbarMenu(demos);
+        //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

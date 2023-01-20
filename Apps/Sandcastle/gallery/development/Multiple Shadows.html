@@ -41,102 +41,108 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          scene3DOnly: true,
+          infoBox: false,
+          selectionIndicator: false,
+          timeline: false,
+        });
+
         (async () => {
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            scene3DOnly: true,
-            infoBox: false,
-            selectionIndicator: false,
-            timeline: false,
-            terrainProvider: await Cesium.createWorldTerrainAsync(),
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
+
+        const scene = viewer.scene;
+        const camera = scene.camera;
+
+        scene.debugShowFramesPerSecond = true;
+
+        function addPrimitive(lon, lat, height, heading) {
+          const center = Cesium.Cartesian3.fromRadians(lon, lat, height);
+
+          const pointLightCamera = new Cesium.Camera(scene);
+          pointLightCamera.position = center;
+
+          camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
+          camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+          const shadowMap = new Cesium.ShadowMap({
+            context: scene.context,
+            lightCamera: pointLightCamera,
+            isPointLight: true,
+            softShadows: false,
           });
 
-          const scene = viewer.scene;
-          const camera = scene.camera;
+          shadowMap.enabled = true;
 
-          scene.debugShowFramesPerSecond = true;
+          const model = scene.primitives.add(
+            Cesium.Model.fromGltf({
+              url:
+                "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
+              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                center,
+                new Cesium.HeadingPitchRoll(heading, 0.0, 0.0)
+              ),
+            })
+          );
 
-          function addPrimitive(lon, lat, height, heading) {
-            const center = Cesium.Cartesian3.fromRadians(lon, lat, height);
-
-            const pointLightCamera = new Cesium.Camera(scene);
-            pointLightCamera.position = center;
-
-            camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
-            camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-
-            const shadowMap = new Cesium.ShadowMap({
-              context: scene.context,
-              lightCamera: pointLightCamera,
-              isPointLight: true,
-              softShadows: false,
+          model.readyPromise
+            .then(function (model) {
+              // Play and loop all animations at half-speed
+              model.activeAnimations.addAll({
+                multiplier: 0.5,
+                loop: Cesium.ModelAnimationLoop.REPEAT,
+              });
+            })
+            .catch(function (error) {
+              window.alert(error);
             });
 
-            shadowMap.enabled = true;
+          return shadowMap;
+        }
 
-            const model = scene.primitives.add(
-              Cesium.Model.fromGltf({
-                url:
-                  "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
-                modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
-                  center,
-                  new Cesium.HeadingPitchRoll(heading, 0.0, 0.0)
-                ),
-              })
-            );
+        const longitude = -1.3324415110874286;
+        const latitude = 0.6954224325279967;
+        const height = 200.0;
 
-            model.readyPromise
-              .then(function (model) {
-                // Play and loop all animations at half-speed
-                model.activeAnimations.addAll({
-                  multiplier: 0.5,
-                  loop: Cesium.ModelAnimationLoop.REPEAT,
-                });
-              })
-              .catch(function (error) {
-                window.alert(error);
-              });
+        const shadowMap1 = addPrimitive(
+          longitude + 0.00005,
+          latitude,
+          height,
+          0.0
+        );
+        const shadowMap2 = addPrimitive(
+          longitude - 0.00005,
+          latitude,
+          height,
+          Math.PI
+        );
 
-            return shadowMap;
-          }
+        shadowMap1.debugShow = true;
+        shadowMap2.debugShow = false;
 
-          const longitude = -1.3324415110874286;
-          const latitude = 0.6954224325279967;
-          const height = 200.0;
+        Sandcastle.addToolbarButton("Debug Toggle", function () {
+          shadowMap1.debugShow = !shadowMap1.debugShow;
+          shadowMap2.debugShow = !shadowMap2.debugShow;
+        });
 
-          const shadowMap1 = addPrimitive(
-            longitude + 0.00005,
-            latitude,
-            height,
-            0.0
-          );
-          const shadowMap2 = addPrimitive(
-            longitude - 0.00005,
-            latitude,
-            height,
-            Math.PI
-          );
+        scene.shadowMap = shadowMap1;
 
-          shadowMap1.debugShow = true;
-          shadowMap2.debugShow = false;
+        // Workaround until Cesium supports multiple light sources
+        const CustomPrimitive = function (shadowMap) {
+          this.shadowMap = shadowMap;
+        };
 
-          Sandcastle.addToolbarButton("Debug Toggle", function () {
-            shadowMap1.debugShow = !shadowMap1.debugShow;
-            shadowMap2.debugShow = !shadowMap2.debugShow;
-          });
+        CustomPrimitive.prototype.update = function (frameState) {
+          frameState.shadowMaps.push(this.shadowMap);
+        };
 
-          scene.shadowMap = shadowMap1;
-
-          // Workaround until Cesium supports multiple light sources
-          const CustomPrimitive = function (shadowMap) {
-            this.shadowMap = shadowMap;
-          };
-
-          CustomPrimitive.prototype.update = function (frameState) {
-            frameState.shadowMaps.push(this.shadowMap);
-          };
-
-          scene.primitives.add(new CustomPrimitive(shadowMap2));
-        })(); //Sandcastle_End
+        scene.primitives.add(new CustomPrimitive(shadowMap2));
+        //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

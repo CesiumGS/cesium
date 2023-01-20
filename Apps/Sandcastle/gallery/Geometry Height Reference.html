@@ -35,143 +35,152 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        (async () => {
-          const cesiumTerrainProvider = await Cesium.createWorldTerrainAsync();
-          const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+        const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            baseLayerPicker: false,
-            terrainProvider: cesiumTerrainProvider,
-          });
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          baseLayerPicker: false,
+        });
 
-          // depth test against terrain is required to make the polygons clamp to terrain
-          // instead of showing through it from underground
-          viewer.scene.globe.depthTestAgainstTerrain = true;
+        // depth test against terrain is required to make the polygons clamp to terrain
+        // instead of showing through it from underground
+        viewer.scene.globe.depthTestAgainstTerrain = true;
 
-          Sandcastle.addToolbarMenu([
-            {
-              text: "Polygons",
-              onselect: function () {
-                viewer.entities.removeAll();
-                addPolygons();
-              },
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Polygons",
+            onselect: function () {
+              viewer.entities.removeAll();
+              addPolygons();
             },
-            {
-              text: "Boxes, Cylinders and Ellipsoids",
-              onselect: function () {
-                viewer.entities.removeAll();
-                addGeometries();
-              },
+          },
+          {
+            text: "Boxes, Cylinders and Ellipsoids",
+            onselect: function () {
+              viewer.entities.removeAll();
+              addGeometries();
             },
-          ]);
+          },
+        ]);
 
-          Sandcastle.addToolbarMenu([
-            {
-              text: "Terrain Enabled",
-              onselect: async function () {
-                viewer.scene.terrainProvider = cesiumTerrainProvider;
-              },
-            },
-            {
-              text: "Terrain Disabled",
-              onselect: function () {
-                viewer.scene.terrainProvider = ellipsoidTerrainProvider;
-              },
-            },
-          ]);
-
-          const longitude = 6.950615989890521;
-          const latitude = 45.79546589994886;
-          const delta = 0.001;
-
-          function addGeometry(i, j) {
-            const west = longitude + delta * i;
-            const north = latitude + delta * j + delta;
-
-            const type = Math.floor(Math.random() * 3);
-            if (type === 0) {
-              viewer.entities.add({
-                position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
-                box: {
-                  dimensions: new Cesium.Cartesian3(40.0, 30.0, 50.0),
-                  material: Cesium.Color.fromRandom({ alpha: 1.0 }),
-                  heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                },
-              });
-            } else if (type === 1) {
-              viewer.entities.add({
-                position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
-                cylinder: {
-                  length: 50.0,
-                  topRadius: 20.0,
-                  bottomRadius: 20.0,
-                  material: Cesium.Color.fromRandom({ alpha: 1.0 }),
-                  heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                },
-              });
-            } else {
-              viewer.entities.add({
-                position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
-                ellipsoid: {
-                  radii: new Cesium.Cartesian3(20.0, 15.0, 25.0),
-                  material: Cesium.Color.fromRandom({ alpha: 1.0 }),
-                  heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                },
-              });
-            }
-          }
-
-          function addGeometries() {
-            for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                addGeometry(i, j);
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Terrain Enabled",
+            onselect: async function () {
+              try {
+                viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+              } catch (error) {
+                console.log(error);
               }
-            }
-            viewer.zoomTo(viewer.entities);
+            },
+          },
+          {
+            text: "Terrain Disabled",
+            onselect: function () {
+              viewer.scene.terrainProvider = ellipsoidTerrainProvider;
+            },
+          },
+        ]);
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
           }
+        })();
 
-          function addPolygon(i, j) {
-            const west = longitude + delta * i;
-            const east = longitude + delta * i + delta;
+        const longitude = 6.950615989890521;
+        const latitude = 45.79546589994886;
+        const delta = 0.001;
 
-            const south = latitude + delta * j;
-            const north = latitude + delta * j + delta;
-            const a = Cesium.Cartesian3.fromDegrees(west, south);
-            const b = Cesium.Cartesian3.fromDegrees(west, north);
-            const c = Cesium.Cartesian3.fromDegrees(east, north);
-            const d = Cesium.Cartesian3.fromDegrees(east, south);
+        function addGeometry(i, j) {
+          const west = longitude + delta * i;
+          const north = latitude + delta * j + delta;
 
-            const positions = [a, b, c, d];
+          const type = Math.floor(Math.random() * 3);
+          if (type === 0) {
             viewer.entities.add({
-              polygon: {
-                hierarchy: positions,
-                material: Cesium.Color.fromRandom({ alpha: 1 }),
-                height: 40.0,
-                heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
-                extrudedHeight: 0.0,
-                extrudedHeightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+              position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+              box: {
+                dimensions: new Cesium.Cartesian3(40.0, 30.0, 50.0),
+                material: Cesium.Color.fromRandom({ alpha: 1.0 }),
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+              },
+            });
+          } else if (type === 1) {
+            viewer.entities.add({
+              position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+              cylinder: {
+                length: 50.0,
+                topRadius: 20.0,
+                bottomRadius: 20.0,
+                material: Cesium.Color.fromRandom({ alpha: 1.0 }),
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+              },
+            });
+          } else {
+            viewer.entities.add({
+              position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+              ellipsoid: {
+                radii: new Cesium.Cartesian3(20.0, 15.0, 25.0),
+                material: Cesium.Color.fromRandom({ alpha: 1.0 }),
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
               },
             });
           }
+        }
 
-          function addPolygons() {
-            // create 16 polygons that are side-by-side
-            for (let i = 0; i < 4; i++) {
-              for (let j = 0; j < 4; j++) {
-                addPolygon(i, j);
-              }
+        function addGeometries() {
+          for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+              addGeometry(i, j);
             }
-            viewer.camera.lookAt(
-              Cesium.Cartesian3.fromDegrees(longitude, latitude, 1500),
-              new Cesium.HeadingPitchRange(
-                -Cesium.Math.PI / 2,
-                -Cesium.Math.PI_OVER_FOUR,
-                2000
-              )
-            );
-            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
           }
-        })(); //Sandcastle_End
+          viewer.zoomTo(viewer.entities);
+        }
+
+        function addPolygon(i, j) {
+          const west = longitude + delta * i;
+          const east = longitude + delta * i + delta;
+
+          const south = latitude + delta * j;
+          const north = latitude + delta * j + delta;
+          const a = Cesium.Cartesian3.fromDegrees(west, south);
+          const b = Cesium.Cartesian3.fromDegrees(west, north);
+          const c = Cesium.Cartesian3.fromDegrees(east, north);
+          const d = Cesium.Cartesian3.fromDegrees(east, south);
+
+          const positions = [a, b, c, d];
+          viewer.entities.add({
+            polygon: {
+              hierarchy: positions,
+              material: Cesium.Color.fromRandom({ alpha: 1 }),
+              height: 40.0,
+              heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+              extrudedHeight: 0.0,
+              extrudedHeightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            },
+          });
+        }
+
+        function addPolygons() {
+          // create 16 polygons that are side-by-side
+          for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+              addPolygon(i, j);
+            }
+          }
+          viewer.camera.lookAt(
+            Cesium.Cartesian3.fromDegrees(longitude, latitude, 1500),
+            new Cesium.HeadingPitchRange(
+              -Cesium.Math.PI / 2,
+              -Cesium.Math.PI_OVER_FOUR,
+              2000
+            )
+          );
+          viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        }
+        //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
