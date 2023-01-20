@@ -6,10 +6,10 @@ describe(
   "Renderer/Buffer",
   function () {
     createBufferSpecs({});
-    const c = createContext({ requestWebgl2: true });
+    const c = createContext({});
     // Don't repeat WebGL 1 tests when WebGL 2 is not supported
     if (c.webgl2) {
-      createBufferSpecs({ requestWebgl2: true });
+      createBufferSpecs({});
     }
     c.destroyForSpecs();
 
@@ -17,7 +17,7 @@ describe(
       let context;
       let buffer;
       let buffer2;
-      const webglMessage = contextOptions.requestWebgl2 ? ": WebGL 2" : "";
+      const webglMessage = contextOptions.requestWebgl1 ? "" : ": WebGL 2";
 
       beforeAll(function () {
         context = createContext(contextOptions);

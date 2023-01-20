@@ -295,13 +295,13 @@ function processImplicitRange(
   );
 
   // Declare the vertex attribute in the shader
-  // Example: attribute float a_implicit_feature_id_n;
+  // Example: in float a_implicit_feature_id_n;
   const shaderBuilder = renderResources.shaderBuilder;
   const implicitAttributeName = `a_implicit_${variableName}`;
   shaderBuilder.addAttribute("float", implicitAttributeName);
 
   // Also declare the corresponding varyings
-  // Example: varying float v_implicit_feature_id_n;
+  // Example: in float v_implicit_feature_id_n;
   const implicitVaryingName = `v_implicit_${variableName}`;
   shaderBuilder.addVarying("float", implicitVaryingName);
 
@@ -388,9 +388,9 @@ function processTexture(
   );
 
   // Read one or more channels from the texture
-  // example: texture2D(u_featureIdTexture_0, v_texCoord_1).rg
+  // example: texture(u_featureIdTexture_0, v_texCoord_1).rg
   const texCoord = `v_texCoord_${textureReader.texCoord}`;
-  const textureRead = `texture2D(${uniformName}, ${texCoord}).${channels}`;
+  const textureRead = `texture(${uniformName}, ${texCoord}).${channels}`;
 
   // Finally, assign to the struct field. Example:
   // featureIds.featureId_0 = unpacked;

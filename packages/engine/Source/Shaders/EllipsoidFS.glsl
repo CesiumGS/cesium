@@ -1,13 +1,7 @@
-#ifdef WRITE_DEPTH
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
-#endif
-
 uniform vec3 u_radii;
 uniform vec3 u_oneOverEllipsoidRadiiSquared;
 
-varying vec3 v_positionEC;
+in vec3 v_positionEC;
 
 vec4 computeEllipsoidColor(czm_ray ray, float intersection, float side)
 {
@@ -89,11 +83,10 @@ void main()
     // If the viewer either is inside or can see inside, compute insideFaceColor, with normals facing inward.
     vec4 insideFaceColor = (outsideFaceColor.a < 1.0) ? computeEllipsoidColor(ray, intersection.stop, -1.0) : vec4(0.0);
 
-    gl_FragColor = mix(insideFaceColor, outsideFaceColor, outsideFaceColor.a);
-    gl_FragColor.a = 1.0 - (1.0 - insideFaceColor.a) * (1.0 - outsideFaceColor.a);
+    out_FragColor = mix(insideFaceColor, outsideFaceColor, outsideFaceColor.a);
+    out_FragColor.a = 1.0 - (1.0 - insideFaceColor.a) * (1.0 - outsideFaceColor.a);
 
-#ifdef WRITE_DEPTH
-#ifdef GL_EXT_frag_depth
+#if (defined(WRITE_DEPTH) && (__VERSION__ == 300 || defined(GL_EXT_frag_depth)))
     t = (intersection.start != 0.0) ? intersection.start : intersection.stop;
     vec3 positionEC = czm_pointAlongRay(ray, t);
     vec4 positionCC = czm_projection * vec4(positionEC, 1.0);
@@ -105,8 +98,7 @@ void main()
     float n = czm_depthRange.near;
     float f = czm_depthRange.far;
 
-    gl_FragDepthEXT = (z * (f - n) + f + n) * 0.5;
-#endif
+    gl_FragDepth = (z * (f - n) + f + n) * 0.5;
 #endif
 #endif
 }

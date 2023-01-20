@@ -107,7 +107,7 @@ Procedural texture materials procedurally compute patterns on the GPU so they do
 
 ### Base Materials
 
-Base materials represent fine-grain fundamental material characteristics, such as how much incoming light is reflected in a single direction, i.e., the _specular intensity_, or how much light is emitted, i.e., the _emission_. These materials can be used as is, but are more commonly [combined](#CombiningMaterials) using Fabric to create a more complex material.
+Base materials represent fine-grain fundamental material characteristics, such as how much incoming light is reflected in a single direction, i.e., the _specular intensity_, or how much light is emitted, i.e., the _emission_. These materials can be used as is, but are more commonly [combined](#combining-materials) using Fabric to create a more complex material.
 
 | Name          | Screenshot                                            | Description                                                                                                                                                                                                        |
 | :------------ | :---------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -235,7 +235,7 @@ A slightly more complicated example adds a specular component so that the materi
 }
 ```
 
-The `components` property contains sub-properties that define the appearance of the material. The value of each sub-property is a GLSL code snippet, hence the `vec3(0.5)` above, which creates a 3D vector with each component set to `0.5`. These have access to all GLSL functions like `mix`, `cos`, `texture2D`, etc. There are five sub-properties.
+The `components` property contains sub-properties that define the appearance of the material. The value of each sub-property is a GLSL code snippet, hence the `vec3(0.5)` above, which creates a 3D vector with each component set to `0.5`. These have access to all GLSL functions like `mix`, `cos`, `texture`, etc. There are five sub-properties.
 
 | Name        | Default       | Description                                                                                                                                                                                                              |
 | :---------- | :------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -358,7 +358,7 @@ We can implement our own `DiffuseMap` material by using an image uniform:
     image : 'czm_defaultImage'
   },
   components : {
-    diffuse : 'texture2D(image, materialInput.st).rgb'
+    diffuse : 'texture(image, materialInput.st).rgb'
   }
 }
 ```
@@ -370,11 +370,11 @@ polygon.material = Cesium.Material.fromType("OurDiffuseMap");
 polygon.material.uniforms.image = "diffuse.png";
 ```
 
-There is also a cube-map placeholder, `czm_defaultCubeMap`. The standard GLSL uniform types, `float`, `vec3`, `mat4`, etc. are supported. Uniform arrays are not supported yet, but are on the [roadmap](#Roadmap).
+There is also a cube-map placeholder, `czm_defaultCubeMap`. The standard GLSL uniform types, `float`, `vec3`, `mat4`, etc. are supported. Uniform arrays are not supported yet, but are on the roadmap.
 
 ### Combining Materials
 
-So far, we can use the [built-in](#BuiltInMaterials) materials, or create our own by using Fabric to specify the material's [components](#Components) or full GLSL [source](#Source). We can also build materials from existing materials (recursively) forming a hierarchy of materials.
+So far, we can use the [built-in](#built-in-materials) materials, or create our own by using Fabric to specify the material's [components](#components) or full GLSL [source](#source). We can also build materials from existing materials (recursively) forming a hierarchy of materials.
 
 Fabric has a `materials` property where the value of each sub-property is Fabric, i.e., a material. These materials can be referenced in the `components` and `source` properties so they can be built upon. For example, a material representing plastic can be implemented with a `DiffuseMap` and `SpecularMap`.
 

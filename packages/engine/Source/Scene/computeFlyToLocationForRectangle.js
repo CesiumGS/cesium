@@ -49,16 +49,25 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
     return computeFlyToLocationForRectangle
       ._sampleTerrainMostDetailed(terrainProvider, cartographics)
       .then(function (positionsOnTerrain) {
+        let heightFound = false;
         const maxHeight = positionsOnTerrain.reduce(function (
           currentMax,
           item
         ) {
+          if (!defined(item.height)) {
+            return currentMax;
+          }
+          heightFound = true;
           return Math.max(item.height, currentMax);
         },
         -Number.MAX_VALUE);
 
         const finalPosition = positionWithoutTerrain;
-        finalPosition.height += maxHeight;
+
+        if (heightFound) {
+          finalPosition.height += maxHeight;
+        }
+
         return finalPosition;
       });
   });

@@ -5,7 +5,7 @@
 				"hot": "hot.jpg"
 			},
 			"components" : {
-				"diffuse" : "texture2D(hot, materialInput.st).rgb"
+				"diffuse" : "texture(hot, materialInput.st).rgb"
 			}		
 		},
 		"cold" : {
@@ -13,7 +13,7 @@
 				"cold": "cold.jpg"
 			},
 			"components" : {
-				"diffuse" : "texture2D(cold, materialInput.st).rgb"
+				"diffuse" : "texture(cold, materialInput.st).rgb"
 			}		
 		}
 	},

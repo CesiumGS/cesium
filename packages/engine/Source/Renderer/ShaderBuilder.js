@@ -43,9 +43,9 @@ import ShaderFunction from "./ShaderFunction.js";
  *  "void main()",
  *  "{",
  *  "    #ifdef SOLID_COLOR",
- *  "    gl_FragColor = vec4(u_color, 1.0);",
+ *  "    out_FragColor = vec4(u_color, 1.0);",
  *  "    #else",
- *  "    gl_FragColor = vec4(v_color, 1.0);",
+ *  "    out_FragColor = vec4(v_color, 1.0);",
  *  "    #endif",
  *  "}"
  * ]);
@@ -307,7 +307,7 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
  * @return {Number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}. This will always be 0.
  *
  * @example
- * // creates the line "attribute vec3 a_position;"
+ * // creates the line "in vec3 a_position;"
  * shaderBuilder.setPositionAttribute("vec3", "a_position");
  */
 ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
@@ -322,7 +322,7 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
   }
   //>>includeEnd('debug');
 
-  this._positionAttributeLine = `attribute ${type} ${identifier};`;
+  this._positionAttributeLine = `in ${type} ${identifier};`;
 
   // Some WebGL implementations require attribute 0 to always be active, so
   // this builder assumes the position will always go in location 0
@@ -343,7 +343,7 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
  * @return {Number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}
  *
  * @example
- * // creates the line "attribute vec2 a_texCoord0;" in the vertex shader
+ * // creates the line "in vec2 a_texCoord0;" in the vertex shader
  * shaderBuilder.addAttribute("vec2", "a_texCoord0");
  */
 ShaderBuilder.prototype.addAttribute = function (type, identifier) {
@@ -352,7 +352,7 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  const line = `attribute ${type} ${identifier};`;
+  const line = `in ${type} ${identifier};`;
   this._attributeLines.push(line);
 
   const location = this._nextAttributeLocation;
@@ -371,7 +371,8 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
  * @param {String} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
  *
  * @example
- * // creates the line "varying vec3 v_color;" in both shaders
+ * // creates the line "in vec3 v_color;" in the vertex shader
+ * // creates the line "out vec3 v_color;" in the fragment shader
  * shaderBuilder.addVarying("vec3", "v_color");
  */
 ShaderBuilder.prototype.addVarying = function (type, identifier) {
@@ -380,9 +381,9 @@ ShaderBuilder.prototype.addVarying = function (type, identifier) {
   Check.typeOf.string("identifier", identifier);
   //>>includeEnd('debug');
 
-  const line = `varying ${type} ${identifier};`;
-  this._vertexShaderParts.varyingLines.push(line);
-  this._fragmentShaderParts.varyingLines.push(line);
+  const line = `${type} ${identifier};`;
+  this._vertexShaderParts.varyingLines.push(`out ${line}`);
+  this._fragmentShaderParts.varyingLines.push(`in ${line}`);
 };
 
 /**
@@ -427,9 +428,9 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
  *  "void main()",
  *  "{",
  *  "    #ifdef SOLID_COLOR",
- *  "    gl_FragColor = vec4(u_color, 1.0);",
+ *  "    out_FragColor = vec4(u_color, 1.0);",
  *  "    #else",
- *  "    gl_FragColor = vec4(v_color, 1.0);",
+ *  "    out_FragColor = vec4(v_color, 1.0);",
  *  "    #endif",
  *  "}"
  * ]);

@@ -763,7 +763,7 @@ function createDebugShadowViewCommand(shadowMap, context) {
   if (shadowMap._isPointLight) {
     fs =
       "uniform samplerCube shadowMap_textureCube; \n" +
-      "varying vec2 v_textureCoordinates; \n" +
+      "in vec2 v_textureCoordinates; \n" +
       "void main() \n" +
       "{ \n" +
       "    vec2 uv = v_textureCoordinates; \n" +
@@ -812,21 +812,21 @@ function createDebugShadowViewCommand(shadowMap, context) {
       "        } \n" +
       "    } \n" +
       " \n" +
-      "    float shadow = czm_unpackDepth(textureCube(shadowMap_textureCube, dir)); \n" +
-      "    gl_FragColor = vec4(vec3(shadow), 1.0); \n" +
+      "    float shadow = czm_unpackDepth(czm_textureCube(shadowMap_textureCube, dir)); \n" +
+      "    out_FragColor = vec4(vec3(shadow), 1.0); \n" +
       "} \n";
   } else {
     fs =
       `${
         "uniform sampler2D shadowMap_texture; \n" +
-        "varying vec2 v_textureCoordinates; \n" +
+        "in vec2 v_textureCoordinates; \n" +
         "void main() \n" +
         "{ \n"
       }${
         shadowMap._usesDepthTexture
-          ? "    float shadow = texture2D(shadowMap_texture, v_textureCoordinates).r; \n"
-          : "    float shadow = czm_unpackDepth(texture2D(shadowMap_texture, v_textureCoordinates)); \n"
-      }    gl_FragColor = vec4(vec3(shadow), 1.0); \n` + `} \n`;
+          ? "    float shadow = texture(shadowMap_texture, v_textureCoordinates).r; \n"
+          : "    float shadow = czm_unpackDepth(texture(shadowMap_texture, v_textureCoordinates)); \n"
+      }    out_FragColor = vec4(vec3(shadow), 1.0); \n` + `} \n`;
   }
 
   const drawCommand = context.createViewportQuadCommand(fs, {

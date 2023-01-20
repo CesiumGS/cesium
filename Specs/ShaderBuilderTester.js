@@ -66,11 +66,11 @@ ShaderBuilderTester.expectHasVaryings = function (
 ) {
   expectEqualUnordered(
     shaderBuilder._vertexShaderParts.varyingLines,
-    expectedVaryings
+    expectedVaryings.map((varying) => `out ${varying}`)
   );
   expectEqualUnordered(
     shaderBuilder._fragmentShaderParts.varyingLines,
-    expectedVaryings
+    expectedVaryings.map((varying) => `in ${varying}`)
   );
 };
 

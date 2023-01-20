@@ -7,7 +7,7 @@ describe("Scene/PropertyAttribute", function () {
   let propertyAttribute;
 
   beforeAll(function () {
-    classDefinition = new MetadataClass({
+    classDefinition = MetadataClass.fromJson({
       id: "points",
       class: {
         properties: {

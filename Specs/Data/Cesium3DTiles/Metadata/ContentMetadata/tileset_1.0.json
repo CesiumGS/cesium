@@ -9,6 +9,7 @@
   "extensions": {
     "3DTILES_metadata": {
       "schema": {
+        "id": "ContentMetadataSchemaId",
         "classes": {
           "content": {
             "properties": {

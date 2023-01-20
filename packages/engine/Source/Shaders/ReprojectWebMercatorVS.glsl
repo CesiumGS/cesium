@@ -1,9 +1,9 @@
-attribute vec4 position;
-attribute float webMercatorT;
+in vec4 position;
+in float webMercatorT;
 
 uniform vec2 u_textureDimensions;
 
-varying vec2 v_textureCoordinates;
+out vec2 v_textureCoordinates;
 
 void main()
 {

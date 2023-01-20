@@ -1,22 +1,18 @@
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
-
 #ifdef TEXTURE_COORDINATES
 #ifdef SPHERICAL
-varying vec4 v_sphericalExtents;
+in vec4 v_sphericalExtents;
 #else // SPHERICAL
-varying vec2 v_inversePlaneExtents;
-varying vec4 v_westPlane;
-varying vec4 v_southPlane;
+in vec2 v_inversePlaneExtents;
+in vec4 v_westPlane;
+in vec4 v_southPlane;
 #endif // SPHERICAL
-varying vec3 v_uvMinAndSphericalLongitudeRotation;
-varying vec3 v_uMaxAndInverseDistance;
-varying vec3 v_vMaxAndInverseDistance;
+in vec3 v_uvMinAndSphericalLongitudeRotation;
+in vec3 v_uMaxAndInverseDistance;
+in vec3 v_vMaxAndInverseDistance;
 #endif // TEXTURE_COORDINATES
 
 #ifdef PER_INSTANCE_COLOR
-varying vec4 v_color;
+in vec4 v_color;
 #endif
 
 #ifdef NORMAL_EC
@@ -28,8 +24,8 @@ vec3 getEyeCoordinate3FromWindowCoordinate(vec2 fragCoord, float logDepthOrDepth
 vec3 vectorFromOffset(vec4 eyeCoordinate, vec2 positiveOffset) {
     vec2 glFragCoordXY = gl_FragCoord.xy;
     // Sample depths at both offset and negative offset
-    float upOrRightLogDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw));
-    float downOrLeftLogDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY - positiveOffset) / czm_viewport.zw));
+    float upOrRightLogDepth = czm_unpackDepth(texture(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw));
+    float downOrLeftLogDepth = czm_unpackDepth(texture(czm_globeDepthTexture, (glFragCoordXY - positiveOffset) / czm_viewport.zw));
     // Explicitly evaluate both paths
     // Necessary for multifrustum and for edges of the screen
     bvec2 upOrRightInBounds = lessThan(glFragCoordXY + positiveOffset, czm_viewport.zw);
@@ -44,7 +40,7 @@ vec3 vectorFromOffset(vec4 eyeCoordinate, vec2 positiveOffset) {
 void main(void)
 {
 #ifdef REQUIRES_EC
-    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, gl_FragCoord.xy / czm_viewport.zw));
+    float logDepthOrDepth = czm_unpackDepth(texture(czm_globeDepthTexture, gl_FragCoord.xy / czm_viewport.zw));
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, logDepthOrDepth);
 #endif
 
@@ -76,11 +72,11 @@ void main(void)
     // being opaque pixels there in another buffer.
     // Check for logDepthOrDepth != 0.0 to make sure this should be classified.
     if (0.0 <= uv.x && uv.x <= 1.0 && 0.0 <= uv.y && uv.y <= 1.0 || logDepthOrDepth != 0.0) {
-        gl_FragColor.a = 1.0; // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
+        out_FragColor.a = 1.0; // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
         czm_writeDepthClamp();
     }
 #else // CULL_FRAGMENTS
-        gl_FragColor.a = 1.0;
+        out_FragColor.a = 1.0;
 #endif // CULL_FRAGMENTS
 #else // PICK
 
@@ -105,7 +101,7 @@ void main(void)
 
     vec4 color = czm_gammaCorrect(v_color);
 #ifdef FLAT
-    gl_FragColor = color;
+    out_FragColor = color;
 #else // FLAT
     czm_materialInput materialInput;
     materialInput.normalEC = normalEC;
@@ -114,11 +110,11 @@ void main(void)
     material.diffuse = color.rgb;
     material.alpha = color.a;
 
-    gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material, czm_lightDirectionEC);
+    out_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material, czm_lightDirectionEC);
 #endif // FLAT
 
     // Premultiply alpha. Required for classification primitives on translucent globe.
-    gl_FragColor.rgb *= gl_FragColor.a;
+    out_FragColor.rgb *= out_FragColor.a;
 
 #else // PER_INSTANCE_COLOR
 
@@ -151,13 +147,13 @@ void main(void)
     czm_material material = czm_getMaterial(materialInput);
 
 #ifdef FLAT
-    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
+    out_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #else // FLAT
-    gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material, czm_lightDirectionEC);
+    out_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material, czm_lightDirectionEC);
 #endif // FLAT
 
     // Premultiply alpha. Required for classification primitives on translucent globe.
-    gl_FragColor.rgb *= gl_FragColor.a;
+    out_FragColor.rgb *= out_FragColor.a;
 
 #endif // PER_INSTANCE_COLOR
     czm_writeDepthClamp();

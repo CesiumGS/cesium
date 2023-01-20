@@ -1,4 +1,4 @@
-varying vec4 positionEC;
+in vec4 positionEC;
 
 void main()
 {
@@ -25,7 +25,7 @@ void main()
     czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid_center, czm_ellipsoidInverseRadii);
     if (!czm_isEmpty(intersection))
     {
-        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+        out_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
     }
     else
     {

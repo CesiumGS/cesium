@@ -215,15 +215,15 @@ describe(
         []
       );
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying vec3 v_positionEC;",
-        "varying vec3 v_positionMC;",
-        "varying vec3 v_positionWC;",
+        "vec3 v_positionEC;",
+        "vec3 v_positionMC;",
+        "vec3 v_positionWC;",
       ]);
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, []);
       ShaderBuilderTester.expectHasAttributes(
         shaderBuilder,
-        "attribute vec3 a_positionMC;",
+        "in vec3 a_positionMC;",
         []
       );
       verifyFeatureStruct(shaderBuilder);
@@ -317,11 +317,11 @@ describe(
           ["    attributes.texCoord_0 = v_texCoord_0;"]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec3 v_normalEC;",
-          "varying vec2 v_texCoord_0;",
-          "varying vec3 v_positionEC;",
-          "varying vec3 v_positionMC;",
-          "varying vec3 v_positionWC;",
+          "vec3 v_normalEC;",
+          "vec2 v_texCoord_0;",
+          "vec3 v_positionEC;",
+          "vec3 v_positionMC;",
+          "vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_NORMALS",
@@ -333,8 +333,8 @@ describe(
         ]);
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
-          ["attribute vec3 a_normalMC;", "attribute vec2 a_texCoord_0;"]
+          "in vec3 a_positionMC;",
+          ["in vec3 a_normalMC;", "in vec2 a_texCoord_0;"]
         );
         verifyFeatureStruct(shaderBuilder);
       });
@@ -417,11 +417,11 @@ describe(
         ]);
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
+          "in vec3 a_positionMC;",
           [
-            "attribute vec3 a_position2D;",
-            "attribute vec3 a_normalMC;",
-            "attribute vec2 a_texCoord_0;",
+            "in vec3 a_position2D;",
+            "in vec3 a_normalMC;",
+            "in vec2 a_texCoord_0;",
           ]
         );
         verifyFeatureStruct(shaderBuilder);
@@ -537,13 +537,13 @@ describe(
           ["    attributes.texCoord_0 = v_texCoord_0;"]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec3 v_normalEC;",
-          "varying vec3 v_tangentEC;",
-          "varying vec3 v_bitangentEC;",
-          "varying vec2 v_texCoord_0;",
-          "varying vec3 v_positionEC;",
-          "varying vec3 v_positionMC;",
-          "varying vec3 v_positionWC;",
+          "vec3 v_normalEC;",
+          "vec3 v_tangentEC;",
+          "vec3 v_bitangentEC;",
+          "vec2 v_texCoord_0;",
+          "vec3 v_positionEC;",
+          "vec3 v_positionMC;",
+          "vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_BITANGENTS",
@@ -559,11 +559,11 @@ describe(
         ]);
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
+          "in vec3 a_positionMC;",
           [
-            "attribute vec3 a_normalMC;",
-            "attribute vec4 a_tangentMC;",
-            "attribute vec2 a_texCoord_0;",
+            "in vec3 a_normalMC;",
+            "in vec4 a_tangentMC;",
+            "in vec2 a_texCoord_0;",
           ]
         );
         verifyFeatureStruct(shaderBuilder);
@@ -666,11 +666,11 @@ describe(
           ]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec2 v_texCoord_0;",
-          "varying vec2 v_texCoord_1;",
-          "varying vec3 v_positionEC;",
-          "varying vec3 v_positionMC;",
-          "varying vec3 v_positionWC;",
+          "vec2 v_texCoord_0;",
+          "vec2 v_texCoord_1;",
+          "vec3 v_positionEC;",
+          "vec3 v_positionMC;",
+          "vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_TEXCOORD_0",
@@ -682,8 +682,8 @@ describe(
         ]);
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
-          ["attribute vec2 a_texCoord_0;", "attribute vec2 a_texCoord_1;"]
+          "in vec3 a_positionMC;",
+          ["in vec2 a_texCoord_0;", "in vec2 a_texCoord_1;"]
         );
         verifyFeatureStruct(shaderBuilder);
       });
@@ -800,12 +800,12 @@ describe(
           ]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec3 v_normalEC;",
-          "varying vec4 v_color_0;",
-          "varying vec2 v_texCoord_0;",
-          "varying vec3 v_positionEC;",
-          "varying vec3 v_positionMC;",
-          "varying vec3 v_positionWC;",
+          "vec3 v_normalEC;",
+          "vec4 v_color_0;",
+          "vec2 v_texCoord_0;",
+          "vec3 v_positionEC;",
+          "vec3 v_positionMC;",
+          "vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_NORMALS",
@@ -819,12 +819,8 @@ describe(
         ]);
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
-          [
-            "attribute vec3 a_normalMC;",
-            "attribute vec4 a_color_0;",
-            "attribute vec2 a_texCoord_0;",
-          ]
+          "in vec3 a_positionMC;",
+          ["in vec3 a_normalMC;", "in vec4 a_color_0;", "in vec2 a_texCoord_0;"]
         );
         verifyFeatureStruct(shaderBuilder);
       });
@@ -906,10 +902,10 @@ describe(
           ["    attributes.color_0 = v_color_0;"]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec4 v_color_0;",
-          "varying vec3 v_positionEC;",
-          "varying vec3 v_positionMC;",
-          "varying vec3 v_positionWC;",
+          "vec4 v_color_0;",
+          "vec3 v_positionEC;",
+          "vec3 v_positionMC;",
+          "vec3 v_positionWC;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_COLOR_0",
@@ -921,8 +917,8 @@ describe(
         ]);
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
-          ["attribute vec4 a_color_0;"]
+          "in vec3 a_positionMC;",
+          ["in vec4 a_color_0;"]
         );
         verifyFeatureStruct(shaderBuilder);
       });
@@ -1001,15 +997,15 @@ describe(
         ["    attributes.temperature = v_temperature;"]
       );
       ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-        "varying vec2 v_temperature;",
-        "varying vec3 v_positionEC;",
-        "varying vec3 v_positionMC;",
-        "varying vec3 v_positionWC;",
+        "vec2 v_temperature;",
+        "vec3 v_positionEC;",
+        "vec3 v_positionMC;",
+        "vec3 v_positionWC;",
       ]);
       ShaderBuilderTester.expectHasAttributes(
         shaderBuilder,
-        "attribute vec3 a_positionMC;",
-        ["attribute vec2 a_temperature;"]
+        "in vec3 a_positionMC;",
+        ["in vec2 a_temperature;"]
       );
       verifyFeatureStruct(shaderBuilder);
     });
@@ -1095,8 +1091,8 @@ describe(
         );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
-          ["attribute float a_featureId_0;", "attribute vec3 a_normalMC;"]
+          "in vec3 a_positionMC;",
+          ["in float a_featureId_0;", "in vec3 a_normalMC;"]
         );
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_FEATURE_ID_0",
@@ -1175,8 +1171,8 @@ describe(
         );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
-          ["attribute float a_featureId_0;"]
+          "in vec3 a_positionMC;",
+          ["in float a_featureId_0;"]
         );
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_FEATURE_ID_0",
@@ -1264,11 +1260,8 @@ describe(
         );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_quantized_positionMC;",
-          [
-            "attribute vec2 a_quantized_normalMC;",
-            "attribute vec2 a_quantized_texCoord_0;",
-          ]
+          "in vec3 a_quantized_positionMC;",
+          ["in vec2 a_quantized_normalMC;", "in vec2 a_quantized_texCoord_0;"]
         );
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_NORMALS",
@@ -1379,11 +1372,11 @@ describe(
         );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_quantized_positionMC;",
+          "in vec3 a_quantized_positionMC;",
           [
-            "attribute vec2 a_quantized_normalMC;",
-            "attribute vec2 a_quantized_texCoord_0;",
-            "attribute vec4 a_tangentMC;",
+            "in vec2 a_quantized_normalMC;",
+            "in vec2 a_quantized_texCoord_0;",
+            "in vec4 a_tangentMC;",
           ]
         );
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -1495,11 +1488,11 @@ describe(
         );
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_quantized_positionMC;",
+          "in vec3 a_quantized_positionMC;",
           [
-            "attribute vec3 a_position2D;",
-            "attribute vec2 a_quantized_normalMC;",
-            "attribute vec2 a_quantized_texCoord_0;",
+            "in vec3 a_position2D;",
+            "in vec2 a_quantized_normalMC;",
+            "in vec2 a_quantized_texCoord_0;",
           ]
         );
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
@@ -1651,13 +1644,13 @@ describe(
           ]
         );
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec3 v_normalEC;",
-          "varying vec2 v_texCoord_0;",
-          "varying vec3 v_positionEC;",
-          "varying vec3 v_positionMC;",
-          "varying vec3 v_positionWC;",
-          "varying mat2 v_warp_matrix;",
-          "varying vec2 v_temperatures;",
+          "vec3 v_normalEC;",
+          "vec2 v_texCoord_0;",
+          "vec3 v_positionEC;",
+          "vec3 v_positionMC;",
+          "vec3 v_positionWC;",
+          "mat2 v_warp_matrix;",
+          "vec2 v_temperatures;",
         ]);
         ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
           "HAS_NORMALS",
@@ -1669,12 +1662,12 @@ describe(
         ]);
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
+          "in vec3 a_positionMC;",
           [
-            "attribute vec3 a_normalMC;",
-            "attribute vec2 a_texCoord_0;",
-            "attribute mat2 a_warp_matrix;",
-            "attribute vec2 a_temperatures;",
+            "in vec3 a_normalMC;",
+            "in vec2 a_texCoord_0;",
+            "in mat2 a_warp_matrix;",
+            "in vec2 a_temperatures;",
           ]
         );
         verifyFeatureStruct(shaderBuilder);
@@ -1737,8 +1730,8 @@ describe(
         ]);
         ShaderBuilderTester.expectHasAttributes(
           shaderBuilder,
-          "attribute vec3 a_positionMC;",
-          ["attribute vec3 a_normalMC;"]
+          "in vec3 a_positionMC;",
+          ["in vec3 a_normalMC;"]
         );
         verifyFeatureStruct(shaderBuilder);
       });

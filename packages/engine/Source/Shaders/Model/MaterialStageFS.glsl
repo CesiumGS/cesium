@@ -34,10 +34,10 @@ vec3 computeNormal(ProcessedAttributes attributes)
         vec3 t = attributes.tangentEC;
         vec3 b = attributes.bitangentEC;
         mat3 tbn = mat3(t, b, ng);
-        vec3 n = texture2D(u_normalTexture, normalTexCoords).rgb;
+        vec3 n = texture(u_normalTexture, normalTexCoords).rgb;
         normal = normalize(tbn * (2.0 * n - 1.0));
-        #elif defined(GL_OES_standard_derivatives)
-        // Compute tangents
+        #elif (__VERSION__ == 300 || defined(GL_OES_standard_derivatives))
+        // If derivatives are available (not IE 10), compute tangents
         vec3 positionEC = attributes.positionEC;
         vec3 pos_dx = dFdx(positionEC);
         vec3 pos_dy = dFdy(positionEC);
@@ -47,7 +47,7 @@ vec3 computeNormal(ProcessedAttributes attributes)
         t = normalize(t - ng * dot(ng, t));
         vec3 b = normalize(cross(ng, t));
         mat3 tbn = mat3(t, b, ng);
-        vec3 n = texture2D(u_normalTexture, normalTexCoords).rgb;
+        vec3 n = texture(u_normalTexture, normalTexCoords).rgb;
         normal = normalize(tbn * (2.0 * n - 1.0));
         #endif
     #endif
@@ -77,7 +77,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         baseColorTexCoords = computeTextureTransform(baseColorTexCoords, u_baseColorTextureTransform);
         #endif
 
-    baseColorWithAlpha = czm_srgbToLinear(texture2D(u_baseColorTexture, baseColorTexCoords));
+    baseColorWithAlpha = czm_srgbToLinear(texture(u_baseColorTexture, baseColorTexCoords));
 
         #ifdef HAS_BASE_COLOR_FACTOR
         baseColorWithAlpha *= u_baseColorFactor;
@@ -109,7 +109,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         #ifdef HAS_OCCLUSION_TEXTURE_TRANSFORM
         occlusionTexCoords = computeTextureTransform(occlusionTexCoords, u_occlusionTextureTransform);
         #endif
-    material.occlusion = texture2D(u_occlusionTexture, occlusionTexCoords).r;
+    material.occlusion = texture(u_occlusionTexture, occlusionTexCoords).r;
     #endif
 
     #ifdef HAS_EMISSIVE_TEXTURE
@@ -118,7 +118,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         emissiveTexCoords = computeTextureTransform(emissiveTexCoords, u_emissiveTextureTransform);
         #endif
 
-    vec3 emissive = czm_srgbToLinear(texture2D(u_emissiveTexture, emissiveTexCoords).rgb);
+    vec3 emissive = czm_srgbToLinear(texture(u_emissiveTexture, emissiveTexCoords).rgb);
         #ifdef HAS_EMISSIVE_FACTOR
         emissive *= u_emissiveFactor;
         #endif
@@ -134,7 +134,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
           specularGlossinessTexCoords = computeTextureTransform(specularGlossinessTexCoords, u_specularGlossinessTextureTransform);
           #endif
 
-        vec4 specularGlossiness = czm_srgbToLinear(texture2D(u_specularGlossinessTexture, specularGlossinessTexCoords));
+        vec4 specularGlossiness = czm_srgbToLinear(texture(u_specularGlossinessTexture, specularGlossinessTexCoords));
         vec3 specular = specularGlossiness.rgb;
         float glossiness = specularGlossiness.a;
             #ifdef HAS_SPECULAR_FACTOR
@@ -164,7 +164,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
             diffuseTexCoords = computeTextureTransform(diffuseTexCoords, u_diffuseTextureTransform);
             #endif
 
-        vec4 diffuse = czm_srgbToLinear(texture2D(u_diffuseTexture, diffuseTexCoords));
+        vec4 diffuse = czm_srgbToLinear(texture(u_diffuseTexture, diffuseTexCoords));
             #ifdef HAS_DIFFUSE_FACTOR
             diffuse *= u_diffuseFactor;
             #endif
@@ -191,7 +191,7 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
             metallicRoughnessTexCoords = computeTextureTransform(metallicRoughnessTexCoords, u_metallicRoughnessTextureTransform);
             #endif
 
-        vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
+        vec3 metallicRoughness = texture(u_metallicRoughnessTexture, metallicRoughnessTexCoords).rgb;
         float metalness = clamp(metallicRoughness.b, 0.0, 1.0);
         float roughness = clamp(metallicRoughness.g, 0.04, 1.0);
             #ifdef HAS_METALLIC_FACTOR

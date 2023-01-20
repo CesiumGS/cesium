@@ -2215,6 +2215,17 @@ function executeTranslucentCommandsFrontToBack(
   }
 }
 
+function executeVoxelCommands(scene, executeFunction, passState, commands) {
+  const context = scene.context;
+
+  mergeSort(commands, backToFront, scene.camera.positionWC);
+
+  const length = commands.length;
+  for (let i = 0; i < length; ++i) {
+    executeFunction(commands[i], scene, context, passState);
+  }
+}
+
 const scratchPerspectiveFrustum = new PerspectiveFrustum();
 const scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 const scratchOrthographicFrustum = new OrthographicFrustum();
@@ -2622,6 +2633,12 @@ function executeCommands(scene, passState) {
       pickDepth.update(context, depthStencilTexture);
       pickDepth.executeCopyDepth(context, passState);
     }
+
+    us.updatePass(Pass.VOXELS);
+    commands = frustumCommands.commands[Pass.VOXELS];
+    length = frustumCommands.indices[Pass.VOXELS];
+    commands.length = length;
+    executeVoxelCommands(scene, executeCommand, passState, commands);
 
     if (picking || !usePostProcessSelected) {
       continue;

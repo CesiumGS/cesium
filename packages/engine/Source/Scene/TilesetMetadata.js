@@ -52,7 +52,7 @@ Object.defineProperties(TilesetMetadata.prototype, {
   },
 
   /**
-   * Extras in the JSON object.
+   * Extra user-defined properties.
    *
    * @memberof TilesetMetadata.prototype
    * @type {*}
@@ -66,7 +66,7 @@ Object.defineProperties(TilesetMetadata.prototype, {
   },
 
   /**
-   * Extensions in the JSON object.
+   * An object containing extensions.
    *
    * @memberof TilesetMetadata.prototype
    * @type {Object}

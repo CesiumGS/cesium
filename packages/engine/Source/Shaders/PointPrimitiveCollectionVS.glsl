@@ -1,17 +1,17 @@
 uniform float u_maxTotalPointSize;
 
-attribute vec4 positionHighAndSize;
-attribute vec4 positionLowAndOutline;
-attribute vec4 compressedAttribute0;                       // color, outlineColor, pick color
-attribute vec4 compressedAttribute1;                       // show, translucency by distance, some free space
-attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
-attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
+in vec4 positionHighAndSize;
+in vec4 positionLowAndOutline;
+in vec4 compressedAttribute0;                       // color, outlineColor, pick color
+in vec4 compressedAttribute1;                       // show, translucency by distance, some free space
+in vec4 scaleByDistance;                            // near, nearScale, far, farScale
+in vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
 
-varying vec4 v_color;
-varying vec4 v_outlineColor;
-varying float v_innerPercent;
-varying float v_pixelDistance;
-varying vec4 v_pickColor;
+out vec4 v_color;
+out vec4 v_outlineColor;
+out float v_innerPercent;
+out float v_pixelDistance;
+out vec4 v_pickColor;
 
 const float SHIFT_LEFT8 = 256.0;
 const float SHIFT_RIGHT8 = 1.0 / 256.0;
@@ -28,8 +28,6 @@ void main()
     float outlinePercent = outlineWidthBothSides / totalSize;
     // Scale in response to browser-zoom.
     totalSize *= czm_pixelRatio;
-    // Add padding for anti-aliasing on both sides.
-    totalSize += 3.0;
 
     float temp = compressedAttribute1.x * SHIFT_RIGHT8;
     float show = floor(temp);
@@ -111,6 +109,11 @@ void main()
 #ifdef EYE_DISTANCE_SCALING
     totalSize *= czm_nearFarScalar(scaleByDistance, lengthSq);
 #endif
+    if (totalSize > 0.0) {
+        // Add padding for anti-aliasing on both sides.
+        totalSize += 3.0;
+    }
+
     // Clamp to max point size.
     totalSize = min(totalSize, u_maxTotalPointSize);
     // If size is too small, push vertex behind near plane for clipping.

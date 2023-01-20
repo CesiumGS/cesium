@@ -19,7 +19,7 @@ describe(
     let propertyTexture;
 
     beforeAll(function () {
-      classDefinition = new MetadataClass({
+      classDefinition = MetadataClass.fromJson({
         id: "map",
         class: {
           properties: {

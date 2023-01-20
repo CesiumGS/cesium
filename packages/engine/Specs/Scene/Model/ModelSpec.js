@@ -935,6 +935,29 @@ describe(
       });
     });
 
+    it("renders in CV after draw commands are reset", function () {
+      return loadAndZoomToModel(
+        {
+          gltf: boxTexturedGlbUrl,
+          modelMatrix: modelMatrix,
+        },
+        sceneCV
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        scene.camera.moveBackward(1.0);
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: sceneCV,
+        });
+
+        model._drawCommandsBuilt = false;
+        verifyRender(model, true, {
+          zoomToModel: false,
+          scene: sceneCV,
+        });
+      });
+    });
+
     it("projectTo2D works for 2D", function () {
       return loadAndZoomToModel(
         {
@@ -1291,22 +1314,22 @@ describe(
       const triangleFanUrl =
         "./Data/Models/glTF-2.0/TriangleFan/glTF/TriangleFan.gltf";
 
-      let sceneWithWebgl2;
+      let sceneWithWebgl1;
 
       beforeAll(function () {
-        sceneWithWebgl2 = createScene({
+        sceneWithWebgl1 = createScene({
           contextOptions: {
-            requestWebgl2: true,
+            requestWebgl1: true,
           },
         });
       });
 
       afterEach(function () {
-        sceneWithWebgl2.primitives.removeAll();
+        sceneWithWebgl1.primitives.removeAll();
       });
 
       afterAll(function () {
-        sceneWithWebgl2.destroyForSpecs();
+        sceneWithWebgl1.destroyForSpecs();
       });
 
       it("debugWireframe works for WebGL1 if enableDebugWireframe is true", function () {
@@ -1315,7 +1338,7 @@ describe(
         return loadPromise.then(function (buffer) {
           return loadAndZoomToModel(
             { gltf: new Uint8Array(buffer), enableDebugWireframe: true },
-            scene
+            sceneWithWebgl1
           ).then(function (model) {
             verifyDebugWireframe(model, PrimitiveType.TRIANGLES);
           });
@@ -1328,12 +1351,12 @@ describe(
         return loadPromise.then(function (buffer) {
           return loadAndZoomToModel(
             { gltf: new Uint8Array(buffer), enableDebugWireframe: false },
-            scene
+            sceneWithWebgl1
           ).then(function (model) {
             const commandList = scene.frameState.commandList;
             const commandCounts = [];
             let i, command;
-            scene.renderForSpecs();
+            sceneWithWebgl1.renderForSpecs();
             for (i = 0; i < commandList.length; i++) {
               command = commandList[i];
               expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
@@ -1343,7 +1366,7 @@ describe(
             model.debugWireframe = true;
             expect(model._drawCommandsBuilt).toBe(false);
 
-            scene.renderForSpecs();
+            sceneWithWebgl1.renderForSpecs();
             for (i = 0; i < commandList.length; i++) {
               command = commandList[i];
               expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
@@ -1354,7 +1377,7 @@ describe(
       });
 
       it("debugWireframe works for WebGL2", function () {
-        if (!sceneWithWebgl2.context.webgl2) {
+        if (!scene.context.webgl2) {
           return;
         }
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
@@ -1365,7 +1388,7 @@ describe(
             scene
           ).then(function (model) {
             verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
-              scene: sceneWithWebgl2,
+              scene: scene,
             });
           });
         });

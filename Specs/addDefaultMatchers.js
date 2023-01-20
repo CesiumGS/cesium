@@ -806,7 +806,7 @@ function contextRenderAndReadPixels(options) {
   if (!defined(sp)) {
     if (!defined(vs)) {
       vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
     }
     sp = ShaderProgram.fromCache({
       context: context,

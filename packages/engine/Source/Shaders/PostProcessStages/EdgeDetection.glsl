@@ -2,7 +2,7 @@ uniform sampler2D depthTexture;
 uniform float length;
 uniform vec4 color;
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 void main(void)
 {
@@ -35,7 +35,7 @@ void main(void)
     }
     if (!selected)
     {
-        gl_FragColor = vec4(color.rgb, 0.0);
+        out_FragColor = vec4(color.rgb, 0.0);
         return;
     }
 #endif
@@ -48,13 +48,13 @@ void main(void)
         float dir = directions[i];
         float scale = scalars[i];
 
-        horizEdge -= texture2D(depthTexture, v_textureCoordinates + vec2(-padx, dir * pady)).x * scale;
-        horizEdge += texture2D(depthTexture, v_textureCoordinates + vec2(padx, dir * pady)).x * scale;
+        horizEdge -= texture(depthTexture, v_textureCoordinates + vec2(-padx, dir * pady)).x * scale;
+        horizEdge += texture(depthTexture, v_textureCoordinates + vec2(padx, dir * pady)).x * scale;
 
-        vertEdge -= texture2D(depthTexture, v_textureCoordinates + vec2(dir * padx, -pady)).x * scale;
-        vertEdge += texture2D(depthTexture, v_textureCoordinates + vec2(dir * padx, pady)).x * scale;
+        vertEdge -= texture(depthTexture, v_textureCoordinates + vec2(dir * padx, -pady)).x * scale;
+        vertEdge += texture(depthTexture, v_textureCoordinates + vec2(dir * padx, pady)).x * scale;
     }
 
     float len = sqrt(horizEdge * horizEdge + vertEdge * vertEdge);
-    gl_FragColor = vec4(color.rgb, len > length ? color.a : 0.0);
+    out_FragColor = vec4(color.rgb, len > length ? color.a : 0.0);
 }

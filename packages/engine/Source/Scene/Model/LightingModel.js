@@ -9,7 +9,7 @@ const LightingModel = {
   /**
    * Use unlit shading, i.e. skip lighting calculations. The model's
    * diffuse color (assumed to be linear RGB, not sRGB) is used directly
-   * when computing <code>gl_FragColor</code>. The alpha mode is still
+   * when computing <code>out_FragColor</code>. The alpha mode is still
    * applied.
    *
    * @type {Number}

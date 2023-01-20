@@ -102,6 +102,8 @@ describe(
     const boxInstancedTranslationMinMax =
       "./Data/Models/glTF-2.0/BoxInstancedTranslationWithMinMax/glTF/box-instanced-translation-min-max.gltf";
     const duckDraco = "./Data/Models/glTF-2.0/Duck/glTF-Draco/Duck.gltf";
+    const boxMixedCompression =
+      "./Data/Models/glTF-2.0/BoxMixedCompression/glTF/BoxMixedCompression.gltf";
     const boomBoxSpecularGlossiness =
       "./Data/Models/glTF-2.0/BoomBox/glTF-pbrSpecularGlossiness/BoomBox.gltf";
     const largeFeatureIdTexture =
@@ -2173,7 +2175,11 @@ describe(
 
       beforeAll(function () {
         // Disable instancing extension.
-        sceneWithNoInstancing = createScene();
+        sceneWithNoInstancing = createScene({
+          contextOptions: {
+            requestWebgl1: true,
+          },
+        });
         sceneWithNoInstancing.context._instancedArrays = undefined;
       });
 
@@ -2493,7 +2499,7 @@ describe(
         });
       });
 
-      it("loads BoxInstanced when WebGL instancing is disabled", function () {
+      it("loads BoxInstanced when WebGL instancing is disabled on WebGL 1", function () {
         const options = {
           scene: sceneWithNoInstancing,
         };
@@ -2847,6 +2853,33 @@ describe(
         expect(positionAttribute.buffer.sizeInBytes).toBe(14394);
         expect(normalAttribute.buffer.sizeInBytes).toBe(4798);
         expect(texcoordAttribute.buffer.sizeInBytes).toBe(9596);
+      });
+    });
+
+    it("loads BoxMixedCompression", function () {
+      return loadGltf(boxMixedCompression).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const scene = components.scene;
+        const rootNode = scene.nodes[0];
+        const primitive = rootNode.primitives[0];
+        const attributes = primitive.attributes;
+        const positionAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.POSITION
+        );
+        const normalAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.NORMAL
+        );
+        const texcoordAttribute = getAttribute(
+          attributes,
+          VertexAttributeSemantic.TEXCOORD,
+          0
+        );
+
+        expect(positionAttribute.quantization).toBeDefined();
+        expect(normalAttribute.quantization).toBeUndefined();
+        expect(texcoordAttribute.quantization).toBeDefined();
       });
     });
 
@@ -3397,20 +3430,24 @@ describe(
     });
 
     describe("loadIndicesForWireframe", function () {
-      let sceneWithWebgl2;
+      let sceneWithWebgl1;
 
       beforeAll(function () {
-        sceneWithWebgl2 = createScene();
-        sceneWithWebgl2.context._webgl2 = true;
+        sceneWithWebgl1 = createScene({
+          contextOptions: {
+            requestWebgl1: true,
+          },
+        });
       });
 
       afterAll(function () {
-        sceneWithWebgl2.destroyForSpecs();
+        sceneWithWebgl1.destroyForSpecs();
       });
 
       it("loads indices in buffer and typed array for wireframes in WebGL1", function () {
         return loadGltf(triangle, {
           loadIndicesForWireframe: true,
+          scene: sceneWithWebgl1,
         }).then(function (gltfLoader) {
           const components = gltfLoader.components;
           const scene = components.scene;
@@ -3434,9 +3471,12 @@ describe(
       });
 
       it("loads indices in buffer only for wireframes in WebGL2", function () {
+        const customScene = createScene();
+        customScene.context._webgl2 = true;
+
         return loadGltf(triangle, {
           loadIndicesForWireframe: true,
-          scene: sceneWithWebgl2,
+          scene: customScene,
         }).then(function (gltfLoader) {
           const components = gltfLoader.components;
           const scene = components.scene;
@@ -3456,6 +3496,8 @@ describe(
           expect(primitive.indices.count).toBe(3);
           expect(primitive.indices.typedArray).not.toBeDefined();
           expect(primitive.indices.buffer).toBeDefined();
+
+          customScene.destroyForSpecs();
         });
       });
     });

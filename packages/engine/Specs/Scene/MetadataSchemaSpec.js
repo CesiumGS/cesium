@@ -2,7 +2,7 @@ import { MetadataSchema } from "../../index.js";
 
 describe("Scene/MetadataSchema", function () {
   it("creates schema with default values", function () {
-    const schema = new MetadataSchema({});
+    const schema = MetadataSchema.fromJson({});
 
     expect(schema.classes).toEqual({});
     expect(schema.enums).toEqual({});
@@ -21,7 +21,7 @@ describe("Scene/MetadataSchema", function () {
       EXT_other_extension: {},
     };
 
-    const schema = new MetadataSchema({
+    const schema = MetadataSchema.fromJson({
       enums: {
         color: {
           values: [
@@ -123,13 +123,13 @@ describe("Scene/MetadataSchema", function () {
     expect(schema.description).toBe("My Schema Description");
     expect(schema.version).toBe("3.1.0");
 
-    expect(schema.extras).toBe(extras);
-    expect(schema.extensions).toBe(extensions);
+    expect(schema.extras).toEqual(extras);
+    expect(schema.extensions).toEqual(extensions);
   });
 
   it("constructor throws without schema", function () {
     expect(function () {
-      return new MetadataSchema();
+      return MetadataSchema.fromJson();
     }).toThrowDeveloperError();
   });
 });
