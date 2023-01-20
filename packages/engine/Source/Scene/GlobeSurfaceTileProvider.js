@@ -237,8 +237,10 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   ready: {
     get: function () {
       return (
-        this._imageryLayers.length === 0 ||
-        this._imageryLayers.get(0).imageryProvider.ready
+        // ready is deprecated; This is here for backwards compatibility
+        this._terrainProvider._ready &&
+        (this._imageryLayers.length === 0 ||
+          this._imageryLayers.get(0).imageryProvider.ready)
       );
     },
   },
@@ -347,7 +349,11 @@ GlobeSurfaceTileProvider.prototype.update = function (frameState) {
 
 function updateCredits(surface, frameState) {
   const creditDisplay = frameState.creditDisplay;
-  if (defined(surface._terrainProvider.credit)) {
+  if (
+    // ready is deprecated; This is here for backwards compatibility
+    surface._terrainProvider._ready &&
+    defined(surface._terrainProvider.credit)
+  ) {
     creditDisplay.addCredit(surface._terrainProvider.credit);
   }
 
@@ -2119,7 +2125,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     tileProvider.hasWaterMask && defined(waterMaskTexture);
   const oceanNormalMap = tileProvider.oceanNormalMap;
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
-  const hasVertexNormals = tileProvider.terrainProvider.hasVertexNormals;
+  const hasVertexNormals =
+    // ready is deprecated; This is here for backwards compatibility
+    tileProvider.terrainProvider._ready &&
+    tileProvider.terrainProvider.hasVertexNormals;
   const enableFog =
     frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;
   const showGroundAtmosphere =

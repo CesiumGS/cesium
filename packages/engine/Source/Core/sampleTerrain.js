@@ -34,12 +34,15 @@ import Check from "./Check.js";
  * // positions[0].height and positions[1].height have been updated.
  * // updatedPositions is just a reference to positions.
  */
-function sampleTerrain(terrainProvider, level, positions) {
+async function sampleTerrain(terrainProvider, level, positions) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("terrainProvider", terrainProvider);
   Check.typeOf.number("level", level);
   Check.defined("positions", positions);
   //>>includeEnd('debug');
+
+  // readyPromise has been deprecated; This is here for backwards compatibility
+  await terrainProvider._readyPromise;
 
   return doSampling(terrainProvider, level, positions);
 }

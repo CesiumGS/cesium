@@ -5,7 +5,6 @@ import {
   Request,
   RequestScheduler,
   Resource,
-  RuntimeError,
   TerrainProvider,
   VRTheWorldTerrainProvider,
 } from "../../index.js";
@@ -112,54 +111,106 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     expect(provider).toBeInstanceOf(VRTheWorldTerrainProvider);
   });
 
-  it("has error event", async function () {
+  it("resolves readyPromise", function () {
     patchXHRLoad();
 
-    const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url");
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
+  it("resolves readyPromise with Resource", function () {
+    patchXHRLoad();
+
+    const resource = new Resource({
+      url: "made/up/url",
+    });
+
+    const provider = new VRTheWorldTerrainProvider({
+      url: resource,
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
+  it("has error event", function () {
+    patchXHRLoad();
+
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
     expect(provider.errorEvent).toBeDefined();
     expect(provider.errorEvent).toBe(provider.errorEvent);
+    return provider.readyPromise;
   });
 
-  it("returns reasonable geometric error for various levels", async function () {
+  it("returns reasonable geometric error for various levels", function () {
     patchXHRLoad();
 
-    const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url");
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
 
-    expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
-    expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
-      provider.getLevelMaximumGeometricError(1) * 2.0,
-      CesiumMath.EPSILON10
-    );
-    expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
-      provider.getLevelMaximumGeometricError(2) * 2.0,
-      CesiumMath.EPSILON10
-    );
+    return provider.readyPromise.then(function () {
+      expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
+      expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
+        provider.getLevelMaximumGeometricError(1) * 2.0,
+        CesiumMath.EPSILON10
+      );
+      expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
+        provider.getLevelMaximumGeometricError(2) * 2.0,
+        CesiumMath.EPSILON10
+      );
+    });
   });
 
-  it("credit is undefined if credit is not provided", async function () {
+  it("credit is undefined if credit option is not provided", function () {
     patchXHRLoad();
-
-    const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url");
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
     expect(provider.credit).toBeUndefined();
+    return provider.readyPromise;
   });
 
-  it("credit is defined if credit option is provided", async function () {
+  it("credit is defined if credit optoin is provided", function () {
     patchXHRLoad();
-
-    const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url", {
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
       credit: "thanks to our awesome made up contributors!",
     });
     expect(provider.credit).toBeDefined();
+    return provider.readyPromise;
   });
 
-  it("does not have a water mask", async function () {
+  it("does not have a water mask", function () {
     patchXHRLoad();
-
-    const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url");
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
     expect(provider.hasWaterMask).toBe(false);
+    return provider.readyPromise;
   });
 
-  it("fromUrl throws an error if the SRS is not supported", async function () {
+  it("is not ready immediately", function () {
+    patchXHRLoad();
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
+    expect(provider.ready).toBe(false);
+    return provider.readyPromise;
+  });
+
+  it("raises an error if the SRS is not supported", function () {
+    patchXHRLoad();
     Resource._Implementations.loadWithXhr = function (
       url,
       responseType,
@@ -196,15 +247,27 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       }, 1);
     };
 
-    await expectAsync(
-      VRTheWorldTerrainProvider.fromUrl("made/up/url")
-    ).toBeRejectedWithError(RuntimeError, "SRS EPSG:foo is not supported");
+    const terrainProvider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
+
+    let called = false;
+    const errorFunction = function () {
+      called = true;
+    };
+
+    terrainProvider.errorEvent.addEventListener(errorFunction);
+
+    return terrainProvider.readyPromise.then(fail).catch(() => {
+      expect(called).toBe(true);
+    });
   });
 
   describe("requestTileGeometry", function () {
-    it("provides HeightmapTerrainData", async function () {
-      const baseUrl = "made/up/url";
+    it("provides HeightmapTerrainData", function () {
       patchXHRLoad();
+
+      const baseUrl = "made/up/url";
 
       Resource._Implementations.createImage = function (
         request,
@@ -223,18 +286,25 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         );
       };
 
-      const terrainProvider = await VRTheWorldTerrainProvider.fromUrl(baseUrl);
-      expect(terrainProvider.tilingScheme).toBeInstanceOf(
-        GeographicTilingScheme
-      );
+      const terrainProvider = new VRTheWorldTerrainProvider({
+        url: baseUrl,
+      });
 
-      const loadedData = await terrainProvider.requestTileGeometry(0, 0, 0);
-      expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+      return terrainProvider.readyPromise
+        .then(function () {
+          expect(terrainProvider.tilingScheme).toBeInstanceOf(
+            GeographicTilingScheme
+          );
+          return terrainProvider.requestTileGeometry(0, 0, 0);
+        })
+        .then(function (loadedData) {
+          expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+        });
     });
 
-    it("returns undefined if too many requests are already in progress", async function () {
-      const baseUrl = "made/up/url";
+    it("returns undefined if too many requests are already in progress", function () {
       patchXHRLoad();
+      const baseUrl = "made/up/url";
 
       const deferreds = [];
 
@@ -247,35 +317,39 @@ describe("Core/VRTheWorldTerrainProvider", function () {
         deferreds.push(deferred);
       };
 
-      const terrainProvider = await VRTheWorldTerrainProvider.fromUrl(baseUrl);
+      const terrainProvider = new VRTheWorldTerrainProvider({
+        url: baseUrl,
+      });
 
-      const promises = [];
-      let promise;
-      let i;
-      for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
-        const request = new Request({
-          throttle: true,
-          throttleByServer: true,
-        });
-        promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
-        promises.push(promise);
-      }
-      RequestScheduler.update();
-      expect(promise).toBeDefined();
+      return terrainProvider.readyPromise.then(function () {
+        const promises = [];
+        let promise;
+        let i;
+        for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+          const request = new Request({
+            throttle: true,
+            throttleByServer: true,
+          });
+          promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+          promises.push(promise);
+        }
+        RequestScheduler.update();
+        expect(promise).toBeDefined();
 
-      promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
-      expect(promise).toBeUndefined();
+        promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
+        expect(promise).toBeUndefined();
 
-      for (i = 0; i < deferreds.length; ++i) {
-        const deferred = deferreds[i];
-        Resource._Implementations.loadImageElement(
-          "Data/Images/Red16x16.png",
-          false,
-          deferred
-        );
-      }
+        for (i = 0; i < deferreds.length; ++i) {
+          const deferred = deferreds[i];
+          Resource._Implementations.loadImageElement(
+            "Data/Images/Red16x16.png",
+            false,
+            deferred
+          );
+        }
 
-      return Promise.all(promises);
+        return Promise.all(promises);
+      });
     });
   });
 });

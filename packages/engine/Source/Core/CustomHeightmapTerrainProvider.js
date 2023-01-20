@@ -90,6 +90,7 @@ function CustomHeightmapTerrainProvider(options) {
   }
   this._credit = credit;
 
+  this._ready = true;
   this._readyPromise = Promise.resolve(true);
 }
 

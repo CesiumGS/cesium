@@ -552,10 +552,10 @@ CesiumTerrainProvider._initializeReadyPromise = async function (
   options,
   provider
 ) {
-  await Promise.resolve(options.url);
+  const url = await Promise.resolve(options.url);
 
   const terrainProviderBuilder = new TerrainProviderBuilder(options);
-  const resource = Resource.createIfNeeded(options.url);
+  const resource = Resource.createIfNeeded(url);
   resource.appendForwardSlash();
   terrainProviderBuilder.lastResource = resource;
   terrainProviderBuilder.layerJsonResource = terrainProviderBuilder.lastResource.getDerivedResource(
