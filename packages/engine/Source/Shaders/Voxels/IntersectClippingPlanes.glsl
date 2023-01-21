@@ -11,7 +11,7 @@ uniform sampler2D u_clippingPlanesTexture;
 uniform mat4 u_clippingPlanesMatrix;
 
 // Plane is in Hessian Normal Form
-vec2 intersectPlane(Ray ray, vec4 plane) {
+vec2 intersectPlane(in Ray ray, in vec4 plane) {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
     vec3 n = plane.xyz; // normal
@@ -28,7 +28,7 @@ vec2 intersectPlane(Ray ray, vec4 plane) {
     }
 }
 
-void intersectClippingPlanes(Ray ray, inout Intersections ix) {
+void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
     #if (CLIPPING_PLANES_COUNT == 1)
         // Union and intersection are the same when there's one clipping plane, and the code
         // is more simplified.

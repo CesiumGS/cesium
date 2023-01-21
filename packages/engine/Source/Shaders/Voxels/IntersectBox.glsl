@@ -1,4 +1,5 @@
 // See IntersectionUtils.glsl for the definitions of Ray and NO_HIT
+// See convertUvToBox.glsl for the definition of convertShapeUvToUvSpace
 
 /* Box defines (set in Scene/VoxelBoxShape.js)
 #define BOX_INTERSECTION_INDEX ### // always 0
@@ -17,13 +18,57 @@
     #endif
 #endif
 
+struct Box {
+    vec3 p0;
+    vec3 p1;
+};
+
+Box constructVoxelBox(in ivec4 octreeCoords, in vec3 tileUv)
+{
+    // Find the min/max cornerpoints of the voxel in tile coordinates
+    vec3 tileOrigin = vec3(octreeCoords.xyz);
+    vec3 numSamples = vec3(u_dimensions);
+    vec3 voxelSize = 1.0 / numSamples;
+    vec3 coordP0 = floor(tileUv * numSamples) * voxelSize + tileOrigin;
+    vec3 coordP1 = coordP0 + voxelSize;
+
+    // Transform to the UV coordinates of the scaled tileset
+    float tileSize = 1.0 / pow(2.0, float(octreeCoords.w));
+    vec3 p0 = convertShapeUvToUvSpace(coordP0 * tileSize);
+    vec3 p1 = convertShapeUvToUvSpace(coordP1 * tileSize);
+
+    return Box(p0, p1);
+}
+
+// Find the distances along a ray at which the ray intersects an axis-aligned box
+// See https://tavianator.com/2011/ray_box.html
+vec2 intersectBox(in Ray ray, in Box box, in vec2 entryExit)
+{
+    // Consider the box as the intersection of the space between 3 pairs of parallel planes
+    // Compute the distance along the ray to each plane
+    vec3 dInv = 1.0 / ray.dir; // TODO: Input this
+    vec3 t0 = (box.p0 - ray.pos) * dInv;
+    vec3 t1 = (box.p1 - ray.pos) * dInv;
+
+    // Identify candidate entries/exits based on distance from ray.pos
+    vec3 entries = max(min(t0, t1), entryExit.x);
+    vec3 exits = min(max(t0, t1), entryExit.y);
+
+    // The actual box intersection points are the furthest entry and the closest exit
+    float entry = max(max(entries.x, entries.y), entries.z);
+    float exit = min(min(exits.x, exits.y), exits.z);
+
+    if (entry >= exit) {
+        return vec2(NO_HIT);
+    }
+
+    return vec2(entry, exit);
+}
+
 vec2 intersectUnitCube(Ray ray) // Unit cube from [-1, +1]
 {
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
-
-    vec3 dInv = 1.0 / d;
-    vec3 od = -o * dInv;
+    vec3 dInv = 1.0 / ray.dir; // TODO: input this
+    vec3 od = -ray.pos * dInv;
     vec3 t0 = od - dInv;
     vec3 t1 = od + dInv;
     vec3 m0 = min(t0, t1);

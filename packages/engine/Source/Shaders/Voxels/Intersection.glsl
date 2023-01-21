@@ -11,9 +11,7 @@
 #define INTERSECTION_COUNT ###
 */
 
-vec2 intersectScene(vec2 screenCoord, vec3 positionUv, vec3 directionUv, out Intersections ix) {
-    Ray ray = Ray(positionUv, directionUv);
-
+vec2 intersectScene(in vec2 screenCoord, in Ray ray, out Intersections ix) {
     // Do a ray-shape intersection to find the exact starting and ending points.
     intersectShape(ray, ix);
 

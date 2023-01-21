@@ -28,6 +28,17 @@ float hash(vec2 p)
 }
 #endif
 
+float getStepSize(in ivec4 octreeCoords, in vec3 tileUv, in Ray viewRay, in vec2 entryExit) {
+#if defined(SHAPE_BOX)
+    Box voxelBox = constructVoxelBox(octreeCoords, tileUv);
+    vec2 voxelIntersection = intersectBox(viewRay, voxelBox, entryExit);
+    return (voxelIntersection.y - voxelIntersection.x);
+#else
+    float dimAtLevel = pow(2.0, float(octreeCoords.w));
+    return u_stepSize / dimAtLevel;
+#endif
+}
+
 void main()
 {
     vec4 fragCoord = gl_FragCoord;
@@ -36,16 +47,17 @@ void main()
     vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
     vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
     vec3 viewPosUv = u_cameraPositionUv;
+    Ray viewRayUv = Ray(viewPosUv, viewDirUv);
 
     Intersections ix;
-    vec2 entryExitT = intersectScene(screenCoord, viewPosUv, viewDirUv, ix);
+    vec2 entryExitT = intersectScene(screenCoord, viewRayUv, ix);
 
     // Exit early if the scene was completely missed.
     if (entryExitT.x == NO_HIT) {
         discard;
     }
 
-    float currT = entryExitT.x;
+    float currT = entryExitT.x + 0.00001;
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
     // TODO: is it possible for this to be out of bounds, and does it matter?
@@ -55,8 +67,7 @@ void main()
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
-    float stepT = u_stepSize / dimAtLevel;
+    float stepT = getStepSize(traversalData.octreeCoords, sampleDatas[0].tileUv, viewRayUv, entryExitT);
 
     // TODO:
     //  - jitter doesn't affect the first traversal?
@@ -110,7 +121,8 @@ void main()
             // Shape is infinitely thin, no need to traverse further
             // TODO: this doesn't happen? 
             // Even if the shape is thin, won't we have currT >  endT? (see below)
-            break;
+            //break;
+            stepT == 0.00001;
         }
 
         // Keep raymarching
@@ -137,9 +149,9 @@ void main()
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctree but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
-        traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
-        stepT = u_stepSize / dimAtLevel;
+        //traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
+        traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
+        stepT = getStepSize(traversalData.octreeCoords, sampleDatas[0].tileUv, viewRayUv, entryExitT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
