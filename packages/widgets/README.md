@@ -8,7 +8,7 @@
 
 [CesiumJS](../../README.md) is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
-`@cesium/widgets` is a widgets library for use with CesiumJS— including the `CesiumViewer` widget plus widgets for common tasks such as animation, base layer selection and geocoding.
+`@cesium/widgets` is a widgets library for use with CesiumJS—including the `CesiumViewer` widget plus widgets for common tasks such as animation, base layer selection and geocoding.
 
 ---
 
