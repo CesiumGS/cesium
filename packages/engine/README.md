@@ -51,6 +51,6 @@ Have questions? Ask them on the [community forum](https://community.cesium.com/)
 
 Interested in contributing? See [CONTRIBUTING.md](../../CONTRIBUTING.md). :heart:
 
-### License
+## License
 
 [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.html). CesiumJS is free for both commercial and non-commercial use.

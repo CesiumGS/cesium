@@ -37,8 +37,6 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 const viewer = new Viewer("cesiumContainer");
 ```
 
-#### Packages
-
 In addition to the `cesium` package, CesiumJS is also [distributed as scoped npm packages for better dependency management](https://cesium.com/blog/2022/12/07/modular-structure-in-cesiumjs/):
 
 - [`@cesium/engine`](./packages/engine/README.md) - CesiumJS's core, rendering, and data APIs
