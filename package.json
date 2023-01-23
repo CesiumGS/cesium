@@ -133,7 +133,7 @@
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.js\" \"./**/*.cjs\" \"./**/*.html\" --cache --quiet",
     "make-zip": "gulp makeZip",
-    "markdownlint": "markdownlint \"*.md\" \"Documentation/**/*.md\" --ignore CHANGES.md --ignore README.md --ignore LICENSE.md --ignore packages/engine/LICENSE.md --ignore packages/widgets/LICENSE.md",
+    "markdownlint": "markdownlint \"*.md\" \"Documentation/**/*.md\" \"packages/**/*.md\" --ignore CHANGES.md --ignore \"./**/LICENSE.md\"",
     "release": "gulp release",
     "website-release": "gulp websiteRelease",
     "test": "gulp test",
@@ -158,7 +158,7 @@
       "prettier --write"
     ],
     "*.md": [
-      "markdownlint --ignore CHANGES.md --ignore README.md --ignore LICENSE.md --ignore packages/engine/LICENSE.md --ignore packages/widgets/LICENSE.md",
+      "markdownlint --ignore CHANGES.md --ignore \"./**/LICENSE.md\"",
       "prettier --write"
     ]
   },
