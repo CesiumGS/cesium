@@ -1,3 +1,4 @@
+import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -408,4 +409,21 @@ FeatureDetection.supportsWebWorkers = function () {
 FeatureDetection.supportsWebAssembly = function () {
   return typeof WebAssembly !== "undefined";
 };
+
+/**
+ * Detects whether the current browser supports a WebGL2 rendering context for the specified scene.
+ *
+ * @param {Scene} scene the Cesium scene specifying the rendering context
+ * @returns {Boolean} true if the browser supports a WebGL2 rendering context, false if not.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext|WebGL2RenderingContext}
+ */
+FeatureDetection.supportsWebgl2 = function (scene) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("scene", scene);
+  //>>includeEnd('debug');
+
+  return scene.context.webgl2;
+};
+
 export default FeatureDetection;
