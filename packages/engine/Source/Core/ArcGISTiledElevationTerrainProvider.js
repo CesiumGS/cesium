@@ -233,7 +233,7 @@ async function requestMetadata(
  * });
  * viewer.terrainProvider = terrainProvider;
  *
- *  @see TerrainProvider
+ * @see TerrainProvider
  */
 function ArcGISTiledElevationTerrainProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

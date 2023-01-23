@@ -57,7 +57,7 @@
           // height systems (Cesium World Terrain).
           // If this is not specified, or the URL is invalid no geoid conversion will be applied.
           // The source data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
-          const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider(
+          const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
           );
 
