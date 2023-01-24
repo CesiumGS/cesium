@@ -28,13 +28,13 @@ float hash(vec2 p)
 }
 #endif
 
-float getStepSize(in ivec4 octreeCoords, in vec3 tileUv, in Ray viewRay, in vec2 entryExit) {
+float getStepSize(in SampleData sampleData, in Ray viewRay, in vec2 entryExit) {
 #if defined(SHAPE_BOX)
-    Box voxelBox = constructVoxelBox(octreeCoords, tileUv);
+    Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
     vec2 voxelIntersection = intersectBox(viewRay, voxelBox, entryExit);
     return (voxelIntersection.y - voxelIntersection.x);
 #else
-    float dimAtLevel = pow(2.0, float(octreeCoords.w));
+    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     return u_stepSize / dimAtLevel;
 #endif
 }
@@ -67,7 +67,7 @@ void main()
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    float stepT = getStepSize(traversalData.octreeCoords, sampleDatas[0].tileUv, viewRayUv, entryExitT);
+    float stepT = getStepSize(sampleDatas[0], viewRayUv, entryExitT);
 
     // TODO:
     //  - jitter doesn't affect the first traversal?
@@ -149,9 +149,9 @@ void main()
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctree but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
-        //traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-        stepT = getStepSize(traversalData.octreeCoords, sampleDatas[0].tileUv, viewRayUv, entryExitT);
+        traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
+        //traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
+        stepT = getStepSize(sampleDatas[0], viewRayUv, entryExitT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
