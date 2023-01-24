@@ -146,7 +146,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   if (!defined(this._geometricError)) {
     this._geometricError = defined(parent)
-      ? parent.geometricError
+      ? parent._geometricError
       : tileset._geometricError;
     Cesium3DTile._deprecationWarning(
       "geometricErrorUndefined",
@@ -874,7 +874,7 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
   const heightFraction = defaultValue(progressiveResolutionHeightFraction, 1.0);
   const parentGeometricError = defined(this.parent)
     ? this.parent.geometricError
-    : tileset._geometricError;
+    : tileset._scaledGeometricError;
   const geometricError = useParentGeometricError
     ? parentGeometricError
     : this.geometricError;
@@ -1791,6 +1791,12 @@ Cesium3DTile.prototype.updateGeometricErrorScale = function () {
   const scale = Matrix4.getScale(this.computedTransform, scratchScale);
   const uniformScale = Cartesian3.maximumComponent(scale);
   this.geometricError = this._geometricError * uniformScale;
+
+  if (!defined(this.parent)) {
+    // Update the tileset's geometric error
+    const tileset = this._tileset;
+    tileset._scaledGeometricError = tileset._geometricError * uniformScale;
+  }
 };
 
 function applyDebugSettings(tile, tileset, frameState, passOptions) {
