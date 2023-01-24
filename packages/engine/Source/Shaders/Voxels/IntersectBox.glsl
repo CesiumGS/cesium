@@ -46,9 +46,8 @@ vec2 intersectBox(in Ray ray, in Box box, in vec2 entryExit)
 {
     // Consider the box as the intersection of the space between 3 pairs of parallel planes
     // Compute the distance along the ray to each plane
-    vec3 dInv = 1.0 / ray.dir; // TODO: Input this
-    vec3 t0 = (box.p0 - ray.pos) * dInv;
-    vec3 t1 = (box.p1 - ray.pos) * dInv;
+    vec3 t0 = (box.p0 - ray.pos) * ray.dInv;
+    vec3 t1 = (box.p1 - ray.pos) * ray.dInv;
 
     // Identify candidate entries/exits based on distance from ray.pos
     vec3 entries = max(min(t0, t1), entryExit.x);
@@ -65,9 +64,9 @@ vec2 intersectBox(in Ray ray, in Box box, in vec2 entryExit)
     return vec2(entry, exit);
 }
 
-vec2 intersectUnitCube(Ray ray) // Unit cube from [-1, +1]
+vec2 intersectUnitCube(in Ray ray) // Unit cube from [-1, +1]
 {
-    vec3 dInv = 1.0 / ray.dir; // TODO: input this
+    vec3 dInv = 1.0 / ray.dir;
     vec3 od = -ray.pos * dInv;
     vec3 t0 = od - dInv;
     vec3 t1 = od + dInv;
@@ -83,7 +82,7 @@ vec2 intersectUnitCube(Ray ray) // Unit cube from [-1, +1]
     return vec2(tMin, tMax);
 }
 
-vec2 intersectUnitSquare(Ray ray) // Unit square from [-1, +1]
+vec2 intersectUnitSquare(in Ray ray) // Unit square from [-1, +1]
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
@@ -97,7 +96,7 @@ vec2 intersectUnitSquare(Ray ray) // Unit square from [-1, +1]
     return vec2(t, t);
 }
 
-void intersectShape(Ray ray, inout Intersections ix)
+void intersectShape(in Ray ray, inout Intersections ix)
 {
     #if defined(BOX_HAS_RENDER_BOUNDS)
         #if defined(BOX_IS_2D)

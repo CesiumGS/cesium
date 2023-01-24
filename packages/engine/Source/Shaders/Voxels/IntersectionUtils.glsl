@@ -8,6 +8,9 @@
 struct Ray {
     vec3 pos;
     vec3 dir;
+#if defined(SHAPE_BOX)
+    vec3 dInv;
+#endif
 };
 
 struct Intersections {

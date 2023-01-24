@@ -47,7 +47,12 @@ void main()
     vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
     vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
     vec3 viewPosUv = u_cameraPositionUv;
-    Ray viewRayUv = Ray(viewPosUv, viewDirUv);
+    #if defined(SHAPE_BOX)
+        vec3 dInv = 1.0 / viewDirUv;
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv, dInv);
+    #else
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv);
+    #endif
 
     Intersections ix;
     vec2 entryExitT = intersectScene(screenCoord, viewRayUv, ix);
@@ -147,10 +152,9 @@ void main()
         }
 
         // Traverse the tree from the current ray position.
-        // This is similar to traverseOctree but is faster when the ray is in the same tile as the previous step.
+        // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        //traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
         stepT = getStepSize(sampleDatas[0], viewRayUv, entryExitT);
     }
 

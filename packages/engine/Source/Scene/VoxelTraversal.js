@@ -93,25 +93,12 @@ function VoxelTraversal(
   this._frameNumber = 0;
 
   const shape = primitive._shape;
-  const rootLevel = 0;
-  const rootX = 0;
-  const rootY = 0;
-  const rootZ = 0;
-  const rootParent = undefined;
 
   /**
    * @type {SpatialNode}
    * @readonly
    */
-  this.rootNode = new SpatialNode(
-    rootLevel,
-    rootX,
-    rootY,
-    rootZ,
-    rootParent,
-    shape,
-    dimensions
-  );
+  this.rootNode = new SpatialNode(0, 0, 0, 0, undefined, shape, dimensions);
 
   /**
    * @type {DoubleEndedPriorityQueue}
@@ -425,12 +412,6 @@ function requestData(that, keyframeNode) {
 
   const primitive = that._primitive;
   const provider = primitive._provider;
-  const keyframe = keyframeNode.keyframe;
-  const spatialNode = keyframeNode.spatialNode;
-  const tileLevel = spatialNode.level;
-  const tileX = spatialNode.x;
-  const tileY = spatialNode.y;
-  const tileZ = spatialNode.z;
 
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
@@ -469,11 +450,12 @@ function requestData(that, keyframeNode) {
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
   }
 
+  const { keyframe, spatialNode } = keyframeNode;
   const promise = provider.requestData({
-    tileLevel: tileLevel,
-    tileX: tileX,
-    tileY: tileY,
-    tileZ: tileZ,
+    tileLevel: spatialNode.level,
+    tileX: spatialNode.x,
+    tileY: spatialNode.y,
+    tileZ: spatialNode.z,
     keyframe: keyframe,
   });
 
@@ -510,18 +492,17 @@ function loadAndUnload(that, frameState) {
   const frameNumber = that._frameNumber;
   const primitive = that._primitive;
   const shape = primitive._shape;
-  const voxelDimensions = primitive._provider.dimensions;
-  const targetScreenSpaceError = primitive._screenSpaceError;
+  const { dimensions } = primitive;
+  const targetScreenSpaceError = primitive.screenSpaceError;
   const priorityQueue = that._priorityQueue;
   const keyframeLocation = that._keyframeLocation;
   const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
 
-  const cameraPosition = frameState.camera.positionWC;
-  const screenSpaceErrorDenominator = frameState.camera.frustum.sseDenominator;
-  const screenHeight =
-    frameState.context.drawingBufferHeight / frameState.pixelRatio;
-  const screenSpaceErrorMultiplier = screenHeight / screenSpaceErrorDenominator;
+  const { camera, context, pixelRatio } = frameState;
+  const { positionWC, frustum } = camera;
+  const screenHeight = context.drawingBufferHeight / pixelRatio;
+  const screenSpaceErrorMultiplier = screenHeight / frustum.sseDenominator;
 
   /**
    * @ignore
@@ -529,10 +510,7 @@ function loadAndUnload(that, frameState) {
    * @param {Number} visibilityPlaneMask
    */
   function addToQueueRecursive(spatialNode, visibilityPlaneMask) {
-    spatialNode.computeScreenSpaceError(
-      cameraPosition,
-      screenSpaceErrorMultiplier
-    );
+    spatialNode.computeScreenSpaceError(positionWC, screenSpaceErrorMultiplier);
 
     visibilityPlaneMask = spatialNode.visibility(
       frameState,
@@ -622,7 +600,7 @@ function loadAndUnload(that, frameState) {
           z,
           spatialNode,
           shape,
-          voxelDimensions
+          dimensions
         );
       });
     }
