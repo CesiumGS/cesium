@@ -62,7 +62,7 @@ void main()
         discard;
     }
 
-    float currT = entryExitT.x + 0.00001;
+    float currT = entryExitT.x + 0.0001;
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
     // TODO: is it possible for this to be out of bounds, and does it matter?
