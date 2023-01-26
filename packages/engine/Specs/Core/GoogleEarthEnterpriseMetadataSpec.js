@@ -108,7 +108,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     }).toThrowError(RuntimeError);
   });
 
-  it("populateSubtree", function () {
+  it("populateSubtree", async function () {
     const quad = "0123";
     let index = 0;
     spyOn(
@@ -127,45 +127,35 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       return Promise.resolve();
     });
 
-    const metadata = new GoogleEarthEnterpriseMetadata({
-      url: "http://test.server",
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(
+      "http://test.server"
+    );
     const request = new Request({
       throttle: true,
     });
-    return metadata.readyPromise
-      .then(function () {
-        const tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
-        return metadata.populateSubtree(
-          tileXY.x,
-          tileXY.y,
-          tileXY.level,
-          request
-        );
-      })
-      .then(function () {
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket.calls.count()
-        ).toEqual(4);
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
-        ).toHaveBeenCalledWith("", 1);
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
-        ).toHaveBeenCalledWith("0", 1, request);
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
-        ).toHaveBeenCalledWith("01", 1, request);
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
-        ).toHaveBeenCalledWith("012", 1, request);
+    const tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
+    await metadata.populateSubtree(tileXY.x, tileXY.y, tileXY.level, request);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket.calls.count()
+    ).toEqual(4);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+    ).toHaveBeenCalledWith("", 1);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+    ).toHaveBeenCalledWith("0", 1, request);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+    ).toHaveBeenCalledWith("01", 1, request);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+    ).toHaveBeenCalledWith("012", 1, request);
 
-        const tileInfo = metadata._tileInfo;
-        expect(tileInfo["0"]).toBeDefined();
-        expect(tileInfo["01"]).toBeDefined();
-        expect(tileInfo["012"]).toBeDefined();
-        expect(tileInfo["0123"]).toBeDefined();
-      });
+    const tileInfo = metadata._tileInfo;
+    expect(tileInfo["0"]).toBeDefined();
+    expect(tileInfo["01"]).toBeDefined();
+    expect(tileInfo["012"]).toBeDefined();
+    expect(tileInfo["0123"]).toBeDefined();
   });
 
   it("resolves readyPromise", function () {

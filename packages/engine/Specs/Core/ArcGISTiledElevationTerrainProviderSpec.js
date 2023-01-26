@@ -11,8 +11,6 @@ import {
   Math as CesiumMath,
 } from "../../index.js";
 
-import pollToPromise from "../../../../Specs/pollToPromise.js";
-
 describe("Core/ArcGISTiledElevationTerrainProvider", function () {
   const lercTileUrl = "Data/Images/Red16x16.png";
   let availability;
@@ -270,68 +268,52 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     });
   });
 
-  it("has error event", function () {
-    const provider = new ArcGISTiledElevationTerrainProvider({
-      url: "made/up/url",
-    });
+  it("has error event", async function () {
+    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      "made/up/url"
+    );
     expect(provider.errorEvent).toBeDefined();
     expect(provider.errorEvent).toBe(provider.errorEvent);
-
-    return provider.readyPromise;
   });
 
-  it("returns reasonable geometric error for various levels", function () {
-    const provider = new ArcGISTiledElevationTerrainProvider({
-      url: "made/up/url",
-    });
-
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
-      expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
-        provider.getLevelMaximumGeometricError(1) * 2.0,
-        CesiumMath.EPSILON10
-      );
-      expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
-        provider.getLevelMaximumGeometricError(2) * 2.0,
-        CesiumMath.EPSILON10
-      );
-    });
+  it("returns reasonable geometric error for various levels", async function () {
+    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      "made/up/url"
+    );
+    expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
+    expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
+      provider.getLevelMaximumGeometricError(1) * 2.0,
+      CesiumMath.EPSILON10
+    );
+    expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(
+      provider.getLevelMaximumGeometricError(2) * 2.0,
+      CesiumMath.EPSILON10
+    );
   });
 
-  it("logo is undefined if credit is not provided", function () {
+  it("logo is undefined if credit is not provided", async function () {
     delete metadata.copyrightText;
-    const provider = new ArcGISTiledElevationTerrainProvider({
-      url: "made/up/url",
-    });
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.credit).toBeUndefined();
-    });
+    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      "made/up/url"
+    );
+    expect(provider.credit).toBeUndefined();
   });
 
-  it("logo is defined if credit is provided", function () {
-    const provider = new ArcGISTiledElevationTerrainProvider({
-      url: "made/up/url",
-      credit: "thanks to our awesome made up contributors!",
-    });
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.credit).toBeDefined();
-    });
+  it("logo is defined if credit is provided", async function () {
+    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      "made/up/url",
+      {
+        credit: "thanks to our awesome made up contributors!",
+      }
+    );
+    expect(provider.credit).toBeDefined();
   });
 
-  it("does not have a water mask", function () {
-    const provider = new ArcGISTiledElevationTerrainProvider({
-      url: "made/up/url",
-    });
+  it("does not have a water mask", async function () {
+    const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      "made/up/url"
+    );
     expect(provider.hasWaterMask).toBe(false);
-    return provider.readyPromise.catch(function (error) {
-      expect(error).toBeInstanceOf(RuntimeError);
-    });
   });
 
   it("is not ready immediately", function () {
@@ -344,126 +326,88 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     });
   });
 
-  it("detects WebMercator tiling scheme", function () {
+  it("detects WebMercator tiling scheme", async function () {
     const baseUrl = "made/up/url";
 
-    const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-      url: baseUrl,
-    });
+    const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      baseUrl
+    );
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider.tilingScheme).toBeInstanceOf(
-        WebMercatorTilingScheme
-      );
-    });
+    expect(terrainProvider.tilingScheme).toBeInstanceOf(
+      WebMercatorTilingScheme
+    );
   });
 
-  it("detects Geographic tiling scheme", function () {
+  it("detects Geographic tiling scheme", async function () {
     const baseUrl = "made/up/url";
-
     metadata.spatialReference.latestWkid = 4326;
 
-    const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-      url: baseUrl,
-    });
+    const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      baseUrl
+    );
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider.tilingScheme).toBeInstanceOf(
-        GeographicTilingScheme
-      );
-    });
+    expect(terrainProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
   });
 
-  it("raises an error if the SRS is not supported", function () {
+  it("fromUrl throws if the SRS is not supported", async function () {
     const baseUrl = "made/up/url";
-
     metadata.spatialReference.latestWkid = 1234;
 
-    const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-      url: baseUrl,
-    });
-
-    return terrainProvider.readyPromise.then(fail).catch(function (error) {
-      expect(error).toBeInstanceOf(RuntimeError);
-    });
+    await expectAsync(
+      ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+    ).toBeRejectedWithError(RuntimeError, "Invalid spatial reference");
   });
 
-  it("raises an error if tileInfo missing", function () {
+  it("fromUrl throws if tileInfo missing", async function () {
     const baseUrl = "made/up/url";
-
     delete metadata.tileInfo;
 
-    const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-      url: baseUrl,
-    });
-
-    return terrainProvider.readyPromise.then(fail).catch(function (error) {
-      expect(error).toBeInstanceOf(RuntimeError);
-    });
+    await expectAsync(
+      ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+    ).toBeRejectedWithError(RuntimeError, "tileInfo is required");
   });
 
-  it("checks availability if TileMap capability exists", function () {
+  it("checks availability if TileMap capability exists", async function () {
     const baseUrl = "made/up/url";
 
-    const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-      url: baseUrl,
-    });
+    const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      baseUrl
+    );
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider._hasAvailability).toBe(true);
-      expect(terrainProvider._tilesAvailable).toBeDefined();
-      expect(terrainProvider._tilesAvailabilityLoaded).toBeDefined();
-    });
+    expect(terrainProvider._hasAvailability).toBe(true);
+    expect(terrainProvider._tilesAvailable).toBeDefined();
+    expect(terrainProvider._tilesAvailabilityLoaded).toBeDefined();
   });
 
-  it("does not check availability if TileMap capability is missing", function () {
+  it("does not check availability if TileMap capability is missing", async function () {
     const baseUrl = "made/up/url";
-
     metadata.capabilities = "Image,Mensuration";
 
-    const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-      url: baseUrl,
-    });
+    const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+      baseUrl
+    );
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider._hasAvailability).toBe(false);
-      expect(terrainProvider._tilesAvailable).toBeUndefined();
-      expect(terrainProvider._tilesAvailablityLoaded).toBeUndefined();
-    });
+    expect(terrainProvider._hasAvailability).toBe(false);
+    expect(terrainProvider._tilesAvailable).toBeUndefined();
+    expect(terrainProvider._tilesAvailablityLoaded).toBeUndefined();
   });
 
   describe("requestTileGeometry", function () {
-    it("provides HeightmapTerrainData", function () {
+    it("provides HeightmapTerrainData", async function () {
       const baseUrl = "made/up/url";
 
-      const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-        url: baseUrl,
-      });
+      const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+        baseUrl
+      );
 
-      return pollToPromise(function () {
-        return terrainProvider.ready;
-      })
-        .then(function () {
-          const promise = terrainProvider.requestTileGeometry(0, 0, 0);
-          RequestScheduler.update();
-          return promise;
-        })
-        .then(function (loadedData) {
-          expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
-        });
+      const promise = terrainProvider.requestTileGeometry(0, 0, 0);
+      RequestScheduler.update();
+      const loadedData = await promise;
+      expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
     });
 
-    it("returns undefined if too many requests are already in progress", function () {
+    it("returns undefined if too many requests are already in progress", async function () {
       const baseUrl = "made/up/url";
-
       const deferreds = [];
 
       Resource._Implementations.createImage = function (
@@ -475,39 +419,35 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
         deferreds.push(deferred);
       };
 
-      const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-        url: baseUrl,
-      });
+      const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+        baseUrl
+      );
 
-      return pollToPromise(function () {
-        return terrainProvider.ready;
-      }).then(function () {
-        let promise;
-        let i;
-        // Make one less request to account for the additional availability request.
-        for (i = 0; i < RequestScheduler.maximumRequestsPerServer - 1; ++i) {
-          const request = new Request({
-            throttle: true,
-            throttleByServer: true,
-          });
-          promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
-        }
-        RequestScheduler.update();
-        expect(promise).toBeDefined();
+      let promise;
+      let i;
+      // Make one less request to account for the additional availability request.
+      for (i = 0; i < RequestScheduler.maximumRequestsPerServer - 1; ++i) {
+        const request = new Request({
+          throttle: true,
+          throttleByServer: true,
+        });
+        promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+      }
+      RequestScheduler.update();
+      expect(promise).toBeDefined();
 
-        promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
-        expect(promise).toBeUndefined();
+      promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
+      expect(promise).toBeUndefined();
 
-        for (i = 0; i < deferreds.length; ++i) {
-          deferreds[i].resolve();
-        }
+      for (i = 0; i < deferreds.length; ++i) {
+        deferreds[i].resolve();
+      }
 
-        return Promise.all(
-          deferreds.map(function (deferred) {
-            return deferred.promise;
-          })
-        );
-      });
+      await Promise.all(
+        deferreds.map(function (deferred) {
+          return deferred.promise;
+        })
+      );
     });
   });
 });
