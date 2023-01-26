@@ -54,13 +54,10 @@ async function main() {
   try {
     const hasBaseLayerPicker = !defined(imageryProvider);
 
-    let terrainProvider;
-    if (hasBaseLayerPicker) {
-      terrainProvider = await createWorldTerrainAsync({
-        requestWaterMask: true,
-        requestVertexNormals: true,
-      });
-    }
+    const terrainProvider = await createWorldTerrainAsync({
+      requestWaterMask: true,
+      requestVertexNormals: true,
+    });
 
     viewer = new Viewer("cesiumContainer", {
       imageryProvider: imageryProvider,
