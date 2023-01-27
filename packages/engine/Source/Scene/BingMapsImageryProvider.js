@@ -3,7 +3,7 @@ import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import CesiumMath from "../Core/Math.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -20,9 +20,9 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * Initialization options for the BingMapsImageryProvider constructor
  *
- * @property {Resource|String} url The url of the Bing Maps server hosting the imagery.
- * @property {String} key The Bing Maps key for your application, which can be
- *        created at {@link https://www.bingmapsportal.com/}.
+ * @property {Resource|String} [url] The url of the Bing Maps server hosting the imagery. Deprecated.
+ * @property {String} [key] The Bing Maps key for your application, which can be
+ *        created at {@link https://www.bingmapsportal.com/}. Deprecated.
  * @property {String} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
  *        By default, tiles are loaded using the same protocol as the page.
  * @property {BingMapsStyle} [mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
@@ -37,6 +37,10 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 
 /**
+ * <div class="notice">
+ * To construct a BingMapsImageryProvider, call {@link BingMapsImageryProvider.fromUrl}. Do not call the constructor directly.
+ * </div>
+ *
  * Provides tiled imagery using the Bing Maps Imagery REST API.
  *
  * @alias BingMapsImageryProvider
@@ -44,6 +48,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * @param {BingMapsImageryProvider.ConstructorOptions} options Object describing initialization options
  *
+ * @see BingMapsImageryProvider.fromUrl
  * @see ArcGisMapServerImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
  * @see OpenStreetMapImageryProvider
@@ -53,12 +58,11 @@ import ImageryProvider from "./ImageryProvider.js";
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
  *
- *
  * @example
- * const bing = new Cesium.BingMapsImageryProvider({
- *     url : 'https://dev.virtualearth.net',
- *     key : 'get-yours-at-https://www.bingmapsportal.com/',
- *     mapStyle : Cesium.BingMapsStyle.AERIAL
+ * const bing = await Cesium.BingMapsImageryProvider.fromUrl(
+ *   "https://dev.virtualearth.net",
+ *   "get-yours-at-https://www.bingmapsportal.com/", {
+ *     mapStyle: Cesium.BingMapsStyle.AERIAL
  * });
  *
  * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
@@ -66,16 +70,6 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 function BingMapsImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const accessKey = options.key;
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.url)) {
-    throw new DeveloperError("options.url is required.");
-  }
-  if (!defined(accessKey)) {
-    throw new DeveloperError("options.key is required.");
-  }
-  //>>includeEnd('debug');
 
   /**
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
@@ -163,12 +157,9 @@ function BingMapsImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  this._key = accessKey;
-  this._resource = Resource.createIfNeeded(options.url);
-  this._resource.appendForwardSlash();
-  this._tileProtocol = options.tileProtocol;
   this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
   this._culture = defaultValue(options.culture, "");
+  this._key = options.key;
 
   this._tileDiscardPolicy = options.tileDiscardPolicy;
   if (!defined(this._tileDiscardPolicy)) {
@@ -195,119 +186,56 @@ function BingMapsImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
-
-  let tileProtocol = this._tileProtocol;
-
-  // For backward compatibility reasons, the tileProtocol may end with
-  // a `:`. Remove it.
-  if (defined(tileProtocol)) {
-    if (
-      tileProtocol.length > 0 &&
-      tileProtocol[tileProtocol.length - 1] === ":"
-    ) {
-      tileProtocol = tileProtocol.substr(0, tileProtocol.length - 1);
-    }
-  } else {
-    // use http if the document's protocol is http, otherwise use https
-    const documentProtocol = document.location.protocol;
-    tileProtocol = documentProtocol === "http:" ? "http" : "https";
-  }
-
-  const metadataResource = this._resource.getDerivedResource({
-    url: `REST/v1/Imagery/Metadata/${this._mapStyle}`,
-    queryParameters: {
-      incl: "ImageryProviders",
-      key: this._key,
-      uriScheme: tileProtocol,
-    },
-  });
-  const that = this;
-  let metadataError;
-
-  function metadataSuccess(data) {
-    if (data.resourceSets.length !== 1) {
-      return metadataFailure();
-    }
-    const resource = data.resourceSets[0].resources[0];
-
-    that._tileWidth = resource.imageWidth;
-    that._tileHeight = resource.imageHeight;
-    that._maximumLevel = resource.zoomMax - 1;
-    that._imageUrlSubdomains = resource.imageUrlSubdomains;
-    that._imageUrlTemplate = resource.imageUrl;
-
-    let attributionList = (that._attributionList = resource.imageryProviders);
-    if (!attributionList) {
-      attributionList = that._attributionList = [];
-    }
-
-    for (
-      let attributionIndex = 0, attributionLength = attributionList.length;
-      attributionIndex < attributionLength;
-      ++attributionIndex
-    ) {
-      const attribution = attributionList[attributionIndex];
-
-      if (attribution.credit instanceof Credit) {
-        // If attribution.credit has already been created
-        // then we are using a cached value, which means
-        // none of the remaining processing needs to be done.
-        break;
-      }
-
-      attribution.credit = new Credit(attribution.attribution);
-      const coverageAreas = attribution.coverageAreas;
-
-      for (
-        let areaIndex = 0, areaLength = attribution.coverageAreas.length;
-        areaIndex < areaLength;
-        ++areaIndex
-      ) {
-        const area = coverageAreas[areaIndex];
-        const bbox = area.bbox;
-        area.bbox = new Rectangle(
-          CesiumMath.toRadians(bbox[1]),
-          CesiumMath.toRadians(bbox[0]),
-          CesiumMath.toRadians(bbox[3]),
-          CesiumMath.toRadians(bbox[2])
-        );
-      }
-    }
-
-    that._ready = true;
-    TileProviderError.reportSuccess(metadataError);
-    return Promise.resolve(true);
-  }
-
-  function metadataFailure(e) {
-    const message = `An error occurred while accessing ${metadataResource.url}.`;
-    metadataError = TileProviderError.reportError(
-      metadataError,
-      that,
-      that._errorEvent,
-      message,
-      undefined,
-      undefined,
-      undefined
+  if (defined(options.url)) {
+    deprecationWarning(
+      "BingMapsImageryProvider options.url",
+      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use BingMapsImageryProvider.fromUrl instead."
     );
-    if (metadataError.retry) {
-      return requestMetadata();
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("options.key", options.key);
+    //>>includeEnd('debug');
+
+    let tileProtocol = options.tileProtocol;
+
+    // For backward compatibility reasons, the tileProtocol may end with
+    // a `:`. Remove it.
+    if (defined(tileProtocol)) {
+      if (
+        tileProtocol.length > 0 &&
+        tileProtocol[tileProtocol.length - 1] === ":"
+      ) {
+        tileProtocol = tileProtocol.substr(0, tileProtocol.length - 1);
+      }
+    } else {
+      // use http if the document's protocol is http, otherwise use https
+      const documentProtocol = document.location.protocol;
+      tileProtocol = documentProtocol === "http:" ? "http" : "https";
     }
-    return Promise.reject(new RuntimeError(message));
-  }
 
-  const cacheKey = metadataResource.url;
-  function requestMetadata() {
-    const promise = metadataResource.fetchJsonp("jsonp");
-    BingMapsImageryProvider._metadataCache[cacheKey] = promise;
-    return promise.then(metadataSuccess).catch(metadataFailure);
-  }
+    const resource = Resource.createIfNeeded(options.url);
+    this._resource = resource;
+    resource.appendForwardSlash();
+    const metadataResource = resource.getDerivedResource({
+      url: `REST/v1/Imagery/Metadata/${this._mapStyle}`,
+      queryParameters: {
+        incl: "ImageryProviders",
+        key: options.key,
+        uriScheme: tileProtocol,
+      },
+    });
 
-  const promise = BingMapsImageryProvider._metadataCache[cacheKey];
-  if (defined(promise)) {
-    this._readyPromise = promise.then(metadataSuccess).catch(metadataFailure);
+    const imageryProviderBuilder = new ImageryProviderBuilder(options);
+    this._readyPromise = requestMetadata(
+      metadataResource,
+      imageryProviderBuilder,
+      this
+    ).then(() => {
+      imageryProviderBuilder.build(this);
+      return true;
+    });
   } else {
-    this._readyPromise = requestMetadata();
+    this._readyPromise = Promise.resolve(true);
   }
 }
 
@@ -375,127 +303,73 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link BingMapsImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof BingMapsImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   tileWidth: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileWidth must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileWidth;
     },
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link BingMapsImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof BingMapsImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   tileHeight: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileHeight must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileHeight;
     },
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link BingMapsImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof BingMapsImageryProvider.prototype
    * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maximumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._maximumLevel;
     },
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link BingMapsImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof BingMapsImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   minimumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minimumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return 0;
     },
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link BingMapsImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof BingMapsImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme;
     },
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link BingMapsImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof BingMapsImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
    */
   rectangle: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "rectangle must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme.rectangle;
     },
   },
@@ -503,22 +377,13 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link BingMapsImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof BingMapsImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
    */
   tileDiscardPolicy: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileDiscardPolicy must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileDiscardPolicy;
     },
   },
@@ -542,9 +407,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
    * @memberof BingMapsImageryProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.ready",
+        "BingMapsImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use BingMapsImageryProvider.fromUrl instead."
+      );
       return this._ready;
     },
   },
@@ -554,16 +424,21 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
    * @memberof BingMapsImageryProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.readyPromise",
+        "BingMapsImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use BingMapsImageryProvider.fromUrl instead."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof BingMapsImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -591,6 +466,200 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   },
 });
 
+/**
+ * Used to track creation details while fetching initial metadata
+ *
+ * @constructor
+ * @private
+ *
+ * @param {BingMapsImageryProvider.ConstructorOptions} options An object describing initialization options
+ */
+function ImageryProviderBuilder(options) {
+  this.tileWidth = undefined;
+  this.tileHeight = undefined;
+  this.maximumLevel = undefined;
+  this.imageUrlSubdomains = undefined;
+  this.imageUrlTemplate = undefined;
+
+  this.attributionList = undefined;
+}
+
+/**
+ * Complete BingMapsImageryProvider creation based on builder values.
+ *
+ * @private
+ *
+ * @param {BingMapsImageryProvider} provider
+ */
+ImageryProviderBuilder.prototype.build = function (provider) {
+  provider._tileWidth = this.tileWidth;
+  provider._tileHeight = this.tileHeight;
+  provider._maximumLevel = this.maximumLevel;
+  provider._imageUrlSubdomains = this.imageUrlSubdomains;
+  provider._imageUrlTemplate = this.imageUrlTemplate;
+
+  let attributionList = (provider._attributionList = this.attributionList);
+  if (!attributionList) {
+    attributionList = [];
+  }
+  provider._attributionList = attributionList;
+
+  for (
+    let attributionIndex = 0, attributionLength = attributionList.length;
+    attributionIndex < attributionLength;
+    ++attributionIndex
+  ) {
+    const attribution = attributionList[attributionIndex];
+
+    if (attribution.credit instanceof Credit) {
+      // If attribution.credit has already been created
+      // then we are using a cached value, which means
+      // none of the remaining processing needs to be done.
+      break;
+    }
+
+    attribution.credit = new Credit(attribution.attribution);
+    const coverageAreas = attribution.coverageAreas;
+
+    for (
+      let areaIndex = 0, areaLength = attribution.coverageAreas.length;
+      areaIndex < areaLength;
+      ++areaIndex
+    ) {
+      const area = coverageAreas[areaIndex];
+      const bbox = area.bbox;
+      area.bbox = new Rectangle(
+        CesiumMath.toRadians(bbox[1]),
+        CesiumMath.toRadians(bbox[0]),
+        CesiumMath.toRadians(bbox[3]),
+        CesiumMath.toRadians(bbox[2])
+      );
+    }
+  }
+
+  provider._ready = true;
+};
+
+function metadataSuccess(data, imageryProviderBuilder) {
+  if (data.resourceSets.length !== 1) {
+    throw new RuntimeError(
+      "metadata does not specify one resource in resourceSets"
+    );
+  }
+
+  const resource = data.resourceSets[0].resources[0];
+  imageryProviderBuilder.tileWidth = resource.imageWidth;
+  imageryProviderBuilder.tileHeight = resource.imageHeight;
+  imageryProviderBuilder.maximumLevel = resource.zoomMax - 1;
+  imageryProviderBuilder.imageUrlSubdomains = resource.imageUrlSubdomains;
+  imageryProviderBuilder.imageUrlTemplate = resource.imageUrl;
+  imageryProviderBuilder.attributionList = resource.imageryProviders;
+}
+
+function metadataFailure(metadataResource, error, provider) {
+  let message = `An error occurred while accessing ${metadataResource.url}`;
+  if (defined(error) && defined(error.message)) {
+    message += `: ${error.message}`;
+  }
+
+  TileProviderError.reportError(
+    undefined,
+    provider,
+    defined(provider) ? provider._errorEvent : undefined,
+    message,
+    undefined,
+    undefined,
+    undefined,
+    error
+  );
+
+  throw new RuntimeError(message);
+}
+
+async function requestMetadata(
+  metadataResource,
+  imageryProviderBuilder,
+  provider
+) {
+  const cacheKey = metadataResource.url;
+  let promise = BingMapsImageryProvider._metadataCache[cacheKey];
+  if (!defined(promise)) {
+    promise = metadataResource.fetchJsonp("jsonp");
+    BingMapsImageryProvider._metadataCache[cacheKey] = promise;
+  }
+
+  try {
+    const data = await promise;
+    return metadataSuccess(data, imageryProviderBuilder);
+  } catch (e) {
+    metadataFailure(metadataResource, e, provider);
+  }
+}
+
+/**
+ * Creates an {@link ImageryProvider} which provides tiled imagery using the Bing Maps Imagery REST API.
+ *
+ * @param {Resource|String} url The url of the Bing Maps server hosting the imagery.
+ * @param {String} key The Bing Maps key for your application, which can be
+ *        created at {@link https://www.bingmapsportal.com/}.
+ * @param {BingMapsImageryProvider.ConstructorOptions} options Object describing initialization options
+ * @returns {Promise<BingMapsImageryProvider>} A promise that resolves to the created BingMapsImageryProvider
+ *
+ * @example
+ * const bing = await Cesium.BingMapsImageryProvider.fromUrl(
+ *   "https://dev.virtualearth.net",
+ *   "get-yours-at-https://www.bingmapsportal.com/", {
+ *     mapStyle: Cesium.BingMapsStyle.AERIAL
+ * });
+ *
+ * @exception {RuntimeError} metadata does not specify one resource in resourceSets
+ */
+BingMapsImageryProvider.fromUrl = async function (url, key, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  Check.defined("key", key);
+  //>>includeEnd('debug');
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  let tileProtocol = options.tileProtocol;
+
+  // For backward compatibility reasons, the tileProtocol may end with
+  // a `:`. Remove it.
+  if (defined(tileProtocol)) {
+    if (
+      tileProtocol.length > 0 &&
+      tileProtocol[tileProtocol.length - 1] === ":"
+    ) {
+      tileProtocol = tileProtocol.substr(0, tileProtocol.length - 1);
+    }
+  } else {
+    // use http if the document's protocol is http, otherwise use https
+    const documentProtocol = document.location.protocol;
+    tileProtocol = documentProtocol === "http:" ? "http" : "https";
+  }
+
+  const mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+  const resource = Resource.createIfNeeded(url);
+  resource.appendForwardSlash();
+  const metadataResource = resource.getDerivedResource({
+    url: `REST/v1/Imagery/Metadata/${mapStyle}`,
+    queryParameters: {
+      incl: "ImageryProviders",
+      key: key,
+      uriScheme: tileProtocol,
+    },
+  });
+
+  const provider = new BingMapsImageryProvider(options);
+  provider._resource = resource;
+  provider._key = key;
+  const imageryProviderBuilder = new ImageryProviderBuilder(options);
+  await requestMetadata(metadataResource, imageryProviderBuilder);
+  imageryProviderBuilder.build(provider);
+  return provider;
+};
+
 const rectangleScratch = new Rectangle();
 
 /**
@@ -600,18 +669,8 @@ const rectangleScratch = new Rectangle();
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "getTileCredits must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   const rectangle = this._tilingScheme.tileXYToRectangle(
     x,
     y,
@@ -628,8 +687,7 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link BingMapsImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -637,8 +695,6 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 BingMapsImageryProvider.prototype.requestImage = function (
   x,
@@ -646,14 +702,6 @@ BingMapsImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "requestImage must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   const promise = ImageryProvider.loadImage(
     this,
     buildImageResource(this, x, y, level, request)

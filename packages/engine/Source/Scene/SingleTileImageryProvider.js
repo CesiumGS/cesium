@@ -1,7 +1,8 @@
+import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -15,13 +16,17 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * Initialization options for the SingleTileImageryProvider constructor
  *
- * @property {Resource|String} url The url for the tile.
+ * @property {Resource|String} [url] The url for the tile. Deprecated.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  */
 
 /**
+ * <div class="notice">
+ * To construct a SingleTileImageryProvider, call {@link SingleTileImageryProvider.fromUrl}. Do not call the constructor directly.
+ * </div>
+ *
  * Provides a single, top-level imagery tile.  The single image is assumed to use a
  * {@link GeographicTilingScheme}.
  *
@@ -41,12 +46,6 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 function SingleTileImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.url)) {
-    throw new DeveloperError("options.url is required.");
-  }
-  //>>includeEnd('debug');
-
   /**
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
@@ -133,8 +132,6 @@ function SingleTileImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  const resource = Resource.createIfNeeded(options.url);
-
   const rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
   const tilingScheme = new GeographicTilingScheme({
     rectangle: rectangle,
@@ -143,7 +140,6 @@ function SingleTileImageryProvider(options) {
     ellipsoid: options.ellipsoid,
   });
   this._tilingScheme = tilingScheme;
-  this._resource = resource;
   this._image = undefined;
   this._texture = undefined;
   this._tileWidth = 0;
@@ -159,42 +155,23 @@ function SingleTileImageryProvider(options) {
   }
   this._credit = credit;
 
-  const that = this;
-  let error;
-
-  function success(image) {
-    that._image = image;
-    that._tileWidth = image.width;
-    that._tileHeight = image.height;
-    that._ready = true;
-    TileProviderError.reportSuccess(that._errorEvent);
-    return Promise.resolve(true);
-  }
-
-  function failure(e) {
-    const message = `Failed to load image ${resource.url}.`;
-    error = TileProviderError.reportError(
-      error,
-      that,
-      that._errorEvent,
-      message,
-      0,
-      0,
-      0
+  if (defined(options.url)) {
+    deprecationWarning(
+      "SingleTileImageryProvider options.url",
+      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use SingleTileImageryProvider.fromUrl instead."
     );
-    if (error.retry) {
-      return doRequest();
-    }
-    return Promise.reject(new RuntimeError(message));
-  }
 
-  function doRequest() {
-    return ImageryProvider.loadImage(null, resource)
-      .then(success)
-      .catch(failure);
+    const resource = Resource.createIfNeeded(options.url);
+    this._resource = resource;
+    this._readyPromise = doRequest(resource, this).then((image) => {
+      TileProviderError.reportSuccess(this._errorEvent);
+      this._image = image;
+      this._tileWidth = image.width;
+      this._tileHeight = image.height;
+      this._ready = true;
+      return true;
+    });
   }
-
-  this._readyPromise = doRequest();
 }
 
 Object.defineProperties(SingleTileImageryProvider.prototype, {
@@ -223,113 +200,67 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link SingleTileImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof SingleTileImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   tileWidth: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileWidth must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileWidth;
     },
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link SingleTileImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof SingleTileImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   tileHeight: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileHeight must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileHeight;
     },
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link SingleTileImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof SingleTileImageryProvider.prototype
    * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maximumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return 0;
     },
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link SingleTileImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof SingleTileImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   minimumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minimumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return 0;
     },
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link SingleTileImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof SingleTileImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme;
     },
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link SingleTileImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof SingleTileImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -343,22 +274,13 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link SingleTileImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof SingleTileImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
    */
   tileDiscardPolicy: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileDiscardPolicy must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return undefined;
     },
   },
@@ -382,9 +304,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
    * @memberof SingleTileImageryProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "SingleTileImageryProvider.ready",
+        "SingleTileImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use SingleTileImageryProvider.fromUrl instead."
+      );
       return this._ready;
     },
   },
@@ -394,16 +321,21 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
    * @memberof SingleTileImageryProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "SingleTileImageryProvider.readyPromise",
+        "SingleTileImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use SingleTileImageryProvider.fromUrl instead."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link SingleTileImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof SingleTileImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -431,6 +363,67 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
   },
 });
 
+function failure(resource, error, provider, previousError) {
+  let message = `Failed to load image ${resource.url}`;
+  if (defined(error) && defined(error.message)) {
+    message += `: ${error.message}`;
+  }
+
+  // When readyPromise is deprecated, TileProviderError.reportError,
+  // retry attempts, and related parameters can be removed
+  const reportedError = TileProviderError.reportError(
+    previousError,
+    provider,
+    defined(provider) ? provider._errorEvent : undefined,
+    message,
+    0,
+    0,
+    0,
+    error
+  );
+  if (reportedError.retry) {
+    return doRequest(resource, provider, reportedError);
+  }
+
+  throw new RuntimeError(message);
+}
+
+async function doRequest(resource, provider, previousError) {
+  try {
+    const image = await ImageryProvider.loadImage(null, resource);
+    return image;
+  } catch (error) {
+    return failure(resource, error, provider, previousError);
+  }
+}
+
+/**
+ * Creates a provider for a single, top-level imagery tile.  The single image is assumed to use a
+ * @param {Resource|String} url The url for the tile
+ * @param {SingleTileImageryProvider.ConstructorOptions} [options] Object describing initialization options.
+ *
+ * @example
+ * const provider = await SingleTileImageryProvider.fromUrl("https://yoururl.com/image.png");
+ */
+SingleTileImageryProvider.fromUrl = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  const resource = Resource.createIfNeeded(url);
+  const image = await doRequest(resource);
+
+  const provider = new SingleTileImageryProvider(options);
+  provider._resource = resource;
+  provider._image = image;
+  provider._tileWidth = image.width;
+  provider._tileHeight = image.height;
+  provider._ready = true;
+  provider._readyPromise = Promise.resolve(true);
+
+  return provider;
+};
+
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
@@ -438,24 +431,19 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 SingleTileImageryProvider.prototype.getTileCredits = function (x, y, level) {
   return undefined;
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link SingleTileImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise.<ImageryTypes>|undefined} The resolved image
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 SingleTileImageryProvider.prototype.requestImage = function (
   x,
@@ -463,14 +451,6 @@ SingleTileImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "requestImage must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   if (!defined(this._image)) {
     return;
   }

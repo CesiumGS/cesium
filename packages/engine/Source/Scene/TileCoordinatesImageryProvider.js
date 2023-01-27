@@ -1,6 +1,7 @@
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 
@@ -141,8 +142,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -154,8 +154,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -167,8 +166,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {Number|undefined}
    * @readonly
@@ -180,8 +178,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -193,8 +190,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -206,8 +202,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -221,8 +216,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -252,9 +246,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "TileCoordinatesImageryProvider.ready",
+        "TileCoordinatesImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return true;
     },
   },
@@ -264,16 +263,21 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "TileCoordinatesImageryProvider.readyPromise",
+        "TileCoordinatesImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof TileCoordinatesImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -308,8 +312,6 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 TileCoordinatesImageryProvider.prototype.getTileCredits = function (
   x,
@@ -320,8 +322,7 @@ TileCoordinatesImageryProvider.prototype.getTileCredits = function (
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.

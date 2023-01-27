@@ -1,6 +1,7 @@
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
@@ -215,9 +216,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.ready",
+        "MapboxStyleImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return this._imageryProvider.ready;
     },
   },
@@ -227,16 +233,20 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.readyPromise",
+        "MapboxStyleImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return this._imageryProvider.readyPromise;
     },
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by the instance.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -248,8 +258,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -261,8 +270,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -274,8 +282,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Number|undefined}
    * @readonly
@@ -287,8 +294,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true. Generally,
+   * Gets the minimum level-of-detail that can be requested. Generally,
    * a minimum level should only be used when the rectangle of the imagery is small
    * enough that the number of tiles at the minimum level is small.  An imagery
    * provider with more than a few tiles at the minimum level will lead to
@@ -304,8 +310,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -319,8 +324,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -347,8 +351,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery. This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -395,16 +398,13 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 MapboxStyleImageryProvider.prototype.getTileCredits = function (x, y, level) {
   return undefined;
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -412,8 +412,6 @@ MapboxStyleImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 MapboxStyleImageryProvider.prototype.requestImage = function (
   x,
@@ -426,8 +424,7 @@ MapboxStyleImageryProvider.prototype.requestImage = function (
 
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
- * a tile.  This function should not be called before {@link MapboxStyleImageryProvider#ready} returns true.
- * This function is optional, so it may not exist on all ImageryProviders.
+ * a tile. This function is optional, so it may not exist on all ImageryProviders.
  *
  *
  * @param {Number} x The tile X coordinate.
@@ -439,8 +436,6 @@ MapboxStyleImageryProvider.prototype.requestImage = function (
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.
- *
- * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
  */
 MapboxStyleImageryProvider.prototype.pickFeatures = function (
   x,

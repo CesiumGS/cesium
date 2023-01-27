@@ -138,6 +138,7 @@ Object.defineProperties(ImageryProvider.prototype, {
    * @memberof ImageryProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: DeveloperError.throwInstantiationError,
@@ -148,14 +149,14 @@ Object.defineProperties(ImageryProvider.prototype, {
    * @memberof ImageryProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: DeveloperError.throwInstantiationError,
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
-   * not be called before {@link ImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by the instance.
    * @memberof ImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -165,8 +166,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels.  This function should
-   * not be called before {@link ImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof ImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -176,8 +176,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link ImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof ImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -187,8 +186,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link ImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof ImageryProvider.prototype
    * @type {Number|undefined}
    * @readonly
@@ -198,8 +196,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link ImageryProvider#ready} returns true. Generally,
+   * Gets the minimum level-of-detail that can be requested.  Generally,
    * a minimum level should only be used when the rectangle of the imagery is small
    * enough that the number of tiles at the minimum level is small.  An imagery
    * provider with more than a few tiles at the minimum level will lead to
@@ -213,8 +210,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This function should
-   * not be called before {@link ImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof ImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -226,8 +222,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link ImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof ImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -237,7 +232,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   },
 
   /**
-   * Gets an event that is raised when the imagery provider encounters an asynchronous error..  By subscribing
+   * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of {@link TileProviderError}.
    * @memberof ImageryProvider.prototype
@@ -250,8 +245,7 @@ Object.defineProperties(ImageryProvider.prototype, {
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery. This function should
-   * not be called before {@link ImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof ImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -292,16 +286,13 @@ Object.defineProperties(ImageryProvider.prototype, {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 ImageryProvider.prototype.getTileCredits = function (x, y, level) {
   DeveloperError.throwInstantiationError();
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link ImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -309,8 +300,6 @@ ImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise.<ImageryTypes>|undefined} Returns a promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 ImageryProvider.prototype.requestImage = function (x, y, level, request) {
   DeveloperError.throwInstantiationError();
@@ -318,7 +307,7 @@ ImageryProvider.prototype.requestImage = function (x, y, level, request) {
 
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
- * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
+ * a tile.
  * This function is optional, so it may not exist on all ImageryProviders.
  *
  * @function
@@ -333,7 +322,6 @@ ImageryProvider.prototype.requestImage = function (x, y, level, request) {
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.
  *
- * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
  */
 ImageryProvider.prototype.pickFeatures = function (
   x,

@@ -12,6 +12,7 @@ import {
   queryToObject,
   RequestScheduler,
   Resource,
+  RuntimeError,
   WebMercatorTilingScheme,
 } from "../../index.js";
 
@@ -78,16 +79,6 @@ describe("Scene/BingMapsImageryProvider", function () {
 
   it("conforms to ImageryProvider interface", function () {
     expect(BingMapsImageryProvider).toConformToInterface(ImageryProvider);
-  });
-
-  it("constructor throws when url is not specified", function () {
-    function constructWithoutServer() {
-      return new BingMapsImageryProvider({
-        mapStyle: BingMapsStyle.AERIAL,
-        key: "",
-      });
-    }
-    expect(constructWithoutServer).toThrowDeveloperError();
   });
 
   it("constructor throws when key is not specified", function () {
@@ -431,73 +422,210 @@ describe("Scene/BingMapsImageryProvider", function () {
       });
   });
 
-  it("returns valid value for hasAlphaChannel", function () {
+  it("fromUrl throws if url is not provided", async function () {
+    await expectAsync(
+      BingMapsImageryProvider.fromUrl()
+    ).toBeRejectedWithDeveloperError(
+      "url is required, actual value was undefined"
+    );
+  });
+
+  it("fromUrl throws if key is not provided", async function () {
+    await expectAsync(
+      BingMapsImageryProvider.fromUrl("http://fake.fake.invalid/")
+    ).toBeRejectedWithDeveloperError(
+      "key is required, actual value was undefined"
+    );
+  });
+
+  it("fromUrl resolves with created provider", async function () {
+    const url = "http://fake.fake.invalid/";
+    const mapStyle = BingMapsStyle.ROAD;
+
+    installFakeMetadataRequest(url, mapStyle);
+    installFakeImageRequest();
+
+    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+      mapStyle: mapStyle,
+    });
+    expect(provider).toBeInstanceOf(BingMapsImageryProvider);
+    expect(provider.url).toEqual(url);
+  });
+
+  it("fromUrl uses cached metadata result", async function () {
+    const url = "http://fake.fake.invalid/";
+    const mapStyle = BingMapsStyle.ROAD;
+
+    installFakeMetadataRequest(url, mapStyle);
+    installFakeImageRequest();
+
+    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+      mapStyle: mapStyle,
+    });
+    const provider2 = await BingMapsImageryProvider.fromUrl(url, "", {
+      mapStyle: mapStyle,
+    });
+
+    //These are the same instance only if the cache has been used
+    expect(provider._attributionList).toBe(provider2._attributionList);
+
+    installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
+    installFakeImageRequest();
+
+    const provider3 = await BingMapsImageryProvider.fromUrl(url, "", {
+      mapStyle: BingMapsStyle.AERIAL,
+    });
+
+    // Because the road is different, a non-cached request should have happened
+    expect(provider3._attributionList).not.toBe(provider._attributionList);
+  });
+
+  it("fromUrl resolves with a path", async function () {
+    const url = "http://fake.fake.invalid/some/subdirectory";
+    const mapStyle = BingMapsStyle.ROAD;
+
+    installFakeMetadataRequest(url, mapStyle);
+    installFakeImageRequest();
+
+    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+      mapStyle: mapStyle,
+    });
+    expect(provider).toBeInstanceOf(BingMapsImageryProvider);
+    expect(provider.url).toEqual(`${url}/`);
+  });
+
+  it("fromUrl resolves with a path ending with a slash", async function () {
+    const url = "http://fake.fake.invalid/some/subdirectory/";
+    const mapStyle = BingMapsStyle.ROAD;
+
+    installFakeMetadataRequest(url, mapStyle);
+    installFakeImageRequest();
+
+    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+      mapStyle: mapStyle,
+    });
+    expect(provider).toBeInstanceOf(BingMapsImageryProvider);
+    expect(provider.url).toEqual(url);
+  });
+
+  it("fromUrl resolves with Resource", async function () {
+    const url = "http://fake.fake.invalid/";
+    const mapStyle = BingMapsStyle.ROAD;
+
+    installFakeMetadataRequest(url, mapStyle);
+    installFakeImageRequest();
+
+    const resource = new Resource({
+      url: url,
+    });
+
+    const provider = await BingMapsImageryProvider.fromUrl(resource, "", {
+      mapStyle: mapStyle,
+    });
+    expect(provider).toBeInstanceOf(BingMapsImageryProvider);
+    expect(provider.url).toEqual(url);
+  });
+
+  it("fromUrl throws if request fails", async function () {
+    const url = "http://fake.fake.invalid";
+
+    await expectAsync(
+      BingMapsImageryProvider.fromUrl(url, "")
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "An error occurred while accessing http://fake.fake.invalid/REST/v1/Imagery/Metadata/Aerial?jsonp=loadJsonp321911&incl=ImageryProviders&key=&uriScheme=http"
+    );
+  });
+
+  it("fromUrl throws if metadata does not specify one resource in resourceSets", async function () {
+    const url = "http://fake.fake.invalid";
+
+    const baseUri = new Uri(appendForwardSlash(url));
+    const expectedUri = new Uri(
+      `REST/v1/Imagery/Metadata/${BingMapsStyle.AERIAL}`
+    ).absoluteTo(baseUri);
+
+    Resource._Implementations.loadAndExecuteScript = function (
+      url,
+      functionName
+    ) {
+      const uri = new Uri(url);
+      const query = queryToObject(uri.query());
+      expect(query.jsonp).toBeDefined();
+      expect(query.incl).toEqual("ImageryProviders");
+      expect(query.key).toBeDefined();
+
+      uri.query("");
+      expect(uri.toString()).toStartWith(expectedUri.toString());
+
+      setTimeout(function () {
+        const response = createFakeMetadataResponse(BingMapsStyle.AERIAL);
+        response.resourceSets = [];
+        window[functionName](response);
+      }, 1);
+    };
+    installFakeImageRequest();
+
+    await expectAsync(
+      BingMapsImageryProvider.fromUrl(url, "")
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "An error occurred while accessing http://fake.fake.invalid/REST/v1/Imagery/Metadata/Aerial?jsonp=loadJsonp700536&incl=ImageryProviders&key=&uriScheme=http: metadata does not specify one resource in resourceSets"
+    );
+  });
+
+  it("returns valid value for hasAlphaChannel", async function () {
     const url = "http://fake.fake.invalid";
     const mapStyle = BingMapsStyle.AERIAL;
 
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = new BingMapsImageryProvider({
-      url: url,
+    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
       mapStyle: mapStyle,
-      key: "",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(typeof provider.hasAlphaChannel).toBe("boolean");
-    });
+    expect(typeof provider.hasAlphaChannel).toBe("boolean");
   });
 
-  it("can provide a root tile", function () {
+  it("can provide a root tile", async function () {
     const url = "http://fake.fake.invalid";
     const mapStyle = BingMapsStyle.ROAD;
 
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = new BingMapsImageryProvider({
-      url: url,
+    const provider = await BingMapsImageryProvider.fromUrl(url, "fake Key", {
       mapStyle: mapStyle,
-      key: "fake Key",
     });
 
     expect(provider.url).toStartWith(url);
     expect(provider.key).toBeDefined();
     expect(provider.mapStyle).toEqual(mapStyle);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.tileWidth).toEqual(256);
-      expect(provider.tileHeight).toEqual(256);
-      expect(provider.maximumLevel).toEqual(20);
-      expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-      expect(provider.tileDiscardPolicy).toBeInstanceOf(
-        DiscardEmptyTileImagePolicy
-      );
-      expect(provider.rectangle).toEqual(
-        new WebMercatorTilingScheme().rectangle
-      );
-      expect(provider.credit).toBeInstanceOf(Object);
+    expect(provider.tileWidth).toEqual(256);
+    expect(provider.tileHeight).toEqual(256);
+    expect(provider.maximumLevel).toEqual(20);
+    expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+    expect(provider.tileDiscardPolicy).toBeInstanceOf(
+      DiscardEmptyTileImagePolicy
+    );
+    expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
+    expect(provider.credit).toBeInstanceOf(Object);
 
-      installFakeImageRequest(
-        "http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg",
-        {
-          g: "3031",
-          mkt: "",
-        }
-      );
+    installFakeImageRequest(
+      "http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg",
+      {
+        g: "3031",
+        mkt: "",
+      }
+    );
 
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(image).toBeImageOrImageBitmap();
-      });
-    });
+    const image = await provider.requestImage(0, 0, 0);
+    expect(image).toBeImageOrImageBitmap();
   });
 
-  it("sets correct culture in tile requests", function () {
+  it("sets correct culture in tile requests", async function () {
     const url = "http://fake.fake.invalid";
     const mapStyle = BingMapsStyle.AERIAL_WITH_LABELS;
 
@@ -506,66 +634,34 @@ describe("Scene/BingMapsImageryProvider", function () {
 
     const culture = "ja-jp";
 
-    const provider = new BingMapsImageryProvider({
-      url: url,
+    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
       mapStyle: mapStyle,
       culture: culture,
-      key: "",
     });
 
     expect(provider.culture).toEqual(culture);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      installFakeImageRequest(
-        "http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg",
-        {
-          g: "3031",
-          mkt: "ja-jp",
-        }
-      );
+    installFakeImageRequest(
+      "http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg",
+      {
+        g: "3031",
+        mkt: "ja-jp",
+      }
+    );
 
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(image).toBeImageOrImageBitmap();
-      });
-    });
+    const image = await provider.requestImage(0, 0, 0);
+    expect(image).toBeImageOrImageBitmap();
   });
 
-  it("raises error on invalid url", function () {
-    const url = "http://host.invalid";
-    const provider = new BingMapsImageryProvider({
-      url: url,
-      key: "",
-    });
-
-    let errorEventRaised = false;
-    provider.errorEvent.addEventListener(function (error) {
-      expect(error.message).toContain(url);
-      errorEventRaised = true;
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail();
-      })
-      .catch(function () {
-        expect(provider.ready).toEqual(false);
-        expect(errorEventRaised).toEqual(true);
-      });
-  });
-
-  it("raises error event when image cannot be loaded", function () {
+  it("raises error event when image cannot be loaded", async function () {
     const url = "http://foo.bar.invalid";
     const mapStyle = BingMapsStyle.ROAD;
 
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = new BingMapsImageryProvider({
-      url: url,
+    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
       mapStyle: mapStyle,
-      key: "",
     });
 
     const layer = new ImageryLayer(provider);
@@ -637,34 +733,28 @@ describe("Scene/BingMapsImageryProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      const imagery = new Imagery(layer, 0, 0, 0);
-      imagery.addReference();
-      layer._requestImagery(imagery);
-      RequestScheduler.update();
+    const imagery = new Imagery(layer, 0, 0, 0);
+    imagery.addReference();
+    layer._requestImagery(imagery);
+    RequestScheduler.update();
 
-      return pollToPromise(function () {
-        return imagery.state === ImageryState.RECEIVED;
-      }).then(function () {
-        expect(imagery.image).toBeImageOrImageBitmap();
-        expect(tries).toEqual(2);
-        imagery.releaseReference();
-      });
+    return pollToPromise(function () {
+      return imagery.state === ImageryState.RECEIVED;
+    }).then(function () {
+      expect(imagery.image).toBeImageOrImageBitmap();
+      expect(tries).toEqual(2);
+      imagery.releaseReference();
     });
   });
 
-  it("correctly handles empty tiles", function () {
+  it("correctly handles empty tiles", async function () {
     const url = "http://foo.bar.invalid";
     const mapStyle = BingMapsStyle.ROAD_ON_DEMAND;
 
     installFakeMetadataRequest(url, mapStyle);
 
-    const provider = new BingMapsImageryProvider({
-      url: url,
+    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
       mapStyle: mapStyle,
-      key: "",
     });
 
     const layer = new ImageryLayer(provider);
@@ -676,20 +766,16 @@ describe("Scene/BingMapsImageryProvider", function () {
       return Promise.reject(e);
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      const imagery = new Imagery(layer, 0, 0, 0);
-      imagery.addReference();
-      layer._requestImagery(imagery);
-      RequestScheduler.update();
+    const imagery = new Imagery(layer, 0, 0, 0);
+    imagery.addReference();
+    layer._requestImagery(imagery);
+    RequestScheduler.update();
 
-      return pollToPromise(function () {
-        return imagery.state === ImageryState.RECEIVED;
-      }).then(function () {
-        expect(imagery.image).toBe(DiscardEmptyTileImagePolicy.EMPTY_IMAGE);
-        imagery.releaseReference();
-      });
+    return pollToPromise(function () {
+      return imagery.state === ImageryState.RECEIVED;
+    }).then(function () {
+      expect(imagery.image).toBe(DiscardEmptyTileImagePolicy.EMPTY_IMAGE);
+      imagery.releaseReference();
     });
   });
 });

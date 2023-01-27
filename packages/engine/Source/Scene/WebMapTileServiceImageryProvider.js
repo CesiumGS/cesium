@@ -2,6 +2,7 @@ import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -412,8 +413,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -425,8 +425,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -438,8 +437,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Number|undefined}
    * @readonly
@@ -451,8 +449,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -464,8 +461,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -477,8 +473,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -492,8 +487,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -535,9 +529,16 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
-    value: true,
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.ready",
+        "WebMapTileServiceImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
+      return true;
+    },
   },
 
   /**
@@ -545,16 +546,21 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.readyPromise",
+        "WebMapTileServiceImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -635,8 +641,6 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
   x,
@@ -647,8 +651,7 @@ WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -656,8 +659,6 @@ WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 WebMapTileServiceImageryProvider.prototype.requestImage = function (
   x,

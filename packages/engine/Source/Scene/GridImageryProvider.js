@@ -1,6 +1,7 @@
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 
@@ -165,8 +166,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof GridImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -178,8 +178,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof GridImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -191,8 +190,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof GridImageryProvider.prototype
    * @type {Number|undefined}
    * @readonly
@@ -204,8 +202,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof GridImageryProvider.prototype
    * @type {Number}
    * @readonly
@@ -217,8 +214,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof GridImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -230,8 +226,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof GridImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -245,8 +240,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof GridImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -276,9 +270,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * @memberof GridImageryProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprected
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "GridImageryProvider.ready",
+        "GridImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return true;
     },
   },
@@ -288,16 +287,21 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * @memberof GridImageryProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "GridImageryProvider.readyPromise",
+        "GridImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link GridImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof GridImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -392,16 +396,13 @@ GridImageryProvider.prototype._createGridCanvas = function () {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
   return undefined;
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link GridImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.

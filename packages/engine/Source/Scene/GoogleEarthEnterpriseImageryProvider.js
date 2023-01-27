@@ -1,8 +1,9 @@
+import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import decodeGoogleEarthEnterpriseData from "../Core/decodeGoogleEarthEnterpriseData.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import GoogleEarthEnterpriseMetadata from "../Core/GoogleEarthEnterpriseMetadata.js";
@@ -47,8 +48,8 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  *
  * Initialization options for the GoogleEarthEnterpriseImageryProvider constructor
  *
- * @property {Resource|String} url The url of the Google Earth Enterprise server hosting the imagery.
- * @property {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
+ * @property {Resource|String} [url] The url of the Google Earth Enterprise server hosting the imagery. Deprecated.
+ * @property {GoogleEarthEnterpriseMetadata} [metadata] A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider. Deprecated.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded. If this value is not specified, a default
@@ -57,6 +58,10 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  */
 
 /**
+ * <div class="notice">
+ * To construct a GoogleEarthEnterpriseImageryProvider, call {@link GoogleEarthEnterpriseImageryProvider.fromMetadata}. Do not call the constructor directly.
+ * </div>
+ *
  * Provides tiled imagery using the Google Earth Enterprise REST API.
  *
  * Notes: This provider is for use with the 3D Earth API of Google Earth Enterprise,
@@ -67,6 +72,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  *
  * @param {GoogleEarthEnterpriseImageryProvider.ConstructorOptions} options Object describing initialization options
  *
+ * @see GoogleEarthEnterpriseImageryProvider.fromMetadata
  * @see GoogleEarthEnterpriseTerrainProvider
  * @see ArcGisMapServerImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -79,21 +85,13 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  *
  *
  * @example
- * const geeMetadata = new GoogleEarthEnterpriseMetadata('http://www.example.com');
- * const gee = new Cesium.GoogleEarthEnterpriseImageryProvider({
- *     metadata : geeMetadata
- * });
+ * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl("http://www.example.com");
+ * const gee = Cesium.GoogleEarthEnterpriseImageryProvider.fromMetadata(geeMetadata);
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!(defined(options.url) || defined(options.metadata))) {
-    throw new DeveloperError("options.url or options.metadata is required.");
-  }
-  //>>includeEnd('debug');
 
   /**
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
@@ -181,14 +179,6 @@ function GoogleEarthEnterpriseImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  let metadata;
-  if (defined(options.metadata)) {
-    metadata = options.metadata;
-  } else {
-    const resource = Resource.createIfNeeded(options.url);
-    metadata = new GoogleEarthEnterpriseMetadata(resource);
-  }
-  this._metadata = metadata;
   this._tileDiscardPolicy = options.tileDiscardPolicy;
 
   this._tilingScheme = new GeographicTilingScheme({
@@ -223,12 +213,50 @@ function GoogleEarthEnterpriseImageryProvider(options) {
   this._ready = false;
   const that = this;
   let metadataError;
-  this._readyPromise = metadata.readyPromise
-    .then(function (result) {
-      if (!metadata.imageryPresent) {
-        const e = new RuntimeError(
-          `The server ${metadata.url} doesn't have imagery`
-        );
+  let metadata;
+  if (defined(options.url)) {
+    deprecationWarning(
+      "GoogleEarthEnterpriseImageryProvider options.url",
+      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+    );
+    const resource = Resource.createIfNeeded(options.url);
+    metadata = new GoogleEarthEnterpriseMetadata(resource);
+  }
+
+  if (defined(options.metadata)) {
+    deprecationWarning(
+      "GoogleEarthEnterpriseImageryProvider options.metadata",
+      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+    );
+    metadata = options.metadata;
+  }
+
+  this._metadata = metadata;
+  if (defined(metadata)) {
+    this._readyPromise = metadata.readyPromise
+      .then(function (result) {
+        if (!metadata.imageryPresent) {
+          const e = new RuntimeError(
+            `The server ${metadata.url} doesn't have imagery`
+          );
+          metadataError = TileProviderError.reportError(
+            metadataError,
+            that,
+            that._errorEvent,
+            e.message,
+            undefined,
+            undefined,
+            undefined,
+            e
+          );
+          return Promise.reject(e);
+        }
+
+        TileProviderError.reportSuccess(metadataError);
+        that._ready = result;
+        return result;
+      })
+      .catch(function (e) {
         metadataError = TileProviderError.reportError(
           metadataError,
           that,
@@ -240,25 +268,8 @@ function GoogleEarthEnterpriseImageryProvider(options) {
           e
         );
         return Promise.reject(e);
-      }
-
-      TileProviderError.reportSuccess(metadataError);
-      that._ready = result;
-      return result;
-    })
-    .catch(function (e) {
-      metadataError = TileProviderError.reportError(
-        metadataError,
-        that,
-        that._errorEvent,
-        e.message,
-        undefined,
-        undefined,
-        undefined,
-        e
-      );
-      return Promise.reject(e);
-    });
+      });
+  }
 }
 
 Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
@@ -287,127 +298,73 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   tileWidth: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileWidth must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileWidth;
     },
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   tileHeight: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileHeight must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileHeight;
     },
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maximumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._maximumLevel;
     },
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {Number}
    * @readonly
    */
   minimumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minimumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return 0;
     },
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme;
     },
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
    */
   rectangle: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "rectangle must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme.rectangle;
     },
   },
@@ -415,22 +372,13 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
    */
   tileDiscardPolicy: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileDiscardPolicy must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileDiscardPolicy;
     },
   },
@@ -454,9 +402,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {Boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseImageryProvider.ready",
+        "GoogleEarthEnterpriseImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+      );
       return this._ready;
     },
   },
@@ -466,16 +419,21 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {Promise.<Boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseImageryProvider.readyPromise",
+        "GoogleEarthEnterpriseImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -504,28 +462,49 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
 });
 
 /**
+ * Creates a tiled imagery provider using the Google Earth Enterprise REST API.
+ * @param {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
+ * @param {GoogleEarthEnterpriseImageryProvider.ConstructorOptions} options Object describing initialization options.
+ * @returns {GoogleEarthEnterpriseImageryProvider}
+ *
+ * @exception {RuntimeError} The metadata url does not have imagery
+ *
+ * @example
+ * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl("http://www.example.com");
+ * const gee = Cesium.GoogleEarthEnterpriseImageryProvider.fromMetadata(geeMetadata);
+ */
+GoogleEarthEnterpriseImageryProvider.fromMetadata = function (
+  metadata,
+  options
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("metadata", metadata);
+  //>>includeEnd('debug');
+
+  if (!metadata.imageryPresent) {
+    throw new RuntimeError(`The server ${metadata.url} doesn't have imagery`);
+  }
+
+  const provider = new GoogleEarthEnterpriseImageryProvider(options);
+  provider._metadata = metadata;
+  provider._ready = true;
+  provider._readyPromise = Promise.resolve(true);
+  return provider;
+};
+
+/**
  * Gets the credits to be displayed when a given tile is displayed.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
   x,
   y,
   level
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "getTileCredits must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   const metadata = this._metadata;
   const info = metadata.getTileInformation(x, y, level);
   if (defined(info)) {
@@ -539,8 +518,7 @@ GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -548,8 +526,6 @@ GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
   x,
@@ -557,14 +533,6 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "requestImage must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   const invalidImage = this._tileDiscardPolicy._image; // Empty image or undefined depending on discard policy
   const metadata = this._metadata;
   const quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
