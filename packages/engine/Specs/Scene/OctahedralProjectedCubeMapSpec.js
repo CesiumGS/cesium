@@ -208,7 +208,7 @@ describe(
         });
     });
 
-    it("rejects when environment map fails to load.", function () {
+    it("raises error event when environment map fails to load.", function () {
       if (!OctahedralProjectedCubeMap.isSupported(context)) {
         return;
       }
@@ -217,15 +217,12 @@ describe(
       const frameState = createFrameState(context);
       let error;
 
-      projection.readyPromise
-        .then(function () {
-          fail("Should not resolve.");
-        })
-        .catch(function (e) {
-          error = e;
-          expect(error).toBeDefined();
-          expect(projection.ready).toEqual(false);
-        });
+      const removeListener = projection.errorEvent.addEventListener((e) => {
+        error = e;
+        expect(error).toBeDefined();
+        expect(projection.ready).toEqual(false);
+        removeListener();
+      });
 
       return pollToPromise(function () {
         projection.update(frameState);
