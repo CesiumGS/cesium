@@ -237,7 +237,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
         "MapboxImageryProvider.readyPromise",
         "MapboxImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
       );
-      return this._imageryProvider.readyPromise;
+      return this._imageryProvider._readyPromise;
     },
   },
 

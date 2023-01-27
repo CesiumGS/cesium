@@ -263,7 +263,8 @@ function IonImageryProvider(options) {
       });
 
       that._imageryProvider = imageryProvider;
-      return imageryProvider.readyPromise.then(function () {
+      // readyPromise is deprecated. This is here for backwards compatibility
+      return imageryProvider._readyPromise.then(function () {
         that._ready = true;
         return true;
       });

@@ -606,7 +606,6 @@ describe("Scene/QuadtreePrimitive", function () {
         const result = jasmine.createSpyObj("tileProvider", [
           "getQuadtree",
           "setQuadtree",
-          "getReady",
           "getTilingScheme",
           "getErrorEvent",
           "initialize",
@@ -627,9 +626,6 @@ describe("Scene/QuadtreePrimitive", function () {
           quadtree: {
             get: result.getQuadtree,
             set: result.setQuadtree,
-          },
-          ready: {
-            get: result.getReady,
           },
           tilingScheme: {
             get: result.getTilingScheme,

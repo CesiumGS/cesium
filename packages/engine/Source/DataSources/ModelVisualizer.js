@@ -386,7 +386,8 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   if (hasHeightReference) {
     // We cannot query the availability of the terrain provider till its ready, so the
     // bounding sphere state will remain pending till the terrain provider is ready.
-    if (!terrainProvider.ready) {
+    // ready is deprecated. This is here for backwards compatibility
+    if (!terrainProvider._ready) {
       return BoundingSphereState.PENDING;
     }
 

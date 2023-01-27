@@ -233,6 +233,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GlobeSurfaceTileProvider.prototype
    * @type {Boolean}
+   * @deprecated
    */
   ready: {
     get: function () {
@@ -240,14 +241,13 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
         // ready is deprecated; This is here for backwards compatibility
         this._terrainProvider._ready &&
         (this._imageryLayers.length === 0 ||
-          this._imageryLayers.get(0).imageryProvider.ready)
+          this._imageryLayers.get(0).imageryProvider._ready)
       );
     },
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This property should
-   * not be accessed before {@link GlobeSurfaceTileProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof GlobeSurfaceTileProvider.prototype
    * @type {TilingScheme}
    */
@@ -360,7 +360,8 @@ function updateCredits(surface, frameState) {
   const imageryLayers = surface._imageryLayers;
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
     const imageryProvider = imageryLayers.get(i).imageryProvider;
-    if (imageryProvider.ready && defined(imageryProvider.credit)) {
+    // ready is deprecated; This is here for backwards compatibility
+    if (imageryProvider._ready && defined(imageryProvider.credit)) {
       creditDisplay.addCredit(imageryProvider.credit);
     }
   }
@@ -564,8 +565,7 @@ GlobeSurfaceTileProvider.prototype.cancelReprojections = function () {
 };
 
 /**
- * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
- * called before {@link GlobeSurfaceTileProvider#ready} returns true.
+ * Gets the maximum geometric error allowed in a tile at a given level, in meters.
  *
  * @param {Number} level The tile level for which to get the maximum geometric error.
  * @returns {Number} The maximum geometric error in meters.
@@ -578,13 +578,10 @@ GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function (
 
 /**
  * Loads, or continues loading, a given tile.  This function will continue to be called
- * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
- * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
+ * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.
  *
  * @param {FrameState} frameState The frame state.
  * @param {QuadtreeTile} tile The tile to load.
- *
- * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
  */
 GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
   // We don't want to load imagery until we're certain that the terrain tiles are actually visible.

@@ -533,7 +533,9 @@ describe("Scene/BingMapsImageryProvider", function () {
       BingMapsImageryProvider.fromUrl(url, "")
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while accessing http://fake.fake.invalid/REST/v1/Imagery/Metadata/Aerial?jsonp=loadJsonp321911&incl=ImageryProviders&key=&uriScheme=http"
+      jasmine.stringContaining(
+        "An error occurred while accessing http://fake.fake.invalid/REST/v1/Imagery/Metadata/Aerial"
+      )
     );
   });
 
@@ -570,7 +572,9 @@ describe("Scene/BingMapsImageryProvider", function () {
       BingMapsImageryProvider.fromUrl(url, "")
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while accessing http://fake.fake.invalid/REST/v1/Imagery/Metadata/Aerial?jsonp=loadJsonp700536&incl=ImageryProviders&key=&uriScheme=http: metadata does not specify one resource in resourceSets"
+      jasmine.stringContaining(
+        "metadata does not specify one resource in resourceSets"
+      )
     );
   });
 

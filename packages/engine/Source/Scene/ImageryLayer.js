@@ -496,12 +496,12 @@ const terrainRectangleScratch = new Rectangle();
  *     });
  * });
  */
-ImageryLayer.prototype.getViewableRectangle = function () {
+ImageryLayer.prototype.getViewableRectangle = async function () {
   const imageryProvider = this._imageryProvider;
   const rectangle = this._rectangle;
-  return imageryProvider.readyPromise.then(function () {
-    return Rectangle.intersection(imageryProvider.rectangle, rectangle);
-  });
+  // readyPromise has been deprecated. This is here for backward compatibility and can be removed with readyPromise.
+  await imageryProvider._readyPromise;
+  return Rectangle.intersection(imageryProvider.rectangle, rectangle);
 };
 
 /**
@@ -541,7 +541,8 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     insertionPoint = surfaceTile.imagery.length;
   }
 
-  if (!imageryProvider.ready) {
+  // ready is deprecated. This is here for backwards compatibility
+  if (!imageryProvider._ready) {
     // The imagery provider is not ready, so we can't create skeletons, yet.
     // Instead, add a placeholder so that we'll know to create
     // the skeletons once the provider is ready.
