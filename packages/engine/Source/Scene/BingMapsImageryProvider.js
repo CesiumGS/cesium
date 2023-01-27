@@ -177,7 +177,7 @@ function BingMapsImageryProvider(options) {
 
   this._proxy = options.proxy;
   this._credit = new Credit(
-    `<a href="http://www.bing.com"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
+    `<a href="https://www.microsoft.com/en-us/maps/product/enduserterms"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
   );
 
   this._tilingScheme = new WebMercatorTilingScheme({
