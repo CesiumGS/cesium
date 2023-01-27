@@ -29,6 +29,7 @@
 - Fixed a crash in terrain sampling if any points have an indefined position due to being outside the rectangle. [#10931](https://github.com/CesiumGS/cesium/pull/10931)
 - Fixed label background rendering. [#11040](https://github.com/CesiumGS/cesium/issues/11040)
 - Fixed a bug where scale was not being applied to the top-level tileset geometric error. [#11047](https://github.com/CesiumGS/cesium/pull/11047)
+- Updating Bing Maps top page hyperlink to Bing Maps ToU hyperlink [#11049](https://github.com/CesiumGS/cesium/pull/11049)
 
 ### 1.101 - 2023-01-02
 
