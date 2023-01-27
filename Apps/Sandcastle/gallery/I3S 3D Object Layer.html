@@ -38,13 +38,13 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
-          animation: false,
-          timeline: false,
-        });
+        (async () => {
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            terrainProvider: await Cesium.createWorldTerrainAsync(),
+            animation: false,
+            timeline: false,
+          });
 
-        async function addI3sProvider() {
           // More datasets to tour can be added here...
           // The url passed to I3SDataProvider supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a SceneServer.
           const tours = {
@@ -83,78 +83,78 @@
           viewer.camera.setView({
             destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
           });
-        }
 
-        addI3sProvider();
-
-        // An entity object which will hold info about the currently selected feature for infobox display
-        const selectedEntity = new Cesium.Entity();
-        // Show metadata in the InfoBox.
-        viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
-          movement
-        ) {
-          // Pick a new feature
-          const pickedFeature = viewer.scene.pick(movement.position);
-          if (!Cesium.defined(pickedFeature)) {
-            return;
-          }
-
-          const pickedPosition = viewer.scene.pickPosition(movement.position);
-
-          if (
-            Cesium.defined(pickedFeature.content) &&
-            Cesium.defined(pickedFeature.content.tile.i3sNode)
+          // An entity object which will hold info about the currently selected feature for infobox display
+          const selectedEntity = new Cesium.Entity();
+          // Show metadata in the InfoBox.
+          viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(
+            movement
           ) {
-            const i3sNode = pickedFeature.content.tile.i3sNode;
-            if (pickedPosition) {
-              i3sNode.loadFields().then(function () {
-                let description = "No attributes";
-                let name;
-                console.log(
-                  `pickedPosition(x,y,z) : ${pickedPosition.x}, ${pickedPosition.y}, ${pickedPosition.z}`
-                );
+            // Pick a new feature
+            const pickedFeature = viewer.scene.pick(movement.position);
+            if (!Cesium.defined(pickedFeature)) {
+              return;
+            }
 
-                const fields = i3sNode.getFieldsForPickedPosition(
-                  pickedPosition
-                );
-                if (Object.keys(fields).length > 0) {
-                  description =
-                    '<table class="cesium-infoBox-defaultTable"><tbody>';
-                  for (const fieldName in fields) {
-                    if (i3sNode.fields.hasOwnProperty(fieldName)) {
-                      description += `<tr><th>${fieldName}</th><td>`;
-                      description += `${fields[fieldName]}</td></tr>`;
-                      console.log(`${fieldName}: ${fields[fieldName]}`);
-                      if (!Cesium.defined(name) && isNameProperty(fieldName)) {
-                        name = fields[fieldName];
+            const pickedPosition = viewer.scene.pickPosition(movement.position);
+
+            if (
+              Cesium.defined(pickedFeature.content) &&
+              Cesium.defined(pickedFeature.content.tile.i3sNode)
+            ) {
+              const i3sNode = pickedFeature.content.tile.i3sNode;
+              if (pickedPosition) {
+                i3sNode.loadFields().then(function () {
+                  let description = "No attributes";
+                  let name;
+                  console.log(
+                    `pickedPosition(x,y,z) : ${pickedPosition.x}, ${pickedPosition.y}, ${pickedPosition.z}`
+                  );
+
+                  const fields = i3sNode.getFieldsForPickedPosition(
+                    pickedPosition
+                  );
+                  if (Object.keys(fields).length > 0) {
+                    description =
+                      '<table class="cesium-infoBox-defaultTable"><tbody>';
+                    for (const fieldName in fields) {
+                      if (i3sNode.fields.hasOwnProperty(fieldName)) {
+                        description += `<tr><th>${fieldName}</th><td>`;
+                        description += `${fields[fieldName]}</td></tr>`;
+                        console.log(`${fieldName}: ${fields[fieldName]}`);
+                        if (
+                          !Cesium.defined(name) &&
+                          isNameProperty(fieldName)
+                        ) {
+                          name = fields[fieldName];
+                        }
                       }
                     }
+                    description += `</tbody></table>`;
                   }
-                  description += `</tbody></table>`;
-                }
-                if (!Cesium.defined(name)) {
-                  name = "unknown";
-                }
-                selectedEntity.name = name;
-                selectedEntity.description = description;
-                viewer.selectedEntity = selectedEntity;
-              });
+                  if (!Cesium.defined(name)) {
+                    name = "unknown";
+                  }
+                  selectedEntity.name = name;
+                  selectedEntity.description = description;
+                  viewer.selectedEntity = selectedEntity;
+                });
+              }
             }
-          }
-        },
-        Cesium.ScreenSpaceEventType.LEFT_CLICK);
+          },
+          Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        function isNameProperty(propertyName) {
-          const name = propertyName.toLowerCase();
-          if (
-            name.localeCompare("name") === 0 ||
-            name.localeCompare("objname") === 0
-          ) {
-            return true;
+          function isNameProperty(propertyName) {
+            const name = propertyName.toLowerCase();
+            if (
+              name.localeCompare("name") === 0 ||
+              name.localeCompare("objname") === 0
+            ) {
+              return true;
+            }
+            return false;
           }
-          return false;
-        }
-        //Sandcastle_End
+        })(); //Sandcastle_End
         if (typeof Cesium !== "undefined") {
           window.startupCalled = true;
           window.startup(Cesium);

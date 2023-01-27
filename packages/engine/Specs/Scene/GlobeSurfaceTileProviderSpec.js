@@ -895,7 +895,7 @@ describe(
       });
     });
 
-    it("adds terrain and imagery credits to the CreditDisplay", async function () {
+    it("adds terrain and imagery credits to the CreditDisplay", function () {
       const CreditDisplayElement = CreditDisplay.CreditDisplayElement;
       const imageryCredit = new Credit("imagery credit");
       scene.imageryLayers.addImageryProvider(
@@ -906,23 +906,22 @@ describe(
       );
 
       const terrainCredit = new Credit("terrain credit");
-      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "https://s3.amazonaws.com/cesiumjs/smallTerrain",
-        {
-          credit: terrainCredit,
-        }
-      );
+      scene.terrainProvider = new CesiumTerrainProvider({
+        url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
+        credit: terrainCredit,
+      });
 
-      await updateUntilDone(scene.globe);
-      const creditDisplay = scene.frameState.creditDisplay;
-      creditDisplay.showLightbox();
-      expect(
-        creditDisplay._currentFrameCredits.lightboxCredits.values
-      ).toContain(new CreditDisplayElement(imageryCredit));
-      expect(
-        creditDisplay._currentFrameCredits.lightboxCredits.values
-      ).toContain(new CreditDisplayElement(terrainCredit));
-      creditDisplay.hideLightbox();
+      return updateUntilDone(scene.globe).then(function () {
+        const creditDisplay = scene.frameState.creditDisplay;
+        creditDisplay.showLightbox();
+        expect(
+          creditDisplay._currentFrameCredits.lightboxCredits.values
+        ).toContain(new CreditDisplayElement(imageryCredit));
+        expect(
+          creditDisplay._currentFrameCredits.lightboxCredits.values
+        ).toContain(new CreditDisplayElement(terrainCredit));
+        creditDisplay.hideLightbox();
+      });
     });
 
     describe(

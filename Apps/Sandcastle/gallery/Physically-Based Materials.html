@@ -48,8 +48,15 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           clockViewModel: new Cesium.ClockViewModel(clock),
           selectionIndicator: false,
-          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
           checked

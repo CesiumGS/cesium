@@ -66,21 +66,21 @@ function makeAsyncThrowFunction(debug, Type, name) {
     return {
       compare: function (actualPromise) {
         return Promise.resolve(actualPromise)
-          .catch((e) => {
-            // Ignore any error
+          .then(() => {
             return { pass: true };
           })
-          .finally(() => {
+          .catch((e) => {
+            // Ignore any error
             return { pass: true };
           });
       },
       negativeCompare: function (actualPromise) {
         return Promise.resolve(actualPromise)
-          .catch((e) => {
-            // Ignore any error
+          .then(() => {
             return { pass: true };
           })
-          .finally(() => {
+          .catch((e) => {
+            // Ignore any error
             return { pass: true };
           });
       },

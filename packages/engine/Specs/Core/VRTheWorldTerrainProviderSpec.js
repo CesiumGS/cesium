@@ -112,6 +112,36 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     expect(provider).toBeInstanceOf(VRTheWorldTerrainProvider);
   });
 
+  it("resolves readyPromise", function () {
+    patchXHRLoad();
+
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
+  it("resolves readyPromise with Resource", function () {
+    patchXHRLoad();
+
+    const resource = new Resource({
+      url: "made/up/url",
+    });
+
+    const provider = new VRTheWorldTerrainProvider({
+      url: resource,
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
   it("has error event", async function () {
     patchXHRLoad();
 
@@ -136,16 +166,14 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     );
   });
 
-  it("credit is undefined if credit is not provided", async function () {
+  it("credit is undefined if credit option is not provided", async function () {
     patchXHRLoad();
-
     const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url");
     expect(provider.credit).toBeUndefined();
   });
 
   it("credit is defined if credit option is provided", async function () {
     patchXHRLoad();
-
     const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url", {
       credit: "thanks to our awesome made up contributors!",
     });
@@ -154,12 +182,21 @@ describe("Core/VRTheWorldTerrainProvider", function () {
 
   it("does not have a water mask", async function () {
     patchXHRLoad();
-
     const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url");
     expect(provider.hasWaterMask).toBe(false);
   });
 
-  it("fromUrl throws an error if the SRS is not supported", async function () {
+  it("is not ready immediately", function () {
+    patchXHRLoad();
+    const provider = new VRTheWorldTerrainProvider({
+      url: "made/up/url",
+    });
+    expect(provider.ready).toBe(false);
+    return provider.readyPromise;
+  });
+
+  it("fromUrl throws if the SRS is not supported", async function () {
+    patchXHRLoad();
     Resource._Implementations.loadWithXhr = function (
       url,
       responseType,
@@ -198,13 +235,17 @@ describe("Core/VRTheWorldTerrainProvider", function () {
 
     await expectAsync(
       VRTheWorldTerrainProvider.fromUrl("made/up/url")
-    ).toBeRejectedWithError(RuntimeError, "SRS EPSG:foo is not supported");
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "An error occurred while accessing made/up/url: SRS EPSG:foo is not supported"
+    );
   });
 
   describe("requestTileGeometry", function () {
     it("provides HeightmapTerrainData", async function () {
-      const baseUrl = "made/up/url";
       patchXHRLoad();
+
+      const baseUrl = "made/up/url";
 
       Resource._Implementations.createImage = function (
         request,
@@ -224,17 +265,17 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       };
 
       const terrainProvider = await VRTheWorldTerrainProvider.fromUrl(baseUrl);
+
       expect(terrainProvider.tilingScheme).toBeInstanceOf(
         GeographicTilingScheme
       );
-
       const loadedData = await terrainProvider.requestTileGeometry(0, 0, 0);
       expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
     });
 
     it("returns undefined if too many requests are already in progress", async function () {
-      const baseUrl = "made/up/url";
       patchXHRLoad();
+      const baseUrl = "made/up/url";
 
       const deferreds = [];
 

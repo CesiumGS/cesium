@@ -41,14 +41,20 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-
         const viewer = new Cesium.Viewer("cesiumContainer", {
           scene3DOnly: true,
           infoBox: false,
           selectionIndicator: false,
           timeline: false,
-          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         const scene = viewer.scene;
         const camera = scene.camera;
@@ -126,7 +132,7 @@
 
         scene.shadowMap = shadowMap1;
 
-        // TODO : workaround until Cesium supports multiple light sources
+        // Workaround until Cesium supports multiple light sources
         const CustomPrimitive = function (shadowMap) {
           this.shadowMap = shadowMap;
         };
@@ -136,7 +142,6 @@
         };
 
         scene.primitives.add(new CustomPrimitive(shadowMap2));
-
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

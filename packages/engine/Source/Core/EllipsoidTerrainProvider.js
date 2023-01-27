@@ -43,6 +43,7 @@ function EllipsoidTerrainProvider(options) {
   );
 
   this._errorEvent = new Event();
+  this._ready = true;
   this._readyPromise = Promise.resolve(true);
 }
 

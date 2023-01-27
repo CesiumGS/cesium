@@ -146,8 +146,15 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           requestRenderMode: true,
           maximumRenderTimeChange: Infinity,
-          terrainProvider: Cesium.createWorldTerrainAsync(),
         });
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         const scene = viewer.scene;
         scene.debugShowFramesPerSecond = true;
@@ -348,7 +355,6 @@
         ];
 
         Sandcastle.addToolbarMenu(scenarios);
-
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

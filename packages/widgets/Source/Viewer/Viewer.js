@@ -314,7 +314,7 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ImageryProvider} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false.
- * @property {TerrainProvider|Promise<TerrainProvider>} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
+ * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @property {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
@@ -369,39 +369,43 @@ function enableVRUI(viewer, enabled) {
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
  *
  * @example
- * //Initialize the viewer widget with several custom options and mixins.
- * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     //Start in Columbus Viewer
- *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
- *     //Use Cesium World Terrain
- *     terrainProvider : Cesium.createWorldTerrainAsync(),
- *     //Hide the base layer picker
- *     baseLayerPicker : false,
- *     //Use OpenStreetMaps
- *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
- *         url : 'https://a.tile.openstreetmap.org/'
+ * // Initialize the viewer widget with several custom options and mixins.
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     // Start in Columbus Viewer
+ *     sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+ *     // Use Cesium World Terrain
+ *     terrainProvider: await Cesium.createWorldTerrainAsync(),
+ *     // Hide the base layer picker
+ *     baseLayerPicker: false,
+ *     // Use OpenStreetMaps
+ *     imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+ *       url: "https://a.tile.openstreetmap.org/"
  *     }),
- *     skyBox : new Cesium.SkyBox({
- *         sources : {
- *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
- *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
- *           positiveY : 'stars/TychoSkymapII.t3_08192x04096_80_py.jpg',
- *           negativeY : 'stars/TychoSkymapII.t3_08192x04096_80_my.jpg',
- *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
- *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
- *         }
+ *     skyBox: new Cesium.SkyBox({
+ *       sources: {
+ *         positiveX: "stars/TychoSkymapII.t3_08192x04096_80_px.jpg",
+ *         negativeX: "stars/TychoSkymapII.t3_08192x04096_80_mx.jpg",
+ *         positiveY: "stars/TychoSkymapII.t3_08192x04096_80_py.jpg",
+ *         negativeY: "stars/TychoSkymapII.t3_08192x04096_80_my.jpg",
+ *         positiveZ: "stars/TychoSkymapII.t3_08192x04096_80_pz.jpg",
+ *         negativeZ: "stars/TychoSkymapII.t3_08192x04096_80_mz.jpg"
+ *       }
  *     }),
  *     // Show Columbus View map with Web Mercator projection
- *     mapProjection : new Cesium.WebMercatorProjection()
- * });
+ *     mapProjection: new Cesium.WebMercatorProjection()
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  *
- * //Add basic drag and drop functionality
+ * // Add basic drag and drop functionality
  * viewer.extend(Cesium.viewerDragDropMixin);
  *
- * //Show a pop-up alert if we encounter an error when processing a dropped file
+ * // Show a pop-up alert if we encounter an error when processing a dropped file
  * viewer.dropError.addEventListener(function(dropHandler, name, error) {
- *     console.log(error);
- *     window.alert(error);
+ *   console.log(error);
+ *   window.alert(error);
  * });
  */
 function Viewer(container, options) {
@@ -680,21 +684,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     scene.imageryLayers.addImageryProvider(options.imageryProvider);
   }
   if (defined(options.terrainProvider)) {
-    // options.terrainProvider is a promise
-    // Promise.resolve is not used so that synchronous code can immediately execute
-    if (defined(options.terrainProvider.then)) {
-      options.terrainProvider.then((provider) => {
-        if (createBaseLayerPicker) {
-          baseLayerPicker.viewModel.selectedTerrain = undefined;
-        }
-        scene.terrainProvider = provider;
-      });
-    } else {
-      if (createBaseLayerPicker) {
-        baseLayerPicker.viewModel.selectedTerrain = undefined;
-      }
-      scene.terrainProvider = options.terrainProvider;
+    if (createBaseLayerPicker) {
+      baseLayerPicker.viewModel.selectedTerrain = undefined;
     }
+    scene.terrainProvider = options.terrainProvider;
   }
 
   // Navigation Help Button

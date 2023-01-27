@@ -39,12 +39,18 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync({
-            requestWaterMask: true,
-            requestVertexNormals: true,
-          }),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync({
+              requestWaterMask: true,
+              requestVertexNormals: true,
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         // set lighting to true
         viewer.scene.globe.enableLighting = true;
@@ -337,7 +343,6 @@
           },
           "sampleButtons"
         );
-
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

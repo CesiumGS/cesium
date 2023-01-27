@@ -16,18 +16,26 @@ import IonResource from "./IonResource.js";
  *
  * @example
  * // Create Cesium World Terrain with default settings
- * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     terrainProvider : Cesium.createWorldTerrainAsync();
- * });
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     terrainProvider: await Cesium.createWorldTerrainAsync();
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  *
  * @example
  * // Create Cesium World Terrain with water and normals.
- * const viewer1 = new Cesium.Viewer('cesiumContainer', {
- *     terrainProvider : Cesium.createWorldTerrainAsync({
- *         requestWaterMask : true,
- *         requestVertexNormals : true
+ * try {
+ *   const viewer1 = new Cesium.Viewer("cesiumContainer", {
+ *     terrainProvider: await Cesium.createWorldTerrainAsync({
+ *       requestWaterMask: true,
+ *       requestVertexNormals: true
  *     });
- * });
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  *
  */
 function createWorldTerrainAsync(options) {

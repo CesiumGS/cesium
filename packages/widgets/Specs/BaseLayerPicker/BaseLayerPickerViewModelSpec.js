@@ -10,6 +10,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     this.imageryLayers = new ImageryLayerCollection();
     this.terrainProvider = new EllipsoidTerrainProvider();
   }
+  MockGlobe.prototype.isDestroyed = () => false;
 
   const testProvider = {};
   const testProvider2 = {};
@@ -39,6 +40,15 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     iconUrl: "url3",
     creationFunction: function () {
       return testProvider3;
+    },
+  });
+
+  const testProviderViewModelAsync = new ProviderViewModel({
+    name: "name3",
+    tooltip: "tooltip3",
+    iconUrl: "url3",
+    creationFunction: async function () {
+      return testProvider;
     },
   });
 
@@ -229,6 +239,22 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     viewModel.selectedTerrain = testProviderViewModel3;
     await testProviderViewModel3.creationCommand();
     expect(globe.terrainProvider).toBe(testProvider3);
+  });
+
+  it("selectedTerrain actually sets async terrainProvider", async function () {
+    const terrainProviderViewModels = [
+      testProviderViewModel,
+      testProviderViewModelAsync,
+    ];
+    const globe = new MockGlobe();
+    const viewModel = new BaseLayerPickerViewModel({
+      globe: globe,
+      terrainProviderViewModels: terrainProviderViewModels,
+    });
+
+    viewModel.selectedTerrain = testProviderViewModelAsync;
+    await testProviderViewModelAsync.creationCommand();
+    expect(globe.terrainProvider).toBe(testProvider);
   });
 
   it("settings selectedImagery only removes layers added by view model", function () {

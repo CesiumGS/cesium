@@ -35,9 +35,16 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
+
         const scene = viewer.scene;
         viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
@@ -494,7 +501,6 @@
           );
           viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         };
-
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

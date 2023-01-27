@@ -37,10 +37,16 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.scene.globe.depthTestAgainstTerrain = true;
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         const ellipsoid = viewer.scene.globe.ellipsoid;
         const billboardCollection = viewer.scene.primitives.add(
@@ -162,7 +168,6 @@
             );
           }
         });
-
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

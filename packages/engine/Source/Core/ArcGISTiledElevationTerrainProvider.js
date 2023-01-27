@@ -229,11 +229,11 @@ async function requestMetadata(
  *
  * @example
  * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
- *   token : "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
+ *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
  * });
  * viewer.terrainProvider = terrainProvider;
  *
- *  @see TerrainProvider
+ * @see TerrainProvider
  */
 function ArcGISTiledElevationTerrainProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -418,7 +418,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
  *
  * @example
  * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
- *   token : "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
+ *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
  * });
  * viewer.terrainProvider = terrainProvider;
  *

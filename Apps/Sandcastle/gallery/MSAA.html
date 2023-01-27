@@ -33,11 +33,18 @@
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
           contextOptions: {
             requestWebgl1: false,
           },
         });
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
           "2022-08-01T00:00:00Z"

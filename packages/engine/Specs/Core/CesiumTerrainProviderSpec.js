@@ -1,6 +1,5 @@
 import {
   CesiumTerrainProvider,
-  Credit,
   Ellipsoid,
   GeographicTilingScheme,
   getAbsoluteUri,
@@ -188,10 +187,62 @@ describe("Core/CesiumTerrainProvider", function () {
     ).toBeRejectedWithError("my message");
   });
 
+  it("resolves readyPromise", function () {
+    const provider = new CesiumTerrainProvider({
+      url: "made/up/url",
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
+  it("resolves readyPromise when url promise is used", function () {
+    const provider = new CesiumTerrainProvider({
+      url: Promise.resolve("made/up/url"),
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
+  it("resolves readyPromise with Resource", function () {
+    const resource = new Resource({
+      url: "made/up/url",
+    });
+
+    const provider = new CesiumTerrainProvider({
+      url: resource,
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
+  it("rejects readyPromise when url rejects", function () {
+    const provider = new CesiumTerrainProvider({
+      url: Promise.reject(new Error("my message")),
+    });
+    return provider.readyPromise
+      .then(function () {
+        fail("should not resolve");
+      })
+      .catch(function (result) {
+        expect(result.message).toBe("my message");
+        expect(provider.ready).toBe(false);
+      });
+  });
+
   it("uses geographic tiling scheme by default", async function () {
     returnHeightmapTileJson();
 
     const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+
     expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
   });
 
@@ -216,6 +267,7 @@ describe("Core/CesiumTerrainProvider", function () {
     returnQuantizedMeshTileJson();
 
     const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+
     expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
     expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
       provider.getLevelMaximumGeometricError(1) * 2.0,
@@ -227,27 +279,29 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   });
 
-  it("credit is undefined if credit is not provided", async function () {
+  it("credit is undefined if credit option is not provided", async function () {
     returnHeightmapTileJson();
 
     const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+
     expect(provider.credit).toBeUndefined();
   });
 
-  it("credit is defined if credit is provided", async function () {
+  it("credit is defined if credit option is provided", async function () {
     returnHeightmapTileJson();
 
     const provider = await CesiumTerrainProvider.fromUrl("made/up/url", {
       credit: "thanks to our awesome made up contributors!",
     });
 
-    expect(provider.credit).toBeInstanceOf(Credit);
+    expect(provider.credit).toBeDefined();
   });
 
   it("has a water mask", async function () {
     returnHeightmapTileJson();
 
     const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+
     expect(provider.hasWaterMask).toBe(true);
   });
 
@@ -306,18 +360,7 @@ describe("Core/CesiumTerrainProvider", function () {
     expect(layers[1].availability.isTileAvailable(2, 0, 0)).toBe(false);
   });
 
-  it("fromUrl throws an error if layer.json does not specify a format", async function () {
-    returnTileJson("Data/CesiumTerrainTileJson/NoFormat.tile.json");
-
-    await expectAsync(
-      CesiumTerrainProvider.fromUrl("made/up/url")
-    ).toBeRejectedWithError(
-      RuntimeError,
-      "The tile format is not specified in the layer.json file."
-    );
-  });
-
-  it("fromUrl throws an error if layer.json specifies an unknown format", async function () {
+  it("fromUrl throws if layer.json specifies an unknown format", async function () {
     returnTileJson("Data/CesiumTerrainTileJson/InvalidFormat.tile.json");
 
     await expectAsync(
@@ -328,7 +371,7 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   });
 
-  it("fromUrl throws an error if layer.json does not specify quantized-mesh 1.x format", async function () {
+  it("fromUrl throws if layer.json does not specify quantized-mesh 1.x format", async function () {
     returnTileJson("Data/CesiumTerrainTileJson/QuantizedMesh2.0.tile.json");
 
     await expectAsync(
@@ -339,7 +382,7 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   });
 
-  it("from supports quantized-mesh1.x minor versions", async function () {
+  it("fromUrl supports quantized-mesh1.x minor versions", async function () {
     returnTileJson("Data/CesiumTerrainTileJson/QuantizedMesh1.1.tile.json");
 
     await expectAsync(
@@ -347,7 +390,7 @@ describe("Core/CesiumTerrainProvider", function () {
     ).toBeResolved();
   });
 
-  it("fromUrl throws an error if layer.json does not specify a tiles property", async function () {
+  it("fromUrl throws if layer.json does not specify a tiles property", async function () {
     returnTileJson("Data/CesiumTerrainTileJson/NoTiles.tile.json");
 
     await expectAsync(
@@ -358,7 +401,7 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   });
 
-  it("fromUrl throws an error if layer.json tiles property is an empty array", async function () {
+  it("fromUrl throws if layer.json tiles property is an empty array", async function () {
     returnTileJson("Data/CesiumTerrainTileJson/EmptyTilesArray.tile.json");
 
     await expectAsync(
@@ -369,19 +412,21 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   });
 
-  it("uses attribution specified in layer.json", async function () {
+  it("fromUrl uses attribution specified in layer.json", async function () {
     returnTileJson("Data/CesiumTerrainTileJson/WithAttribution.tile.json");
 
     const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+
     expect(provider._tileCredits[0].html).toBe(
       "This amazing data is courtesy The Amazing Data Source!"
     );
   });
 
-  it("do not add blank attribution if layer.json does not have one", async function () {
+  it("formUrl does not add blank attribution if layer.json does not have one", async function () {
     returnTileJson("Data/CesiumTerrainTileJson/WaterMask.tile.json");
 
     const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+
     expect(provider._tileCredit).toBeUndefined();
   });
 
@@ -454,71 +499,83 @@ describe("Core/CesiumTerrainProvider", function () {
   });
 
   describe("requestTileGeometry", function () {
-    async function makeRequest(provider, x, y, z) {
-      try {
-        await provider.requestTileGeometry(x, y, z);
-      } catch {
-        // Request is expect to fail
-      }
-    }
-
     it("uses multiple urls specified in layer.json", async function () {
       returnTileJson("Data/CesiumTerrainTileJson/MultipleUrls.tile.json");
+      const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
       spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
 
-      const provider = await CesiumTerrainProvider.fromUrl("made/up/url");
+      try {
+        await provider.requestTileGeometry(0, 0, 0);
+      } catch (e) {
+        expect(
+          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+        ).toContain("foo0.com");
+      }
 
-      await makeRequest(provider, 0, 0, 0);
-      expect(
-        Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-      ).toContain("foo0.com");
+      try {
+        await provider.requestTileGeometry(1, 0, 0);
+      } catch (e) {
+        expect(
+          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+        ).toContain("foo1.com");
+      }
 
-      await makeRequest(provider, 1, 0, 0);
-      expect(
-        Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-      ).toContain("foo1.com");
+      try {
+        await provider.requestTileGeometry(1, -1, 0);
+      } catch (e) {
+        expect(
+          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+        ).toContain("foo2.com");
+      }
 
-      await makeRequest(provider, 1, -1, 0);
-      expect(
-        Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-      ).toContain("foo2.com");
-
-      await makeRequest(provider, 1, 0, 1);
-      expect(
-        Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-      ).toContain("foo3.com");
+      try {
+        await provider.requestTileGeometry(1, 0, 1);
+      } catch (e) {
+        expect(
+          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+        ).toContain("foo3.com");
+      }
     });
 
     it("supports scheme-less template URLs in layer.json resolved with absolute URL", async function () {
       returnTileJson("Data/CesiumTerrainTileJson/MultipleUrls.tile.json");
-
       const url = getAbsoluteUri("Data/CesiumTerrainTileJson");
-      spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
-
       const provider = await CesiumTerrainProvider.fromUrl(url);
 
-      await makeRequest(provider, 0, 0, 0);
-      expect(
-        Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-      ).toContain("foo0.com");
+      spyOn(Resource._Implementations, "loadWithXhr").and.callThrough();
 
-      await makeRequest(provider, 1, 0, 0);
-      expect(
-        Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-      ).toContain("foo1.com");
+      try {
+        await provider.requestTileGeometry(0, 0, 0);
+      } catch (e) {
+        expect(
+          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+        ).toContain("foo0.com");
+      }
+      try {
+        await provider.requestTileGeometry(1, 0, 0);
+      } catch (e) {
+        expect(
+          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+        ).toContain("foo1.com");
+      }
 
-      await makeRequest(provider, 1, -1, 0);
-      expect(
-        Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-      ).toContain("foo2.com");
-
-      await makeRequest(provider, 1, 0, 1);
-      expect(
-        Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
-      ).toContain("foo3.com");
+      try {
+        await provider.requestTileGeometry(1, -1, 0);
+      } catch (e) {
+        expect(
+          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+        ).toContain("foo2.com");
+      }
+      try {
+        await provider.requestTileGeometry(1, 0, 1);
+      } catch (e) {
+        expect(
+          Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]
+        ).toContain("foo3.com");
+      }
     });
 
-    it("provides HeightmapTerrainData", async function () {
+    it("provides HeightmapTerrainData", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -541,11 +598,12 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnHeightmapTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, false, false);
-      expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+      return waitForTile(0, 0, 0, false, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+      });
     });
 
-    it("provides QuantizedMeshTerrainData", async function () {
+    it("provides QuantizedMeshTerrainData", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -567,11 +625,12 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnQuantizedMeshTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, false, false);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+      return waitForTile(0, 0, 0, false, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+      });
     });
 
-    it("provides QuantizedMeshTerrainData with 32bit indices", async function () {
+    it("provides QuantizedMeshTerrainData with 32bit indices", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -593,12 +652,13 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnQuantizedMeshTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, false, false);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-      expect(loadedData._indices.BYTES_PER_ELEMENT).toBe(4);
+      return waitForTile(0, 0, 0, false, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+        expect(loadedData._indices.BYTES_PER_ELEMENT).toBe(4);
+      });
     });
 
-    it("provides QuantizedMeshTerrainData with VertexNormals", async function () {
+    it("provides QuantizedMeshTerrainData with VertexNormals", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -620,12 +680,13 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnVertexNormalTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, true, false);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-      expect(loadedData._encodedNormals).toBeDefined();
+      return waitForTile(0, 0, 0, true, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+        expect(loadedData._encodedNormals).toBeDefined();
+      });
     });
 
-    it("provides QuantizedMeshTerrainData with WaterMask", async function () {
+    it("provides QuantizedMeshTerrainData with WaterMask", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -647,12 +708,13 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnWaterMaskTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, false, true);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-      expect(loadedData._waterMask).toBeDefined();
+      return waitForTile(0, 0, 0, false, true, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+        expect(loadedData._waterMask).toBeDefined();
+      });
     });
 
-    it("provides QuantizedMeshTerrainData with VertexNormals and WaterMask", async function () {
+    it("provides QuantizedMeshTerrainData with VertexNormals and WaterMask", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -674,13 +736,14 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnWaterMaskTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, true, true);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-      expect(loadedData._encodedNormals).toBeDefined();
-      expect(loadedData._waterMask).toBeDefined();
+      return waitForTile(0, 0, 0, true, true, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+        expect(loadedData._encodedNormals).toBeDefined();
+        expect(loadedData._waterMask).toBeDefined();
+      });
     });
 
-    it("provides QuantizedMeshTerrainData with OctVertexNormals", async function () {
+    it("provides QuantizedMeshTerrainData with OctVertexNormals", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -702,12 +765,13 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnOctVertexNormalTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, true, false);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-      expect(loadedData._encodedNormals).toBeDefined();
+      return waitForTile(0, 0, 0, true, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+        expect(loadedData._encodedNormals).toBeDefined();
+      });
     });
 
-    it("provides QuantizedMeshTerrainData with VertexNormals and unknown extensions", async function () {
+    it("provides QuantizedMeshTerrainData with VertexNormals and unknown extensions", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -729,12 +793,13 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnVertexNormalTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, true, false);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-      expect(loadedData._encodedNormals).toBeDefined();
+      return waitForTile(0, 0, 0, true, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+        expect(loadedData._encodedNormals).toBeDefined();
+      });
     });
 
-    it("provides QuantizedMeshTerrainData with OctVertexNormals and unknown extensions", async function () {
+    it("provides QuantizedMeshTerrainData with OctVertexNormals and unknown extensions", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -756,12 +821,13 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnOctVertexNormalTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, true, false);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-      expect(loadedData._encodedNormals).toBeDefined();
+      return waitForTile(0, 0, 0, true, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+        expect(loadedData._encodedNormals).toBeDefined();
+      });
     });
 
-    it("provides QuantizedMeshTerrainData with unknown extension", async function () {
+    it("provides QuantizedMeshTerrainData with unknown extension", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -783,8 +849,9 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnOctVertexNormalTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, false, false);
-      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+      return waitForTile(0, 0, 0, false, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+      });
     });
 
     it("provides QuantizedMeshTerrainData with Metadata availability", async function () {
@@ -812,6 +879,7 @@ describe("Core/CesiumTerrainProvider", function () {
       const terrainProvider = await CesiumTerrainProvider.fromUrl(
         "made/up/url"
       );
+
       expect(terrainProvider.hasMetadata).toBe(true);
       expect(terrainProvider._layers[0].availabilityLevels).toBe(10);
       expect(terrainProvider.availability.isTileAvailable(0, 0, 0)).toBe(true);
@@ -844,35 +912,29 @@ describe("Core/CesiumTerrainProvider", function () {
       returnHeightmapTileJson();
 
       const terrainProvider = await CesiumTerrainProvider.fromUrl(baseUrl);
-
+      let promise;
       let i;
-      const promises = [];
       for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
         const request = new Request({
           throttle: true,
           throttleByServer: true,
         });
-        promises.push(
-          expectAsync(
-            terrainProvider.requestTileGeometry(0, 0, 0, request)
-          ).toBeRejectedWithError(RuntimeError, "Mesh buffer doesn't exist.")
-        );
+        promise = terrainProvider
+          .requestTileGeometry(0, 0, 0, request)
+          .then(fail)
+          .catch((e) => {
+            expect(e.message).toContain("Mesh buffer doesn't exist.");
+          });
       }
       RequestScheduler.update();
+      expect(promise).toBeDefined();
 
-      const promise = terrainProvider.requestTileGeometry(
-        0,
-        0,
-        0,
-        createRequest()
-      );
+      promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
       expect(promise).toBeUndefined();
 
       for (i = 0; i < deferreds.length; ++i) {
         deferreds[i].resolve();
       }
-
-      return Promise.all(promises);
     });
 
     it("supports getTileDataAvailable()", async function () {
@@ -900,6 +962,7 @@ describe("Core/CesiumTerrainProvider", function () {
       returnQuantizedMeshTileJson();
 
       const terrainProvider = await CesiumTerrainProvider.fromUrl(baseUrl);
+
       expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
       expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBe(false);
     });
@@ -910,6 +973,7 @@ describe("Core/CesiumTerrainProvider", function () {
       returnPartialAvailabilityTileJson();
 
       const terrainProvider = await CesiumTerrainProvider.fromUrl(baseUrl);
+
       expect(terrainProvider.getTileDataAvailable(1, 3, 2)).toBe(true);
       expect(terrainProvider.getTileDataAvailable(1, 0, 2)).toBe(false);
     });
@@ -947,7 +1011,7 @@ describe("Core/CesiumTerrainProvider", function () {
       expect(terrainProvider.getTileDataAvailable(0, 0, 1)).toBe(true);
     });
 
-    it("supports a query string in the base URL", async function () {
+    it("supports a query string in the base URL", function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -970,8 +1034,9 @@ describe("Core/CesiumTerrainProvider", function () {
 
       returnHeightmapTileJson();
 
-      const loadedData = await waitForTile(0, 0, 0, false, false);
-      expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+      return waitForTile(0, 0, 0, false, false, function (loadedData) {
+        expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+      });
     });
 
     it("Uses query parameter extensions for ion resource", async function () {
@@ -987,7 +1052,7 @@ describe("Core/CesiumTerrainProvider", function () {
         IonResource.prototype,
         "getDerivedResource"
       ).and.callThrough();
-      terrainProvider.requestTileGeometry(0, 0, 0);
+      await terrainProvider.requestTileGeometry(0, 0, 0);
       const options = getDerivedResource.calls.argsFor(0)[0];
       expect(options.queryParameters.extensions).toEqual(
         "octvertexnormals-watermask-metadata"

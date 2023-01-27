@@ -110,10 +110,12 @@ function metadataSuccess(terrainProviderBuilder, xml) {
 }
 
 function metadataFailure(resource, error, provider) {
-  const message = defaultValue(
-    defined(error) ? error.message : undefined,
-    `An error occurred while accessing ${resource.url}.`
-  );
+  let message = `An error occurred while accessing ${resource.url}`;
+
+  if (defined(error) && defined(error.message)) {
+    message = `${message}: ${error.message}`;
+  }
+
   TileProviderError.reportError(
     undefined,
     provider,
@@ -121,7 +123,7 @@ function metadataFailure(resource, error, provider) {
     message
   );
 
-  throw error;
+  throw new RuntimeError(message);
 }
 
 async function requestMetadata(terrainProviderBuilder, resource, provider) {

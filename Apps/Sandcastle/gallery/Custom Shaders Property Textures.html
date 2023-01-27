@@ -42,10 +42,16 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync(),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         scene.globe.depthTestAgainstTerrain = false;
 
@@ -63,31 +69,31 @@
           NO_TEXTURE: undefined,
           UNCERTAINTY_CE90: new Cesium.CustomShader({
             fragmentShaderText: `
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                int horizontalUncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum;
-                material.diffuse = vec3(float(horizontalUncertainty) / 255.0);
-              }
-            `,
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          int horizontalUncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum;
+          material.diffuse = vec3(float(horizontalUncertainty) / 255.0);
+        }
+      `,
           }),
           UNCERTAINTY_LE90: new Cesium.CustomShader({
             fragmentShaderText: `
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                int verticalUncertainty = fsInput.metadata.r3dm_uncertainty_le90sum;
-                material.diffuse = vec3(float(verticalUncertainty) / 255.0);
-              }
-            `,
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          int verticalUncertainty = fsInput.metadata.r3dm_uncertainty_le90sum;
+          material.diffuse = vec3(float(verticalUncertainty) / 255.0);
+        }
+      `,
           }),
           // combined uncertainty
           UNCERTAINTY: new Cesium.CustomShader({
             fragmentShaderText: `
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                int uncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum + fsInput.metadata.r3dm_uncertainty_le90sum;
-                material.diffuse = vec3(float(uncertainty) / 255.0);
-              }
-            `,
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          int uncertainty = fsInput.metadata.r3dm_uncertainty_ce90sum + fsInput.metadata.r3dm_uncertainty_le90sum;
+          material.diffuse = vec3(float(uncertainty) / 255.0);
+        }
+      `,
           }),
         };
 
@@ -117,7 +123,6 @@
             },
           },
         ]);
-
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

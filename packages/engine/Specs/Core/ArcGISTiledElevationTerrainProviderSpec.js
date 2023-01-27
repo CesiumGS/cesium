@@ -242,11 +242,36 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     ).toBeRejectedWithError("my message");
   });
 
+  it("resolves readyPromise", function () {
+    const provider = new ArcGISTiledElevationTerrainProvider({
+      url: "made/up/url",
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
+  it("resolves readyPromise with Resource", function () {
+    const resource = new Resource({
+      url: "made/up/url",
+    });
+
+    const provider = new ArcGISTiledElevationTerrainProvider({
+      url: resource,
+    });
+
+    return provider.readyPromise.then(function (result) {
+      expect(result).toBe(true);
+      expect(provider.ready).toBe(true);
+    });
+  });
+
   it("has error event", async function () {
     const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
       "made/up/url"
     );
-
     expect(provider.errorEvent).toBeDefined();
     expect(provider.errorEvent).toBe(provider.errorEvent);
   });
@@ -255,7 +280,6 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
       "made/up/url"
     );
-
     expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
     expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(
       provider.getLevelMaximumGeometricError(1) * 2.0,
@@ -267,7 +291,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     );
   });
 
-  it("credit is undefined if credit is not provided", async function () {
+  it("logo is undefined if credit is not provided", async function () {
     delete metadata.copyrightText;
     const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
       "made/up/url"
@@ -275,7 +299,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     expect(provider.credit).toBeUndefined();
   });
 
-  it("credit is defined if credit option is provided", async function () {
+  it("logo is defined if credit is provided", async function () {
     const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
       "made/up/url",
       {
@@ -292,8 +316,19 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     expect(provider.hasWaterMask).toBe(false);
   });
 
+  it("is not ready immediately", function () {
+    const provider = new ArcGISTiledElevationTerrainProvider({
+      url: "made/up/url",
+    });
+    expect(provider.ready).toBe(false);
+    return provider.readyPromise.catch(function (error) {
+      expect(error).toBeInstanceOf(RuntimeError);
+    });
+  });
+
   it("detects WebMercator tiling scheme", async function () {
     const baseUrl = "made/up/url";
+
     const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
       baseUrl
     );
@@ -305,7 +340,6 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
 
   it("detects Geographic tiling scheme", async function () {
     const baseUrl = "made/up/url";
-
     metadata.spatialReference.latestWkid = 4326;
 
     const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
@@ -315,9 +349,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     expect(terrainProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
   });
 
-  it("fromUrl throws if SRS is not supported", async function () {
+  it("fromUrl throws if the SRS is not supported", async function () {
     const baseUrl = "made/up/url";
-
     metadata.spatialReference.latestWkid = 1234;
 
     await expectAsync(
@@ -325,9 +358,8 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     ).toBeRejectedWithError(RuntimeError, "Invalid spatial reference");
   });
 
-  it("raises an error if tileInfo missing", async function () {
+  it("fromUrl throws if tileInfo missing", async function () {
     const baseUrl = "made/up/url";
-
     delete metadata.tileInfo;
 
     await expectAsync(
@@ -337,6 +369,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
 
   it("checks availability if TileMap capability exists", async function () {
     const baseUrl = "made/up/url";
+
     const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
       baseUrl
     );
@@ -348,7 +381,6 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
 
   it("does not check availability if TileMap capability is missing", async function () {
     const baseUrl = "made/up/url";
-
     metadata.capabilities = "Image,Mensuration";
 
     const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
@@ -357,7 +389,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
 
     expect(terrainProvider._hasAvailability).toBe(false);
     expect(terrainProvider._tilesAvailable).toBeUndefined();
-    expect(terrainProvider._tilesAvailabilityLoaded).toBeUndefined();
+    expect(terrainProvider._tilesAvailablityLoaded).toBeUndefined();
   });
 
   describe("requestTileGeometry", function () {
@@ -376,7 +408,6 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
 
     it("returns undefined if too many requests are already in progress", async function () {
       const baseUrl = "made/up/url";
-
       const deferreds = [];
 
       Resource._Implementations.createImage = function (
@@ -412,7 +443,7 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
         deferreds[i].resolve();
       }
 
-      return Promise.all(
+      await Promise.all(
         deferreds.map(function (deferred) {
           return deferred.promise;
         })

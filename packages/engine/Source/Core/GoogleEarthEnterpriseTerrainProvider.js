@@ -96,7 +96,7 @@ TerrainCache.prototype.tidy = function () {
  * @see CesiumTerrainProvider
  *
  * @example
- * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl('http://www.example.com');
+ * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl("http://www.example.com");
  * const gee = Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(geeMetadata);
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -351,7 +351,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
  * @exception {RuntimeError} metadata does not specify terrain
  *
  * @example
- * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl('http://www.example.com');
+ * const geeMetadata = await GoogleEarthEnterpriseMetadata.fromUrl("http://www.example.com");
  * const gee = Cesium.GoogleEarthEnterpriseTerrainProvider.fromMetadata(geeMetadata);
  */
 GoogleEarthEnterpriseTerrainProvider.fromMetadata = function (

@@ -465,12 +465,16 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  *
  * @example
  * // Create Arctic DEM terrain with normals.
- * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     terrainProvider : Cesium.CesiumTerrainProvider.fromUrl(
- *         Cesium.IonResource.fromAssetId(3956), {
- *             requestVertexNormals : true
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(
+ *       Cesium.IonResource.fromAssetId(3956), {
+ *         requestVertexNormals: true
  *     })
- * });
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  *
  * @see createWorldTerrain
  * @see CesiumTerrainProvider.fromUrl
@@ -548,10 +552,10 @@ CesiumTerrainProvider._initializeReadyPromise = async function (
   options,
   provider
 ) {
-  await Promise.resolve(options.url);
+  const url = await Promise.resolve(options.url);
 
   const terrainProviderBuilder = new TerrainProviderBuilder(options);
-  const resource = Resource.createIfNeeded(options.url);
+  const resource = Resource.createIfNeeded(url);
   resource.appendForwardSlash();
   terrainProviderBuilder.lastResource = resource;
   terrainProviderBuilder.layerJsonResource = terrainProviderBuilder.lastResource.getDerivedResource(
@@ -1210,12 +1214,16 @@ CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
  *
  * @example
  * // Create Arctic DEM terrain with normals.
- * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     terrainProvider : Cesium.CesiumTerrainProvider.fromUrl(
- *         Cesium.IonResource.fromAssetId(3956), {
- *             requestVertexNormals : true
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(
+ *       Cesium.IonResource.fromAssetId(3956), {
+ *         requestVertexNormals: true
  *     })
- * });
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  *
  * @exception {RuntimeError} layer.json does not specify a format
  * @exception {RuntimeError} layer.json specifies an unknown format

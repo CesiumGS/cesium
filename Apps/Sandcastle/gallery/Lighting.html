@@ -32,15 +32,20 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrainAsync({
-            requestWaterMask: true,
-            requestVertexNormals: true,
-          }),
-        });
-
+        const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
         scene.globe.enableLighting = true;
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync({
+              requestWaterMask: true,
+              requestVertexNormals: true,
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         const scratchIcrfToFixed = new Cesium.Matrix3();
         const scratchMoonPosition = new Cesium.Cartesian3();

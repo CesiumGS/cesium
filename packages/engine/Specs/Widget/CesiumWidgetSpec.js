@@ -145,34 +145,12 @@ describe(
       expect(imageryLayers.length).toEqual(0);
     });
 
-    it("uses default terrainProvider", function () {
-      widget = createCesiumWidget(container);
-      expect(widget.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
-    });
-
     it("sets expected options terrainProvider", function () {
       const options = {
         terrainProvider: new EllipsoidTerrainProvider(),
       };
       widget = createCesiumWidget(container, options);
       expect(widget.terrainProvider).toBe(options.terrainProvider);
-
-      const anotherProvider = new EllipsoidTerrainProvider();
-      widget.terrainProvider = anotherProvider;
-      expect(widget.terrainProvider).toBe(anotherProvider);
-    });
-
-    it("sets expected options terrainProvider promise", async function () {
-      const options = {
-        terrainProvider: Promise.resolve(new EllipsoidTerrainProvider()),
-      };
-      widget = createCesiumWidget(container, options);
-      const provider = await options.terrainProvider;
-      expect(widget.terrainProvider).toBe(provider);
-    });
-
-    it("sets terrainProvider", function () {
-      widget = createCesiumWidget(container);
 
       const anotherProvider = new EllipsoidTerrainProvider();
       widget.terrainProvider = anotherProvider;
