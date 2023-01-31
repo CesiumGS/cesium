@@ -35,29 +35,30 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        (async () => {
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            terrainProvider: await Cesium.createWorldTerrainAsync(),
-          });
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: await Cesium.createWorldTerrainAsync(),
+        });
 
-          viewer.scene.primitives.add(Cesium.createOsmBuildings());
+        viewer.scene.primitives.add(Cesium.createOsmBuildings());
 
-          viewer.scene.camera.flyTo({
-            destination: Cesium.Cartesian3.fromDegrees(-74.019, 40.6912, 750),
-            orientation: {
-              heading: Cesium.Math.toRadians(20),
-              pitch: Cesium.Math.toRadians(-20),
-            },
-          });
-        })(); //Sandcastle_End
-        Sandcastle.finishedLoading();
+        viewer.scene.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(-74.019, 40.6912, 750),
+          orientation: {
+            heading: Cesium.Math.toRadians(20),
+            pitch: Cesium.Math.toRadians(-20),
+          },
+        }); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>
