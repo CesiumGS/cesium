@@ -1,19 +1,109 @@
 {
-  "name": "cesium",
-  "version": "1.101.0",
-  "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
-  "homepage": "http://cesium.com/cesiumjs/",
-  "license": "Apache-2.0",
+  "_from": "cesium@1.80.0",
+  "_id": "cesium@1.80.0",
+  "_inBundle": false,
+  "_integrity": "sha512-g0TWaU6uibOf5iskfmyVK4RfEkwLCR+JqWbtMwHP0aHRO9knqrX+jQ8SCaxnSVSFf8d362Lu1LtGj0zdLIIdDA==",
+  "_location": "/cesium",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "cesium@1.80.0",
+    "name": "cesium",
+    "escapedName": "cesium",
+    "rawSpec": "1.80.0",
+    "saveSpec": null,
+    "fetchSpec": "1.80.0"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/cesium/-/cesium-1.80.0.tgz",
+  "_shasum": "811339a383800ac9fd19ccddc2e62cca14626bbf",
+  "_spec": "cesium@1.80.0",
+  "_where": "/Users/qbatch/Desktop/sportstracklive-maps",
   "author": {
     "name": "Cesium GS, Inc.",
     "url": "https://cesium.com"
   },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues",
+    "email": "cesium-dev@googlegroups.com"
+  },
+  "bundleDependencies": false,
   "contributors": [
     {
       "name": "CesiumJS community",
-      "url": "https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md"
+      "url": "https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTORS.md"
     }
   ],
+  "deprecated": false,
+  "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
+  "devDependencies": {
+    "aws-sdk": "^2.531.0",
+    "bluebird": "^3.4.6",
+    "cloc": "^2.3.3",
+    "compression": "^1.6.2",
+    "eslint": "^7.5.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-es": "^4.1.0",
+    "eslint-plugin-html": "^6.0.0",
+    "express": "^4.15.0",
+    "globby": "^11.0.0",
+    "glsl-strip-comments": "^1.0.0",
+    "gulp": "^4.0.0",
+    "gulp-clean-css": "^4.2.0",
+    "gulp-insert": "^0.5.0",
+    "gulp-rename": "^2.0.0",
+    "gulp-replace": "^1.0.0",
+    "gulp-tap": "^2.0.0",
+    "gulp-uglify": "^3.0.0",
+    "gulp-zip": "^5.0.0",
+    "husky": "^4.2.5",
+    "jasmine-core": "^3.3.0",
+    "jsdoc": "^3.4.3",
+    "karma": "^5.1.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-coverage": "^2.0.1",
+    "karma-coverage-istanbul-instrumenter": "^1.0.1",
+    "karma-detect-browsers": "^2.2.3",
+    "karma-edge-launcher": "^0.4.2",
+    "karma-firefox-launcher": "^1.0.0",
+    "karma-ie-launcher": "^1.0.0",
+    "karma-jasmine": "^4.0.1",
+    "karma-longest-reporter": "^1.1.0",
+    "karma-safari-launcher": "^1.0.0",
+    "karma-spec-reporter": "^0.0.32",
+    "merge-stream": "^2.0.0",
+    "mime": "^2.0.3",
+    "mkdirp": "^1.0.0",
+    "open": "^7.0.0",
+    "prettier": "2.1.2",
+    "pretty-quick": "^3.0.2",
+    "request": "^2.79.0",
+    "rimraf": "^3.0.0",
+    "rollup": "^2.22.1",
+    "rollup-plugin-external-globals": "^0.6.0",
+    "rollup-plugin-strip-pragma": "^1.0.0",
+    "rollup-plugin-uglify": "^6.0.3",
+    "stream-to-promise": "^3.0.0",
+    "tsd-jsdoc": "^2.5.0",
+    "typescript": "^3.9.2",
+    "yargs": "^16.0.3"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "require": "./index.cjs",
+      "import": "./Source/Cesium.js"
+    }
+  },
+  "homepage": "http://cesium.com/cesiumjs/",
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
   "keywords": [
     "3D",
     "webgl",
@@ -21,149 +111,50 @@
     "map",
     "globe"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/CesiumGS/cesium.git"
-  },
-  "bugs": {
-    "url": "https://github.com/CesiumGS/cesium/issues",
-    "email": "cesium-dev@googlegroups.com"
-  },
+  "license": "Apache-2.0",
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
-  "types": "./Source/Cesium.d.ts",
-  "exports": {
-    "./package.json": "./package.json",
-    "./Source/*": "./Source/*",
-    "./Source/*.js": null,
-    "./Build/*": "./Build/*",
-    "./Build/*.js": null,
-    ".": {
-      "require": "./index.cjs",
-      "import": "./Source/Cesium.js"
-    }
-  },
-  "type": "module",
-  "sideEffects": [
-    "./Source/ThirdParty/**/*",
-    "./Source/Widgets/**/*.css",
-    "./Source/Workers/*",
-    "./Specs/**/*"
-  ],
-  "dependencies": {
-    "@cesium/engine": "1.1.0",
-    "@cesium/widgets": "1.1.0"
-  },
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^23.0.5",
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "aws-sdk": "^2.1276.0",
-    "chokidar": "^3.5.3",
-    "cloc": "^2.8.0",
-    "compression": "^1.7.4",
-    "decompress": "^4.2.1",
-    "download": "^8.0.0",
-    "draco3d": "^1.5.1",
-    "esbuild": "^0.16.7",
-    "eslint": "^8.29.0",
-    "eslint-config-cesium": "^9.0.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-es": "^4.1.0",
-    "eslint-plugin-html": "^7.1.0",
-    "eslint-plugin-node": "^11.1.0",
-    "express": "^4.17.1",
-    "globby": "^13.1.3",
-    "glsl-strip-comments": "^1.0.0",
-    "gulp": "^4.0.2",
-    "gulp-clean-css": "^4.3.0",
-    "gulp-insert": "^0.5.0",
-    "gulp-rename": "^2.0.0",
-    "gulp-replace": "^1.1.3",
-    "gulp-tap": "^2.0.0",
-    "gulp-zip": "^5.1.0",
-    "husky": "^8.0.2",
-    "istanbul-lib-instrument": "^5.2.0",
-    "jasmine-core": "^4.0.1",
-    "jsdoc": "^3.6.7",
-    "karma": "^6.3.20",
-    "karma-chrome-launcher": "^3.1.0",
-    "karma-coverage": "^2.0.3",
-    "karma-detect-browsers": "^2.3.3",
-    "karma-edge-launcher": "^0.4.2",
-    "karma-firefox-launcher": "^2.1.1",
-    "karma-ie-launcher": "^1.0.0",
-    "karma-jasmine": "^5.1.0",
-    "karma-longest-reporter": "^1.1.0",
-    "karma-safari-launcher": "^1.0.0",
-    "karma-sourcemap-loader": "^0.3.8",
-    "karma-spec-reporter": "^0.0.36",
-    "markdownlint-cli": "^0.32.2",
-    "merge-stream": "^2.0.0",
-    "mime": "^3.0.0",
-    "mkdirp": "^1.0.4",
-    "node-fetch": "^3.2.10",
-    "open": "^8.2.1",
-    "p-limit": "^4.0.0",
-    "prettier": "2.1.2",
-    "prismjs": "^1.28.0",
-    "request": "^2.79.0",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.79.1",
-    "rollup-plugin-strip-pragma": "^1.0.0",
-    "rollup-plugin-terser": "^7.0.2",
-    "stream-to-promise": "^3.0.0",
-    "tsd-jsdoc": "^2.5.0",
-    "typescript": "^4.9.4",
-    "yargs": "^17.0.1"
+  "name": "cesium",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git"
   },
   "scripts": {
-    "prepare": "gulp prepare && husky install",
-    "start": "node server.js",
-    "start-public": "node server.js --public",
     "build": "gulp build",
-    "build-release": "gulp buildRelease",
-    "build-watch": "gulp buildWatch",
-    "build-ts": "gulp buildTs",
-    "build-third-party": "gulp buildThirdParty",
-    "build-apps": "gulp buildApps",
+    "build-specs": "gulp build-specs",
+    "build-ts": "gulp build-ts",
+    "build-watch": "gulp build-watch",
+    "buildApps": "gulp buildApps",
     "clean": "gulp clean",
     "cloc": "gulp cloc",
+    "combine": "gulp combine",
+    "combineRelease": "gulp combineRelease",
+    "convertToModules": "gulp convertToModules",
     "coverage": "gulp coverage",
-    "build-docs": "gulp buildDocs",
-    "build-docs-watch": "gulp buildDocsWatch",
+    "deploy-s3": "gulp deploy-s3",
+    "deploy-set-version": "gulp deploy-set-version",
+    "deploy-status": "gulp deploy-status",
     "eslint": "eslint \"./**/*.js\" \"./**/*.cjs\" \"./**/*.html\" --cache --quiet",
-    "make-zip": "gulp makeZip",
-    "markdownlint": "markdownlint \"*.md\" \"Documentation/**/*.md\" \"packages/**/*.md\" --ignore CHANGES.md --ignore \"./**/LICENSE.md\"",
+    "generateDocumentation": "gulp generateDocumentation",
+    "generateDocumentation-watch": "gulp generateDocumentation-watch",
+    "makeZipFile": "gulp makeZipFile",
+    "minify": "gulp minify",
+    "minifyRelease": "gulp minifyRelease",
+    "prettier": "prettier --write \"**/*\"",
+    "prettier-check": "prettier --check \"**/*\"",
+    "pretty-quick": "pretty-quick",
     "release": "gulp release",
-    "website-release": "gulp websiteRelease",
+    "start": "node server.cjs",
+    "startPublic": "node server.cjs --public",
     "test": "gulp test",
     "test-all": "gulp test --all",
-    "test-webgl": "gulp test --include WebGL",
     "test-non-webgl": "gulp test --exclude WebGL",
-    "test-webgl-validation": "gulp test --webglValidation",
-    "test-webgl-stub": "gulp test --webglStub",
     "test-release": "gulp test --release",
-    "deploy-s3": "gulp deployS3",
-    "deploy-status": "gulp deployStatus",
-    "deploy-set-version": "gulp deploySetVersion",
-    "prettier": "prettier --write \"**/*\"",
-    "prettier-check": "prettier --check \"**/*\""
+    "test-webgl": "gulp test --include WebGL",
+    "test-webgl-stub": "gulp test --webglStub",
+    "test-webgl-validation": "gulp test --webglValidation"
   },
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "lint-staged": {
-    "*.{js,cjs,html}": [
-      "eslint --cache --quiet",
-      "prettier --write"
-    ],
-    "*.md": [
-      "markdownlint --ignore CHANGES.md --ignore \"./**/LICENSE.md\"",
-      "prettier --write"
-    ]
-  },
-  "workspaces": [
-    "packages/engine",
-    "packages/widgets"
-  ]
+  "type": "module",
+  "types": "./Source/Cesium.d.ts",
+  "version": "1.80.0"
 }
