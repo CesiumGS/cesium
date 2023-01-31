@@ -1985,6 +1985,7 @@ function loadWithHttpRequest(
 ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
   /* eslint-disable no-undef */
+  var nodeRequire = global.require
   var URL = nodeRequire("url").parse(url);
   var http = URL.protocol === "https:" ? nodeRequire("https") : nodeRequire("http");
   var zlib = nodeRequire("zlib");
