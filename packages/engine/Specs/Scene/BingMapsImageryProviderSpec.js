@@ -533,9 +533,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       BingMapsImageryProvider.fromUrl(url, "")
     ).toBeRejectedWithError(
       RuntimeError,
-      jasmine.stringContaining(
-        "An error occurred while accessing http://fake.fake.invalid/REST/v1/Imagery/Metadata/Aerial"
-      )
+      new RegExp("An error occurred while accessing")
     );
   });
 
@@ -572,9 +570,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       BingMapsImageryProvider.fromUrl(url, "")
     ).toBeRejectedWithError(
       RuntimeError,
-      jasmine.stringContaining(
-        "metadata does not specify one resource in resourceSets"
-      )
+      new RegExp("metadata does not specify one resource in resourceSets")
     );
   });
 

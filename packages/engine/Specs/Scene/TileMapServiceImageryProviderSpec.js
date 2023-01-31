@@ -252,7 +252,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       TileMapServiceImageryProvider.fromUrl("made/up/tms/server")
     ).toBeRejectedWithError(
       RuntimeError,
-      "http://localhost:9876/made/up/tms/server/tilemapresource.xmlspecifies an unsupported profile attribute, foobar."
+      "http://localhost:9876/made/up/tms/server/tilemapresource.xml specifies an unsupported profile attribute, foobar."
     );
   });
 

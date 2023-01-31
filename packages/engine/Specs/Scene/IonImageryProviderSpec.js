@@ -138,12 +138,7 @@ describe("Scene/IonImageryProvider", function () {
 
   it("fromAssetId throws without assetId", async function () {
     await expectAsync(
-      createTestProviderAsync({
-        type: "3DTILES",
-        url: "http://test.invalid/layer",
-        accessToken: "not_really_a_refresh_token",
-        attributions: [],
-      })
+      IonImageryProvider.fromAssetId()
     ).toBeRejectedWithDeveloperError();
   });
 

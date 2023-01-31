@@ -985,9 +985,9 @@ Globe.prototype.beginFrame = function (frameState) {
   const terrainProvider = this.terrainProvider;
   const hasWaterMask =
     this.showWaterEffect &&
-    terrainProvider.hasWaterMask &&
     // ready is deprecated; This is here for backwards compatibility
-    terrainProvider._ready;
+    terrainProvider._ready &&
+    terrainProvider.hasWaterMask;
 
   if (hasWaterMask && this._oceanNormalMapResourceDirty) {
     // url changed, load new normal map asynchronously

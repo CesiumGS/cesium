@@ -79,6 +79,7 @@ function TileMapServiceImageryProvider(options) {
 
   if (defined(options.url)) {
     this._metadataError = undefined;
+    this._ready = false;
 
     let resource;
     const that = this;

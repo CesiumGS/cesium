@@ -712,7 +712,7 @@ describe(
       });
     });
 
-    it("renders imagery cutout", function () {
+    it("renders imagery cutout", async function () {
       expect(scene).toRender([0, 0, 0, 255]);
 
       const layer = scene.imageryLayers.addImageryProvider(

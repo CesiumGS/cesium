@@ -18,7 +18,7 @@ function MockImageryProvider() {
 
   const that = this;
   Resource.fetchImage("./Data/Images/Green.png").then(function (image) {
-    this.ready = that._ready = true;
+    that.ready = that._ready = true;
     that._image = image;
   });
 }

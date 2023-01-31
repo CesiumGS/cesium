@@ -256,6 +256,7 @@ function UrlTemplateImageryProvider(options) {
   this._pickFeaturesTags = allPickFeaturesTags;
 
   this._readyPromise = Promise.resolve(true);
+  this._ready = true;
 
   /**
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
@@ -570,7 +571,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
         "UrlTemplateImageryProvider.ready",
         "UrlTemplateImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
       );
-      return defined(this._resource);
+      return this._ready && defined(this._resource);
     },
   },
 
@@ -711,6 +712,7 @@ UrlTemplateImageryProvider.prototype._reinitialize = function (options) {
     that._tags = allTags;
     that._pickFeaturesResource = pickFeaturesResource;
     that._pickFeaturesTags = allPickFeaturesTags;
+    that._ready = true;
 
     return true;
   });
