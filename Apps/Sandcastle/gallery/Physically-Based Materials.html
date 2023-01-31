@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const clock = new Cesium.Clock({
@@ -48,15 +48,8 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           clockViewModel: new Cesium.ClockViewModel(clock),
           selectionIndicator: false,
+          terrainProvider: await Cesium.createWorldTerrainAsync(),
         });
-
-        (async () => {
-          try {
-            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
-          } catch (error) {
-            console.log(error);
-          }
-        })();
 
         Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
           checked
@@ -203,7 +196,11 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        try {
+          window.startup(Cesium);
+        } catch (error) {
+          console.error(error);
+        }
       }
     </script>
   </body>

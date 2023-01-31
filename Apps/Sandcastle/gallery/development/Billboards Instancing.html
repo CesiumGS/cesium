@@ -34,18 +34,12 @@
       <div id="sampleButtons"></div>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer");
-
-        (async () => {
-          try {
-            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
-          } catch (error) {
-            console.log(error);
-          }
-        })();
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: await Cesium.createWorldTerrainAsync(),
+        });
 
         const scene = viewer.scene;
         const context = scene.context;
@@ -237,7 +231,11 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        try {
+          window.startup(Cesium);
+        } catch (error) {
+          console.error(error);
+        }
       }
     </script>
   </body>

@@ -29,25 +29,23 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        (async () => {
-          try {
-            const viewer = new Cesium.Viewer("cesiumContainer", {
-              terrainProvider: await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-                "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
-              ),
-            });
-          } catch (error) {
-            console.log(error);
-          }
-        })(); //Sandcastle_End
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+          ),
+        }); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        try {
+          window.startup(Cesium);
+        } catch (error) {
+          console.error(error);
+        }
       }
     </script>
   </body>

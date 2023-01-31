@@ -32,21 +32,15 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer");
-
-        (async () => {
-          try {
-            viewer.terrainProvider = await Cesium.createWorldTerrainAsync({
-              requestWaterMask: true,
-              requestVertexNormals: true,
-            });
-          } catch (error) {
-            console.log(error);
-          }
-        })();
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: await Cesium.createWorldTerrainAsync({
+            requestWaterMask: true,
+            requestVertexNormals: true,
+          }),
+        });
 
         if (!Cesium.GroundPrimitive.supportsMaterials(viewer.scene)) {
           window.alert(
@@ -558,7 +552,11 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        try {
+          window.startup(Cesium);
+        } catch (error) {
+          console.error(error);
+        }
       }
     </script>
   </body>
