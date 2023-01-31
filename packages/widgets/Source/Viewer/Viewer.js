@@ -369,39 +369,43 @@ function enableVRUI(viewer, enabled) {
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
  *
  * @example
- * //Initialize the viewer widget with several custom options and mixins.
- * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     //Start in Columbus Viewer
- *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
- *     //Use Cesium World Terrain
- *     terrainProvider : Cesium.createWorldTerrain(),
- *     //Hide the base layer picker
- *     baseLayerPicker : false,
- *     //Use OpenStreetMaps
- *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
- *         url : 'https://a.tile.openstreetmap.org/'
+ * // Initialize the viewer widget with several custom options and mixins.
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     // Start in Columbus Viewer
+ *     sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+ *     // Use Cesium World Terrain
+ *     terrainProvider: await Cesium.createWorldTerrainAsync(),
+ *     // Hide the base layer picker
+ *     baseLayerPicker: false,
+ *     // Use OpenStreetMaps
+ *     imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+ *       url: "https://a.tile.openstreetmap.org/"
  *     }),
- *     skyBox : new Cesium.SkyBox({
- *         sources : {
- *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
- *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
- *           positiveY : 'stars/TychoSkymapII.t3_08192x04096_80_py.jpg',
- *           negativeY : 'stars/TychoSkymapII.t3_08192x04096_80_my.jpg',
- *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
- *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
- *         }
+ *     skyBox: new Cesium.SkyBox({
+ *       sources: {
+ *         positiveX: "stars/TychoSkymapII.t3_08192x04096_80_px.jpg",
+ *         negativeX: "stars/TychoSkymapII.t3_08192x04096_80_mx.jpg",
+ *         positiveY: "stars/TychoSkymapII.t3_08192x04096_80_py.jpg",
+ *         negativeY: "stars/TychoSkymapII.t3_08192x04096_80_my.jpg",
+ *         positiveZ: "stars/TychoSkymapII.t3_08192x04096_80_pz.jpg",
+ *         negativeZ: "stars/TychoSkymapII.t3_08192x04096_80_mz.jpg"
+ *       }
  *     }),
  *     // Show Columbus View map with Web Mercator projection
- *     mapProjection : new Cesium.WebMercatorProjection()
- * });
+ *     mapProjection: new Cesium.WebMercatorProjection()
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  *
- * //Add basic drag and drop functionality
+ * // Add basic drag and drop functionality
  * viewer.extend(Cesium.viewerDragDropMixin);
  *
- * //Show a pop-up alert if we encounter an error when processing a dropped file
+ * // Show a pop-up alert if we encounter an error when processing a dropped file
  * viewer.dropError.addEventListener(function(dropHandler, name, error) {
- *     console.log(error);
- *     window.alert(error);
+ *   console.log(error);
+ *   window.alert(error);
  * });
  */
 function Viewer(container, options) {

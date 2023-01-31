@@ -122,12 +122,18 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain({
-            requestVertexNormals: true, //Needed to visualize slope
-          }),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.scene.globe.enableLighting = true;
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync({
+              requestVertexNormals: true, //Needed to visualize slope
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         function getElevationContourMaterial() {
           // Creates a composite material with both elevation shading and contour lines
@@ -417,7 +423,6 @@
           ],
           "zoomButtons"
         );
-
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

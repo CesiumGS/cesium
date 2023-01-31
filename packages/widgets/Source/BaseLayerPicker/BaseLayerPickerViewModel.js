@@ -181,7 +181,7 @@ function BaseLayerPickerViewModel(options) {
     get: function () {
       return selectedImageryViewModel();
     },
-    set: function (value) {
+    set: async function (value) {
       if (selectedImageryViewModel() === value) {
         this.dropDownVisible = false;
         return;
@@ -253,12 +253,31 @@ function BaseLayerPickerViewModel(options) {
         newProvider = value.creationCommand();
       }
 
-      this._globe.depthTestAgainstTerrain = !(
-        newProvider instanceof EllipsoidTerrainProvider
-      );
-      this._globe.terrainProvider = newProvider;
       selectedTerrainViewModel(value);
-      this.dropDownVisible = false;
+
+      const updateTerrainProvider = async () => {
+        try {
+          const provider = await Promise.resolve(newProvider);
+
+          if (!defined(provider) || this._globe.isDestroyed()) {
+            this.dropDownVisible = false;
+            return;
+          }
+
+          this._globe.depthTestAgainstTerrain = !(
+            provider instanceof EllipsoidTerrainProvider
+          );
+          this._globe.terrainProvider = provider;
+        } catch (error) {
+          console.log(
+            `An error occurred while creating the terrain provider: ${error}`
+          );
+        }
+
+        this.dropDownVisible = false;
+      };
+
+      updateTerrainProvider();
     },
   });
 
@@ -271,9 +290,12 @@ function BaseLayerPickerViewModel(options) {
     options.selectedImageryProviderViewModel,
     imageryProviderViewModels[0]
   );
-  this.selectedTerrain = defaultValue(
-    options.selectedTerrainProviderViewModel,
-    terrainProviderViewModels[0]
+
+  selectedTerrainViewModel(
+    defaultValue(
+      options.selectedTerrainProviderViewModel,
+      terrainProviderViewModels[0]
+    )
   );
 }
 
@@ -281,7 +303,6 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of the drop down.
    * @memberof BaseLayerPickerViewModel.prototype
-   *
    * @type {Command}
    */
   toggleDropDown: {
@@ -293,7 +314,6 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
   /**
    * Gets the globe.
    * @memberof BaseLayerPickerViewModel.prototype
-   *
    * @type {Globe}
    */
   globe: {

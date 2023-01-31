@@ -74,7 +74,7 @@ import Rectangle from "../Core/Rectangle.js";
  * @param {Resource|String} options.url The url of the I3S dataset.
  * @param {String} [options.name] The name of the I3S dataset.
  * @param {Boolean} [options.show=true] Determines if the dataset will be shown.
- * @param {ArcGISTiledElevationTerrainProvider} [options.geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
+ * @param {ArcGISTiledElevationTerrainProvider|Promise<ArcGISTiledElevationTerrainProvider>} [options.geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
  * @param {Boolean} [options.traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
  * @param {Object} [options.cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
  *
@@ -85,9 +85,9 @@ import Rectangle from "../Core/Rectangle.js";
  * viewer.scene.primitives.add(i3sData);
  *
  * @example
- * const geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
- *   url: "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
- * });
+ * const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+ *   "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
+ * );
  * let i3sData = new I3SDataProvider({
  *   url: 'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0',
  *   geoidTiledTerrainProvider: geoidService
@@ -401,7 +401,7 @@ I3SDataProvider.prototype._load = function () {
     }
 
     that._computeExtent();
-    that._loadGeoidData();
+    that._geoidDataIsReadyPromise = that._loadGeoidData();
 
     // Start loading all of the tiles
     const layerPromises = [];
@@ -512,9 +512,7 @@ I3SDataProvider.prototype._getDecoderTaskProcessor = function () {
 };
 
 function getCoveredTiles(terrainProvider, extent) {
-  return terrainProvider.readyPromise.then(function () {
-    return getTiles(terrainProvider, extent);
-  });
+  return getTiles(terrainProvider, extent);
 }
 
 const scratchCartesian2 = new Cartesian2();
@@ -617,7 +615,7 @@ function getTiles(terrainProvider, extent) {
 /**
  * @private
  */
-I3SDataProvider.prototype._loadGeoidData = function () {
+I3SDataProvider.prototype._loadGeoidData = async function () {
   // Load tiles from arcgis
   const that = this;
   const geoidTerrainProvider = this._geoidTiledTerrainProvider;
@@ -626,23 +624,11 @@ I3SDataProvider.prototype._loadGeoidData = function () {
     console.log(
       "No Geoid Terrain service provided - no geoid conversion will be performed."
     );
-    this._geoidDataIsReadyPromise = Promise.resolve();
-    return this._geoidDataIsReadyPromise;
+    return;
   }
 
-  this._geoidDataIsReadyPromise = geoidTerrainProvider.readyPromise.then(
-    function () {
-      const tilesReadyPromise = getCoveredTiles(
-        geoidTerrainProvider,
-        that._extent
-      );
-      return tilesReadyPromise.then(function (heightMaps) {
-        that._geoidDataList = heightMaps;
-      });
-    }
-  );
-
-  return this._geoidDataIsReadyPromise;
+  const heightMaps = await getCoveredTiles(geoidTerrainProvider, that._extent);
+  that._geoidDataList = heightMaps;
 };
 
 /**

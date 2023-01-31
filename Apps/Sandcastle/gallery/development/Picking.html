@@ -477,8 +477,8 @@
           },
           {
             text: "Vector tile polygons",
-            onselect: function () {
-              viewer.terrainProvider = Cesium.createWorldTerrain();
+            onselect: async function () {
+              viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
 
               tileset = viewer.scene.primitives.add(
                 new Cesium.Cesium3DTileset({
@@ -537,8 +537,8 @@
           },
           {
             text: "Vector tile polylines",
-            onselect: function () {
-              viewer.terrainProvider = Cesium.createWorldTerrain();
+            onselect: async function () {
+              viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
 
               tileset = viewer.scene.primitives.add(
                 new Cesium.Cesium3DTileset({

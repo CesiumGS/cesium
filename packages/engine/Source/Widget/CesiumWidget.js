@@ -156,27 +156,31 @@ function configureCameraFrustum(widget) {
  * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
  * // and in the body, include: <div id="cesiumContainer"></div>
  *
- * //Widget with no terrain and default Bing Maps imagery provider.
- * const widget = new Cesium.CesiumWidget('cesiumContainer');
+ * // Widget with no terrain and default Bing Maps imagery provider.
+ * const widget = new Cesium.CesiumWidget("cesiumContainer");
  *
- * //Widget with ion imagery and Cesium World Terrain.
- * const widget2 = new Cesium.CesiumWidget('cesiumContainer', {
- *     imageryProvider : Cesium.createWorldImagery(),
- *     terrainProvider : Cesium.createWorldTerrain(),
- *     skyBox : new Cesium.SkyBox({
- *         sources : {
- *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
- *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
- *           positiveY : 'stars/TychoSkymapII.t3_08192x04096_80_py.jpg',
- *           negativeY : 'stars/TychoSkymapII.t3_08192x04096_80_my.jpg',
- *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
- *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
- *         }
+ * // Widget with ion imagery and Cesium World Terrain.
+ * try {
+ *   const widget2 = new Cesium.CesiumWidget("cesiumContainer", {
+ *     imageryProvider: Cesium.createWorldImagery(),
+ *     terrainProvider: await Cesium.createWorldTerrainAsync(),
+ *     skyBox: new Cesium.SkyBox({
+ *       sources: {
+ *         positiveX: "stars/TychoSkymapII.t3_08192x04096_80_px.jpg",
+ *         negativeX: "stars/TychoSkymapII.t3_08192x04096_80_mx.jpg",
+ *         positiveY: "stars/TychoSkymapII.t3_08192x04096_80_py.jpg",
+ *         negativeY: "stars/TychoSkymapII.t3_08192x04096_80_my.jpg",
+ *         positiveZ: "stars/TychoSkymapII.t3_08192x04096_80_pz.jpg",
+ *         negativeZ: "stars/TychoSkymapII.t3_08192x04096_80_mz.jpg"
+ *       }
  *     }),
  *     // Show Columbus View map with Web Mercator projection
- *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
- *     mapProjection : new Cesium.WebMercatorProjection()
- * });
+ *     sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+ *     mapProjection: new Cesium.WebMercatorProjection()
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  */
 function CesiumWidget(container, options) {
   //>>includeStart('debug', pragmas.debug);

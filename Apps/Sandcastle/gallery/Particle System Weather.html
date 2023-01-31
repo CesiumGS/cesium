@@ -37,10 +37,18 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
-          terrainProvider: Cesium.createWorldTerrain(),
         });
         const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
+
         const resetCameraFunction = function () {
           scene.camera.setView({
             destination: new Cesium.Cartesian3(

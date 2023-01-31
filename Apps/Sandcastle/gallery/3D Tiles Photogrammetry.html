@@ -36,18 +36,18 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
-        });
+        (async () => {
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            terrainProvider: await Cesium.createWorldTerrainAsync(),
+          });
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(40866),
-        });
+          const tileset = new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(40866),
+          });
 
-        viewer.scene.primitives.add(tileset);
-        viewer.zoomTo(tileset);
-
-        //Sandcastle_End
+          viewer.scene.primitives.add(tileset);
+          viewer.zoomTo(tileset);
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {

@@ -35,14 +35,18 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const worldTerrain = Cesium.createWorldTerrain({
-          requestWaterMask: true,
-          requestVertexNormals: true,
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: worldTerrain,
-        });
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync({
+              requestWaterMask: true,
+              requestVertexNormals: true,
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         if (!Cesium.GroundPrimitive.supportsMaterials(viewer.scene)) {
           window.alert(

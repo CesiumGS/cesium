@@ -4,7 +4,7 @@ if (window.CESIUM_BASE_URL === undefined) {
 
 import {
   Cartesian3,
-  createWorldTerrain,
+  createWorldTerrainAsync,
   defined,
   formatError,
   Math as CesiumMath,
@@ -20,7 +20,7 @@ import {
   viewerDragDropMixin,
 } from "../../Build/CesiumUnminified/index.js";
 
-function main() {
+async function main() {
   /*
      Options parsed from query string:
        source=url          The URL of a CZML/GeoJSON/KML data source to load at startup.
@@ -53,21 +53,23 @@ function main() {
   let viewer;
   try {
     const hasBaseLayerPicker = !defined(imageryProvider);
+
+    const terrainProvider = await createWorldTerrainAsync({
+      requestWaterMask: true,
+      requestVertexNormals: true,
+    });
+
     viewer = new Viewer("cesiumContainer", {
       imageryProvider: imageryProvider,
       baseLayerPicker: hasBaseLayerPicker,
       scene3DOnly: endUserOptions.scene3DOnly,
       requestRenderMode: true,
+      terrainProvider: terrainProvider,
     });
 
     if (hasBaseLayerPicker) {
       const viewModel = viewer.baseLayerPicker.viewModel;
       viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
-    } else {
-      viewer.terrainProvider = createWorldTerrain({
-        requestWaterMask: true,
-        requestVertexNormals: true,
-      });
     }
   } catch (exception) {
     loadingIndicator.style.display = "none";
@@ -144,25 +146,23 @@ function main() {
     }
 
     if (defined(loadPromise)) {
-      viewer.dataSources
-        .add(loadPromise)
-        .then(function (dataSource) {
-          const lookAt = endUserOptions.lookAt;
-          if (defined(lookAt)) {
-            const entity = dataSource.entities.getById(lookAt);
-            if (defined(entity)) {
-              viewer.trackedEntity = entity;
-            } else {
-              const error = `No entity with id "${lookAt}" exists in the provided data source.`;
-              showLoadError(source, error);
-            }
-          } else if (!defined(view) && endUserOptions.flyTo !== "false") {
-            viewer.flyTo(dataSource);
+      try {
+        const dataSource = await viewer.dataSources.add(loadPromise);
+        const lookAt = endUserOptions.lookAt;
+        if (defined(lookAt)) {
+          const entity = dataSource.entities.getById(lookAt);
+          if (defined(entity)) {
+            viewer.trackedEntity = entity;
+          } else {
+            const error = `No entity with id "${lookAt}" exists in the provided data source.`;
+            showLoadError(source, error);
           }
-        })
-        .catch(function (error) {
-          showLoadError(source, error);
-        });
+        } else if (!defined(view) && endUserOptions.flyTo !== "false") {
+          viewer.flyTo(dataSource);
+        }
+      } catch (error) {
+        showLoadError(source, error);
+      }
     }
   }
 
