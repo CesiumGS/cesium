@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.103 - 2023-03-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added smooth zoom with mouse wheel. [#11062](https://github.com/CesiumGS/cesium/pull/11062)
+
 ### 1.102 - 2023-02-01
 
 #### @cesium/engine
