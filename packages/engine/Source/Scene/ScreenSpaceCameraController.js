@@ -108,9 +108,9 @@ function ScreenSpaceCameraController(scene) {
    * the camera will continue to zoom because of inertia.
    * With value of zero, the camera will have no inertia.
    * @type {Number}
-   * @default 0.8
+   * @default 0.5
    */
-  this.inertiaZoom = 0.8;
+  this.inertiaZoom = 0.5;
   /**
    * A parameter in the range <code>[0, 1)</code> used to limit the range
    * of various user inputs to a percentage of the window width/height per animation frame.

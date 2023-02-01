@@ -133,12 +133,24 @@ function listenToPinch(aggregator, modifier, canvas) {
 function listenToWheel(aggregator, modifier) {
   const key = getKey(CameraEventType.WHEEL, modifier);
 
+  const pressTime = aggregator._pressTime;
+  const releaseTime = aggregator._releaseTime;
+
   const update = aggregator._update;
   update[key] = true;
 
   let movement = aggregator._movement[key];
   if (!defined(movement)) {
     movement = aggregator._movement[key] = {};
+  }
+
+  let lastMovement = aggregator._lastMovement[key];
+  if (!defined(lastMovement)) {
+    lastMovement = aggregator._lastMovement[key] = {
+      startPosition: new Cartesian2(),
+      endPosition: new Cartesian2(),
+      valid: false,
+    };
   }
 
   movement.startPosition = new Cartesian2();
@@ -156,6 +168,9 @@ function listenToWheel(aggregator, modifier) {
         movement.endPosition.y = arcLength;
         update[key] = false;
       }
+      Cartesian2.clone(movement.endPosition, lastMovement.endPosition);
+      lastMovement.valid = true;
+      pressTime[key] = releaseTime[key] = new Date();
     },
     ScreenSpaceEventType.WHEEL,
     modifier
