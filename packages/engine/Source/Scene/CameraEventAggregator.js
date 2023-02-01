@@ -170,10 +170,10 @@ function listenToWheel(aggregator, modifier) {
       lastMovement.valid = true;
       if (debounceZoom) {
         clearTimeout(debounceZoom);
-        debounceZoom = setTimeout(function () {
-          update[key] = true;
-        }, 10);
       }
+      debounceZoom = setTimeout(function () {
+        update[key] = true;
+      }, 10);
       update[key] = false;
     },
     ScreenSpaceEventType.WHEEL,
