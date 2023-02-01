@@ -1,4 +1,5 @@
 import { FeatureDetection } from "../../index.js";
+import createScene from "../../../../Specs/createScene.js";
 
 describe("Core/FeatureDetection", function () {
   //generally, these tests just make sure the function runs, the test can't expect a value of true or false
@@ -157,5 +158,13 @@ describe("Core/FeatureDetection", function () {
         expect(typeof supportsWebP).toEqual("boolean");
         expect(FeatureDetection.supportsWebP()).toEqual(supportsWebP);
       });
+  });
+
+  it("detects WebGL2 support", function () {
+    const scene = createScene();
+    expect(FeatureDetection.supportsWebgl2(scene)).toEqual(
+      scene.context.webgl2
+    );
+    scene.destroyForSpecs();
   });
 });

@@ -448,9 +448,9 @@ describe(
       return color;
     }
 
-    function renderAndCall(expectationCallback, time) {
+    function renderAndCall(expectationCallback, time, customScene) {
       expect({
-        scene: scene,
+        scene: defined(customScene) ? customScene : scene,
         time: time,
         primeShadowMap: true,
       }).toRenderAndCall(function (rgba) {
@@ -1060,7 +1060,7 @@ describe(
       });
     });
 
-    function depthFramebufferSupported() {
+    function depthFramebufferSupported(scene) {
       const framebuffer = new Framebuffer({
         context: scene.context,
         depthStencilTexture: new Texture({
@@ -1079,41 +1079,62 @@ describe(
       box.show = true;
       floor.show = true;
 
-      createCascadedShadowMap();
-
-      renderAndCall(function (rgba) {
-        if (scene.context.depthTexture) {
-          if (depthFramebufferSupported()) {
-            expect(scene.shadowMap._usesDepthTexture).toBe(true);
-            expect(scene.shadowMap._shadowMapTexture.pixelFormat).toEqual(
-              PixelFormat.DEPTH_STENCIL
-            );
-          } else {
-            // Depth texture extension is supported, but it fails to create create a depth-only FBO
-            expect(scene.shadowMap._usesDepthTexture).toBe(false);
-            expect(scene.shadowMap._shadowMapTexture.pixelFormat).toEqual(
-              PixelFormat.RGBA
-            );
-          }
-        }
+      // Create a WebGL 1 scene
+      const sceneWithWebgl1 = createScene({
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
+      const lightCamera = new Camera(scene);
+      sceneWithWebgl1.shadowMap = new ShadowMap({
+        context: sceneWithWebgl1.context,
+        lightCamera: lightCamera,
       });
 
-      scene.shadowMap = scene.shadowMap && scene.shadowMap.destroy();
+      renderAndCall(
+        function (rgba) {
+          if (sceneWithWebgl1.context.depthTexture) {
+            if (depthFramebufferSupported(sceneWithWebgl1)) {
+              expect(sceneWithWebgl1.shadowMap._usesDepthTexture).toBe(true);
+              expect(
+                sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat
+              ).toEqual(PixelFormat.DEPTH_STENCIL);
+            } else {
+              // Depth texture extension is supported, but it fails to create create a depth-only FBO
+              expect(sceneWithWebgl1.shadowMap._usesDepthTexture).toBe(false);
+              expect(
+                sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat
+              ).toEqual(PixelFormat.RGBA);
+            }
+          }
+        },
+        undefined,
+        sceneWithWebgl1
+      );
+
+      sceneWithWebgl1.shadowMap =
+        sceneWithWebgl1.shadowMap && sceneWithWebgl1.shadowMap.destroy();
 
       // Disable extension
-      const depthTexture = scene.context._depthTexture;
-      scene.context._depthTexture = false;
-      createCascadedShadowMap();
+      sceneWithWebgl1.context._depthTexture = false;
 
-      renderAndCall(function (rgba) {
-        expect(scene.shadowMap._usesDepthTexture).toBe(false);
-        expect(scene.shadowMap._shadowMapTexture.pixelFormat).toEqual(
-          PixelFormat.RGBA
-        );
+      sceneWithWebgl1.shadowMap = new ShadowMap({
+        context: sceneWithWebgl1.context,
+        lightCamera: lightCamera,
       });
 
-      // Re-enable extension
-      scene.context._depthTexture = depthTexture;
+      renderAndCall(
+        function (rgba) {
+          expect(sceneWithWebgl1.shadowMap._usesDepthTexture).toBe(false);
+          expect(
+            sceneWithWebgl1.shadowMap._shadowMapTexture.pixelFormat
+          ).toEqual(PixelFormat.RGBA);
+        },
+        undefined,
+        sceneWithWebgl1
+      );
+
+      sceneWithWebgl1.destroyForSpecs();
     });
 
     it("does not render shadows when the camera is far away from any shadow receivers", function () {

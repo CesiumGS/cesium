@@ -743,7 +743,7 @@ function cloneInstance(instance, geometry) {
   };
 }
 
-const positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
+const positionRegex = /in\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
 Primitive._modifyShaderPosition = function (
   primitive,
@@ -771,8 +771,7 @@ Primitive._modifyShaderPosition = function (
     if (!defined(primitive.rtcCenter)) {
       // Use GPU RTE
       if (!scene3DOnly) {
-        attributes +=
-          `attribute vec3 ${name}2DHigh;\n` + `attribute vec3 ${name}2DLow;\n`;
+        attributes += `in vec3 ${name}2DHigh;\nin vec3 ${name}2DLow;\n`;
 
         computeFunctions +=
           `${functionName}\n` +
@@ -805,16 +804,16 @@ Primitive._modifyShaderPosition = function (
     } else {
       // Use RTC
       vertexShaderSource = vertexShaderSource.replace(
-        /attribute\s+vec(?:3|4)\s+position3DHigh;/g,
+        /in\s+vec(?:3|4)\s+position3DHigh;/g,
         ""
       );
       vertexShaderSource = vertexShaderSource.replace(
-        /attribute\s+vec(?:3|4)\s+position3DLow;/g,
+        /in\s+vec(?:3|4)\s+position3DLow;/g,
         ""
       );
 
       forwardDecl += "uniform mat4 u_modifiedModelView;\n";
-      attributes += "attribute vec4 position;\n";
+      attributes += "in vec4 position;\n";
 
       computeFunctions +=
         `${functionName}\n` +
@@ -871,7 +870,7 @@ Primitive._updateColorAttribute = function (
     return vertexShaderSource;
   }
 
-  if (vertexShaderSource.search(/attribute\s+vec4\s+color;/g) === -1) {
+  if (vertexShaderSource.search(/in\s+vec4\s+color;/g) === -1) {
     return vertexShaderSource;
   }
 
@@ -887,7 +886,7 @@ Primitive._updateColorAttribute = function (
   //>>includeEnd('debug');
 
   let modifiedVS = vertexShaderSource;
-  modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec4\s+color;/g, "");
   if (!isDepthFail) {
     modifiedVS = modifiedVS.replace(
       /(\b)color(\b)/g,
@@ -905,7 +904,7 @@ Primitive._updateColorAttribute = function (
 function appendPickToVertexShader(source) {
   const renamedVS = ShaderSource.replaceMain(source, "czm_non_pick_main");
   const pickMain =
-    "varying vec4 v_pickColor; \n" +
+    "out vec4 v_pickColor; \n" +
     "void main() \n" +
     "{ \n" +
     "    czm_non_pick_main(); \n" +
@@ -916,11 +915,11 @@ function appendPickToVertexShader(source) {
 }
 
 function appendPickToFragmentShader(source) {
-  return `varying vec4 v_pickColor;\n${source}`;
+  return `in vec4 v_pickColor;\n${source}`;
 }
 
 Primitive._updatePickColorAttribute = function (source) {
-  let vsPick = source.replace(/attribute\s+vec4\s+pickColor;/g, "");
+  let vsPick = source.replace(/in\s+vec4\s+pickColor;/g, "");
   vsPick = vsPick.replace(
     /(\b)pickColor(\b)/g,
     "$1czm_batchTable_pickColor(batchId)$2"
@@ -933,10 +932,10 @@ Primitive._appendOffsetToShader = function (primitive, vertexShaderSource) {
     return vertexShaderSource;
   }
 
-  let attr = "attribute float batchId;\n";
-  attr += "attribute float applyOffset;";
+  let attr = "in float batchId;\n";
+  attr += "in float applyOffset;";
   let modifiedShader = vertexShaderSource.replace(
-    /attribute\s+float\s+batchId;/g,
+    /in\s+float\s+batchId;/g,
     attr
   );
 
@@ -1033,17 +1032,16 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   }
 
   const containsNormal =
-    vertexShaderSource.search(/attribute\s+vec3\s+normal;/g) !== -1;
-  const containsSt =
-    vertexShaderSource.search(/attribute\s+vec2\s+st;/g) !== -1;
+    vertexShaderSource.search(/in\s+vec3\s+normal;/g) !== -1;
+  const containsSt = vertexShaderSource.search(/in\s+vec2\s+st;/g) !== -1;
   if (!containsNormal && !containsSt) {
     return vertexShaderSource;
   }
 
   const containsTangent =
-    vertexShaderSource.search(/attribute\s+vec3\s+tangent;/g) !== -1;
+    vertexShaderSource.search(/in\s+vec3\s+tangent;/g) !== -1;
   const containsBitangent =
-    vertexShaderSource.search(/attribute\s+vec3\s+bitangent;/g) !== -1;
+    vertexShaderSource.search(/in\s+vec3\s+bitangent;/g) !== -1;
 
   let numComponents = containsSt && containsNormal ? 2.0 : 1.0;
   numComponents += containsTangent || containsBitangent ? 1 : 0;
@@ -1051,7 +1049,7 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   const type = numComponents > 1 ? `vec${numComponents}` : "float";
 
   const attributeName = "compressedAttributes";
-  const attributeDecl = `attribute ${type} ${attributeName};`;
+  const attributeDecl = `in ${type} ${attributeName};`;
 
   let globalDecl = "";
   let decode = "";
@@ -1092,10 +1090,10 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   }
 
   let modifiedVS = vertexShaderSource;
-  modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, "");
-  modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, "");
-  modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, "");
-  modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+bitangent;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec3\s+normal;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec2\s+st;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec3\s+tangent;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec3\s+bitangent;/g, "");
   modifiedVS = ShaderSource.replaceMain(modifiedVS, "czm_non_compressed_main");
   const compressedMain =
     `${"void main() \n" + "{ \n"}${decode}    czm_non_compressed_main(); \n` +
@@ -1125,19 +1123,12 @@ function depthClampFS(fragmentShaderSource) {
   modifiedFS +=
     "void main() {\n" +
     "    czm_non_depth_clamp_main();\n" +
-    "#if defined(GL_EXT_frag_depth)\n" +
     "    #if defined(LOG_DEPTH)\n" +
     "        czm_writeLogDepth();\n" +
     "    #else\n" +
     "        czm_writeDepthClamp();\n" +
     "    #endif\n" +
-    "#endif\n" +
     "}\n";
-  modifiedFS = `${
-    "#ifdef GL_EXT_frag_depth\n" +
-    "#extension GL_EXT_frag_depth : enable\n" +
-    "#endif\n"
-  }${modifiedFS}`;
   return modifiedFS;
 }
 

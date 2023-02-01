@@ -1,35 +1,35 @@
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
+in vec3 position3DHigh;
+in vec3 position3DLow;
 
-attribute vec4 startHiAndForwardOffsetX;
-attribute vec4 startLoAndForwardOffsetY;
-attribute vec4 startNormalAndForwardOffsetZ;
-attribute vec4 endNormalAndTextureCoordinateNormalizationX;
-attribute vec4 rightNormalAndTextureCoordinateNormalizationY;
-attribute vec4 startHiLo2D;
-attribute vec4 offsetAndRight2D;
-attribute vec4 startEndNormals2D;
-attribute vec2 texcoordNormalization2D;
+in vec4 startHiAndForwardOffsetX;
+in vec4 startLoAndForwardOffsetY;
+in vec4 startNormalAndForwardOffsetZ;
+in vec4 endNormalAndTextureCoordinateNormalizationX;
+in vec4 rightNormalAndTextureCoordinateNormalizationY;
+in vec4 startHiLo2D;
+in vec4 offsetAndRight2D;
+in vec4 startEndNormals2D;
+in vec2 texcoordNormalization2D;
 
-attribute float batchId;
+in float batchId;
 
-varying vec3 v_forwardDirectionEC;
-varying vec3 v_texcoordNormalizationAndHalfWidth;
-varying float v_batchId;
+out vec3 v_forwardDirectionEC;
+out vec3 v_texcoordNormalizationAndHalfWidth;
+out float v_batchId;
 
 // For materials
 #ifdef WIDTH_VARYING
-varying float v_width;
+out float v_width;
 #endif
 #ifdef ANGLE_VARYING
-varying float v_polylineAngle;
+out float v_polylineAngle;
 #endif
 
 #ifdef PER_INSTANCE_COLOR
-varying vec4 v_color;
+out vec4 v_color;
 #else
-varying vec2 v_alignedPlaneDistances;
-varying float v_texcoordT;
+out vec2 v_alignedPlaneDistances;
+out float v_texcoordT;
 #endif
 
 // Morphing planes using SLERP or NLERP doesn't seem to work, so instead draw the material directly on the shadow volume.

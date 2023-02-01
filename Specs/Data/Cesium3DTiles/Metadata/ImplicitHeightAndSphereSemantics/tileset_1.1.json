@@ -3,6 +3,7 @@
     "version": "1.1"
   },
   "schema": {
+    "id": "ImplicitHeightAndSphereSemanticsMetadataSchemaId",
     "classes": {
       "tile": {
         "properties": {

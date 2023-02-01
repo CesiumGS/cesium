@@ -1,6 +1,6 @@
 uniform sampler2D colorTexture;
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 #ifdef AUTO_EXPOSURE
 uniform sampler2D autoExposure;
@@ -11,11 +11,11 @@ uniform sampler2D autoExposure;
 
 void main()
 {
-    vec4 fragmentColor = texture2D(colorTexture, v_textureCoordinates);
+    vec4 fragmentColor = texture(colorTexture, v_textureCoordinates);
     vec3 color = fragmentColor.rgb;
 
 #ifdef AUTO_EXPOSURE
-    float exposure = texture2D(autoExposure, vec2(0.5)).r;
+    float exposure = texture(autoExposure, vec2(0.5)).r;
     color /= exposure;
 #endif
 
@@ -32,5 +32,5 @@ void main()
 	float w = ((white * (A * white + C * B) + D * E) / (white * ( A * white + B) + D * F)) - E / F;
 
 	c = czm_inverseGamma(c / w);
-	gl_FragColor = vec4(c, fragmentColor.a);
+	out_FragColor = vec4(c, fragmentColor.a);
 }

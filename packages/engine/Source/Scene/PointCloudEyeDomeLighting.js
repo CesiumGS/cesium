@@ -126,25 +126,30 @@ function getECShaderProgram(context, shaderProgram) {
 
     const fs = shaderProgram.fragmentShaderSource.clone();
 
+    fs.sources.splice(
+      0,
+      0,
+      `layout (location = 0) out vec4 out_FragData_0;\nlayout (location = 1) out vec4 out_FragData_1;`
+    );
+
     fs.sources = fs.sources.map(function (source) {
       source = ShaderSource.replaceMain(
         source,
         "czm_point_cloud_post_process_main"
       );
-      source = source.replace(/gl_FragColor/g, "gl_FragData[0]");
+      source = source.replaceAll(/out_FragColor/g, "out_FragData_0");
       return source;
     });
 
-    fs.sources.unshift("#extension GL_EXT_draw_buffers : enable \n");
     fs.sources.push(
       "void main() \n" +
         "{ \n" +
         "    czm_point_cloud_post_process_main(); \n" +
         "#ifdef LOG_DEPTH\n" +
         "    czm_writeLogDepth();\n" +
-        "    gl_FragData[1] = czm_packDepth(gl_FragDepthEXT); \n" +
+        "    out_FragData_1 = czm_packDepth(gl_FragDepth); \n" +
         "#else\n" +
-        "    gl_FragData[1] = czm_packDepth(gl_FragCoord.z);\n" +
+        "    out_FragData_1 = czm_packDepth(gl_FragCoord.z);\n" +
         "#endif\n" +
         "}"
     );

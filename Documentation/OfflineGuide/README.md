@@ -27,3 +27,37 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
   geocoder: false,
 });
 ```
+
+## 3D Tiles, glTF, and other static files
+
+Most other files loaded in CesiumJS, such as 3D Tiles or glTF, are static assets that do not require any server-side operations to load. However, since browsers commonly treat requests to load resources using the `file://` schema as cross-origin requests, it's recommended that you set up a local server.
+
+1. Download and install [Node.js](https://nodejs.org/en/download/)
+
+2. At the command line, run
+
+   ```sh
+   npm install http-server -g
+   ```
+
+   This will install the 'http-server' app from https://github.com/http-party/http-server globally
+
+3. In the directory that contains the data, run
+
+   ```sh
+   http-server -a localhost -p 8003 --cors=http://localhost:8080/
+   ```
+
+   This will start the server, under the address localhost, using port `8003`. The cors parameter will allow the a CesiumJS app running at port `8080` to access the data from this locally running server.
+
+4. Load files in a CesiumJS app at the served url.
+
+   For example, a local tileset in an `example` directory can now be loaded with the following url:
+
+   ```js
+   const tileset = viewer.scene.primitives.add(
+     new Cesium.Cesium3DTileset({
+       url: "http://localhost:8003/example/tileset.json",
+     })
+   );
+   ```

@@ -1,16 +1,16 @@
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
-attribute vec3 normal;
-attribute vec3 tangent;
-attribute vec3 bitangent;
-attribute vec2 st;
-attribute float batchId;
+in vec3 position3DHigh;
+in vec3 position3DLow;
+in vec3 normal;
+in vec3 tangent;
+in vec3 bitangent;
+in vec2 st;
+in float batchId;
 
-varying vec3 v_positionEC;
-varying vec3 v_normalEC;
-varying vec3 v_tangentEC;
-varying vec3 v_bitangentEC;
-varying vec2 v_st;
+out vec3 v_positionEC;
+out vec3 v_normalEC;
+out vec3 v_tangentEC;
+out vec3 v_bitangentEC;
+out vec2 v_st;
 
 void main()
 {

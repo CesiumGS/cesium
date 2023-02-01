@@ -283,7 +283,7 @@ function getSilhouetteEdgeDetection(edgeDetectionStages) {
   for (let i = 0; i < edgeDetectionStages.length; ++i) {
     fsDecl += `uniform sampler2D edgeTexture${i}; \n`;
     fsLoop +=
-      `        vec4 edge${i} = texture2D(edgeTexture${i}, v_textureCoordinates); \n` +
+      `        vec4 edge${i} = texture(edgeTexture${i}, v_textureCoordinates); \n` +
       `        if (edge${i}.a > 0.0) \n` +
       `        { \n` +
       `            color = edge${i}; \n` +
@@ -293,12 +293,12 @@ function getSilhouetteEdgeDetection(edgeDetectionStages) {
   }
 
   const fs =
-    `${fsDecl}varying vec2 v_textureCoordinates; \n` +
+    `${fsDecl}in vec2 v_textureCoordinates; \n` +
     `void main() { \n` +
     `    vec4 color = vec4(0.0); \n` +
     `    for (int i = 0; i < ${edgeDetectionStages.length}; i++) \n` +
     `    { \n${fsLoop}    } \n` +
-    `    gl_FragColor = color; \n` +
+    `    out_FragColor = color; \n` +
     `} \n`;
 
   const edgeComposite = new PostProcessStage({

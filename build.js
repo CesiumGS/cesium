@@ -288,6 +288,10 @@ const workspaceSpecFiles = {
   widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
 
+/**
+ * Creates a single entry point file, Specs/SpecList.js, which imports all individual spec files.
+ * @returns {Buffer} contents
+ */
 export async function createCombinedSpecList() {
   let contents = `export const VERSION = '${version}';\n`;
 
@@ -297,28 +301,6 @@ export async function createCombinedSpecList() {
       contents += `import '../${file}';\n`;
     }
   }
-
-  await writeFile(path.join("Specs", "SpecList.js"), contents, {
-    encoding: "utf-8",
-  });
-
-  return contents;
-}
-
-/**
- * Creates a single entry point file, SpecList.js, which imports all individual spec files.
- * @returns {Buffer} contents
- */
-export async function createSpecList() {
-  const files = await globby(["Specs/**/*Spec.js"]);
-
-  let contents = "";
-  files.forEach(function (file) {
-    contents += `import './${filePathToModuleId(file).replace(
-      "Specs/",
-      ""
-    )}.js';\n`;
-  });
 
   await writeFile(path.join("Specs", "SpecList.js"), contents, {
     encoding: "utf-8",
@@ -895,7 +877,7 @@ async function createIndexJs(workspace) {
  * @param {String} workspace The workspace.
  * @param {String} outputPath The path the file is written to.
  */
-async function createSpecListJs(files, workspace, outputPath) {
+async function createSpecListForWorkspace(files, workspace, outputPath) {
   let contents = "";
   files.forEach(function (file) {
     contents += `import './${filePathToModuleId(file).replace(
@@ -1020,7 +1002,7 @@ export const buildEngine = async (options) => {
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["engine"]);
   const specListFile = path.join("packages/engine/Specs", "SpecList.js");
-  await createSpecListJs(specFiles, "engine", specListFile);
+  await createSpecListForWorkspace(specFiles, "engine", specListFile);
 
   await bundleSpecs({
     incremental: incremental,
@@ -1056,7 +1038,7 @@ export const buildWidgets = async (options) => {
   // Create SpecList.js
   const specFiles = await globby(workspaceSpecFiles["widgets"]);
   const specListFile = path.join("packages/widgets/Specs", "SpecList.js");
-  await createSpecListJs(specFiles, "widgets", specListFile);
+  await createSpecListForWorkspace(specFiles, "widgets", specListFile);
 
   await bundleSpecs({
     incremental: incremental,

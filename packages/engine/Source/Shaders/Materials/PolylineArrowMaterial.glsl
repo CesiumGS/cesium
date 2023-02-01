@@ -16,10 +16,11 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
     vec2 st = materialInput.st;
 
-#ifdef GL_OES_standard_derivatives
+#if (__VERSION__ == 300 || defined(GL_OES_standard_derivatives))
     float base = 1.0 - abs(fwidth(st.s)) * 10.0 * czm_pixelRatio;
 #else
-    float base = 0.975; // 2.5% of the line will be the arrow head
+     // If no derivatives available (IE 10?), 2.5% of the line will be the arrow head
+    float base = 0.975;
 #endif
 
     vec2 center = vec2(1.0, 0.5);

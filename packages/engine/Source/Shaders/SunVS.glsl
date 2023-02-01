@@ -1,8 +1,8 @@
-attribute vec2 direction;
+in vec2 direction;
 
 uniform float u_size;
 
-varying vec2 v_textureCoordinates;
+out vec2 v_textureCoordinates;
 
 void main() 
 {

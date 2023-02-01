@@ -15,20 +15,24 @@
   "tileAvailability": {
     "constant": 1
   },
-  "contentAvailability": {
-    "constant": 1
-  },
+  "contentAvailability": [
+    {
+      "constant": 1
+    }
+  ],
   "childSubtreeAvailability": {
     "constant": 0
   },
-  "extensions": {
-    "3DTILES_metadata": {
+  "propertyTables": [
+    {
       "class": "tile",
+      "count": 73,
       "properties": {
         "contentBounds": {
-          "bufferView": 0
+          "values": 0
         }
       }
     }
-  }
+  ],
+  "tileMetadata": 0
 }

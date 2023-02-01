@@ -143,8 +143,8 @@ void main()
         if (colorAccum.a == 0.0) {
             discard;
         }
-        gl_FragColor = u_pickColor;
+        out_FragColor = u_pickColor;
     #else
-        gl_FragColor = colorAccum;
+        out_FragColor = colorAccum;
     #endif
 }

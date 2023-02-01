@@ -598,10 +598,7 @@ describe(
       expect(positionLocation).toBe(0);
       expect(normalLocation).toBe(1);
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
-      const expectedAttributes = [
-        "attribute vec3 a_position;",
-        "attribute vec3 a_normal;",
-      ];
+      const expectedAttributes = ["in vec3 a_position;", "in vec3 a_normal;"];
       checkVertexShader(shaderProgram, [], expectedAttributes);
       checkFragmentShader(shaderProgram, [], []);
 
@@ -661,10 +658,7 @@ describe(
       expect(colorLocation).toBe(1);
       expect(normalLocation).toBe(2);
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
-      const expectedAttributes = [
-        "attribute vec4 a_color;",
-        "attribute vec3 a_normal;",
-      ];
+      const expectedAttributes = ["in vec4 a_color;", "in vec3 a_normal;"];
       checkVertexShader(shaderProgram, [], expectedAttributes);
       checkFragmentShader(shaderProgram, [], []);
       const expectedLocations = {
@@ -685,10 +679,7 @@ describe(
       // this is 4 because the mat3 takes up locations 1, 2 and 3
       expect(colorLocation).toBe(4);
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
-      const expectedAttributes = [
-        "attribute mat3 a_warpMatrix;",
-        "attribute vec3 a_color;",
-      ];
+      const expectedAttributes = ["in mat3 a_warpMatrix;", "in vec3 a_color;"];
       checkVertexShader(shaderProgram, [], expectedAttributes);
       checkFragmentShader(shaderProgram, [], []);
       const expectedLocations = {
@@ -730,10 +721,18 @@ describe(
     it("addVarying adds varyings to both shaders", function () {
       const shaderBuilder = new ShaderBuilder();
       shaderBuilder.addVarying("vec2", "v_uv");
-      const expectedLines = ["varying vec2 v_uv;"];
+
+      const expectedVaryings = ["vec2 v_uv;"];
+      const expectedVertexVaryings = expectedVaryings.map(
+        (varying) => `out ${varying}`
+      );
+      const expectedFragmentVaryings = expectedVaryings.map(
+        (varying) => `in ${varying}`
+      );
+
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
-      checkVertexShader(shaderProgram, [], expectedLines);
-      checkFragmentShader(shaderProgram, [], expectedLines);
+      checkVertexShader(shaderProgram, [], expectedVertexVaryings);
+      checkFragmentShader(shaderProgram, [], expectedFragmentVaryings);
     });
 
     it("addVertexLines throws for undefined lines", function () {
@@ -789,7 +788,7 @@ describe(
       const fragmentLines = [
         "void main()",
         "{",
-        "    gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);",
+        "    out_FragColor = vec4(1.0, 0.5, 0.0, 1.0);",
         "}",
       ];
       shaderBuilder.addFragmentLines(fragmentLines);
@@ -829,28 +828,31 @@ describe(
       const fragmentLines = [
         "void main()",
         "{",
-        "    gl_FragColor = vec4(v_uv, BLUE_TINT, 1.0);",
+        "    out_FragColor = vec4(v_uv, BLUE_TINT, 1.0);",
         "}",
       ];
       shaderBuilder.addFragmentLines(fragmentLines);
 
-      const expectedAttributes = [
-        "attribute vec3 a_position;",
-        "attribute vec3 a_uv;",
-      ];
+      const expectedAttributes = ["in vec3 a_position;", "in vec3 a_uv;"];
 
-      const expectedVaryings = ["varying vec2 v_uv;"];
+      const expectedVaryings = ["vec2 v_uv;"];
+      const expectedVertexVaryings = expectedVaryings.map(
+        (varying) => `out ${varying}`
+      );
+      const expectedFragmentVaryings = expectedVaryings.map(
+        (varying) => `in ${varying}`
+      );
 
       const shaderProgram = shaderBuilder.buildShaderProgram(context);
       checkVertexShader(
         shaderProgram,
         [],
-        expectedAttributes.concat(expectedVaryings, vertexLines)
+        expectedAttributes.concat(expectedVertexVaryings, vertexLines)
       );
       checkFragmentShader(
         shaderProgram,
         ["BLUE_TINT 0.5"],
-        expectedVaryings.concat(fragmentLines)
+        expectedFragmentVaryings.concat(fragmentLines)
       );
     });
   },

@@ -297,10 +297,10 @@ describe(
 
         const shaderBuilder = renderResources.shaderBuilder;
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec4 a_pickColor;",
+          "in vec4 a_pickColor;",
         ]);
         ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-          "varying vec4 v_pickColor;",
+          "vec4 v_pickColor;",
         ]);
 
         let i = 0;
@@ -368,7 +368,7 @@ describe(
         ]);
 
         expect(renderResources.pickId).toEqual(
-          "((selectedFeature.id < int(model_featuresLength)) ? texture2D(model_pickTexture, selectedFeature.st) : vec4(0.0))"
+          "((selectedFeature.id < int(model_featuresLength)) ? texture(model_pickTexture, selectedFeature.st) : vec4(0.0))"
         );
       });
     });

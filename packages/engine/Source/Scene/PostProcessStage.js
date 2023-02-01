@@ -40,7 +40,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *
  * @exception {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
  * @exception {DeveloperError} options.pixelFormat must be a color format.
- * @exception {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
+ * @exception {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support floating point textures. Check context.floatingPointTexture.
  *
  * @see PostProcessStageComposite
  *
@@ -48,12 +48,12 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * // Simple stage to change the color
  * const fs =`
  *     uniform sampler2D colorTexture;
- *     varying vec2 v_textureCoordinates;
+ *     in vec2 v_textureCoordinates;
  *     uniform float scale;
  *     uniform vec3 offset;
  *     void main() {
- *         vec4 color = texture2D(colorTexture, v_textureCoordinates);
- *         gl_FragColor = vec4(color.rgb * scale + offset, 1.0);
+ *         vec4 color = texture(colorTexture, v_textureCoordinates);
+ *         out_FragColor = vec4(color.rgb * scale + offset, 1.0);
  *     }`;
  * scene.postProcessStages.add(new Cesium.PostProcessStage({
  *     fragmentShader : fs,
@@ -70,15 +70,15 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.
  * const fs =`
  *     uniform sampler2D colorTexture;
- *     varying vec2 v_textureCoordinates;
+ *     in vec2 v_textureCoordinates;
  *     uniform vec4 highlight;
  *     void main() {
- *         vec4 color = texture2D(colorTexture, v_textureCoordinates);
+ *         vec4 color = texture(colorTexture, v_textureCoordinates);
  *         if (czm_selected()) {
  *             vec3 highlighted = highlight.a * highlight.rgb + (1.0 - highlight.a) * color.rgb;
- *             gl_FragColor = vec4(highlighted, 1.0);
+ *             out_FragColor = vec4(highlighted, 1.0);
  *         } else {
- *             gl_FragColor = color;
+ *             out_FragColor = color;
  *         }
  *     }`;
  * const stage = scene.postProcessStages.add(new Cesium.PostProcessStage({
@@ -364,7 +364,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * if (czm_selected(v_textureCoordinates)) {
    *     // apply post-process stage
    * } else {
-   *     gl_FragColor = texture2D(colorTexture, v_textureCoordinates);
+   *     out_FragColor = texture(colorTexture, v_textureCoordinates);
    * }
    * </code>
    * </p>
@@ -556,22 +556,22 @@ function createDrawCommand(stage, context) {
   if (defined(stage._selectedIdTexture)) {
     const width = stage._selectedIdTexture.width;
 
-    fs = fs.replace(/varying\s+vec2\s+v_textureCoordinates;/g, "");
+    fs = fs.replace(/in\s+vec2\s+v_textureCoordinates;/g, "");
     fs =
       `${
         "#define CZM_SELECTED_FEATURE \n" +
         "uniform sampler2D czm_idTexture; \n" +
         "uniform sampler2D czm_selectedIdTexture; \n" +
         "uniform float czm_selectedIdTextureStep; \n" +
-        "varying vec2 v_textureCoordinates; \n" +
+        "in vec2 v_textureCoordinates; \n" +
         "bool czm_selected(vec2 offset) \n" +
         "{ \n" +
         "    bool selected = false;\n" +
-        "    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n" +
+        "    vec4 id = texture(czm_idTexture, v_textureCoordinates + offset); \n" +
         "    for (int i = 0; i < "
       }${width}; ++i) \n` +
       `    { \n` +
-      `        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n` +
+      `        vec4 selectedId = texture(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n` +
       `        if (all(equal(id, selectedId))) \n` +
       `        { \n` +
       `            return true; \n` +

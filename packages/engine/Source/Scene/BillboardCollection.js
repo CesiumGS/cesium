@@ -1789,10 +1789,10 @@ function updateBoundingVolume(collection, frameState, boundingVolume) {
 function createDebugCommand(billboardCollection, context) {
   const fs =
     "uniform sampler2D billboard_texture; \n" +
-    "varying vec2 v_textureCoordinates; \n" +
+    "in vec2 v_textureCoordinates; \n" +
     "void main() \n" +
     "{ \n" +
-    "    gl_FragColor = texture2D(billboard_texture, v_textureCoordinates); \n" +
+    "    out_FragColor = texture(billboard_texture, v_textureCoordinates); \n" +
     "} \n";
 
   const drawCommand = context.createViewportQuadCommand(fs, {

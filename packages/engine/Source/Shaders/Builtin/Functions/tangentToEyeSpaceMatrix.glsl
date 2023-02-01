@@ -12,7 +12,7 @@
  *
  * @example
  * mat3 tangentToEye = czm_tangentToEyeSpaceMatrix(normalEC, tangentEC, bitangentEC);
- * vec3 normal = tangentToEye * texture2D(normalMap, st).xyz;
+ * vec3 normal = tangentToEye * texture(normalMap, st).xyz;
  */
 mat3 czm_tangentToEyeSpaceMatrix(vec3 normalEC, vec3 tangentEC, vec3 bitangentEC)
 {

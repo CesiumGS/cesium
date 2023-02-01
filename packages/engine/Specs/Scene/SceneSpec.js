@@ -69,7 +69,7 @@ describe(
           sources: ["void main() { gl_Position = vec4(1.0); }"],
         }),
         fragmentShaderSource: new ShaderSource({
-          sources: ["void main() { gl_FragColor = vec4(1.0); }"],
+          sources: ["void main() { out_FragColor = vec4(1.0); }"],
         }),
       });
       simpleRenderState = new RenderState();

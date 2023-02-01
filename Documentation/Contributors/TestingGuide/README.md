@@ -494,7 +494,7 @@ Uniforms, the model matrix, and various depth options can be provided. In additi
 it("can declare automatic uniforms", function () {
   const fs =
     "void main() { " +
-    "  gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); " +
+    "  out_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); " +
     "}";
   expect({
     context: context,
@@ -573,7 +573,7 @@ it("has czm_transpose (2x2)", function () {
     "void main() { " +
     "  mat2 m = mat2(1.0, 2.0, 3.0, 4.0); " +
     "  mat2 mt = mat2(1.0, 3.0, 2.0, 4.0); " +
-    "  gl_FragColor = vec4(czm_transpose(m) == mt); " +
+    "  out_FragColor = vec4(czm_transpose(m) == mt); " +
     "}";
 
   context.verifyDrawForSpecs(fs);
@@ -586,7 +586,7 @@ it("has czm_transpose (2x2)", function () {
 expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 ```
 
-In the test above, the expectation is implicit in the GLSL string for the fragment shader, `fs`, which assigns white to `gl_FragColor` if `czm_transpose` correctly transposes the matrix.
+In the test above, the expectation is implicit in the GLSL string for the fragment shader, `fs`, which assigns white to `out_FragColor` if `czm_transpose` correctly transposes the matrix.
 
 ### Spies
 

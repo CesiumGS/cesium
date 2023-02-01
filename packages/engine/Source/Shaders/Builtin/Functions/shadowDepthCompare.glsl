@@ -1,15 +1,15 @@
 
 float czm_sampleShadowMap(highp samplerCube shadowMap, vec3 d)
 {
-    return czm_unpackDepth(textureCube(shadowMap, d));
+    return czm_unpackDepth(czm_textureCube(shadowMap, d));
 }
 
 float czm_sampleShadowMap(highp sampler2D shadowMap, vec2 uv)
 {
 #ifdef USE_SHADOW_DEPTH_TEXTURE
-    return texture2D(shadowMap, uv).r;
+    return texture(shadowMap, uv).r;
 #else
-    return czm_unpackDepth(texture2D(shadowMap, uv));
+    return czm_unpackDepth(texture(shadowMap, uv));
 #endif
 }
 

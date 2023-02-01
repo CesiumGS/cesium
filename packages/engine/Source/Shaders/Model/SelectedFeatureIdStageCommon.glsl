@@ -27,7 +27,7 @@ void selectedFeatureIdStage(out SelectedFeature feature, FeatureIds featureIds)
 
         feature.id = featureId;
         feature.st = featureSt;
-        feature.color = texture2D(model_batchTexture, featureSt);
+        feature.color = texture(model_batchTexture, featureSt);
     }
     // Floating point comparisons can be unreliable in GLSL, so we
     // increment the feature ID to make sure it's always greater

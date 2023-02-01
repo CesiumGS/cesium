@@ -203,16 +203,16 @@ function createUniformMap(autoexposure, index) {
 function getShaderSource(index, length) {
   let source =
     "uniform sampler2D colorTexture; \n" +
-    "varying vec2 v_textureCoordinates; \n" +
+    "in vec2 v_textureCoordinates; \n" +
     "float sampleTexture(vec2 offset) { \n";
 
   if (index === 0) {
     source +=
-      "    vec4 color = texture2D(colorTexture, v_textureCoordinates + offset); \n" +
+      "    vec4 color = texture(colorTexture, v_textureCoordinates + offset); \n" +
       "    return czm_luminance(color.rgb); \n";
   } else {
     source +=
-      "    return texture2D(colorTexture, v_textureCoordinates + offset).r; \n";
+      "    return texture(colorTexture, v_textureCoordinates + offset).r; \n";
   }
 
   source += "}\n\n";
@@ -244,13 +244,13 @@ function getShaderSource(index, length) {
 
   if (index === length - 1) {
     source +=
-      "    float previous = texture2D(previousLuminance, vec2(0.5)).r; \n" +
+      "    float previous = texture(previousLuminance, vec2(0.5)).r; \n" +
       "    color = clamp(color, minMaxLuminance.x, minMaxLuminance.y); \n" +
       "    color = previous + (color - previous) / (60.0 * 1.5); \n" +
       "    color = clamp(color, minMaxLuminance.x, minMaxLuminance.y); \n";
   }
 
-  source += "    gl_FragColor = vec4(color); \n" + "} \n";
+  source += "    out_FragColor = vec4(color); \n" + "} \n";
   return source;
 }
 
