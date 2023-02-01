@@ -97,7 +97,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-sourcemap-loader": "^0.3.8",
     "karma-spec-reporter": "^0.0.36",
-    "markdownlint-cli": "^0.32.2",
+    "markdownlint-cli": "^0.33.0",
     "merge-stream": "^2.0.0",
     "mime": "^3.0.0",
     "mkdirp": "^1.0.4",
