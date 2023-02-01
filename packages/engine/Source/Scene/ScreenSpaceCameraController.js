@@ -108,9 +108,9 @@ function ScreenSpaceCameraController(scene) {
    * the camera will continue to zoom because of inertia.
    * With value of zero, the camera will have no inertia.
    * @type {Number}
-   * @default 0.5
+   * @default 0.8
    */
-  this.inertiaZoom = 0.5;
+  this.inertiaZoom = 0.8;
   /**
    * A parameter in the range <code>[0, 1)</code> used to limit the range
    * of various user inputs to a percentage of the window width/height per animation frame.
@@ -301,7 +301,7 @@ function ScreenSpaceCameraController(scene) {
   );
 
   // Constants, Make any of these public?
-  this._zoomFactor = 5.0;
+  this._zoomFactor = 2.0;
   this._rotateFactor = undefined;
   this._rotateRateRangeAdjustment = undefined;
   this._maximumRotateRate = 1.77;
@@ -591,9 +591,9 @@ function handleZoom(
     return;
   }
 
-  const sameStartPosition = Cartesian2.equals(
-    startPosition,
-    object._zoomMouseStart
+  const sameStartPosition = defaultValue(
+    movement.inertiaEnabled,
+    Cartesian2.equals(startPosition, object._zoomMouseStart)
   );
   let zoomingOnVector = object._zoomingOnVector;
   let rotatingZoom = object._rotatingZoom;
