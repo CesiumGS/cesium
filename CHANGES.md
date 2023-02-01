@@ -24,10 +24,10 @@
 
 ##### Fixes :wrench:
 
+- Fixed label background rendering. [#11040](https://github.com/CesiumGS/cesium/issues/11040)
 - Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
 - Fixed an edge case in `viewer.flyTo` when flying to a imagery layer with certain terrain providers. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
-- Fixed a crash in terrain sampling if any points have an indefined position due to being outside the rectangle. [#10931](https://github.com/CesiumGS/cesium/pull/10931)
-- Fixed label background rendering. [#11040](https://github.com/CesiumGS/cesium/issues/11040)
+- Fixed a crash in terrain sampling if any points have an undefined position due to being outside the rectangle. [#10931](https://github.com/CesiumGS/cesium/pull/10931)
 - Fixed a bug where scale was not being applied to the top-level tileset geometric error. [#11047](https://github.com/CesiumGS/cesium/pull/11047)
 - Updating Bing Maps top page hyperlink to Bing Maps ToU hyperlink [#11049](https://github.com/CesiumGS/cesium/pull/11049)
 
