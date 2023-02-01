@@ -130,6 +130,10 @@ function listenToPinch(aggregator, modifier, canvas) {
   );
 }
 
+function cloneZoomMovement(zoomMovement, result) {
+  Cartesian2.clone(zoomMovement.endPosition, result.endPosition);
+}
+
 function listenToWheel(aggregator, modifier) {
   const key = getKey(CameraEventType.WHEEL, modifier);
 
@@ -160,17 +164,18 @@ function listenToWheel(aggregator, modifier) {
     function (delta) {
       // TODO: magic numbers
       const arcLength = 15.0 * CesiumMath.toRadians(delta);
+      pressTime[key] = releaseTime[key] = new Date();
       if (!update[key]) {
+        cloneZoomMovement(movement, lastMovement);
         movement.endPosition.y = movement.endPosition.y + arcLength;
       } else {
         Cartesian2.clone(Cartesian2.ZERO, movement.startPosition);
         movement.endPosition.x = 0.0;
         movement.endPosition.y = arcLength;
+        cloneZoomMovement(movement, lastMovement);
+        lastMovement.valid = true;
         update[key] = false;
       }
-      Cartesian2.clone(movement.endPosition, lastMovement.endPosition);
-      lastMovement.valid = true;
-      pressTime[key] = releaseTime[key] = new Date();
     },
     ScreenSpaceEventType.WHEEL,
     modifier
