@@ -2426,6 +2426,8 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
   if (index === -1) {
     return undefined;
   }
+  
+  this._lastPerInstanceAttributeIndex = index;
 
   let attributes = this._perInstanceAttributeCache[index];
   if (defined(attributes)) {
@@ -2451,7 +2453,6 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
   createPickIdProperty(this, properties, index);
   Object.defineProperties(attributes, properties);
 
-  this._lastPerInstanceAttributeIndex = index;
   this._perInstanceAttributeCache[index] = attributes;
   return attributes;
 };
