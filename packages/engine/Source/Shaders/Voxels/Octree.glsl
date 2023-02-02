@@ -78,7 +78,7 @@ int getOctreeParentIndex(in int octreeIndex) {
 * into the uv-space of a tile within the tileset
 */
 vec3 getTileUv(in vec3 shapePosition, in ivec4 octreeCoords) {
-	// TODO: use bit-shifting (only in WebGL2)
+	// PERFORMANCE_IDEA: use bit-shifting (only in WebGL2)
     float dimAtLevel = pow(2.0, float(octreeCoords.w));
     return shapePosition * dimAtLevel - vec3(octreeCoords.xyz);
 }

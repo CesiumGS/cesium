@@ -67,7 +67,6 @@ void main()
     float currT = entryExitT.x + 0.0001;
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
-    // TODO: is it possible for this to be out of bounds, and does it matter?
     vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
 
     // Traverse the tree from the start position
@@ -76,10 +75,6 @@ void main()
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
     float stepT = getStepSize(sampleDatas[0], viewRayUv, entryExitT);
 
-    // TODO:
-    //  - jitter doesn't affect the first traversal?
-    //  - jitter is always > 0?
-    //  - jitter is only applied at one step?
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
         currT += noise * stepT;
@@ -125,10 +120,8 @@ void main()
         }
 
         if (stepT == 0.0) {
-            // Shape is infinitely thin, no need to traverse further
-            // TODO: this doesn't happen? 
-            // Even if the shape is thin, won't we have currT >  endT? (see below)
-            //break;
+            // Shape is infinitely thin. The ray may have hit the edge of a
+            // foreground voxel. Step ahead slightly to check for more voxels
             stepT == 0.00001;
         }
 
