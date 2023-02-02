@@ -43,21 +43,14 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           selectionIndicator: false,
           infoBox: false,
+          terrainProvider: await Cesium.createWorldTerrainAsync(),
         });
-
-        (async () => {
-          try {
-            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
-          } catch (error) {
-            console.log(error);
-          }
-        })();
 
         viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
           Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
@@ -183,7 +176,11 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        try {
+          window.startup(Cesium);
+        } catch (error) {
+          console.error(error);
+        }
       }
     </script>
   </body>

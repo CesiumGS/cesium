@@ -38,7 +38,7 @@
       <div><input type="checkbox" data-bind="checked: shadows" /> Shadows</div>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -222,7 +222,11 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        try {
+          window.startup(Cesium);
+        } catch (error) {
+          console.error(error);
+        }
       }
     </script>
   </body>

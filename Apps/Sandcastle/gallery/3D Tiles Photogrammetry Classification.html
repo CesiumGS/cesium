@@ -33,56 +33,58 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        (async () => {
-          // An example of using a b3dm tileset to classify another b3dm tileset.
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            terrainProvider: await Cesium.createWorldTerrainAsync(),
-          });
+        // An example of using a b3dm tileset to classify another b3dm tileset.
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: await Cesium.createWorldTerrainAsync(),
+        });
 
-          // A normal b3dm tileset containing photogrammetry
-          const tileset = new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          });
-          viewer.scene.primitives.add(tileset);
-          viewer.zoomTo(tileset);
+        // A normal b3dm tileset containing photogrammetry
+        const tileset = new Cesium.Cesium3DTileset({
+          url: Cesium.IonResource.fromAssetId(40866),
+        });
+        viewer.scene.primitives.add(tileset);
+        viewer.zoomTo(tileset);
 
-          const classificationTilesetUrl =
-            "../../SampleData/Cesium3DTiles/Classification/Photogrammetry/tileset.json";
-          // A b3dm tileset used to classify the photogrammetry tileset
-          const classificationTileset = new Cesium.Cesium3DTileset({
-            url: classificationTilesetUrl,
-            classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-          });
-          classificationTileset.style = new Cesium.Cesium3DTileStyle({
-            color: "rgba(255, 0, 0, 0.5)",
-          });
-          viewer.scene.primitives.add(classificationTileset);
+        const classificationTilesetUrl =
+          "../../SampleData/Cesium3DTiles/Classification/Photogrammetry/tileset.json";
+        // A b3dm tileset used to classify the photogrammetry tileset
+        const classificationTileset = new Cesium.Cesium3DTileset({
+          url: classificationTilesetUrl,
+          classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+        });
+        classificationTileset.style = new Cesium.Cesium3DTileStyle({
+          color: "rgba(255, 0, 0, 0.5)",
+        });
+        viewer.scene.primitives.add(classificationTileset);
 
-          // The same b3dm tileset used for classification, but rendered normally for comparison.
-          const nonClassificationTileset = new Cesium.Cesium3DTileset({
-            url: classificationTilesetUrl,
-            show: false,
-          });
-          nonClassificationTileset.style = new Cesium.Cesium3DTileStyle({
-            color: "rgba(255, 0, 0, 0.5)",
-          });
-          viewer.scene.primitives.add(nonClassificationTileset);
+        // The same b3dm tileset used for classification, but rendered normally for comparison.
+        const nonClassificationTileset = new Cesium.Cesium3DTileset({
+          url: classificationTilesetUrl,
+          show: false,
+        });
+        nonClassificationTileset.style = new Cesium.Cesium3DTileStyle({
+          color: "rgba(255, 0, 0, 0.5)",
+        });
+        viewer.scene.primitives.add(nonClassificationTileset);
 
-          Sandcastle.addToggleButton("Show classification", true, function (
-            checked
-          ) {
-            classificationTileset.show = checked;
-            nonClassificationTileset.show = !checked;
-          });
-        })(); //Sandcastle_End
+        Sandcastle.addToggleButton("Show classification", true, function (
+          checked
+        ) {
+          classificationTileset.show = checked;
+          nonClassificationTileset.show = !checked;
+        }); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        try {
+          window.startup(Cesium);
+        } catch (error) {
+          console.error(error);
+        }
       }
     </script>
   </body>
