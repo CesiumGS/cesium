@@ -3,18 +3,10 @@
 
 /* Box defines (set in Scene/VoxelBoxShape.js)
 #define BOX_INTERSECTION_INDEX ### // always 0
-#define BOX_HAS_RENDER_BOUNDS
-#define BOX_IS_2D
 */
 
-#if defined(BOX_IS_2D)
-    // This matrix bakes in an axis conversion so that the math works for XY plane.
-    uniform mat4 u_boxUvToRenderBoundsTransform;
-#elif defined(BOX_HAS_RENDER_BOUNDS)
-    // Similar to u_boxTransformUvToBounds but fewer instructions needed.
-    uniform vec3 u_boxUvToRenderBoundsScale;
-    uniform vec3 u_boxUvToRenderBoundsTranslate;
-#endif
+uniform vec3 u_renderMinBounds;
+uniform vec3 u_renderMaxBounds;
 
 struct Box {
     vec3 p0;
@@ -55,62 +47,15 @@ vec2 intersectBox(in Ray ray, in Box box)
     float entry = max(max(entries.x, entries.y), entries.z);
     float exit = min(min(exits.x, exits.y), exits.z);
 
-    if (entry >= exit) {
+    if (entry > exit) {
         return vec2(NO_HIT);
     }
 
     return vec2(entry, exit);
 }
 
-vec2 intersectUnitCube(in Ray ray) // Unit cube from [-1, +1]
-{
-    vec3 dInv = 1.0 / ray.dir;
-    vec3 od = -ray.pos * dInv;
-    vec3 t0 = od - dInv;
-    vec3 t1 = od + dInv;
-    vec3 m0 = min(t0, t1);
-    vec3 m1 = max(t0, t1);
-    float tMin = max(max(m0.x, m0.y), m0.z);
-    float tMax = min(min(m1.x, m1.y), m1.z);
-
-    if (tMin >= tMax) {
-        return vec2(NO_HIT);
-    }
-
-    return vec2(tMin, tMax);
-}
-
-vec2 intersectUnitSquare(in Ray ray) // Unit square from [-1, +1]
-{
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
-
-    float t = -o.z / d.z;
-    vec2 planePos = o.xy + d.xy * t;
-    if (any(greaterThan(abs(planePos), vec2(1.0)))) {
-        return vec2(NO_HIT);
-    }
-
-    return vec2(t, t);
-}
-
 void intersectShape(in Ray ray, inout Intersections ix)
 {
-    #if defined(BOX_IS_2D)
-        // Transform the ray into unit square space on Z plane
-        // This matrix bakes in an axis conversion so that the math works for XY plane.
-        ray.pos = vec3(u_boxUvToRenderBoundsTransform * vec4(ray.pos, 1.0));
-        ray.dir = vec3(u_boxUvToRenderBoundsTransform * vec4(ray.dir, 0.0));
-        vec2 entryExit = intersectUnitSquare(ray);
-    #elif defined(BOX_HAS_RENDER_BOUNDS)
-        // Transform the ray into unit cube space
-        ray.pos = ray.pos * u_boxUvToRenderBoundsScale + u_boxUvToRenderBoundsTranslate;
-        ray.dir *= u_boxUvToRenderBoundsScale;
-        vec2 entryExit = intersectUnitCube(ray);
-    #else
-        Box box = Box(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0));
-        vec2 entryExit = intersectBox(ray, box);
-    #endif
-
+    vec2 entryExit = intersectBox(ray, Box(u_renderMinBounds, u_renderMaxBounds));
     setIntersectionPair(ix, BOX_INTERSECTION_INDEX, entryExit);
 }
