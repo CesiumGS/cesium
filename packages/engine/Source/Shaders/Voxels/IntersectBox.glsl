@@ -7,15 +7,13 @@
 #define BOX_IS_2D
 */
 
-#if defined(BOX_HAS_RENDER_BOUNDS)
-    #if defined(BOX_IS_2D)
-        // This matrix bakes in an axis conversion so that the math works for XY plane.
-        uniform mat4 u_boxUvToRenderBoundsTransform;
-    #else
-        // Similar to u_boxTransformUvToBounds but fewer instructions needed.
-        uniform vec3 u_boxUvToRenderBoundsScale;
-        uniform vec3 u_boxUvToRenderBoundsTranslate;
-    #endif
+#if defined(BOX_IS_2D)
+    // This matrix bakes in an axis conversion so that the math works for XY plane.
+    uniform mat4 u_boxUvToRenderBoundsTransform;
+#elif defined(BOX_HAS_RENDER_BOUNDS)
+    // Similar to u_boxTransformUvToBounds but fewer instructions needed.
+    uniform vec3 u_boxUvToRenderBoundsScale;
+    uniform vec3 u_boxUvToRenderBoundsTranslate;
 #endif
 
 struct Box {
@@ -98,19 +96,17 @@ vec2 intersectUnitSquare(in Ray ray) // Unit square from [-1, +1]
 
 void intersectShape(in Ray ray, inout Intersections ix)
 {
-    #if defined(BOX_HAS_RENDER_BOUNDS)
-        #if defined(BOX_IS_2D)
-            // Transform the ray into unit square space on Z plane
-            // This matrix bakes in an axis conversion so that the math works for XY plane.
-            ray.pos = vec3(u_boxUvToRenderBoundsTransform * vec4(ray.pos, 1.0));
-            ray.dir = vec3(u_boxUvToRenderBoundsTransform * vec4(ray.dir, 0.0));
-            vec2 entryExit = intersectUnitSquare(ray);
-        #else
-            // Transform the ray into unit cube space
-            ray.pos = ray.pos * u_boxUvToRenderBoundsScale + u_boxUvToRenderBoundsTranslate;
-            ray.dir *= u_boxUvToRenderBoundsScale;
-            vec2 entryExit = intersectUnitCube(ray);
-        #endif
+    #if defined(BOX_IS_2D)
+        // Transform the ray into unit square space on Z plane
+        // This matrix bakes in an axis conversion so that the math works for XY plane.
+        ray.pos = vec3(u_boxUvToRenderBoundsTransform * vec4(ray.pos, 1.0));
+        ray.dir = vec3(u_boxUvToRenderBoundsTransform * vec4(ray.dir, 0.0));
+        vec2 entryExit = intersectUnitSquare(ray);
+    #elif defined(BOX_HAS_RENDER_BOUNDS)
+        // Transform the ray into unit cube space
+        ray.pos = ray.pos * u_boxUvToRenderBoundsScale + u_boxUvToRenderBoundsTranslate;
+        ray.dir *= u_boxUvToRenderBoundsScale;
+        vec2 entryExit = intersectUnitCube(ray);
     #else
         // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
         // Direction is scaled as well to be in sync with position.
