@@ -16,14 +16,16 @@ struct Ray {
 struct Intersections {
     // Don't access these member variables directly - call the functions instead.
 
-    // Store an array of intersections. Each intersection is composed of:
-    //  w for the T value
-    //  y for the shape type - which encodes positive vs negative and entering vs exiting
-    // For example:
-    //  y = 0: positive shape entry
-    //  y = 1: positive shape exit
-    //  y = 2: negative shape entry
-    //  y = 3: negative shape exit
+    // Store an array of ray-surface intersections. Each intersection is composed of:
+    //  .xyz for the surface normal at the intersection point
+    //  .w for the T value
+    // The scale of the normal encodes the shape intersection type:
+    //  length(intersection.xyz) = 1: positive shape entry
+    //  length(intersection.xyz) = 2: positive shape exit
+    //  length(intersection.xyz) = 3: negative shape entry
+    //  length(intersection.xyz) = 4: negative shape exit
+    // INTERSECTION_COUNT is the number of ray-*shape* (volume) intersections,
+    // so we need twice as many to track ray-*surface* intersections
     vec4 intersections[INTERSECTION_COUNT * 2];
 
     #if (INTERSECTION_COUNT > 1)
@@ -38,8 +40,8 @@ struct Intersections {
 #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)].w
 #define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection((ix), (index) * 2 + 0), getIntersection((ix), (index) * 2 + 1))
 
-#define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = vec4(0.0, float(!positive) * 2.0 + float(!enter), 0.0, (t))
-#define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec4(0.0, float((index) > 0) * 2.0 + 0.0, 0.0, (entryExit).x); (ix).intersections[(index) * 2 + 1] = vec4(0.0, float((index) > 0) * 2.0 + 1.0, 0.0, (entryExit).y)
+#define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*bool*/ enter) (ix).intersections[(index)] = vec4(0.0, float(!positive) * 2.0 + float(!enter) + 1.0, 0.0, (t))
+#define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec4(0.0, float((index) > 0) * 2.0 + 1.0, 0.0, (entryExit).x); (ix).intersections[(index) * 2 + 1] = vec4(0.0, float((index) > 0) * 2.0 + 2.0, 0.0, (entryExit).y)
 
 #if (INTERSECTION_COUNT > 1)
 void initializeIntersections(inout Intersections ix) {
@@ -91,8 +93,9 @@ vec2 nextIntersection(inout Intersections ix) {
 
         vec4 intersect = ix.intersections[i];
         float t = intersect.w;
-        bool currShapeIsPositive = intersect.y < 2.0;
-        bool enter = mod(intersect.y, 2.0) == 0.0;
+        float intersectionType = length(intersect.xyz) - 1.0;
+        bool currShapeIsPositive = intersectionType < 2.0;
+        bool enter = mod(intersectionType, 2.0) == 0.0;
 
         ix.surroundCount += enter ? +1 : -1;
         ix.surroundIsPositive = currShapeIsPositive ? enter : ix.surroundIsPositive;
