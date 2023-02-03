@@ -30,9 +30,10 @@ Box constructVoxelBox(in ivec4 octreeCoords, in vec3 tileUv)
     return Box(p0, p1);
 }
 
-vec3 getBoxNormal(in vec3 entryPoint, in Box box)
+vec3 getBoxNormal(in Box box, in Ray ray, in float entryT)
 {
-    vec3 epsilon = (box.p1 - box.p0) * 0.00001;
+    vec3 entryPoint = ray.pos + entryT * ray.dir;
+    vec3 epsilon = vec3(entryT * 0.000001);
     vec3 lower = step(entryPoint - epsilon, box.p0);
     vec3 upper = step(box.p1, entryPoint + epsilon);
     return normalize(upper - lower);
@@ -55,8 +56,7 @@ RayShapeIntersection intersectBox(in Ray ray, in Box box)
     float entryT = max(max(entries.x, entries.y), entries.z);
     float exitT = min(min(exits.x, exits.y), exits.z);
 
-    vec3 entryPoint = ray.pos + entryT * ray.dir;
-    vec3 normal = getBoxNormal(entryPoint, box);
+    vec3 normal = getBoxNormal(box, ray, entryT);
     
     if (entryT > exitT) {
         return RayShapeIntersection(normal, NO_HIT, NO_HIT);
