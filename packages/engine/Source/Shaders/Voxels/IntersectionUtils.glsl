@@ -17,14 +17,14 @@ struct Intersections {
     // Don't access these member variables directly - call the functions instead.
 
     // Store an array of intersections. Each intersection is composed of:
-    //  x for the T value
+    //  w for the T value
     //  y for the shape type - which encodes positive vs negative and entering vs exiting
     // For example:
     //  y = 0: positive shape entry
     //  y = 1: positive shape exit
     //  y = 2: negative shape entry
     //  y = 3: negative shape exit
-    vec2 intersections[INTERSECTION_COUNT * 2];
+    vec4 intersections[INTERSECTION_COUNT * 2];
 
     #if (INTERSECTION_COUNT > 1)
         // Maintain state for future nextIntersection calls
@@ -35,11 +35,11 @@ struct Intersections {
 };
 
 // Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
-#define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)].x
+#define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)].w
 #define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection((ix), (index) * 2 + 0), getIntersection((ix), (index) * 2 + 1))
 
-#define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = vec2((t), float(!positive) * 2.0 + float(!enter))
-#define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec2((entryExit).x, float((index) > 0) * 2.0 + 0.0); (ix).intersections[(index) * 2 + 1] = vec2((entryExit).y, float((index) > 0) * 2.0 + 1.0)
+#define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = vec4(0.0, float(!positive) * 2.0 + float(!enter), 0.0, (t))
+#define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec4(0.0, float((index) > 0) * 2.0 + 0.0, 0.0, (entryExit).x); (ix).intersections[(index) * 2 + 1] = vec4(0.0, float((index) > 0) * 2.0 + 1.0, 0.0, (entryExit).y)
 
 #if (INTERSECTION_COUNT > 1)
 void initializeIntersections(inout Intersections ix) {
@@ -53,10 +53,10 @@ void initializeIntersections(inout Intersections ix) {
             // loop with non-constant condition, so it has to break early instead
             if (i >= n) { break; }
 
-            vec2 intersect0 = ix.intersections[i + 0];
-            vec2 intersect1 = ix.intersections[i + 1];
+            vec4 intersect0 = ix.intersections[i + 0];
+            vec4 intersect1 = ix.intersections[i + 1];
 
-            bool inOrder = intersect0.x <= intersect1.x;
+            bool inOrder = intersect0.w <= intersect1.w;
 
             ix.intersections[i + 0] = inOrder ? intersect0 : intersect1;
             ix.intersections[i + 1] = inOrder ? intersect1 : intersect0;
@@ -89,8 +89,8 @@ vec2 nextIntersection(inout Intersections ix) {
 
         ix.index = i + 1;
 
-        vec2 intersect = ix.intersections[i];
-        float t = intersect.x;
+        vec4 intersect = ix.intersections[i];
+        float t = intersect.w;
         bool currShapeIsPositive = intersect.y < 2.0;
         bool enter = mod(intersect.y, 2.0) == 0.0;
 
