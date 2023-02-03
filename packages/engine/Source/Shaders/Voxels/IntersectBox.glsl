@@ -32,7 +32,7 @@ Box constructVoxelBox(in ivec4 octreeCoords, in vec3 tileUv)
 
 // Find the distances along a ray at which the ray intersects an axis-aligned box
 // See https://tavianator.com/2011/ray_box.html
-vec2 intersectBox(in Ray ray, in Box box)
+RayShapeIntersection intersectBox(in Ray ray, in Box box)
 {
     // Consider the box as the intersection of the space between 3 pairs of parallel planes
     // Compute the distance along the ray to each plane
@@ -44,18 +44,21 @@ vec2 intersectBox(in Ray ray, in Box box)
     vec3 exits = max(t0, t1);
 
     // The actual box intersection points are the furthest entry and the closest exit
-    float entry = max(max(entries.x, entries.y), entries.z);
-    float exit = min(min(exits.x, exits.y), exits.z);
+    float entryT = max(max(entries.x, entries.y), entries.z);
+    float exitT = min(min(exits.x, exits.y), exits.z);
 
-    if (entry > exit) {
-        return vec2(NO_HIT);
+    if (entryT > exitT) {
+        return RayShapeIntersection(vec3(NO_HIT), NO_HIT, NO_HIT);
     }
 
-    return vec2(entry, exit);
+    vec3 entryPoint = ray.pos + entryT * ray.dir;
+    vec3 normal = normalize(step(box.p1, entryPoint) - step(entryPoint, box.p0));
+
+    return RayShapeIntersection(normal, entryT, exitT);
 }
 
 void intersectShape(in Ray ray, inout Intersections ix)
 {
-    vec2 entryExit = intersectBox(ray, Box(u_renderMinBounds, u_renderMaxBounds));
-    setIntersectionPair(ix, BOX_INTERSECTION_INDEX, entryExit);
+    RayShapeIntersection intersection = intersectBox(ray, Box(u_renderMinBounds, u_renderMaxBounds));
+    setIntersectionPair(ix, BOX_INTERSECTION_INDEX, vec2(intersection.entryT, intersection.exitT));
 }

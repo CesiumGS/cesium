@@ -13,6 +13,12 @@ struct Ray {
 #endif
 };
 
+struct RayShapeIntersection {
+    vec3 normal;
+    float entryT;
+    float exitT;
+};
+
 struct Intersections {
     // Don't access these member variables directly - call the functions instead.
 

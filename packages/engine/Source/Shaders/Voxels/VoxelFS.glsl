@@ -31,9 +31,9 @@ float hash(vec2 p)
 float getStepSize(in SampleData sampleData, in Ray viewRay, in vec2 entryExit) {
 #if defined(SHAPE_BOX)
     Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
-    vec2 voxelIntersection = intersectBox(viewRay, voxelBox);
-    float entry = max(voxelIntersection.x, entryExit.x);
-    float exit = min(voxelIntersection.y, entryExit.y);
+    RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
+    float entry = max(voxelIntersection.entryT, entryExit.x);
+    float exit = min(voxelIntersection.exitT, entryExit.y);
     return (exit - entry);
 #else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
