@@ -11,21 +11,15 @@ uniform sampler2D u_clippingPlanesTexture;
 uniform mat4 u_clippingPlanesMatrix;
 
 // Plane is in Hessian Normal Form
-vec2 intersectPlane(in Ray ray, in vec4 plane) {
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
+vec4 intersectPlane(in Ray ray, in vec4 plane) {
     vec3 n = plane.xyz; // normal
     float w = plane.w; // -dot(pointOnPlane, normal)
 
-    float a = dot(o, n);
-    float b = dot(d, n);
+    float a = dot(ray.pos, n);
+    float b = dot(ray.dir, n);
     float t = -(w + a) / b;
 
-    if (dot(d, n) > 0.0) {
-        return vec2(t, +INF_HIT);
-    } else {
-        return vec2(-INF_HIT, t);
-    }
+    return vec4(n, t);
 }
 
 void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
@@ -33,18 +27,21 @@ void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
         // Union and intersection are the same when there's one clipping plane, and the code
         // is more simplified.
         vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, 0, u_clippingPlanesMatrix);
-        vec2 intersection = intersectPlane(ray, planeUv);
-        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX, intersection);
+        vec4 intersection = intersectPlane(ray, planeUv);
+        vec2 entryExitT = dot(ray.dir, planeUv.xyz) > 0.0
+            ? vec2(intersection.w, +INF_HIT)
+            : vec2(-INF_HIT, intersection.w);
+        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX, entryExitT);
     #elif defined(CLIPPING_PLANES_UNION)
         float minPositiveT = +INF_HIT;
         float maxNegativeT = -INF_HIT;
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
             vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i, u_clippingPlanesMatrix);
-            vec2 intersection = intersectPlane(ray, planeUv);
-            if (intersection.y == +INF_HIT) {
-                minPositiveT = min(minPositiveT, intersection.x);
+            vec4 intersection = intersectPlane(ray, planeUv);
+            if (dot(ray.dir, planeUv.xyz) > 0.0) {
+                minPositiveT = min(minPositiveT, intersection.w);
             } else {
-                maxNegativeT = max(maxNegativeT, intersection.y);
+                maxNegativeT = max(maxNegativeT, intersection.w);
             }
         }
         setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 0, vec2(-INF_HIT, maxNegativeT));
@@ -54,11 +51,11 @@ void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
         float minNegativeT = +INF_HIT;
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
             vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i, u_clippingPlanesMatrix);
-            vec2 intersection = intersectPlane(ray, planeUv);
-            if (intersection.y == +INF_HIT) {
-                maxPositiveT = max(maxPositiveT, intersection.x);
+            vec4 intersection = intersectPlane(ray, planeUv);
+            if (dot(ray.dir, planeUv.xyz) > 0.0) {
+                maxPositiveT = max(maxPositiveT, intersection.w);
             } else {
-                minNegativeT = min(minNegativeT, intersection.y);
+                minNegativeT = min(minNegativeT, intersection.w);
             }
         }
         if (maxPositiveT < minNegativeT) {
