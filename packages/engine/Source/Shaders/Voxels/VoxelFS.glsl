@@ -99,6 +99,7 @@ void main()
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
+        fragmentInput.voxel.surfaceNormal = viewRayUv.dir;
         fragmentInput.voxel.travelDistance = stepT;
 
         // Run the custom shader
