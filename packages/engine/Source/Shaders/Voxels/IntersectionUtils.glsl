@@ -56,18 +56,10 @@ void initializeIntersections(inout Intersections ix) {
             vec2 intersect0 = ix.intersections[i + 0];
             vec2 intersect1 = ix.intersections[i + 1];
 
-            float t0 = intersect0.x;
-            float t1 = intersect1.x;
-            float b0 = intersect0.y;
-            float b1 = intersect1.y;
+            bool inOrder = intersect0.x <= intersect1.x;
 
-            float tmin = min(t0, t1);
-            float tmax = max(t0, t1);
-            float bmin = tmin == t0 ? b0 : b1;
-            float bmax = tmin == t0 ? b1 : b0;
-
-            ix.intersections[i + 0] = vec2(tmin, bmin);
-            ix.intersections[i + 1] = vec2(tmax, bmax);
+            ix.intersections[i + 0] = inOrder ? intersect0 : intersect1;
+            ix.intersections[i + 1] = inOrder ? intersect1 : intersect0;
         }
     }
 
