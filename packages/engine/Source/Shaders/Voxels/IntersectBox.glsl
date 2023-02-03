@@ -30,6 +30,14 @@ Box constructVoxelBox(in ivec4 octreeCoords, in vec3 tileUv)
     return Box(p0, p1);
 }
 
+vec3 getBoxNormal(in vec3 entryPoint, in Box box)
+{
+    vec3 epsilon = (box.p1 - box.p0) * 0.00001;
+    vec3 lower = step(entryPoint - epsilon, box.p0);
+    vec3 upper = step(box.p1, entryPoint + epsilon);
+    return normalize(upper - lower);
+}
+
 // Find the distances along a ray at which the ray intersects an axis-aligned box
 // See https://tavianator.com/2011/ray_box.html
 RayShapeIntersection intersectBox(in Ray ray, in Box box)
@@ -47,12 +55,12 @@ RayShapeIntersection intersectBox(in Ray ray, in Box box)
     float entryT = max(max(entries.x, entries.y), entries.z);
     float exitT = min(min(exits.x, exits.y), exits.z);
 
-    if (entryT > exitT) {
-        return RayShapeIntersection(vec3(NO_HIT), NO_HIT, NO_HIT);
-    }
-
     vec3 entryPoint = ray.pos + entryT * ray.dir;
-    vec3 normal = normalize(step(box.p1, entryPoint) - step(entryPoint, box.p0));
+    vec3 normal = getBoxNormal(entryPoint, box);
+    
+    if (entryT > exitT) {
+        return RayShapeIntersection(normal, NO_HIT, NO_HIT);
+    }
 
     return RayShapeIntersection(normal, entryT, exitT);
 }
