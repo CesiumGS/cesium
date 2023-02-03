@@ -16,50 +16,30 @@ struct Ray {
 struct Intersections {
     // Don't access these member variables directly - call the functions instead.
 
-    #if (INTERSECTION_COUNT > 1)
-        // Store an array of intersections. Each intersection is composed of:
-        //  x for the T value
-        //  y for the shape type - which encodes positive vs negative and entering vs exiting
-        // For example:
-        //  y = 0: positive shape entry
-        //  y = 1: positive shape exit
-        //  y = 2: negative shape entry
-        //  y = 3: negative shape exit
-        vec2 intersections[INTERSECTION_COUNT * 2];
+    // Store an array of intersections. Each intersection is composed of:
+    //  x for the T value
+    //  y for the shape type - which encodes positive vs negative and entering vs exiting
+    // For example:
+    //  y = 0: positive shape entry
+    //  y = 1: positive shape exit
+    //  y = 2: negative shape entry
+    //  y = 3: negative shape exit
+    vec2 intersections[INTERSECTION_COUNT * 2];
 
+    #if (INTERSECTION_COUNT > 1)
         // Maintain state for future nextIntersection calls
         int index;
         int surroundCount;
         bool surroundIsPositive;
-    #else
-        // When there's only one positive shape intersection none of the extra stuff is needed.
-        float intersections[2];
     #endif
 };
 
-// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (INTERSECTION_COUNT > 1)
-    #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)].x
-#else
-    #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)]
-#endif
-
-// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
+// Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
+#define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)].x
 #define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection((ix), (index) * 2 + 0), getIntersection((ix), (index) * 2 + 1))
 
-// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (INTERSECTION_COUNT > 1)
-    #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = vec2((t), float(!positive) * 2.0 + float(!enter))
-#else
-    #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = (t)
-#endif
-
-// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (INTERSECTION_COUNT > 1)
-    #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec2((entryExit).x, float((index) > 0) * 2.0 + 0.0); (ix).intersections[(index) * 2 + 1] = vec2((entryExit).y, float((index) > 0) * 2.0 + 1.0)
-#else
-    #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = (entryExit).x; (ix).intersections[(index) * 2 + 1] = (entryExit).y
-#endif
+#define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = vec2((t), float(!positive) * 2.0 + float(!enter))
+#define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec2((entryExit).x, float((index) > 0) * 2.0 + 0.0); (ix).intersections[(index) * 2 + 1] = vec2((entryExit).y, float((index) > 0) * 2.0 + 1.0)
 
 #if (INTERSECTION_COUNT > 1)
 void initializeIntersections(inout Intersections ix) {
@@ -150,4 +130,3 @@ vec2 nextIntersection(inout Intersections ix) {
 #endif
 
 // NOTE: initializeIntersections, nextIntersection aren't even declared unless INTERSECTION_COUNT > 1
-// export { NO_HIT, INF_HIT, Ray, Intersections, getIntersectionPair, setIntersectionPair, initializeIntersections, nextIntersection };
