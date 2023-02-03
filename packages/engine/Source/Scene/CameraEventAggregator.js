@@ -154,26 +154,18 @@ function listenToWheel(aggregator, modifier) {
   }
 
   movement.startPosition = new Cartesian2();
+  Cartesian2.clone(Cartesian2.ZERO, movement.startPosition);
   movement.endPosition = new Cartesian2();
-
-  let debounceZoom;
 
   aggregator._eventHandler.setInputAction(
     function (delta) {
       // TODO: magic numbers
       const arcLength = 15.0 * CesiumMath.toRadians(delta);
       pressTime[key] = releaseTime[key] = new Date();
-      Cartesian2.clone(Cartesian2.ZERO, movement.startPosition);
       movement.endPosition.x = 0.0;
       movement.endPosition.y = arcLength;
       Cartesian2.clone(movement.endPosition, lastMovement.endPosition);
       lastMovement.valid = true;
-      if (debounceZoom) {
-        clearTimeout(debounceZoom);
-      }
-      debounceZoom = setTimeout(function () {
-        update[key] = true;
-      }, 10);
       update[key] = false;
     },
     ScreenSpaceEventType.WHEEL,
