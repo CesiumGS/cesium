@@ -314,7 +314,7 @@ function Primitive(options) {
   this._boundingSphereCV = [];
   this._boundingSphere2D = [];
   this._boundingSphereMorph = [];
-  this._perInstanceAttributeCache = [];
+  this._perInstanceAttributeCache = new Map();
   this._instanceIds = [];
   this._lastPerInstanceAttributeIndex = 0;
 
@@ -2411,6 +2411,11 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
   }
   //>>includeEnd('debug');
 
+  let attributes = this._perInstanceAttributeCache.get(id);
+  if (defined(attributes)) {
+    return attributes;
+  }
+
   let index = -1;
   const lastIndex = this._lastPerInstanceAttributeIndex;
   const ids = this._instanceIds;
@@ -2425,13 +2430,6 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
 
   if (index === -1) {
     return undefined;
-  }
-  
-  this._lastPerInstanceAttributeIndex = index;
-
-  let attributes = this._perInstanceAttributeCache[index];
-  if (defined(attributes)) {
-    return attributes;
   }
 
   const batchTable = this._batchTable;
@@ -2453,7 +2451,8 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
   createPickIdProperty(this, properties, index);
   Object.defineProperties(attributes, properties);
 
-  this._perInstanceAttributeCache[index] = attributes;
+  this._lastPerInstanceAttributeIndex = index;
+  this._perInstanceAttributeCache.set(id, attributes);
   return attributes;
 };
 
