@@ -301,7 +301,7 @@ function ScreenSpaceCameraController(scene) {
   );
 
   // Constants, Make any of these public?
-  this._zoomFactor = 2.0;
+  this._zoomFactor = 5.0;
   this._rotateFactor = undefined;
   this._rotateRateRangeAdjustment = undefined;
   this._maximumRotateRate = 1.77;
@@ -2162,6 +2162,7 @@ function zoom3D(controller, startPosition, movement) {
   if (defined(movement.distance)) {
     movement = movement.distance;
   }
+  const inertiaMovement = movement.inertiaEnabled;
 
   const ellipsoid = controller._ellipsoid;
   const scene = controller._scene;
@@ -2187,7 +2188,7 @@ function zoom3D(controller, startPosition, movement) {
     camera.position,
     zoom3DCartographic
   ).height;
-  if (height < controller._minimumPickingTerrainHeight) {
+  if (height < controller._minimumPickingTerrainHeight && !inertiaMovement) {
     intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
   }
 
