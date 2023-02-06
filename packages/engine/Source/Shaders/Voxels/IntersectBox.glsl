@@ -32,10 +32,9 @@ Box constructVoxelBox(in ivec4 octreeCoords, in vec3 tileUv)
 
 vec3 getBoxNormal(in Box box, in Ray ray, in float entryT)
 {
-    vec3 entryPoint = ray.pos + entryT * ray.dir;
-    vec3 epsilon = vec3(entryT * 0.000001);
-    vec3 lower = step(entryPoint - epsilon, box.p0);
-    vec3 upper = step(box.p1, entryPoint + epsilon);
+    vec3 entryPoint = ray.pos + (entryT - RAY_SHIFT) * ray.dir;
+    vec3 lower = step(entryPoint, box.p0);
+    vec3 upper = step(box.p1, entryPoint);
     return normalize(upper - lower);
 }
 

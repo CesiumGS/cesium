@@ -64,7 +64,7 @@ void main()
         discard;
     }
 
-    float currT = entryExitT.x + 0.0001;
+    float currT = entryExitT.x + RAY_SHIFT;
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
     vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
