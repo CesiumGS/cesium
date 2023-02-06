@@ -43,10 +43,15 @@ struct Intersections {
     #endif
 };
 
-// Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
-#define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)].w
-#define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection((ix), (index) * 2 + 0), getIntersection((ix), (index) * 2 + 1))
+RayShapeIntersection getFirstIntersection(in Intersections ix) 
+{
+    vec3 normal = ix.intersections[0].xyz;
+    float entryT = ix.intersections[0].w;
+    float exitT = ix.intersections[1].w;
+    return RayShapeIntersection(normal, entryT, exitT);
+}
 
+// Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
 #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*bool*/ enter) (ix).intersections[(index)] = vec4(0.0, float(!positive) * 2.0 + float(!enter) + 1.0, 0.0, (t))
 #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec4(0.0, float((index) > 0) * 2.0 + 1.0, 0.0, (entryExit).x); (ix).intersections[(index) * 2 + 1] = vec4(0.0, float((index) > 0) * 2.0 + 2.0, 0.0, (entryExit).y)
 
@@ -80,13 +85,13 @@ void initializeIntersections(inout Intersections ix) {
 #endif
 
 #if (INTERSECTION_COUNT > 1)
-vec2 nextIntersection(inout Intersections ix) {
-    vec2 entryExitT = vec2(NO_HIT);
+RayShapeIntersection nextIntersection(inout Intersections ix) {
+    RayShapeIntersection shapeIntersection = RayShapeIntersection(vec3(0.0), NO_HIT, NO_HIT);
 
     const int passCount = INTERSECTION_COUNT * 2;
 
     if (ix.index == passCount) {
-        return entryExitT;
+        return shapeIntersection;
     }
 
     for (int i = 0; i < passCount; ++i) {
@@ -98,9 +103,9 @@ vec2 nextIntersection(inout Intersections ix) {
 
         ix.index = i + 1;
 
-        vec4 intersect = ix.intersections[i];
-        float t = intersect.w;
-        float intersectionType = length(intersect.xyz) - 1.0;
+        vec4 surfaceIntersection = ix.intersections[i];
+        float t = surfaceIntersection.w;
+        float intersectionType = length(surfaceIntersection.xyz) - 1.0;
         bool currShapeIsPositive = intersectionType < 2.0;
         bool enter = mod(intersectionType, 2.0) == 0.0;
 
@@ -109,14 +114,15 @@ vec2 nextIntersection(inout Intersections ix) {
 
         // entering positive or exiting negative
         if (ix.surroundCount == 1 && ix.surroundIsPositive && enter == currShapeIsPositive) {
-            entryExitT.x = t;
+            shapeIntersection.normal = surfaceIntersection.xyz;
+            shapeIntersection.entryT = t;
         }
 
         // exiting positive or entering negative after being inside positive
         bool exitPositive = !enter && currShapeIsPositive && ix.surroundCount == 0;
         bool enterNegativeFromPositive = enter && !currShapeIsPositive && ix.surroundCount == 2 && ix.surroundIsPositive;
         if (exitPositive || enterNegativeFromPositive) {
-            entryExitT.y = t;
+            shapeIntersection.exitT = t;
 
             // entry and exit have been found, so the loop can stop
             if (exitPositive) {
@@ -127,7 +133,7 @@ vec2 nextIntersection(inout Intersections ix) {
         }
     }
 
-    return entryExitT;
+    return shapeIntersection;
 }
 #endif
 
