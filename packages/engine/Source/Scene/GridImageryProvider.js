@@ -149,6 +149,7 @@ function GridImageryProvider(options) {
   // We only need a single canvas since all tiles will be the same
   this._canvas = this._createGridCanvas();
 
+  this._ready = true;
   this._readyPromise = Promise.resolve(true);
 }
 
@@ -270,7 +271,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * @memberof GridImageryProvider.prototype
    * @type {Boolean}
    * @readonly
-   * @deprected
+   * @deprecated
    */
   ready: {
     get: function () {

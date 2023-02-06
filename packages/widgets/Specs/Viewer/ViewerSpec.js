@@ -12,6 +12,7 @@ import {
   HeadingPitchRange,
   JulianDate,
   Matrix4,
+  Rectangle,
   TimeIntervalCollection,
   WebMercatorProjection,
   ConstantPositionProperty,
@@ -53,9 +54,19 @@ import pollToPromise from "../../../../Specs/pollToPromise.js";
 describe(
   "Widgets/Viewer/Viewer",
   function () {
+    const readyPromise = Promise.resolve(true);
     const testProvider = {
       isReady: function () {
         return false;
+      },
+      _ready: true,
+      ready: true,
+      _readyPromise: readyPromise,
+      readyPromise: readyPromise,
+      tilingScheme: {
+        tileXYToRectangle: function () {
+          return new Rectangle();
+        },
       },
     };
 

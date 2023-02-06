@@ -39,6 +39,7 @@ function TileCoordinatesImageryProvider(options) {
   this._errorEvent = new Event();
   this._tileWidth = defaultValue(options.tileWidth, 256);
   this._tileHeight = defaultValue(options.tileHeight, 256);
+  this._ready = true;
   this._readyPromise = Promise.resolve(true);
 
   /**

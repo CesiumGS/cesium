@@ -38,10 +38,14 @@ const ImageryProviderMapping = {
 
 const ImageryProviderAsyncMapping = {
   ARCGIS_MAPSERVER: ArcGisMapServerImageryProvider.fromUrl,
-  BING: BingMapsImageryProvider.fromUrl,
+  BING: async (url, options) => {
+    const key = options.key;
+    delete options.key;
+    return BingMapsImageryProvider.fromUrl(url, key, options);
+  },
   GOOGLE_EARTH: async (url, options) => {
     const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
-    GoogleEarthEnterpriseMapsProvider.fromMetadata(metadata, options);
+    return GoogleEarthEnterpriseMapsProvider.fromMetadata(metadata, options);
   },
   MAPBOX: (url, options) => {
     return new MapboxImageryProvider({
@@ -49,12 +53,7 @@ const ImageryProviderAsyncMapping = {
       ...options,
     });
   },
-  SINGLE_TILE: (url, options) => {
-    return new SingleTileImageryProvider({
-      url: url,
-      ...options,
-    });
-  },
+  SINGLE_TILE: SingleTileImageryProvider.fromUrl,
   TMS: TileMapServiceImageryProvider.fromUrl,
   URL_TEMPLATE: (url, options) => {
     return new UrlTemplateImageryProvider({
@@ -401,8 +400,7 @@ IonImageryProvider._initialize = function (provider, assetId, options) {
   // already retrieved. This exists mainly to support Bing caching to reduce
   // world imagery sessions, but provides a small boost of performance in general
   // if constantly reloading assets
-  const cacheKey =
-    options.assetId.toString() + options.accessToken + options.server;
+  const cacheKey = assetId.toString() + options.accessToken + options.server;
   let promise = IonImageryProvider._endpointCache[cacheKey];
   if (!defined(promise)) {
     promise = endpointResource.fetchJson();
@@ -449,7 +447,7 @@ IonImageryProvider._initialize = function (provider, assetId, options) {
 
     provider._imageryProvider = imageryProvider;
     // readyPromise is deprecated. This is here for backwards compatibility
-    return imageryProvider._readyPromise.then(function () {
+    return Promise.resolve(imageryProvider._readyPromise).then(function () {
       provider._ready = true;
       return true;
     });

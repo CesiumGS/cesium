@@ -269,8 +269,6 @@ TileMapServiceImageryProvider._metadataSuccess = function (
   let format, bbox, tilesets;
   const tilesetsList = []; //list of TileSets
 
-  // TODO: Check for error? https://github.com/CesiumGS/cesium/issues/6242
-
   // Allowing options properties (already copied to that) to override XML values
 
   // Iterate XML Document nodes for properties
