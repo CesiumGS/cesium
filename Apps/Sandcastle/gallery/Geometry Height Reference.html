@@ -32,14 +32,13 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = async function (Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
           baseLayerPicker: false,
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
         });
 
         // depth test against terrain is required to make the polygons clamp to terrain
@@ -81,6 +80,14 @@
             },
           },
         ]);
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         const longitude = 6.950615989890521;
         const latitude = 45.79546589994886;
@@ -178,11 +185,7 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
-          console.error(error);
-        }
+        window.startup(Cesium);
       }
     </script>
   </body>

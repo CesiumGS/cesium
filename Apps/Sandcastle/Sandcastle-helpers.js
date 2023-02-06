@@ -4,7 +4,7 @@
   window.embedInSandcastleTemplate = function (code, addExtraLine) {
     return (
       `${
-        "window.startup = async function (Cesium) {\n" +
+        "window.startup = function (Cesium) {\n" +
         "    'use strict';\n" +
         "//Sandcastle_Begin\n"
       }${addExtraLine ? "\n" : ""}${code}//Sandcastle_End\n` +
@@ -12,11 +12,7 @@
       `};\n` +
       `if (typeof Cesium !== 'undefined') {\n` +
       `    window.startupCalled = true;\n` +
-      `    try {\n` +
-      `      window.startup(Cesium);\n` +
-      `    } catch (error) {\n` +
-      `      console.error(error);\n` +
-      `    }\n` +
+      `    window.startup(Cesium);\n` +
       `}\n`
     );
   };

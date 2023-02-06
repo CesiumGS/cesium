@@ -32,16 +32,22 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = async function (Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          // High-resolution arctic terrain from the Arctic DEM project (Release 4), tiled and hosted by Cesium ion.
-          // https://www.pgc.umn.edu/data/arcticdem/
-          terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(
-            Cesium.IonResource.fromAssetId(3956)
-          ),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        (async () => {
+          try {
+            // High-resolution arctic terrain from the Arctic DEM project (Release 4), tiled and hosted by Cesium ion.
+            // https://www.pgc.umn.edu/data/arcticdem/
+            viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+              Cesium.IonResource.fromAssetId(3956)
+            );
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         // Add Alaskan locations
         Sandcastle.addDefaultToolbarMenu(
@@ -122,11 +128,7 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
-          console.error(error);
-        }
+        window.startup(Cesium);
       }
     </script>
   </body>

@@ -32,16 +32,22 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = async function (Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          // High resolution terrain of Pennsylvania curated by Pennsylvania Spatial Data Access (PASDA)
-          // http://www.pasda.psu.edu/
-          terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(
-            Cesium.IonResource.fromAssetId(3957)
-          ),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        (async () => {
+          try {
+            // High resolution terrain of Pennsylvania curated by Pennsylvania Spatial Data Access (PASDA)
+            // http://www.pasda.psu.edu/
+            viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+              Cesium.IonResource.fromAssetId(3957)
+            );
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         // Add PA locations
         Sandcastle.addDefaultToolbarMenu(
@@ -139,11 +145,7 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
-          console.error(error);
-        }
+        window.startup(Cesium);
       }
     </script>
   </body>

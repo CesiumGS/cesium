@@ -30,7 +30,7 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      window.startup = async function (Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const czml = [
@@ -7243,26 +7243,24 @@
           },
         ];
 
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
-          baseLayerPicker: false,
-          shouldAnimate: true,
-        });
+        (async () => {
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            terrainProvider: await Cesium.createWorldTerrainAsync(),
+            baseLayerPicker: false,
+            shouldAnimate: true,
+          });
 
-        const dataSource = await viewer.dataSources.add(
-          Cesium.CzmlDataSource.load(czml)
-        );
+          const dataSource = await viewer.dataSources.add(
+            Cesium.CzmlDataSource.load(czml)
+          );
 
-        viewer.trackedEntity = dataSource.entities.getById("path"); //Sandcastle_End
+          viewer.trackedEntity = dataSource.entities.getById("path");
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
-          console.error(error);
-        }
+        window.startup(Cesium);
       }
     </script>
   </body>

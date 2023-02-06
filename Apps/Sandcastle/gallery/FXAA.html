@@ -29,47 +29,45 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = async function (Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
-        });
+        (async () => {
+          const viewer = new Cesium.Viewer("cesiumContainer", {
+            terrainProvider: await Cesium.createWorldTerrainAsync(),
+          });
 
-        viewer.scene.camera.setView({
-          destination: new Cesium.Cartesian3(
-            1331419.302230775,
-            -4656681.5022043325,
-            4136232.6465900405
-          ),
-          orientation: new Cesium.HeadingPitchRoll(
-            6.032455545102689,
-            -0.056832496140112765,
-            6.282360923090216
-          ),
-          endTransform: Cesium.Matrix4.IDENTITY,
-        });
+          viewer.scene.camera.setView({
+            destination: new Cesium.Cartesian3(
+              1331419.302230775,
+              -4656681.5022043325,
+              4136232.6465900405
+            ),
+            orientation: new Cesium.HeadingPitchRoll(
+              6.032455545102689,
+              -0.056832496140112765,
+              6.282360923090216
+            ),
+            endTransform: Cesium.Matrix4.IDENTITY,
+          });
 
-        viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(75343),
-          })
-        );
+          viewer.scene.primitives.add(
+            new Cesium.Cesium3DTileset({
+              url: Cesium.IonResource.fromAssetId(75343),
+            })
+          );
 
-        viewer.scene.postProcessStages.fxaa.enabled = true;
+          viewer.scene.postProcessStages.fxaa.enabled = true;
 
-        Sandcastle.addToggleButton("FXAA", true, function (checked) {
-          viewer.scene.postProcessStages.fxaa.enabled = checked;
-        }); //Sandcastle_End
+          Sandcastle.addToggleButton("FXAA", true, function (checked) {
+            viewer.scene.postProcessStages.fxaa.enabled = checked;
+          });
+        })(); //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
-          console.error(error);
-        }
+        window.startup(Cesium);
       }
     </script>
   </body>

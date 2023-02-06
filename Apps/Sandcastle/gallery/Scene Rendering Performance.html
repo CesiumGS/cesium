@@ -138,7 +138,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = async function (Cesium) {
+      window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create a viewer that won't render a new frame unless
@@ -146,8 +146,15 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           requestRenderMode: true,
           maximumRenderTimeChange: Infinity,
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
         });
+
+        (async () => {
+          try {
+            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+          } catch (error) {
+            console.log(error);
+          }
+        })();
 
         const scene = viewer.scene;
         scene.debugShowFramesPerSecond = true;
@@ -353,11 +360,7 @@
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
-          console.error(error);
-        }
+        window.startup(Cesium);
       }
     </script>
   </body>
