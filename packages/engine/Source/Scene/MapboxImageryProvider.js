@@ -192,6 +192,9 @@ function MapboxImageryProvider(options) {
     maximumLevel: options.maximumLevel,
     rectangle: options.rectangle,
   });
+
+  this._ready = true;
+  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(MapboxImageryProvider.prototype, {

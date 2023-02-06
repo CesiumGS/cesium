@@ -341,6 +341,9 @@ function WebMapServiceImageryProvider(options) {
     ),
     enablePickFeatures: options.enablePickFeatures,
   });
+
+  this._ready = true;
+  this._readyPromise = Promise.resolve(true);
 }
 
 function requestImage(imageryProvider, col, row, level, request, interval) {

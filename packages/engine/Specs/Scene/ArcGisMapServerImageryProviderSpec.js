@@ -1226,11 +1226,13 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   });
 
   describe("pickFeatures", function () {
-    it("works with WebMercator geometry", function () {
-      const provider = new ArcGisMapServerImageryProvider({
-        url: "made/up/map/server",
-        usePreCachedTilesIfAvailable: false,
-      });
+    it("works with WebMercator geometry", async function () {
+      const provider = await ArcGisMapServerImageryProvider.fromUrl(
+        "made/up/map/server",
+        {
+          usePreCachedTilesIfAvailable: false,
+        }
+      );
 
       Resource._Implementations.loadWithXhr = function (
         url,
@@ -1253,25 +1255,20 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         );
       };
 
-      return provider.readyPromise.then(function () {
-        return provider
-          .pickFeatures(0, 0, 0, 0.5, 0.5)
-          .then(function (pickResult) {
-            expect(pickResult.length).toBe(1);
+      const pickResult = await provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+      expect(pickResult.length).toBe(1);
 
-            const firstResult = pickResult[0];
-            expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
-            expect(firstResult.description).toContain("Hummock Grasses");
-            expect(firstResult.position).toEqual(
-              new WebMercatorProjection().unproject(
-                new Cartesian3(1.481682457042425e7, -2710890.117898505)
-              )
-            );
-          });
-      });
+      const firstResult = pickResult[0];
+      expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+      expect(firstResult.description).toContain("Hummock Grasses");
+      expect(firstResult.position).toEqual(
+        new WebMercatorProjection().unproject(
+          new Cartesian3(1.481682457042425e7, -2710890.117898505)
+        )
+      );
     });
 
-    it("works with Geographic geometry", function () {
+    it("works with Geographic geometry", async function () {
       const provider = new ArcGisMapServerImageryProvider({
         url: "made/up/map/server",
         usePreCachedTilesIfAvailable: false,
@@ -1298,54 +1295,50 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         );
       };
 
-      return provider.readyPromise.then(function () {
-        return provider
-          .pickFeatures(0, 0, 0, 0.5, 0.5)
-          .then(function (pickResult) {
-            expect(pickResult.length).toBe(1);
+      const pickResult = await provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+      expect(pickResult.length).toBe(1);
 
-            const firstResult = pickResult[0];
-            expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
-            expect(firstResult.description).toContain("Hummock Grasses");
-            expect(firstResult.position).toEqual(
-              Cartographic.fromDegrees(123.45, -34.2)
-            );
-          });
-      });
+      const firstResult = pickResult[0];
+      expect(firstResult).toBeInstanceOf(ImageryLayerFeatureInfo);
+      expect(firstResult.description).toContain("Hummock Grasses");
+      expect(firstResult.position).toEqual(
+        Cartographic.fromDegrees(123.45, -34.2)
+      );
     });
 
-    it("returns undefined if enablePickFeatures is false", function () {
-      const provider = new ArcGisMapServerImageryProvider({
-        url: "made/up/map/server",
-        usePreCachedTilesIfAvailable: false,
-        enablePickFeatures: false,
-      });
+    it("returns undefined if enablePickFeatures is false", async function () {
+      const provider = await ArcGisMapServerImageryProvider.fromUrl(
+        "made/up/map/server",
+        {
+          usePreCachedTilesIfAvailable: false,
+          enablePickFeatures: false,
+        }
+      );
 
-      return provider.readyPromise.then(function () {
-        expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
-      });
+      expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
     });
 
-    it("returns undefined if enablePickFeatures is dynamically set to false", function () {
-      const provider = new ArcGisMapServerImageryProvider({
-        url: "made/up/map/server",
-        usePreCachedTilesIfAvailable: false,
-        enablePickFeatures: true,
-      });
+    it("returns undefined if enablePickFeatures is dynamically set to false", async function () {
+      const provider = await ArcGisMapServerImageryProvider.fromUrl(
+        "made/up/map/server",
+        {
+          usePreCachedTilesIfAvailable: false,
+          enablePickFeatures: true,
+        }
+      );
 
       provider.enablePickFeatures = false;
-
-      return provider.readyPromise.then(function () {
-        expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
-      });
+      expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
     });
 
-    it("does not return undefined if enablePickFeatures is dynamically set to true", function () {
-      const provider = new ArcGisMapServerImageryProvider({
-        url: "made/up/map/server",
-        usePreCachedTilesIfAvailable: false,
-        enablePickFeatures: false,
-      });
+    it("does not return undefined if enablePickFeatures is dynamically set to true", async function () {
+      const provider = await ArcGisMapServerImageryProvider.fromUrl(
+        "made/up/map/server",
+        {
+          usePreCachedTilesIfAvailable: false,
+          enablePickFeatures: false,
+        }
+      );
 
       provider.enablePickFeatures = true;
 
@@ -1370,22 +1363,11 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         );
       };
 
-      return provider.readyPromise
-        .then(function () {
-          return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-        })
-        .then(function (value) {
-          expect(value).toBeDefined();
-        });
+      const value = await provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+      expect(value).toBeDefined();
     });
 
-    it("picks from individual layers", function () {
-      const provider = new ArcGisMapServerImageryProvider({
-        url: "made/up/map/server",
-        usePreCachedTilesIfAvailable: false,
-        layers: "someLayer,anotherLayerYay",
-      });
-
+    it("picks from individual layers", async function () {
       Resource._Implementations.loadWithXhr = function (
         url,
         responseType,
@@ -1410,13 +1392,16 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         );
       };
 
-      return provider.readyPromise
-        .then(function () {
-          return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
-        })
-        .then(function (pickResult) {
-          expect(pickResult.length).toBe(1);
-        });
+      const provider = await ArcGisMapServerImageryProvider.fromUrl(
+        "made/up/map/server",
+        {
+          usePreCachedTilesIfAvailable: false,
+          layers: "someLayer,anotherLayerYay",
+        }
+      );
+
+      const pickResult = await provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+      expect(pickResult.length).toBe(1);
     });
   });
 });

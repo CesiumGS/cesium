@@ -1495,33 +1495,26 @@ describe(
       scene.destroyForSpecs();
     });
 
-    it("Sets terrainProvider", function () {
+    it("Sets terrainProvider", async function () {
       returnQuantizedMeshTileJson();
 
       const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      scene.terrainProvider = new CesiumTerrainProvider({
-        url: "//terrain/tiles",
-      });
+      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "//terrain/tiles"
+      );
 
-      return scene.terrainProvider.readyPromise
-        .then(() => {
-          expect(scene.terrainProvider).toBe(globe.terrainProvider);
-          scene.globe = undefined;
-          const newProvider = new CesiumTerrainProvider({
-            url: "//newTerrain/tiles",
-          });
-          return newProvider.readyPromise.then(() => {
-            expect(function () {
-              scene.terrainProvider = newProvider;
-            }).not.toThrow();
-          });
-        })
-        .finally(() => {
-          scene.destroyForSpecs();
-          Resource._Implementations.loadWithXhr =
-            Resource._DefaultImplementations.loadWithXhr;
-        });
+      expect(scene.terrainProvider).toBe(globe.terrainProvider);
+      scene.globe = undefined;
+      const newProvider = await CesiumTerrainProvider.fromUrl(
+        "//newTerrain/tiles"
+      );
+      expect(function () {
+        scene.terrainProvider = newProvider;
+      }).not.toThrow();
+      scene.destroyForSpecs();
+      Resource._Implementations.loadWithXhr =
+        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("Gets terrainProviderChanged", function () {
