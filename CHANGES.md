@@ -18,19 +18,21 @@
 - `ImageryProvider.ready` and `ImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `ArcGisMapServerImageryProvider` constructor parameter `url`,`ArcGisMapServerImageryProvider.ready`, and `ArcGisMapServerImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ArcGisMapServerImageryProvider.fromUrl` instead.
 - `BingMapsImageryProvider` constructor parameter `url`,`BingMapsImageryProvider.ready`, and `BingMapsImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `BingMapsImageryProvider.fromUrl` instead.
-- `GridImageryProvider.ready` and `GridImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `GoogleEarthEnterpriseImageryProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseImageryProvider.ready`, and `GoogleEarthEnterpriseImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseImageryProvider.fromMetadata` instead.
+- `GridImageryProvider.ready` and `GridImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `IonImageryProvider` constructor parameter `assetId`,`BIonImageryProvider.ready`, and `IonImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `IonImageryProvider.fromAssetId` instead.
 - `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `MapboxStyleImageryProvider.ready` and `MapboxStyleImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `OpenStreetMapImageryProvider.ready` and `OpenStreetMapImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `SingleTileImageryProvider` constructor parameter `options.url`, `SingleTileImageryProvider.ready`, and `SingleTileImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `SingleTileImageryProvider.fromUrl` instead.
 - `TileCoordinatesImageryProvider.ready` and `TileCoordinatesImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `TileMapServiceImageryProvider` constructor, `TileMapServiceImageryProvider.ready`, and `TileMapServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `TileMapServiceImageryProvider.fromUrl` instead.
+- `TileMapServiceImageryProvider` constructor parameter `options.url`, `TileMapServiceImageryProvider.ready`, and `TileMapServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `TileMapServiceImageryProvider.fromUrl` instead.
 - `UrlTemplateImageryProvider.reinitialize`, `UrlTemplateImageryProvider.ready`, and `UrlTemplateImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `WebMapServiceImageryProvider.ready`, and `WebMapServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `WebMapTileServiceImageryProvider.ready`, and `WebMapTileServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `TerrainProvider.ready` and `TerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
+- `ImageryLayer.getViewableRectangle` was deprecated in Cesium 1.102. It will be removed in 1.104. Use `ImageryLayer.getImageryRectangle` instead.
+- `createWorldImagery` was deprecated in Cesium 1.102. It will be removed in 1.104. Use `createWorldImageryAsync` instead.
 - `ArcGISTiledElevationTerrainProvider` constructor parameter `options.url`, `ArcGISTiledElevationTerrainProvider.ready`, and `ArcGISTiledElevationTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ArcGISTiledElevationTerrainProvider.fromUrl` instead.
 - `CesiumTerrainProvider` constructor parameter `options.url`, `CesiumTerrainProvider.ready`, and `CesiumTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `CesiumTerrainProvider.fromUrl` instead.
 - `CustomHeightmapTerrainProvider.ready`, and `CustomHeightmapTerrainProvider.readyPromise` were deprecated in Cesium 1.102.

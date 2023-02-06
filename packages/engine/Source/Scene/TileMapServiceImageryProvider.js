@@ -3,6 +3,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -64,7 +65,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *
  * @example
  * const tms = await Cesium.TileMapServiceImageryProvider.fromUrl(
- *    '../images/cesium_maptiler/Cesium_Logo_Color', {
+ *    "../images/cesium_maptiler/Cesium_Logo_Color", {
  *      fileExtension: 'png',
  *      maximumLevel: 4,
  *      rectangle: new Cesium.Rectangle(
@@ -78,6 +79,11 @@ function TileMapServiceImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   if (defined(options.url)) {
+    deprecationWarning(
+      "TileMapServiceImageryProvider options.url",
+      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use TileMapServiceImageryProvider.fromUrl instead."
+    );
+
     this._metadataError = undefined;
     this._ready = false;
 

@@ -62,6 +62,207 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 
 /**
+ * Used to track creation details while fetching initial metadata
+ *
+ * @constructor
+ * @private
+ *
+ * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options An object describing initialization options
+ */
+function ImageryProviderBuilder(options) {
+  this.useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+
+  const ellipsoid = options.ellipsoid;
+  this.tilingScheme = defaultValue(
+    options.tilingScheme,
+    new GeographicTilingScheme({ ellipsoid: ellipsoid })
+  );
+  this.rectangle = defaultValue(options.rectangle, this.tilingScheme.rectangle);
+  this.ellipsoid = ellipsoid;
+
+  let credit = options.credit;
+  if (typeof credit === "string") {
+    credit = new Credit(credit);
+  }
+  this.credit = credit;
+  this.tileDiscardPolicy = options.tileDiscardPolicy;
+
+  this.tileWidth = defaultValue(options.tileWidth, 256);
+  this.tileHeight = defaultValue(options.tileHeight, 256);
+  this.maximumLevel = options.maximumLevel;
+}
+
+/**
+ * Complete ArcGisMapServerImageryProvider creation based on builder values.
+ *
+ * @private
+ *
+ * @param {ArcGisMapServerImageryProvider} provider
+ */
+ImageryProviderBuilder.prototype.build = function (provider) {
+  provider._useTiles = this.useTiles;
+  provider._tilingScheme = this.tilingScheme;
+  provider._rectangle = this.rectangle;
+  provider._credit = this.credit;
+  provider._tileDiscardPolicy = this.tileDiscardPolicy;
+  provider._tileWidth = this.tileWidth;
+  provider._tileHeight = this.tileHeight;
+  provider._maximumLevel = this.maximumLevel;
+
+  // Install the default tile discard policy if none has been supplied.
+  if (this.useTiles && !defined(this.tileDiscardPolicy)) {
+    provider._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
+      missingImageUrl: buildImageResource(provider, 0, 0, this.maximumLevel)
+        .url,
+      pixelsToCheck: [
+        new Cartesian2(0, 0),
+        new Cartesian2(200, 20),
+        new Cartesian2(20, 200),
+        new Cartesian2(80, 110),
+        new Cartesian2(160, 130),
+      ],
+      disableCheckIfAllPixelsAreTransparent: true,
+    });
+  }
+
+  provider._ready = true;
+};
+
+function metadataSuccess(data, imageryProviderBuilder) {
+  const tileInfo = data.tileInfo;
+  if (!defined(tileInfo)) {
+    imageryProviderBuilder.useTiles = false;
+  } else {
+    imageryProviderBuilder.tileWidth = tileInfo.rows;
+    imageryProviderBuilder.tileHeight = tileInfo.cols;
+
+    if (
+      tileInfo.spatialReference.wkid === 102100 ||
+      tileInfo.spatialReference.wkid === 102113
+    ) {
+      imageryProviderBuilder.tilingScheme = new WebMercatorTilingScheme({
+        ellipsoid: imageryProviderBuilder.ellipsoid,
+      });
+    } else if (data.tileInfo.spatialReference.wkid === 4326) {
+      imageryProviderBuilder.tilingScheme = new GeographicTilingScheme({
+        ellipsoid: imageryProviderBuilder.ellipsoid,
+      });
+    } else {
+      const message = `Tile spatial reference WKID ${data.tileInfo.spatialReference.wkid} is not supported.`;
+      throw new RuntimeError(message);
+    }
+    imageryProviderBuilder.maximumLevel = data.tileInfo.lods.length - 1;
+
+    if (defined(data.fullExtent)) {
+      if (
+        defined(data.fullExtent.spatialReference) &&
+        defined(data.fullExtent.spatialReference.wkid)
+      ) {
+        if (
+          data.fullExtent.spatialReference.wkid === 102100 ||
+          data.fullExtent.spatialReference.wkid === 102113
+        ) {
+          const projection = new WebMercatorProjection();
+          const extent = data.fullExtent;
+          const sw = projection.unproject(
+            new Cartesian3(
+              Math.max(
+                extent.xmin,
+                -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
+                  Math.PI
+              ),
+              Math.max(
+                extent.ymin,
+                -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
+                  Math.PI
+              ),
+              0.0
+            )
+          );
+          const ne = projection.unproject(
+            new Cartesian3(
+              Math.min(
+                extent.xmax,
+                imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
+                  Math.PI
+              ),
+              Math.min(
+                extent.ymax,
+                imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
+                  Math.PI
+              ),
+              0.0
+            )
+          );
+          imageryProviderBuilder.rectangle = new Rectangle(
+            sw.longitude,
+            sw.latitude,
+            ne.longitude,
+            ne.latitude
+          );
+        } else if (data.fullExtent.spatialReference.wkid === 4326) {
+          imageryProviderBuilder.rectangle = Rectangle.fromDegrees(
+            data.fullExtent.xmin,
+            data.fullExtent.ymin,
+            data.fullExtent.xmax,
+            data.fullExtent.ymax
+          );
+        } else {
+          const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
+          throw new RuntimeError(extentMessage);
+        }
+      }
+    } else {
+      imageryProviderBuilder.rectangle =
+        imageryProviderBuilder.tilingScheme.rectangle;
+    }
+
+    imageryProviderBuilder.useTiles = true;
+  }
+
+  if (defined(data.copyrightText) && data.copyrightText.length > 0) {
+    imageryProviderBuilder.credit = new Credit(data.copyrightText);
+  }
+}
+
+function metadataFailure(resource, error, provider) {
+  let message = `An error occurred while accessing ${resource.url}`;
+  if (defined(error) && defined(error.message)) {
+    message += `: ${error.message}`;
+  }
+
+  // When readyPromise is deprecated, TileProviderError.reportError,
+  // and related parameters can be removed
+  TileProviderError.reportError(
+    undefined,
+    provider,
+    defined(provider) ? provider._errorEvent : undefined,
+    message,
+    undefined,
+    undefined,
+    undefined,
+    error
+  );
+
+  throw new RuntimeError(message);
+}
+
+async function requestMetadata(resource, imageryProviderBuilder, provider) {
+  const jsonResource = resource.getDerivedResource({
+    queryParameters: {
+      f: "json",
+    },
+  });
+
+  try {
+    const data = await jsonResource.fetchJsonp();
+    metadataSuccess(data, imageryProviderBuilder);
+  } catch (error) {
+    metadataFailure(resource, error, provider);
+  }
+}
+
+/**
  * <div class="notice">
  * To construct a ArcGisMapServerImageryProvider call {@link ArcGisMapServerImageryProvider.fromUrl}. Do not call the constructor directly.
  * </div>
@@ -522,207 +723,6 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
 });
 
 /**
- * Used to track creation details while fetching initial metadata
- *
- * @constructor
- * @private
- *
- * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options An object describing initialization options
- */
-function ImageryProviderBuilder(options) {
-  this.useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
-
-  const ellipsoid = options.ellipsoid;
-  this.tilingScheme = defaultValue(
-    options.tilingScheme,
-    new GeographicTilingScheme({ ellipsoid: ellipsoid })
-  );
-  this.rectangle = defaultValue(options.rectangle, this.tilingScheme.rectangle);
-  this.ellipsoid = ellipsoid;
-
-  let credit = options.credit;
-  if (typeof credit === "string") {
-    credit = new Credit(credit);
-  }
-  this.credit = credit;
-  this.tileDiscardPolicy = options.tileDiscardPolicy;
-
-  this.tileWidth = defaultValue(options.tileWidth, 256);
-  this.tileHeight = defaultValue(options.tileHeight, 256);
-  this.maximumLevel = options.maximumLevel;
-}
-
-/**
- * Complete ArcGisMapServerImageryProvider creation based on builder values.
- *
- * @private
- *
- * @param {ArcGisMapServerImageryProvider} provider
- */
-ImageryProviderBuilder.prototype.build = function (provider) {
-  provider._useTiles = this.useTiles;
-  provider._tilingScheme = this.tilingScheme;
-  provider._rectangle = this.rectangle;
-  provider._credit = this.credit;
-  provider._tileDiscardPolicy = this.tileDiscardPolicy;
-  provider._tileWidth = this.tileWidth;
-  provider._tileHeight = this.tileHeight;
-  provider._maximumLevel = this.maximumLevel;
-
-  // Install the default tile discard policy if none has been supplied.
-  if (this.useTiles && !defined(this.tileDiscardPolicy)) {
-    provider._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-      missingImageUrl: buildImageResource(provider, 0, 0, this.maximumLevel)
-        .url,
-      pixelsToCheck: [
-        new Cartesian2(0, 0),
-        new Cartesian2(200, 20),
-        new Cartesian2(20, 200),
-        new Cartesian2(80, 110),
-        new Cartesian2(160, 130),
-      ],
-      disableCheckIfAllPixelsAreTransparent: true,
-    });
-  }
-
-  provider._ready = true;
-};
-
-function metadataSuccess(data, imageryProviderBuilder) {
-  const tileInfo = data.tileInfo;
-  if (!defined(tileInfo)) {
-    imageryProviderBuilder.useTiles = false;
-  } else {
-    imageryProviderBuilder.tileWidth = tileInfo.rows;
-    imageryProviderBuilder.tileHeight = tileInfo.cols;
-
-    if (
-      tileInfo.spatialReference.wkid === 102100 ||
-      tileInfo.spatialReference.wkid === 102113
-    ) {
-      imageryProviderBuilder.tilingScheme = new WebMercatorTilingScheme({
-        ellipsoid: imageryProviderBuilder.ellipsoid,
-      });
-    } else if (data.tileInfo.spatialReference.wkid === 4326) {
-      imageryProviderBuilder.tilingScheme = new GeographicTilingScheme({
-        ellipsoid: imageryProviderBuilder.ellipsoid,
-      });
-    } else {
-      const message = `Tile spatial reference WKID ${data.tileInfo.spatialReference.wkid} is not supported.`;
-      throw new RuntimeError(message);
-    }
-    imageryProviderBuilder.maximumLevel = data.tileInfo.lods.length - 1;
-
-    if (defined(data.fullExtent)) {
-      if (
-        defined(data.fullExtent.spatialReference) &&
-        defined(data.fullExtent.spatialReference.wkid)
-      ) {
-        if (
-          data.fullExtent.spatialReference.wkid === 102100 ||
-          data.fullExtent.spatialReference.wkid === 102113
-        ) {
-          const projection = new WebMercatorProjection();
-          const extent = data.fullExtent;
-          const sw = projection.unproject(
-            new Cartesian3(
-              Math.max(
-                extent.xmin,
-                -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
-              ),
-              Math.max(
-                extent.ymin,
-                -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
-              ),
-              0.0
-            )
-          );
-          const ne = projection.unproject(
-            new Cartesian3(
-              Math.min(
-                extent.xmax,
-                imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
-              ),
-              Math.min(
-                extent.ymax,
-                imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
-                  Math.PI
-              ),
-              0.0
-            )
-          );
-          imageryProviderBuilder.rectangle = new Rectangle(
-            sw.longitude,
-            sw.latitude,
-            ne.longitude,
-            ne.latitude
-          );
-        } else if (data.fullExtent.spatialReference.wkid === 4326) {
-          imageryProviderBuilder.rectangle = Rectangle.fromDegrees(
-            data.fullExtent.xmin,
-            data.fullExtent.ymin,
-            data.fullExtent.xmax,
-            data.fullExtent.ymax
-          );
-        } else {
-          const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
-          throw new RuntimeError(extentMessage);
-        }
-      }
-    } else {
-      imageryProviderBuilder.rectangle =
-        imageryProviderBuilder.tilingScheme.rectangle;
-    }
-
-    imageryProviderBuilder.useTiles = true;
-  }
-
-  if (defined(data.copyrightText) && data.copyrightText.length > 0) {
-    imageryProviderBuilder.credit = new Credit(data.copyrightText);
-  }
-}
-
-function metadataFailure(resource, error, provider) {
-  let message = `An error occurred while accessing ${resource.url}`;
-  if (defined(error) && defined(error.message)) {
-    message += `: ${error.message}`;
-  }
-
-  // When readyPromise is deprecated, TileProviderError.reportError,
-  // and related parameters can be removed
-  TileProviderError.reportError(
-    undefined,
-    provider,
-    defined(provider) ? provider._errorEvent : undefined,
-    message,
-    undefined,
-    undefined,
-    undefined,
-    error
-  );
-
-  throw new RuntimeError(message);
-}
-
-async function requestMetadata(resource, imageryProviderBuilder, provider) {
-  const jsonResource = resource.getDerivedResource({
-    queryParameters: {
-      f: "json",
-    },
-  });
-
-  try {
-    const data = await jsonResource.fetchJsonp();
-    metadataSuccess(data, imageryProviderBuilder);
-  } catch (error) {
-    metadataFailure(resource, error, provider);
-  }
-}
-
-/**
  * Creates an {@link ImageryProvider} which provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
  *
@@ -763,6 +763,7 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
   }
 
   imageryProviderBuilder.build(provider);
+  provider._readyPromise = Promise.resolve(true);
   return provider;
 };
 

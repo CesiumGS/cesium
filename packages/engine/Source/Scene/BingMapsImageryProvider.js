@@ -37,6 +37,136 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 
 /**
+ * Used to track creation details while fetching initial metadata
+ *
+ * @constructor
+ * @private
+ *
+ * @param {BingMapsImageryProvider.ConstructorOptions} options An object describing initialization options
+ */
+function ImageryProviderBuilder(options) {
+  this.tileWidth = undefined;
+  this.tileHeight = undefined;
+  this.maximumLevel = undefined;
+  this.imageUrlSubdomains = undefined;
+  this.imageUrlTemplate = undefined;
+
+  this.attributionList = undefined;
+}
+
+/**
+ * Complete BingMapsImageryProvider creation based on builder values.
+ *
+ * @private
+ *
+ * @param {BingMapsImageryProvider} provider
+ */
+ImageryProviderBuilder.prototype.build = function (provider) {
+  provider._tileWidth = this.tileWidth;
+  provider._tileHeight = this.tileHeight;
+  provider._maximumLevel = this.maximumLevel;
+  provider._imageUrlSubdomains = this.imageUrlSubdomains;
+  provider._imageUrlTemplate = this.imageUrlTemplate;
+
+  let attributionList = (provider._attributionList = this.attributionList);
+  if (!attributionList) {
+    attributionList = [];
+  }
+  provider._attributionList = attributionList;
+
+  for (
+    let attributionIndex = 0, attributionLength = attributionList.length;
+    attributionIndex < attributionLength;
+    ++attributionIndex
+  ) {
+    const attribution = attributionList[attributionIndex];
+
+    if (attribution.credit instanceof Credit) {
+      // If attribution.credit has already been created
+      // then we are using a cached value, which means
+      // none of the remaining processing needs to be done.
+      break;
+    }
+
+    attribution.credit = new Credit(attribution.attribution);
+    const coverageAreas = attribution.coverageAreas;
+
+    for (
+      let areaIndex = 0, areaLength = attribution.coverageAreas.length;
+      areaIndex < areaLength;
+      ++areaIndex
+    ) {
+      const area = coverageAreas[areaIndex];
+      const bbox = area.bbox;
+      area.bbox = new Rectangle(
+        CesiumMath.toRadians(bbox[1]),
+        CesiumMath.toRadians(bbox[0]),
+        CesiumMath.toRadians(bbox[3]),
+        CesiumMath.toRadians(bbox[2])
+      );
+    }
+  }
+
+  provider._ready = true;
+};
+
+function metadataSuccess(data, imageryProviderBuilder) {
+  if (data.resourceSets.length !== 1) {
+    throw new RuntimeError(
+      "metadata does not specify one resource in resourceSets"
+    );
+  }
+
+  const resource = data.resourceSets[0].resources[0];
+  imageryProviderBuilder.tileWidth = resource.imageWidth;
+  imageryProviderBuilder.tileHeight = resource.imageHeight;
+  imageryProviderBuilder.maximumLevel = resource.zoomMax - 1;
+  imageryProviderBuilder.imageUrlSubdomains = resource.imageUrlSubdomains;
+  imageryProviderBuilder.imageUrlTemplate = resource.imageUrl;
+  imageryProviderBuilder.attributionList = resource.imageryProviders;
+}
+
+function metadataFailure(metadataResource, error, provider) {
+  let message = `An error occurred while accessing ${metadataResource.url}`;
+  if (defined(error) && defined(error.message)) {
+    message += `: ${error.message}`;
+  }
+
+  TileProviderError.reportError(
+    undefined,
+    provider,
+    defined(provider) ? provider._errorEvent : undefined,
+    message,
+    undefined,
+    undefined,
+    undefined,
+    error
+  );
+
+  throw new RuntimeError(message);
+}
+
+async function requestMetadata(
+  metadataResource,
+  imageryProviderBuilder,
+  provider
+) {
+  const cacheKey = metadataResource.url;
+  let promise = BingMapsImageryProvider._metadataCache[cacheKey];
+  if (!defined(promise)) {
+    promise = metadataResource.fetchJsonp("jsonp");
+    BingMapsImageryProvider._metadataCache[cacheKey] = promise;
+  }
+
+  try {
+    const data = await promise;
+    return metadataSuccess(data, imageryProviderBuilder);
+  } catch (e) {
+    metadataFailure(metadataResource, e, provider);
+  }
+}
+
+/**
  * <div class="notice">
  * To construct a BingMapsImageryProvider, call {@link BingMapsImageryProvider.fromUrl}. Do not call the constructor directly.
  * </div>
@@ -182,6 +312,7 @@ function BingMapsImageryProvider(options) {
   this._maximumLevel = undefined;
   this._imageUrlTemplate = undefined;
   this._imageUrlSubdomains = undefined;
+  this._attributionList = undefined;
 
   this._errorEvent = new Event();
 
@@ -234,8 +365,6 @@ function BingMapsImageryProvider(options) {
       imageryProviderBuilder.build(this);
       return true;
     });
-  } else {
-    this._readyPromise = Promise.resolve(true);
   }
 }
 
@@ -467,136 +596,6 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
 });
 
 /**
- * Used to track creation details while fetching initial metadata
- *
- * @constructor
- * @private
- *
- * @param {BingMapsImageryProvider.ConstructorOptions} options An object describing initialization options
- */
-function ImageryProviderBuilder(options) {
-  this.tileWidth = undefined;
-  this.tileHeight = undefined;
-  this.maximumLevel = undefined;
-  this.imageUrlSubdomains = undefined;
-  this.imageUrlTemplate = undefined;
-
-  this.attributionList = undefined;
-}
-
-/**
- * Complete BingMapsImageryProvider creation based on builder values.
- *
- * @private
- *
- * @param {BingMapsImageryProvider} provider
- */
-ImageryProviderBuilder.prototype.build = function (provider) {
-  provider._tileWidth = this.tileWidth;
-  provider._tileHeight = this.tileHeight;
-  provider._maximumLevel = this.maximumLevel;
-  provider._imageUrlSubdomains = this.imageUrlSubdomains;
-  provider._imageUrlTemplate = this.imageUrlTemplate;
-
-  let attributionList = (provider._attributionList = this.attributionList);
-  if (!attributionList) {
-    attributionList = [];
-  }
-  provider._attributionList = attributionList;
-
-  for (
-    let attributionIndex = 0, attributionLength = attributionList.length;
-    attributionIndex < attributionLength;
-    ++attributionIndex
-  ) {
-    const attribution = attributionList[attributionIndex];
-
-    if (attribution.credit instanceof Credit) {
-      // If attribution.credit has already been created
-      // then we are using a cached value, which means
-      // none of the remaining processing needs to be done.
-      break;
-    }
-
-    attribution.credit = new Credit(attribution.attribution);
-    const coverageAreas = attribution.coverageAreas;
-
-    for (
-      let areaIndex = 0, areaLength = attribution.coverageAreas.length;
-      areaIndex < areaLength;
-      ++areaIndex
-    ) {
-      const area = coverageAreas[areaIndex];
-      const bbox = area.bbox;
-      area.bbox = new Rectangle(
-        CesiumMath.toRadians(bbox[1]),
-        CesiumMath.toRadians(bbox[0]),
-        CesiumMath.toRadians(bbox[3]),
-        CesiumMath.toRadians(bbox[2])
-      );
-    }
-  }
-
-  provider._ready = true;
-};
-
-function metadataSuccess(data, imageryProviderBuilder) {
-  if (data.resourceSets.length !== 1) {
-    throw new RuntimeError(
-      "metadata does not specify one resource in resourceSets"
-    );
-  }
-
-  const resource = data.resourceSets[0].resources[0];
-  imageryProviderBuilder.tileWidth = resource.imageWidth;
-  imageryProviderBuilder.tileHeight = resource.imageHeight;
-  imageryProviderBuilder.maximumLevel = resource.zoomMax - 1;
-  imageryProviderBuilder.imageUrlSubdomains = resource.imageUrlSubdomains;
-  imageryProviderBuilder.imageUrlTemplate = resource.imageUrl;
-  imageryProviderBuilder.attributionList = resource.imageryProviders;
-}
-
-function metadataFailure(metadataResource, error, provider) {
-  let message = `An error occurred while accessing ${metadataResource.url}`;
-  if (defined(error) && defined(error.message)) {
-    message += `: ${error.message}`;
-  }
-
-  TileProviderError.reportError(
-    undefined,
-    provider,
-    defined(provider) ? provider._errorEvent : undefined,
-    message,
-    undefined,
-    undefined,
-    undefined,
-    error
-  );
-
-  throw new RuntimeError(message);
-}
-
-async function requestMetadata(
-  metadataResource,
-  imageryProviderBuilder,
-  provider
-) {
-  const cacheKey = metadataResource.url;
-  let promise = BingMapsImageryProvider._metadataCache[cacheKey];
-  if (!defined(promise)) {
-    promise = metadataResource.fetchJsonp("jsonp");
-    BingMapsImageryProvider._metadataCache[cacheKey] = promise;
-  }
-
-  try {
-    const data = await promise;
-    return metadataSuccess(data, imageryProviderBuilder);
-  } catch (e) {
-    metadataFailure(metadataResource, e, provider);
-  }
-}
-
-/**
  * Creates an {@link ImageryProvider} which provides tiled imagery using the Bing Maps Imagery REST API.
  *
  * @param {Resource|String} url The url of the Bing Maps server hosting the imagery.
@@ -657,6 +656,7 @@ BingMapsImageryProvider.fromUrl = async function (url, key, options) {
   const imageryProviderBuilder = new ImageryProviderBuilder(options);
   await requestMetadata(metadataResource, imageryProviderBuilder);
   imageryProviderBuilder.build(provider);
+  provider._readyPromise = Promise.resolve(true);
   return provider;
 };
 

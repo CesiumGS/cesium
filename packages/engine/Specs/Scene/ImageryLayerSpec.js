@@ -568,6 +568,25 @@ describe(
       });
     });
 
+    it("getImageryRectangle works", async function () {
+      const providerRectangle = Rectangle.fromDegrees(8.2, 61.09, 8.5, 61.7);
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Green4x4.png",
+        {
+          rectangle: providerRectangle,
+        }
+      );
+
+      const layerRectangle = Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7);
+      const layer = new ImageryLayer(provider, {
+        rectangle: layerRectangle,
+      });
+
+      expect(layer.getImageryRectangle()).toEqual(
+        Rectangle.intersection(providerRectangle, layerRectangle)
+      );
+    });
+
     describe("createTileImagerySkeletons", function () {
       it("handles a base layer that does not cover the entire globe", function () {
         const provider = new TileMapServiceImageryProvider({

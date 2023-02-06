@@ -3,6 +3,7 @@ import Cartesian4 from "../Core/Cartesian4.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -497,10 +498,35 @@ const terrainRectangleScratch = new Rectangle();
  * });
  */
 ImageryLayer.prototype.getViewableRectangle = async function () {
+  deprecationWarning(
+    "ImageryLayer.getViewableRectangle",
+    "ImageryLayer.getViewableRectangle was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.getImageryRectangle instead."
+  );
+
   const imageryProvider = this._imageryProvider;
   const rectangle = this._rectangle;
   // readyPromise has been deprecated. This is here for backward compatibility and can be removed with readyPromise.
   await imageryProvider._readyPromise;
+  return Rectangle.intersection(imageryProvider.rectangle, rectangle);
+};
+
+/**
+ * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
+ * producing the overall bounds of imagery that can be produced by this layer.
+ *
+ * @returns {Rectangle} A promise to a rectangle which defines the overall bounds of imagery that can be produced by this layer.
+ *
+ * @example
+ * // Zoom to an imagery layer.
+ * const imageryRectangle = imageryLayer.getImageryRectangle();
+ * scene.camera.flyTo({
+ *     destination: rectangle
+ * });
+ *
+ */
+ImageryLayer.prototype.getImageryRectangle = function () {
+  const imageryProvider = this._imageryProvider;
+  const rectangle = this._rectangle;
   return Rectangle.intersection(imageryProvider.rectangle, rectangle);
 };
 
