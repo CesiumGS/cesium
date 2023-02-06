@@ -55,17 +55,19 @@ RayShapeIntersection intersectBox(in Ray ray, in Box box)
     float entryT = max(max(entries.x, entries.y), entries.z);
     float exitT = min(min(exits.x, exits.y), exits.z);
 
-    vec3 normal = getBoxNormal(box, ray, entryT);
-    
+    vec3 entryNormal = getBoxNormal(box, ray, entryT);
+    vec3 exitNormal = getBoxNormal(box, ray, exitT);
+
     if (entryT > exitT) {
-        return RayShapeIntersection(normal, NO_HIT, NO_HIT);
+        entryT = NO_HIT;
+        exitT = NO_HIT;
     }
 
-    return RayShapeIntersection(normal, entryT, exitT);
+    return RayShapeIntersection(vec4(entryNormal, entryT), vec4(exitNormal, exitT));
 }
 
 void intersectShape(in Ray ray, inout Intersections ix)
 {
     RayShapeIntersection intersection = intersectBox(ray, Box(u_renderMinBounds, u_renderMaxBounds));
-    setIntersectionPair(ix, BOX_INTERSECTION_INDEX, vec2(intersection.entryT, intersection.exitT));
+    setIntersectionPair(ix, BOX_INTERSECTION_INDEX, vec2(intersection.entry.w, intersection.exit.w));
 }

@@ -15,9 +15,8 @@ struct Ray {
 };
 
 struct RayShapeIntersection {
-    vec3 normal;
-    float entryT;
-    float exitT;
+    vec4 entry;
+    vec4 exit;
 };
 
 struct Intersections {
@@ -45,10 +44,7 @@ struct Intersections {
 
 RayShapeIntersection getFirstIntersection(in Intersections ix) 
 {
-    vec3 normal = ix.intersections[0].xyz;
-    float entryT = ix.intersections[0].w;
-    float exitT = ix.intersections[1].w;
-    return RayShapeIntersection(normal, entryT, exitT);
+    return RayShapeIntersection(ix.intersections[0], ix.intersections[1]);
 }
 
 // Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
@@ -86,7 +82,8 @@ void initializeIntersections(inout Intersections ix) {
 
 #if (INTERSECTION_COUNT > 1)
 RayShapeIntersection nextIntersection(inout Intersections ix) {
-    RayShapeIntersection shapeIntersection = RayShapeIntersection(vec3(0.0), NO_HIT, NO_HIT);
+    vec4 surfaceIntersection = vec4(0.0, 0.0, 0.0, NO_HIT);
+    RayShapeIntersection shapeIntersection = RayShapeIntersection(surfaceIntersection, surfaceIntersection);
 
     const int passCount = INTERSECTION_COUNT * 2;
 
@@ -103,7 +100,7 @@ RayShapeIntersection nextIntersection(inout Intersections ix) {
 
         ix.index = i + 1;
 
-        vec4 surfaceIntersection = ix.intersections[i];
+        surfaceIntersection = ix.intersections[i];
         float t = surfaceIntersection.w;
         float intersectionType = length(surfaceIntersection.xyz) - 1.0;
         bool currShapeIsPositive = intersectionType < 2.0;
@@ -114,15 +111,14 @@ RayShapeIntersection nextIntersection(inout Intersections ix) {
 
         // entering positive or exiting negative
         if (ix.surroundCount == 1 && ix.surroundIsPositive && enter == currShapeIsPositive) {
-            shapeIntersection.normal = surfaceIntersection.xyz;
-            shapeIntersection.entryT = t;
+            shapeIntersection.entry = surfaceIntersection;
         }
 
         // exiting positive or entering negative after being inside positive
         bool exitPositive = !enter && currShapeIsPositive && ix.surroundCount == 0;
         bool enterNegativeFromPositive = enter && !currShapeIsPositive && ix.surroundCount == 2 && ix.surroundIsPositive;
         if (exitPositive || enterNegativeFromPositive) {
-            shapeIntersection.exitT = t;
+            shapeIntersection.exit = surfaceIntersection;
 
             // entry and exit have been found, so the loop can stop
             if (exitPositive) {

@@ -32,9 +32,9 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
 #if defined(SHAPE_BOX)
     Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
     RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
-    float entry = max(voxelIntersection.entryT, shapeIntersection.entryT);
-    float exit = min(voxelIntersection.exitT, shapeIntersection.exitT);
-    return vec4(voxelIntersection.normal, exit - entry);
+    float entry = max(voxelIntersection.entry.w, shapeIntersection.entry.w);
+    float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
+    return vec4(voxelIntersection.entry.xyz, exit - entry);
 #else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     return vec4(viewRay.dir, u_stepSize / dimAtLevel);
@@ -60,12 +60,12 @@ void main()
     RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayUv, ix);
 
     // Exit early if the scene was completely missed.
-    if (shapeIntersection.entryT == NO_HIT) {
+    if (shapeIntersection.entry.w == NO_HIT) {
         discard;
     }
 
-    float currT = shapeIntersection.entryT + RAY_SHIFT;
-    float endT = shapeIntersection.exitT;
+    float currT = shapeIntersection.entry.w + RAY_SHIFT;
+    float endT = shapeIntersection.exit.w;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
     vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
 
@@ -136,12 +136,12 @@ void main()
                 break;
             #else
                 shapeIntersection = nextIntersection(ix);
-                if (shapeIntersection.entryT == NO_HIT) {
+                if (shapeIntersection.entry.w == NO_HIT) {
                     break;
                 } else {
                     // Found another intersection. Resume raymarching there
-                    currT = shapeIntersection.entryT;
-                    endT = shapeIntersection.exitT;
+                    currT = shapeIntersection.entry.w;
+                    endT = shapeIntersection.exit.w;
                     positionUv = viewPosUv + currT * viewDirUv;
                 }
             #endif

@@ -17,7 +17,7 @@ RayShapeIntersection intersectScene(in vec2 screenCoord, in Ray ray, out Interse
 
     // Exit early if the positive shape was completely missed or behind the ray.
     RayShapeIntersection intersection = getFirstIntersection(ix);
-    if (intersection.entryT == NO_HIT) {
+    if (intersection.entry.w == NO_HIT) {
         // Positive shape was completely missed - so exit early.
         return intersection;
     }
@@ -37,15 +37,15 @@ RayShapeIntersection intersectScene(in vec2 screenCoord, in Ray ray, out Interse
         initializeIntersections(ix);
         for (int i = 0; i < INTERSECTION_COUNT; ++i) {
             intersection = nextIntersection(ix);
-            if (intersection.exitT > 0.0) {
+            if (intersection.exit.w > 0.0) {
                 // Set start to 0.0 when ray is inside the shape.
-                intersection.entryT = max(intersection.entryT, 0.0);
+                intersection.entry.w = max(intersection.entry.w, 0.0);
                 break;
             }
         }
     #else
         // Set start to 0.0 when ray is inside the shape.
-        intersection.entryT = max(intersection.entryT, 0.0);
+        intersection.entry.w = max(intersection.entry.w, 0.0);
     #endif
 
     return intersection;
