@@ -87,8 +87,8 @@ function VoxelRenderResources(primitive) {
   shaderBuilder.addFragmentLines([
     customShader.fragmentShaderText,
     "#line 0",
-    IntersectionUtils,
     Octree,
+    IntersectionUtils,
     Megatexture,
   ]);
 

@@ -111,8 +111,7 @@ RayShapeIntersection nextIntersection(inout Intersections ix) {
         surfaceIntersection = ix.intersections[i];
         int intersectionType = int(length(surfaceIntersection.xyz) - 0.5);
         bool currShapeIsPositive = intersectionType < 2;
-        // TODO: use intMod for WebGL1 compatibility
-        bool enter = intersectionType % 2 == 0;
+        bool enter = intMod(intersectionType, 2) == 0;
 
         ix.surroundCount += enter ? +1 : -1;
         ix.surroundIsPositive = currShapeIsPositive ? enter : ix.surroundIsPositive;
