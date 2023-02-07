@@ -1,5 +1,17 @@
 # Change Log
 
+### 1.103 - 2023-03-01
+
+#### @cesium/engine
+
+#### Major Announcements :loudspeaker:
+
+##### Additions :tada:
+
+##### Fixes :wrench:
+
+- Fixed Primitive.getGeometryInstanceAttributes cache acquisition speed. [#11066](https://github.com/CesiumGS/cesium/issues/11066)
+
 ### 1.102 - 2023-02-01
 
 #### @cesium/engine
