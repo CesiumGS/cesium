@@ -32,9 +32,9 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
 #if defined(SHAPE_BOX)
     Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
     RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
-    float entry = max(voxelIntersection.entry.w, shapeIntersection.entry.w);
+    vec4 entry = shapeIntersection.entry.w >= voxelIntersection.entry.w ? shapeIntersection.entry : voxelIntersection.entry;
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    return vec4(voxelIntersection.entry.xyz, exit - entry);
+    return vec4(normalize(entry.xyz), exit - entry.w);
 #else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     return vec4(viewRay.dir, u_stepSize / dimAtLevel);

@@ -23,45 +23,56 @@ vec4 intersectPlane(in Ray ray, in vec4 plane) {
 }
 
 void intersectClippingPlanes(in Ray ray, inout Intersections ix) {
+    vec4 backSide = vec4(-ray.dir, -INF_HIT);
+    vec4 farSide = vec4(ray.dir, +INF_HIT);
+    RayShapeIntersection clippingVolume;
+
     #if (CLIPPING_PLANES_COUNT == 1)
         // Union and intersection are the same when there's one clipping plane, and the code
         // is more simplified.
         vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, 0, u_clippingPlanesMatrix);
         vec4 intersection = intersectPlane(ray, planeUv);
-        vec2 entryExitT = dot(ray.dir, planeUv.xyz) > 0.0
-            ? vec2(intersection.w, +INF_HIT)
-            : vec2(-INF_HIT, intersection.w);
-        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX, entryExitT);
+        bool reflects = dot(ray.dir, intersection.xyz) < 0.0;
+        clippingVolume.entry = reflects ? backSide : intersection;
+        clippingVolume.exit = reflects ? intersection : farSide;
+        setShapeIntersection(ix, CLIPPING_PLANES_INTERSECTION_INDEX, clippingVolume);
     #elif defined(CLIPPING_PLANES_UNION)
-        float minPositiveT = +INF_HIT;
-        float maxNegativeT = -INF_HIT;
+        vec4 firstTransmission = vec4(ray.dir, +INF_HIT);
+        vec4 lastReflection = vec4(-ray.dir, -INF_HIT);
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
             vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i, u_clippingPlanesMatrix);
             vec4 intersection = intersectPlane(ray, planeUv);
             if (dot(ray.dir, planeUv.xyz) > 0.0) {
-                minPositiveT = min(minPositiveT, intersection.w);
+                firstTransmission = intersection.w <= firstTransmission.w ? intersection : firstTransmission;
             } else {
-                maxNegativeT = max(maxNegativeT, intersection.w);
+                lastReflection = intersection.w >= lastReflection.w ? intersection : lastReflection;
             }
         }
-        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 0, vec2(-INF_HIT, maxNegativeT));
-        setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 1, vec2(minPositiveT, +INF_HIT));
+        clippingVolume.entry = backSide;
+        clippingVolume.exit = lastReflection;
+        setShapeIntersection(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 0, clippingVolume);
+        clippingVolume.entry = firstTransmission;
+        clippingVolume.exit = farSide;
+        setShapeIntersection(ix, CLIPPING_PLANES_INTERSECTION_INDEX + 1, clippingVolume);
     #else // intersection
-        float maxPositiveT = -INF_HIT;
-        float minNegativeT = +INF_HIT;
+        vec4 lastTransmission = vec4(ray.dir, -INF_HIT);
+        vec4 firstReflection = vec4(-ray.dir, +INF_HIT);
         for (int i = 0; i < CLIPPING_PLANES_COUNT; i++) {
             vec4 planeUv = getClippingPlane(u_clippingPlanesTexture, i, u_clippingPlanesMatrix);
             vec4 intersection = intersectPlane(ray, planeUv);
             if (dot(ray.dir, planeUv.xyz) > 0.0) {
-                maxPositiveT = max(maxPositiveT, intersection.w);
+                lastTransmission = intersection.w > lastTransmission.w ? intersection : lastTransmission;
             } else {
-                minNegativeT = min(minNegativeT, intersection.w);
+                firstReflection = intersection.w < firstReflection.w ? intersection: firstReflection;
             }
         }
-        if (maxPositiveT < minNegativeT) {
-            setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX, vec2(maxPositiveT, minNegativeT));
+        if (lastTransmission.w < firstReflection.w) {
+            clippingVolume.entry = lastTransmission;
+            clippingVolume.exit = firstReflection;
         } else {
-            setIntersectionPair(ix, CLIPPING_PLANES_INTERSECTION_INDEX, vec2(NO_HIT));
+            clippingVolume.entry = vec4(-ray.dir, NO_HIT);
+            clippingVolume.exit = vec4(ray.dir, NO_HIT);
         }
+        setShapeIntersection(ix, CLIPPING_PLANES_INTERSECTION_INDEX, clippingVolume);
     #endif
 }
