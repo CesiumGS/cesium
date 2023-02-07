@@ -30,11 +30,11 @@ Box constructVoxelBox(in ivec4 octreeCoords, in vec3 tileUv)
     return Box(p0, p1);
 }
 
-vec3 getBoxNormal(in Box box, in Ray ray, in float entryT)
+vec3 getBoxNormal(in Box box, in Ray ray, in float t)
 {
-    vec3 entryPoint = ray.pos + (entryT - RAY_SHIFT) * ray.dir;
-    vec3 lower = step(entryPoint, box.p0);
-    vec3 upper = step(box.p1, entryPoint);
+    vec3 hitPoint = ray.pos + t * ray.dir;
+    vec3 lower = step(hitPoint, box.p0);
+    vec3 upper = step(box.p1, hitPoint);
     return normalize(upper - lower);
 }
 
@@ -55,8 +55,8 @@ RayShapeIntersection intersectBox(in Ray ray, in Box box)
     float entryT = max(max(entries.x, entries.y), entries.z);
     float exitT = min(min(exits.x, exits.y), exits.z);
 
-    vec3 entryNormal = getBoxNormal(box, ray, entryT);
-    vec3 exitNormal = getBoxNormal(box, ray, exitT);
+    vec3 entryNormal = getBoxNormal(box, ray, entryT - RAY_SHIFT);
+    vec3 exitNormal = getBoxNormal(box, ray, exitT + RAY_SHIFT);
 
     if (entryT > exitT) {
         entryT = NO_HIT;
@@ -69,5 +69,5 @@ RayShapeIntersection intersectBox(in Ray ray, in Box box)
 void intersectShape(in Ray ray, inout Intersections ix)
 {
     RayShapeIntersection intersection = intersectBox(ray, Box(u_renderMinBounds, u_renderMaxBounds));
-    setIntersectionPair(ix, BOX_INTERSECTION_INDEX, vec2(intersection.entry.w, intersection.exit.w));
+    setShapeIntersection(ix, BOX_INTERSECTION_INDEX, intersection);
 }

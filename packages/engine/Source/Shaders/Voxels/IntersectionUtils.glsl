@@ -47,9 +47,17 @@ RayShapeIntersection getFirstIntersection(in Intersections ix)
     return RayShapeIntersection(ix.intersections[0], ix.intersections[1]);
 }
 
+vec4 encodeIntersectionType(vec4 intersection, int index, bool entry)
+{
+    float scale = float(index > 0) * 2.0 + float(!entry) + 1.0;
+    return vec4(intersection.xyz * scale, intersection.w);
+}
+
 // Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
 #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*bool*/ enter) (ix).intersections[(index)] = vec4(0.0, float(!positive) * 2.0 + float(!enter) + 1.0, 0.0, (t))
 #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec4(0.0, float((index) > 0) * 2.0 + 1.0, 0.0, (entryExit).x); (ix).intersections[(index) * 2 + 1] = vec4(0.0, float((index) > 0) * 2.0 + 2.0, 0.0, (entryExit).y)
+#define setSurfaceIntersection(/*inout Intersections*/ ix, /*int*/ index, /*vec4*/ intersection) (ix).intersections[(index)] = intersection;
+#define setShapeIntersection(/*inout Intersections*/ ix, /*int*/ index, /*RayShapeIntersection*/ intersection) (ix).intersections[(index) * 2 + 0] = encodeIntersectionType((intersection).entry, (index), true); (ix).intersections[(index) * 2 + 1] = encodeIntersectionType((intersection).exit, (index), false)
 
 #if (INTERSECTION_COUNT > 1)
 void initializeIntersections(inout Intersections ix) {
