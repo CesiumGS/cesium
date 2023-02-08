@@ -2,6 +2,7 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import Event from "../Core/Event.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import loadKTX2 from "../Core/loadKTX2.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -43,26 +44,7 @@ function OctahedralProjectedCubeMap(url) {
   this._loading = false;
   this._ready = false;
 
-  const cubeMap = this;
-  this._readyPromise = new Promise((resolve, reject) => {
-    cubeMap._completeLoadFromCache = (cachedTexture) => {
-      cleanupResources(this);
-      this._texture = cachedTexture;
-      this._maximumMipmapLevel = this._texture.maximumMipmapLevel;
-      this._ready = true;
-      resolve();
-      return;
-    };
-
-    cubeMap._failLoad = (error) => {
-      reject(error);
-    };
-
-    cubeMap._completeLoad = () => {
-      this._ready = true;
-      resolve();
-    };
-  });
+  this._errorEvent = new Event();
 }
 
 Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
@@ -75,6 +57,18 @@ Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   url: {
     get: function () {
       return this._url;
+    },
+  },
+  /**
+   * Gets an event that is raised when encountering an asynchronous error.  By subscribing
+   * to the event, you will be notified of the error and can potentially recover from it.
+   * @memberof OctahedralProjectedCubeMap.prototype
+   * @type {Event}
+   * @readonly
+   */
+  errorEvent: {
+    get: function () {
+      return this._errorEvent;
     },
   },
   /**
@@ -108,17 +102,6 @@ Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-  /**
-   * Gets a promise that resolves when the texture atlas is ready to use.
-   * @memberof OctahedralProjectedCubeMap.prototype
-   * @type {Promise<void>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 });
@@ -298,7 +281,10 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
   if (!defined(this._texture) && !this._loading) {
     const cachedTexture = frameState.context.textureCache.getTexture(this._url);
     if (defined(cachedTexture)) {
-      this._completeLoadFromCache(cachedTexture);
+      cleanupResources(this);
+      this._texture = cachedTexture;
+      this._maximumMipmapLevel = this._texture.maximumMipmapLevel;
+      this._ready = true;
     }
   }
 
@@ -310,8 +296,11 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
         that._cubeMapBuffers = buffers;
         that._loading = false;
       })
-      .catch(function (e) {
-        that._failLoad(e);
+      .catch(function (error) {
+        if (that.isDestroyed()) {
+          return;
+        }
+        that._errorEvent.raiseEvent(error);
       });
     this._loading = true;
   }
@@ -417,7 +406,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
   });
   frameState.commandList.push(atlasCommand);
 
-  this._completeLoad();
+  this._ready = true;
 };
 
 /**
