@@ -1,4 +1,4 @@
-import { BingMapsStyle } from "@cesium/engine";
+import { BingMapsStyle } from "../index.js";
 
 export default function (mapStyle) {
   let stylePrefix = "a";

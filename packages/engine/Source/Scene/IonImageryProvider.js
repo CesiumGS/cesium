@@ -3,7 +3,6 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
-import GoogleEarthEnterpriseMetadata from "../Core/GoogleEarthEnterpriseMetadata.js";
 import IonResource from "../Core/IonResource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import ArcGisMapServerImageryProvider from "./ArcGisMapServerImageryProvider.js";
@@ -44,8 +43,9 @@ const ImageryProviderAsyncMapping = {
     return BingMapsImageryProvider.fromUrl(url, key, options);
   },
   GOOGLE_EARTH: async (url, options) => {
-    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
-    return GoogleEarthEnterpriseMapsProvider.fromMetadata(metadata, options);
+    const channel = options.channel;
+    delete options.channel;
+    return GoogleEarthEnterpriseMapsProvider.fromUrl(url, channel, options);
   },
   MAPBOX: (url, options) => {
     return new MapboxImageryProvider({

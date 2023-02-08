@@ -12,7 +12,7 @@
 
 ##### Additions :tada:
 
-- Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling.
+- Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling.
 
 ##### Deprecated :hourglass_flowing_sand:
 
@@ -20,6 +20,7 @@
 - `ArcGisMapServerImageryProvider` constructor parameter `url`,`ArcGisMapServerImageryProvider.ready`, and `ArcGisMapServerImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ArcGisMapServerImageryProvider.fromUrl` instead.
 - `BingMapsImageryProvider` constructor parameter `url`,`BingMapsImageryProvider.ready`, and `BingMapsImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `BingMapsImageryProvider.fromUrl` instead.
 - `GoogleEarthEnterpriseImageryProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseImageryProvider.ready`, and `GoogleEarthEnterpriseImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseImageryProvider.fromMetadata` instead.
+- `GoogleEarthEnterpriseMapsProvider` constructor parameters `options.url` and `options.channel`, `GoogleEarthEnterpriseMapsProvider.ready`, and `GoogleEarthEnterpriseMapsProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseMapsProvider.fromUrl` instead.
 - `GridImageryProvider.ready` and `GridImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `IonImageryProvider` constructor parameter `assetId`,`BIonImageryProvider.ready`, and `IonImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `IonImageryProvider.fromAssetId` instead.
 - `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
