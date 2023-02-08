@@ -237,6 +237,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   ready: {
     get: function () {
       return (
+        defined(this._terrainProvider) &&
         // ready is deprecated; This is here for backwards compatibility
         this._terrainProvider._ready &&
         (this._imageryLayers.length === 0 ||
@@ -295,12 +296,6 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
         return;
       }
 
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(terrainProvider)) {
-        throw new DeveloperError("terrainProvider is required.");
-      }
-      //>>includeEnd('debug');
-
       this._terrainProvider = terrainProvider;
 
       if (defined(this._quadtree)) {
@@ -350,6 +345,7 @@ GlobeSurfaceTileProvider.prototype.update = function (frameState) {
 function updateCredits(surface, frameState) {
   const creditDisplay = frameState.creditDisplay;
   if (
+    defined(surface._terrainProvider) &&
     // ready is deprecated; This is here for backwards compatibility
     surface._terrainProvider._ready &&
     defined(surface._terrainProvider.credit)
@@ -573,6 +569,10 @@ GlobeSurfaceTileProvider.prototype.cancelReprojections = function () {
 GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function (
   level
 ) {
+  if (!defined(this._terrainProvider)) {
+    return 0;
+  }
+
   return this._terrainProvider.getLevelMaximumGeometricError(level);
 };
 
@@ -2126,6 +2126,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const oceanNormalMap = tileProvider.oceanNormalMap;
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
   const hasVertexNormals =
+    defined(tileProvider.terrainProvider) &&
     // ready is deprecated; This is here for backwards compatibility
     tileProvider.terrainProvider._ready &&
     tileProvider.terrainProvider.hasVertexNormals;

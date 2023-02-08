@@ -511,7 +511,7 @@ ImageryLayer.prototype.getViewableRectangle = function () {
  * @private
  *
  * @param {Tile} tile The terrain tile.
- * @param {TerrainProvider} terrainProvider The terrain provider associated with the terrain tile.
+ * @param {TerrainProvider|undefined} terrainProvider The terrain provider associated with the terrain tile.
  * @param {Number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
  * @returns {Boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
  */
@@ -523,8 +523,9 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const surfaceTile = tile.data;
 
   if (
-    defined(this._minimumTerrainLevel) &&
-    tile.level < this._minimumTerrainLevel
+    !defined(terrainProvider) ||
+    (defined(this._minimumTerrainLevel) &&
+      tile.level < this._minimumTerrainLevel)
   ) {
     return false;
   }
