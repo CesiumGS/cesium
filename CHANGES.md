@@ -8,6 +8,7 @@
 
 - Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
 - Fixed an edge case in `viewer.flyTo` when flying to a imagery layer with certain terrain providers. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
+- Fixed `SingleTileImageryProvider` fetching image when `show` is `false` by allowing lazy-loading for `SingleTileImageryProvider` if `tileWidth` and `tileHeight` are provided to the constructor. [#9529](https://github.com/CesiumGS/cesium/issues/9529)
 
 ##### Additions :tada:
 
@@ -24,7 +25,8 @@
 - `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `MapboxStyleImageryProvider.ready` and `MapboxStyleImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `OpenStreetMapImageryProvider.ready` and `OpenStreetMapImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `SingleTileImageryProvider` constructor parameter `options.url`, `SingleTileImageryProvider.ready`, and `SingleTileImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `SingleTileImageryProvider.fromUrl` instead.
+- `SingleTileImageryProvider` constructor parameter `options.url` was deprecated in Cesium 1.102 and will be removed in 1.104. Provide `options.tileHeight` and `options.tileWidth`, or use `SingleTileImageryProvider.fromUrl` instead.
+- `SingleTileImageryProvider.ready` and `SingleTileImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `SingleTileImageryProvider.fromUrl` instead.
 - `TileCoordinatesImageryProvider.ready` and `TileCoordinatesImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `TileMapServiceImageryProvider` constructor parameter `options.url`, `TileMapServiceImageryProvider.ready`, and `TileMapServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `TileMapServiceImageryProvider.fromUrl` instead.
 - `UrlTemplateImageryProvider.reinitialize`, `UrlTemplateImageryProvider.ready`, and `UrlTemplateImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.

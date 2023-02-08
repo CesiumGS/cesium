@@ -65,6 +65,28 @@ describe("Scene/SingleTileImageryProvider", function () {
       });
   });
 
+  it("constructor throws without url", async function () {
+    expect(() => new SingleTileImageryProvider()).toThrowDeveloperError();
+  });
+
+  it("constructor throws without tile height and tile width", async function () {
+    expect(
+      () =>
+        new SingleTileImageryProvider({
+          url: "Data/Images/Red16x16.png",
+          tileWidth: 16,
+        })
+    ).toThrowDeveloperError();
+
+    expect(
+      () =>
+        new SingleTileImageryProvider({
+          url: "Data/Images/Red16x16.png",
+          tileHeight: 16,
+        })
+    ).toThrowDeveloperError();
+  });
+
   it("fromUrl throws without url", async function () {
     await expectAsync(
       SingleTileImageryProvider.fromUrl()
@@ -160,6 +182,36 @@ describe("Scene/SingleTileImageryProvider", function () {
 
     const image = await Promise.resolve(provider.requestImage(0, 0, 0));
     expect(image).toBeImageOrImageBitmap();
+  });
+
+  it("lazy loads image when constructed with tile height and tile width", async function () {
+    const imageUrl = "Data/Images/Red16x16.png";
+
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      const url = request.url;
+      expect(url).toEqual(imageUrl);
+      Resource._DefaultImplementations.createImage(
+        request,
+        crossOrigin,
+        deferred
+      );
+    });
+
+    const provider = new SingleTileImageryProvider({
+      url: imageUrl,
+      tileHeight: 16,
+      tileWidth: 16,
+    });
+
+    expect(Resource._Implementations.createImage).not.toHaveBeenCalled();
+
+    const image = await Promise.resolve(provider.requestImage(0, 0, 0));
+    expect(image).toBeImageOrImageBitmap();
+    expect(Resource._Implementations.createImage).toHaveBeenCalled();
   });
 
   it("turns the supplied credit into a logo", async function () {

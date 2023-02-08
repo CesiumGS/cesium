@@ -16,17 +16,15 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * Initialization options for the SingleTileImageryProvider constructor
  *
- * @property {Resource|String} [url] The url for the tile. Deprecated.
+ * @property {Resource|String} url The url for the tile.
+ * @property {Number} tileWidth The width of the tile, in pixels.
+ * @property {Number} tileHeight The height of the tile, in pixels.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  */
 
 /**
- * <div class="notice">
- * To construct a SingleTileImageryProvider, call {@link SingleTileImageryProvider.fromUrl}. Do not call the constructor directly.
- * </div>
- *
  * Provides a single, top-level imagery tile.  The single image is assumed to use a
  * {@link GeographicTilingScheme}.
  *
@@ -142,9 +140,8 @@ function SingleTileImageryProvider(options) {
   this._tilingScheme = tilingScheme;
   this._image = undefined;
   this._texture = undefined;
-  this._tileWidth = 0;
-  this._tileHeight = 0;
 
+  this._hasError = false;
   this._errorEvent = new Event();
 
   this._ready = false;
@@ -155,23 +152,41 @@ function SingleTileImageryProvider(options) {
   }
   this._credit = credit;
 
-  if (defined(options.url)) {
-    deprecationWarning(
-      "SingleTileImageryProvider options.url",
-      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use SingleTileImageryProvider.fromUrl instead."
-    );
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.url", options.url);
+  //>>includeEnd('debug');
 
-    const resource = Resource.createIfNeeded(options.url);
-    this._resource = resource;
-    this._readyPromise = doRequest(resource, this).then((image) => {
-      TileProviderError.reportSuccess(this._errorEvent);
-      this._image = image;
-      this._tileWidth = image.width;
-      this._tileHeight = image.height;
-      this._ready = true;
-      return true;
-    });
+  const resource = Resource.createIfNeeded(options.url);
+  this._resource = resource;
+
+  if (defined(options.tileWidth) || defined(options.tileHeight)) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("options.tileWidth", options.tileWidth);
+    Check.typeOf.number("options.tileHeight", options.tileHeight);
+    //>>includeEnd('debug');
+
+    this._tileWidth = options.tileWidth;
+    this._tileHeight = options.tileHeight;
+    this._ready = true;
+    this._readyPromise = Promise.resolve(true);
+    return;
   }
+
+  deprecationWarning(
+    "SingleTileImageryProvider options.url",
+    "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Provide options.tileHeight and options.tileWidth, or use SingleTileImageryProvider.fromUrl instead."
+  );
+
+  this._tileWidth = 0;
+  this._tileHeight = 0;
+  this._readyPromise = doRequest(resource, this).then((image) => {
+    TileProviderError.reportSuccess(this._errorEvent);
+    this._image = image;
+    this._tileWidth = image.width;
+    this._tileHeight = image.height;
+    this._ready = true;
+    return true;
+  });
 }
 
 Object.defineProperties(SingleTileImageryProvider.prototype, {
@@ -369,8 +384,6 @@ function failure(resource, error, provider, previousError) {
     message += `: ${error.message}`;
   }
 
-  // When readyPromise is deprecated, TileProviderError.reportError,
-  // retry attempts, and related parameters can be removed
   const reportedError = TileProviderError.reportError(
     previousError,
     provider,
@@ -385,6 +398,9 @@ function failure(resource, error, provider, previousError) {
     return doRequest(resource, provider, reportedError);
   }
 
+  if (defined(provider)) {
+    provider._hasError = true;
+  }
   throw new RuntimeError(message);
 }
 
@@ -413,14 +429,14 @@ SingleTileImageryProvider.fromUrl = async function (url, options) {
   const resource = Resource.createIfNeeded(url);
   const image = await doRequest(resource);
 
-  const provider = new SingleTileImageryProvider(options);
-  provider._resource = resource;
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const provider = new SingleTileImageryProvider({
+    ...options,
+    url: url,
+    tileWidth: image.width,
+    tileHeight: image.height,
+  });
   provider._image = image;
-  provider._tileWidth = image.width;
-  provider._tileHeight = image.height;
-  provider._ready = true;
-  provider._readyPromise = Promise.resolve(true);
-
   return provider;
 };
 
@@ -445,17 +461,20 @@ SingleTileImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise.<ImageryTypes>|undefined} The resolved image
  */
-SingleTileImageryProvider.prototype.requestImage = function (
+SingleTileImageryProvider.prototype.requestImage = async function (
   x,
   y,
   level,
   request
 ) {
-  if (!defined(this._image)) {
-    return;
+  if (!this._hasError && !defined(this._image)) {
+    const image = await doRequest(this._resource, this);
+    this._image = image;
+    TileProviderError.reportSuccess(this._errorEvent);
+    return image;
   }
 
-  return Promise.resolve(this._image);
+  return this._image;
 };
 
 /**
