@@ -352,15 +352,14 @@
         ];
         Sandcastle.addToolbarMenu(demos);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
+        window.startup(Cesium).catch((error) => {
+          "use strict";
           console.error(error);
-        }
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

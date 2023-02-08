@@ -37,15 +37,14 @@
             "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
           ),
         }); //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
+        window.startup(Cesium).catch((error) => {
+          "use strict";
           console.error(error);
-        }
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

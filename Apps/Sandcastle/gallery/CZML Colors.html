@@ -87,15 +87,14 @@
         const dataSourcePromise = Cesium.CzmlDataSource.load(czml);
         viewer.dataSources.add(dataSourcePromise);
         viewer.zoomTo(dataSourcePromise); //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        try {
-          window.startup(Cesium);
-        } catch (error) {
+        window.startup(Cesium).catch((error) => {
+          "use strict";
           console.error(error);
-        }
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -150,15 +150,15 @@
           }
           return false;
         } //Sandcastle_End
-        if (typeof Cesium !== "undefined") {
-          window.startupCalled = true;
-          try {
-            window.startup(Cesium);
-          } catch (error) {
-            console.error(error);
-          }
-        }
       };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
     </script>
   </body>
 </html>
