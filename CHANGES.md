@@ -4,12 +4,32 @@
 
 #### @cesium/engine
 
+#### Major Announcements :loudspeaker:
+
+- CesiumJS now defaults to using a WebGL2 context for rendering. WebGL2 is widely supported on all platforms and this results in better feature support across devices, especially mobile.
+  - WebGL1 is supported. If WebGL2 is not available, CesiumJS will automatically fall back to WebGL1.
+  - In order to work in a WebGL2 context, any custom materials, custom primitives or custom shaders will need to be upgraded to use GLSL 300.
+  - Otherwise to request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions` as shown below:
+    ```js
+    const viewer = new Viewer("cesiumContainer", {
+      contextOptions: {
+        requestWebgl1: true,
+      },
+    });
+    ```
+
+##### Additions :tada:
+
+- Added `FeatureDetection.supportsWebgl2` to detect if a WebGL2 rendering context in the current browser.
+
 ##### Fixes :wrench:
 
+- Fixed label background rendering. [#11040](https://github.com/CesiumGS/cesium/issues/11040)
 - Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
 - Fixed an edge case in `viewer.flyTo` when flying to a imagery layer with certain terrain providers. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
-- Fixed a crash in terrain sampling if any points have an indefined position due to being outside the rectangle. [#10931](https://github.com/CesiumGS/cesium/pull/10931)
-- Fixed label background rendering. [#11040](https://github.com/CesiumGS/cesium/issues/11040)
+- Fixed a crash in terrain sampling if any points have an undefined position due to being outside the rectangle. [#10931](https://github.com/CesiumGS/cesium/pull/10931)
+- Fixed a bug where scale was not being applied to the top-level tileset geometric error. [#11047](https://github.com/CesiumGS/cesium/pull/11047)
+- Updating Bing Maps top page hyperlink to Bing Maps ToU hyperlink [#11049](https://github.com/CesiumGS/cesium/pull/11049)
 
 ### 1.101 - 2023-01-02
 
@@ -71,6 +91,10 @@
     - `Widgets`(CSS files only)
   - The ability to import modules and TypeScript definitions from individual files has been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
 
+#### Breaking Changes :mega:
+
+- The viewer parameter in `KmlTour.prototype.play` was removed. Instead of a `Viewer`, pass a `CesiumWidget` instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
+
 ### 1.99 - 2022-11-01
 
 #### Major Announcements :loudspeaker:
@@ -86,6 +110,10 @@
     - `ThirdParty`
     - `Widgets`(CSS files only)
   - The ability to import modules and TypeScript definitions from individual files will been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
+
+#### Breaking Changes :mega:
+
+- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been removed. Use the native browser methods instead. [#10579](https://github.com/CesiumGS/cesium/pull/10579)
 
 ##### Additions :tada:
 
@@ -110,6 +138,7 @@
 #### Breaking Changes :mega:
 
 - As of the previous release (1.97), `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
+- The `.getPropertyNames` methods of `Cesium3DTileFeature`, `Cesium3DTilePointFeature`, and `ModelFeature` have been removed. Use the `.getPropertyIds` methods instead.
 
 ##### Additions :tada:
 
@@ -185,6 +214,7 @@
 ##### Breaking Changes :mega:
 
 - `Model.boundingSphere` now returns the bounding sphere in ECEF coordinates instead of the local coordinate system. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
+- `Cesium3DTileStyle.readyPromise` and `Cesium3DTileStyle.ready` have been removed. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
 
 ##### Additions :tada:
 
@@ -276,7 +306,7 @@
 - Removed individual image-based lighting parameters from `Model` and `Cesium3DTileset`. [#10388](https://github.com/CesiumGS/cesium/pull/10388)
 - Models and tilesets rendered with `ModelExperimental` must set `enableDebugWireframe` to true in order for `debugWireframe` to work in WebGL1. [#10344](https://github.com/CesiumGS/cesium/pull/10344)
 - Removed `ImagerySplitPosition` and `Scene.imagerySplitPosition`. Use `SplitDirection` and `Scene.splitPosition` instead.[#10418](https://github.com/CesiumGS/cesium/pull/10418)
-- Removed restriction on enabling `Scene.orderIndependentTranslucency` on iPad and iOS. [#10417](https://github.com/CesiumGS/cesium/pull/10417)
+- Tilesets and models should now specify image-based lighting parameters in `ImageBasedLighting` instead of as individual options. [#10226](https://github.com/CesiumGS/cesium/pull/10226)
 
 ##### Additions :tada:
 
