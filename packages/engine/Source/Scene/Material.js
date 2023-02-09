@@ -72,10 +72,14 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  */
 
 /**
+ * @typedef {Function} TranslucentFunction
+ */
+
+/**
  * @typedef {Object} MaterialTemplate A material template object.
  * @property {Boolean} strict
  * @property {Fabric} fabric
- * @property {Boolean | (material: Material) => Boolean} translucent
+ * @property {Boolean | TranslucentFunction} translucent
  */
 
 /**
@@ -269,7 +273,7 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
- * @param {Boolean|(material: Material) => Boolean} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
+ * @param {Boolean | TranslucentFunction} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
  *                           with this material is expected to appear translucent.
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
@@ -306,6 +310,8 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *     }
  *   }
  * });
+ *
+ * @constructor
  */
 function Material(options) {
   /**
