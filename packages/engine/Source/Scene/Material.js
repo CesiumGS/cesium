@@ -37,6 +37,48 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
 import WaterMaterial from "../Shaders/Materials/Water.js";
 
 /**
+ * @typedef {{}} GeneralValue Use for general uniform value, may be a struct in GLSL.
+ * @typedef { Color |
+ *   String |
+ *   Cartesian2 |
+ *   import('../Core/Cartesian3').default |
+ *   import('../Core/Cartesian4').default |
+ *   Matrix2 |
+ *   Matrix3 |
+ *   Matrix4 |
+ *   GeneralValue
+ * } FabricUniformValue
+ */
+
+/**
+ * @typedef {Object.<string, FabricUniformValue>} FabricUniforms An object contain all uniforms that fabric material will use.
+ */
+
+/**
+ * @typedef {Object} FabricComponents An object define all components will apply to fabric material.
+ * @property {String} [diffuse='vec3(0.0)'] Diffuse expression.
+ * @property {Number | String} [specular=0.0] Specular Expression.
+ * @property {Number | String} [shininess=1.0] Shininess Expression.
+ * @property {String} [normal] Normal Expression.
+ * @property {String} [emission='vec3(0.0)'] Emission Expression.
+ * @property {Number | String} [alpha=1] Alpha Expression.
+ */
+
+/**
+ * @typedef {Object} Fabric The fabric definition to a material template object.
+ * @property {String} type The material type.
+ * @property {FabricUniforms} uniforms The uniforms that will use during shadering.
+ * @property {FabricComponents} components
+ */
+
+/**
+ * @typedef {Object} MaterialTemplate A material template object.
+ * @property {Boolean} strict
+ * @property {Fabric} fabric
+ * @property {Boolean | (material: Material) => Boolean} translucent
+ */
+
+/**
  * A Material defines surface appearance through a combination of diffuse, specular,
  * normal, emission, and alpha components. These values are specified using a
  * JSON schema called Fabric which gets parsed and assembled into glsl shader code
@@ -227,13 +269,12 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
- * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
+ * @param {Boolean|(material: Material) => Boolean} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
  *                           with this material is expected to appear translucent.
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
- * @param {Object} options.fabric The fabric JSON used to generate the material.
- *
- * @constructor
+ * @param {Fabric} options.fabric The fabric JSON used to generate the material.
+ *ructor
  *
  * @exception {DeveloperError} fabric: uniform has invalid type.
  * @exception {DeveloperError} fabric: uniforms and materials cannot share the same property.
@@ -258,12 +299,12 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *
  * // Create a color material with full Fabric notation:
  * polygon.material = new Cesium.Material({
- *     fabric : {
- *         type : 'Color',
- *         uniforms : {
- *             color : new Cesium.Color(1.0, 1.0, 0.0, 1.0)
- *         }
+ *   fabric: {
+ *     type: 'Color',
+ *     uniforms: {
+ *       color: new Cesium.Color(1.0, 1.0, 0.0, 1.0)
  *     }
+ *   }
  * });
  */
 function Material(options) {
@@ -350,7 +391,7 @@ Material._uniformList = {};
  * Shorthand for: new Material({fabric : {type : type}});
  *
  * @param {String} type The base material type.
- * @param {Object} [uniforms] Overrides for the default uniforms.
+ * @param {FabricUniforms} [uniforms] Overrides for the default uniforms.
  * @returns {Material} New material object.
  *
  * @exception {DeveloperError} material with that type does not exist.
@@ -1206,6 +1247,11 @@ function getNumberOfTokens(material, token, excludePeriod) {
 
 Material._materialCache = {
   _materials: {},
+  /**
+   * Add a fabric material to
+   * @param {String} type The material type.
+   * @param {MaterialTemplate} materialTemplate An object represent a fabric material.
+   */
   addMaterial: function (type, materialTemplate) {
     this._materials[type] = materialTemplate;
   },
@@ -1216,19 +1262,19 @@ Material._materialCache = {
 
 /**
  * Gets or sets the default texture uniform value.
- * @type {String}
+ * @type {"czm_defaultImage"}
  */
 Material.DefaultImageId = "czm_defaultImage";
 
 /**
  * Gets or sets the default cube map texture uniform value.
- * @type {String}
+ * @type {"czm_defaultCubeMap"}
  */
 Material.DefaultCubeMapId = "czm_defaultCubeMap";
 
 /**
  * Gets the name of the color material.
- * @type {String}
+ * @type {"Color"}
  * @readonly
  */
 Material.ColorType = "Color";
@@ -1250,7 +1296,7 @@ Material._materialCache.addMaterial(Material.ColorType, {
 
 /**
  * Gets the name of the image material.
- * @type {String}
+ * @type {"Image"}
  * @readonly
  */
 Material.ImageType = "Image";
@@ -1275,7 +1321,7 @@ Material._materialCache.addMaterial(Material.ImageType, {
 
 /**
  * Gets the name of the diffuce map material.
- * @type {String}
+ * @type {"DiffuseMap"}
  * @readonly
  */
 Material.DiffuseMapType = "DiffuseMap";
@@ -1296,7 +1342,7 @@ Material._materialCache.addMaterial(Material.DiffuseMapType, {
 
 /**
  * Gets the name of the alpha map material.
- * @type {String}
+ * @type {"AlphaMap"}
  * @readonly
  */
 Material.AlphaMapType = "AlphaMap";
@@ -1317,7 +1363,7 @@ Material._materialCache.addMaterial(Material.AlphaMapType, {
 
 /**
  * Gets the name of the specular map material.
- * @type {String}
+ * @type {"SpecularMap"}
  * @readonly
  */
 Material.SpecularMapType = "SpecularMap";
@@ -1338,7 +1384,7 @@ Material._materialCache.addMaterial(Material.SpecularMapType, {
 
 /**
  * Gets the name of the emmision map material.
- * @type {String}
+ * @type {"EmissionMap"}
  * @readonly
  */
 Material.EmissionMapType = "EmissionMap";
@@ -1359,7 +1405,7 @@ Material._materialCache.addMaterial(Material.EmissionMapType, {
 
 /**
  * Gets the name of the bump map material.
- * @type {String}
+ * @type {"BumpMap"}
  * @readonly
  */
 Material.BumpMapType = "BumpMap";
@@ -1379,7 +1425,7 @@ Material._materialCache.addMaterial(Material.BumpMapType, {
 
 /**
  * Gets the name of the normal map material.
- * @type {String}
+ * @type {"NormalMap"}
  * @readonly
  */
 Material.NormalMapType = "NormalMap";
@@ -1399,7 +1445,7 @@ Material._materialCache.addMaterial(Material.NormalMapType, {
 
 /**
  * Gets the name of the grid material.
- * @type {String}
+ * @type {"Grid"}
  * @readonly
  */
 Material.GridType = "Grid";
@@ -1423,7 +1469,7 @@ Material._materialCache.addMaterial(Material.GridType, {
 
 /**
  * Gets the name of the stripe material.
- * @type {String}
+ * @type {"Stripe"}
  * @readonly
  */
 Material.StripeType = "Stripe";
@@ -1447,7 +1493,7 @@ Material._materialCache.addMaterial(Material.StripeType, {
 
 /**
  * Gets the name of the checkerboard material.
- * @type {String}
+ * @type {"Checkerboard"}
  * @readonly
  */
 Material.CheckerboardType = "Checkerboard";
@@ -1469,7 +1515,7 @@ Material._materialCache.addMaterial(Material.CheckerboardType, {
 
 /**
  * Gets the name of the dot material.
- * @type {String}
+ * @type {"Dot"}
  * @readonly
  */
 Material.DotType = "Dot";
@@ -1491,7 +1537,7 @@ Material._materialCache.addMaterial(Material.DotType, {
 
 /**
  * Gets the name of the water material.
- * @type {String}
+ * @type {"Water"}
  * @readonly
  */
 Material.WaterType = "Water";
@@ -1521,7 +1567,7 @@ Material._materialCache.addMaterial(Material.WaterType, {
 
 /**
  * Gets the name of the rim lighting material.
- * @type {String}
+ * @type {"RimLighting"}
  * @readonly
  */
 Material.RimLightingType = "RimLighting";
@@ -1543,7 +1589,7 @@ Material._materialCache.addMaterial(Material.RimLightingType, {
 
 /**
  * Gets the name of the fade material.
- * @type {String}
+ * @type {"Fade"}
  * @readonly
  */
 Material.FadeType = "Fade";
@@ -1573,7 +1619,7 @@ Material._materialCache.addMaterial(Material.FadeType, {
 
 /**
  * Gets the name of the polyline arrow material.
- * @type {String}
+ * @type {"PolylineArrow"}
  * @readonly
  */
 Material.PolylineArrowType = "PolylineArrow";
@@ -1590,7 +1636,7 @@ Material._materialCache.addMaterial(Material.PolylineArrowType, {
 
 /**
  * Gets the name of the polyline glow material.
- * @type {String}
+ * @type {"PolylineDash"}
  * @readonly
  */
 Material.PolylineDashType = "PolylineDash";
@@ -1610,7 +1656,7 @@ Material._materialCache.addMaterial(Material.PolylineDashType, {
 
 /**
  * Gets the name of the polyline glow material.
- * @type {String}
+ * @type {"PolylineGlow"}
  * @readonly
  */
 Material.PolylineGlowType = "PolylineGlow";
@@ -1629,7 +1675,7 @@ Material._materialCache.addMaterial(Material.PolylineGlowType, {
 
 /**
  * Gets the name of the polyline outline material.
- * @type {String}
+ * @type {"PolylineOutline"}
  * @readonly
  */
 Material.PolylineOutlineType = "PolylineOutline";
@@ -1651,7 +1697,7 @@ Material._materialCache.addMaterial(Material.PolylineOutlineType, {
 
 /**
  * Gets the name of the elevation contour material.
- * @type {String}
+ * @type {"ElevationContour"}
  * @readonly
  */
 Material.ElevationContourType = "ElevationContour";
@@ -1670,7 +1716,7 @@ Material._materialCache.addMaterial(Material.ElevationContourType, {
 
 /**
  * Gets the name of the elevation contour material.
- * @type {String}
+ * @type {"ElevationRamp"}
  * @readonly
  */
 Material.ElevationRampType = "ElevationRamp";
@@ -1689,7 +1735,7 @@ Material._materialCache.addMaterial(Material.ElevationRampType, {
 
 /**
  * Gets the name of the slope ramp material.
- * @type {String}
+ * @type {"SlopeRamp"}
  * @readonly
  */
 Material.SlopeRampMaterialType = "SlopeRamp";
@@ -1706,7 +1752,7 @@ Material._materialCache.addMaterial(Material.SlopeRampMaterialType, {
 
 /**
  * Gets the name of the aspect ramp material.
- * @type {String}
+ * @type {"AspectRamp"}
  * @readonly
  */
 Material.AspectRampMaterialType = "AspectRamp";
@@ -1723,7 +1769,7 @@ Material._materialCache.addMaterial(Material.AspectRampMaterialType, {
 
 /**
  * Gets the name of the elevation band material.
- * @type {String}
+ * @type {"ElevationBand"}
  * @readonly
  */
 Material.ElevationBandType = "ElevationBand";
