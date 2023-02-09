@@ -37,7 +37,7 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
 import WaterMaterial from "../Shaders/Materials/Water.js";
 
 /**
- * @typedef {{}} GeneralValue Use for general uniform value, may be a struct in GLSL.
+ * @typedef {Object.<string, any>} GeneralValue Use for general uniform value, may be a struct in GLSL.
  * @typedef { Color |
  *   String |
  *   Cartesian2 |
@@ -47,7 +47,7 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *   Matrix3 |
  *   Matrix4 |
  *   GeneralValue
- * } FabricUniformValue
+ * } FabricUniformValue Fabric material uniform value types.
  */
 
 /**
@@ -72,7 +72,9 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  */
 
 /**
- * @typedef {Function} TranslucentFunction
+ * @callback TranslucentFunction A function determine material is translucent or not.
+ * @param {Material} material
+ * @returns {Boolean}
  */
 
 /**
@@ -346,7 +348,7 @@ function Material(options) {
   /**
    * When <code>true</code> or a function that returns <code>true</code>,
    * the geometry is expected to appear translucent.
-   * @type {Boolean|Function}
+   * @type {Boolean | TranslucentFunction}
    * @default undefined
    */
   this.translucent = undefined;
@@ -404,7 +406,7 @@ Material._uniformList = {};
  *
  * @example
  * const material = Cesium.Material.fromType('Color', {
- *     color : new Cesium.Color(1.0, 0.0, 0.0, 1.0)
+ *   color: new Cesium.Color(1.0, 0.0, 0.0, 1.0)
  * });
  */
 Material.fromType = function (type, uniforms) {
