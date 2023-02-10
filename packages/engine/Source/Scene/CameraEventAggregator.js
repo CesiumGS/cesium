@@ -159,7 +159,6 @@ function listenToWheel(aggregator, modifier) {
 
   aggregator._eventHandler.setInputAction(
     function (delta) {
-      // TODO: magic numbers
       const arcLength = 7.5 * CesiumMath.toRadians(delta);
       pressTime[key] = releaseTime[key] = new Date();
       movement.endPosition.x = 0.0;
