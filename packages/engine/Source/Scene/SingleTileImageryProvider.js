@@ -159,6 +159,8 @@ function SingleTileImageryProvider(options) {
   const resource = Resource.createIfNeeded(options.url);
   this._resource = resource;
 
+  // After ready promise and the deprecation warning for these properties are removed,
+  // the if check is not needed, and this can become a top-level block
   if (defined(options.tileWidth) || defined(options.tileHeight)) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.number("options.tileWidth", options.tileWidth);
@@ -173,8 +175,8 @@ function SingleTileImageryProvider(options) {
   }
 
   deprecationWarning(
-    "SingleTileImageryProvider options.url",
-    "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Provide options.tileHeight and options.tileWidth, or use SingleTileImageryProvider.fromUrl instead."
+    "SingleTileImageryProvider options",
+    "options.tileHeight and options.tileWidth became required in CesiumJS 1.102. Omitting these properties will result in an error in 1.104. Provide options.tileHeight and options.tileWidth, or use SingleTileImageryProvider.fromUrl instead."
   );
 
   this._tileWidth = 0;

@@ -26,7 +26,7 @@
 - `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `MapboxStyleImageryProvider.ready` and `MapboxStyleImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `OpenStreetMapImageryProvider.ready` and `OpenStreetMapImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `SingleTileImageryProvider` constructor parameter `options.url` was deprecated in Cesium 1.102 and will be removed in 1.104. Provide `options.tileHeight` and `options.tileWidth`, or use `SingleTileImageryProvider.fromUrl` instead.
+- `SingleTileImageryProvider` constructor parameters `options.tileHeight` and `options.tileWidth` became required in CesiumJS 1.102. Omitting these properties will result in an error in 1.104. Provide `options.tileHeight` and `options.tileWidth`, or use `SingleTileImageryProvider.fromUrl` instead.
 - `SingleTileImageryProvider.ready` and `SingleTileImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `SingleTileImageryProvider.fromUrl` instead.
 - `TileCoordinatesImageryProvider.ready` and `TileCoordinatesImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `TileMapServiceImageryProvider` constructor parameter `options.url`, `TileMapServiceImageryProvider.ready`, and `TileMapServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `TileMapServiceImageryProvider.fromUrl` instead.
