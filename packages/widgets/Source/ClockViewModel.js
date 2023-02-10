@@ -76,7 +76,7 @@ function ClockViewModel(clock) {
    * Gets or sets the clock multiplier.
    * See {@link Clock#multiplier}.
    * This property is observable.
-   * @type {Number}
+   * @type {number}
    */
   this.multiplier = knockout.observable(clock.multiplier);
   this.multiplier.subscribe(function (value) {
@@ -112,7 +112,7 @@ function ClockViewModel(clock) {
    * Gets or sets whether the clock can animate.
    * See {@link Clock#canAnimate}.
    * This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.canAnimate = knockout.observable(clock.canAnimate);
   this.canAnimate.subscribe(function (value) {
@@ -124,7 +124,7 @@ function ClockViewModel(clock) {
    * Gets or sets whether the clock should animate.
    * See {@link Clock#shouldAnimate}.
    * This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.shouldAnimate = knockout.observable(clock.shouldAnimate);
   this.shouldAnimate.subscribe(function (value) {
@@ -178,7 +178,7 @@ ClockViewModel.prototype.synchronize = function () {
 };
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 ClockViewModel.prototype.isDestroyed = function () {
   return false;

@@ -16,7 +16,7 @@ import SampledProperty from "./SampledProperty.js";
  * @constructor
  *
  * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
- * @param {Number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
+ * @param {number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
  */
 function SampledPositionProperty(referenceFrame, numberOfDerivatives) {
   numberOfDerivatives = defaultValue(numberOfDerivatives, 0);
@@ -45,7 +45,7 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof SampledPositionProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -82,7 +82,7 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * Gets the degree of interpolation to perform when retrieving a value. Call <code>setInterpolationOptions</code> to set this.
    * @memberof SampledPositionProperty.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @default 1
    * @readonly
    */
@@ -108,7 +108,7 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * The number of derivatives contained by this property; i.e. 0 for just position, 1 for velocity, etc.
    * @memberof SampledPositionProperty.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @default 0
    */
   numberOfDerivatives: {
@@ -135,7 +135,7 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * Gets or sets the amount of time to extrapolate forward before
    * the property becomes undefined.  A value of 0 will extrapolate forever.
    * @memberof SampledPositionProperty.prototype
-   * @type {Number}
+   * @type {number}
    * @default 0
    */
   forwardExtrapolationDuration: {
@@ -165,7 +165,7 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * Gets or sets the amount of time to extrapolate backward
    * before the property becomes undefined.  A value of 0 will extrapolate forever.
    * @memberof SampledPositionProperty.prototype
-   * @type {Number}
+   * @type {number}
    * @default 0
    */
   backwardExtrapolationDuration: {
@@ -223,9 +223,9 @@ SampledPositionProperty.prototype.getValueInReferenceFrame = function (
 /**
  * Sets the algorithm and degree to use when interpolating a position.
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
- * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
+ * @param {number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
  */
 SampledPositionProperty.prototype.setInterpolationOptions = function (options) {
   this._property.setInterpolationOptions(options);
@@ -278,7 +278,7 @@ SampledPositionProperty.prototype.addSamples = function (
  * Adds samples as a single packed array where each new sample is represented as a date,
  * followed by the packed representation of the corresponding value and derivatives.
  *
- * @param {Number[]} packedSamples The array of packed samples.
+ * @param {number[]} packedSamples The array of packed samples.
  * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
  */
 SampledPositionProperty.prototype.addSamplesPackedArray = function (
@@ -292,7 +292,7 @@ SampledPositionProperty.prototype.addSamplesPackedArray = function (
  * Removes a sample at the given time, if present.
  *
  * @param {JulianDate} time The sample time.
- * @returns {Boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
  */
 SampledPositionProperty.prototype.removeSample = function (time) {
   return this._property.removeSample(time);
@@ -312,7 +312,7 @@ SampledPositionProperty.prototype.removeSamples = function (timeInterval) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 SampledPositionProperty.prototype.equals = function (other) {
   return (

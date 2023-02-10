@@ -29,12 +29,12 @@ const scratchNormal = new Cartesian3();
  * @alias WallGeometry
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
- * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Number[]} [options.maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
+ * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number[]} [options.maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
  *        wall at <code>positions</code>. If undefined, the height of each position in used.
- * @param {Number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
+ * @param {number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -115,7 +115,7 @@ function WallGeometry(options) {
 
   /**
    * The number of elements used to pack the object into an array.
-   * @type {Number}
+   * @type {number}
    */
   this.packedLength =
     numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 1;
@@ -125,10 +125,10 @@ function WallGeometry(options) {
  * Stores the provided instance into the provided array.
  *
  * @param {WallGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 WallGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -197,8 +197,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {WallGeometry} [result] The object into which to store the result.
  * @returns {WallGeometry} The modified result parameter or a new WallGeometry instance if one was not provided.
  */
@@ -274,11 +274,11 @@ WallGeometry.unpack = function (array, startingIndex, result) {
  * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
  * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
- * @param {Number} [options.maximumHeight] A constant that defines the maximum height of the
+ * @param {number} [options.maximumHeight] A constant that defines the maximum height of the
  *        wall at <code>positions</code>. If undefined, the height of each position in used.
- * @param {Number} [options.minimumHeight] A constant that defines the minimum height of the
+ * @param {number} [options.minimumHeight] A constant that defines the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.

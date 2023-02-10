@@ -15,8 +15,8 @@ function Proxy() {
 /**
  * Get the final URL to use to request a given resource.
  *
- * @param {String} resource The resource to request.
- * @returns {String} proxied resource
+ * @param {string} resource The resource to request.
+ * @returns {string} proxied resource
  * @function
  */
 Proxy.prototype.getURL = DeveloperError.throwInstantiationError;

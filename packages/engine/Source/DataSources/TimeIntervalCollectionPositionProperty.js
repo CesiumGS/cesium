@@ -31,7 +31,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof TimeIntervalCollectionPositionProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -82,7 +82,7 @@ Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
  * Gets the value of the property at the provided time in the fixed frame.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * @returns {Cartesian3 | undefined} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 TimeIntervalCollectionPositionProperty.prototype.getValue = function (
@@ -132,7 +132,7 @@ TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = func
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 TimeIntervalCollectionPositionProperty.prototype.equals = function (other) {
   return (

@@ -16,7 +16,7 @@ import InfoBoxViewModel from "./InfoBoxViewModel.js";
  * @alias InfoBox
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  */
@@ -185,7 +185,7 @@ Object.defineProperties(InfoBox.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 InfoBox.prototype.isDestroyed = function () {
   return false;

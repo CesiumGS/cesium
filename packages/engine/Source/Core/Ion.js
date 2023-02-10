@@ -24,14 +24,14 @@ const Ion = {};
 /**
  * Gets or sets the default Cesium ion access token.
  *
- * @type {String}
+ * @type {string}
  */
 Ion.defaultAccessToken = defaultAccessToken;
 
 /**
  * Gets or sets the default Cesium ion server.
  *
- * @type {String|Resource}
+ * @type {string|Resource}
  * @default https://api.cesium.com
  */
 Ion.defaultServer = new Resource({ url: "https://api.cesium.com/" });

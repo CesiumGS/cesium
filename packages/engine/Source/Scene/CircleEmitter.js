@@ -10,7 +10,7 @@ import CesiumMath from "../Core/Math.js";
  * @alias CircleEmitter
  * @constructor
  *
- * @param {Number} [radius=1.0] The radius of the circle in meters.
+ * @param {number} [radius=1.0] The radius of the circle in meters.
  */
 function CircleEmitter(radius) {
   radius = defaultValue(radius, 1.0);
@@ -26,7 +26,7 @@ Object.defineProperties(CircleEmitter.prototype, {
   /**
    * The radius of the circle in meters.
    * @memberof CircleEmitter.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   radius: {

@@ -55,33 +55,34 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  */
 
 /**
- * @typedef {Object} FabricComponents An object define all components will apply to fabric material.
- * @property {String} [diffuse='vec3(0.0)'] Diffuse expression.
- * @property {Number | String} [specular=0.0] Specular Expression.
- * @property {Number | String} [shininess=1.0] Shininess Expression.
- * @property {String} [normal] Normal Expression.
- * @property {String} [emission='vec3(0.0)'] Emission Expression.
- * @property {Number | String} [alpha=1] Alpha Expression.
+ * @typedef {object} FabricComponents An object define all components will apply to fabric material.
+ * @property {string} [diffuse='vec3(0.0)'] Diffuse expression.
+ * @property {number | String} [specular=0.0] Specular Expression.
+ * @property {number | String} [shininess=1.0] Shininess Expression.
+ * @property {string} [normal] Normal Expression.
+ * @property {string} [emission='vec3(0.0)'] Emission Expression.
+ * @property {number | String} [alpha=1] Alpha Expression.
  */
 
 /**
- * @typedef {Object} Fabric The fabric definition to a material template object.
- * @property {String} type The material type.
+ * @typedef {object} Fabric The fabric definition to a material template object.
+ * @property {string} type The material type.
  * @property {FabricUniforms} uniforms The uniforms that will use during shadering.
  * @property {FabricComponents} components
+ * @property {string} source Shader code.
  */
 
 /**
  * @callback TranslucentFunction A function determine material is translucent or not.
  * @param {Material} material
- * @returns {Boolean}
+ * @returns {boolean}
  */
 
 /**
- * @typedef {Object} MaterialTemplate A material template object.
- * @property {Boolean} strict
+ * @typedef {object} MaterialTemplate A material template object.
+ * @property {boolean} strict
  * @property {Fabric} fabric
- * @property {Boolean | TranslucentFunction} translucent
+ * @property {boolean | TranslucentFunction} translucent
  */
 
 /**
@@ -272,10 +273,11 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  * </div>
  *
  * @alias Material
+ * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
- * @param {Boolean | TranslucentFunction} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
+ * @param {boolean | TranslucentFunction} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
  *                           with this material is expected to appear translucent.
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
@@ -312,34 +314,32 @@ import WaterMaterial from "../Shaders/Materials/Water.js";
  *     }
  *   }
  * });
- *
- * @constructor
  */
 function Material(options) {
   /**
    * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
-   * @type {String}
+   * @type {string}
    * @default undefined
    */
   this.type = undefined;
 
   /**
    * The glsl shader source for this material.
-   * @type {String}
+   * @type {string}
    * @default undefined
    */
   this.shaderSource = undefined;
 
   /**
    * Maps sub-material names to Material objects.
-   * @type {Object}
+   * @type {object}
    * @default undefined
    */
   this.materials = undefined;
 
   /**
    * Maps uniform names to their values.
-   * @type {Object}
+   * @type {object}
    * @default undefined
    */
   this.uniforms = undefined;
@@ -348,7 +348,7 @@ function Material(options) {
   /**
    * When <code>true</code> or a function that returns <code>true</code>,
    * the geometry is expected to appear translucent.
-   * @type {Boolean | TranslucentFunction}
+   * @type {boolean | TranslucentFunction}
    * @default undefined
    */
   this.translucent = undefined;
@@ -398,7 +398,7 @@ Material._uniformList = {};
  * <br /><br />
  * Shorthand for: new Material({fabric : {type : type}});
  *
- * @param {String} type The base material type.
+ * @param {string} type The base material type.
  * @param {FabricUniforms} [uniforms] Overrides for the default uniforms.
  * @returns {Material} New material object.
  *
@@ -435,7 +435,7 @@ Material.fromType = function (type, uniforms) {
 
 /**
  * Gets whether or not this material is translucent.
- * @returns {Boolean} <code>true</code> if this material is translucent, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if this material is translucent, <code>false</code> otherwise.
  */
 Material.prototype.isTranslucent = function () {
   if (defined(this.translucent)) {
@@ -586,7 +586,7 @@ Material.prototype.update = function (context) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see Material#destroy
  */
@@ -1257,7 +1257,7 @@ Material._materialCache = {
   _materials: {},
   /**
    * Add a fabric material to
-   * @param {String} type The material type.
+   * @param {string} type The material type.
    * @param {MaterialTemplate} materialTemplate An object represent a fabric material.
    */
   addMaterial: function (type, materialTemplate) {

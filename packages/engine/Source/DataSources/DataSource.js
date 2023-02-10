@@ -18,7 +18,7 @@ Object.defineProperties(DataSource.prototype, {
   /**
    * Gets a human-readable name for this instance.
    * @memberof DataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   name: {
     get: DeveloperError.throwInstantiationError,
@@ -42,7 +42,7 @@ Object.defineProperties(DataSource.prototype, {
   /**
    * Gets a value indicating if the data source is currently loading data.
    * @memberof DataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isLoading: {
     get: DeveloperError.throwInstantiationError,
@@ -74,7 +74,7 @@ Object.defineProperties(DataSource.prototype, {
   /**
    * Gets whether or not this data source should be displayed.
    * @memberof DataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: DeveloperError.throwInstantiationError,
@@ -98,7 +98,7 @@ Object.defineProperties(DataSource.prototype, {
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
  *
  * @param {JulianDate} time The simulation time.
- * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
 DataSource.prototype.update = function (time) {
   DeveloperError.throwInstantiationError();

@@ -10,7 +10,7 @@ import Resource from "./Resource.js";
  * @alias PeliasGeocoderService
  * @constructor
  *
- * @param {Resource|String} url The endpoint to the Pelias server.
+ * @param {Resource|string} url The endpoint to the Pelias server.
  *
  * @example
  * // Configure a Viewer to use the Pelias server hosted by https://geocode.earth/
@@ -49,7 +49,7 @@ Object.defineProperties(PeliasGeocoderService.prototype, {
 /**
  * @function
  *
- * @param {String} query The query to be sent to the geocoder service
+ * @param {string} query The query to be sent to the geocoder service
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
  * @returns {Promise<GeocoderService.Result[]>}
  */

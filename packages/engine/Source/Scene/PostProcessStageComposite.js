@@ -16,11 +16,11 @@ import destroyObject from "../Core/destroyObject.js";
  * @alias PostProcessStageComposite
  * @constructor
  *
- * @param {Object} options An object with the following properties:
+ * @param {object} options An object with the following properties:
  * @param {Array} options.stages An array of {@link PostProcessStage}s or composites to be executed in order.
- * @param {Boolean} [options.inputPreviousStageTexture=true] Whether to execute each post-process stage where the input to one stage is the output of the previous. Otherwise, the input to each contained stage is the output of the stage that executed before the composite.
- * @param {String} [options.name=createGuid()] The unique name of this post-process stage for reference by other composites. If a name is not supplied, a GUID will be generated.
- * @param {Object} [options.uniforms] An alias to the uniforms of post-process stages.
+ * @param {boolean} [options.inputPreviousStageTexture=true] Whether to execute each post-process stage where the input to one stage is the output of the previous. Otherwise, the input to each contained stage is the output of the stage that executed before the composite.
+ * @param {string} [options.name=createGuid()] The unique name of this post-process stage for reference by other composites. If a name is not supplied, a GUID will be generated.
+ * @param {object} [options.uniforms] An alias to the uniforms of post-process stages.
  *
  * @exception {DeveloperError} options.stages.length must be greater than 0.0.
  *
@@ -119,7 +119,7 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
    * Determines if this post-process stage is ready to be executed.
    *
    * @memberof PostProcessStageComposite.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -138,7 +138,7 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
    * The unique name of this post-process stage for reference by other stages in a PostProcessStageComposite.
    *
    * @memberof PostProcessStageComposite.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -150,7 +150,7 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
    * Whether or not to execute this post-process stage when ready.
    *
    * @memberof PostProcessStageComposite.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   enabled: {
     get: function () {
@@ -167,7 +167,7 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
   /**
    * An alias to the uniform values of the post-process stages. May be <code>undefined</code>; in which case, get each stage to set uniform values.
    * @memberof PostProcessStageComposite.prototype
-   * @type {Object}
+   * @type {object}
    */
   uniforms: {
     get: function () {
@@ -181,7 +181,7 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
    * or the output texture of the previous stage.
    *
    * @memberof PostProcessStageComposite.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   inputPreviousStageTexture: {
@@ -193,7 +193,7 @@ Object.defineProperties(PostProcessStageComposite.prototype, {
    * The number of post-process stages in this composite.
    *
    * @memberof PostProcessStageComposite.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -245,7 +245,7 @@ PostProcessStageComposite.prototype._isSupported = function (context) {
 /**
  * Gets the post-process stage at <code>index</code>
  *
- * @param {Number} index The index of the post-process stage or composite.
+ * @param {number} index The index of the post-process stage or composite.
  * @return {PostProcessStage|PostProcessStageComposite} The post-process stage or composite at index.
  *
  * @exception {DeveloperError} index must be greater than or equal to 0.
@@ -298,7 +298,7 @@ function isSelectedTextureDirty(stage) {
 /**
  * A function that will be called before execute. Updates each post-process stage in the composite.
  * @param {Context} context The context.
- * @param {Boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
+ * @param {boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
  * @private
  */
 PostProcessStageComposite.prototype.update = function (context, useLogDepth) {
@@ -330,7 +330,7 @@ PostProcessStageComposite.prototype.update = function (context, useLogDepth) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see PostProcessStageComposite#destroy
  */

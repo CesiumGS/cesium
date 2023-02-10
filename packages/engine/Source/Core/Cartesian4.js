@@ -9,10 +9,10 @@ import CesiumMath from "./Math.js";
  * @alias Cartesian4
  * @constructor
  *
- * @param {Number} [x=0.0] The X component.
- * @param {Number} [y=0.0] The Y component.
- * @param {Number} [z=0.0] The Z component.
- * @param {Number} [w=0.0] The W component.
+ * @param {number} [x=0.0] The X component.
+ * @param {number} [y=0.0] The Y component.
+ * @param {number} [z=0.0] The Z component.
+ * @param {number} [w=0.0] The W component.
  *
  * @see Cartesian2
  * @see Cartesian3
@@ -21,28 +21,28 @@ import CesiumMath from "./Math.js";
 function Cartesian4(x, y, z, w) {
   /**
    * The X component.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.x = defaultValue(x, 0.0);
 
   /**
    * The Y component.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.y = defaultValue(y, 0.0);
 
   /**
    * The Z component.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.z = defaultValue(z, 0.0);
 
   /**
    * The W component.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.w = defaultValue(w, 0.0);
@@ -51,10 +51,10 @@ function Cartesian4(x, y, z, w) {
 /**
  * Creates a Cartesian4 instance from x, y, z and w coordinates.
  *
- * @param {Number} x The x coordinate.
- * @param {Number} y The y coordinate.
- * @param {Number} z The z coordinate.
- * @param {Number} w The w coordinate.
+ * @param {number} x The x coordinate.
+ * @param {number} y The y coordinate.
+ * @param {number} z The z coordinate.
+ * @param {number} w The w coordinate.
  * @param {Cartesian4} [result] The object onto which to store the result.
  * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
  */
@@ -118,7 +118,7 @@ Cartesian4.clone = function (cartesian, result) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 Cartesian4.packedLength = 4;
 
@@ -126,10 +126,10 @@ Cartesian4.packedLength = 4;
  * Stores the provided instance into the provided array.
  *
  * @param {Cartesian4} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 Cartesian4.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -150,8 +150,8 @@ Cartesian4.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Cartesian4} [result] The object into which to store the result.
  * @returns {Cartesian4}  The modified result parameter or a new Cartesian4 instance if one was not provided.
  */
@@ -176,8 +176,8 @@ Cartesian4.unpack = function (array, startingIndex, result) {
  * Flattens an array of Cartesian4s into an array of components.
  *
  * @param {Cartesian4[]} array The array of cartesians to pack.
- * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
- * @returns {Number[]} The packed array.
+ * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
+ * @returns {number[]} The packed array.
  */
 Cartesian4.packArray = function (array, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -207,7 +207,7 @@ Cartesian4.packArray = function (array, result) {
 /**
  * Unpacks an array of cartesian components into an array of Cartesian4s.
  *
- * @param {Number[]} array The array of components to unpack.
+ * @param {number[]} array The array of components to unpack.
  * @param {Cartesian4[]} [result] The array onto which to store the result.
  * @returns {Cartesian4[]} The unpacked array.
  */
@@ -238,8 +238,8 @@ Cartesian4.unpackArray = function (array, result) {
  * Creates a Cartesian4 from four consecutive elements in an array.
  * @function
  *
- * @param {Number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
- * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
+ * @param {number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
+ * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
  * @param {Cartesian4} [result] The object onto which to store the result.
  * @returns {Cartesian4}  The modified result parameter or a new Cartesian4 instance if one was not provided.
  *
@@ -258,7 +258,7 @@ Cartesian4.fromArray = Cartesian4.unpack;
  * Computes the value of the maximum component for the supplied Cartesian.
  *
  * @param {Cartesian4} cartesian The cartesian to use.
- * @returns {Number} The value of the maximum component.
+ * @returns {number} The value of the maximum component.
  */
 Cartesian4.maximumComponent = function (cartesian) {
   //>>includeStart('debug', pragmas.debug);
@@ -272,7 +272,7 @@ Cartesian4.maximumComponent = function (cartesian) {
  * Computes the value of the minimum component for the supplied Cartesian.
  *
  * @param {Cartesian4} cartesian The cartesian to use.
- * @returns {Number} The value of the minimum component.
+ * @returns {number} The value of the minimum component.
  */
 Cartesian4.minimumComponent = function (cartesian) {
   //>>includeStart('debug', pragmas.debug);
@@ -362,7 +362,7 @@ Cartesian4.clamp = function (value, min, max, result) {
  * Computes the provided Cartesian's squared magnitude.
  *
  * @param {Cartesian4} cartesian The Cartesian instance whose squared magnitude is to be computed.
- * @returns {Number} The squared magnitude.
+ * @returns {number} The squared magnitude.
  */
 Cartesian4.magnitudeSquared = function (cartesian) {
   //>>includeStart('debug', pragmas.debug);
@@ -381,7 +381,7 @@ Cartesian4.magnitudeSquared = function (cartesian) {
  * Computes the Cartesian's magnitude (length).
  *
  * @param {Cartesian4} cartesian The Cartesian instance whose magnitude is to be computed.
- * @returns {Number} The magnitude.
+ * @returns {number} The magnitude.
  */
 Cartesian4.magnitude = function (cartesian) {
   return Math.sqrt(Cartesian4.magnitudeSquared(cartesian));
@@ -394,7 +394,7 @@ const distanceScratch = new Cartesian4();
  *
  * @param {Cartesian4} left The first point to compute the distance from.
  * @param {Cartesian4} right The second point to compute the distance to.
- * @returns {Number} The distance between two points.
+ * @returns {number} The distance between two points.
  *
  * @example
  * // Returns 1.0
@@ -418,7 +418,7 @@ Cartesian4.distance = function (left, right) {
  *
  * @param {Cartesian4} left The first point to compute the distance from.
  * @param {Cartesian4} right The second point to compute the distance to.
- * @returns {Number} The distance between two points.
+ * @returns {number} The distance between two points.
  *
  * @example
  * // Returns 4.0, not 2.0
@@ -475,7 +475,7 @@ Cartesian4.normalize = function (cartesian, result) {
  *
  * @param {Cartesian4} left The first Cartesian.
  * @param {Cartesian4} right The second Cartesian.
- * @returns {Number} The dot product.
+ * @returns {number} The dot product.
  */
 Cartesian4.dot = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -580,7 +580,7 @@ Cartesian4.subtract = function (left, right, result) {
  * Multiplies the provided Cartesian componentwise by the provided scalar.
  *
  * @param {Cartesian4} cartesian The Cartesian to be scaled.
- * @param {Number} scalar The scalar to multiply with.
+ * @param {number} scalar The scalar to multiply with.
  * @param {Cartesian4} result The object onto which to store the result.
  * @returns {Cartesian4} The modified result parameter.
  */
@@ -602,7 +602,7 @@ Cartesian4.multiplyByScalar = function (cartesian, scalar, result) {
  * Divides the provided Cartesian componentwise by the provided scalar.
  *
  * @param {Cartesian4} cartesian The Cartesian to be divided.
- * @param {Number} scalar The scalar to divide by.
+ * @param {number} scalar The scalar to divide by.
  * @param {Cartesian4} result The object onto which to store the result.
  * @returns {Cartesian4} The modified result parameter.
  */
@@ -666,7 +666,7 @@ const lerpScratch = new Cartesian4();
  *
  * @param {Cartesian4} start The value corresponding to t at 0.0.
  * @param {Cartesian4}end The value corresponding to t at 1.0.
- * @param {Number} t The point along t at which to interpolate.
+ * @param {number} t The point along t at which to interpolate.
  * @param {Cartesian4} result The object onto which to store the result.
  * @returns {Cartesian4} The modified result parameter.
  */
@@ -733,7 +733,7 @@ Cartesian4.mostOrthogonalAxis = function (cartesian, result) {
  *
  * @param {Cartesian4} [left] The first Cartesian.
  * @param {Cartesian4} [right] The second Cartesian.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Cartesian4.equals = function (left, right) {
   return (
@@ -766,9 +766,9 @@ Cartesian4.equalsArray = function (cartesian, array, offset) {
  *
  * @param {Cartesian4} [left] The first Cartesian.
  * @param {Cartesian4} [right] The second Cartesian.
- * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
- * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
- * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
+ * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+ * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Cartesian4.equalsEpsilon = function (
   left,
@@ -870,7 +870,7 @@ Cartesian4.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Cartesian4} [right] The right hand side Cartesian.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 Cartesian4.prototype.equals = function (right) {
   return Cartesian4.equals(this, right);
@@ -882,9 +882,9 @@ Cartesian4.prototype.equals = function (right) {
  * <code>false</code> otherwise.
  *
  * @param {Cartesian4} [right] The right hand side Cartesian.
- * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
- * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
- * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
+ * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+ * @returns {boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
 Cartesian4.prototype.equalsEpsilon = function (
   right,
@@ -902,7 +902,7 @@ Cartesian4.prototype.equalsEpsilon = function (
 /**
  * Creates a string representing this Cartesian in the format '(x, y, z, w)'.
  *
- * @returns {String} A string representing the provided Cartesian in the format '(x, y, z, w)'.
+ * @returns {string} A string representing the provided Cartesian in the format '(x, y, z, w)'.
  */
 Cartesian4.prototype.toString = function () {
   return `(${this.x}, ${this.y}, ${this.z}, ${this.w})`;
@@ -919,7 +919,7 @@ const littleEndian = testU8[0] === 0x44;
 /**
  * Packs an arbitrary floating point value to 4 values representable using uint8.
  *
- * @param {Number} value A floating point number.
+ * @param {number} value A floating point number.
  * @param {Cartesian4} [result] The Cartesian4 that will contain the packed float.
  * @returns {Cartesian4} A Cartesian4 representing the float packed to values in x, y, z, and w.
  */
@@ -954,7 +954,7 @@ Cartesian4.packFloat = function (value, result) {
  * Unpacks a float packed using Cartesian4.packFloat.
  *
  * @param {Cartesian4} packedFloat A Cartesian4 containing a float packed to 4 values representable using uint8.
- * @returns {Number} The unpacked float.
+ * @returns {number} The unpacked float.
  * @private
  */
 Cartesian4.unpackFloat = function (packedFloat) {

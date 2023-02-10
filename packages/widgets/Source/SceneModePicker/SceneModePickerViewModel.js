@@ -15,7 +15,7 @@ import createCommand from "../createCommand.js";
  * @constructor
  *
  * @param {Scene} scene The Scene to morph
- * @param {Number} [duration=2.0] The duration of scene morph animations, in seconds
+ * @param {number} [duration=2.0] The duration of scene morph animations, in seconds
  */
 function SceneModePickerViewModel(scene, duration) {
   //>>includeStart('debug', pragmas.debug);
@@ -46,28 +46,28 @@ function SceneModePickerViewModel(scene, duration) {
 
   /**
    * Gets or sets whether the button drop-down is currently visible.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.dropDownVisible = false;
 
   /**
    * Gets or sets the 2D tooltip.  This property is observable.
-   * @type {String}
+   * @type {string}
    * @default '2D'
    */
   this.tooltip2D = "2D";
 
   /**
    * Gets or sets the 3D tooltip.  This property is observable.
-   * @type {String}
+   * @type {string}
    * @default '3D'
    */
   this.tooltip3D = "3D";
 
   /**
    * Gets or sets the Columbus View tooltip.  This property is observable.
-   * @type {String}
+   * @type {string}
    * @default 'Columbus View'
    */
   this.tooltipColumbusView = "Columbus View";
@@ -82,7 +82,7 @@ function SceneModePickerViewModel(scene, duration) {
 
   /**
    * Gets the currently active tooltip.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.selectedTooltip = undefined;
   knockout.defineProperty(this, "selectedTooltip", function () {
@@ -132,7 +132,7 @@ Object.defineProperties(SceneModePickerViewModel.prototype, {
    * Gets or sets the the duration of scene mode transition animations in seconds.
    * A value of zero causes the scene to instantly change modes.
    * @memberof SceneModePickerViewModel.prototype
-   * @type {Number}
+   * @type {number}
    */
   duration: {
     get: function () {
@@ -199,7 +199,7 @@ Object.defineProperties(SceneModePickerViewModel.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 SceneModePickerViewModel.prototype.isDestroyed = function () {
   return false;

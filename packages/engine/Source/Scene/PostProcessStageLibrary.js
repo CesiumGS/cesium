@@ -198,7 +198,7 @@ PostProcessStageLibrary.createDepthOfFieldStage = function () {
  * </p>
  *
  * @param {Scene} scene The scene.
- * @return {Boolean} Whether this post process stage is supported.
+ * @return {boolean} Whether this post process stage is supported.
  *
  * @see {Context#depthTexture}
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
@@ -257,7 +257,7 @@ PostProcessStageLibrary.createEdgeDetectionStage = function () {
  * </p>
  *
  * @param {Scene} scene The scene.
- * @return {Boolean} Whether this post process stage is supported.
+ * @return {boolean} Whether this post process stage is supported.
  *
  * @see {Context#depthTexture}
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
@@ -352,7 +352,7 @@ PostProcessStageLibrary.createSilhouetteStage = function (edgeDetectionStages) {
  * </p>
  *
  * @param {Scene} scene The scene.
- * @return {Boolean} Whether this post process stage is supported.
+ * @return {boolean} Whether this post process stage is supported.
  *
  * @see {Context#depthTexture}
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
@@ -628,7 +628,7 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
  * </p>
  *
  * @param {Scene} scene The scene.
- * @return {Boolean} Whether this post process stage is supported.
+ * @return {boolean} Whether this post process stage is supported.
  *
  * @see {Context#depthTexture}
  * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
@@ -655,7 +655,7 @@ PostProcessStageLibrary.createFXAAStage = function () {
 
 /**
  * Creates a post-process stage that applies ACES tonemapping operator.
- * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+ * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
  * @return {PostProcessStage} A post-process stage that applies ACES tonemapping operator.
  * @private
  */
@@ -675,7 +675,7 @@ PostProcessStageLibrary.createAcesTonemappingStage = function (
 
 /**
  * Creates a post-process stage that applies filmic tonemapping operator.
- * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+ * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
  * @return {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
  * @private
  */
@@ -695,7 +695,7 @@ PostProcessStageLibrary.createFilmicTonemappingStage = function (
 
 /**
  * Creates a post-process stage that applies Reinhard tonemapping operator.
- * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+ * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
  * @return {PostProcessStage} A post-process stage that applies Reinhard tonemapping operator.
  * @private
  */
@@ -715,7 +715,7 @@ PostProcessStageLibrary.createReinhardTonemappingStage = function (
 
 /**
  * Creates a post-process stage that applies modified Reinhard tonemapping operator.
- * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+ * @param {boolean} useAutoExposure Whether or not to use auto-exposure.
  * @return {PostProcessStage} A post-process stage that applies modified Reinhard tonemapping operator.
  * @private
  */

@@ -7,35 +7,35 @@ import DeveloperError from "./DeveloperError.js";
  * @alias NearFarScalar
  * @constructor
  *
- * @param {Number} [near=0.0] The lower bound of the camera range.
- * @param {Number} [nearValue=0.0] The value at the lower bound of the camera range.
- * @param {Number} [far=1.0] The upper bound of the camera range.
- * @param {Number} [farValue=0.0] The value at the upper bound of the camera range.
+ * @param {number} [near=0.0] The lower bound of the camera range.
+ * @param {number} [nearValue=0.0] The value at the lower bound of the camera range.
+ * @param {number} [far=1.0] The upper bound of the camera range.
+ * @param {number} [farValue=0.0] The value at the upper bound of the camera range.
  *
  * @see Packable
  */
 function NearFarScalar(near, nearValue, far, farValue) {
   /**
    * The lower bound of the camera range.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.near = defaultValue(near, 0.0);
   /**
    * The value at the lower bound of the camera range.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.nearValue = defaultValue(nearValue, 0.0);
   /**
    * The upper bound of the camera range.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.far = defaultValue(far, 1.0);
   /**
    * The value at the upper bound of the camera range.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.farValue = defaultValue(farValue, 0.0);
@@ -71,7 +71,7 @@ NearFarScalar.clone = function (nearFarScalar, result) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 NearFarScalar.packedLength = 4;
 
@@ -79,10 +79,10 @@ NearFarScalar.packedLength = 4;
  * Stores the provided instance into the provided array.
  *
  * @param {NearFarScalar} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 NearFarScalar.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -107,8 +107,8 @@ NearFarScalar.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {NearFarScalar} [result] The object into which to store the result.
  * @returns {NearFarScalar} The modified result parameter or a new NearFarScalar instance if one was not provided.
  */
@@ -137,7 +137,7 @@ NearFarScalar.unpack = function (array, startingIndex, result) {
  *
  * @param {NearFarScalar} [left] The first NearFarScalar.
  * @param {NearFarScalar} [right] The second NearFarScalar.
- * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
+ * @returns {boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
  */
 NearFarScalar.equals = function (left, right) {
   return (
@@ -166,7 +166,7 @@ NearFarScalar.prototype.clone = function (result) {
  * <code>false</code> otherwise.
  *
  * @param {NearFarScalar} [right] The right hand side NearFarScalar.
- * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
+ * @returns {boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
  */
 NearFarScalar.prototype.equals = function (right) {
   return NearFarScalar.equals(this, right);

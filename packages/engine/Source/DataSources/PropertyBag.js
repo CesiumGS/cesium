@@ -13,7 +13,7 @@ import Property from "./Property.js";
  * @implements Record<string, any>
  * @constructor
  *
- * @param {Object} [value] An object, containing key-value mapping of property names to properties.
+ * @param {object} [value] An object, containing key-value mapping of property names to properties.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
  */
 function PropertyBag(value, createPropertyCallback) {
@@ -41,7 +41,7 @@ Object.defineProperties(PropertyBag.prototype, {
    * is considered constant if all property items in this object are constant.
    * @memberof PropertyBag.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -74,9 +74,9 @@ Object.defineProperties(PropertyBag.prototype, {
 /**
  * Determines if this object has defined a property with the given name.
  *
- * @param {String} propertyName The name of the property to check for.
+ * @param {string} propertyName The name of the property to check for.
  *
- * @returns {Boolean} True if this object has defined a property with the given name, false otherwise.
+ * @returns {boolean} True if this object has defined a property with the given name, false otherwise.
  */
 PropertyBag.prototype.hasProperty = function (propertyName) {
   return this._propertyNames.indexOf(propertyName) !== -1;
@@ -89,7 +89,7 @@ function createConstantProperty(value) {
 /**
  * Adds a property to this object.
  *
- * @param {String} propertyName The name of the property to add.
+ * @param {string} propertyName The name of the property to add.
  * @param {*} [value] The value of the new property, if provided.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of this new property is set to a value that is not a Property.
  *
@@ -134,7 +134,7 @@ PropertyBag.prototype.addProperty = function (
 /**
  * Removed a property previously added with addProperty.
  *
- * @param {String} propertyName The name of the property to remove.
+ * @param {string} propertyName The name of the property to remove.
  *
  * @exception {DeveloperError} "propertyName" is not a registered property.
  */
@@ -162,9 +162,9 @@ PropertyBag.prototype.removeProperty = function (propertyName) {
  * result will be an object, mapping property names to those values.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
  * Note that any properties in result which are not part of this PropertyBag will be left as-is.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 PropertyBag.prototype.getValue = function (time, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -193,7 +193,7 @@ PropertyBag.prototype.getValue = function (time, result) {
  * Assigns each unassigned property on this object to the value
  * of the same property on the provided source object.
  *
- * @param {Object} source The object to be merged into this object.
+ * @param {object} source The object to be merged into this object.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
  */
 PropertyBag.prototype.merge = function (source, createPropertyCallback) {
@@ -263,7 +263,7 @@ function propertiesEqual(a, b) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 PropertyBag.prototype.equals = function (other) {
   return (

@@ -8,9 +8,9 @@ const InspectorShared = {};
 
 /**
  * Creates a checkbox component
- * @param {String} labelText The text to display in the checkbox label
- * @param {String} checkedBinding The name of the variable used for checked binding
- * @param {String} [enableBinding] The name of the variable used for enable binding
+ * @param {string} labelText The text to display in the checkbox label
+ * @param {string} checkedBinding The name of the variable used for checked binding
+ * @param {string} [enableBinding] The name of the variable used for enable binding
  * @return {Element}
  */
 InspectorShared.createCheckbox = function (
@@ -41,9 +41,9 @@ InspectorShared.createCheckbox = function (
 /**
  * Creates a section element
  * @param {Element} panel The parent element
- * @param {String} headerText The text to display at the top of the section
- * @param {String} sectionVisibleBinding The name of the variable used for visible binding
- * @param {String} toggleSectionVisibilityBinding The name of the function used to toggle visibility
+ * @param {string} headerText The text to display at the top of the section
+ * @param {string} sectionVisibleBinding The name of the variable used for visible binding
+ * @param {string} toggleSectionVisibilityBinding The name of the function used to toggle visibility
  * @return {Element}
  */
 InspectorShared.createSection = function (
@@ -86,12 +86,12 @@ InspectorShared.createSection = function (
 
 /**
  * Creates a range input
- * @param {String} rangeText The text to display
- * @param {String} sliderValueBinding The name of the variable used for slider value binding
- * @param {Number} min The minimum value
- * @param {Number} max The maximum value
- * @param {Number} [step] The step size. Defaults to "any".
- * @param {String} [inputValueBinding] The name of the variable used for input value binding
+ * @param {string} rangeText The text to display
+ * @param {string} sliderValueBinding The name of the variable used for slider value binding
+ * @param {number} min The minimum value
+ * @param {number} max The maximum value
+ * @param {number} [step] The step size. Defaults to "any".
+ * @param {string} [inputValueBinding] The name of the variable used for input value binding
  * @return {Element}
  */
 InspectorShared.createRangeInput = function (
@@ -138,9 +138,9 @@ InspectorShared.createRangeInput = function (
 
 /**
  * Creates a button component
- * @param {String} buttonText The button text
- * @param {String} clickedBinding The name of the variable used for clicked binding
- * @param {String} [activeBinding] The name of the variable used for active binding
+ * @param {string} buttonText The button text
+ * @param {string} clickedBinding The name of the variable used for clicked binding
+ * @param {string} [activeBinding] The name of the variable used for active binding
  * @return {Element}
  */
 InspectorShared.createButton = function (

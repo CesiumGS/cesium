@@ -6,7 +6,7 @@
  *
  * @function getTimestamp
  *
- * @returns {Number} The timestamp in milliseconds since some unspecified reference time.
+ * @returns {number} The timestamp in milliseconds since some unspecified reference time.
  */
 let getTimestamp;
 

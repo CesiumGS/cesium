@@ -47,13 +47,13 @@ function LayerInformation(layer) {
  * @alias CesiumTerrainProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the Cesium terrain server.
- * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
- * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
- * @param {Boolean} [options.requestMetadata=true] Flag that indicates if the client should request per tile metadata from the server, if available.
+ * @param {object} options Object with the following properties:
+ * @param {Resource|string|Promise<Resource>|Promise<string>} options.url The URL of the Cesium terrain server.
+ * @param {boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
+ * @param {boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
+ * @param {boolean} [options.requestMetadata=true] Flag that indicates if the client should request per tile metadata from the server, if available.
  * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  *
  * @example
@@ -83,7 +83,7 @@ function CesiumTerrainProvider(options) {
 
   /**
    * Boolean flag that indicates if the client should request vertex normals from the server.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    * @private
    */
@@ -94,7 +94,7 @@ function CesiumTerrainProvider(options) {
 
   /**
    * Boolean flag that indicates if the client should request tile watermasks from the server.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    * @private
    */
@@ -102,7 +102,7 @@ function CesiumTerrainProvider(options) {
 
   /**
    * Boolean flag that indicates if the client should request tile metadata from the server.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    * @private
    */
@@ -483,7 +483,7 @@ const QuantizedMeshExtensionIds = {
   /**
    * Oct-Encoded Per-Vertex Normals are included as an extension to the tile mesh
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @default 1
    */
@@ -491,7 +491,7 @@ const QuantizedMeshExtensionIds = {
   /**
    * A watermask is included as an extension to the tile mesh
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @default 2
    */
@@ -499,7 +499,7 @@ const QuantizedMeshExtensionIds = {
   /**
    * A json object contain metadata about the tile
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @default 4
    */
@@ -787,12 +787,12 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
  * {@link CesiumTerrainProvider#ready} returns true.  The result must include terrain data and
  * may optionally include a water mask and an indication of which child tiles are available.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  *
@@ -986,7 +986,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -998,7 +998,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -1013,7 +1013,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * as a reflective surface with animated waves.  This function should not be
    * called before {@link CesiumTerrainProvider#ready} returns true.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @exception {DeveloperError} This property must not be called before {@link CesiumTerrainProvider#ready}
    */
@@ -1035,7 +1035,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * Gets a value indicating whether or not the requested tiles include vertex normals.
    * This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @exception {DeveloperError} This property must not be called before {@link CesiumTerrainProvider#ready}
    */
@@ -1058,7 +1058,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * Gets a value indicating whether or not the requested tiles include metadata.
    * This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @exception {DeveloperError} This property must not be called before {@link CesiumTerrainProvider#ready}
    */
@@ -1082,7 +1082,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * Vertex normals data is appended to the standard tile mesh data only if the client requests the vertex normals and
    * if the server provides vertex normals.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   requestVertexNormals: {
@@ -1096,7 +1096,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * Watermask data is appended to the standard tile mesh data only if the client requests the watermask and
    * if the server provides a watermask.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   requestWaterMask: {
@@ -1110,7 +1110,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
    * Metadata is appended to the standard tile mesh data only if the client requests the metadata and
    * if the server provides a metadata.
    * @memberof CesiumTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   requestMetadata: {
@@ -1148,8 +1148,8 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
  */
 CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   level
@@ -1160,10 +1160,10 @@ CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
 /**
  * Determines whether data for a tile is available to be loaded.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported or availability is unknown, otherwise true or false.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported or availability is unknown, otherwise true or false.
  */
 CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
   if (!defined(this._availability)) {
@@ -1198,9 +1198,9 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
 /**
  * Makes sure we load availability data for a tile
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 CesiumTerrainProvider.prototype.loadTileDataAvailability = function (

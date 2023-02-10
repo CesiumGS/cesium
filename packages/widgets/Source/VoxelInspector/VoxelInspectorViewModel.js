@@ -852,7 +852,7 @@ VoxelInspectorViewModel.prototype.shaderEditorKeyPress = function (
 };
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 VoxelInspectorViewModel.prototype.isDestroyed = function () {
   return false;

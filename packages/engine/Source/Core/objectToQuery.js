@@ -7,8 +7,8 @@ import DeveloperError from "./DeveloperError.js";
  * will produce multiple values with the same name.
  * @function objectToQuery
  *
- * @param {Object} obj The object containing data to encode.
- * @returns {String} An encoded query string.
+ * @param {object} obj The object containing data to encode.
+ * @returns {string} An encoded query string.
  *
  *
  * @example

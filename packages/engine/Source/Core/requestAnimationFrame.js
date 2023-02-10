@@ -45,7 +45,7 @@ if (typeof requestAnimationFrame !== "undefined") {
  * @function requestAnimationFrame
  *
  * @param {requestAnimationFrameCallback} callback The function to call when the next frame should be drawn.
- * @returns {Number} An ID that can be passed to {@link cancelAnimationFrame} to cancel the request.
+ * @returns {number} An ID that can be passed to {@link cancelAnimationFrame} to cancel the request.
  *
  *
  * @example
@@ -78,6 +78,6 @@ function requestAnimationFramePolyFill(callback) {
  * A function that will be called when the next frame should be drawn.
  * @callback requestAnimationFrameCallback
  *
- * @param {Number} timestamp A timestamp for the frame, in milliseconds.
+ * @param {number} timestamp A timestamp for the frame, in milliseconds.
  */
 export default requestAnimationFramePolyFill;

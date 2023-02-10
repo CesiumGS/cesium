@@ -38,13 +38,13 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @alias ImplicitTileCoordinates
  * @constructor
  *
- * @param {Object} options An object with the following properties:
+ * @param {object} options An object with the following properties:
  * @param {ImplicitSubdivisionScheme} options.subdivisionScheme Whether the coordinates are for a quadtree or octree
- * @param {Number} options.subtreeLevels The number of distinct levels within the coordinate's subtree
- * @param {Number} options.level The level of a tile relative to the tile with the extension
- * @param {Number} options.x The x coordinate of the tile
- * @param {Number} options.y The y coordinate of the tile
- * @param {Number} [options.z] The z coordinate of the tile. Only required when options.subdivisionScheme is ImplicitSubdivisionScheme.OCTREE
+ * @param {number} options.subtreeLevels The number of distinct levels within the coordinate's subtree
+ * @param {number} options.level The level of a tile relative to the tile with the extension
+ * @param {number} options.x The x coordinate of the tile
+ * @param {number} options.y The y coordinate of the tile
+ * @param {number} [options.z] The z coordinate of the tile. Only required when options.subdivisionScheme is ImplicitSubdivisionScheme.OCTREE
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -101,7 +101,7 @@ function ImplicitTileCoordinates(options) {
   /**
    * The number of distinct levels within the coordinate's subtree
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -112,7 +112,7 @@ function ImplicitTileCoordinates(options) {
    * (3D Tiles 1.1) or the <code>3DTILES_implicit_tiling</code> extension.
    * Level numbers start at 0.
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -121,7 +121,7 @@ function ImplicitTileCoordinates(options) {
   /**
    * X coordinate of this tile
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -130,7 +130,7 @@ function ImplicitTileCoordinates(options) {
   /**
    * Y coordinate of this tile
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -139,7 +139,7 @@ function ImplicitTileCoordinates(options) {
   /**
    * Z coordinate of this tile. Only defined for octrees.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    * @private
    */
@@ -159,7 +159,7 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
    * be computed more directly by concatenating the bits [z0] y0 x0
    * </p>
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -180,7 +180,7 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
    * Get the Morton index for this tile within the current level by interleaving
    * the bits of the x, y and z coordinates.
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -196,7 +196,7 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
   /**
    * Get the tile index by adding the Morton index to the level offset
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -276,7 +276,7 @@ ImplicitTileCoordinates.prototype.getDescendantCoordinates = function (
 /**
  * Compute the coordinates of a tile higher up in the tree by going up a number of levels.
  *
- * @param {Number} offsetLevels The number of levels to go up in the tree
+ * @param {number} offsetLevels The number of levels to go up in the tree
  * @returns {ImplicitTileCoordinates} The coordinates of the ancestor
  * @private
  */
@@ -374,7 +374,7 @@ ImplicitTileCoordinates.prototype.getOffsetCoordinates = function (
  * Given the morton index of the child, compute the coordinates of the child.
  * This is a special case of {@link ImplicitTileCoordinates#getDescendantCoordinates}.
  *
- * @param {Number} childIndex The morton index of the child tile relative to its parent
+ * @param {number} childIndex The morton index of the child tile relative to its parent
  * @returns {ImplicitTileCoordinates} The tile coordinates of the child
  * @private
  */
@@ -444,7 +444,7 @@ ImplicitTileCoordinates.prototype.getParentSubtreeCoordinates = function () {
  * Returns whether this tile is an ancestor of another tile
  *
  * @param {ImplicitTileCoordinates} descendantCoordinates the descendant coordinates
- * @returns {Boolean} <code>true</code> if this tile is an ancestor of the other tile
+ * @returns {boolean} <code>true</code> if this tile is an ancestor of the other tile
  * @private
  */
 ImplicitTileCoordinates.prototype.isAncestor = function (
@@ -479,7 +479,7 @@ ImplicitTileCoordinates.prototype.isAncestor = function (
  * Returns whether the provided coordinates are equal to this coordinate
  *
  * @param {ImplicitTileCoordinates} otherCoordinates the other coordinates
- * @returns {Boolean} <code>true</code> if the coordinates are equal
+ * @returns {boolean} <code>true</code> if the coordinates are equal
  * @private
  */
 ImplicitTileCoordinates.prototype.isEqual = function (otherCoordinates) {
@@ -502,7 +502,7 @@ ImplicitTileCoordinates.prototype.isEqual = function (otherCoordinates) {
 /**
  * Returns whether this tile is the root of the implicit tileset
  *
- * @returns {Boolean} <code>true</code> if this tile is the root
+ * @returns {boolean} <code>true</code> if this tile is the root
  * @private
  */
 ImplicitTileCoordinates.prototype.isImplicitTilesetRoot = function () {
@@ -512,7 +512,7 @@ ImplicitTileCoordinates.prototype.isImplicitTilesetRoot = function () {
 /**
  * Returns whether this tile is the root of the subtree
  *
- * @returns {Boolean} <code>true</code> if this tile is the root of the subtree
+ * @returns {boolean} <code>true</code> if this tile is the root of the subtree
  * @private
  */
 ImplicitTileCoordinates.prototype.isSubtreeRoot = function () {
@@ -522,7 +522,7 @@ ImplicitTileCoordinates.prototype.isSubtreeRoot = function () {
 /**
  * Returns whether this tile is on the last row of tiles in the subtree
  *
- * @returns {Boolean} <code>true</code> if this tile is on the last row of tiles in the subtree
+ * @returns {boolean} <code>true</code> if this tile is on the last row of tiles in the subtree
  * @private
  */
 ImplicitTileCoordinates.prototype.isBottomOfSubtree = function () {
@@ -532,7 +532,7 @@ ImplicitTileCoordinates.prototype.isBottomOfSubtree = function () {
 /**
  * Get a dictionary of values for templating into an implicit template URI.
  *
- * @returns {Object} An object suitable for use with {@link Resource#getDerivedResource}
+ * @returns {object} An object suitable for use with {@link Resource#getDerivedResource}
  * @private
  */
 ImplicitTileCoordinates.prototype.getTemplateValues = function () {
@@ -555,9 +555,9 @@ const scratchCoordinatesArray = [0, 0, 0];
  * octree/quadtree, compute the (level, x, y, [z]) coordinates
  *
  * @param {ImplicitSubdivisionScheme} subdivisionScheme Whether the coordinates are for a quadtree or octree
- * @param {Number} subtreeLevels The number of distinct levels within the coordinate's subtree
- * @param {Number} level The level of the tree
- * @param {Number} mortonIndex The morton index of the tile.
+ * @param {number} subtreeLevels The number of distinct levels within the coordinate's subtree
+ * @param {number} level The level of the tree
+ * @param {number} mortonIndex The morton index of the tile.
  * @returns {ImplicitTileCoordinates} The coordinates of the tile with the given Morton index
  * @private
  */
@@ -598,8 +598,8 @@ ImplicitTileCoordinates.fromMortonIndex = function (
  * the (level, x, y, [z]) coordinates
  *
  * @param {ImplicitSubdivisionScheme} subdivisionScheme Whether the coordinates are for a quadtree or octree
- * @param {Number} subtreeLevels The number of distinct levels within the coordinate's subtree
- * @param {Number} tileIndex The tile's index
+ * @param {number} subtreeLevels The number of distinct levels within the coordinate's subtree
+ * @param {number} tileIndex The tile's index
  * @returns {ImplicitTileCoordinates} The coordinates of the tile with the given tile index
  * @private
  */

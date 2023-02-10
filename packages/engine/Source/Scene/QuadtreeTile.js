@@ -11,9 +11,9 @@ import TileSelectionResult from "./TileSelectionResult.js";
  * @constructor
  * @private
  *
- * @param {Number} options.level The level of the tile in the quadtree.
- * @param {Number} options.x The X coordinate of the tile in the quadtree.  0 is the westernmost tile.
- * @param {Number} options.y The Y coordinate of the tile in the quadtree.  0 is the northernmost tile.
+ * @param {number} options.level The level of the tile in the quadtree.
+ * @param {number} options.x The X coordinate of the tile in the quadtree.  0 is the westernmost tile.
+ * @param {number} options.y The Y coordinate of the tile in the quadtree.  0 is the northernmost tile.
  * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
  * @param {QuadtreeTile} [options.parent] This tile's parent, or undefined if this is a root tile.
  */
@@ -83,7 +83,7 @@ function QuadtreeTile(options) {
 
   /**
    * Gets or sets a value indicating whether or not the tile is currently renderable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.renderable = false;
@@ -93,7 +93,7 @@ function QuadtreeTile(options) {
    * parent tile.  If all four children of a parent tile were upsampled from the parent,
    * we will render the parent instead of the children even if the LOD indicates that
    * the children would be preferable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.upsampledFromParent = false;
@@ -101,7 +101,7 @@ function QuadtreeTile(options) {
   /**
    * Gets or sets the additional data associated with this tile.  The exact content is specific to the
    * {@link QuadtreeTileProvider}.
-   * @type {Object}
+   * @type {object}
    * @default undefined
    */
   this.data = undefined;
@@ -204,7 +204,7 @@ Object.defineProperties(QuadtreeTile.prototype, {
   /**
    * Gets the tile X coordinate.
    * @memberof QuadtreeTile.prototype
-   * @type {Number}
+   * @type {number}
    */
   x: {
     get: function () {
@@ -215,7 +215,7 @@ Object.defineProperties(QuadtreeTile.prototype, {
   /**
    * Gets the tile Y coordinate.
    * @memberof QuadtreeTile.prototype
-   * @type {Number}
+   * @type {number}
    */
   y: {
     get: function () {
@@ -226,7 +226,7 @@ Object.defineProperties(QuadtreeTile.prototype, {
   /**
    * Gets the level-of-detail, where zero is the coarsest, least-detailed.
    * @memberof QuadtreeTile.prototype
-   * @type {Number}
+   * @type {number}
    */
   level: {
     get: function () {
@@ -369,7 +369,7 @@ Object.defineProperties(QuadtreeTile.prototype, {
    * This property will return true if the {@link QuadtreeTile#state} is
    * <code>START</code> or <code>LOADING</code>.
    * @memberof QuadtreeTile.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   needsLoading: {
     get: function () {
@@ -386,7 +386,7 @@ Object.defineProperties(QuadtreeTile.prototype, {
    * <code>eligibleForUnloading</code> property, the value of that property is returned.
    * Otherwise, this property returns true.
    * @memberof QuadtreeTile.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   eligibleForUnloading: {
     get: function () {

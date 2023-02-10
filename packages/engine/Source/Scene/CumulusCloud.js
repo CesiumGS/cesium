@@ -88,7 +88,7 @@ Object.defineProperties(CumulusCloud.prototype, {
    * Determines if this cumulus cloud will be shown.  Use this to hide or show a cloud, instead
    * of removing it and re-adding it to the collection.
    * @memberof CumulusCloud.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   show: {
@@ -293,7 +293,7 @@ Object.defineProperties(CumulusCloud.prototype, {
    * </div>
    *
    * @memberof CumulusCloud.prototype
-   * @type {Number}
+   * @type {number}
    * @default -1.0
    */
   slice: {
@@ -325,7 +325,7 @@ Object.defineProperties(CumulusCloud.prototype, {
    * </tr></table>
    * </div>
    * @memberof CumulusCloud.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   brightness: {

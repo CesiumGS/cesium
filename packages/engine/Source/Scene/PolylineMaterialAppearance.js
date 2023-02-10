@@ -21,12 +21,12 @@ if (!FeatureDetection.isInternetExplorer()) {
  * @alias PolylineMaterialAppearance
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
  * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
- * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
- * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
- * @param {Object} [options.renderState] Optional render state to override the default render state.
+ * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+ * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+ * @param {object} [options.renderState] Optional render state to override the default render state.
  *
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
  *
@@ -72,7 +72,7 @@ function PolylineMaterialAppearance(options) {
    * When <code>true</code>, the geometry is expected to appear translucent so
    * {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -104,7 +104,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
    *
    * @memberof PolylineMaterialAppearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   vertexShaderSource: {
@@ -125,7 +125,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
    *
    * @memberof PolylineMaterialAppearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   fragmentShaderSource: {
@@ -144,7 +144,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
    *
    * @memberof PolylineMaterialAppearance.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   renderState: {
@@ -160,7 +160,7 @@ Object.defineProperties(PolylineMaterialAppearance.prototype, {
    *
    * @memberof PolylineMaterialAppearance.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -206,7 +206,7 @@ PolylineMaterialAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_ST;
  *
  * @function
  *
- * @returns {String} The full GLSL fragment shader source.
+ * @returns {string} The full GLSL fragment shader source.
  */
 PolylineMaterialAppearance.prototype.getFragmentShaderSource =
   Appearance.prototype.getFragmentShaderSource;
@@ -216,7 +216,7 @@ PolylineMaterialAppearance.prototype.getFragmentShaderSource =
  *
  * @function
  *
- * @returns {Boolean} <code>true</code> if the appearance is translucent.
+ * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 PolylineMaterialAppearance.prototype.isTranslucent =
   Appearance.prototype.isTranslucent;
@@ -228,7 +228,7 @@ PolylineMaterialAppearance.prototype.isTranslucent =
  *
  * @function
  *
- * @returns {Object} The render state.
+ * @returns {object} The render state.
  */
 PolylineMaterialAppearance.prototype.getRenderState =
   Appearance.prototype.getRenderState;

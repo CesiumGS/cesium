@@ -1,7 +1,7 @@
 /**
  * An enum identifying the type of request. Used for finer grained logging and priority sorting.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const RequestType = {
   /**

@@ -32,15 +32,15 @@ const excludesReverseAxis = [
 ];
 
 /**
- * @typedef {Object} WebMapServiceImageryProvider.ConstructorOptions
+ * @typedef {object} WebMapServiceImageryProvider.ConstructorOptions
  *
  * Initialization options for the WebMapServiceImageryProvider constructor
  *
- * @property {Resource|String} url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
- * @property {String} layers The layers to include, separated by commas.
- * @property {Object} [parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
- * @property {Object} [getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
- * @property {Boolean} [enablePickFeatures=true] If true, {@link WebMapServiceImageryProvider#pickFeatures} will invoke
+ * @property {Resource|string} url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
+ * @property {string} layers The layers to include, separated by commas.
+ * @property {object} [parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
+ * @property {object} [getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
+ * @property {boolean} [enablePickFeatures=true] If true, {@link WebMapServiceImageryProvider#pickFeatures} will invoke
  *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
  *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
  *        without communicating with the server.  Set this property to false if you know your WMS server does not support
@@ -53,22 +53,22 @@ const excludesReverseAxis = [
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *        this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *        parameter is specified, the WGS84 ellipsoid is used.
- * @property {Number} [tileWidth=256] The width of each tile in pixels.
- * @property {Number} [tileHeight=256] The height of each tile in pixels.
- * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
+ * @property {number} [tileWidth=256] The width of each tile in pixels.
+ * @property {number} [tileHeight=256] The height of each tile in pixels.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
  *        specifying this that the number of tiles at the minimum level is small, such as four or less.  A larger number is
  *        likely to result in rendering problems.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  *        If not specified, there is no limit.
- * @property {String} [crs] CRS specification, for use with WMS specification >= 1.3.0.
- * @property {String} [srs] SRS specification, for use with WMS specification 1.1.0 or 1.1.1
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+ * @property {string} [crs] CRS specification, for use with WMS specification >= 1.3.0.
+ * @property {string} [srs] SRS specification, for use with WMS specification 1.1.0 or 1.1.1
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {string|string[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
- * @property {Resource|String} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
+ * @property {Resource|string} [getFeatureInfoUrl] The getFeatureInfo URL of the WMS service. If the property is not defined then we use the property value of url.
  */
 
 /**
@@ -122,7 +122,7 @@ function WebMapServiceImageryProvider(options) {
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultAlpha = undefined;
@@ -131,7 +131,7 @@ function WebMapServiceImageryProvider(options) {
    * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultNightAlpha = undefined;
@@ -140,7 +140,7 @@ function WebMapServiceImageryProvider(options) {
    * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultDayAlpha = undefined;
@@ -149,7 +149,7 @@ function WebMapServiceImageryProvider(options) {
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultBrightness = undefined;
@@ -158,7 +158,7 @@ function WebMapServiceImageryProvider(options) {
    * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultContrast = undefined;
@@ -166,7 +166,7 @@ function WebMapServiceImageryProvider(options) {
   /**
    * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultHue = undefined;
@@ -175,7 +175,7 @@ function WebMapServiceImageryProvider(options) {
    * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultSaturation = undefined;
@@ -183,7 +183,7 @@ function WebMapServiceImageryProvider(options) {
   /**
    * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultGamma = undefined;
@@ -376,7 +376,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   /**
    * Gets the URL of the WMS server.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -400,7 +400,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   /**
    * Gets the names of the WMS layers, separated by commas.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   layers: {
@@ -413,7 +413,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
    * Gets the width of each tile, in pixels. This function should
    * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -426,7 +426,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
    * Gets the height of each tile, in pixels.  This function should
    * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -439,7 +439,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -452,7 +452,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
    * Gets the minimum level-of-detail that can be requested.  This function should
    * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -519,7 +519,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -531,7 +531,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -560,7 +560,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -576,7 +576,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
    * features) without communicating with the server.  Set this property to false if you know your data
    * source does not support picking features or if you don't want this provider's features to be pickable.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   enablePickFeatures: {
@@ -620,7 +620,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   /**
    * Gets the getFeatureInfo URL of the WMS server.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Resource|String}
+   * @type {Resource|string}
    * @readonly
    */
   getFeatureInfoUrl: {
@@ -633,9 +633,9 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -648,11 +648,11 @@ WebMapServiceImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * Requests the image for a given tile.  This function should
  * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
@@ -690,12 +690,12 @@ WebMapServiceImageryProvider.prototype.requestImage = function (
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
  * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
+ * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *
@@ -725,7 +725,7 @@ WebMapServiceImageryProvider.prototype.pickFeatures = function (
  *    format=image/jpeg
  *
  * @constant
- * @type {Object}
+ * @type {object}
  */
 WebMapServiceImageryProvider.DefaultParameters = Object.freeze({
   service: "WMS",
@@ -742,7 +742,7 @@ WebMapServiceImageryProvider.DefaultParameters = Object.freeze({
  *     request=GetFeatureInfo
  *
  * @constant
- * @type {Object}
+ * @type {object}
  */
 WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters = Object.freeze({
   service: "WMS",

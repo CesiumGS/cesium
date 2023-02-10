@@ -20,9 +20,9 @@ import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
  * @constructor
  *
  * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
- * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+ * @param {number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
- * @param {String} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {string} [options.specularEnvironmentMaps] A URL to a KTX2 file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  */
 function ImageBasedLighting(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -164,7 +164,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    *
    * @memberof ImageBasedLighting.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @default 0.2
    */
   luminanceAtZenith: {
@@ -217,7 +217,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    *
    * @memberof ImageBasedLighting.prototype
    * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
-   * @type {String}
+   * @type {string}
    * @see ImageBasedLighting#sphericalHarmonicCoefficients
    */
   specularEnvironmentMaps: {
@@ -239,7 +239,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * Whether or not image-based lighting is enabled.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -257,7 +257,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * based on the properties and resources have changed.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -271,7 +271,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * Whether or not to use the default spherical harmonic coefficients.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -285,7 +285,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * Whether or not the image-based lighting settings use spherical harmonic coefficients.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -316,7 +316,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * Whether or not to use the default specular environment maps.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -330,7 +330,7 @@ Object.defineProperties(ImageBasedLighting.prototype, {
    * Whether or not the image-based lighting settings use specular environment maps.
    *
    * @memberof ImageBasedLighting.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -477,7 +477,7 @@ ImageBasedLighting.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see ImageBasedLighting#destroy
  * @private

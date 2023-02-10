@@ -6,12 +6,12 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} PolylineGraphics.ConstructorOptions
+ * @typedef {object} PolylineGraphics.ConstructorOptions
  *
  * Initialization options for the PolylineGraphics constructor
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the polyline.
- * @property {Property | Array<Cartesian3>} [positions] A Property specifying the array of {@link Cartesian3} positions that define the line strip.
+ * @property {Property | Cartesian3[]} [positions] A Property specifying the array of {@link Cartesian3} positions that define the line strip.
  * @property {Property | number} [width=1.0] A numeric Property specifying the width in pixels.
  * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if arcType is not ArcType.NONE.
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the polyline.

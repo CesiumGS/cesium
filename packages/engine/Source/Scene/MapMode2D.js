@@ -1,13 +1,13 @@
 /**
  * Describes how the map will operate in 2D.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const MapMode2D = {
   /**
    * The 2D map can be rotated about the z axis.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ROTATE: 0,
@@ -15,7 +15,7 @@ const MapMode2D = {
   /**
    * The 2D map can be scrolled infinitely in the horizontal direction.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   INFINITE_SCROLL: 1,

@@ -1,7 +1,7 @@
 /**
  * The lighting model to use for lighting a {@link Model}.
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -12,7 +12,7 @@ const LightingModel = {
    * when computing <code>out_FragColor</code>. The alpha mode is still
    * applied.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   UNLIT: 0,
@@ -21,7 +21,7 @@ const LightingModel = {
    * both PBR metallic roughness and PBR specular glossiness. Image-based
    * lighting is also applied when possible.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   PBR: 1,

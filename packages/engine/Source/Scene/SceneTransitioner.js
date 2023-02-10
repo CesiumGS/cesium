@@ -299,7 +299,7 @@ SceneTransitioner.prototype.morphTo3D = function (duration, ellipsoid) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 SceneTransitioner.prototype.isDestroyed = function () {
   return false;

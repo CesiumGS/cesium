@@ -51,8 +51,8 @@ function resolve(that) {
  * @constructor
  *
  * @param {EntityCollection} targetCollection The entity collection which will be used to resolve the reference.
- * @param {String} targetId The id of the entity which is being referenced.
- * @param {String[]} targetPropertyNames The names of the property on the target entity which we will use.
+ * @param {string} targetId The id of the entity which is being referenced.
+ * @param {string[]} targetPropertyNames The names of the property on the target entity which we will use.
  *
  * @example
  * const collection = new Cesium.EntityCollection();
@@ -122,7 +122,7 @@ Object.defineProperties(ReferenceProperty.prototype, {
   /**
    * Gets a value indicating if this property is constant.
    * @memberof ReferenceProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -158,7 +158,7 @@ Object.defineProperties(ReferenceProperty.prototype, {
   /**
    * Gets the id of the entity being referenced.
    * @memberof ReferenceProperty.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   targetId: {
@@ -180,7 +180,7 @@ Object.defineProperties(ReferenceProperty.prototype, {
   /**
    * Gets the array of property names used to retrieve the referenced property.
    * @memberof ReferenceProperty.prototype
-   * @type {String[]}
+   * @type {}
    * @readonly
    */
   targetPropertyNames: {
@@ -209,7 +209,7 @@ Object.defineProperties(ReferenceProperty.prototype, {
  * or any sub-properties contains a # . or \ they must be escaped.
  *
  * @param {EntityCollection} targetCollection
- * @param {String} referenceString
+ * @param {string} referenceString
  * @returns {ReferenceProperty} A new instance of ReferenceProperty.
  *
  * @exception {DeveloperError} invalid referenceString.
@@ -258,8 +258,8 @@ ReferenceProperty.fromString = function (targetCollection, referenceString) {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 ReferenceProperty.prototype.getValue = function (time, result) {
   const target = resolve(this);
@@ -291,7 +291,7 @@ ReferenceProperty.prototype.getValueInReferenceFrame = function (
  * This method is only valid if the property being referenced is a {@link MaterialProperty}.
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 ReferenceProperty.prototype.getType = function (time) {
   const target = resolve(this);
@@ -303,7 +303,7 @@ ReferenceProperty.prototype.getType = function (time) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 ReferenceProperty.prototype.equals = function (other) {
   if (this === other) {

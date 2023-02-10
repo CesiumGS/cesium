@@ -9,7 +9,7 @@ import DeveloperError from "./DeveloperError.js";
  * @alias ShowGeometryInstanceAttribute
  * @constructor
  *
- * @param {Boolean} [show=true] Determines if the geometry instance will be shown.
+ * @param {boolean} [show=true] Determines if the geometry instance will be shown.
  *
  *
  * @example
@@ -66,7 +66,7 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
    *
    * @memberof ShowGeometryInstanceAttribute.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @default 1
@@ -84,7 +84,7 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
    *
    * @memberof ShowGeometryInstanceAttribute.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -99,7 +99,7 @@ Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
 /**
  * Converts a boolean show to a typed array that can be used to assign a show attribute.
  *
- * @param {Boolean} show The show value.
+ * @param {boolean} show The show value.
  * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
  * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
  *

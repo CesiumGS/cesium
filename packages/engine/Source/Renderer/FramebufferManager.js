@@ -13,15 +13,15 @@ import PixelFormat from "../Core/PixelFormat.js";
 /**
  * Creates a wrapper object around a framebuffer and its resources.
  *
- * @param {Object} options Object with the following properties:
- * @param {Number} [options.numSamples=1] The multisampling rate of the render targets. Requires a WebGL2 context.
- * @param {Number} [options.colorAttachmentsLength=1] The number of color attachments this FramebufferManager will create.
- * @param {Boolean} [options.color=true] Whether the FramebufferManager will use color attachments.
- * @param {Boolean} [options.depth=false] Whether the FramebufferManager will use depth attachments.
- * @param {Boolean} [options.depthStencil=false] Whether the FramebufferManager will use depth-stencil attachments.
- * @param {Boolean} [options.supportsDepthTexture=false] Whether the FramebufferManager will create a depth texture when the extension is supported.
- * @param {Boolean} [options.createColorAttachments=true] Whether the FramebufferManager will construct its own color attachments.
- * @param {Boolean} [options.createDepthAttachments=true] Whether the FramebufferManager will construct its own depth attachments.
+ * @param {object} options Object with the following properties:
+ * @param {number} [options.numSamples=1] The multisampling rate of the render targets. Requires a WebGL2 context.
+ * @param {number} [options.colorAttachmentsLength=1] The number of color attachments this FramebufferManager will create.
+ * @param {boolean} [options.color=true] Whether the FramebufferManager will use color attachments.
+ * @param {boolean} [options.depth=false] Whether the FramebufferManager will use depth attachments.
+ * @param {boolean} [options.depthStencil=false] Whether the FramebufferManager will use depth-stencil attachments.
+ * @param {boolean} [options.supportsDepthTexture=false] Whether the FramebufferManager will create a depth texture when the extension is supported.
+ * @param {boolean} [options.createColorAttachments=true] Whether the FramebufferManager will construct its own color attachments.
+ * @param {boolean} [options.createDepthAttachments=true] Whether the FramebufferManager will construct its own depth attachments.
  * @param {PixelDatatype} [options.pixelDatatype=undefined] The default pixel datatype to use when creating color attachments.
  * @param {PixelFormat} [options.pixelFormat=undefined] The default pixel format to use when creating color attachments.
  *

@@ -29,8 +29,8 @@ function StyleExpression() {}
  * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
  *
  * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
- * @param {Object} [result] The object onto which to store the result.
- * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
+ * @param {object} [result] The object onto which to store the result.
+ * @returns {boolean|number|string|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
  */
 StyleExpression.prototype.evaluate = function (feature, result) {
   DeveloperError.throwInstantiationError();
@@ -54,12 +54,12 @@ StyleExpression.prototype.evaluateColor = function (feature, result) {
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
  *
- * @param {String} functionSignature Signature of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
- * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
- * @param {String} returnType The return type of the generated function.
+ * @param {string} functionSignature Signature of the generated function.
+ * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
+ * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
+ * @param {string} returnType The return type of the generated function.
  *
- * @returns {String} The shader function.
+ * @returns {string} The shader function.
  *
  * @private
  */
@@ -75,7 +75,7 @@ StyleExpression.prototype.getShaderFunction = function (
 /**
  * Gets the variables used by the expression.
  *
- * @returns {String[]} The variables used by the expression.
+ * @returns {string[]} The variables used by the expression.
  *
  * @private
  */

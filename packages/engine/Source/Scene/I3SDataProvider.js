@@ -70,13 +70,13 @@ import Rectangle from "../Core/Rectangle.js";
  * @alias I3SDataProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url of the I3S dataset.
- * @param {String} [options.name] The name of the I3S dataset.
- * @param {Boolean} [options.show=true] Determines if the dataset will be shown.
+ * @param {object} options Object with the following properties:
+ * @param {Resource|string} options.url The url of the I3S dataset.
+ * @param {string} [options.name] The name of the I3S dataset.
+ * @param {boolean} [options.show=true] Determines if the dataset will be shown.
  * @param {ArcGISTiledElevationTerrainProvider} [options.geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
- * @param {Boolean} [options.traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
- * @param {Object} [options.cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
+ * @param {boolean} [options.traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
+ * @param {object} [options.cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
  *
  * @example
  * const i3sData = new I3SDataProvider({
@@ -130,7 +130,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * Gets a human-readable name for this dataset.
    * @memberof I3SDataProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -142,7 +142,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * Determines if the dataset will be shown.
    * @memberof I3SDataProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -165,7 +165,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * Gets or sets debugging and tracing of I3S fetches.
    * @memberof I3SDataProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   traceFetches: {
     get: function () {
@@ -215,7 +215,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * Gets the I3S data for this object.
    * @memberof I3SDataProvider.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   data: {
@@ -255,7 +255,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
   /**
    * Gets the promise that will be resolved when the I3S scene is loaded.
    * @memberof I3SDataProvider.prototype
-   * @type {Promise.<I3SDataProvider>}
+   * @type {Promise<I3SDataProvider>}
    * @readonly
    */
   readyPromise: {
@@ -268,7 +268,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
    * When <code>true</code>, the I3S scene is loaded.
    * This is set to <code>true</code> right before {@link I3SDataProvider#readyPromise} is resolved.
    * @memberof I3SDataProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -320,7 +320,7 @@ I3SDataProvider.prototype.destroy = function () {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see I3SDataProvider#destroy
  */

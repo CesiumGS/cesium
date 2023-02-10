@@ -13,7 +13,7 @@ const scratchBarycentricCoords = new Cartesian3();
  * @param {Cartesian2|Cartesian3} p0 The first point of the triangle.
  * @param {Cartesian2|Cartesian3} p1 The second point of the triangle.
  * @param {Cartesian2|Cartesian3} p2 The third point of the triangle.
- * @returns {Boolean} <code>true</code> if the point is inside the triangle; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the point is inside the triangle; otherwise, <code>false</code>.
  *
  * @example
  * // Returns true

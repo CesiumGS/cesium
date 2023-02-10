@@ -4,13 +4,13 @@
  * it has no visibility, may partially block an occludee from view, or may not block it at all,
  * leading to full visibility.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const Visibility = {
   /**
    * Represents that no part of an object is visible.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NONE: -1,
@@ -18,7 +18,7 @@ const Visibility = {
   /**
    * Represents that part, but not all, of an object is visible
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   PARTIAL: 0,
@@ -26,7 +26,7 @@ const Visibility = {
   /**
    * Represents that an object is visible in its entirety.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   FULL: 1,

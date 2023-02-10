@@ -3,9 +3,9 @@ import defaultValue from "../Core/defaultValue.js";
 /**
  * Image formats supported by the browser.
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.webp=false] Whether the browser supports WebP images.
- * @param {Boolean} [options.basis=false] Whether the browser supports compressed textures required to view KTX2 + Basis Universal images.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.webp=false] Whether the browser supports WebP images.
+ * @param {boolean} [options.basis=false] Whether the browser supports compressed textures required to view KTX2 + Basis Universal images.
  *
  * @private
  */

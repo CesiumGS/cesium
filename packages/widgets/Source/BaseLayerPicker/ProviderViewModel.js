@@ -8,11 +8,11 @@ import createCommand from "../createCommand.js";
  * @alias ProviderViewModel
  * @constructor
  *
- * @param {Object} options The object containing all parameters.
- * @param {String} options.name The name of the layer.
- * @param {String} options.tooltip The tooltip to show when the item is moused over.
- * @param {String} options.iconUrl An icon representing the layer.
- * @param {String} [options.category] A category for the layer.
+ * @param {object} options The object containing all parameters.
+ * @param {string} options.name The name of the layer.
+ * @param {string} options.tooltip The tooltip to show when the item is moused over.
+ * @param {string} options.iconUrl An icon representing the layer.
+ * @param {string} [options.category] A category for the layer.
  * @param {ProviderViewModel.CreationFunction|Command} options.creationFunction A function or Command
  *        that creates one or more providers which will be added to the globe when this item is selected.
  *
@@ -45,19 +45,19 @@ function ProviderViewModel(options) {
 
   /**
    * Gets the display name.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.name = options.name;
 
   /**
    * Gets the tooltip.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.tooltip = options.tooltip;
 
   /**
    * Gets the icon.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.iconUrl = options.iconUrl;
 
@@ -83,7 +83,7 @@ Object.defineProperties(ProviderViewModel.prototype, {
 
   /**
    * Gets the category
-   * @type {String}
+   * @type {string}
    * @memberof ProviderViewModel.prototype
    * @readonly
    */

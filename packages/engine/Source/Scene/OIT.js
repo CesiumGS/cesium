@@ -131,8 +131,8 @@ function destroyResources(oit) {
  * @private
  * @param {OIT} oit
  * @param {Context} context
- * @param {Number} width
- * @param {Number} height
+ * @param {number} width
+ * @param {number} height
  */
 function updateTextures(oit, context, width, height) {
   destroyTextures(oit);
@@ -165,7 +165,7 @@ function updateTextures(oit, context, width, height) {
  * @private
  * @param {OIT} oit
  * @param {Context} context
- * @returns {Boolean}
+ * @returns {boolean}
  */
 function updateFramebuffers(oit, context) {
   destroyFramebuffers(oit);
@@ -236,8 +236,8 @@ function updateFramebuffers(oit, context) {
  * @param {Context} context
  * @param {PassState} passState
  * @param {Framebuffer} framebuffer
- * @param {Boolean} useHDR
- * @param {Number} numSamples
+ * @param {boolean} useHDR
+ * @param {number} numSamples
  */
 OIT.prototype.update = function (
   context,
@@ -510,8 +510,8 @@ const alphaShaderSource =
  * @private
  * @param {Context} context
  * @param {ShaderProgram} shaderProgram
- * @param {String} keyword
- * @param {String} source
+ * @param {string} keyword
+ * @param {string} source
  * @returns {ShaderProgram}
  */
 function getTranslucentShaderProgram(context, shaderProgram, keyword, source) {
@@ -941,7 +941,7 @@ OIT.prototype.clear = function (context, passState, clearColor) {
 
 /**
  * @private
- * @returns {Boolean}
+ * @returns {boolean}
  */
 OIT.prototype.isSupported = function () {
   return this._translucentMRTSupport || this._translucentMultipassSupport;
@@ -949,7 +949,7 @@ OIT.prototype.isSupported = function () {
 
 /**
  * @private
- * @returns {Boolean}
+ * @returns {boolean}
  */
 OIT.prototype.isDestroyed = function () {
   return false;

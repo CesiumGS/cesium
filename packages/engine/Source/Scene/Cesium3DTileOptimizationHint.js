@@ -1,7 +1,7 @@
 /**
  * Hint defining optimization support for a 3D tile
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @private
  */

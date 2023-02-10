@@ -240,8 +240,8 @@ const EasingFunction = {
 /**
  * Function interface for implementing a custom easing function.
  * @callback EasingFunction.Callback
- * @param {Number} time The time in the range <code>[0, 1]</code>.
- * @returns {Number} The value of the function at the given time.
+ * @param {number} time The time in the range <code>[0, 1]</code>.
+ * @returns {number} The value of the function at the given time.
  *
  * @example
  * function quadraticIn(time) {

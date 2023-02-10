@@ -9,9 +9,9 @@ import RuntimeError from "./RuntimeError.js";
  * @function
  *
  * @param {Uint8Array} uint8Array The Uint8Array to read from.
- * @param {Number} [byteOffset=0] The byte offset to start reading from.
- * @param {Number} [byteLength] The byte length to read. If byteLength is omitted the remainder of the buffer is read.
- * @returns {String} The string.
+ * @param {number} [byteOffset=0] The byte offset to start reading from.
+ * @param {number} [byteLength] The byte length to read. If byteLength is omitted the remainder of the buffer is read.
+ * @returns {string} The string.
  *
  * @private
  */

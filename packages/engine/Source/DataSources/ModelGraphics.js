@@ -19,7 +19,7 @@ function createArticulationStagePropertyBag(value) {
 }
 
 /**
- * @typedef {Object} ModelGraphics.ConstructorOptions
+ * @typedef {object} ModelGraphics.ConstructorOptions
  *
  * Initialization options for the ModelGraphics constructor
  *

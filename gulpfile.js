@@ -499,7 +499,7 @@ export const release = gulp.series(
  * Removes scripts from package.json files to ensure that
  * they still work when run from within the ZIP file.
  *
- * @param {String} packageJsonPath The path to the package.json.
+ * @param {string} packageJsonPath The path to the package.json.
  * @returns {WritableStream} A stream that writes to the updated package.json file.
  */
 async function pruneScriptsForZip(packageJsonPath) {
@@ -1250,15 +1250,15 @@ async function setStatus(state, targetUrl, description, context) {
 /**
  * Generates coverage report.
  *
- * @param {Object} options An object with the following properties:
- * @param {String} options.outputDirectory The output directory for the generated build artifacts.
- * @param {String} options.coverageDirectory The path where the coverage reports should be saved to.
- * @param {String} options.specList The path to the spec list for the package.
+ * @param {object} options An object with the following properties:
+ * @param {string} options.outputDirectory The output directory for the generated build artifacts.
+ * @param {string} options.coverageDirectory The path where the coverage reports should be saved to.
+ * @param {string} options.specList The path to the spec list for the package.
  * @param {RegExp} options.filter The filter for finding which files should be instrumented.
- * @param {Boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
- * @param {Boolean} [options.suppressPassed=false] True if output should be suppressed for tests that pass.
- * @param {Boolean} [options.failTaskOnError=false] True if the gulp task should fail on errors in the tests.
- * @param {String} options.workspace The name of the workspace, if any.
+ * @param {boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
+ * @param {boolean} [options.suppressPassed=false] True if output should be suppressed for tests that pass.
+ * @param {boolean} [options.failTaskOnError=false] True if the gulp task should fail on errors in the tests.
+ * @param {string} options.workspace The name of the workspace, if any.
  */
 export async function runCoverage(options) {
   const webglStub = options.webglStub ?? false;
@@ -1635,7 +1635,7 @@ export async function test() {
  * Generates TypeScript definition file (.d.ts) for a package.
  *
  * @param {*} workspaceName
- * @param {String} definitionsPath The path of the .d.ts file to generate.
+ * @param {string} definitionsPath The path of the .d.ts file to generate.
  * @param {*} configurationPath
  * @param {*} processSourceFunc
  * @param {*} processModulesFunc
@@ -1920,9 +1920,9 @@ ${source}
 
 /**
  * Reads `ThirdParty.extra.json` file
- * @param path {string} Path to `ThirdParty.extra.json`
- * @param discoveredDependencies {Array<string>} List of previously discovered modules
- * @returns {Promise<Array<Object>>} A promise to an array of objects with 'name`, `license`, and `url` strings
+ * @param {string} path Path to `ThirdParty.extra.json`
+ * @param {string[]} discoveredDependencies  List of previously discovered modules
+ * @returns {Promise<object[]>} A promise to an array of objects with 'name`, `license`, and `url` strings
  */
 async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
   if (!existsSync(path)) {
@@ -1973,10 +1973,10 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
 /**
  * Extracts name, license, and url from `package.json` file.
  *
- * @param packageName {string} Name of package
- * @param discoveredDependencies {Array<string>} List of previously discovered modules
- * @param licenseOverride {Array<string>} If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
- * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
+ * @param {string} packageName Name of package
+ * @param {string[]} discoveredDependencies List of previously discovered modules
+ * @param {string[]} licenseOverride If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
+ * @returns {Promise<object>} A promise to an object with 'name`, `license`, and `url` strings
  */
 async function getLicenseDataFromPackage(
   packageJson,

@@ -24,7 +24,7 @@ Object.defineProperties(Fullscreen, {
    * The element that is currently fullscreen, if any.  To simply check if the
    * browser is in fullscreen mode or not, use {@link Fullscreen#fullscreen}.
    * @memberof Fullscreen
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   element: {
@@ -43,7 +43,7 @@ Object.defineProperties(Fullscreen, {
    * In your event handler, to determine if the browser is in fullscreen mode or not,
    * use {@link Fullscreen#fullscreen}.
    * @memberof Fullscreen
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   changeEventName: {
@@ -60,7 +60,7 @@ Object.defineProperties(Fullscreen, {
    * The name of the event that is fired when a fullscreen error
    * occurs.  This event name is intended for use with addEventListener.
    * @memberof Fullscreen
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   errorEventName: {
@@ -78,7 +78,7 @@ Object.defineProperties(Fullscreen, {
    * For example, by default, iframes cannot go fullscreen unless the containing page
    * adds an "allowfullscreen" attribute (or prefixed equivalent).
    * @memberof Fullscreen
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   enabled: {
@@ -94,7 +94,7 @@ Object.defineProperties(Fullscreen, {
   /**
    * Determines if the browser is currently in fullscreen mode.
    * @memberof Fullscreen
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   fullscreen: {
@@ -111,7 +111,7 @@ Object.defineProperties(Fullscreen, {
 /**
  * Detects whether the browser supports the standard fullscreen API.
  *
- * @returns {Boolean} <code>true</code> if the browser supports the standard fullscreen API,
+ * @returns {boolean} <code>true</code> if the browser supports the standard fullscreen API,
  * <code>false</code> otherwise.
  */
 Fullscreen.supportsFullscreen = function () {
@@ -214,8 +214,8 @@ Fullscreen.supportsFullscreen = function () {
  * Asynchronously requests the browser to enter fullscreen mode on the given element.
  * If fullscreen mode is not supported by the browser, does nothing.
  *
- * @param {Object} element The HTML element which will be placed into fullscreen mode.
- * @param {Object} [vrDevice] The HMDVRDevice device.
+ * @param {object} element The HTML element which will be placed into fullscreen mode.
+ * @param {object} [vrDevice] The HMDVRDevice device.
  *
  * @example
  * // Put the entire page into fullscreen.

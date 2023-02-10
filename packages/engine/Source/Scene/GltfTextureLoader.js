@@ -22,15 +22,15 @@ import resizeImageToNextPowerOfTwo from "../Core/resizeImageToNextPowerOfTwo.js"
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Object} options.gltf The glTF JSON.
- * @param {Object} options.textureInfo The texture info object.
+ * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.textureInfo The texture info object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
- * @param {String} [options.cacheKey] The cache key of the resource.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {string} [options.cacheKey] The cache key of the resource.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @private
  */
@@ -92,7 +92,7 @@ Object.defineProperties(GltfTextureLoader.prototype, {
    *
    * @memberof GltfTextureLoader.prototype
    *
-   * @type {Promise.<GltfTextureLoader>|undefined}
+   * @type {Promise<GltfTextureLoader>|undefined}
    * @readonly
    * @private
    */
@@ -106,7 +106,7 @@ Object.defineProperties(GltfTextureLoader.prototype, {
    *
    * @memberof GltfTextureLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -135,7 +135,7 @@ const scratchTextureJob = new CreateTextureJob();
 
 /**
  * Loads the resource.
- * @returns {Promise.<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfTextureLoader.prototype.load = function () {

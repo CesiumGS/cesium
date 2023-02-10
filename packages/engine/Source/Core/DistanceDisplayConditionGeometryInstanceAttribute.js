@@ -9,8 +9,8 @@ import DeveloperError from "./DeveloperError.js";
  * @alias DistanceDisplayConditionGeometryInstanceAttribute
  * @constructor
  *
- * @param {Number} [near=0.0] The near distance.
- * @param {Number} [far=Number.MAX_VALUE] The far distance.
+ * @param {number} [near=0.0] The near distance.
+ * @param {number} [far=Number.MAX_VALUE] The far distance.
  *
  * @exception {DeveloperError} far must be greater than near.
  *
@@ -79,7 +79,7 @@ Object.defineProperties(
      *
      * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
      *
-     * @type {Number}
+     * @type {number}
      * @readonly
      *
      * @default 3
@@ -97,7 +97,7 @@ Object.defineProperties(
      *
      * @memberof DistanceDisplayConditionGeometryInstanceAttribute.prototype
      *
-     * @type {Boolean}
+     * @type {boolean}
      * @readonly
      *
      * @default false

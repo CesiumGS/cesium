@@ -1,7 +1,7 @@
 /**
  * State of the request.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const RequestState = {
   /**
