@@ -397,7 +397,7 @@ function Context(canvas, options) {
  * especially for horizon views.
  * </p>
  *
- * @property {boolean} [requestWebGl1=false] If true and the browser supports it, use a WebGL 1 rendering context
+ * @property {boolean} [requestWebgl1=false] If true and the browser supports it, use a WebGL 1 rendering context
  * @property {boolean} [allowTextureFilterAnisotropic=true] If true, use anisotropic filtering during texture sampling
  * @property {WebGLOptions} [webgl] WebGL options to be passed on to canvas.getContext
  * @property {Function} [getWebGLStub] A function to create a WebGL stub for testing

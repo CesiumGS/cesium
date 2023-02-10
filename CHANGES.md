@@ -11,6 +11,7 @@
 ##### Fixes :wrench:
 
 - Fixed Primitive.getGeometryInstanceAttributes cache acquisition speed. [#11066](https://github.com/CesiumGS/cesium/issues/11066)
+- Fixed requestWebgl1 hint error in context. [#11082](https://github.com/CesiumGS/cesium/issues/11082)
 
 ### 1.102 - 2023-02-01
 
