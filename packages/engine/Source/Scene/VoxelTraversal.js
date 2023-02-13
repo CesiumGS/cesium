@@ -145,16 +145,6 @@ function VoxelTraversal(
    */
   this._binaryTreeKeyframeWeighting = new Array(keyframeCount);
 
-  function binaryTreeWeightingRecursive(arr, start, end, depth) {
-    if (start > end) {
-      return;
-    }
-    const mid = Math.floor((start + end) / 2);
-    arr[mid] = depth;
-    binaryTreeWeightingRecursive(arr, start, mid - 1, depth + 1);
-    binaryTreeWeightingRecursive(arr, mid + 1, end, depth + 1);
-  }
-
   const binaryTreeKeyframeWeighting = this._binaryTreeKeyframeWeighting;
   binaryTreeKeyframeWeighting[0] = 0;
   binaryTreeKeyframeWeighting[keyframeCount - 1] = 0;
@@ -226,6 +216,16 @@ function VoxelTraversal(
    * @readonly
    */
   this.leafNodeTexelSizeUv = new Cartesian2();
+}
+
+function binaryTreeWeightingRecursive(arr, start, end, depth) {
+  if (start > end) {
+    return;
+  }
+  const mid = Math.floor((start + end) / 2);
+  arr[mid] = depth;
+  binaryTreeWeightingRecursive(arr, start, mid - 1, depth + 1);
+  binaryTreeWeightingRecursive(arr, mid + 1, end, depth + 1);
 }
 
 VoxelTraversal.simultaneousRequestCountMaximum = 50;

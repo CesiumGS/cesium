@@ -65,16 +65,6 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   this.computeBoundingVolumes(shape, voxelDimensions);
 }
 
-/**
- * @param {SpatialNode} a
- * @param {SpatialNode} b
- * @returns {Boolean}
- */
-SpatialNode.spatialComparator = function (a, b) {
-  // The higher of the two screen space errors is prioritized
-  return b.screenSpaceError - a.screenSpaceError;
-};
-
 const scratchObbHalfScale = new Cartesian3();
 
 /**
