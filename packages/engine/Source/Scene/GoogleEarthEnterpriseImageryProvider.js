@@ -226,7 +226,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
   if (defined(options.metadata)) {
     deprecationWarning(
       "GoogleEarthEnterpriseImageryProvider options.metadata",
-      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+      "options.metadata was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
     );
     metadata = options.metadata;
   }
