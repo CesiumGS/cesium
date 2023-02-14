@@ -4390,9 +4390,15 @@ function setTerrain(scene, terrain) {
     scene._removeTerrainProviderReadyListener &&
     scene._removeTerrainProviderReadyListener();
 
-  // Set a placeholder
+  // If the terrain is already loaded, set it immediately
+  if (terrain.ready) {
+    if (defined(scene.globe)) {
+      scene.globe.terrainProvider = terrain.provider;
+    }
+    return;
+  }
+  // Otherwise, set a placeholder
   scene.globe.terrainProvider = undefined;
-
   scene._removeTerrainProviderReadyListener = terrain.readyEvent.addEventListener(
     (provider) => {
       if (defined(scene) && defined(scene.globe)) {

@@ -32,11 +32,15 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        try {
+          viewer.scene.terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
             "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
-          ),
-        }); //Sandcastle_End
+          );
+        } catch (error) {
+          window.alert(`Failed to load terrain. ${error}`);
+        } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;

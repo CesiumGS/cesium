@@ -254,9 +254,21 @@ function BaseLayerPickerViewModel(options) {
         newProvider = value.creationCommand();
       }
 
+      let cancelUpdate = false;
+      const removeCancelListener = this._globe.terrainProviderChanged.addEventListener(
+        () => {
+          cancelUpdate = true;
+          removeCancelListener();
+        }
+      );
       const terrain = new Terrain(Promise.resolve(newProvider));
       const removeEventListener = terrain.readyEvent.addEventListener(
         (terrainProvider) => {
+          if (cancelUpdate) {
+            // Early return in case something has outside of the picker.
+            return;
+          }
+
           this._globe.depthTestAgainstTerrain = !(
             terrainProvider instanceof EllipsoidTerrainProvider
           );

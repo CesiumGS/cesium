@@ -794,10 +794,9 @@
           .getObservable(viewModel, "enableTerrain")
           .subscribe(async function (newValue) {
             if (newValue) {
-              const provider = await Cesium.createWorldTerrainAsync();
-              globe.terrainProvider = provider;
+              scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
             } else {
-              globe.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+              scene.terrainProvider = new Cesium.EllipsoidTerrainProvider();
             }
           });
         Cesium.knockout

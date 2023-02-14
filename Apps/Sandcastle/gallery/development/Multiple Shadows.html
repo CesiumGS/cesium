@@ -46,7 +46,7 @@
           infoBox: false,
           selectionIndicator: false,
           timeline: false,
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const scene = viewer.scene;

@@ -44,6 +44,7 @@ function Terrain(terrainProviderPromise) {
   Check.typeOf.object("terrainProviderPromise", terrainProviderPromise);
   //>>includeEnd('debug');
 
+  this._ready = false;
   this._provider = undefined;
   this._errorEvent = new Event();
   this._readyEvent = new Event();
@@ -76,6 +77,19 @@ Object.defineProperties(Terrain.prototype, {
   readyEvent: {
     get: function () {
       return this._readyEvent;
+    },
+  },
+
+  /**
+   * Returns true when the terrain provider has been successfully created. Otherwise, returns false.
+   * @memberof Viewer.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   */
+  ready: {
+    get: function () {
+      return this._ready;
     },
   },
 
@@ -155,12 +169,12 @@ async function handlePromise(instance, promise) {
   let provider;
   try {
     provider = await Promise.resolve(promise);
+    instance._provider = provider;
+    instance._ready = true;
+    instance._readyEvent.raiseEvent(provider);
   } catch (error) {
     handleError(instance._errorEvent, error);
   }
-
-  instance._provider = provider;
-  instance._readyEvent.raiseEvent(provider);
 }
 
 export default Terrain;

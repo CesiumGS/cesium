@@ -38,7 +38,7 @@
         //Sandcastle_Begin
         // An example showing a point cloud tileset classified by a Geometry tileset.
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.

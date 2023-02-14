@@ -38,7 +38,7 @@
         //Sandcastle_Begin
         // Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         viewer.scene.globe.depthTestAgainstTerrain = true;

@@ -743,8 +743,6 @@
 
         scene.debugShowFramesPerSecond = true;
 
-        const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
-
         function getModelPosition() {
           if (viewModel.modelPosition === "Ground") {
             return 0.0;
@@ -759,7 +757,14 @@
           }
         }
 
-        const createWorldTerrainPromise = Cesium.createWorldTerrainAsync();
+        const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+        let worldTerrain;
+        try {
+          worldTerrain = await Cesium.createWorldTerrainAsync();
+        } catch (error) {
+          console.log(`Failed to create world terrain. ${error}`);
+        }
+
         async function updateLocation() {
           // Get the height of the terrain at the given longitude/latitude, then create the scene.
           const location = uiOptions.locations[viewModel.location];
@@ -769,19 +774,28 @@
               location.centerLatitude
             ),
           ];
+
           let terrainProvider = ellipsoidTerrainProvider;
-          if (viewModel.terrain) {
-            terrainProvider = await createWorldTerrainPromise;
+          if (viewModel.terrain && Cesium.defined(worldTerrain)) {
+            terrainProvider = worldTerrain;
           }
-          globe.terrainProvider = terrainProvider;
-          const updatedPositions = await Cesium.sampleTerrain(
-            terrainProvider,
-            11,
-            positions
-          );
-          location.height = updatedPositions[0].height + getModelPosition();
+
+          scene.terrainProvider = terrainProvider;
+
+          try {
+            const updatedPositions = await Cesium.sampleTerrain(
+              terrainProvider,
+              11,
+              positions
+            );
+            location.height = updatedPositions[0].height + getModelPosition();
+          } catch (error) {
+            console.log(`There was an error sampling terrain. ${error}`);
+          }
+
           createScene();
         }
+
         updateLocation();
 
         function createScene() {
