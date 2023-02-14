@@ -83,18 +83,12 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer");
-
-        (async () => {
-          try {
-            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
-          } catch (error) {
-            console.log(error);
-          }
-        })();
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+        });
 
         // A ~10 billion point 3D Tileset of the city of Montreal, Canada captured in 2015 with a resolution of 20 cm. Tiled and hosted by Cesium ion.
         const tileset = viewer.scene.primitives.add(
@@ -429,11 +423,14 @@
             applyStyle(tileset, pointStyles);
           });
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

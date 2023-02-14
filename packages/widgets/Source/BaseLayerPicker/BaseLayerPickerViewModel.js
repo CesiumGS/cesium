@@ -3,6 +3,7 @@ import {
   defined,
   DeveloperError,
   EllipsoidTerrainProvider,
+  Terrain,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
@@ -181,7 +182,7 @@ function BaseLayerPickerViewModel(options) {
     get: function () {
       return selectedImageryViewModel();
     },
-    set: async function (value) {
+    set: function (value) {
       if (selectedImageryViewModel() === value) {
         this.dropDownVisible = false;
         return;
@@ -253,31 +254,31 @@ function BaseLayerPickerViewModel(options) {
         newProvider = value.creationCommand();
       }
 
-      selectedTerrainViewModel(value);
-
-      const updateTerrainProvider = async () => {
-        try {
-          const provider = await Promise.resolve(newProvider);
-
-          if (!defined(provider) || this._globe.isDestroyed()) {
-            this.dropDownVisible = false;
+      let cancelUpdate = false;
+      const removeCancelListener = this._globe.terrainProviderChanged.addEventListener(
+        () => {
+          cancelUpdate = true;
+          removeCancelListener();
+        }
+      );
+      const terrain = new Terrain(Promise.resolve(newProvider));
+      const removeEventListener = terrain.readyEvent.addEventListener(
+        (terrainProvider) => {
+          if (cancelUpdate) {
+            // Early return in case something has outside of the picker.
             return;
           }
 
           this._globe.depthTestAgainstTerrain = !(
-            provider instanceof EllipsoidTerrainProvider
+            terrainProvider instanceof EllipsoidTerrainProvider
           );
-          this._globe.terrainProvider = provider;
-        } catch (error) {
-          console.log(
-            `An error occurred while creating the terrain provider: ${error}`
-          );
+          this._globe.terrainProvider = terrainProvider;
+          removeEventListener();
         }
+      );
 
-        this.dropDownVisible = false;
-      };
-
-      updateTerrainProvider();
+      selectedTerrainViewModel(value);
+      this.dropDownVisible = false;
     },
   });
 
@@ -290,12 +291,9 @@ function BaseLayerPickerViewModel(options) {
     options.selectedImageryProviderViewModel,
     imageryProviderViewModels[0]
   );
-
-  selectedTerrainViewModel(
-    defaultValue(
-      options.selectedTerrainProviderViewModel,
-      terrainProviderViewModels[0]
-    )
+  this.selectedTerrain = defaultValue(
+    options.selectedTerrainProviderViewModel,
+    terrainProviderViewModels[0]
   );
 }
 
@@ -303,6 +301,7 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
   /**
    * Gets the command to toggle the visibility of the drop down.
    * @memberof BaseLayerPickerViewModel.prototype
+   *
    * @type {Command}
    */
   toggleDropDown: {
@@ -314,6 +313,7 @@ Object.defineProperties(BaseLayerPickerViewModel.prototype, {
   /**
    * Gets the globe.
    * @memberof BaseLayerPickerViewModel.prototype
+   *
    * @type {Globe}
    */
   globe: {

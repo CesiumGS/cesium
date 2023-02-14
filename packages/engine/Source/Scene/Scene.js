@@ -3,6 +3,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
+import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
@@ -638,6 +639,7 @@ function Scene(options) {
     requestRenderAfterFrame(this)
   );
   this._removeGlobeCallbacks = [];
+  this._removeTerrainProviderReadyListener = undefined;
 
   const viewport = new BoundingRectangle(
     0,
@@ -1104,6 +1106,11 @@ Object.defineProperties(Scene.prototype, {
       return this.globe.terrainProvider;
     },
     set: function (terrainProvider) {
+      // Cancel any in-progress terrain update
+      this._removeTerrainProviderReadyListener =
+        this._removeTerrainProviderReadyListener &&
+        this._removeTerrainProviderReadyListener();
+
       if (defined(this.globe)) {
         this.globe.terrainProvider = terrainProvider;
       }
@@ -4377,6 +4384,61 @@ Scene.prototype.morphTo3D = function (duration) {
   this._transitioner.morphTo3D(duration, ellipsoid);
 };
 
+function setTerrain(scene, terrain) {
+  // Cancel any in-progress terrain update
+  scene._removeTerrainProviderReadyListener =
+    scene._removeTerrainProviderReadyListener &&
+    scene._removeTerrainProviderReadyListener();
+
+  // If the terrain is already loaded, set it immediately
+  if (terrain.ready) {
+    if (defined(scene.globe)) {
+      scene.globe.terrainProvider = terrain.provider;
+    }
+    return;
+  }
+  // Otherwise, set a placeholder
+  scene.globe.terrainProvider = undefined;
+  scene._removeTerrainProviderReadyListener = terrain.readyEvent.addEventListener(
+    (provider) => {
+      if (defined(scene) && defined(scene.globe)) {
+        scene.globe.terrainProvider = provider;
+      }
+
+      scene._removeTerrainProviderReadyListener();
+    }
+  );
+}
+
+/**
+ * Update the terrain providing surface geometry for the globe.
+ *
+ * @param {Terrain} terrain The terrain provider async helper
+ * @returns {Terrain} terrain The terrain provider async helper
+ *
+ * @example
+ * // Use Cesium World Terrain
+ * scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
+ *
+ * @example
+ * // Use a custom terrain provider
+ * const terrain = new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromUrl("https://myTestTerrain.com"));
+ * scene.setTerrain(terrain);
+ *
+ * terrain.errorEvent.addEventListener(error => {
+ *   alert(`Encountered an error while creating terrain! ${error}`);
+ * });
+ */
+Scene.prototype.setTerrain = function (terrain) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("terrain", terrain);
+  //>>includeEnd('debug');
+
+  setTerrain(this, terrain);
+
+  return terrain;
+};
+
 /**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
@@ -4421,6 +4483,9 @@ Scene.prototype.destroy = function () {
   this._groundPrimitives =
     this._groundPrimitives && this._groundPrimitives.destroy();
   this._globe = this._globe && this._globe.destroy();
+  this._removeTerrainProviderReadyListener =
+    this._removeTerrainProviderReadyListener &&
+    this._removeTerrainProviderReadyListener();
   this.skyBox = this.skyBox && this.skyBox.destroy();
   this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
   this._debugSphere = this._debugSphere && this._debugSphere.destroy();

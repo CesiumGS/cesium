@@ -29,71 +29,72 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        (async () => {
-          const viewer = new Cesium.Viewer("cesiumContainer", {
-            terrainProvider: await Cesium.createWorldTerrainAsync(),
-            shadows: true,
-          });
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+          shadows: true,
+        });
 
-          if (!viewer.scene.highDynamicRangeSupported) {
-            window.alert("This browser does not support high dynamic range.");
-          }
+        if (!viewer.scene.highDynamicRangeSupported) {
+          window.alert("This browser does not support high dynamic range.");
+        }
 
-          viewer.scene.camera.setView({
-            destination: new Cesium.Cartesian3(
-              -1915097.7863741855,
-              -4783356.851539908,
-              3748887.43462683
-            ),
-            orientation: new Cesium.HeadingPitchRoll(
-              6.166004548388564,
-              -0.043242401760068994,
-              0.002179961955988574
-            ),
-            endTransform: Cesium.Matrix4.IDENTITY,
-          });
+        viewer.scene.camera.setView({
+          destination: new Cesium.Cartesian3(
+            -1915097.7863741855,
+            -4783356.851539908,
+            3748887.43462683
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            6.166004548388564,
+            -0.043242401760068994,
+            0.002179961955988574
+          ),
+          endTransform: Cesium.Matrix4.IDENTITY,
+        });
 
-          viewer.scene.highDynamicRange = true;
+        viewer.scene.highDynamicRange = true;
 
-          Sandcastle.addToggleButton("HDR", true, function (checked) {
-            viewer.scene.highDynamicRange = checked;
-          });
+        Sandcastle.addToggleButton("HDR", true, function (checked) {
+          viewer.scene.highDynamicRange = checked;
+        });
 
-          const url =
-            "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf";
-          const position = Cesium.Cartesian3.fromRadians(
-            -1.9516424279517286,
-            0.6322397098422969,
-            1239.0006814631095
-          );
-          const heading = Cesium.Math.toRadians(-15.0);
-          const pitch = 0;
-          const roll = 0;
-          const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-          const orientation = Cesium.Transforms.headingPitchRollQuaternion(
-            position,
-            hpr
-          );
-          const scale = 10.0;
+        const url =
+          "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf";
+        const position = Cesium.Cartesian3.fromRadians(
+          -1.9516424279517286,
+          0.6322397098422969,
+          1239.0006814631095
+        );
+        const heading = Cesium.Math.toRadians(-15.0);
+        const pitch = 0;
+        const roll = 0;
+        const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+        const orientation = Cesium.Transforms.headingPitchRollQuaternion(
+          position,
+          hpr
+        );
+        const scale = 10.0;
 
-          const entity = viewer.entities.add({
-            name: url,
-            position: position,
-            orientation: orientation,
-            model: {
-              uri: url,
-              scale: scale,
-            },
-          });
-        })(); //Sandcastle_End
-        Sandcastle.finishedLoading();
+        const entity = viewer.entities.add({
+          name: url,
+          position: position,
+          orientation: orientation,
+          model: {
+            uri: url,
+            scale: scale,
+          },
+        }); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>
