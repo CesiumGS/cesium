@@ -6,6 +6,7 @@ import {
   VoxelPrimitive,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/VoxelPrimitive",
@@ -15,6 +16,11 @@ describe(
 
     beforeEach(function () {
       scene = createScene();
+
+      const camera = scene.camera;
+      camera.position = Cartesian3.fromElements(-10, -10, -10);
+      camera.direction = Cartesian3.fromElements(1, 1, 1);
+
       provider = new Cesium3DTilesVoxelProvider({
         url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
       });
@@ -46,6 +52,55 @@ describe(
         expect(primitive.dimensions.equals(provider.dimensions)).toBe(true);
         expect(primitive._tileCount).toBe(provider._tileCount);
         expect(primitive._traversal).toBeDefined();
+        expect(primitive.minimumValues).toBe(provider.minimumValues);
+        expect(primitive.maximumValues).toBe(provider.maximumValues);
+      });
+    });
+
+    it("toggles render options that require shader rebuilds", function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+
+      function toggleOption(option, defaultValue, newValue) {
+        expect(primitive[option]).toBe(defaultValue);
+        primitive[option] = newValue;
+        expect(primitive._shaderDirty).toBe(true);
+        primitive.update(scene.frameState);
+        expect(primitive[option]).toBe(newValue);
+        expect(primitive._shaderDirty).toBe(false);
+      }
+
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        const traversal = primitive._traversal;
+        return traversal.isRenderable(traversal.rootNode);
+      }).then(function () {
+        toggleOption("depthTest", true, false);
+        toggleOption("jitter", true, false);
+        toggleOption("nearestSampling", false, true);
+      });
+    });
+
+    it("sets render parameters", function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+
+      function setParameter(parameter, defaultValue, newValue) {
+        expect(primitive[parameter]).toBe(defaultValue);
+        primitive[parameter] = newValue;
+        primitive.update(scene.frameState);
+        expect(primitive[parameter]).toBe(newValue);
+      }
+
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        const traversal = primitive._traversal;
+        return traversal.isRenderable(traversal.rootNode);
+      }).then(function () {
+        setParameter("levelBlendFactor", 0.0, 0.5);
+        setParameter("screenSpaceError", 4.0, 2.0);
+        setParameter("stepSize", 1.0, 0.5);
+        setParameter("debugDraw", false, true);
       });
     });
 
