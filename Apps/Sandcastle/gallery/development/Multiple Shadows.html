@@ -38,7 +38,7 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -46,15 +46,8 @@
           infoBox: false,
           selectionIndicator: false,
           timeline: false,
+          terrainProvider: await Cesium.createWorldTerrainAsync(),
         });
-
-        (async () => {
-          try {
-            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
-          } catch (error) {
-            console.log(error);
-          }
-        })();
 
         const scene = viewer.scene;
         const camera = scene.camera;
@@ -143,11 +136,14 @@
 
         scene.primitives.add(new CustomPrimitive(shadowMap2));
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

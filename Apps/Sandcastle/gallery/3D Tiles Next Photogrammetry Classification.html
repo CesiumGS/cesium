@@ -32,22 +32,15 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // San Francisco Ferry Building photogrammetry model provided by Aerometrex
         const viewer = new Cesium.Viewer("cesiumContainer", {
           infoBox: false,
           orderIndependentTranslucency: false,
+          terrainProvider: await Cesium.createWorldTerrainAsync(),
         });
-
-        (async () => {
-          try {
-            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
-          } catch (error) {
-            console.log(error);
-          }
-        })();
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
           "2021-11-09T20:27:37.016064475348684937Z"
@@ -359,11 +352,14 @@
         ];
         Sandcastle.addToolbarMenu(demos);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>
