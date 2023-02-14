@@ -2,27 +2,6 @@ import Check from "../Core/Check.js";
 import Event from "../Core/Event.js";
 import createWorldTerrainAsync from "../Core/createWorldTerrainAsync.js";
 
-function handleError(errorEvent, error) {
-  if (errorEvent.numberOfListeners > 0) {
-    errorEvent.raiseEvent(error);
-  } else {
-    // Default handler is to log to the console
-    console.error(error);
-  }
-}
-
-async function handlePromise(instance, promise) {
-  let provider;
-  try {
-    provider = await Promise.resolve(promise);
-  } catch (error) {
-    handleError(instance._errorEvent, error);
-  }
-
-  instance._provider = provider;
-  instance._readyEvent.raiseEvent(provider);
-}
-
 /**
  * A helper to manage async operations of a terrain provider.
  *
@@ -162,6 +141,27 @@ Object.defineProperties(Terrain.prototype, {
 Terrain.fromWorldTerrain = function (options) {
   return new Terrain(createWorldTerrainAsync(options));
 };
+
+function handleError(errorEvent, error) {
+  if (errorEvent.numberOfListeners > 0) {
+    errorEvent.raiseEvent(error);
+  } else {
+    // Default handler is to log to the console
+    console.error(error);
+  }
+}
+
+async function handlePromise(instance, promise) {
+  let provider;
+  try {
+    provider = await Promise.resolve(promise);
+  } catch (error) {
+    handleError(instance._errorEvent, error);
+  }
+
+  instance._provider = provider;
+  instance._readyEvent.raiseEvent(provider);
+}
 
 export default Terrain;
 
