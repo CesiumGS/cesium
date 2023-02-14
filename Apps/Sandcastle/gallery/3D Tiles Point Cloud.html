@@ -38,7 +38,7 @@
         //Sandcastle_Begin
         //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const tileset = new Cesium.Cesium3DTileset({

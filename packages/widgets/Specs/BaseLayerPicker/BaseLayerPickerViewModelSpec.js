@@ -1,5 +1,6 @@
 import {
   EllipsoidTerrainProvider,
+  Event,
   ImageryLayerCollection,
 } from "@cesium/engine";
 
@@ -9,6 +10,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   function MockGlobe() {
     this.imageryLayers = new ImageryLayerCollection();
     this.terrainProvider = new EllipsoidTerrainProvider();
+    this.terrainProviderChanged = new Event();
   }
   MockGlobe.prototype.isDestroyed = () => false;
 
@@ -255,6 +257,23 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     viewModel.selectedTerrain = testProviderViewModelAsync;
     await testProviderViewModelAsync.creationCommand();
     expect(globe.terrainProvider).toBe(testProvider);
+  });
+
+  it("selectedTerrain cancels update if terrainProvider is set externally", async function () {
+    const terrainProviderViewModels = [
+      testProviderViewModel,
+      testProviderViewModelAsync,
+    ];
+    const globe = new MockGlobe();
+    const viewModel = new BaseLayerPickerViewModel({
+      globe: globe,
+      terrainProviderViewModels: terrainProviderViewModels,
+    });
+
+    viewModel.selectedTerrain = testProviderViewModelAsync;
+    globe.terrainProviderChanged.raiseEvent();
+    await testProviderViewModelAsync.creationCommand();
+    expect(globe.terrainProvider).not.toBe(testProvider);
   });
 
   it("settings selectedImagery only removes layers added by view model", function () {

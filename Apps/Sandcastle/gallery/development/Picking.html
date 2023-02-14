@@ -50,6 +50,9 @@
           originalColor: new Cesium.Color(),
         };
 
+        const worldTerrain = Cesium.Terrain.fromWorldTerrain();
+        const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+
         Sandcastle.addToolbarMenu([
           {
             text: "Billboard",
@@ -477,8 +480,8 @@
           },
           {
             text: "Vector tile polygons",
-            onselect: async function () {
-              viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+            onselect: function () {
+              viewer.scene.setTerrain(worldTerrain);
 
               tileset = viewer.scene.primitives.add(
                 new Cesium.Cesium3DTileset({
@@ -537,8 +540,8 @@
           },
           {
             text: "Vector tile polylines",
-            onselect: async function () {
-              viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+            onselect: function () {
+              viewer.scene.setTerrain(worldTerrain);
 
               tileset = viewer.scene.primitives.add(
                 new Cesium.Cesium3DTileset({
@@ -613,11 +616,8 @@
           }
           handler = handler && handler.destroy();
           viewer.scene.camera.flyHome(0.0);
-          if (
-            !(viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider)
-          ) {
-            viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
-          }
+
+          viewer.terrainProvider = ellipsoidTerrainProvider;
         };
         //Sandcastle_End
       };

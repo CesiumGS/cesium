@@ -35,7 +35,7 @@
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const pinBuilder = new Cesium.PinBuilder();

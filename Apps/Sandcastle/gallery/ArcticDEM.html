@@ -35,13 +35,17 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        try {
           // High-resolution arctic terrain from the Arctic DEM project (Release 4), tiled and hosted by Cesium ion.
           // https://www.pgc.umn.edu/data/arcticdem/
-          terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(
+          viewer.scene.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
             Cesium.IonResource.fromAssetId(3956)
-          ),
-        });
+          );
+        } catch (error) {
+          window.alert(`Failed to load terrain. ${error}`);
+        }
 
         // Add Alaskan locations
         Sandcastle.addDefaultToolbarMenu(

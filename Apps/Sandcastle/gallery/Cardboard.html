@@ -37,7 +37,7 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           vrButton: true,
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         // Click the VR button in the bottom right of the screen to switch to VR mode.
 

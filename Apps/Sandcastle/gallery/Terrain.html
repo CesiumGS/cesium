@@ -40,7 +40,7 @@
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.createWorldTerrainAsync({
+          terrain: Cesium.Terrain.fromWorldTerrain({
             requestWaterMask: true,
             requestVertexNormals: true,
           }),
@@ -85,36 +85,41 @@
           [
             {
               text: "CesiumTerrainProvider - Cesium World Terrain",
-              onselect: async function () {
-                const provider = await Cesium.createWorldTerrainAsync({
-                  requestWaterMask: true,
-                  requestVertexNormals: true,
-                });
-                viewer.terrainProvider = provider;
+              onselect: function () {
+                viewer.scene.setTerrain(
+                  Cesium.Terrain.fromWorldTerrain({
+                    requestWaterMask: true,
+                    requestVertexNormals: true,
+                  })
+                );
                 viewer.scene.globe.enableLighting = true;
               },
             },
             {
               text: "CesiumTerrainProvider - Cesium World Terrain - no effects",
-              onselect: async function () {
-                viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
+              onselect: function () {
+                viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
               },
             },
             {
               text: "CesiumTerrainProvider - Cesium World Terrain w/ Lighting",
-              onselect: async function () {
-                viewer.terrainProvider = await Cesium.createWorldTerrainAsync({
-                  requestVertexNormals: true,
-                });
+              onselect: function () {
+                viewer.scene.setTerrain(
+                  Cesium.Terrain.fromWorldTerrain({
+                    requestVertexNormals: true,
+                  })
+                );
                 viewer.scene.globe.enableLighting = true;
               },
             },
             {
               text: "CesiumTerrainProvider - Cesium World Terrain w/ Water",
-              onselect: async function () {
-                viewer.terrainProvider = await Cesium.createWorldTerrainAsync({
-                  requestWaterMask: true,
-                });
+              onselect: function () {
+                viewer.scene.setTerrain(
+                  Cesium.Terrain.fromWorldTerrain({
+                    requestWaterMask: true,
+                  })
+                );
               },
             },
             {
@@ -131,23 +136,29 @@
             },
             {
               text: "VRTheWorldTerrainProvider",
-              onselect: async function () {
-                const provider = await Cesium.VRTheWorldTerrainProvider.fromUrl(
-                  "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
-                  {
-                    credit: "Terrain data courtesy VT MÄK",
-                  }
+              onselect: function () {
+                viewer.scene.setTerrain(
+                  new Cesium.Terrain(
+                    Cesium.VRTheWorldTerrainProvider.fromUrl(
+                      "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
+                      {
+                        credit: "Terrain data courtesy VT MÄK",
+                      }
+                    )
+                  )
                 );
-                viewer.terrainProvider = provider;
               },
             },
             {
               text: "ArcGISTerrainProvider",
-              onselect: async function () {
-                const provider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-                  "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+              onselect: function () {
+                viewer.scene.setTerrain(
+                  new Cesium.Terrain(
+                    Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+                      "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer"
+                    )
+                  )
                 );
-                viewer.terrainProvider = provider;
               },
             },
           ],

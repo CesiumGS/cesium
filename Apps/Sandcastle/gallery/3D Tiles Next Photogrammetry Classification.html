@@ -39,7 +39,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           infoBox: false,
           orderIndependentTranslucency: false,
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(

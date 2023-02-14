@@ -41,7 +41,7 @@
           infoBox: false, //Disable InfoBox widget
           selectionIndicator: false, //Disable selection indicator
           shouldAnimate: true, // Enable animations
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         //Enable lighting based on the sun position

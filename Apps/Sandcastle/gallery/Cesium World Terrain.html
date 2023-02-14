@@ -37,7 +37,7 @@
         //Sandcastle_Begin
         // For more information on Cesium World Terrain, see https://cesium.com/platform/cesium-ion/content/cesium-world-terrain/
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         }); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

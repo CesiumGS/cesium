@@ -984,6 +984,7 @@ Globe.prototype.beginFrame = function (frameState) {
   const terrainProvider = this.terrainProvider;
   const hasWaterMask =
     this.showWaterEffect &&
+    defined(terrainProvider) &&
     terrainProvider.hasWaterMask &&
     // ready is deprecated; This is here for backwards compatibility
     terrainProvider._ready;

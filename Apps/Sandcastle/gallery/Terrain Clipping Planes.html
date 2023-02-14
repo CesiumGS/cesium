@@ -65,7 +65,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           skyAtmosphere: false,
           shouldAnimate: true,
-          terrainProvider: await Cesium.createWorldTerrainAsync(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
           scene3DOnly: true,
         });
         const globe = viewer.scene.globe;

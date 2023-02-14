@@ -35,13 +35,17 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        try {
           // High resolution terrain of Pennsylvania curated by Pennsylvania Spatial Data Access (PASDA)
           // http://www.pasda.psu.edu/
-          terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(
+          viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
             Cesium.IonResource.fromAssetId(3957)
-          ),
-        });
+          );
+        } catch (error) {
+          window.alert(`Failed to load terrain. ${error}`);
+        }
 
         // Add PA locations
         Sandcastle.addDefaultToolbarMenu(
