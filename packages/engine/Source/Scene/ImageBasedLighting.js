@@ -102,6 +102,7 @@ function ImageBasedLighting(options) {
   );
   this._previousLuminanceAtZenith = luminanceAtZenith;
   this._previousSphericalHarmonicCoefficients = sphericalHarmonicCoefficients;
+  this._removeErrorListener = undefined;
 }
 
 Object.defineProperties(ImageBasedLighting.prototype, {
@@ -359,13 +360,11 @@ function createSpecularEnvironmentMapAtlas(imageBasedLighting, context) {
     );
     imageBasedLighting._specularEnvironmentMapAtlas = atlas;
 
-    atlas.readyPromise
-      .then(function () {
-        imageBasedLighting._specularEnvironmentMapLoaded = true;
-      })
-      .catch(function (error) {
+    imageBasedLighting._removeErrorListener = atlas.errorEvent.addEventListener(
+      (error) => {
         console.error(`Error loading specularEnvironmentMaps: ${error}`);
-      });
+      }
+    );
   }
 
   // Regenerate shaders so they do not use an environment map.
@@ -436,6 +435,9 @@ ImageBasedLighting.prototype.update = function (frameState) {
 
   if (defined(this._specularEnvironmentMapAtlas)) {
     this._specularEnvironmentMapAtlas.update(frameState);
+    if (this._specularEnvironmentMapAtlas.ready) {
+      this._specularEnvironmentMapLoaded = true;
+    }
   }
 
   const recompileWithDefaultAtlas =
@@ -504,6 +506,8 @@ ImageBasedLighting.prototype.destroy = function () {
   this._specularEnvironmentMapAtlas =
     this._specularEnvironmentMapAtlas &&
     this._specularEnvironmentMapAtlas.destroy();
+  this._removeErrorListener =
+    this._removeErrorListener && this._removeErrorListener();
   return destroyObject(this);
 };
 
