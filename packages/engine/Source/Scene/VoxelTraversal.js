@@ -593,10 +593,7 @@ function loadAndUnload(that, frameState) {
     }
 
     if (!defined(spatialNode.children)) {
-      const childCoords = spatialNode.getChildCoordinates();
-      spatialNode.children = childCoords.map(([level, x, y, z]) => {
-        return new SpatialNode(level, x, y, z, spatialNode, shape, dimensions);
-      });
+      spatialNode.constructChildNodes(shape, dimensions);
     }
     for (let childIndex = 0; childIndex < 8; childIndex++) {
       const child = spatialNode.children[childIndex];

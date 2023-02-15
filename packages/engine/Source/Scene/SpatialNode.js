@@ -16,7 +16,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @param {Number} y
  * @param {Number} z
  * @param {SpatialNode} parent
- * @param {VoxelShapeType} shape
+ * @param {VoxelShape} shape
  * @param {Cartesian3} voxelDimensions
  *
  * @private
@@ -93,11 +93,11 @@ SpatialNode.prototype.computeBoundingVolumes = function (
 };
 
 /**
- * Compute the [level, x, y, z] coordinates of the children of a node
- * @returns {Array[]} Child coordinate arrays
+ * @param {VoxelShape} shape The shape of the parent VoxelPrimitive
+ * @param {Cartesian3} voxelDimensions
  * @private
  */
-SpatialNode.prototype.getChildCoordinates = function () {
+SpatialNode.prototype.constructChildNodes = function (shape, voxelDimensions) {
   const { level, x, y, z } = this;
   const xMin = x * 2;
   const yMin = y * 2;
@@ -107,7 +107,7 @@ SpatialNode.prototype.getChildCoordinates = function () {
   const zMax = zMin + 1;
   const childLevel = level + 1;
 
-  return [
+  const childCoords = [
     [childLevel, xMin, yMin, zMin],
     [childLevel, xMax, yMin, zMin],
     [childLevel, xMin, yMax, zMin],
@@ -117,6 +117,10 @@ SpatialNode.prototype.getChildCoordinates = function () {
     [childLevel, xMin, yMax, zMax],
     [childLevel, xMax, yMax, zMax],
   ];
+
+  this.children = childCoords.map(([level, x, y, z]) => {
+    return new SpatialNode(level, x, y, z, this, shape, voxelDimensions);
+  });
 };
 
 /**

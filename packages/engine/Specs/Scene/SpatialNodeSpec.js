@@ -42,6 +42,9 @@ describe("Scene/SpatialNode", function () {
     const dimensions = new Cartesian3(2, 3, 4);
 
     const node = new SpatialNode(level, x, y, z, parent, shape, dimensions);
+    expect(node.children).toBeUndefined();
+    node.constructChildNodes(shape, dimensions);
+    expect(node.children.length).toBe(8);
 
     const expectedChildCoordinates = [
       [3, 2, 4, 6],
@@ -53,8 +56,14 @@ describe("Scene/SpatialNode", function () {
       [3, 2, 5, 7],
       [3, 3, 5, 7],
     ];
+    const actualChildCoordinates = node.children.map((child) => [
+      child.level,
+      child.x,
+      child.y,
+      child.z,
+    ]);
 
-    expect(node.getChildCoordinates()).toEqual(expectedChildCoordinates);
+    expect(actualChildCoordinates).toEqual(expectedChildCoordinates);
   });
 
   it("computes screen space error", function () {
