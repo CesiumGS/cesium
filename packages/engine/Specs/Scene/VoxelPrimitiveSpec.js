@@ -41,23 +41,23 @@ describe(
       expect(primitive.show).toEqual(true);
     });
 
-    it("constructs with options", function () {
+    it("constructs with options", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
       expect(primitive.provider).toBe(provider);
-      return primitive.readyPromise.then(function () {
-        expect(primitive.shape._type).toBe(provider.shape._type);
-        expect(primitive.dimensions.equals(provider.dimensions)).toBe(true);
-        expect(primitive._tileCount).toBe(provider._tileCount);
-        expect(primitive._traversal).toBeDefined();
-        expect(primitive.minimumValues).toBe(provider.minimumValues);
-        expect(primitive.maximumValues).toBe(provider.maximumValues);
-      });
+      await primitive.readyPromise;
+
+      expect(primitive.shape._type).toBe(provider.shape._type);
+      expect(primitive.dimensions.equals(provider.dimensions)).toBe(true);
+      expect(primitive._tileCount).toBe(provider._tileCount);
+      expect(primitive._traversal).toBeDefined();
+      expect(primitive.minimumValues).toBe(provider.minimumValues);
+      expect(primitive.maximumValues).toBe(provider.maximumValues);
     });
 
-    it("toggles render options that require shader rebuilds", function () {
+    it("toggles render options that require shader rebuilds", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
 
@@ -70,18 +70,18 @@ describe(
         expect(primitive._shaderDirty).toBe(false);
       }
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.renderForSpecs();
         const traversal = primitive._traversal;
         return traversal.isRenderable(traversal.rootNode);
-      }).then(function () {
-        toggleOption("depthTest", true, false);
-        toggleOption("jitter", true, false);
-        toggleOption("nearestSampling", false, true);
       });
+
+      toggleOption("depthTest", true, false);
+      toggleOption("jitter", true, false);
+      toggleOption("nearestSampling", false, true);
     });
 
-    it("sets render parameters", function () {
+    it("sets render parameters", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
 
@@ -92,16 +92,16 @@ describe(
         expect(primitive[parameter]).toBe(newValue);
       }
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.renderForSpecs();
         const traversal = primitive._traversal;
         return traversal.isRenderable(traversal.rootNode);
-      }).then(function () {
-        setParameter("levelBlendFactor", 0.0, 0.5);
-        setParameter("screenSpaceError", 4.0, 2.0);
-        setParameter("stepSize", 1.0, 0.5);
-        setParameter("debugDraw", false, true);
       });
+
+      setParameter("levelBlendFactor", 0.0, 0.5);
+      setParameter("screenSpaceError", 4.0, 2.0);
+      setParameter("stepSize", 1.0, 0.5);
+      setParameter("debugDraw", false, true);
     });
 
     it("sets clipping range extrema when given valid range between 0 and 1", function () {
@@ -126,65 +126,64 @@ describe(
       expect(primitive.style).toBe(VoxelPrimitive.DefaultStyle);
     });
 
-    it("updates step size", function () {
+    it("updates step size", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
       const shape = primitive._shape;
       shape.translation = new Cartesian3(2.382, -3.643, 1.084);
-      return primitive.readyPromise.then(function () {
-        primitive.update(scene.frameState);
-        const stepSizeUv = shape.computeApproximateStepSize(
-          primitive.dimensions
-        );
-        expect(primitive._stepSizeUv).toBe(stepSizeUv);
-      });
+
+      await primitive.readyPromise;
+
+      primitive.update(scene.frameState);
+      const stepSizeUv = shape.computeApproximateStepSize(primitive.dimensions);
+      expect(primitive._stepSizeUv).toBe(stepSizeUv);
     });
 
-    it("accepts a new Custom Shader", function () {
+    it("accepts a new Custom Shader", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      return primitive.readyPromise.then(function () {
-        expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+      await primitive.readyPromise;
 
-        // If new shader is undefined, we should get DefaultCustomShader again
-        primitive.customShader = undefined;
-        scene.renderForSpecs();
-        expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+      expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
 
-        const modifiedShader = new CustomShader({
-          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+      // If new shader is undefined, we should get DefaultCustomShader again
+      primitive.customShader = undefined;
+      scene.renderForSpecs();
+      expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+
+      const modifiedShader = new CustomShader({
+        fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
 {
     material.diffuse = vec3(1.0, 1.0, 0.0);
     material.alpha = 0.8;
 }`,
-        });
-        primitive.customShader = modifiedShader;
-        scene.renderForSpecs();
-        expect(primitive.customShader).toBe(modifiedShader);
       });
+      primitive.customShader = modifiedShader;
+      scene.renderForSpecs();
+      expect(primitive.customShader).toBe(modifiedShader);
     });
 
-    it("destroys", function () {
+    it("destroys", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
       expect(primitive.isDestroyed()).toBe(false);
 
-      return primitive.readyPromise.then(function () {
-        primitive.update(scene.frameState);
-        expect(primitive.isDestroyed()).toBe(false);
-        expect(primitive._pickId).toBeDefined();
-        expect(primitive._traversal).toBeDefined();
+      await primitive.readyPromise;
 
-        scene.primitives.remove(primitive);
-        expect(primitive.isDestroyed()).toBe(true);
-        expect(primitive._pickId).toBeUndefined();
-        expect(primitive._traversal).toBeUndefined();
-      });
+      primitive.update(scene.frameState);
+      expect(primitive.isDestroyed()).toBe(false);
+      expect(primitive._pickId).toBeDefined();
+      expect(primitive._traversal).toBeDefined();
+
+      scene.primitives.remove(primitive);
+      expect(primitive.isDestroyed()).toBe(true);
+      expect(primitive._pickId).toBeUndefined();
+      expect(primitive._traversal).toBeUndefined();
     });
   },
   "WebGL"
