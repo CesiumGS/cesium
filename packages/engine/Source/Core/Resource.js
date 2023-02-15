@@ -817,7 +817,7 @@ Resource.prototype.fetchArrayBuffer = function () {
 /**
  * Creates a Resource and calls fetchArrayBuffer() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -861,7 +861,7 @@ Resource.prototype.fetchBlob = function () {
 /**
  * Creates a Resource and calls fetchBlob() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -1076,7 +1076,7 @@ function fetchImage(options) {
 /**
  * Creates a Resource and calls fetchImage() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -1136,7 +1136,7 @@ Resource.prototype.fetchText = function () {
 /**
  * Creates a Resource and calls fetchText() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -1197,7 +1197,7 @@ Resource.prototype.fetchJson = function () {
 /**
  * Creates a Resource and calls fetchJson() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -1246,7 +1246,7 @@ Resource.prototype.fetchXML = function () {
 /**
  * Creates a Resource and calls fetchXML() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -1351,7 +1351,7 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
 /**
  * Creates a Resource from a URL and calls fetchJsonp() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -1522,7 +1522,7 @@ Resource.prototype.fetch = function (options) {
 /**
  * Creates a Resource from a URL and calls fetch() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -1578,7 +1578,7 @@ Resource.prototype.delete = function (options) {
 /**
  * Creates a Resource from a URL and calls delete() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.data] Data that is posted with the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
@@ -1636,7 +1636,7 @@ Resource.prototype.head = function (options) {
 /**
  * Creates a Resource from a URL and calls head() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
@@ -1692,7 +1692,7 @@ Resource.prototype.options = function (options) {
 /**
  * Creates a Resource from a URL and calls options() on it.
  *
- * @param {string|Object} options A url or an object with the following properties
+ * @param {string|object} options A url or an object with the following properties
  * @param {string} options.url The url of the resource.
  * @param {object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).

@@ -607,7 +607,7 @@ function GeoJsonDataSource(name) {
 /**
  * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
  *
- * @param {Resource|string|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+ * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
@@ -885,7 +885,7 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
 /**
  * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
  *
- * @param {Resource|string|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+ * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
@@ -897,7 +897,7 @@ GeoJsonDataSource.prototype.load = function (data, options) {
 /**
  * Asynchronously loads the provided GeoJSON or TopoJSON data, without replacing any existing data.
  *
- * @param {Resource|string|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+ * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.

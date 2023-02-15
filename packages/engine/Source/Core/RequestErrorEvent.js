@@ -9,7 +9,7 @@ import parseResponseHeaders from "./parseResponseHeaders.js";
  *
  * @param {number} [statusCode] The HTTP error status code, such as 404.
  * @param {object} [response] The response included along with the error.
- * @param {string|Object} [responseHeaders] The response headers, represented either as an object literal or as a
+ * @param {string|object} [responseHeaders] The response headers, represented either as an object literal or as a
  *                        string in the format returned by XMLHttpRequest's getAllResponseHeaders() function.
  */
 function RequestErrorEvent(statusCode, response, responseHeaders) {

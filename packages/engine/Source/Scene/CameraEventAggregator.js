@@ -429,7 +429,7 @@ CameraEventAggregator.prototype.getMovement = function (type, modifier) {
  *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
- * @returns {Object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
+ * @returns {object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
  */
 CameraEventAggregator.prototype.getLastMovement = function (type, modifier) {
   //>>includeStart('debug', pragmas.debug);

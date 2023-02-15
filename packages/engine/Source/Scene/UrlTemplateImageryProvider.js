@@ -53,7 +53,7 @@ const pickFeaturesTags = combine(tags, {
  *
  * Initialization options for the UrlTemplateImageryProvider constructor
  *
- * @property {Promise<object>|Object} [options] Object with the following properties:
+ * @property {Promise<object>|object} [options] Object with the following properties:
  * @property {Resource|string} url  The URL template to use to request tiles.  It has the following keywords:
  * <ul>
  *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
@@ -648,7 +648,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
  * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
  * recommended because existing tiles provided by the imagery provider will not be updated.
  *
- * @param {Promise<object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
+ * @param {Promise<object>|object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
  */
 UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
   const that = this;

@@ -714,7 +714,7 @@ function getTileBoundingVolume(
  *
  * @param {object} tileBoundingVolume An object containing the JSON for the tile's bounding volume
  * @param {object} [contentBounds] The content bounds
- * @returns {Object|undefined} An object containing the JSON for a bounding volume, or <code>undefined</code> if there is no bounding volume
+ * @returns {object|undefined} An object containing the JSON for a bounding volume, or <code>undefined</code> if there is no bounding volume
  * @private
  */
 function getContentBoundingVolume(tileBoundingVolume, contentBounds) {

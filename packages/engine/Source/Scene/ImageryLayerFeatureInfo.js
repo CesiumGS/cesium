@@ -30,13 +30,13 @@ function ImageryLayerFeatureInfo() {
   /**
    * Gets or sets the raw data describing the feature.  The raw data may be in any
    * number of formats, such as GeoJSON, KML, etc.
-   * @type {Object|undefined}
+   * @type {object|undefined}
    */
   this.data = undefined;
 
   /**
    * Gets or sets the image layer of the feature.
-   * @type {Object|undefined}
+   * @type {object|undefined}
    */
   this.imageryLayer = undefined;
 }

@@ -4859,7 +4859,7 @@ function CzmlDataSource(name) {
 /**
  * Creates a Promise to a new instance loaded with the provided CZML data.
  *
- * @param {Resource|string|Object} czml A url or CZML object to be processed.
+ * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
@@ -5032,7 +5032,7 @@ CzmlDataSource.updaters = [
 /**
  * Processes the provided url or CZML object without clearing any existing data.
  *
- * @param {Resource|string|Object} czml A url or CZML object to be processed.
+ * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
@@ -5044,7 +5044,7 @@ CzmlDataSource.prototype.process = function (czml, options) {
 /**
  * Loads the provided url or CZML object, replacing any existing data.
  *
- * @param {Resource|string|Object} czml A url or CZML object to be processed.
+ * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
