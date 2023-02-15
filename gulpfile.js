@@ -318,10 +318,9 @@ const filesToClean = [
 ];
 
 export async function clean() {
-  const rimrafAsync = (file) => new Promise((resolve) => rimraf(file, resolve));
-  await rimrafAsync("Build");
+  await rimraf("Build");
   const files = await globby(filesToClean);
-  return Promise.all(files.map(rimrafAsync));
+  return Promise.all(files.map((file) => rimraf(file)));
 }
 
 async function clocSource() {
