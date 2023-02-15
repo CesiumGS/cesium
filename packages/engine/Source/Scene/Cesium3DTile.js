@@ -52,6 +52,9 @@ import Pass from "../Renderer/Pass.js";
  *
  * @alias Cesium3DTile
  * @constructor
+ * @param {Cesium3DTileset} tileset
+ * @param {Resource} baseResource
+ * @param {Cesium3DTile} parent
  */
 function Cesium3DTile(tileset, baseResource, header, parent) {
   this._tileset = tileset;
@@ -757,6 +760,13 @@ Object.defineProperties(Cesium3DTile.prototype, {
 });
 
 const scratchCartesian = new Cartesian3();
+
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @param {FrameState} frameState
+ * @returns {Boolean}
+ */
 function isPriorityDeferred(tile, frameState) {
   const tileset = tile._tileset;
 
@@ -864,6 +874,9 @@ const scratchJulianDate = new JulianDate();
  * Get the tile's screen space error.
  *
  * @private
+ * @param {FrameState} frameState
+ * @param {Boolean} useParentGeometricError
+ * @param {number} progressiveResolutionHeightFraction
  */
 Cesium3DTile.prototype.getScreenSpaceError = function (
   frameState,
@@ -882,9 +895,8 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
     // Leaf tiles do not have any error so save the computation
     return 0.0;
   }
-  const camera = frameState.camera;
+  const { camera, context } = frameState;
   let frustum = camera.frustum;
-  const context = frameState.context;
   const width = context.drawingBufferWidth;
   const height = context.drawingBufferHeight * heightFraction;
   let error;
@@ -902,7 +914,7 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
   } else {
     // Avoid divide by zero when viewer is inside the tile
     const distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
-    const sseDenominator = camera.frustum.sseDenominator;
+    const sseDenominator = frustum.sseDenominator;
     error = (geometricError * height) / (distance * sseDenominator);
     if (tileset.dynamicScreenSpaceError) {
       const density = tileset._dynamicScreenSpaceErrorComputedDensity;
@@ -917,6 +929,12 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
   return error;
 };
 
+/**
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {Cesium3DTile} tile
+ * @returns {Boolean}
+ */
 function isPriorityProgressiveResolution(tileset, tile) {
   if (
     tileset.progressiveResolutionHeightFraction <= 0.0 ||
@@ -944,6 +962,12 @@ function isPriorityProgressiveResolution(tileset, tile) {
   return isProgressiveResolutionTile;
 }
 
+/**
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {Cesium3DTile} tile
+ * @returns {number}
+ */
 function getPriorityReverseScreenSpaceError(tileset, tile) {
   const parent = tile.parent;
   const useParentScreenSpaceError =
@@ -962,10 +986,10 @@ function getPriorityReverseScreenSpaceError(tileset, tile) {
  * Update the tile's visibility.
  *
  * @private
+ * @param {FrameState} frameState
  */
 Cesium3DTile.prototype.updateVisibility = function (frameState) {
-  const parent = this.parent;
-  const tileset = this._tileset;
+  const { parent, tileset } = this;
   const parentTransform = defined(parent)
     ? parent.computedTransform
     : tileset.modelMatrix;
@@ -1018,6 +1042,10 @@ Cesium3DTile.prototype.updateExpiration = function () {
   }
 };
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ */
 function updateExpireDate(tile) {
   if (defined(tile.expireDuration)) {
     const expireDurationDate = JulianDate.now(scratchJulianDate);
@@ -1037,6 +1065,11 @@ function updateExpireDate(tile) {
   }
 }
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @returns {Function}
+ */
 function createPriorityFunction(tile) {
   return function () {
     return tile._priority;
@@ -1076,6 +1109,8 @@ Cesium3DTile.prototype.requestContent = function () {
  * </p>
  *
  * @private
+ * @param {Cesium3DTile} tile
+ * @returns {number}
  */
 function requestMultipleContents(tile) {
   let multipleContents = tile._content;
@@ -1167,6 +1202,12 @@ function requestMultipleContents(tile) {
   return 0;
 }
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset
+ * @param {*} error
+ */
 function multipleContentFailed(tile, tileset, error) {
   // note: The Multiple3DTileContent handles decrementing the number of pending
   // requests if the state is LOADING.
@@ -1177,6 +1218,11 @@ function multipleContentFailed(tile, tileset, error) {
   tile._contentState = Cesium3DTileContentState.FAILED;
 }
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @returns {number}
+ */
 function requestSingleContent(tile) {
   // it is important to clone here. The fetchArrayBuffer() below uses
   // throttling, but other uses of the resources do not.
@@ -1271,6 +1317,11 @@ function requestSingleContent(tile) {
   return 0;
 }
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset
+ */
 function singleContentFailed(tile, tileset) {
   if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
     --tileset.statistics.numberOfTilesProcessing;
@@ -1402,6 +1453,12 @@ Cesium3DTile.prototype.unloadContent = function () {
 
 const scratchProjectedBoundingSphere = new BoundingSphere();
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @param {FrameState} frameState
+ * @returns {TileBoundingVolume}
+ */
 function getBoundingVolume(tile, frameState) {
   if (
     frameState.mode !== SceneMode.SCENE3D &&
@@ -1424,6 +1481,12 @@ function getBoundingVolume(tile, frameState) {
     : tile._boundingVolume;
 }
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @param {FrameState} frameState
+ * @returns {TileBoundingVolume}
+ */
 function getContentBoundingVolume(tile, frameState) {
   if (
     frameState.mode !== SceneMode.SCENE3D &&
