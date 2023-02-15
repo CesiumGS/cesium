@@ -299,7 +299,7 @@ function Material(options) {
   /**
    * When <code>true</code> or a function that returns <code>true</code>,
    * the geometry is expected to appear translucent.
-   * @type {boolean | TranslucentFunction}
+   * @type {boolean|Function}
    * @default undefined
    */
   this.translucent = undefined;
