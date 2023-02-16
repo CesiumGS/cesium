@@ -93,25 +93,12 @@ function VoxelTraversal(
   this._frameNumber = 0;
 
   const shape = primitive._shape;
-  const rootLevel = 0;
-  const rootX = 0;
-  const rootY = 0;
-  const rootZ = 0;
-  const rootParent = undefined;
 
   /**
    * @type {SpatialNode}
    * @readonly
    */
-  this.rootNode = new SpatialNode(
-    rootLevel,
-    rootX,
-    rootY,
-    rootZ,
-    rootParent,
-    shape,
-    dimensions
-  );
+  this.rootNode = new SpatialNode(0, 0, 0, 0, undefined, shape, dimensions);
 
   /**
    * @type {DoubleEndedPriorityQueue}
@@ -157,16 +144,6 @@ function VoxelTraversal(
    * @private
    */
   this._binaryTreeKeyframeWeighting = new Array(keyframeCount);
-
-  function binaryTreeWeightingRecursive(arr, start, end, depth) {
-    if (start > end) {
-      return;
-    }
-    const mid = Math.floor((start + end) / 2);
-    arr[mid] = depth;
-    binaryTreeWeightingRecursive(arr, start, mid - 1, depth + 1);
-    binaryTreeWeightingRecursive(arr, mid + 1, end, depth + 1);
-  }
 
   const binaryTreeKeyframeWeighting = this._binaryTreeKeyframeWeighting;
   binaryTreeKeyframeWeighting[0] = 0;
@@ -239,6 +216,16 @@ function VoxelTraversal(
    * @readonly
    */
   this.leafNodeTexelSizeUv = new Cartesian2();
+}
+
+function binaryTreeWeightingRecursive(arr, start, end, depth) {
+  if (start > end) {
+    return;
+  }
+  const mid = Math.floor((start + end) / 2);
+  arr[mid] = depth;
+  binaryTreeWeightingRecursive(arr, start, mid - 1, depth + 1);
+  binaryTreeWeightingRecursive(arr, mid + 1, end, depth + 1);
 }
 
 VoxelTraversal.simultaneousRequestCountMaximum = 50;
@@ -425,12 +412,6 @@ function requestData(that, keyframeNode) {
 
   const primitive = that._primitive;
   const provider = primitive._provider;
-  const keyframe = keyframeNode.keyframe;
-  const spatialNode = keyframeNode.spatialNode;
-  const tileLevel = spatialNode.level;
-  const tileX = spatialNode.x;
-  const tileY = spatialNode.y;
-  const tileZ = spatialNode.z;
 
   function postRequestSuccess(result) {
     that._simultaneousRequestCount--;
@@ -469,11 +450,12 @@ function requestData(that, keyframeNode) {
     keyframeNode.state = KeyframeNode.LoadState.FAILED;
   }
 
+  const { keyframe, spatialNode } = keyframeNode;
   const promise = provider.requestData({
-    tileLevel: tileLevel,
-    tileX: tileX,
-    tileY: tileY,
-    tileZ: tileZ,
+    tileLevel: spatialNode.level,
+    tileX: spatialNode.x,
+    tileY: spatialNode.y,
+    tileZ: spatialNode.z,
     keyframe: keyframe,
   });
 
@@ -510,18 +492,41 @@ function loadAndUnload(that, frameState) {
   const frameNumber = that._frameNumber;
   const primitive = that._primitive;
   const shape = primitive._shape;
-  const voxelDimensions = primitive._provider.dimensions;
-  const targetScreenSpaceError = primitive._screenSpaceError;
+  const { dimensions } = primitive;
+  const targetScreenSpaceError = primitive.screenSpaceError;
   const priorityQueue = that._priorityQueue;
   const keyframeLocation = that._keyframeLocation;
   const keyframeCount = that._keyframeCount;
   const rootNode = that.rootNode;
 
-  const cameraPosition = frameState.camera.positionWC;
-  const screenSpaceErrorDenominator = frameState.camera.frustum.sseDenominator;
-  const screenHeight =
-    frameState.context.drawingBufferHeight / frameState.pixelRatio;
-  const screenSpaceErrorMultiplier = screenHeight / screenSpaceErrorDenominator;
+  const { camera, context, pixelRatio } = frameState;
+  const { positionWC, frustum } = camera;
+  const screenHeight = context.drawingBufferHeight / pixelRatio;
+  const screenSpaceErrorMultiplier = screenHeight / frustum.sseDenominator;
+
+  function keyframePriority(previousKeyframe, keyframe, nextKeyframe) {
+    const keyframeDifference = Math.min(
+      Math.abs(keyframe - previousKeyframe),
+      Math.abs(keyframe - nextKeyframe)
+    );
+    const maxKeyframeDifference = Math.max(
+      previousKeyframe,
+      keyframeCount - nextKeyframe - 1,
+      1
+    );
+    const keyframeFactor = Math.pow(
+      1.0 - keyframeDifference / maxKeyframeDifference,
+      4.0
+    );
+    const binaryTreeFactor = Math.exp(
+      -that._binaryTreeKeyframeWeighting[keyframe]
+    );
+    return CesiumMath.lerp(
+      binaryTreeFactor,
+      keyframeFactor,
+      0.15 + 0.85 * keyframeFactor
+    );
+  }
 
   /**
    * @ignore
@@ -529,10 +534,7 @@ function loadAndUnload(that, frameState) {
    * @param {number} visibilityPlaneMask
    */
   function addToQueueRecursive(spatialNode, visibilityPlaneMask) {
-    spatialNode.computeScreenSpaceError(
-      cameraPosition,
-      screenSpaceErrorMultiplier
-    );
+    spatialNode.computeScreenSpaceError(positionWC, screenSpaceErrorMultiplier);
 
     visibilityPlaneMask = spatialNode.visibility(
       frameState,
@@ -565,31 +567,10 @@ function loadAndUnload(that, frameState) {
     const keyframeNodes = spatialNode.keyframeNodes;
     for (let i = 0; i < keyframeNodes.length; i++) {
       const keyframeNode = keyframeNodes[i];
-      const keyframe = keyframeNode.keyframe;
 
-      // Balanced prioritization
-      const keyframeDifference = Math.min(
-        Math.abs(keyframe - previousKeyframe),
-        Math.abs(keyframe - nextKeyframe)
-      );
-      const maxKeyframeDifference = Math.max(
-        previousKeyframe,
-        keyframeCount - nextKeyframe - 1,
-        1
-      );
-      const keyframeFactor = Math.pow(
-        1.0 - keyframeDifference / maxKeyframeDifference,
-        4.0
-      );
-      const binaryTreeFactor = Math.exp(
-        -that._binaryTreeKeyframeWeighting[keyframe]
-      );
-      keyframeNode.priority = 10.0 * ssePriority;
-      keyframeNode.priority += CesiumMath.lerp(
-        binaryTreeFactor,
-        keyframeFactor,
-        0.15 + 0.85 * keyframeFactor
-      );
+      keyframeNode.priority =
+        10.0 * ssePriority +
+        keyframePriority(previousKeyframe, keyframeNode.keyframe, nextKeyframe);
 
       if (
         keyframeNode.state !== KeyframeNode.LoadState.UNAVAILABLE &&
@@ -612,19 +593,7 @@ function loadAndUnload(that, frameState) {
     }
 
     if (!defined(spatialNode.children)) {
-      const childCoords = getChildCoords(spatialNode);
-      const childLevel = spatialNode.level + 1;
-      spatialNode.children = childCoords.map(([x, y, z]) => {
-        return new SpatialNode(
-          childLevel,
-          x,
-          y,
-          z,
-          spatialNode,
-          shape,
-          voxelDimensions
-        );
-      });
+      spatialNode.constructChildNodes(shape, dimensions);
     }
     for (let childIndex = 0; childIndex < 8; childIndex++) {
       const child = spatialNode.children[childIndex];
@@ -704,33 +673,6 @@ function loadAndUnload(that, frameState) {
       keyframeNodesInMegatexture[addNodeIndex] = highPriorityKeyframeNode;
     }
   }
-}
-
-/**
- * Compute the X, Y, Z coordinates of the children of a node
- * @param {SpatialNode} spatialNode The parent node
- * @returns {Array[]} Child coordinate arrays
- * @private
- */
-function getChildCoords(spatialNode) {
-  const { x, y, z } = spatialNode;
-  const xMin = x * 2;
-  const yMin = y * 2;
-  const zMin = z * 2;
-  const yMax = yMin + 1;
-  const xMax = xMin + 1;
-  const zMax = zMin + 1;
-
-  return [
-    [xMin, yMin, zMin],
-    [xMax, yMin, zMin],
-    [xMin, yMax, zMin],
-    [xMax, yMax, zMin],
-    [xMin, yMin, zMax],
-    [xMax, yMin, zMax],
-    [xMin, yMax, zMax],
-    [xMax, yMax, zMax],
-  ];
 }
 
 /**
