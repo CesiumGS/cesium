@@ -721,7 +721,7 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
 /**
  * Helper function to copy files.
  *
- * @param {Array.>} globs The file globs to be copied.
+ * @param {string[]} globs The file globs to be copied.
  * @param {string} destination The path to copy the files to.
  * @param {string} base The base path to omit from the globs when files are copied. Defaults to "".
  * @returns {Promise<Buffer>} A promise containing the stream output as a buffer.
@@ -873,7 +873,7 @@ async function createIndexJs(workspace) {
 
 /**
  * Creates a single entry point file by importing all individual spec files.
- * @param {Array.>} files The individual spec files.
+ * @param {string[]} files The individual spec files.
  * @param {string} workspace The workspace.
  * @param {string} outputPath The path the file is written to.
  */
@@ -897,7 +897,7 @@ async function createSpecListForWorkspace(files, workspace, outputPath) {
  * Bundles CSS files.
  *
  * @param {object} options
- * @param {Array.>} options.filePaths The file paths to bundle.
+ * @param {string[]} options.filePaths The file paths to bundle.
  * @param {boolean} options.sourcemap
  * @param {boolean} options.minify
  * @param {string} options.outdir The output directory.
