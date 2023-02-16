@@ -6,10 +6,6 @@
 
 #### Major Announcements :loudspeaker:
 
-##### Additions :tada:
-
-- Support TypeScript `import()` type in JSDoc [#11080](https://github.com/CesiumGS/cesium/pull/11080)
-
 ##### Fixes :wrench:
 
 - Fixed Primitive.getGeometryInstanceAttributes cache acquisition speed. [#11066](https://github.com/CesiumGS/cesium/issues/11066)
