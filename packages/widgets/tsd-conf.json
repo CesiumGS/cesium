@@ -13,7 +13,6 @@
     "excludePattern": "(^|\\/|\\\\)_"
   },
   "plugins": [
-    "node_modules/jsdoc-tsimport-plugin/index.js",
     "./Tools/jsdoc/cesiumTags",
     "tsd-jsdoc/dist/plugin"
   ],
