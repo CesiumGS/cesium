@@ -768,12 +768,12 @@ const scratchCartesian = new Cartesian3();
  * @returns {Boolean}
  */
 function isPriorityDeferred(tile, frameState) {
-  const tileset = tile._tileset;
+  const { tileset, boundingSphere } = tile;
+  const { radius, center } = boundingSphere;
+  const { camera } = frameState;
 
-  // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
-  const camera = frameState.camera;
-  const boundingSphere = tile.boundingSphere;
-  const radius = boundingSphere.radius;
+  // If closest point on line is inside the sphere then set foveatedFactor to 0.
+  // Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
   const scaledCameraDirection = Cartesian3.multiplyByScalar(
     camera.directionWC,
     tile._centerZDepth,
@@ -787,7 +787,7 @@ function isPriorityDeferred(tile, frameState) {
   // The distance from the camera's view direction to the tile.
   const toLine = Cartesian3.subtract(
     closestPointOnLine,
-    boundingSphere.center,
+    center,
     scratchCartesian
   );
   const distanceToCenterLine = Cartesian3.magnitude(toLine);
@@ -805,7 +805,7 @@ function isPriorityDeferred(tile, frameState) {
       scratchCartesian
     );
     const closestOnSphere = Cartesian3.add(
-      boundingSphere.center,
+      center,
       scaledToLine,
       scratchCartesian
     );
@@ -1047,21 +1047,22 @@ Cesium3DTile.prototype.updateExpiration = function () {
  * @param {Cesium3DTile} tile
  */
 function updateExpireDate(tile) {
-  if (defined(tile.expireDuration)) {
-    const expireDurationDate = JulianDate.now(scratchJulianDate);
-    JulianDate.addSeconds(
-      expireDurationDate,
-      tile.expireDuration,
-      expireDurationDate
-    );
+  if (!defined(tile.expireDuration)) {
+    return;
+  }
+  const expireDurationDate = JulianDate.now(scratchJulianDate);
+  JulianDate.addSeconds(
+    expireDurationDate,
+    tile.expireDuration,
+    expireDurationDate
+  );
 
-    if (defined(tile.expireDate)) {
-      if (JulianDate.lessThan(tile.expireDate, expireDurationDate)) {
-        JulianDate.clone(expireDurationDate, tile.expireDate);
-      }
-    } else {
-      tile.expireDate = JulianDate.clone(expireDurationDate);
+  if (defined(tile.expireDate)) {
+    if (JulianDate.lessThan(tile.expireDate, expireDurationDate)) {
+      JulianDate.clone(expireDurationDate, tile.expireDate);
     }
+  } else {
+    tile.expireDate = JulianDate.clone(expireDurationDate);
   }
 }
 
@@ -1590,7 +1591,7 @@ Cesium3DTile.prototype.contentVisibility = function (frameState) {
  * Computes the (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
  *
  * @param {FrameState} frameState The frame state.
- * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
+ * @returns {number} The distance, in meters, or zero if the camera is inside the bounding volume.
  *
  * @private
  */
@@ -1605,7 +1606,7 @@ const scratchToTileCenter = new Cartesian3();
  * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
  *
  * @param {FrameState} frameState The frame state.
- * @returns {Number} The distance, in meters.
+ * @returns {number} The distance, in meters.
  *
  * @private
  */
@@ -1624,7 +1625,7 @@ Cesium3DTile.prototype.distanceToTileCenter = function (frameState) {
  * Checks if the camera is inside the viewer request volume.
  *
  * @param {FrameState} frameState The frame state.
- * @returns {Boolean} Whether the camera is inside the volume.
+ * @returns {boolean} Whether the camera is inside the volume.
  *
  * @private
  */
@@ -1644,6 +1645,13 @@ const scratchRectangle = new Rectangle();
 const scratchOrientedBoundingBox = new OrientedBoundingBox();
 const scratchTransform = new Matrix4();
 
+/**
+ * @private
+ * @param {*} box
+ * @param {Matrix4} transform
+ * @param {TileBoundingVolume} [result]
+ * @returns {TileOrientedBoundingBox}
+ */
 function createBox(box, transform, result) {
   let center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
   let halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
@@ -1660,6 +1668,14 @@ function createBox(box, transform, result) {
   return new TileOrientedBoundingBox(center, halfAxes);
 }
 
+/**
+ * @private
+ * @param {*} region
+ * @param {Matrix4} transform
+ * @param {Matrix4} initialTransform
+ * @param {TileOrientedBoundingBox} [result]
+ * @returns {TileOrientedBoundingBox}
+ */
 function createBoxFromTransformedRegion(
   region,
   transform,
@@ -1700,6 +1716,14 @@ function createBoxFromTransformedRegion(
   return new TileOrientedBoundingBox(center, halfAxes);
 }
 
+/**
+ * @private
+ * @param {*} region
+ * @param {Matrix4} transform
+ * @param {Matrix4} initialTransform
+ * @param {TileBoundingVolume} [result]
+ * @returns {TileBoundingVolume}
+ */
 function createRegion(region, transform, initialTransform, result) {
   if (
     !Matrix4.equalsEpsilon(transform, initialTransform, CesiumMath.EPSILON8)
@@ -1725,6 +1749,13 @@ function createRegion(region, transform, initialTransform, result) {
   });
 }
 
+/**
+ * @private
+ * @param {*} sphere
+ * @param {Matrix4} transform
+ * @param {TileBoundingVolume} [result]
+ * @returns {TileBoundingSphere}
+ */
 function createSphere(sphere, transform, result) {
   let center = Cartesian3.fromElements(
     sphere[0],
@@ -1796,6 +1827,7 @@ Cesium3DTile.prototype.createBoundingVolume = function (
  * Update the tile's transform. The transform is applied to the tile's bounding volumes.
  *
  * @private
+ * @param {Matrix4} parentTransform
  */
 Cesium3DTile.prototype.updateTransform = function (parentTransform) {
   parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
@@ -1862,6 +1894,13 @@ Cesium3DTile.prototype.updateGeometricErrorScale = function () {
   }
 };
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ * @param {object} passOptions
+ */
 function applyDebugSettings(tile, tileset, frameState, passOptions) {
   if (!passOptions.isRender) {
     return;
@@ -1955,8 +1994,13 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
   }
 }
 
+/**
+ * @private
+ * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ */
 function updateContent(tile, tileset, frameState) {
-  const content = tile._content;
   const expiredContent = tile._expiredContent;
 
   // expired content is not supported for multiple contents
@@ -1972,14 +2016,20 @@ function updateContent(tile, tileset, frameState) {
     tile._expiredContent = undefined;
   }
 
-  content.update(tileset, frameState);
+  tile.content.update(tileset, frameState);
 }
 
+/**
+ * Compute and compare ClippingPlanes state:
+ *  - enabled-ness - are clipping planes enabled? is this tile clipped?
+ *  - clipping plane count
+ *  - clipping function (union v. intersection)
+
+ * @private
+ * @param {Cesium3DTile} tile 
+ * @param {Cesium3DTileset} tileset 
+ */
 function updateClippingPlanes(tile, tileset) {
-  // Compute and compare ClippingPlanes state:
-  // - enabled-ness - are clipping planes enabled? is this tile clipped?
-  // - clipping plane count
-  // - clipping function (union v. intersection)
   const clippingPlanes = tileset.clippingPlanes;
   let currentClippingPlanesState = 0;
   if (defined(clippingPlanes) && tile._isClipped && clippingPlanes.enabled) {
@@ -1996,6 +2046,9 @@ function updateClippingPlanes(tile, tileset) {
  * Get the draw commands needed to render this tile.
  *
  * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ * @param {object} passOptions
  */
 Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
   const commandStart = frameState.commandList.length;
@@ -2037,17 +2090,32 @@ Cesium3DTile.prototype.process = function (tileset, frameState) {
   frameState.commandList = savedCommandList;
 };
 
+/**
+ * @private
+ * @param {number} normalizedValue
+ * @param {number} numberOfDigits
+ * @param {number} leftShift
+ * @returns {number}
+ */
 function isolateDigits(normalizedValue, numberOfDigits, leftShift) {
   const scaled = normalizedValue * Math.pow(10, numberOfDigits);
   const integer = parseInt(scaled);
   return integer * Math.pow(10, leftShift);
 }
 
+/**
+ * @private
+ * @param {number} value
+ * @param {number} minimum
+ * @param {number} maximum
+ * @returns {number}
+ */
 function priorityNormalizeAndClamp(value, minimum, maximum) {
+  // Subtract epsilon since we only want decimal digits present in the output.
   return Math.max(
     CesiumMath.normalize(value, minimum, maximum) - CesiumMath.EPSILON7,
     0.0
-  ); // Subtract epsilon since we only want decimal digits present in the output.
+  );
 }
 
 /**
@@ -2181,4 +2249,5 @@ Cesium3DTile.prototype.destroy = function () {
     this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
   return destroyObject(this);
 };
+
 export default Cesium3DTile;
