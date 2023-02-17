@@ -12,11 +12,14 @@
 
 ##### Additions :tada:
 
-- Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling.
+- Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `ImageryLayer.fromProviderAsync`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `Terrain`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling.
 
 ##### Deprecated :hourglass_flowing_sand:
 
+- `CesiumWidget` constructor option `options.imageryProvider` haw been deprecated in Cesium 1.102. It will be removed in 1.104. Use `options.baseLayer` instead.
 - `ImageryProvider.ready` and `ImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
+- `ImageryProvider.defaultAlpha`, `ImageryProvider.defaultNightAlpha`, `ImageryProvider.defaultDayAlpha`, `ImageryProvider.defaultBrightness`, `ImageryProvider.defaultContrast`, `ImageryProvider.defaultHue`, `ImageryProvider.defaultSaturation`, `ImageryProvider.defaultGamma`, `ImageryProvider.defaultMinificationFilter`, `ImageryProvider.defaultMagnificationFilter` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ImageryLayer.alpha`, `ImageryLayer.nightAlpha`, `ImageryLayer.dayAlpha`, `ImageryLayer.brightness`, `ImageryLayer.contrast`, `ImageryLayer.hue`, `ImageryLayer.saturation`, `ImageryLayer.gamma`, `ImageryLayer.minificationFilter`, `ImageryLayer.magnificationFilter`instead.
+- `ImageryLayer.getViewableRectangle` was deprecated in Cesium 1.102. It will be removed in 1.104. Use `ImageryLayer.getImageryRectangle` instead.
 - `ArcGisMapServerImageryProvider` constructor parameter `url`,`ArcGisMapServerImageryProvider.ready`, and `ArcGisMapServerImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ArcGisMapServerImageryProvider.fromUrl` instead.
 - `BingMapsImageryProvider` constructor parameter `url`,`BingMapsImageryProvider.ready`, and `BingMapsImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `BingMapsImageryProvider.fromUrl` instead.
 - `GoogleEarthEnterpriseImageryProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseImageryProvider.ready`, and `GoogleEarthEnterpriseImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseImageryProvider.fromMetadata` instead.
@@ -34,7 +37,6 @@
 - `WebMapServiceImageryProvider.ready`, and `WebMapServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `WebMapTileServiceImageryProvider.ready`, and `WebMapTileServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
 - `TerrainProvider.ready` and `TerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `ImageryLayer.getViewableRectangle` was deprecated in Cesium 1.102. It will be removed in 1.104. Use `ImageryLayer.getImageryRectangle` instead.
 - `createWorldImagery` was deprecated in Cesium 1.102. It will be removed in 1.104. Use `createWorldImageryAsync` instead.
 - `ArcGISTiledElevationTerrainProvider` constructor parameter `options.url`, `ArcGISTiledElevationTerrainProvider.ready`, and `ArcGISTiledElevationTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ArcGISTiledElevationTerrainProvider.fromUrl` instead.
 - `CesiumTerrainProvider` constructor parameter `options.url`, `CesiumTerrainProvider.ready`, and `CesiumTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `CesiumTerrainProvider.fromUrl` instead.
@@ -44,6 +46,12 @@
 - `GoogleEarthEnterpriseTerrainProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseTerrainProvider.ready`, and `GoogleEarthEnterpriseTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseTerrainProvider.fromMetadata` instead.
 - `VRTheWorldTerrainProvider` constructor parameter `options.url`, `VRTheWorldTerrainProvider.ready`, and `VRTheWorldTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `VRTheWorldTerrainProvider.fromUrl` instead.
 - `createWorldTerrain` was deprecated in CesiumJS 1.102. It will be removed in 1.104. Use createWorldTerrainAsync instead.
+
+#### @cesium/widgets
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Viewer` constructor option `options.imageryProvider` haw been deprecated in Cesium 1.102. It will be removed in 1.104. Use `options.baseLayer` instead.
 
 ### 1.101 - 2023-01-02
 

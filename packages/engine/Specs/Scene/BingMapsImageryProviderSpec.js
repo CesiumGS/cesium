@@ -373,7 +373,8 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
     });
     expect(provider).toBeInstanceOf(BingMapsImageryProvider);
@@ -387,10 +388,12 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
     });
-    const provider2 = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider2 = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
     });
 
@@ -400,7 +403,8 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
     installFakeImageRequest();
 
-    const provider3 = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider3 = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: BingMapsStyle.AERIAL,
     });
 
@@ -415,7 +419,8 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
     });
     expect(provider).toBeInstanceOf(BingMapsImageryProvider);
@@ -429,7 +434,8 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
     });
     expect(provider).toBeInstanceOf(BingMapsImageryProvider);
@@ -447,7 +453,8 @@ describe("Scene/BingMapsImageryProvider", function () {
       url: url,
     });
 
-    const provider = await BingMapsImageryProvider.fromUrl(resource, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(resource, {
+      key: "",
       mapStyle: mapStyle,
     });
     expect(provider).toBeInstanceOf(BingMapsImageryProvider);
@@ -458,7 +465,9 @@ describe("Scene/BingMapsImageryProvider", function () {
     const url = "http://fake.fake.invalid";
 
     await expectAsync(
-      BingMapsImageryProvider.fromUrl(url, "")
+      BingMapsImageryProvider.fromUrl(url, {
+        key: "",
+      })
     ).toBeRejectedWithError(
       RuntimeError,
       new RegExp("An error occurred while accessing")
@@ -497,7 +506,9 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeImageRequest();
 
     await expectAsync(
-      BingMapsImageryProvider.fromUrl(url, "")
+      BingMapsImageryProvider.fromUrl(url, {
+        key: "",
+      })
     ).toBeRejectedWithError(
       RuntimeError,
       new RegExp("metadata does not specify one resource in resourceSets")
@@ -511,7 +522,8 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
     });
 
@@ -525,7 +537,8 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "fake Key", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "fake Key",
       mapStyle: mapStyle,
     });
 
@@ -564,7 +577,8 @@ describe("Scene/BingMapsImageryProvider", function () {
 
     const culture = "ja-jp";
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
       culture: culture,
     });
@@ -590,7 +604,8 @@ describe("Scene/BingMapsImageryProvider", function () {
     installFakeMetadataRequest(url, mapStyle);
     installFakeImageRequest();
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
     });
 
@@ -683,7 +698,8 @@ describe("Scene/BingMapsImageryProvider", function () {
 
     installFakeMetadataRequest(url, mapStyle);
 
-    const provider = await BingMapsImageryProvider.fromUrl(url, "", {
+    const provider = await BingMapsImageryProvider.fromUrl(url, {
+      key: "",
       mapStyle: mapStyle,
     });
 

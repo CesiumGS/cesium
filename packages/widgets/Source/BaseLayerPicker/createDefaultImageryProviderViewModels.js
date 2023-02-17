@@ -1,7 +1,7 @@
 import {
   ArcGisMapServerImageryProvider,
   buildModuleUrl,
-  createWorldImagery,
+  createWorldImageryAsync,
   IonImageryProvider,
   IonWorldImageryStyle,
   OpenStreetMapImageryProvider,
@@ -21,7 +21,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps aerial imagery, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.AERIAL,
         });
       },
@@ -37,7 +37,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps aerial imagery with labels, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.AERIAL_WITH_LABELS,
         });
       },
@@ -51,7 +51,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps standard road maps, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.ROAD,
         });
       },
@@ -75,11 +75,12 @@ i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Ad
 contributed by the GIS User Community.\nhttp://www.esri.com",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
-          url:
-            "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromUrl(
+          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
@@ -98,11 +99,12 @@ Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Bo
 http://www.esri.com",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
-          url:
-            "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromUrl(
+          "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
@@ -120,11 +122,12 @@ for informational and educational purposes as well as a basemap by GIS professio
 mapping applications.\nhttp://www.esri.com",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
-          url:
-            "https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromUrl(
+          "https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/",
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
@@ -193,7 +196,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "Sentinel-2 cloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 and 2017).",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3954 });
+        return IonImageryProvider.fromAssetId(3954);
       },
     })
   );
@@ -205,7 +208,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
       tooltip: "Blue Marble Next Generation July, 2004 imagery from NASA.",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3845 });
+        return IonImageryProvider.fromAssetId(3845);
       },
     })
   );
@@ -220,7 +223,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "The Earth at night, also known as The Black Marble, is a 500 meter resolution global composite imagery layer released by NASA.",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3812 });
+        return IonImageryProvider.fromAssetId(3812);
       },
     })
   );
@@ -235,9 +238,9 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/",
       category: "Cesium ion",
       creationFunction: function () {
-        return new TileMapServiceImageryProvider({
-          url: buildModuleUrl("Assets/Textures/NaturalEarthII"),
-        });
+        return TileMapServiceImageryProvider.fromUrl(
+          buildModuleUrl("Assets/Textures/NaturalEarthII")
+        );
       },
     })
   );

@@ -11,17 +11,18 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  * @param {Object} [options] Object with the following properties:
  * @param {IonWorldImageryStyle} [options.style=IonWorldImageryStyle] The style of base imagery, only AERIAL, AERIAL_WITH_LABELS, and ROAD are currently supported.
  * @returns {IonImageryProvider}
+ * @deprecated
  *
  * @see Ion
  *
  * @example
- * // Create Cesium World Terrain with default settings
+ * // Create Cesium World Imagery with default settings
  * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery();
  * });
  *
  * @example
- * // Create Cesium World Terrain with water and normals.
+ * // Create Cesium World Imagery with a different style
  * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery({
  *         style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS

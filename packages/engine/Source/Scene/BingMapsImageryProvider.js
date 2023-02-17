@@ -22,7 +22,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * @property {Resource|String} [url] The url of the Bing Maps server hosting the imagery. Deprecated.
  * @property {String} [key] The Bing Maps key for your application, which can be
- *        created at {@link https://www.bingmapsportal.com/}. Deprecated.
+ *        created at {@link https://www.bingmapsportal.com/}.
  * @property {String} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
  *        By default, tiles are loaded using the same protocol as the page.
  * @property {BingMapsStyle} [mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
@@ -190,8 +190,8 @@ async function requestMetadata(
  *
  * @example
  * const bing = await Cesium.BingMapsImageryProvider.fromUrl(
- *   "https://dev.virtualearth.net",
- *   "get-yours-at-https://www.bingmapsportal.com/", {
+ *   "https://dev.virtualearth.net", {
+ *     key: "get-yours-at-https://www.bingmapsportal.com/",
  *     mapStyle: Cesium.BingMapsStyle.AERIAL
  * });
  *
@@ -201,91 +201,16 @@ async function requestMetadata(
 function BingMapsImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultNightAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultDayAlpha = undefined;
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultBrightness = undefined;
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultContrast = undefined;
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultHue = undefined;
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultSaturation = undefined;
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   *
-   * @type {Number|undefined}
-   * @default 1.0
-   */
-  this.defaultGamma = 1.0;
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   *
-   * @type {TextureMinificationFilter}
-   * @default undefined
-   */
-  this.defaultMinificationFilter = undefined;
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   *
-   * @type {TextureMagnificationFilter}
-   * @default undefined
-   */
-  this.defaultMagnificationFilter = undefined;
+  this._defaultAlpha = undefined;
+  this._defaultNightAlpha = undefined;
+  this._defaultDayAlpha = undefined;
+  this._defaultBrightness = undefined;
+  this._defaultContrast = undefined;
+  this._defaultHue = undefined;
+  this._defaultSaturation = undefined;
+  this._defaultGamma = 1.0;
+  this._defaultMinificationFilter = undefined;
+  this._defaultMagnificationFilter = undefined;
 
   this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
   this._culture = defaultValue(options.culture, "");
@@ -593,33 +518,267 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
       return false;
     },
   },
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultAlpha: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultAlpha",
+        "BingMapsImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+      );
+      return this._defaultAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultAlpha",
+        "BingMapsImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+      );
+      this._defaultAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultNightAlpha: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultNightAlpha",
+        "BingMapsImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+      );
+      return this.defaultNightAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultNightAlpha",
+        "BingMapsImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+      );
+      this.defaultNightAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultDayAlpha: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultDayAlpha",
+        "BingMapsImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+      );
+      return this._defaultDayAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultDayAlpha",
+        "BingMapsImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+      );
+      this._defaultDayAlpha = value;
+    },
+  },
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultBrightness: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultBrightness",
+        "BingMapsImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+      );
+      return this._defaultBrightness;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultBrightness",
+        "BingMapsImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+      );
+      this._defaultBrightness = value;
+    },
+  },
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultContrast: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultContrast",
+        "BingMapsImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+      );
+      return this._defaultContrast;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultContrast",
+        "BingMapsImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+      );
+      this._defaultContrast = value;
+    },
+  },
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultHue: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultHue",
+        "BingMapsImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+      );
+      return this._defaultHue;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultHue",
+        "BingMapsImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+      );
+      this._defaultHue = value;
+    },
+  },
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultSaturation: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultSaturation",
+        "BingMapsImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+      );
+      return this._defaultSaturation;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultSaturation",
+        "BingMapsImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+      );
+      this._defaultSaturation = value;
+    },
+  },
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultGamma: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultGamma",
+        "BingMapsImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+      );
+      return this._defaultGamma;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultGamma",
+        "BingMapsImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+      );
+      this._defaultGamma = value;
+    },
+  },
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {TextureMinificationFilter}
+   * @deprecated
+   */
+  defaultMinificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultMinificationFilter",
+        "BingMapsImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+      );
+      return this._defaultMinificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultMinificationFilter",
+        "BingMapsImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+      );
+      this._defaultMinificationFilter = value;
+    },
+  },
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {TextureMagnificationFilter}
+   * @deprecated
+   */
+  defaultMagnificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultMagnificationFilter",
+        "BingMapsImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+      );
+      return this._defaultMagnificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "BingMapsImageryProvider.defaultMagnificationFilter",
+        "BingMapsImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+      );
+      this._defaultMagnificationFilter = value;
+    },
+  },
 });
 
 /**
  * Creates an {@link ImageryProvider} which provides tiled imagery using the Bing Maps Imagery REST API.
  *
  * @param {Resource|String} url The url of the Bing Maps server hosting the imagery.
- * @param {String} key The Bing Maps key for your application, which can be
- *        created at {@link https://www.bingmapsportal.com/}.
  * @param {BingMapsImageryProvider.ConstructorOptions} options Object describing initialization options
  * @returns {Promise<BingMapsImageryProvider>} A promise that resolves to the created BingMapsImageryProvider
  *
  * @example
  * const bing = await Cesium.BingMapsImageryProvider.fromUrl(
- *   "https://dev.virtualearth.net",
- *   "get-yours-at-https://www.bingmapsportal.com/", {
+ *   "https://dev.virtualearth.net", {
+ *     key: "get-yours-at-https://www.bingmapsportal.com/",
  *     mapStyle: Cesium.BingMapsStyle.AERIAL
  * });
  *
  * @exception {RuntimeError} metadata does not specify one resource in resourceSets
  */
-BingMapsImageryProvider.fromUrl = async function (url, key, options) {
+BingMapsImageryProvider.fromUrl = async function (url, options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
   //>>includeStart('debug', pragmas.debug);
   Check.defined("url", url);
-  Check.defined("key", key);
+  Check.defined("options.key", options.key);
   //>>includeEnd('debug');
-
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   let tileProtocol = options.tileProtocol;
 
@@ -645,14 +804,13 @@ BingMapsImageryProvider.fromUrl = async function (url, key, options) {
     url: `REST/v1/Imagery/Metadata/${mapStyle}`,
     queryParameters: {
       incl: "ImageryProviders",
-      key: key,
+      key: options.key,
       uriScheme: tileProtocol,
     },
   });
 
   const provider = new BingMapsImageryProvider(options);
   provider._resource = resource;
-  provider._key = key;
   const imageryProviderBuilder = new ImageryProviderBuilder(options);
   await requestMetadata(metadataResource, imageryProviderBuilder);
   imageryProviderBuilder.build(provider);

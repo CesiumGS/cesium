@@ -44,46 +44,46 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
  * const imageryViewModels = [];
  * imageryViewModels.push(new Cesium.ProviderViewModel({
- *      name : 'Open\u00adStreet\u00adMap',
- *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
- *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
- * map of the world.\nhttp://www.openstreetmap.org',
- *      creationFunction : function() {
+ *      name: "Open\u00adStreet\u00adMap",
+ *      iconUrl: Cesium.buildModuleUrl("Widgets/Images/ImageryProviders/openStreetMap.png"),
+ *      tooltip: "OpenStreetMap (OSM) is a collaborative project to create a free editable \
+ * map of the world.\nhttp://www.openstreetmap.org",
+ *      creationFunction: function() {
  *          return new Cesium.OpenStreetMapImageryProvider({
- *              url : 'https://a.tile.openstreetmap.org/'
+ *              url: "https://a.tile.openstreetmap.org/"
  *          });
  *      }
  *  }));
  *
  *  imageryViewModels.push(new Cesium.ProviderViewModel({
- *      name : 'Earth at Night',
- *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
- *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
- * in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
- *      creationFunction : function() {
- *          return new Cesium.IonImageryProvider({ assetId: 3812 });
+ *      name: "Earth at Night",
+ *      iconUrl: Cesium.buildModuleUrl("Widgets/Images/ImageryProviders/blackMarble.png"),
+ *      tooltip: "The lights of cities and villages trace the outlines of civilization \
+ * in this global view of the Earth at night as seen by NASA/NOAA's Suomi NPP satellite.",
+ *      creationFunction: function() {
+ *          return Cesium.IonImageryProvider.fromAssetId(3812);
  *      }
  *  }));
  *
  *  imageryViewModels.push(new Cesium.ProviderViewModel({
- *      name : 'Natural Earth\u00a0II',
- *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
- *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
- *      creationFunction : function() {
- *          return new Cesium.TileMapServiceImageryProvider({
- *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
- *          });
+ *      name: "Natural Earth\u00a0II",
+ *      iconUrl: Cesium.buildModuleUrl("Widgets/Images/ImageryProviders/naturalEarthII.png"),
+ *      tooltip: "Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/",
+ *      creationFunction: function() {
+ *          return Cesium.TileMapServiceImageryProvider.fromUrl(
+ *              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
+ *          );
  *      }
  *  }));
  *
  * //Create a CesiumWidget without imagery, if you haven't already done so.
- * const cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
+ * const cesiumWidget = new Cesium.CesiumWidget("cesiumContainer", { baseLayer: false });
  *
  * //Finally, create the baseLayerPicker widget using our view models.
  * const layers = cesiumWidget.imageryLayers;
- * const baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', {
- *     globe : cesiumWidget.scene.globe,
- *     imageryProviderViewModels : imageryViewModels
+ * const baseLayerPicker = new Cesium.BaseLayerPicker("baseLayerPickerContainer", {
+ *     globe: cesiumWidget.scene.globe,
+ *     imageryProviderViewModels: imageryViewModels
  * });
  *
  * @see TerrainProvider

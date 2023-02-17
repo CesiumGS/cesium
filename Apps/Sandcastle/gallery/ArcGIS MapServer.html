@@ -33,10 +33,11 @@
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-            url:
-              "https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/",
-          }),
+          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+            Cesium.ArcGisMapServerImageryProvider.fromUrl(
+              "https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/"
+            )
+          ),
         });
         //Sandcastle_End
       };

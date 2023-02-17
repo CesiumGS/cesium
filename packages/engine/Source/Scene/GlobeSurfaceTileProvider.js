@@ -239,10 +239,12 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
     get: function () {
       return (
         defined(this._terrainProvider) &&
-        // ready is deprecated; This is here for backwards compatibility
+        // TerrainProvider.ready is deprecated; This is here for backwards compatibility
         this._terrainProvider._ready &&
         (this._imageryLayers.length === 0 ||
-          this._imageryLayers.get(0).imageryProvider._ready)
+          // ImageryProvider.ready is deprecated; This is here for backwards compatibility
+          (this._imageryLayers.get(0).ready &&
+            this._imageryLayers.get(0).imageryProvider._ready))
       );
     },
   },
@@ -355,10 +357,14 @@ function updateCredits(surface, frameState) {
 
   const imageryLayers = surface._imageryLayers;
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
-    const imageryProvider = imageryLayers.get(i).imageryProvider;
-    // ready is deprecated; This is here for backwards compatibility
-    if (imageryProvider._ready && defined(imageryProvider.credit)) {
-      creditDisplay.addCredit(imageryProvider.credit);
+    const layer = imageryLayers.get(i);
+    // ImageryProvider.ready is deprecated; This is here for backwards compatibility
+    if (
+      layer.ready &&
+      layer.imageryProvider._ready &&
+      defined(layer.imageryProvider.credit)
+    ) {
+      creditDisplay.addCredit(layer.imageryProvider.credit);
     }
   }
 }
@@ -1439,9 +1445,8 @@ GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
     const terrainProvider = this._terrainProvider;
 
     const that = this;
-    const imageryProvider = layer.imageryProvider;
     const tileImageryUpdatedEvent = this._imageryLayersUpdatedEvent;
-    imageryProvider._reload = function () {
+    const reloadFunction = function () {
       // Clear the layer's cache
       layer._imageryCache = {};
 
@@ -1502,6 +1507,11 @@ GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
         }
       });
     };
+
+    if (layer.ready) {
+      const imageryProvider = layer.imageryProvider;
+      imageryProvider._reload = reloadFunction;
+    }
 
     // create TileImageries for this layer for all previously loaded tiles
     this._quadtree.forEachLoadedTile(function (tile) {
@@ -2125,7 +2135,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const hasVertexNormals =
     defined(tileProvider.terrainProvider) &&
     // ready is deprecated; This is here for backwards compatibility
-    tileProvider.terrainProvider._ready &&
+    tileProvider.terrainP &&
     tileProvider.terrainProvider.hasVertexNormals;
   const enableFog =
     frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;

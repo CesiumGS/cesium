@@ -57,19 +57,21 @@
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-            url:
-              "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
-          }),
+          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+            Cesium.ArcGisMapServerImageryProvider.fromUrl(
+              "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"
+            )
+          ),
           baseLayerPicker: false,
           infoBox: false,
         });
 
         const layers = viewer.imageryLayers;
-        const earthAtNight = layers.addImageryProvider(
-          new Cesium.IonImageryProvider({ assetId: 3812 })
+        const earthAtNight = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.IonImageryProvider.fromAssetId(3812)
         );
         earthAtNight.splitDirection = Cesium.SplitDirection.LEFT; // Only show to the left of the slider.
+        layers.add(earthAtNight);
 
         // Sync the position of the slider with the split position
         const slider = document.getElementById("slider");

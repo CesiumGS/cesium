@@ -14,19 +14,22 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  * @see Ion
  *
  * @example
- * // Create Cesium World Terrain with default settings
- * const viewer = new Cesium.Viewer("cesiumContainer", {
- *     imageryProvider: await Cesium.createWorldImageryAsync();
- * });
+ * // Create a Cesium World Imagery base layer with default settings
+ * try {
+ *   const imageryProvider = await Cesium.createWorldImageryAsync();
+ * } catch (error) {
+ *   console.log(`There was an error creating world imagery: ${error}`);
+ * }
  *
  * @example
- * // Create Cesium World Terrain with water and normals.
- * const viewer = new Cesium.Viewer("cesiumContainer", {
- *     imageryProvider: await Cesium.createWorldImageryAsync({
+ * // Create Cesium World Imagery with different style
+ * try {
+ *   const imageryProvider = await Cesium.createWorldImageryAsync({
  *         style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS
- *     })
- * });
- *
+ *   });
+ * } catch (error) {
+ *   console.log(`There was an error creating world imagery: ${error}`);
+ * }
  */
 function createWorldImageryAsync(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
