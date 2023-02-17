@@ -364,7 +364,7 @@ function VoxelPrimitive(options) {
   this._disableUpdate = false;
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @private
    */
   this._uniforms = {
@@ -397,14 +397,14 @@ function VoxelPrimitive(options) {
 
   /**
    * Shape specific shader defines from the previous shape update. Used to detect if the shader needs to be rebuilt.
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @private
    */
   this._shapeDefinesOld = {};
 
   /**
    * Map uniform names to functions that return the uniform values.
-   * @type {Object.<string, function():any>}
+   * @type {Object<string, function():any>}
    * @private
    */
   this._uniformMap = {};

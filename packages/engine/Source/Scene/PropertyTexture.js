@@ -15,7 +15,7 @@ import PropertyTextureProperty from "./PropertyTextureProperty.js";
  * @param {string|number} [options.id] A unique id to identify the property texture, useful for debugging. For <code>EXT_structural_metadata</code>, this is the array index in the property textures array, for <code>EXT_feature_metadata</code> this is the dictionary key in the property textures dictionary.
  * @param {object} options.propertyTexture The property texture JSON, following the EXT_structural_metadata schema.
  * @param {MetadataClass} options.class The class that properties conform to.
- * @param {Object.<string, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
+ * @param {Object<string, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
  * @alias PropertyTexture
  * @constructor

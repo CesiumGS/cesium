@@ -101,7 +101,7 @@ Object.defineProperties(PropertyAttribute.prototype, {
    *
    * @memberof PropertyAttribute.prototype
    *
-   * @type {Object.<string, PropertyAttributeProperty>}
+   * @type {Object<string, PropertyAttributeProperty>}
    * @readonly
    * @private
    */

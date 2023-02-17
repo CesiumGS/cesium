@@ -297,7 +297,7 @@ Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(
  * A scalar to multiply to the camera position and add it back after setting the camera to view the rectangle.
  * A value of zero means the camera will view the entire {@link Camera#DEFAULT_VIEW_RECTANGLE}, a value greater than zero
  * will move it further away from the extent, and a value less than zero will move it close to the extent.
- * @type Number
+ * @type {number}
  */
 Camera.DEFAULT_VIEW_FACTOR = 0.5;
 

@@ -372,7 +372,7 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
 
 /**
  * @param {number} frameNumber
- * @returns Boolean
+ * @returns {boolean}
  */
 SpatialNode.prototype.isRenderable = function (frameNumber) {
   const previousNode = this.renderableKeyframeNodePrevious;

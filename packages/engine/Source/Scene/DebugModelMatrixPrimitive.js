@@ -62,7 +62,7 @@ function DebugModelMatrixPrimitive(options) {
   /**
    * Determines if this primitive will be shown.
    *
-   * @type Boolean
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);

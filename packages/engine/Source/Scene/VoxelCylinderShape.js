@@ -92,7 +92,7 @@ function VoxelCylinderShape() {
   this._maximumAngle = VoxelCylinderShape.DefaultMaxBounds.z;
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderUniforms = {
@@ -108,7 +108,7 @@ function VoxelCylinderShape() {
   };
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderDefines = {

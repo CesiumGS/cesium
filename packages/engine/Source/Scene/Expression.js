@@ -223,7 +223,7 @@ Expression.prototype.getShaderExpression = function (
 /**
  * Gets the variables used by the expression.
  *
- * @returns {} The variables used by the expression.
+ * @returns {string[]} The variables used by the expression.
  *
  * @private
  */

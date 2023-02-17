@@ -57,7 +57,7 @@ function SkyBox(options) {
    * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
    * These can be either URLs or <code>Image</code> objects.
    *
-   * @type Object
+   * @type {object}
    * @default undefined
    */
   this.sources = options.sources;

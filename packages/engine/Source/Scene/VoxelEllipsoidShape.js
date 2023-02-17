@@ -90,7 +90,7 @@ function VoxelEllipsoidShape() {
   this._rotation = new Matrix3();
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderUniforms = {
@@ -108,7 +108,7 @@ function VoxelEllipsoidShape() {
   };
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderDefines = {

@@ -43,7 +43,7 @@ function ModelRenderResources(model) {
    * A dictionary mapping uniform name to functions that return the uniform
    * values.
    *
-   * @type {Object.<string, Function>}
+   * @type {Object<string, Function>}
    * @readonly
    *
    * @private

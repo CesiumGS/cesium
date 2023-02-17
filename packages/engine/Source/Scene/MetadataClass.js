@@ -15,7 +15,7 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * @param {string} options.id The ID of the class.
  * @param {string} [options.name] The name of the class.
  * @param {string} [options.description] The description of the class.
- * @param {Object.<string, MetadataClassProperty>} [options.properties] The class properties, where each key is the property ID.
+ * @param {Object<string, MetadataClassProperty>} [options.properties] The class properties, where each key is the property ID.
  * @param {*} [options.extras] Extra user-defined properties.
  * @param {object} [options.extensions] An object containing extensions.
  *
@@ -57,7 +57,7 @@ function MetadataClass(options) {
  * @param {object} options Object with the following properties:
  * @param {string} options.id The ID of the class.
  * @param {object} options.class The class JSON object.
- * @param {Object.<string, MetadataEnum>} [options.enums] A dictionary of enums.
+ * @param {Object<string, MetadataEnum>} [options.enums] A dictionary of enums.
  *
  * @returns {MetadataClass} The newly created metadata class.
  *
@@ -101,7 +101,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * The class properties.
    *
    * @memberof MetadataClass.prototype
-   * @type {Object.<string, MetadataClassProperty>}
+   * @type {Object<string, MetadataClassProperty>}
    * @readonly
    */
   properties: {
@@ -114,7 +114,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * A dictionary mapping semantics to class properties.
    *
    * @memberof MetadataClass.prototype
-   * @type {Object.<string, MetadataClassProperty>}
+   * @type {Object<string, MetadataClassProperty>}
    * @readonly
    *
    * @private

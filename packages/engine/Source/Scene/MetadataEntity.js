@@ -63,7 +63,7 @@ MetadataEntity.prototype.hasPropertyBySemantic = function (semantic) {
  * Returns an array of property IDs.
  *
  * @param {string[]} [results] An array into which to store the results.
- * @returns {} The property IDs.
+ * @returns {string[]} The property IDs.
  * @private
  */
 MetadataEntity.prototype.getPropertyIds = function (results) {
@@ -196,7 +196,7 @@ MetadataEntity.hasPropertyBySemantic = function (
  * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @param {string[]} [results] An array into which to store the results.
- * @returns {} The property IDs.
+ * @returns {string[]} The property IDs.
  *
  * @private
  */

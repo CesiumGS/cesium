@@ -16,8 +16,8 @@ import MetadataEnum from "./MetadataEnum.js";
  * @param {string} [options.name] The name of the schema.
  * @param {string} [options.description] The description of the schema.
  * @param {string} [options.version] The application-specific version of the schema.
- * @param {Object.<string, MetadataClass>} [options.classes] Classes defined in the schema, where each key is the class ID.
- * @param {Object.<string, MetadataEnum>} [options.enums] Enums defined in the schema, where each key is the enum ID.
+ * @param {Object<string, MetadataClass>} [options.classes] Classes defined in the schema, where each key is the class ID.
+ * @param {Object<string, MetadataEnum>} [options.enums] Enums defined in the schema, where each key is the enum ID.
  * @param {*} [options.extras] Extra user-defined properties.
  * @param {object} [options.extensions] An object containing extensions.
  *
@@ -98,7 +98,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * Classes defined in the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {Object.<string, MetadataClass>}
+   * @type {Object<string, MetadataClass>}
    * @readonly
    */
   classes: {
@@ -111,7 +111,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * Enums defined in the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {Object.<string, MetadataEnum>}
+   * @type {Object<string, MetadataEnum>}
    * @readonly
    */
   enums: {

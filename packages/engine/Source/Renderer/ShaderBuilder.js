@@ -92,7 +92,7 @@ Object.defineProperties(ShaderBuilder.prototype, {
    * the vertex shader.
    *
    * @memberof ShaderBuilder.prototype
-   * @type {Object.<string, Number>}
+   * @type {Object<string, number>}
    * @readonly
    * @private
    */

@@ -77,7 +77,7 @@ function GeometryInstanceAttribute(options) {
    * For example, a position attribute with x, y, and z components would have 3 as
    * shown in the code example.
    *
-   * @type Number
+   * @type {number}
    *
    * @default undefined
    *
@@ -99,7 +99,7 @@ function GeometryInstanceAttribute(options) {
    * This is commonly used when storing colors using {@link ComponentDatatype.UNSIGNED_BYTE}.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    *

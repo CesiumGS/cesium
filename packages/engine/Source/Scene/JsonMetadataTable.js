@@ -9,7 +9,7 @@ import MetadataEntity from "./MetadataEntity.js";
  *
  * @param {object} options Object with the following properties:
  * @param {number} options.count The number of entities in the table.
- * @param {Object.<string, Array>} options.properties The JSON representation of the metadata table. All the arrays must have exactly options.count elements.
+ * @param {Object<string, Array>} options.properties The JSON representation of the metadata table. All the arrays must have exactly options.count elements.
  *
  * @alias JsonMetadataTable
  * @constructor
@@ -45,7 +45,7 @@ JsonMetadataTable.prototype.hasProperty = function (propertyId) {
  * Returns an array of property IDs.
  *
  * @param {string[]} [results] An array into which to store the results.
- * @returns {} The property IDs.
+ * @returns {string[]} The property IDs.
  * @private
  */
 JsonMetadataTable.prototype.getPropertyIds = function (results) {

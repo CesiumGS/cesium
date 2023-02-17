@@ -88,7 +88,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {PointGraphics | PointGraphics.ConstructorOptions} [point] A point to associate with this entity.
  * @property {PolygonGraphics | PolygonGraphics.ConstructorOptions} [polygon] A polygon to associate with this entity.
  * @property {PolylineGraphics | PolylineGraphics.ConstructorOptions} [polyline] A polyline to associate with this entity.
- * @property {PropertyBag | Object.<string,*>} [properties] Arbitrary properties to associate with this entity.
+ * @property {PropertyBag | Object<string,*>} [properties] Arbitrary properties to associate with this entity.
  * @property {PolylineVolumeGraphics | PolylineVolumeGraphics.ConstructorOptions} [polylineVolume] A polylineVolume to associate with this entity.
  * @property {RectangleGraphics | RectangleGraphics.ConstructorOptions} [rectangle] A rectangle to associate with this entity.
  * @property {WallGraphics | WallGraphics.ConstructorOptions} [wall] A wall to associate with this entity.

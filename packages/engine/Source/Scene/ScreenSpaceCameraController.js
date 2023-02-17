@@ -591,8 +591,9 @@ function handleZoom(
     return;
   }
 
-  const sameStartPosition = defaultValue(
-    movement.inertiaEnabled,
+  const sameStartPosition = Cartesian2.equals(
+    startPosition,
+    object._zoomMouseStart,
     Cartesian2.equals(startPosition, object._zoomMouseStart)
   );
   let zoomingOnVector = object._zoomingOnVector;

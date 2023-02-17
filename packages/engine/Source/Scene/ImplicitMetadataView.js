@@ -108,7 +108,7 @@ ImplicitMetadataView.prototype.hasPropertyBySemantic = function (semantic) {
  * Returns an array of property IDs in the metadata table.
  *
  * @param {string[]} [results] An array into which to store the results.
- * @returns {} The property IDs.
+ * @returns {string[]} The property IDs.
  * @private
  */
 ImplicitMetadataView.prototype.getPropertyIds = function (results) {

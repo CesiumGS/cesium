@@ -110,7 +110,7 @@ Object.defineProperties(RequestScheduler, {
    *
    * @memberof RequestScheduler
    *
-   * @type Object
+   * @type {object}
    * @readonly
    * @private
    */

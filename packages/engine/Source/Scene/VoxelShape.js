@@ -68,7 +68,7 @@ Object.defineProperties(VoxelShape.prototype, {
   },
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   shaderUniforms: {
@@ -76,7 +76,7 @@ Object.defineProperties(VoxelShape.prototype, {
   },
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   shaderDefines: {

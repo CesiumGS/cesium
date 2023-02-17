@@ -22,7 +22,7 @@ Object.defineProperties(ManagedArray.prototype, {
    * If the set length is greater than the length of the internal array, the internal array is resized.
    *
    * @memberof ManagedArray.prototype
-   * @type Number
+   * @type {number}
    */
   length: {
     get: function () {
@@ -50,7 +50,7 @@ Object.defineProperties(ManagedArray.prototype, {
    * Gets the internal array.
    *
    * @memberof ManagedArray.prototype
-   * @type Array
+   * @type {Array}
    * @readonly
    */
   values: {

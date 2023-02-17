@@ -31,7 +31,7 @@ function VertexFormat(options) {
    * 64-bit floating-point (for precision).  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -43,7 +43,7 @@ function VertexFormat(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -55,7 +55,7 @@ function VertexFormat(options) {
    * 32-bit floating-point.  2 components per attribute
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -67,7 +67,7 @@ function VertexFormat(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -79,7 +79,7 @@ function VertexFormat(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -91,7 +91,7 @@ function VertexFormat(options) {
    * 8-bit unsigned byte.  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */

@@ -47,7 +47,7 @@ function DistanceDisplayConditionGeometryInstanceAttribute(near, far) {
   /**
    * The values for the attributes stored in a typed array.
    *
-   * @type Float32Array
+   * @type {Float32Array}
    *
    * @default [0.0, 0.0, Number.MAX_VALUE]
    */

@@ -114,7 +114,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * A dictionary mapping enum integer values to names.
    *
    * @memberof MetadataEnum.prototype
-   * @type {Object.<Number, String>}
+   * @type {Object<number, string>}
    * @readonly
    *
    * @private
@@ -129,7 +129,7 @@ Object.defineProperties(MetadataEnum.prototype, {
    * A dictionary mapping enum names to integer values.
    *
    * @memberof MetadataEnum.prototype
-   * @type {Object.<string, Number>}
+   * @type {Object<string, number>}
    * @readonly
    *
    * @private

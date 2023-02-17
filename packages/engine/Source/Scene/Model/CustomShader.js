@@ -78,8 +78,8 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
  * @param {LightingModel} [options.lightingModel] The lighting model (e.g. PBR or unlit). If present, this overrides the default lighting for the model.
  * @param {CustomShaderTranslucencyMode} [options.translucencyMode=CustomShaderTranslucencyMode.INHERIT] The translucency mode, which determines how the custom shader will be applied. If the value is CustomShaderTransulcencyMode.OPAQUE or CustomShaderTransulcencyMode.TRANSLUCENT, the custom shader will override settings from the model's material. If the value is CustomShaderTransulcencyMode.INHERIT, the custom shader will render as either opaque or translucent depending on the primitive's material settings.
- * @param {Object.<string, UniformSpecifier>} [options.uniforms] A dictionary for user-defined uniforms. The key is the uniform name that will appear in the GLSL code. The value is an object that describes the uniform type and initial value
- * @param {Object.<string, VaryingType>} [options.varyings] A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
+ * @param {Object<string, UniformSpecifier>} [options.uniforms] A dictionary for user-defined uniforms. The key is the uniform name that will appear in the GLSL code. The value is an object that describes the uniform type and initial value
+ * @param {Object<string, VaryingType>} [options.varyings] A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
  * @param {string} [options.vertexShaderText] The custom vertex shader as a string of GLSL code. It must include a GLSL function called vertexMain. See the example for the expected signature. If not specified, the custom vertex shader step will be skipped in the computed vertex shader.
  * @param {string} [options.fragmentShaderText] The custom fragment shader as a string of GLSL code. It must include a GLSL function called fragmentMain. See the example for the expected signature. If not specified, the custom fragment shader step will be skipped in the computed fragment shader.
  *
@@ -141,7 +141,7 @@ function CustomShader(options) {
   /**
    * Additional uniforms as declared by the user.
    *
-   * @type {Object.<string, UniformSpecifier>}
+   * @type {Object<string, UniformSpecifier>}
    * @readonly
    */
   this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
@@ -149,7 +149,7 @@ function CustomShader(options) {
    * Additional varyings as declared by the user.
    * This is used by {@link CustomShaderPipelineStage}
    *
-   * @type {Object.<string, VaryingType>}
+   * @type {Object<string, VaryingType>}
    * @readonly
    */
   this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
@@ -205,7 +205,7 @@ function CustomShader(options) {
    * The map of uniform names to a function that returns a value. This map
    * is combined with the overall uniform map used by the {@link DrawCommand}
    *
-   * @type {Object.<string, Function>}
+   * @type {Object<string, Function>}
    * @readonly
    * @private
    */

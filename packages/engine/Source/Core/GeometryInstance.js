@@ -83,7 +83,7 @@ function GeometryInstance(options) {
   /**
    * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
    *
-   * @type Object
+   * @type {object}
    *
    * @default undefined
    *
@@ -103,7 +103,7 @@ function GeometryInstance(options) {
    * Per-instance attributes like {@link ColorGeometryInstanceAttribute} or {@link ShowGeometryInstanceAttribute}.
    * {@link Geometry} attributes varying per vertex; these attributes are constant for the entire instance.
    *
-   * @type Object
+   * @type {object}
    *
    * @default undefined
    */

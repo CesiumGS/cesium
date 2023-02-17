@@ -123,7 +123,7 @@ function Geometry(options) {
    * Optional index data that - along with {@link Geometry#primitiveType} -
    * determines the primitives in the geometry.
    *
-   * @type Array
+   * @type {Array}
    *
    * @default undefined
    */

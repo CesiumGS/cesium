@@ -392,7 +392,7 @@ function Scene(options) {
    * command-dense and could benefit from batching.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -409,7 +409,7 @@ function Scene(options) {
    * yellow.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -421,7 +421,7 @@ function Scene(options) {
    * Displays frames per second and time between frames.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -433,7 +433,7 @@ function Scene(options) {
    * Indicates which frustum will have depth information displayed.
    * </p>
    *
-   * @type Number
+   * @type {number}
    *
    * @default 1
    */
@@ -445,7 +445,7 @@ function Scene(options) {
    * When <code>true</code>, draws outlines to show the boundaries of the camera frustums
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -456,7 +456,7 @@ function Scene(options) {
   /**
    * When <code>true</code>, enables picking using the depth buffer.
    *
-   * @type Boolean
+   * @type {boolean}
    * @default true
    */
   this.useDepthPicking = true;

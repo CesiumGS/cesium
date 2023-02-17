@@ -57,7 +57,7 @@ DracoLoader.decodePointCloud = function (parameters) {
  * @param {object} options Object with the following properties:
  * @param {Uint8Array} options.array The typed array containing the buffer view data.
  * @param {object} options.bufferView The glTF buffer view object.
- * @param {Object.<string, Number>} options.compressedAttributes The compressed attributes.
+ * @param {Object<string, number>} options.compressedAttributes The compressed attributes.
  * @param {boolean} options.dequantizeInShader Whether POSITION and NORMAL attributes should be dequantized on the GPU.
  *
  * @returns {Promise} A promise that resolves to the decoded indices and attributes.

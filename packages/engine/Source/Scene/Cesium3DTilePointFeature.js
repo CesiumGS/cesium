@@ -733,7 +733,7 @@ Cesium3DTilePointFeature.prototype.hasProperty = function (name) {
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
  * @param {string[]} [results] An array into which to store the results.
- * @returns {} The IDs of the feature's properties.
+ * @returns {string[]} The IDs of the feature's properties.
  */
 Cesium3DTilePointFeature.prototype.getPropertyIds = function (results) {
   return this._content.batchTable.getPropertyIds(this._batchId, results);

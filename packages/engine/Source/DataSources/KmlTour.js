@@ -20,22 +20,22 @@ import Event from "../Core/Event.js";
 function KmlTour(name, id) {
   /**
    * Id of kml gx:Tour entry
-   * @type String
+   * @type {string}
    */
   this.id = id;
   /**
    * Tour name
-   * @type String
+   * @type {string}
    */
   this.name = name;
   /**
    * Index of current entry from playlist
-   * @type Number
+   * @type {number}
    */
   this.playlistIndex = 0;
   /**
    * Array of playlist entries
-   * @type Array
+   * @type {Array}
    */
   this.playlist = [];
   /**

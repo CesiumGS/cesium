@@ -233,7 +233,7 @@ function Primitive(options) {
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default true
    */

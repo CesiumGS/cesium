@@ -72,7 +72,7 @@ function VoxelBoxShape() {
   );
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderUniforms = {
@@ -84,7 +84,7 @@ function VoxelBoxShape() {
   };
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderDefines = {

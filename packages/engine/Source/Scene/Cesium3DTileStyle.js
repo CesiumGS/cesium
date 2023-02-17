@@ -1445,7 +1445,7 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
 /**
  * Gets the variables used by the style.
  *
- * @returns {} The variables used by the style.
+ * @returns {string[]} The variables used by the style.
  *
  * @private
  */

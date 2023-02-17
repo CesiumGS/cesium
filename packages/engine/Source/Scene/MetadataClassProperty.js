@@ -128,7 +128,7 @@ function MetadataClassProperty(options) {
  * @param {object} options Object with the following properties:
  * @param {string} options.id The ID of the property.
  * @param {object} options.property The property JSON object.
- * @param {Object.<string, MetadataEnum>} [options.enums] A dictionary of enums.
+ * @param {Object<string, MetadataEnum>} [options.enums] A dictionary of enums.
  *
  * @returns {MetadataClassProperty} The newly created metadata class property.
  *

@@ -143,7 +143,7 @@ function EllipsoidPrimitive(options) {
   /**
    * User-defined object returned when the ellipsoid is picked.
    *
-   * @type Object
+   * @type {object}
    *
    * @default undefined
    *

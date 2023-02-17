@@ -16,7 +16,7 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * @param {object} options Object with the following properties:
  * @param {object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
- * @param {Object.<Number, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
+ * @param {Object<number, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
  * @alias PropertyTextureProperty
  * @constructor

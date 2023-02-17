@@ -43,7 +43,7 @@ function Spline() {
  * @param {number|Cartesian3|Quaternion} point
  * @returns {*} The type of the point.
  *
- * @exception {DeveloperError} value must be a Cartesian3, Quaternion, or Number.
+ * @exception {DeveloperError} value must be a Cartesian3, Quaternion, or number.
  *
  * @private
  */
@@ -60,7 +60,7 @@ Spline.getPointType = function (point) {
 
   //>>includeStart('debug', pragmas.debug);
   throw new DeveloperError(
-    "point must be a Cartesian3, Quaternion, or Number."
+    "point must be a Cartesian3, Quaternion, or number."
   );
   //>>includeEnd('debug');
 };

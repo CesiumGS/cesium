@@ -210,7 +210,7 @@ function partitionProperties(batchTable) {
  *
  * @param {number} featureCount The number of features in the batch table
  * @param {string} className The name of the metadata class to be created.
- * @param {Object.<string, Object>} binaryProperties A dictionary of property ID to property definition
+ * @param {Object<string, Object>} binaryProperties A dictionary of property ID to property definition
  * @param {Uint8Array} [binaryBody] The binary body of the batch table
  * @return {object} Transcoded data needed for constructing a {@link StructuralMetadata} object.
  *
