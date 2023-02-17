@@ -409,7 +409,7 @@ BatchTableHierarchy.prototype.propertyExists = function (propertyId) {
  * @param {number} batchId the batch ID of the feature
  * @param {number} index The index of the entity.
  * @param {string[]} [results] An array into which to store the results.
- * @returns {} The property IDs.
+ * @returns {string[]} The property IDs.
  * @private
  */
 BatchTableHierarchy.prototype.getPropertyIds = function (batchId, results) {
