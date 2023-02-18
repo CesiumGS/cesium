@@ -589,7 +589,7 @@ function Primitive() {
    * The feature IDs associated with this primitive. Feature ID types may
    * be interleaved
    *
-   * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRangeModelComponents.FeatureIdTexture>}
+   * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>}
    * @private
    */
   this.featureIds = [];
@@ -643,7 +643,7 @@ function Instances() {
    * The feature ID attributes associated with this set of instances.
    * Feature ID attribute types may be interleaved.
    *
-   * @type {ModelComponents.FeatureIdAttribute[]|ModelComponents.FeatureIdImplicitRange[]}
+   * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange>}
    * @private
    */
   this.featureIds = [];
