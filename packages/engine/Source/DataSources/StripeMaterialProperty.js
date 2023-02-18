@@ -17,12 +17,12 @@ const defaultRepeat = 1;
  * @alias StripeMaterialProperty
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Property|StripeOrientation} [options.orientation=StripeOrientation.HORIZONTAL] A Property specifying the {@link StripeOrientation}.
  * @param {Property|Color} [options.evenColor=Color.WHITE] A Property specifying the first {@link Color}.
  * @param {Property|Color} [options.oddColor=Color.BLACK] A Property specifying the second {@link Color}.
- * @param {Property|Number} [options.offset=0] A numeric Property specifying how far into the pattern to start the material.
- * @param {Property|Number} [options.repeat=1] A numeric Property specifying how many times the stripes repeat.
+ * @param {Property|number} [options.offset=0] A numeric Property specifying how far into the pattern to start the material.
+ * @param {Property|number} [options.repeat=1] A numeric Property specifying how many times the stripes repeat.
  */
 function StripeMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -52,7 +52,7 @@ Object.defineProperties(StripeMaterialProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof StripeMaterialProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -129,7 +129,7 @@ Object.defineProperties(StripeMaterialProperty.prototype, {
  * Gets the {@link Material} type at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 StripeMaterialProperty.prototype.getType = function (time) {
   return "Stripe";
@@ -139,8 +139,8 @@ StripeMaterialProperty.prototype.getType = function (time) {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 StripeMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(result)) {
@@ -171,7 +171,7 @@ StripeMaterialProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 StripeMaterialProperty.prototype.equals = function (other) {
   return (

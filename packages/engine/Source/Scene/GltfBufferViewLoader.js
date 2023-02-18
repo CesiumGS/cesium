@@ -16,13 +16,13 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.bufferViewId The buffer view ID.
+ * @param {object} options.gltf The glTF JSON.
+ * @param {number} options.bufferViewId The buffer view ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {String} [options.cacheKey] The cache key of the resource.
+ * @param {string} [options.cacheKey] The cache key of the resource.
  *
  * @private
  */
@@ -101,7 +101,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    *
    * @memberof GltfBufferViewLoader.prototype
    *
-   * @type {Promise.<GltfBufferViewLoader>|undefined}
+   * @type {Promise<GltfBufferViewLoader>|undefined}
    * @readonly
    * @private
    */
@@ -115,7 +115,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
    *
    * @memberof GltfBufferViewLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -142,7 +142,7 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<GltfBufferViewLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GltfBufferViewLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfBufferViewLoader.prototype.load = function () {

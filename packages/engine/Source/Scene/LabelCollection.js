@@ -557,14 +557,14 @@ function destroyLabel(labelCollection, label) {
  * @alias LabelCollection
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
  * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
  * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
- * @param {Boolean} [options.show=true] Determines if the labels in the collection will be shown.
+ * @param {boolean} [options.show=true] Determines if the labels in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many labels, to
  * many collections with only a few labels each.  Avoid having collections where some
@@ -622,7 +622,7 @@ function LabelCollection(options) {
   /**
    * Determines if labels in this collection will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -666,7 +666,7 @@ function LabelCollection(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -695,7 +695,7 @@ Object.defineProperties(LabelCollection.prototype, {
    * {@link LabelCollection#get} to iterate over all the labels
    * in the collection.
    * @memberof LabelCollection.prototype
-   * @type {Number}
+   * @type {number}
    */
   length: {
     get: function () {
@@ -708,7 +708,7 @@ Object.defineProperties(LabelCollection.prototype, {
  * Creates and adds a label with the specified initial properties to the collection.
  * The added label is returned so it can be modified or removed from the collection later.
  *
- * @param {Object} [options] A template describing the label's properties as shown in Example 1.
+ * @param {object} [options] A template describing the label's properties as shown in Example 1.
  * @returns {Label} The label that was added to the collection.
  *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -769,7 +769,7 @@ LabelCollection.prototype.add = function (options) {
  * Removes a label from the collection.  Once removed, a label is no longer usable.
  *
  * @param {Label} label The label to remove.
- * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
+ * @returns {boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
  *
  * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
@@ -831,7 +831,7 @@ LabelCollection.prototype.removeAll = function () {
  * Check whether this collection contains a given label.
  *
  * @param {Label} label The label to check for.
- * @returns {Boolean} true if this collection contains the label, false otherwise.
+ * @returns {boolean} true if this collection contains the label, false otherwise.
  *
  * @see LabelCollection#get
  *
@@ -847,7 +847,7 @@ LabelCollection.prototype.contains = function (label) {
  * {@link LabelCollection#length} to iterate over all the labels
  * in the collection.
  *
- * @param {Number} index The zero-based index of the billboard.
+ * @param {number} index The zero-based index of the billboard.
  *
  * @returns {Label} The label at the specified index.
  *
@@ -957,7 +957,7 @@ LabelCollection.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see LabelCollection#destroy
  */

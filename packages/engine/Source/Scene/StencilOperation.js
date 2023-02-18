@@ -3,13 +3,13 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Determines the action taken based on the result of the stencil test.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const StencilOperation = {
   /**
    * Sets the stencil buffer value to zero.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ZERO: WebGLConstants.ZERO,
@@ -17,7 +17,7 @@ const StencilOperation = {
   /**
    * Does not change the stencil buffer.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   KEEP: WebGLConstants.KEEP,
@@ -25,7 +25,7 @@ const StencilOperation = {
   /**
    * Replaces the stencil buffer value with the reference value.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   REPLACE: WebGLConstants.REPLACE,
@@ -33,7 +33,7 @@ const StencilOperation = {
   /**
    * Increments the stencil buffer value, clamping to unsigned byte.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   INCREMENT: WebGLConstants.INCR,
@@ -41,7 +41,7 @@ const StencilOperation = {
   /**
    * Decrements the stencil buffer value, clamping to zero.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   DECREMENT: WebGLConstants.DECR,
@@ -49,7 +49,7 @@ const StencilOperation = {
   /**
    * Bitwise inverts the existing stencil buffer value.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   INVERT: WebGLConstants.INVERT,
@@ -57,7 +57,7 @@ const StencilOperation = {
   /**
    * Increments the stencil buffer value, wrapping to zero when exceeding the unsigned byte range.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   INCREMENT_WRAP: WebGLConstants.INCR_WRAP,
@@ -65,7 +65,7 @@ const StencilOperation = {
   /**
    * Decrements the stencil buffer value, wrapping to the maximum unsigned byte instead of going below zero.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   DECREMENT_WRAP: WebGLConstants.DECR_WRAP,

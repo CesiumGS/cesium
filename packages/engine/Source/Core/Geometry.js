@@ -26,7 +26,7 @@ import Transforms from "./Transforms.js";
  * @alias Geometry
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {GeometryAttributes} options.attributes Attributes, which make up the geometry's vertices.
  * @param {PrimitiveType} [options.primitiveType=PrimitiveType.TRIANGLES] The type of primitives in the geometry.
  * @param {Uint16Array|Uint32Array} [options.indices] Optional index data that determines the primitives in the geometry.
@@ -123,7 +123,7 @@ function Geometry(options) {
    * Optional index data that - along with {@link Geometry#primitiveType} -
    * determines the primitives in the geometry.
    *
-   * @type Array
+   * @type {Array}
    *
    * @default undefined
    */
@@ -174,7 +174,7 @@ function Geometry(options) {
  * respect to the number of attributes in a vertex, not the number of vertices.
  *
  * @param {Geometry} geometry The geometry.
- * @returns {Number} The number of vertices in the geometry.
+ * @returns {number} The number of vertices in the geometry.
  *
  * @example
  * const numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
@@ -244,10 +244,10 @@ const rotation2DScratch = new Matrix2();
  * as an intermediary instead of local ENU, which is more accurate for large-area rectangles.
  *
  * @param {Cartesian3[]} positions Array of positions outlining the geometry
- * @param {Number} stRotation Texture coordinate rotation.
+ * @param {number} stRotation Texture coordinate rotation.
  * @param {Ellipsoid} ellipsoid Ellipsoid for projecting and generating local vectors.
  * @param {Rectangle} boundingRectangle Bounding rectangle around the positions.
- * @returns {Number[]} An array of 6 numbers specifying [minimum point, u extent, v extent] as points in the "cartographic" system.
+ * @returns {number[]} An array of 6 numbers specifying [minimum point, u extent, v extent] as points in the "cartographic" system.
  * @private
  */
 Geometry._textureCoordinateRotationPoints = function (

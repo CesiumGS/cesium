@@ -29,7 +29,7 @@ RectangleWithId.fromRectangleAndId = function (id, rectangle, result) {
 /**
  * Insert a rectangle into the collision checker.
  *
- * @param {String} id Unique string ID for the rectangle being inserted.
+ * @param {string} id Unique string ID for the rectangle being inserted.
  * @param {Rectangle} rectangle A Rectangle
  * @private
  */
@@ -55,7 +55,7 @@ const removalScratch = new RectangleWithId();
 /**
  * Remove a rectangle from the collision checker.
  *
- * @param {String} id Unique string ID for the rectangle being removed.
+ * @param {string} id Unique string ID for the rectangle being removed.
  * @param {Rectangle} rectangle A Rectangle
  * @private
  */
@@ -78,7 +78,7 @@ const collisionScratch = new RectangleWithId();
  * Checks if a given rectangle collides with any of the rectangles in the collection.
  *
  * @param {Rectangle} rectangle A Rectangle that should be checked against the rectangles in the collision checker.
- * @returns {Boolean} Whether the rectangle collides with any of the rectangles in the collision checker.
+ * @returns {boolean} Whether the rectangle collides with any of the rectangles in the collision checker.
  */
 RectangleCollisionChecker.prototype.collides = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);

@@ -8,8 +8,8 @@ const creditToId = {};
 
 /**
  * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
- * @param {String} html An string representing an html code snippet
- * @param {Boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+ * @param {string} html An string representing an html code snippet
+ * @param {boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
  *
  * @alias Credit
  * @constructor
@@ -47,7 +47,7 @@ Object.defineProperties(Credit.prototype, {
   /**
    * The credit content
    * @memberof Credit.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   html: {
@@ -58,7 +58,7 @@ Object.defineProperties(Credit.prototype, {
 
   /**
    * @memberof Credit.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -72,7 +72,7 @@ Object.defineProperties(Credit.prototype, {
   /**
    * Whether the credit should be displayed on screen or in a lightbox
    * @memberof Credit.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   showOnScreen: {
     get: function () {
@@ -116,7 +116,7 @@ Object.defineProperties(Credit.prototype, {
  *
  * @param {Credit} left The first credit
  * @param {Credit} right The second credit
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Credit.equals = function (left, right) {
   return (
@@ -132,7 +132,7 @@ Credit.equals = function (left, right) {
  * Returns true if the credits are equal
  *
  * @param {Credit} credit The credit to compare to.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Credit.prototype.equals = function (credit) {
   return Credit.equals(this, credit);

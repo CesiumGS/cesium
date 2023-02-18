@@ -12,9 +12,9 @@ const url = "https://dev.virtualearth.net/REST/v1/Locations";
  * @alias BingMapsGeocoderService
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.key A key to use with the Bing Maps geocoding service
- * @param {String} [options.culture] A Bing Maps {@link https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes|Culture Code} to return results in a specific culture and language.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.key A key to use with the Bing Maps geocoding service
+ * @param {string} [options.culture] A Bing Maps {@link https://docs.microsoft.com/en-us/bingmaps/rest-services/common-parameters-and-types/supported-culture-codes|Culture Code} to return results in a specific culture and language.
  */
 function BingMapsGeocoderService(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -44,7 +44,7 @@ function BingMapsGeocoderService(options) {
 Object.defineProperties(BingMapsGeocoderService.prototype, {
   /**
    * The URL endpoint for the Bing geocoder service
-   * @type {String}
+   * @type {string}
    * @memberof BingMapsGeocoderService.prototype
    * @readonly
    */
@@ -56,7 +56,7 @@ Object.defineProperties(BingMapsGeocoderService.prototype, {
 
   /**
    * The key for the Bing geocoder service
-   * @type {String}
+   * @type {string}
    * @memberof BingMapsGeocoderService.prototype
    * @readonly
    */
@@ -70,7 +70,7 @@ Object.defineProperties(BingMapsGeocoderService.prototype, {
 /**
  * @function
  *
- * @param {String} query The query to be sent to the geocoder service
+ * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
  */
 BingMapsGeocoderService.prototype.geocode = function (query) {

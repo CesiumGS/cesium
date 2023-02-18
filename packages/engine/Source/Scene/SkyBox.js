@@ -30,9 +30,9 @@ import SceneMode from "./SceneMode.js";
  * @alias SkyBox
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {object} options Object with the following properties:
+ * @param {object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
  *
  *
  * @example
@@ -57,7 +57,7 @@ function SkyBox(options) {
    * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
    * These can be either URLs or <code>Image</code> objects.
    *
-   * @type Object
+   * @type {object}
    * @default undefined
    */
   this.sources = options.sources;
@@ -66,7 +66,7 @@ function SkyBox(options) {
   /**
    * Determines if the sky box will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -217,7 +217,7 @@ SkyBox.prototype.update = function (frameState, useHdr) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see SkyBox#destroy
  */

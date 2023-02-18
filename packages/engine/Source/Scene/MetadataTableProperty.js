@@ -19,11 +19,11 @@ import MetadataType from "./MetadataType.js";
  * for glTF. For the legacy glTF extension, see {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension}
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Number} options.count The number of elements in each property array.
- * @param {Object} options.property The property JSON object.
+ * @param {object} options Object with the following properties:
+ * @param {number} options.count The number of elements in each property array.
+ * @param {object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
- * @param {Object.<String, Uint8Array>} options.bufferViews An object mapping bufferView IDs to Uint8Array objects.
+ * @param {Object<string, Uint8Array>} options.bufferViews An object mapping bufferView IDs to Uint8Array objects.
  *
  * @alias MetadataTableProperty
  * @constructor
@@ -226,7 +226,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
    * undefined, they default to identity so this property is set false
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @private
    */
@@ -240,7 +240,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
    * The offset to be added to property values as part of the value transform.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Number[]|Number[][]}
+   * @type {number|number[]|number[][]}
    * @readonly
    * @private
    */
@@ -254,7 +254,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
    * The scale to be multiplied to property values as part of the value transform.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Number[]|Number[][]}
+   * @type {number|number[]|number[][]}
    * @readonly
    * @private
    */
@@ -310,7 +310,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
 /**
  * Returns a copy of the value at the given index.
  *
- * @param {Number} index The index.
+ * @param {number} index The index.
  * @returns {*} The value of the property.
  *
  * @private
@@ -337,7 +337,7 @@ MetadataTableProperty.prototype.get = function (index) {
 /**
  * Sets the value at the given index.
  *
- * @param {Number} index The index.
+ * @param {number} index The index.
  * @param {*} value The value of the property.
  *
  * @private

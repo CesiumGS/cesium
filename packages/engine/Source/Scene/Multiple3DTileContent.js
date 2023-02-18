@@ -27,7 +27,7 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The content this content belongs to
  * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
- * @param {Object} contentsJson Either the tile JSON containing the contents array (3D Tiles 1.1), or <code>3DTILES_multiple_contents</code> extension JSON
+ * @param {object} contentsJson Either the tile JSON containing the contents array (3D Tiles 1.1), or <code>3DTILES_multiple_contents</code> extension JSON
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -80,7 +80,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code> checks if any of the inner contents have dirty featurePropertiesDirty.
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -111,7 +111,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -128,7 +128,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -145,7 +145,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -162,7 +162,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -179,7 +179,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -196,7 +196,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -221,7 +221,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    *
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {Promise.<Cesium3DTileContent>|undefined}
+   * @type {Promise<Cesium3DTileContent>|undefined}
    * @readonly
    *
    * @private
@@ -263,7 +263,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * have a single URL, so this returns undefined.
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -327,7 +327,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * {@link Cesium3DTileset#debugShowUrl}.
    * @memberof Multiple3DTileContent.prototype
    *
-   * @type {String[]}
+   * @type {string[]}
    * @readonly
    * @private
    */
@@ -386,7 +386,7 @@ function cancelPendingRequests(multipleContents, originalContentState) {
  * requests are successfully scheduled.
  * </p>
  *
- * @return {Number} The number of attempted requests that were unable to be scheduled.
+ * @return {number} The number of attempted requests that were unable to be scheduled.
  * @private
  */
 Multiple3DTileContent.prototype.requestInnerContents = function () {
@@ -419,8 +419,8 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
 
 /**
  * Check if all requests for inner contents can be scheduled at once. This is slower, but it avoids a potential memory leak.
- * @param {String[]} serverKeys The server keys for all of the inner contents
- * @return {Boolean} True if the request scheduler has enough open slots for all inner contents
+ * @param {string[]} serverKeys The server keys for all of the inner contents
+ * @return {boolean} True if the request scheduler has enough open slots for all inner contents
  * @private
  */
 function canScheduleAllRequests(serverKeys) {

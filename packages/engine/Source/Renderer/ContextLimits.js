@@ -32,7 +32,7 @@ Object.defineProperties(ContextLimits, {
    * shader with this WebGL implementation.  The minimum is eight.  If both shaders access the
    * same texture unit, this counts as two texture units.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_COMBINED_TEXTURE_IMAGE_UNITS</code>.
    */
   maximumCombinedTextureImageUnits: {
@@ -45,7 +45,7 @@ Object.defineProperties(ContextLimits, {
    * The approximate maximum cube mape width and height supported by this WebGL implementation.
    * The minimum is 16, but most desktop and laptop implementations will support much larger sizes like 8,192.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_CUBE_MAP_TEXTURE_SIZE</code>.
    */
   maximumCubeMapSize: {
@@ -58,7 +58,7 @@ Object.defineProperties(ContextLimits, {
    * The maximum number of <code>vec4</code>, <code>ivec4</code>, and <code>bvec4</code>
    * uniforms that can be used by a fragment shader with this WebGL implementation.  The minimum is 16.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_FRAGMENT_UNIFORM_VECTORS</code>.
    */
   maximumFragmentUniformVectors: {
@@ -70,7 +70,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum number of texture units that can be used from the fragment shader with this WebGL implementation.  The minimum is eight.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_TEXTURE_IMAGE_UNITS</code>.
    */
   maximumTextureImageUnits: {
@@ -83,7 +83,7 @@ Object.defineProperties(ContextLimits, {
    * The maximum renderbuffer width and height supported by this WebGL implementation.
    * The minimum is 16, but most desktop and laptop implementations will support much larger sizes like 8,192.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_RENDERBUFFER_SIZE</code>.
    */
   maximumRenderbufferSize: {
@@ -96,7 +96,7 @@ Object.defineProperties(ContextLimits, {
    * The approximate maximum texture width and height supported by this WebGL implementation.
    * The minimum is 64, but most desktop and laptop implementations will support much larger sizes like 8,192.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_TEXTURE_SIZE</code>.
    */
   maximumTextureSize: {
@@ -109,7 +109,7 @@ Object.defineProperties(ContextLimits, {
    * The maximum number of <code>vec4</code> varying variables supported by this WebGL implementation.
    * The minimum is eight.  Matrices and arrays count as multiple <code>vec4</code>s.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VARYING_VECTORS</code>.
    */
   maximumVaryingVectors: {
@@ -121,7 +121,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum number of <code>vec4</code> vertex attributes supported by this WebGL implementation.  The minimum is eight.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VERTEX_ATTRIBS</code>.
    */
   maximumVertexAttributes: {
@@ -134,7 +134,7 @@ Object.defineProperties(ContextLimits, {
    * The maximum number of texture units that can be used from the vertex shader with this WebGL implementation.
    * The minimum is zero, which means the GL does not support vertex texture fetch.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VERTEX_TEXTURE_IMAGE_UNITS</code>.
    */
   maximumVertexTextureImageUnits: {
@@ -147,7 +147,7 @@ Object.defineProperties(ContextLimits, {
    * The maximum number of <code>vec4</code>, <code>ivec4</code>, and <code>bvec4</code>
    * uniforms that can be used by a vertex shader with this WebGL implementation.  The minimum is 16.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VERTEX_UNIFORM_VECTORS</code>.
    */
   maximumVertexUniformVectors: {
@@ -159,7 +159,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The minimum aliased line width, in pixels, supported by this WebGL implementation.  It will be at most one.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
    */
   minimumAliasedLineWidth: {
@@ -171,7 +171,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
    */
   maximumAliasedLineWidth: {
@@ -183,7 +183,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The minimum aliased point size, in pixels, supported by this WebGL implementation.  It will be at most one.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_POINT_SIZE_RANGE</code>.
    */
   minimumAliasedPointSize: {
@@ -195,7 +195,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum aliased point size, in pixels, supported by this WebGL implementation.  It will be at least one.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_POINT_SIZE_RANGE</code>.
    */
   maximumAliasedPointSize: {
@@ -207,7 +207,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum supported width of the viewport.  It will be at least as large as the visible width of the associated canvas.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VIEWPORT_DIMS</code>.
    */
   maximumViewportWidth: {
@@ -219,7 +219,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum supported height of the viewport.  It will be at least as large as the visible height of the associated canvas.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VIEWPORT_DIMS</code>.
    */
   maximumViewportHeight: {
@@ -231,7 +231,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum degree of anisotropy for texture filtering
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    */
   maximumTextureFilterAnisotropy: {
     get: function () {
@@ -242,7 +242,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum number of simultaneous outputs that may be written in a fragment shader.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    */
   maximumDrawBuffers: {
     get: function () {
@@ -253,7 +253,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum number of color attachments supported.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    */
   maximumColorAttachments: {
     get: function () {
@@ -264,7 +264,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * The maximum number of samples supported for multisampling.
    * @memberof ContextLimits
-   * @type {Number}
+   * @type {number}
    */
   maximumSamples: {
     get: function () {
@@ -275,7 +275,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * High precision float supported (<code>highp</code>) in fragment shaders.
    * @memberof ContextLimits
-   * @type {Boolean}
+   * @type {boolean}
    */
   highpFloatSupported: {
     get: function () {
@@ -286,7 +286,7 @@ Object.defineProperties(ContextLimits, {
   /**
    * High precision int supported (<code>highp</code>) in fragment shaders.
    * @memberof ContextLimits
-   * @type {Boolean}
+   * @type {boolean}
    */
   highpIntSupported: {
     get: function () {

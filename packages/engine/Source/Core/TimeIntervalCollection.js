@@ -61,7 +61,7 @@ Object.defineProperties(TimeIntervalCollection.prototype, {
   /**
    * Gets whether or not the start time is included in the collection.
    * @memberof TimeIntervalCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isStartIncluded: {
@@ -88,7 +88,7 @@ Object.defineProperties(TimeIntervalCollection.prototype, {
   /**
    * Gets whether or not the stop time is included in the collection.
    * @memberof TimeIntervalCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isStopIncluded: {
@@ -102,7 +102,7 @@ Object.defineProperties(TimeIntervalCollection.prototype, {
   /**
    * Gets the number of intervals in the collection.
    * @memberof TimeIntervalCollection.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -114,7 +114,7 @@ Object.defineProperties(TimeIntervalCollection.prototype, {
   /**
    * Gets whether or not the collection is empty.
    * @memberof TimeIntervalCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isEmpty: {
@@ -130,7 +130,7 @@ Object.defineProperties(TimeIntervalCollection.prototype, {
  *
  * @param {TimeIntervalCollection} [right] The right hand side collection.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 TimeIntervalCollection.prototype.equals = function (right, dataComparer) {
   if (this === right) {
@@ -156,7 +156,7 @@ TimeIntervalCollection.prototype.equals = function (right, dataComparer) {
 /**
  * Gets the interval at the specified index.
  *
- * @param {Number} index The index of the interval to retrieve.
+ * @param {number} index The index of the interval to retrieve.
  * @returns {TimeInterval|undefined} The interval at the specified index, or <code>undefined</code> if no interval exists as that index.
  */
 TimeIntervalCollection.prototype.get = function (index) {
@@ -194,7 +194,7 @@ TimeIntervalCollection.prototype.findIntervalContainingDate = function (date) {
  * Finds and returns the data for the interval that contains the specified date.
  *
  * @param {JulianDate} date The date to search for.
- * @returns {Object} The data for the interval containing the specified date, or <code>undefined</code> if no such interval exists.
+ * @returns {object} The data for the interval containing the specified date, or <code>undefined</code> if no such interval exists.
  */
 TimeIntervalCollection.prototype.findDataForIntervalContainingDate = function (
   date
@@ -207,7 +207,7 @@ TimeIntervalCollection.prototype.findDataForIntervalContainingDate = function (
  * Checks if the specified date is inside this collection.
  *
  * @param {JulianDate} julianDate The date to check.
- * @returns {Boolean} <code>true</code> if the collection contains the specified date, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the collection contains the specified date, <code>false</code> otherwise.
  */
 TimeIntervalCollection.prototype.contains = function (julianDate) {
   return this.indexOf(julianDate) >= 0;
@@ -219,7 +219,7 @@ const indexOfScratch = new TimeInterval();
  * Finds and returns the index of the interval in the collection that contains the specified date.
  *
  * @param {JulianDate} date The date to search for.
- * @returns {Number} The index of the interval that contains the specified date, if no such interval exists,
+ * @returns {number} The index of the interval that contains the specified date, if no such interval exists,
  * it returns a negative number which is the bitwise complement of the index of the next interval that
  * starts after the date, or if no interval starts after the specified date, the bitwise complement of
  * the length of the collection.
@@ -269,11 +269,11 @@ TimeIntervalCollection.prototype.indexOf = function (date) {
  * Returns the first interval in the collection that matches the specified parameters.
  * All parameters are optional and <code>undefined</code> parameters are treated as a don't care condition.
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {JulianDate} [options.start] The start time of the interval.
  * @param {JulianDate} [options.stop] The stop time of the interval.
- * @param {Boolean} [options.isStartIncluded] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.isStopIncluded] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStartIncluded] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
  * @returns {TimeInterval|undefined} The first interval in the collection that matches the specified parameters.
  */
 TimeIntervalCollection.prototype.findInterval = function (options) {
@@ -505,7 +505,7 @@ TimeIntervalCollection.prototype.addInterval = function (
  * The data property of the input interval is ignored.
  *
  * @param {TimeInterval} interval The interval to remove.
- * @returns {Boolean} <code>true</code> if the interval was removed, <code>false</code> if no part of the interval was in the collection.
+ * @returns {boolean} <code>true</code> if the interval was removed, <code>false</code> if no part of the interval was in the collection.
  */
 TimeIntervalCollection.prototype.removeInterval = function (interval) {
   //>>includeStart('debug', pragmas.debug);
@@ -731,12 +731,12 @@ TimeIntervalCollection.prototype.intersect = function (
 /**
  * Creates a new instance from a JulianDate array.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {JulianDate[]} options.julianDates An array of ISO 8601 dates.
- * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
- * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+ * @param {boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+ * @param {boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
  * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
  * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
  * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
@@ -898,9 +898,9 @@ const durationRegex = /P(?:([\d.,]+)Y)?(?:([\d.,]+)M)?(?:([\d.,]+)W)?(?:([\d.,]+
 /**
  * Parses ISO8601 duration string
  *
- * @param {String} iso8601 An ISO 8601 duration.
+ * @param {string} iso8601 An ISO 8601 duration.
  * @param {GregorianDate} result An existing instance to use for the result.
- * @returns {Boolean} True is parsing succeeded, false otherwise
+ * @returns {boolean} True is parsing succeeded, false otherwise
  *
  * @private
  */
@@ -981,12 +981,12 @@ const scratchDuration = new GregorianDate();
 /**
  * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} time interval (start/end/duration).
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.iso8601 An ISO 8601 interval.
- * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
- * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.iso8601 An ISO 8601 interval.
+ * @param {boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+ * @param {boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
  * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
  * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
  * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
@@ -1038,12 +1038,12 @@ TimeIntervalCollection.fromIso8601 = function (options, result) {
 /**
  * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} date array.
  *
- * @param {Object} options Object with the following properties:
- * @param {String[]} options.iso8601Dates An array of ISO 8601 dates.
- * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
- * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+ * @param {object} options Object with the following properties:
+ * @param {string[]} options.iso8601Dates An array of ISO 8601 dates.
+ * @param {boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+ * @param {boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
  * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
  * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
  * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
@@ -1076,14 +1076,14 @@ TimeIntervalCollection.fromIso8601DateArray = function (options, result) {
 /**
  * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} duration array.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {JulianDate} options.epoch An date that the durations are relative to.
- * @param {String} options.iso8601Durations An array of ISO 8601 durations.
- * @param {Boolean} [options.relativeToPrevious=false] <code>true</code> if durations are relative to previous date, <code>false</code> if always relative to the epoch.
- * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
- * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+ * @param {string} options.iso8601Durations An array of ISO 8601 durations.
+ * @param {boolean} [options.relativeToPrevious=false] <code>true</code> if durations are relative to previous date, <code>false</code> if always relative to the epoch.
+ * @param {boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+ * @param {boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
  * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
  * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
  * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.

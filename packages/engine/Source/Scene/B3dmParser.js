@@ -21,8 +21,8 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  * @private
  *
  * @param {ArrayBuffer} arrayBuffer The array buffer containing the b3dm.
- * @param {Number} [byteOffset=0] The byte offset of the beginning of the b3dm in the array buffer.
- * @returns {Object} Returns an object with the batch length, feature table (binary and json), batch table (binary and json) and glTF parts of the b3dm.
+ * @param {number} [byteOffset=0] The byte offset of the beginning of the b3dm in the array buffer.
+ * @returns {object} Returns an object with the batch length, feature table (binary and json), batch table (binary and json) and glTF parts of the b3dm.
  */
 B3dmParser.parse = function (arrayBuffer, byteOffset) {
   const byteStart = defaultValue(byteOffset, 0);

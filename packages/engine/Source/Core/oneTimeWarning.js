@@ -11,8 +11,8 @@ const warnings = {};
  *
  * @function oneTimeWarning
  *
- * @param {String} identifier The unique identifier for this warning.
- * @param {String} [message=identifier] The message to log to the console.
+ * @param {string} identifier The unique identifier for this warning.
+ * @param {string} [message=identifier] The message to log to the console.
  *
  * @example
  * for(let i=0;i<foo.length;++i) {

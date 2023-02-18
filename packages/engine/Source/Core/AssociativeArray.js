@@ -17,7 +17,7 @@ Object.defineProperties(AssociativeArray.prototype, {
    * Gets the number of items in the collection.
    * @memberof AssociativeArray.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   length: {
     get: function () {
@@ -42,8 +42,8 @@ Object.defineProperties(AssociativeArray.prototype, {
 /**
  * Determines if the provided key is in the array.
  *
- * @param {String|Number} key The key to check.
- * @returns {Boolean} <code>true</code> if the key is in the array, <code>false</code> otherwise.
+ * @param {string|number} key The key to check.
+ * @returns {boolean} <code>true</code> if the key is in the array, <code>false</code> otherwise.
  */
 AssociativeArray.prototype.contains = function (key) {
   //>>includeStart('debug', pragmas.debug);
@@ -58,7 +58,7 @@ AssociativeArray.prototype.contains = function (key) {
  * Associates the provided key with the provided value.  If the key already
  * exists, it is overwritten with the new value.
  *
- * @param {String|Number} key A unique identifier.
+ * @param {string|number} key A unique identifier.
  * @param {*} value The value to associate with the provided key.
  */
 AssociativeArray.prototype.set = function (key, value) {
@@ -79,7 +79,7 @@ AssociativeArray.prototype.set = function (key, value) {
 /**
  * Retrieves the value associated with the provided key.
  *
- * @param {String|Number} key The key whose value is to be retrieved.
+ * @param {string|number} key The key whose value is to be retrieved.
  * @returns {*} The associated value, or undefined if the key does not exist in the collection.
  */
 AssociativeArray.prototype.get = function (key) {
@@ -94,8 +94,8 @@ AssociativeArray.prototype.get = function (key) {
 /**
  * Removes a key-value pair from the collection.
  *
- * @param {String|Number} key The key to be removed.
- * @returns {Boolean} True if it was removed, false if the key was not in the collection.
+ * @param {string|number} key The key to be removed.
+ * @returns {boolean} True if it was removed, false if the key was not in the collection.
  */
 AssociativeArray.prototype.remove = function (key) {
   //>>includeStart('debug', pragmas.debug);

@@ -17,37 +17,37 @@ function InfoBoxViewModel() {
 
   /**
    * Gets or sets the maximum height of the info box in pixels.  This property is observable.
-   * @type {Number}
+   * @type {number}
    */
   this.maxHeight = 500;
 
   /**
    * Gets or sets whether the camera tracking icon is enabled.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.enableCamera = false;
 
   /**
    * Gets or sets the status of current camera tracking of the selected object.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.isCameraTracking = false;
 
   /**
    * Gets or sets the visibility of the info box.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.showInfo = false;
 
   /**
    * Gets or sets the title text in the info box.
-   * @type {String}
+   * @type {string}
    */
   this.titleText = "";
 
   /**
    * Gets or sets the description HTML for the info box.
-   * @type {String}
+   * @type {string}
    */
   this.description = "";
 
@@ -65,7 +65,7 @@ function InfoBoxViewModel() {
 
   /**
    * Gets the SVG path of the camera icon, which can change to be "crossed out" or not.
-   * @type {String}
+   * @type {string}
    */
   this.cameraIconPath = undefined;
   knockout.defineProperty(this, "cameraIconPath", {
@@ -85,8 +85,8 @@ function InfoBoxViewModel() {
 
 /**
  * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.
- * @param {Number} offset The offset in pixels.
- * @returns {String}
+ * @param {number} offset The offset in pixels.
+ * @returns {string}
  */
 InfoBoxViewModel.prototype.maxHeightOffset = function (offset) {
   return `${this.maxHeight - offset}px`;

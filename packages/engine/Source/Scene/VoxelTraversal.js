@@ -28,8 +28,8 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
  * @param {Cartesian3} dimensions
  * @param {MetadataType[]} types
  * @param {MetadataComponentType[]} componentTypes
- * @param {Number} keyframeCount
- * @param {Number} [maximumTextureMemoryByteLength]
+ * @param {number} keyframeCount
+ * @param {number} [maximumTextureMemoryByteLength]
  *
  * @private
  */
@@ -75,19 +75,19 @@ function VoxelTraversal(
   const maximumTileCount = this.megatextures[0].maximumTileCount;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._simultaneousRequestCount = 0;
 
   /**
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this._debugPrint = false;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._frameNumber = 0;
@@ -122,25 +122,25 @@ function VoxelTraversal(
   this._keyframeNodesInMegatexture = new Array(maximumTileCount);
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._keyframeCount = keyframeCount;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._sampleCount = undefined;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._keyframeLocation = 0;
 
   /**
-   * @type {Number[]}
+   * @type {number[]}
    * @private
    */
   this._binaryTreeKeyframeWeighting = new Array(keyframeCount);
@@ -182,7 +182,7 @@ function VoxelTraversal(
   });
 
   /**
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.internalNodeTilesPerRow = internalNodeTilesPerRow;
@@ -205,7 +205,7 @@ function VoxelTraversal(
 
   /**
    * Only generated when there are two or more samples.
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.leafNodeTilesPerRow = undefined;
@@ -232,9 +232,9 @@ VoxelTraversal.simultaneousRequestCountMaximum = 50;
 
 /**
  * @param {FrameState} frameState
- * @param {Number} keyframeLocation
- * @param {Boolean} recomputeBoundingVolumes
- * @param {Boolean} pauseUpdate
+ * @param {number} keyframeLocation
+ * @param {boolean} recomputeBoundingVolumes
+ * @param {boolean} pauseUpdate
  */
 VoxelTraversal.prototype.update = function (
   frameState,
@@ -323,7 +323,7 @@ VoxelTraversal.prototype.update = function (
 /**
  * Check if a node is renderable.
  * @param {SpatialNode} tile
- * @returns {Boolean}
+ * @returns {boolean}
  */
 VoxelTraversal.prototype.isRenderable = function (tile) {
   return tile.isRenderable(this._frameNumber);
@@ -335,7 +335,7 @@ VoxelTraversal.prototype.isRenderable = function (tile) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see VoxelTraversal#destroy
  */
@@ -471,8 +471,8 @@ function requestData(that, keyframeNode) {
 /**
  * @function
  *
- * @param {Number} x
- * @returns {Number}
+ * @param {number} x
+ * @returns {number}
  *
  * @private
  */
@@ -531,7 +531,7 @@ function loadAndUnload(that, frameState) {
   /**
    * @ignore
    * @param {SpatialNode} spatialNode
-   * @param {Number} visibilityPlaneMask
+   * @param {number} visibilityPlaneMask
    */
   function addToQueueRecursive(spatialNode, visibilityPlaneMask) {
     spatialNode.computeScreenSpaceError(positionWC, screenSpaceErrorMultiplier);
@@ -805,8 +805,8 @@ const GpuOctreeFlag = {
  *
  * @param {VoxelTraversal} that
  * @param {FrameState} frameState
- * @param {Number} sampleCount
- * @param {Number} levelBlendFactor
+ * @param {number} sampleCount
+ * @param {number} levelBlendFactor
  * @private
  */
 function generateOctree(that, sampleCount, levelBlendFactor) {
@@ -823,10 +823,10 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
   /**
    * @ignore
    * @param {SpatialNode} node
-   * @param {Number} childOctreeIndex
-   * @param {Number} childEntryIndex
-   * @param {Number} parentOctreeIndex
-   * @param {Number} parentEntryIndex
+   * @param {number} childOctreeIndex
+   * @param {number} childEntryIndex
+   * @param {number} parentOctreeIndex
+   * @param {number} parentEntryIndex
    */
   function buildOctree(
     node,
@@ -934,9 +934,9 @@ function generateOctree(that, sampleCount, levelBlendFactor) {
 /**
  * Compute an interpolation factor between a node and its parent
  * @param {SpatialNode} node
- * @param {Number} targetSse
- * @param {Number} levelBlendFactor
- * @returns {Number}
+ * @param {number} targetSse
+ * @param {number} levelBlendFactor
+ * @returns {number}
  * @private
  */
 function getLodLerp(node, targetSse, levelBlendFactor) {
@@ -953,9 +953,9 @@ function getLodLerp(node, targetSse, levelBlendFactor) {
 
 /**
  *
- * @param {Number[]} data
- * @param {Number} texelsPerTile
- * @param {Number} tilesPerRow
+ * @param {number[]} data
+ * @param {number} texelsPerTile
+ * @param {number} tilesPerRow
  * @param {Texture} texture
  * @private
  */
@@ -994,9 +994,9 @@ function copyToInternalNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
 
 /**
  *
- * @param {Number[]} data
- * @param {Number} texelsPerTile
- * @param {Number} tilesPerRow
+ * @param {number[]} data
+ * @param {number} texelsPerTile
+ * @param {number} tilesPerRow
  * @param {Texture} texture
  * @private
  */
@@ -1053,7 +1053,7 @@ function copyToLeafNodeTexture(data, texelsPerTile, tilesPerRow, texture) {
 }
 
 /**
- * @param {Number} tileCount
+ * @param {number} tileCount
  * @param {Cartesian3} dimensions
  * @param {MetadataType[]} types
  * @param {MetadataComponentType[]} componentTypes

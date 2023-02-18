@@ -11,10 +11,10 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @alias SpatialNode
  * @constructor
  *
- * @param {Number} level
- * @param {Number} x
- * @param {Number} y
- * @param {Number} z
+ * @param {number} level
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
  * @param {SpatialNode} parent
  * @param {VoxelShape} shape
  * @param {Cartesian3} voxelDimensions
@@ -125,8 +125,8 @@ SpatialNode.prototype.constructChildNodes = function (shape, voxelDimensions) {
 
 /**
  * @param {FrameState} frameState
- * @param {Number} visibilityPlaneMask
- * @returns {Number} A plane mask as described in {@link CullingVolume#computeVisibilityWithPlaneMask}.
+ * @param {number} visibilityPlaneMask
+ * @returns {number} A plane mask as described in {@link CullingVolume#computeVisibilityWithPlaneMask}.
  */
 SpatialNode.prototype.visibility = function (frameState, visibilityPlaneMask) {
   const obb = this.orientedBoundingBox;
@@ -136,7 +136,7 @@ SpatialNode.prototype.visibility = function (frameState, visibilityPlaneMask) {
 
 /**
  * @param {Cartesian3} cameraPosition
- * @param {Number} screenSpaceErrorMultiplier
+ * @param {number} screenSpaceErrorMultiplier
  */
 SpatialNode.prototype.computeScreenSpaceError = function (
   cameraPosition,
@@ -160,9 +160,9 @@ const scratchBinarySearchKeyframeNode = {
 /**
  * Find the index of a given key frame position within an array of KeyframeNodes,
  * or the complement (~) of the index where it would be in the sorted array.
- * @param {Number} keyframe
+ * @param {number} keyframe
  * @param {KeyframeNode[]} keyframeNodes
- * @returns {Number}
+ * @returns {number}
  * @private
  */
 function findKeyframeIndex(keyframe, keyframeNodes) {
@@ -177,7 +177,7 @@ function findKeyframeIndex(keyframe, keyframeNodes) {
 /**
  * Computes the most suitable keyframes for rendering, balancing between temporal and visual quality.
  *
- * @param {Number} keyframeLocation
+ * @param {number} keyframeLocation
  */
 SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
   keyframeLocation
@@ -275,15 +275,15 @@ function getWeightedKeyframeDistance(levelDistance, keyframeDistance) {
 }
 
 /**
- * @param {Number} frameNumber
- * @returns {Boolean}
+ * @param {number} frameNumber
+ * @returns {boolean}
  */
 SpatialNode.prototype.isVisited = function (frameNumber) {
   return this.visitedFrameNumber === frameNumber;
 };
 
 /**
- * @param {Number} keyframe
+ * @param {number} keyframe
  */
 SpatialNode.prototype.createKeyframeNode = function (keyframe) {
   let index = findKeyframeIndex(keyframe, this.keyframeNodes);
@@ -371,8 +371,8 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
 };
 
 /**
- * @param {Number} frameNumber
- * @returns Boolean
+ * @param {number} frameNumber
+ * @returns {boolean}
  */
 SpatialNode.prototype.isRenderable = function (frameNumber) {
   const previousNode = this.renderableKeyframeNodePrevious;

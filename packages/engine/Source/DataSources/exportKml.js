@@ -224,14 +224,14 @@ IdManager.prototype.get = function (id) {
 
 /**
  * @typedef exportKmlResultKml
- * @type {Object}
- * @property {String} kml The generated KML.
- * @property {Object.<string, Blob>} externalFiles An object dictionary of external files
+ * @type {object}
+ * @property {string} kml The generated KML.
+ * @property {Object<string, Blob>} externalFiles An object dictionary of external files
  */
 
 /**
  * @typedef exportKmlResultKmz
- * @type {Object}
+ * @type {object}
  * @property {Blob} kmz The generated kmz file.
  */
 
@@ -247,14 +247,14 @@ IdManager.prototype.get = function (id) {
  *
  * @function exportKml
  *
- * @param {Object} options An object with the following properties:
+ * @param {object} options An object with the following properties:
  * @param {EntityCollection} options.entities The EntityCollection to export as KML.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file.
  * @param {exportKmlModelCallback} [options.modelCallback] A callback that will be called with a {@link ModelGraphics} instance and should return the URI to use in the KML. Required if a model exists in the entity collection.
  * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
  * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
- * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
- * @param {Boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
+ * @param {number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
+ * @param {boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
  *
  * @returns {Promise<exportKmlResultKml|exportKmlResultKmz>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
@@ -1513,7 +1513,7 @@ function colorToString(color) {
  *
  * @param {ModelGraphics} model The ModelGraphics instance for an Entity.
  * @param {JulianDate} time The time that any properties should use to get the value.
- * @param {Object} externalFiles An object that maps a filename to a Blob or a Promise that resolves to a Blob.
- * @returns {String} The URL to use for the href in the KML document.
+ * @param {object} externalFiles An object that maps a filename to a Blob or a Promise that resolves to a Blob.
+ * @returns {string} The URL to use for the href in the KML document.
  */
 export default exportKml;

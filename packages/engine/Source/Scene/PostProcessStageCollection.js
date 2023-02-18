@@ -105,7 +105,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * Determines if all of the post-process stages in the collection are ready to be executed.
    *
    * @memberof PostProcessStageCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -231,7 +231,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * The number of post-process stages in this collection.
    *
    * @memberof PostProcessStageCollection.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -286,7 +286,7 @@ Object.defineProperties(PostProcessStageCollection.prototype, {
    * Whether the collection has a stage that has selected features.
    *
    * @memberof PostProcessStageCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @private
    */
@@ -453,7 +453,7 @@ PostProcessStageCollection.prototype.add = function (stage) {
  * Removes a post-process stage from the collection and destroys it.
  *
  * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage to remove from the collection.
- * @return {Boolean} Whether the post-process stage was removed.
+ * @return {boolean} Whether the post-process stage was removed.
  */
 PostProcessStageCollection.prototype.remove = function (stage) {
   if (!this.contains(stage)) {
@@ -489,7 +489,7 @@ PostProcessStageCollection.prototype.remove = function (stage) {
  * Returns whether the collection contains a post-process stage.
  *
  * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage.
- * @return {Boolean} Whether the collection contains the post-process stage.
+ * @return {boolean} Whether the collection contains the post-process stage.
  */
 PostProcessStageCollection.prototype.contains = function (stage) {
   return (
@@ -502,7 +502,7 @@ PostProcessStageCollection.prototype.contains = function (stage) {
 /**
  * Gets the post-process stage at <code>index</code>.
  *
- * @param {Number} index The index of the post-process stage.
+ * @param {number} index The index of the post-process stage.
  * @return {PostProcessStage|PostProcessStageComposite} The post-process stage at index.
  */
 PostProcessStageCollection.prototype.get = function (index) {
@@ -532,7 +532,7 @@ PostProcessStageCollection.prototype.removeAll = function () {
 /**
  * Gets a post-process stage in the collection by its name.
  *
- * @param {String} name The name of the post-process stage.
+ * @param {string} name The name of the post-process stage.
  * @return {PostProcessStage|PostProcessStageComposite} The post-process stage.
  *
  * @private
@@ -545,7 +545,7 @@ PostProcessStageCollection.prototype.getStageByName = function (name) {
  * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
  *
  * @param {Context} context The context.
- * @param {Boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
+ * @param {boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
  *
  * @private
  */
@@ -703,7 +703,7 @@ function getOutputTexture(stage) {
 /**
  * Gets the output texture of a stage with the given name.
  *
- * @param {String} stageName The name of the stage.
+ * @param {string} stageName The name of the stage.
  * @return {Texture|undefined} The texture rendered to by the stage with the given name.
  *
  * @private
@@ -854,7 +854,7 @@ PostProcessStageCollection.prototype.copy = function (context, framebuffer) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see PostProcessStageCollection#destroy
  */

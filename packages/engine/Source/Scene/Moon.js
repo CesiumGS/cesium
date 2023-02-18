@@ -17,11 +17,11 @@ import Material from "./Material.js";
  * @alias Moon
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.show=true] Determines whether the moon will be rendered.
- * @param {String} [options.textureUrl=buildModuleUrl('Assets/Textures/moonSmall.jpg')] The moon texture.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.show=true] Determines whether the moon will be rendered.
+ * @param {string} [options.textureUrl=buildModuleUrl('Assets/Textures/moonSmall.jpg')] The moon texture.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.MOON] The moon ellipsoid.
- * @param {Boolean} [options.onlySunLighting=true] Use the sun as the only light source.
+ * @param {boolean} [options.onlySunLighting=true] Use the sun as the only light source.
  *
  *
  * @example
@@ -40,14 +40,14 @@ function Moon(options) {
   /**
    * Determines if the moon will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
 
   /**
    * The moon texture.
-   * @type {String}
+   * @type {string}
    * @default buildModuleUrl('Assets/Textures/moonSmall.jpg')
    */
   this.textureUrl = url;
@@ -56,7 +56,7 @@ function Moon(options) {
 
   /**
    * Use the sun as the only light source.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.onlySunLighting = defaultValue(options.onlySunLighting, true);
@@ -142,7 +142,7 @@ Moon.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see Moon#destroy
  */

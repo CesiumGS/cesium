@@ -10,7 +10,7 @@ import defined from "../Core/defined.js";
  * @constructor
  *
  * @param {Cartesian3} normal The plane's normal (normalized).
- * @param {Number} distance The shortest distance from the origin to the plane.  The sign of
+ * @param {number} distance The shortest distance from the origin to the plane.  The sign of
  * <code>distance</code> determines which side of the plane the origin
  * is on.  If <code>distance</code> is positive, the origin is in the half-space
  * in the direction of the normal; if negative, the origin is in the half-space
@@ -36,7 +36,7 @@ Object.defineProperties(ClippingPlane.prototype, {
    * in the direction of the normal; if negative, the origin is in the half-space
    * opposite to the normal; if zero, the plane passes through the origin.
    *
-   * @type {Number}
+   * @type {number}
    * @memberof ClippingPlane.prototype
    */
   distance: {

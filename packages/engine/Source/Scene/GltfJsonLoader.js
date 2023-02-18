@@ -25,13 +25,13 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
- * @param {Object} [options.gltfJson] The parsed glTF JSON contents.
- * @param {String} [options.cacheKey] The cache key of the resource.
+ * @param {object} [options.gltfJson] The parsed glTF JSON contents.
+ * @param {string} [options.cacheKey] The cache key of the resource.
  *
  * @private
  */
@@ -73,7 +73,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @memberof GltfJsonLoader.prototype
    *
-   * @type {Promise.<GltfJsonLoader>|undefined}
+   * @type {Promise<GltfJsonLoader>|undefined}
    * @readonly
    * @private
    */
@@ -87,7 +87,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @memberof GltfJsonLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -101,7 +101,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
    *
    * @memberof GltfJsonLoader.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -114,7 +114,7 @@ Object.defineProperties(GltfJsonLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<GltfJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GltfJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfJsonLoader.prototype.load = function () {

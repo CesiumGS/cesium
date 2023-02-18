@@ -32,10 +32,10 @@ const MAX_GLTF_UINT8_INDEX = 255;
  * @alias PrimitiveOutlineGenerator
  * @constructor
  *
- * @param {Number} options Object with the following properties:
+ * @param {number} options Object with the following properties:
  * @param {Uint8Array|Uint16Array|Uint32Array} options.triangleIndices The original triangle indices of the primitive. The constructor takes ownership of this typed array as it will be modified internally. Use the updatedTriangleIndices getter to get the final result.
- * @param {Number[]} options.outlineIndices The indices of edges in the triangle from the CESIUM_primitive_outline extension
- * @param {Number} options.originalVertexCount The original number of vertices in the primitive
+ * @param {number[]} options.outlineIndices The indices of edges in the triangle from the CESIUM_primitive_outline extension
+ * @param {number} options.originalVertexCount The original number of vertices in the primitive
  * @example
  * // The constructor will compute the updated indices and generate outline
  * // coordinates.
@@ -88,7 +88,7 @@ function PrimitiveOutlineGenerator(options) {
   /**
    * How many vertices were originally in the primitive
    *
-   * @type {Number}
+   * @type {number}
    *
    * @private
    */
@@ -120,7 +120,7 @@ function PrimitiveOutlineGenerator(options) {
    * Array containing the indices of any vertices that must be copied and
    * appended to the list.
    *
-   * @type {Number[]}
+   * @type {number[]}
    *
    * @private
    */
@@ -294,14 +294,14 @@ function initialize(outlineGenerator) {
  * and if found, computes outline coordinates for the three vertices. If not
  * possible, one of the vertices is returned so it can be copied.
  *
- * @param {Number[]} outlineCoordinates An array to store the computed outline coordinates. There are 3 components per vertex. This will be modified in place.
- * @param {Number} i0 The index of the first vertex of the triangle.
- * @param {Number} i1 The index of the second vertex of the triangle.
- * @param {Number} i2 The index of the third vertex of the triangle.
- * @param {Boolean} hasEdge01 Whether there is an outline edge between vertices 0 and 1 of the triangle
- * @param {Boolean} hasEdge12 Whether there is an outline edge between vertices 1 and 2 of the triangle
- * @param {Boolean} hasEdge20 Whether there is an outline edge between vertices 2 and 0 of the triangle
- * @returns {Number} If it's not possible to compute consistent outline coordinates for this triangle, the index of the most constrained vertex of i0, i1 and i2 is returned. Otherwise, this function returns undefined to indicate a successful match.
+ * @param {number[]} outlineCoordinates An array to store the computed outline coordinates. There are 3 components per vertex. This will be modified in place.
+ * @param {number} i0 The index of the first vertex of the triangle.
+ * @param {number} i1 The index of the second vertex of the triangle.
+ * @param {number} i2 The index of the third vertex of the triangle.
+ * @param {boolean} hasEdge01 Whether there is an outline edge between vertices 0 and 1 of the triangle
+ * @param {boolean} hasEdge12 Whether there is an outline edge between vertices 1 and 2 of the triangle
+ * @param {boolean} hasEdge20 Whether there is an outline edge between vertices 2 and 0 of the triangle
+ * @returns {number} If it's not possible to compute consistent outline coordinates for this triangle, the index of the most constrained vertex of i0, i1 and i2 is returned. Otherwise, this function returns undefined to indicate a successful match.
  *
  * @private
  */
@@ -448,12 +448,12 @@ function matchAndStoreCoordinates(
  * Then we can find an ordering that works for all three vertices with a
  * bitwise AND.
  *
- * @param {Number[]} outlineCoordinates The array of outline coordinates
- * @param {Number} vertexIndex The index of the vertex to compute the mask for
- * @param {Number} a The outline coordinate for edge 2-0
- * @param {Number} b The outline coordinate for edge 0-1
- * @param {Number} c The outline coordinate for edge 1-2
- * @returns {Number} A bitmask with 6 bits where a 1 indicates the corresponding ordering is valid.
+ * @param {number[]} outlineCoordinates The array of outline coordinates
+ * @param {number} vertexIndex The index of the vertex to compute the mask for
+ * @param {number} a The outline coordinate for edge 2-0
+ * @param {number} b The outline coordinate for edge 0-1
+ * @param {number} c The outline coordinate for edge 1-2
+ * @returns {number} A bitmask with 6 bits where a 1 indicates the corresponding ordering is valid.
  *
  * @private
  */
@@ -483,8 +483,8 @@ function computeOrderMask(outlineCoordinates, vertexIndex, a, b, c) {
  * Compute the popcount for 6-bit integers (values 0-63). This is the
  * number of 1s in the binary representation of the value.
  *
- * @param {Number} value The value to compute the popcount for
- * @returns {Number} The number of 1s in the binary representation of value
+ * @param {number} value The value to compute the popcount for
+ * @returns {number} The number of 1s in the binary representation of value
  *
  * @private
  */
@@ -601,7 +601,7 @@ PrimitiveOutlineGenerator.createTexture = function (context) {
  * mostly 0 values, except for the last value which is brighter to indicate
  * the outline.
  *
- * @param {Number} size The width of the texture for this mip level
+ * @param {number} size The width of the texture for this mip level
  * @returns {Uint8Array} A typed array containing the texels of the mip level
  *
  * @private
@@ -634,8 +634,8 @@ function createMipLevel(size) {
  * @alias EdgeSet
  * @constructor
  *
- * @param {Number[]} edgeIndices An array of vertex indices with an even number of elements where each pair of indices defines an edge.
- * @param {Number} originalVertexCount The original number of vertices. This is used for computing a hash function.
+ * @param {number[]} edgeIndices An array of vertex indices with an even number of elements where each pair of indices defines an edge.
+ * @param {number} originalVertexCount The original number of vertices. This is used for computing a hash function.
  *
  * @private
  */
@@ -644,7 +644,7 @@ function EdgeSet(edgeIndices, originalVertexCount) {
    * Original number of vertices in the primitive. This is used for computing
    * the hash key
    *
-   * @type {Number}
+   * @type {number}
    *
    * @private
    */
@@ -673,9 +673,9 @@ function EdgeSet(edgeIndices, originalVertexCount) {
 /**
  * Check if an edge exists in the set. The order of the input vertices does
  * not matter.
- * @param {Number} a The first index
- * @param {Number} b The second index
- * @returns {Boolean} true if there is an edge between a and b
+ * @param {number} a The first index
+ * @param {number} b The second index
+ * @returns {boolean} true if there is an edge between a and b
  *
  * @private
  */

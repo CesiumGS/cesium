@@ -9,8 +9,8 @@ import EasingFunction from "../Core/EasingFunction.js";
  * @alias KmlTourFlyTo
  * @constructor
  *
- * @param {Number} duration entry duration
- * @param {String} flyToMode KML fly to mode: bounce, smooth, etc
+ * @param {number} duration entry duration
+ * @param {string} flyToMode KML fly to mode: bounce, smooth, etc
  * @param {KmlCamera|KmlLookAt} view KmlCamera or KmlLookAt
  *
  * @see KmlTour
@@ -32,7 +32,7 @@ function KmlTourFlyTo(duration, flyToMode, view) {
  *
  * @param {KmlTourFlyTo.DoneCallback} done function which will be called when playback ends
  * @param {Camera} camera Cesium camera
- * @param {Object} [cameraOptions] which will be merged with camera flyTo options. See {@link Camera#flyTo}
+ * @param {object} [cameraOptions] which will be merged with camera flyTo options. See {@link Camera#flyTo}
  */
 KmlTourFlyTo.prototype.play = function (done, camera, cameraOptions) {
   this.activeCamera = camera;
@@ -70,8 +70,8 @@ KmlTourFlyTo.prototype.stop = function () {
  * Returns options for {@link Camera#flyTo} or {@link Camera#flyToBoundingSphere}
  * depends on this.view type.
  *
- * @param {Object} cameraOptions options to merge with generated. See {@link Camera#flyTo}
- * @returns {Object} {@link Camera#flyTo} or {@link Camera#flyToBoundingSphere} options
+ * @param {object} cameraOptions options to merge with generated. See {@link Camera#flyTo}
+ * @returns {object} {@link Camera#flyTo} or {@link Camera#flyToBoundingSphere} options
  */
 KmlTourFlyTo.prototype.getCameraOptions = function (cameraOptions) {
   let options = {
@@ -103,7 +103,7 @@ KmlTourFlyTo.prototype.getCameraOptions = function (cameraOptions) {
  * A function that will be executed when the flight completes.
  * @callback KmlTourFlyTo.DoneCallback
  *
- * @param {Boolean} terminated true if {@link KmlTourFlyTo#stop} was
+ * @param {boolean} terminated true if {@link KmlTourFlyTo#stop} was
  * called before entry done playback.
  */
 export default KmlTourFlyTo;

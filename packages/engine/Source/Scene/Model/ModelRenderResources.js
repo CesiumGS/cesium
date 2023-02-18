@@ -43,7 +43,7 @@ function ModelRenderResources(model) {
    * A dictionary mapping uniform name to functions that return the uniform
    * values.
    *
-   * @type {Object.<String, Function>}
+   * @type {Object<string, Function>}
    * @readonly
    *
    * @private
@@ -65,7 +65,7 @@ function ModelRenderResources(model) {
    * The pipeline stages simply set the options, the render state is created
    * when the {@link DrawCommand} is constructed.
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    *
    * @private
@@ -83,7 +83,7 @@ function ModelRenderResources(model) {
    * Whether the model has a silhouette. This value indicates what draw commands
    * are needed and is set by ModelSilhouettePipelineStage.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    *
    * @private
@@ -95,7 +95,7 @@ function ModelRenderResources(model) {
    * optimization. This value indicates what draw commands are needed and
    * is set by TilesetPipelineStage.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    *
    * @private

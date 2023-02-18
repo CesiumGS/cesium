@@ -49,41 +49,41 @@ function ScreenSpaceCameraController(scene) {
    * start of such events, and set true on completion.  To keep inputs disabled
    * past the end of camera flights, you must use the other booleans (enableTranslate,
    * enableZoom, enableRotate, enableTilt, and enableLook).
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableInputs = true;
   /**
    * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
    * This flag only applies in 2D and Columbus view modes.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableTranslate = true;
   /**
    * If true, allows the user to zoom in and out.  If false, the camera is locked to the current distance from the ellipsoid.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableZoom = true;
   /**
    * If true, allows the user to rotate the world which translates the user's position.
    * This flag only applies in 2D and 3D.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableRotate = true;
   /**
    * If true, allows the user to tilt the camera.  If false, the camera is locked to the current heading.
    * This flag only applies in 3D and Columbus view.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableTilt = true;
   /**
    * If true, allows the user to use free-look. If false, the camera view direction can only be changed through translating
    * or rotating. This flag only applies in 3D and Columbus view modes.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableLook = true;
@@ -91,7 +91,7 @@ function ScreenSpaceCameraController(scene) {
    * A parameter in the range <code>[0, 1)</code> used to determine how long
    * the camera will continue to spin because of inertia.
    * With value of zero, the camera will have no inertia.
-   * @type {Number}
+   * @type {number}
    * @default 0.9
    */
   this.inertiaSpin = 0.9;
@@ -99,7 +99,7 @@ function ScreenSpaceCameraController(scene) {
    * A parameter in the range <code>[0, 1)</code> used to determine how long
    * the camera will continue to translate because of inertia.
    * With value of zero, the camera will have no inertia.
-   * @type {Number}
+   * @type {number}
    * @default 0.9
    */
   this.inertiaTranslate = 0.9;
@@ -107,7 +107,7 @@ function ScreenSpaceCameraController(scene) {
    * A parameter in the range <code>[0, 1)</code> used to determine how long
    * the camera will continue to zoom because of inertia.
    * With value of zero, the camera will have no inertia.
-   * @type {Number}
+   * @type {number}
    * @default 0.8
    */
   this.inertiaZoom = 0.8;
@@ -115,25 +115,25 @@ function ScreenSpaceCameraController(scene) {
    * A parameter in the range <code>[0, 1)</code> used to limit the range
    * of various user inputs to a percentage of the window width/height per animation frame.
    * This helps keep the camera under control in low-frame-rate situations.
-   * @type {Number}
+   * @type {number}
    * @default 0.1
    */
   this.maximumMovementRatio = 0.1;
   /**
    * Sets the duration, in seconds, of the bounce back animations in 2D and Columbus view.
-   * @type {Number}
+   * @type {number}
    * @default 3.0
    */
   this.bounceAnimationTime = 3.0;
   /**
    * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 1.0.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.minimumZoomDistance = 1.0;
   /**
    * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
-   * @type {Number}
+   * @type {number}
    * @default {@link Number.POSITIVE_INFINITY}
    */
   this.maximumZoomDistance = Number.POSITIVE_INFINITY;
@@ -218,14 +218,14 @@ function ScreenSpaceCameraController(scene) {
   };
   /**
    * The minimum height the camera must be before picking the terrain instead of the ellipsoid.
-   * @type {Number}
+   * @type {number}
    * @default 150000.0
    */
   this.minimumPickingTerrainHeight = 150000.0;
   this._minimumPickingTerrainHeight = this.minimumPickingTerrainHeight;
   /**
    * The minimum height the camera must be before testing for collision with terrain.
-   * @type {Number}
+   * @type {number}
    * @default 15000.0
    */
   this.minimumCollisionTerrainHeight = 15000.0;
@@ -233,14 +233,14 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The minimum height the camera must be before switching from rotating a track ball to
    * free look when clicks originate on the sky or in space.
-   * @type {Number}
+   * @type {number}
    * @default 7500000.0
    */
   this.minimumTrackBallHeight = 7500000.0;
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
    * Enables or disables camera collision detection with terrain.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableCollisionDetection = true;
@@ -2902,7 +2902,7 @@ ScreenSpaceCameraController.prototype.update = function () {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see ScreenSpaceCameraController#destroy
  */

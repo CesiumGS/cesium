@@ -7,9 +7,9 @@ import knockout from "./ThirdParty/knockout.js";
  * @constructor
  *
  * @param {Command} command The command which will be executed when the button is toggled.
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.toggled=false] A boolean indicating whether the button should be initially toggled.
- * @param {String} [options.tooltip=''] A string containing the button's tooltip.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.toggled=false] A boolean indicating whether the button should be initially toggled.
+ * @param {string} [options.tooltip=''] A string containing the button's tooltip.
  */
 function ToggleButtonViewModel(command, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -24,14 +24,14 @@ function ToggleButtonViewModel(command, options) {
 
   /**
    * Gets or sets whether the button is currently toggled.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.toggled = defaultValue(options.toggled, false);
 
   /**
    * Gets or sets the button's tooltip.  This property is observable.
-   * @type {String}
+   * @type {string}
    * @default ''
    */
   this.tooltip = defaultValue(options.tooltip, "");

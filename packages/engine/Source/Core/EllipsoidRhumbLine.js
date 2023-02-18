@@ -415,7 +415,7 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
   /**
    * Gets the surface distance between the start and end point
    * @memberof EllipsoidRhumbLine.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   surfaceDistance: {
@@ -455,7 +455,7 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
   /**
    * Gets the heading from the start point to the end point.
    * @memberof EllipsoidRhumbLine.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   heading: {
@@ -473,8 +473,8 @@ Object.defineProperties(EllipsoidRhumbLine.prototype, {
  * Create a rhumb line using an initial position with a heading and distance.
  *
  * @param {Cartographic} start The initial planetodetic point on the path.
- * @param {Number} heading The heading in radians.
- * @param {Number} distance The rhumb line distance between the start and end point.
+ * @param {number} heading The heading in radians.
+ * @param {number} distance The rhumb line distance between the start and end point.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rhumb line lies.
  * @param {EllipsoidRhumbLine} [result] The object in which to store the result.
  * @returns {EllipsoidRhumbLine} The EllipsoidRhumbLine object.
@@ -538,7 +538,7 @@ EllipsoidRhumbLine.prototype.setEndPoints = function (start, end) {
 /**
  * Provides the location of a point at the indicated portion along the rhumb line.
  *
- * @param {Number} fraction The portion of the distance between the initial and final points.
+ * @param {number} fraction The portion of the distance between the initial and final points.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the rhumb line.
  */
@@ -555,7 +555,7 @@ EllipsoidRhumbLine.prototype.interpolateUsingFraction = function (
 /**
  * Provides the location of a point at the indicated distance along the rhumb line.
  *
- * @param {Number} distance The distance from the inital point to the point of interest along the rhumbLine.
+ * @param {number} distance The distance from the inital point to the point of interest along the rhumbLine.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the rhumb line.
  *
@@ -588,7 +588,7 @@ EllipsoidRhumbLine.prototype.interpolateUsingSurfaceDistance = function (
  * Provides the location of a point at the indicated longitude along the rhumb line.
  * If the longitude is outside the range of start and end points, the first intersection with the longitude from the start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
  *
- * @param {Number} intersectionLongitude The longitude, in radians, at which to find the intersection point from the starting point using the heading.
+ * @param {number} intersectionLongitude The longitude, in radians, at which to find the intersection point from the starting point using the heading.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
  *
@@ -692,7 +692,7 @@ EllipsoidRhumbLine.prototype.findIntersectionWithLongitude = function (
  * Provides the location of a point at the indicated latitude along the rhumb line.
  * If the latitude is outside the range of start and end points, the first intersection with the latitude from that start point in the direction of the heading is returned. This follows the spiral property of a rhumb line.
  *
- * @param {Number} intersectionLatitude The latitude, in radians, at which to find the intersection point from the starting point using the heading.
+ * @param {number} intersectionLatitude The latitude, in radians, at which to find the intersection point from the starting point using the heading.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the intersection point along the rhumb line, undefined if there is no intersection or infinite intersections.
  *

@@ -12,16 +12,16 @@ const defaultSize = new Cartesian2(1.0, 1.0);
  * @alias Particle
  * @constructor
  *
- * @param {Object} options An object with the following properties:
- * @param {Number} [options.mass=1.0] The mass of the particle in kilograms.
+ * @param {object} options An object with the following properties:
+ * @param {number} [options.mass=1.0] The mass of the particle in kilograms.
  * @param {Cartesian3} [options.position=Cartesian3.ZERO] The initial position of the particle in world coordinates.
  * @param {Cartesian3} [options.velocity=Cartesian3.ZERO] The velocity vector of the particle in world coordinates.
- * @param {Number} [options.life=Number.MAX_VALUE] The life of the particle in seconds.
- * @param {Object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
+ * @param {number} [options.life=Number.MAX_VALUE] The life of the particle in seconds.
+ * @param {object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
  * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
  * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
- * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
- * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
+ * @param {number} [options.startScale=1.0] The scale of the particle when it is born.
+ * @param {number} [options.endScale=1.0] The scale of the particle when it dies.
  * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions, width by height, to scale the particle image in pixels.
  */
 function Particle(options) {
@@ -29,7 +29,7 @@ function Particle(options) {
 
   /**
    * The mass of the particle in kilograms.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.mass = defaultValue(options.mass, 1.0);
@@ -51,13 +51,13 @@ function Particle(options) {
   );
   /**
    * The life of the particle in seconds.
-   * @type {Number}
+   * @type {number}
    * @default Number.MAX_VALUE
    */
   this.life = defaultValue(options.life, Number.MAX_VALUE);
   /**
    * The image to use for the particle.
-   * @type {Object}
+   * @type {object}
    * @default undefined
    */
   this.image = options.image;
@@ -75,13 +75,13 @@ function Particle(options) {
   this.endColor = Color.clone(defaultValue(options.endColor, Color.WHITE));
   /**
    * the scale of the particle when it is born.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.startScale = defaultValue(options.startScale, 1.0);
   /**
    * The scale of the particle when it dies.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.endScale = defaultValue(options.endScale, 1.0);
@@ -105,7 +105,7 @@ Object.defineProperties(Particle.prototype, {
   /**
    * Gets the age of the particle in seconds.
    * @memberof Particle.prototype
-   * @type {Number}
+   * @type {number}
    */
   age: {
     get: function () {
@@ -115,7 +115,7 @@ Object.defineProperties(Particle.prototype, {
   /**
    * Gets the age normalized to a value in the range [0.0, 1.0].
    * @memberof Particle.prototype
-   * @type {Number}
+   * @type {number}
    */
   normalizedAge: {
     get: function () {

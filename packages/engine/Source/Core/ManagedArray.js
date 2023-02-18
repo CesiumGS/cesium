@@ -8,7 +8,7 @@ import defaultValue from "./defaultValue.js";
  * @constructor
  * @private
  *
- * @param {Number} [length=0] The initial length of the array.
+ * @param {number} [length=0] The initial length of the array.
  */
 function ManagedArray(length) {
   length = defaultValue(length, 0);
@@ -22,7 +22,7 @@ Object.defineProperties(ManagedArray.prototype, {
    * If the set length is greater than the length of the internal array, the internal array is resized.
    *
    * @memberof ManagedArray.prototype
-   * @type Number
+   * @type {number}
    */
   length: {
     get: function () {
@@ -50,7 +50,7 @@ Object.defineProperties(ManagedArray.prototype, {
    * Gets the internal array.
    *
    * @memberof ManagedArray.prototype
-   * @type Array
+   * @type {Array}
    * @readonly
    */
   values: {
@@ -63,7 +63,7 @@ Object.defineProperties(ManagedArray.prototype, {
 /**
  * Gets the element at an index.
  *
- * @param {Number} index The index to get.
+ * @param {number} index The index to get.
  */
 ManagedArray.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -76,7 +76,7 @@ ManagedArray.prototype.get = function (index) {
 /**
  * Sets the element at an index. Resizes the array if index is greater than the length of the array.
  *
- * @param {Number} index The index to set.
+ * @param {number} index The index to set.
  * @param {*} element The element to set at index.
  */
 ManagedArray.prototype.set = function (index, element) {
@@ -126,7 +126,7 @@ ManagedArray.prototype.pop = function () {
 /**
  * Resize the internal array if length > _array.length.
  *
- * @param {Number} length The length.
+ * @param {number} length The length.
  */
 ManagedArray.prototype.reserve = function (length) {
   //>>includeStart('debug', pragmas.debug);
@@ -141,7 +141,7 @@ ManagedArray.prototype.reserve = function (length) {
 /**
  * Resize the array.
  *
- * @param {Number} length The length.
+ * @param {number} length The length.
  */
 ManagedArray.prototype.resize = function (length) {
   //>>includeStart('debug', pragmas.debug);
@@ -154,7 +154,7 @@ ManagedArray.prototype.resize = function (length) {
 /**
  * Trim the internal array to the specified length. Defaults to the current length.
  *
- * @param {Number} [length] The length.
+ * @param {number} [length] The length.
  */
 ManagedArray.prototype.trim = function (length) {
   length = defaultValue(length, this._length);

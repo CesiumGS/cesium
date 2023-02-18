@@ -52,7 +52,7 @@ const TileSelectionResult = {
    * or <code>REFINED_AND_KICKED</code>.
    *
    * @param {TileSelectionResult} value The selection result to test.
-   * @returns {Boolean} true if the tile was kicked, no matter if it was originally rendered or refined.
+   * @returns {boolean} true if the tile was kicked, no matter if it was originally rendered or refined.
    */
   wasKicked: function (value) {
     return value >= TileSelectionResult.RENDERED_AND_KICKED;

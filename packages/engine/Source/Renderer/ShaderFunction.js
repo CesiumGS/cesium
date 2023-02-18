@@ -7,7 +7,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @constructor
  *
  * @see {@link ShaderBuilder}
- * @param {String} signature The full signature of the function as it will appear in the shader. Do not include the curly braces.
+ * @param {string} signature The full signature of the function as it will appear in the shader. Do not include the curly braces.
  * @example
  * // generate the following function
  * //
@@ -31,7 +31,7 @@ function ShaderFunction(signature) {
 
 /**
  * Adds one or more lines to the body of the function
- * @param {String|String[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
+ * @param {string|string[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  */
 ShaderFunction.prototype.addLines = function (lines) {
   //>>includeStart('debug', pragmas.debug);
@@ -57,7 +57,7 @@ ShaderFunction.prototype.addLines = function (lines) {
 
 /**
  * Generate lines of GLSL code for use with {@link ShaderBuilder}
- * @return {String[]}
+ * @return {string[]}
  */
 ShaderFunction.prototype.generateGlslLines = function () {
   return [].concat(this.signature, "{", this.body, "}");

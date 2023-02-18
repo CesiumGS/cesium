@@ -14,7 +14,7 @@ function ResourceCacheStatistics() {
   /**
    * The size of vertex buffers and index buffers loaded in the cache in bytes.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.geometryByteLength = 0;
@@ -22,7 +22,7 @@ function ResourceCacheStatistics() {
   /**
    * The size of all textures loaded in the cache in bytes
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.texturesByteLength = 0;

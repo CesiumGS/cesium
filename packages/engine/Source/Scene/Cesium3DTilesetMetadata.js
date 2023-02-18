@@ -14,8 +14,8 @@ import TilesetMetadata from "./TilesetMetadata.js";
  * the schema ({@link MetadataSchema}), tileset metadata ({@link TilesetMetadata}), group metadata (dictionary of {@link GroupMetadata}), and metadata statistics (dictionary)
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.metadataJson Either the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension object that contains the tileset metadata.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.metadataJson Either the tileset JSON (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension object that contains the tileset metadata.
  * @param {MetadataSchema} options.schema The parsed schema.
  *
  * @alias Cesium3DTilesetMetadata
@@ -125,7 +125,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * Only populated if using the legacy schema.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
-   * @type {String[]}
+   * @type {}
    * @readonly
    * @private
    */
@@ -157,7 +157,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * </p>
    *
    * @memberof Cesium3DTilesetMetadata.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -185,7 +185,7 @@ Object.defineProperties(Cesium3DTilesetMetadata.prototype, {
    * An object containing extensions.
    *
    * @memberof Cesium3DTilesetMetadata.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */

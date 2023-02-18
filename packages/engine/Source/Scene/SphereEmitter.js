@@ -10,7 +10,7 @@ import CesiumMath from "../Core/Math.js";
  * @alias SphereEmitter
  * @constructor
  *
- * @param {Number} [radius=1.0] The radius of the sphere in meters.
+ * @param {number} [radius=1.0] The radius of the sphere in meters.
  */
 function SphereEmitter(radius) {
   radius = defaultValue(radius, 1.0);
@@ -26,7 +26,7 @@ Object.defineProperties(SphereEmitter.prototype, {
   /**
    * The radius of the sphere in meters.
    * @memberof SphereEmitter.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   radius: {

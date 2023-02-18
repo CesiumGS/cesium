@@ -15,22 +15,22 @@ import RuntimeError from "./RuntimeError.js";
  * @constructor
  * @implements {ArrayLike<number>}
  *
- * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
- * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
- * @param {Number} [column2Row0=0.0] The value for column 2, row 0.
- * @param {Number} [column3Row0=0.0] The value for column 3, row 0.
- * @param {Number} [column0Row1=0.0] The value for column 0, row 1.
- * @param {Number} [column1Row1=0.0] The value for column 1, row 1.
- * @param {Number} [column2Row1=0.0] The value for column 2, row 1.
- * @param {Number} [column3Row1=0.0] The value for column 3, row 1.
- * @param {Number} [column0Row2=0.0] The value for column 0, row 2.
- * @param {Number} [column1Row2=0.0] The value for column 1, row 2.
- * @param {Number} [column2Row2=0.0] The value for column 2, row 2.
- * @param {Number} [column3Row2=0.0] The value for column 3, row 2.
- * @param {Number} [column0Row3=0.0] The value for column 0, row 3.
- * @param {Number} [column1Row3=0.0] The value for column 1, row 3.
- * @param {Number} [column2Row3=0.0] The value for column 2, row 3.
- * @param {Number} [column3Row3=0.0] The value for column 3, row 3.
+ * @param {number} [column0Row0=0.0] The value for column 0, row 0.
+ * @param {number} [column1Row0=0.0] The value for column 1, row 0.
+ * @param {number} [column2Row0=0.0] The value for column 2, row 0.
+ * @param {number} [column3Row0=0.0] The value for column 3, row 0.
+ * @param {number} [column0Row1=0.0] The value for column 0, row 1.
+ * @param {number} [column1Row1=0.0] The value for column 1, row 1.
+ * @param {number} [column2Row1=0.0] The value for column 2, row 1.
+ * @param {number} [column3Row1=0.0] The value for column 3, row 1.
+ * @param {number} [column0Row2=0.0] The value for column 0, row 2.
+ * @param {number} [column1Row2=0.0] The value for column 1, row 2.
+ * @param {number} [column2Row2=0.0] The value for column 2, row 2.
+ * @param {number} [column3Row2=0.0] The value for column 3, row 2.
+ * @param {number} [column0Row3=0.0] The value for column 0, row 3.
+ * @param {number} [column1Row3=0.0] The value for column 1, row 3.
+ * @param {number} [column2Row3=0.0] The value for column 2, row 3.
+ * @param {number} [column3Row3=0.0] The value for column 3, row 3.
  *
  * @see Matrix4.fromArray
  * @see Matrix4.fromColumnMajorArray
@@ -91,7 +91,7 @@ function Matrix4(
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 Matrix4.packedLength = 16;
 
@@ -99,10 +99,10 @@ Matrix4.packedLength = 16;
  * Stores the provided instance into the provided array.
  *
  * @param {Matrix4} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 Matrix4.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -135,8 +135,8 @@ Matrix4.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Matrix4} [result] The object into which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
  */
@@ -175,8 +175,8 @@ Matrix4.unpack = function (array, startingIndex, result) {
  * are stored in column-major order.
  *
  * @param {Matrix4[]} array The array of matrices to pack.
- * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 16 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 16) elements.
- * @returns {Number[]} The packed array.
+ * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 16 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 16) elements.
+ * @returns {number[]} The packed array.
  */
 Matrix4.packArray = function (array, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -206,7 +206,7 @@ Matrix4.packArray = function (array, result) {
 /**
  * Unpacks an array of column-major matrix components into an array of Matrix4s.
  *
- * @param {Number[]} array The array of components to unpack.
+ * @param {number[]} array The array of components to unpack.
  * @param {Matrix4[]} [result] The array onto which to store the result.
  * @returns {Matrix4[]} The unpacked array.
  */
@@ -287,8 +287,8 @@ Matrix4.clone = function (matrix, result) {
  * Creates a Matrix4 from 16 consecutive elements in an array.
  * @function
  *
- * @param {Number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
- * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
+ * @param {number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+ * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
  *
@@ -311,7 +311,7 @@ Matrix4.fromArray = Matrix4.unpack;
 /**
  * Computes a Matrix4 instance from a column-major order array.
  *
- * @param {Number[]} values The column-major order array.
+ * @param {number[]} values The column-major order array.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
  */
@@ -327,7 +327,7 @@ Matrix4.fromColumnMajorArray = function (values, result) {
  * Computes a Matrix4 instance from a row-major order array.
  * The resulting matrix will be in column-major order.
  *
- * @param {Number[]} values The row-major order array.
+ * @param {number[]} values The row-major order array.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
  */
@@ -614,7 +614,7 @@ Matrix4.fromScale = function (scale, result) {
 /**
  * Computes a Matrix4 instance representing a uniform scale.
  *
- * @param {Number} scale The uniform scale factor.
+ * @param {number} scale The uniform scale factor.
  * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
  *
@@ -818,10 +818,10 @@ Matrix4.fromCamera = function (camera, result) {
 /**
  * Computes a Matrix4 instance representing a perspective transformation matrix.
  *
- * @param {Number} fovY The field of view along the Y axis in radians.
- * @param {Number} aspectRatio The aspect ratio.
- * @param {Number} near The distance to the near plane in meters.
- * @param {Number} far The distance to the far plane in meters.
+ * @param {number} fovY The field of view along the Y axis in radians.
+ * @param {number} aspectRatio The aspect ratio.
+ * @param {number} near The distance to the near plane in meters.
+ * @param {number} far The distance to the far plane in meters.
  * @param {Matrix4} result The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
  *
@@ -874,12 +874,12 @@ Matrix4.computePerspectiveFieldOfView = function (
 /**
  * Computes a Matrix4 instance representing an orthographic transformation matrix.
  *
- * @param {Number} left The number of meters to the left of the camera that will be in view.
- * @param {Number} right The number of meters to the right of the camera that will be in view.
- * @param {Number} bottom The number of meters below of the camera that will be in view.
- * @param {Number} top The number of meters above of the camera that will be in view.
- * @param {Number} near The distance to the near plane in meters.
- * @param {Number} far The distance to the far plane in meters.
+ * @param {number} left The number of meters to the left of the camera that will be in view.
+ * @param {number} right The number of meters to the right of the camera that will be in view.
+ * @param {number} bottom The number of meters below of the camera that will be in view.
+ * @param {number} top The number of meters above of the camera that will be in view.
+ * @param {number} near The distance to the near plane in meters.
+ * @param {number} far The distance to the far plane in meters.
  * @param {Matrix4} result The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
  */
@@ -935,12 +935,12 @@ Matrix4.computeOrthographicOffCenter = function (
 /**
  * Computes a Matrix4 instance representing an off center perspective transformation.
  *
- * @param {Number} left The number of meters to the left of the camera that will be in view.
- * @param {Number} right The number of meters to the right of the camera that will be in view.
- * @param {Number} bottom The number of meters below of the camera that will be in view.
- * @param {Number} top The number of meters above of the camera that will be in view.
- * @param {Number} near The distance to the near plane in meters.
- * @param {Number} far The distance to the far plane in meters.
+ * @param {number} left The number of meters to the left of the camera that will be in view.
+ * @param {number} right The number of meters to the right of the camera that will be in view.
+ * @param {number} bottom The number of meters below of the camera that will be in view.
+ * @param {number} top The number of meters above of the camera that will be in view.
+ * @param {number} near The distance to the near plane in meters.
+ * @param {number} far The distance to the far plane in meters.
  * @param {Matrix4} result The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
  */
@@ -993,11 +993,11 @@ Matrix4.computePerspectiveOffCenter = function (
 /**
  * Computes a Matrix4 instance representing an infinite off center perspective transformation.
  *
- * @param {Number} left The number of meters to the left of the camera that will be in view.
- * @param {Number} right The number of meters to the right of the camera that will be in view.
- * @param {Number} bottom The number of meters below of the camera that will be in view.
- * @param {Number} top The number of meters above of the camera that will be in view.
- * @param {Number} near The distance to the near plane in meters.
+ * @param {number} left The number of meters to the left of the camera that will be in view.
+ * @param {number} right The number of meters to the right of the camera that will be in view.
+ * @param {number} bottom The number of meters below of the camera that will be in view.
+ * @param {number} top The number of meters above of the camera that will be in view.
+ * @param {number} near The distance to the near plane in meters.
  * @param {Matrix4} result The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
  */
@@ -1048,9 +1048,9 @@ Matrix4.computeInfinitePerspectiveOffCenter = function (
 /**
  * Computes a Matrix4 instance that transforms from normalized device coordinates to window coordinates.
  *
- * @param {Object} [viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
- * @param {Number} [nearDepthRange=0.0] The near plane distance in window coordinates.
- * @param {Number} [farDepthRange=1.0] The far plane distance in window coordinates.
+ * @param {object} [viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
+ * @param {number} [nearDepthRange=0.0] The near plane distance in window coordinates.
+ * @param {number} [farDepthRange=1.0] The far plane distance in window coordinates.
  * @param {Matrix4} [result] The object in which the result will be stored.
  * @returns {Matrix4} The modified result parameter.
  *
@@ -1156,8 +1156,8 @@ Matrix4.computeView = function (position, direction, up, right, result) {
  * The array will be in column-major order.
  *
  * @param {Matrix4} matrix The matrix to use..
- * @param {Number[]} [result] The Array onto which to store the result.
- * @returns {Number[]} The modified Array parameter or a new Array instance if one was not provided.
+ * @param {number[]} [result] The Array onto which to store the result.
+ * @returns {number[]} The modified Array parameter or a new Array instance if one was not provided.
  *
  * @example
  * //create an array from an instance of Matrix4
@@ -1217,9 +1217,9 @@ Matrix4.toArray = function (matrix, result) {
 /**
  * Computes the array index of the element at the provided row and column.
  *
- * @param {Number} row The zero-based index of the row.
- * @param {Number} column The zero-based index of the column.
- * @returns {Number} The index of the element at the provided row and column.
+ * @param {number} row The zero-based index of the row.
+ * @param {number} column The zero-based index of the column.
+ * @returns {number} The index of the element at the provided row and column.
  *
  * @exception {DeveloperError} row must be 0, 1, 2, or 3.
  * @exception {DeveloperError} column must be 0, 1, 2, or 3.
@@ -1246,7 +1246,7 @@ Matrix4.getElementIndex = function (column, row) {
  * Retrieves a copy of the matrix column at the provided index as a Cartesian4 instance.
  *
  * @param {Matrix4} matrix The matrix to use.
- * @param {Number} index The zero-based index of the column to retrieve.
+ * @param {number} index The zero-based index of the column to retrieve.
  * @param {Cartesian4} result The object onto which to store the result.
  * @returns {Cartesian4} The modified result parameter.
  *
@@ -1296,7 +1296,7 @@ Matrix4.getColumn = function (matrix, index, result) {
  * Computes a new matrix that replaces the specified column in the provided matrix with the provided Cartesian4 instance.
  *
  * @param {Matrix4} matrix The matrix to use.
- * @param {Number} index The zero-based index of the column to set.
+ * @param {number} index The zero-based index of the column to set.
  * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified column.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
@@ -1342,7 +1342,7 @@ Matrix4.setColumn = function (matrix, index, cartesian, result) {
  * Retrieves a copy of the matrix row at the provided index as a Cartesian4 instance.
  *
  * @param {Matrix4} matrix The matrix to use.
- * @param {Number} index The zero-based index of the row to retrieve.
+ * @param {number} index The zero-based index of the row to retrieve.
  * @param {Cartesian4} result The object onto which to store the result.
  * @returns {Cartesian4} The modified result parameter.
  *
@@ -1391,7 +1391,7 @@ Matrix4.getRow = function (matrix, index, result) {
  * Computes a new matrix that replaces the specified row in the provided matrix with the provided Cartesian4 instance.
  *
  * @param {Matrix4} matrix The matrix to use.
- * @param {Number} index The zero-based index of the row to set.
+ * @param {number} index The zero-based index of the row to set.
  * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified row.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
@@ -1531,7 +1531,7 @@ const scaleScratch2 = new Cartesian3();
  * This assumes the matrix is an affine transformation.
  *
  * @param {Matrix4} matrix The matrix to use.
- * @param {Number} scale The uniform scale that replaces the scale of the provided matrix.
+ * @param {number} scale The uniform scale that replaces the scale of the provided matrix.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
  *
@@ -1619,7 +1619,7 @@ const scaleScratch3 = new Cartesian3();
  * 3x3 matrix.
  *
  * @param {Matrix4} matrix The matrix.
- * @returns {Number} The maximum scale.
+ * @returns {number} The maximum scale.
  */
 Matrix4.getMaximumScale = function (matrix) {
   Matrix4.getScale(matrix, scaleScratch3);
@@ -2154,7 +2154,7 @@ Matrix4.multiplyByScale = function (matrix, scale, result) {
  * Computes the product of a matrix times a uniform scale, as if the scale were a scale matrix.
  *
  * @param {Matrix4} matrix The matrix on the left-hand side.
- * @param {Number} scale The uniform scale on the right-hand side.
+ * @param {number} scale The uniform scale on the right-hand side.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
  *
@@ -2306,7 +2306,7 @@ Matrix4.multiplyByPoint = function (matrix, cartesian, result) {
  * Computes the product of a matrix and a scalar.
  *
  * @param {Matrix4} matrix The matrix.
- * @param {Number} scalar The number to multiply by.
+ * @param {number} scalar The number to multiply by.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
  *
@@ -2491,7 +2491,7 @@ Matrix4.abs = function (matrix, result) {
  *
  * @param {Matrix4} [left] The first matrix.
  * @param {Matrix4} [right] The second matrix.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  *
  * @example
  * //compares two Matrix4 instances
@@ -2552,8 +2552,8 @@ Matrix4.equals = function (left, right) {
  *
  * @param {Matrix4} [left] The first matrix.
  * @param {Matrix4} [right] The second matrix.
- * @param {Number} [epsilon=0] The epsilon to use for equality testing.
- * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
+ * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  *
  * @example
  * //compares two Matrix4 instances
@@ -3019,7 +3019,7 @@ Matrix4.ZERO = Object.freeze(
 /**
  * The index into Matrix4 for column 0, row 0.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN0ROW0 = 0;
@@ -3027,7 +3027,7 @@ Matrix4.COLUMN0ROW0 = 0;
 /**
  * The index into Matrix4 for column 0, row 1.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN0ROW1 = 1;
@@ -3035,7 +3035,7 @@ Matrix4.COLUMN0ROW1 = 1;
 /**
  * The index into Matrix4 for column 0, row 2.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN0ROW2 = 2;
@@ -3043,7 +3043,7 @@ Matrix4.COLUMN0ROW2 = 2;
 /**
  * The index into Matrix4 for column 0, row 3.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN0ROW3 = 3;
@@ -3051,7 +3051,7 @@ Matrix4.COLUMN0ROW3 = 3;
 /**
  * The index into Matrix4 for column 1, row 0.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN1ROW0 = 4;
@@ -3059,7 +3059,7 @@ Matrix4.COLUMN1ROW0 = 4;
 /**
  * The index into Matrix4 for column 1, row 1.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN1ROW1 = 5;
@@ -3067,7 +3067,7 @@ Matrix4.COLUMN1ROW1 = 5;
 /**
  * The index into Matrix4 for column 1, row 2.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN1ROW2 = 6;
@@ -3075,7 +3075,7 @@ Matrix4.COLUMN1ROW2 = 6;
 /**
  * The index into Matrix4 for column 1, row 3.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN1ROW3 = 7;
@@ -3083,7 +3083,7 @@ Matrix4.COLUMN1ROW3 = 7;
 /**
  * The index into Matrix4 for column 2, row 0.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN2ROW0 = 8;
@@ -3091,7 +3091,7 @@ Matrix4.COLUMN2ROW0 = 8;
 /**
  * The index into Matrix4 for column 2, row 1.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN2ROW1 = 9;
@@ -3099,7 +3099,7 @@ Matrix4.COLUMN2ROW1 = 9;
 /**
  * The index into Matrix4 for column 2, row 2.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN2ROW2 = 10;
@@ -3107,7 +3107,7 @@ Matrix4.COLUMN2ROW2 = 10;
 /**
  * The index into Matrix4 for column 2, row 3.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN2ROW3 = 11;
@@ -3115,7 +3115,7 @@ Matrix4.COLUMN2ROW3 = 11;
 /**
  * The index into Matrix4 for column 3, row 0.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN3ROW0 = 12;
@@ -3123,7 +3123,7 @@ Matrix4.COLUMN3ROW0 = 12;
 /**
  * The index into Matrix4 for column 3, row 1.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN3ROW1 = 13;
@@ -3131,7 +3131,7 @@ Matrix4.COLUMN3ROW1 = 13;
 /**
  * The index into Matrix4 for column 3, row 2.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN3ROW2 = 14;
@@ -3139,7 +3139,7 @@ Matrix4.COLUMN3ROW2 = 14;
 /**
  * The index into Matrix4 for column 3, row 3.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix4.COLUMN3ROW3 = 15;
@@ -3149,7 +3149,7 @@ Object.defineProperties(Matrix4.prototype, {
    * Gets the number of items in the collection.
    * @memberof Matrix4.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   length: {
     get: function () {
@@ -3173,7 +3173,7 @@ Matrix4.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Matrix4} [right] The right hand side matrix.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 Matrix4.prototype.equals = function (right) {
   return Matrix4.equals(this, right);
@@ -3209,8 +3209,8 @@ Matrix4.equalsArray = function (matrix, array, offset) {
  * <code>false</code> otherwise.
  *
  * @param {Matrix4} [right] The right hand side matrix.
- * @param {Number} [epsilon=0] The epsilon to use for equality testing.
- * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
+ * @returns {boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix4.prototype.equalsEpsilon = function (right, epsilon) {
   return Matrix4.equalsEpsilon(this, right, epsilon);
@@ -3220,7 +3220,7 @@ Matrix4.prototype.equalsEpsilon = function (right, epsilon) {
  * Computes a string representing this Matrix with each row being
  * on a separate line and in the format '(column0, column1, column2, column3)'.
  *
- * @returns {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2, column3)'.
+ * @returns {string} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2, column3)'.
  */
 Matrix4.prototype.toString = function () {
   return (

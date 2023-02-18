@@ -18,7 +18,7 @@ const AnimatedPropertyType = ModelComponents.AnimatedPropertyType;
  * channel is responsible for interpolating between the keyframe values of an animated
  * property, then applying the change to the target node.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {ModelComponents.AnimationChannel} options.channel The corresponding animation channel components from the 3D model.
  * @param {ModelAnimation} options.runtimeAnimation The runtime animation containing this channel.
  * @param {ModelRuntimeNode} options.runtimeNode The runtime node that this channel will animate.
@@ -254,7 +254,7 @@ function initialize(runtimeChannel) {
 /**
  * Animates the target node property based on its spline.
  *
- * @param {Number} time The local animation time.
+ * @param {number} time The local animation time.
  *
  * @private
  */

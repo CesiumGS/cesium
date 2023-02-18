@@ -11,7 +11,7 @@ import MetadataTable from "./MetadataTable.js";
  * @constructor
  *
  * @param {Resource} resource The resource for this voxel content. This is used for fetching external buffers as needed.
- * @param {Object} [json] Voxel JSON contents. Mutually exclusive with binary.
+ * @param {object} [json] Voxel JSON contents. Mutually exclusive with binary.
  * @param {Uint8Array} [binary] Voxel binary contents. Mutually exclusive with json.
  * @param {MetadataSchema} metadataSchema The metadata schema used by property tables in the voxel content
  *
@@ -128,8 +128,8 @@ function requestBuffers(content, json, binary) {
 /**
  * A helper object for storing the two parts of the binary voxel content
  *
- * @typedef {Object} VoxelChunks
- * @property {Object} json The json chunk of the binary voxel content
+ * @typedef {object} VoxelChunks
+ * @property {object} json The json chunk of the binary voxel content
  * @property {Uint8Array} binary The binary chunk of the binary voxel content. This represents the internal buffer.
  * @private
  */

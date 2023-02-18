@@ -46,7 +46,7 @@ function TranslationRotationScale(translation, rotation, scale) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {TranslationRotationScale} [right] The right hand side TranslationRotationScale.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 TranslationRotationScale.prototype.equals = function (right) {
   return (

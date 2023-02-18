@@ -11,13 +11,13 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.id The ID of the class.
- * @param {String} [options.name] The name of the class.
- * @param {String} [options.description] The description of the class.
- * @param {Object.<String, MetadataClassProperty>} [options.properties] The class properties, where each key is the property ID.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.id The ID of the class.
+ * @param {string} [options.name] The name of the class.
+ * @param {string} [options.description] The description of the class.
+ * @param {Object<string, MetadataClassProperty>} [options.properties] The class properties, where each key is the property ID.
  * @param {*} [options.extras] Extra user-defined properties.
- * @param {Object} [options.extensions] An object containing extensions.
+ * @param {object} [options.extensions] An object containing extensions.
  *
  * @alias MetadataClass
  * @constructor
@@ -54,10 +54,10 @@ function MetadataClass(options) {
 /**
  * Creates a {@link MetadataClass} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.id The ID of the class.
- * @param {Object} options.class The class JSON object.
- * @param {Object.<String, MetadataEnum>} [options.enums] A dictionary of enums.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.id The ID of the class.
+ * @param {object} options.class The class JSON object.
+ * @param {Object<string, MetadataEnum>} [options.enums] A dictionary of enums.
  *
  * @returns {MetadataClass} The newly created metadata class.
  *
@@ -101,7 +101,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * The class properties.
    *
    * @memberof MetadataClass.prototype
-   * @type {Object.<String, MetadataClassProperty>}
+   * @type {Object<string, MetadataClassProperty>}
    * @readonly
    */
   properties: {
@@ -114,7 +114,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * A dictionary mapping semantics to class properties.
    *
    * @memberof MetadataClass.prototype
-   * @type {Object.<String, MetadataClassProperty>}
+   * @type {Object<string, MetadataClassProperty>}
    * @readonly
    *
    * @private
@@ -129,7 +129,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * The ID of the class.
    *
    * @memberof MetadataClass.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   id: {
@@ -142,7 +142,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * The name of the class.
    *
    * @memberof MetadataClass.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -155,7 +155,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * The description of the class.
    *
    * @memberof MetadataClass.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   description: {
@@ -181,7 +181,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * An object containing extensions.
    *
    * @memberof MetadataClass.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   extensions: {

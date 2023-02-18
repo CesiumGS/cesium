@@ -1,20 +1,20 @@
 /**
  * Determines how input texture to a {@link PostProcessStage} is sampled.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const PostProcessStageSampleMode = {
   /**
    * Samples the texture by returning the closest texel.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NEAREST: 0,
   /**
    * Samples the texture through bi-linear interpolation of the four nearest texels.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LINEAR: 1,

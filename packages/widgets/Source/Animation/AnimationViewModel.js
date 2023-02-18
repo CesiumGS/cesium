@@ -116,7 +116,7 @@ function AnimationViewModel(clockViewModel) {
 
   /**
    * Gets or sets whether the shuttle ring is currently being dragged.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.shuttleRingDragging = false;
@@ -125,7 +125,7 @@ function AnimationViewModel(clockViewModel) {
    * Gets or sets whether dragging the shuttle ring should cause the multiplier
    * to snap to the defined tick values rather than interpolating between them.
    * This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.snapToTicks = false;
@@ -144,7 +144,7 @@ function AnimationViewModel(clockViewModel) {
 
   /**
    * Gets the string representation of the current time.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.timeLabel = undefined;
   knockout.defineProperty(this, "timeLabel", function () {
@@ -153,7 +153,7 @@ function AnimationViewModel(clockViewModel) {
 
   /**
    * Gets the string representation of the current date.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.dateLabel = undefined;
   knockout.defineProperty(this, "dateLabel", function () {
@@ -162,7 +162,7 @@ function AnimationViewModel(clockViewModel) {
 
   /**
    * Gets the string representation of the current multiplier.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.multiplierLabel = undefined;
   knockout.defineProperty(this, "multiplierLabel", function () {
@@ -184,7 +184,7 @@ function AnimationViewModel(clockViewModel) {
 
   /**
    * Gets or sets the current shuttle ring angle.  This property is observable.
-   * @type {Number}
+   * @type {number}
    */
   this.shuttleRingAngle = undefined;
   knockout.defineProperty(this, "shuttleRingAngle", {
@@ -393,7 +393,7 @@ AnimationViewModel.defaultDateFormatter = function (date, viewModel) {
 
 /**
  * Gets or sets the default array of known clock multipliers associated with new instances of the shuttle ring.
- * @type {Number[]}
+ * @type {number[]}
  */
 AnimationViewModel.defaultTicks = [
   //
@@ -457,7 +457,7 @@ AnimationViewModel.defaultTimeFormatter = function (date, viewModel) {
 /**
  * Gets a copy of the array of positive known clock multipliers to associate with the shuttle ring.
  *
- * @returns {Number[]} The array of known clock multipliers associated with the shuttle ring.
+ * @returns {number[]} The array of known clock multipliers associated with the shuttle ring.
  */
 AnimationViewModel.prototype.getShuttleRingTicks = function () {
   return this._sortedFilteredPositiveTicks.slice(0);
@@ -470,7 +470,7 @@ AnimationViewModel.prototype.getShuttleRingTicks = function () {
  * to when a single click is made.  The values need not be in order, as they will be sorted
  * automatically, and duplicate values will be removed.
  *
- * @param {Number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
+ * @param {number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
  */
 AnimationViewModel.prototype.setShuttleRingTicks = function (positiveTicks) {
   //>>includeStart('debug', pragmas.debug);
@@ -648,7 +648,7 @@ AnimationViewModel._realtimeShuttleRingAngle = realtimeShuttleRingAngle;
  *
  * @param {JulianDate} date The date to be formatted
  * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
- * @returns {String} The string representation of the calendar date portion of the provided date.
+ * @returns {string} The string representation of the calendar date portion of the provided date.
  */
 
 /**
@@ -657,6 +657,6 @@ AnimationViewModel._realtimeShuttleRingAngle = realtimeShuttleRingAngle;
  *
  * @param {JulianDate} date The date to be formatted
  * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
- * @returns {String} The string representation of the time portion of the provided date.
+ * @returns {string} The string representation of the time portion of the provided date.
  */
 export default AnimationViewModel;

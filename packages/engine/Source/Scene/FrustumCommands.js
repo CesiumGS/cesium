@@ -6,8 +6,8 @@ import Pass from "../Renderer/Pass.js";
  * @alias FrustumCommands
  * @constructor
  *
- * @param {Number} [near=0.0] The lower bound or closest distance from the camera.
- * @param {Number} [far=0.0] The upper bound or farthest distance from the camera.
+ * @param {number} [near=0.0] The lower bound or closest distance from the camera.
+ * @param {number} [far=0.0] The upper bound or farthest distance from the camera.
  *
  * @private
  */

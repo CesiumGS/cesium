@@ -28,7 +28,7 @@ import ResourceCache from "./ResourceCache.js";
  * @constructor
  *
  * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
- * @param {Object} [json] The JSON object for this subtree. Mutually exclusive with subtreeView.
+ * @param {object} [json] The JSON object for this subtree. Mutually exclusive with subtreeView.
  * @param {Uint8Array} [subtreeView] The contents of a subtree binary in a Uint8Array. Mutually exclusive with json.
  * @param {ImplicitTileset} implicitTileset The implicit tileset. This includes information about the size of subtrees
  * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the subtree's root tile.
@@ -127,7 +127,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    * this property stores the JSON from the extension. This is used by {@link TileMetadata}
    * to get the extras and extensions for the tiles in the subtree.
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -183,8 +183,8 @@ Object.defineProperties(ImplicitSubtree.prototype, {
 /**
  * Check if a specific tile is available at an index of the tile availability bitstream
  *
- * @param {Number} index The index of the desired tile
- * @returns {Boolean} The value of the i-th bit
+ * @param {number} index The index of the desired tile
+ * @returns {boolean} The value of the i-th bit
  * @private
  */
 ImplicitSubtree.prototype.tileIsAvailableAtIndex = function (index) {
@@ -195,7 +195,7 @@ ImplicitSubtree.prototype.tileIsAvailableAtIndex = function (index) {
  * Check if a specific tile is available at an implicit tile coordinate
  *
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
- * @returns {Boolean} The value of the i-th bit
+ * @returns {boolean} The value of the i-th bit
  * @private
  */
 ImplicitSubtree.prototype.tileIsAvailableAtCoordinates = function (
@@ -208,9 +208,9 @@ ImplicitSubtree.prototype.tileIsAvailableAtCoordinates = function (
 /**
  * Check if a specific tile's content is available at an index of the content availability bitstream
  *
- * @param {Number} index The index of the desired tile
- * @param {Number} [contentIndex=0] The index of the desired content when multiple contents are used.
- * @returns {Boolean} The value of the i-th bit
+ * @param {number} index The index of the desired tile
+ * @param {number} [contentIndex=0] The index of the desired content when multiple contents are used.
+ * @returns {boolean} The value of the i-th bit
  * @private
  */
 ImplicitSubtree.prototype.contentIsAvailableAtIndex = function (
@@ -234,8 +234,8 @@ ImplicitSubtree.prototype.contentIsAvailableAtIndex = function (
  * Check if a specific tile's content is available at an implicit tile coordinate
  *
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
- * @param {Number} [contentIndex=0] The index of the desired content when the <code>3DTILES_multiple_contents</code> extension is used.
- * @returns {Boolean} The value of the i-th bit
+ * @param {number} [contentIndex=0] The index of the desired content when the <code>3DTILES_multiple_contents</code> extension is used.
+ * @returns {boolean} The value of the i-th bit
  * @private
  */
 ImplicitSubtree.prototype.contentIsAvailableAtCoordinates = function (
@@ -249,8 +249,8 @@ ImplicitSubtree.prototype.contentIsAvailableAtCoordinates = function (
 /**
  * Check if a child subtree is available at an index of the child subtree availability bitstream
  *
- * @param {Number} index The index of the desired child subtree
- * @returns {Boolean} The value of the i-th bit
+ * @param {number} index The index of the desired child subtree
+ * @returns {boolean} The value of the i-th bit
  * @private
  */
 ImplicitSubtree.prototype.childSubtreeIsAvailableAtIndex = function (index) {
@@ -261,7 +261,7 @@ ImplicitSubtree.prototype.childSubtreeIsAvailableAtIndex = function (index) {
  * Check if a specific child subtree is available at an implicit tile coordinate
  *
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a child subtree
- * @returns {Boolean} The value of the i-th bit
+ * @returns {boolean} The value of the i-th bit
  * @private
  */
 ImplicitSubtree.prototype.childSubtreeIsAvailableAtCoordinates = function (
@@ -280,8 +280,8 @@ ImplicitSubtree.prototype.childSubtreeIsAvailableAtCoordinates = function (
  * <li>Level 2 starts at index 5</li>
  * </ul>
  *
- * @param {Number} level The 0-indexed level number relative to the root of the subtree
- * @returns {Number} The first index at the desired level
+ * @param {number} level The 0-indexed level number relative to the root of the subtree
+ * @returns {number} The first index at the desired level
  * @private
  */
 ImplicitSubtree.prototype.getLevelOffset = function (level) {
@@ -294,8 +294,8 @@ ImplicitSubtree.prototype.getLevelOffset = function (level) {
  * chopping off the last 2 (quadtree) or 3 (octree) bits of the morton
  * index.
  *
- * @param {Number} childIndex The morton index of the child tile relative to its parent
- * @returns {Number} The index of the child's parent node
+ * @param {number} childIndex The morton index of the child tile relative to its parent
+ * @returns {number} The index of the child's parent node
  * @private
  */
 ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
@@ -313,7 +313,7 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
  * it resolves/rejects subtree.readyPromise.
  *
  * @param {ImplicitSubtree} subtree The subtree
- * @param {Object} [json] The JSON object for this subtree. If parsing from a binary subtree file, this will be undefined.
+ * @param {object} [json] The JSON object for this subtree. If parsing from a binary subtree file, this will be undefined.
  * @param {Uint8Array} [subtreeView] The contents of the subtree binary
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
  * @private
@@ -433,8 +433,8 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
 /**
  * A helper object for storing the two parts of the subtree binary
  *
- * @typedef {Object} SubtreeChunks
- * @property {Object} json The json chunk of the subtree
+ * @typedef {object} SubtreeChunks
+ * @property {object} json The json chunk of the subtree
  * @property {Uint8Array} binary The binary chunk of the subtree. This represents the internal buffer.
  * @private
  */
@@ -488,11 +488,11 @@ function parseSubtreeChunks(subtreeView) {
  * Buffers are assumed inactive until explicitly marked active. This is used
  * to avoid fetching unneeded buffers.
  *
- * @typedef {Object} BufferHeader
- * @property {Boolean} isExternal True if this is an external buffer
- * @property {Boolean} isActive Whether this buffer is currently used.
- * @property {String} [uri] The URI of the buffer (external buffers only)
- * @property {Number} byteLength The byte length of the buffer, including any padding contained within.
+ * @typedef {object} BufferHeader
+ * @property {boolean} isExternal True if this is an external buffer
+ * @property {boolean} isActive Whether this buffer is currently used.
+ * @property {string} [uri] The URI of the buffer (external buffers only)
+ * @property {number} byteLength The byte length of the buffer, including any padding contained within.
  * @private
  */
 
@@ -520,12 +520,12 @@ function preprocessBuffers(bufferHeaders) {
  * A buffer header is the JSON header from the subtree JSON chunk plus
  * the isActive flag and a reference to the header for the underlying buffer
  *
- * @typedef {Object} BufferViewHeader
+ * @typedef {object} BufferViewHeader
  * @property {BufferHeader} bufferHeader A reference to the header for the underlying buffer
- * @property {Boolean} isActive Whether this bufferView is currently used.
- * @property {Number} buffer The index of the underlying buffer.
- * @property {Number} byteOffset The start byte of the bufferView within the buffer.
- * @property {Number} byteLength The length of the bufferView. No padding is included in this length.
+ * @property {boolean} isActive Whether this bufferView is currently used.
+ * @property {number} buffer The index of the underlying buffer.
+ * @property {number} byteOffset The start byte of the bufferView within the buffer.
+ * @property {number} byteLength The length of the bufferView. No padding is included in this length.
  * @private
  */
 
@@ -619,7 +619,7 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
  * allow filtering this to avoid downloading unneeded buffers.
  * </p>
  *
- * @param {Object} propertyTableJson The property table JSON for either a tile or some content
+ * @param {object} propertyTableJson The property table JSON for either a tile or some content
  * @param {BufferViewHeader[]} bufferViewHeaders The preprocessed buffer view headers
  * @private
  */
@@ -680,7 +680,7 @@ function markActiveMetadataBufferViews(propertyTableJson, bufferViewHeaders) {
  * @param {ImplicitSubtree} subtree The subtree
  * @param {BufferHeader[]} bufferHeaders The preprocessed buffer headers
  * @param {Uint8Array} internalBuffer The binary chunk of the subtree file
- * @returns {Promise<Object>} A promise resolving to the dictionary of active buffers
+ * @returns {Promise<object>} A promise resolving to the dictionary of active buffers
  * @private
  */
 function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
@@ -729,8 +729,8 @@ function requestExternalBuffer(subtree, bufferHeader) {
  * extract a subarray from one of the active buffers.
  *
  * @param {BufferViewHeader[]} bufferViewHeaders
- * @param {Object} buffersU8 A dictionary of buffer index to a Uint8Array of its contents.
- * @returns {Object} A dictionary of buffer view index to a Uint8Array of its contents.
+ * @param {object} buffersU8 A dictionary of buffer index to a Uint8Array of its contents.
+ * @returns {object} A dictionary of buffer view index to a Uint8Array of its contents.
  * @private
  */
 function parseActiveBufferViews(bufferViewHeaders, buffersU8) {
@@ -755,9 +755,9 @@ function parseActiveBufferViews(bufferViewHeaders, buffersU8) {
  * Parse the three availability bitstreams and store them in the subtree
  *
  * @param {ImplicitSubtree} subtree The subtree to modify
- * @param {Object} subtreeJson The subtree JSON
+ * @param {object} subtreeJson The subtree JSON
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to
- * @param {Object} bufferViewsU8 A dictionary of buffer view index to a Uint8Array of its contents.
+ * @param {object} bufferViewsU8 A dictionary of buffer view index to a Uint8Array of its contents.
  * @private
  */
 function parseAvailability(
@@ -812,10 +812,10 @@ function parseAvailability(
  * in-memory representation using an {@link ImplicitAvailabilityBitstream}
  * object. This handles both constants and bitstreams from a bufferView.
  *
- * @param {Object} availabilityJson A JSON object representing the availability
- * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
- * @param {Number} lengthBits The length of the availability bitstream in bits
- * @param {Boolean} [computeAvailableCountEnabled] If true and availabilityJson.availableCount is undefined, the availableCount will be computed.
+ * @param {object} availabilityJson A JSON object representing the availability
+ * @param {object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
+ * @param {number} lengthBits The length of the availability bitstream in bits
+ * @param {boolean} [computeAvailableCountEnabled] If true and availabilityJson.availableCount is undefined, the availableCount will be computed.
  * @returns {ImplicitAvailabilityBitstream} The parsed bitstream object
  * @private
  */
@@ -857,7 +857,7 @@ function parseAvailabilityBitstream(
  *
  * @param {ImplicitSubtree} subtree The subtree
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
- * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
+ * @param {object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
 function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
@@ -882,7 +882,7 @@ function parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8) {
  *
  * @param {ImplicitSubtree} subtree The subtree
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
- * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
+ * @param {object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
 function parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8) {
@@ -979,7 +979,7 @@ function makeContentJumpBuffers(subtree) {
  * Given the implicit tiling coordinates for a tile, get the index within the
  * subtree's tile availability bitstream.
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
- * @return {Number} The tile's index within the subtree.
+ * @return {number} The tile's index within the subtree.
  * @private
  */
 ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
@@ -1001,7 +1001,7 @@ ImplicitSubtree.prototype.getTileIndex = function (implicitCoordinates) {
  * Given the implicit tiling coordinates for a child subtree, get the index within the
  * subtree's child subtree availability bitstream.
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a child subtree
- * @return {Number} The child subtree's index within the subtree's child subtree availability bitstream.
+ * @return {number} The child subtree's index within the subtree's child subtree availability bitstream.
  * @private
  */
 ImplicitSubtree.prototype.getChildSubtreeIndex = function (
@@ -1028,7 +1028,7 @@ ImplicitSubtree.prototype.getChildSubtreeIndex = function (
  * Get the entity ID for a tile within this subtree.
  * @param {ImplicitSubtree} subtree The subtree
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a tile
- * @return {Number} The entity ID for this tile for accessing tile metadata, or <code>undefined</code> if not applicable.
+ * @return {number} The entity ID for this tile for accessing tile metadata, or <code>undefined</code> if not applicable.
  *
  * @private
  */
@@ -1049,8 +1049,8 @@ function getTileEntityId(subtree, implicitCoordinates) {
  * Get the entity ID for a content within this subtree.
  * @param {ImplicitSubtree} subtree The subtree
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a content
- * @param {Number} contentIndex The content index, for distinguishing between multiple contents.
- * @return {Number} The entity ID for this content for accessing content metadata, or <code>undefined</code> if not applicable.
+ * @param {number} contentIndex The content index, for distinguishing between multiple contents.
+ * @return {number} The entity ID for this content for accessing content metadata, or <code>undefined</code> if not applicable.
  *
  * @private
  */
@@ -1100,7 +1100,7 @@ ImplicitSubtree.prototype.getTileMetadataView = function (implicitCoordinates) {
 /**
  * Create and return a metadata table view for a content within this subtree.
  * @param {ImplicitTileCoordinates} implicitCoordinates The global coordinates of a content
- * @param {Number} contentIndex The index of the content used to distinguish between multiple contents
+ * @param {number} contentIndex The index of the content used to distinguish between multiple contents
  * @return {ImplicitMetadataView} The metadata view for this content, or <code>undefined</code> if not applicable.
  *
  * @private

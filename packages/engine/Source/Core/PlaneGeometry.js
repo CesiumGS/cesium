@@ -16,7 +16,7 @@ import VertexFormat from "./VertexFormat.js";
  * @alias PlaneGeometry
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  *
  * @example
@@ -35,7 +35,7 @@ function PlaneGeometry(options) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 PlaneGeometry.packedLength = VertexFormat.packedLength;
 
@@ -43,10 +43,10 @@ PlaneGeometry.packedLength = VertexFormat.packedLength;
  * Stores the provided instance into the provided array.
  *
  * @param {PlaneGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 PlaneGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -69,8 +69,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PlaneGeometry} [result] The object into which to store the result.
  * @returns {PlaneGeometry} The modified result parameter or a new PlaneGeometry instance if one was not provided.
  */

@@ -17,7 +17,7 @@ import VoxelInspectorViewModel from "./VoxelInspectorViewModel.js";
  * @alias VoxelInspector
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene the Scene instance to use.
  */
 function VoxelInspector(container, scene) {
@@ -337,7 +337,7 @@ Object.defineProperties(VoxelInspector.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 VoxelInspector.prototype.isDestroyed = function () {
   return false;

@@ -20,12 +20,12 @@ const stopSearchPath =
  * @alias Geocoder
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Element|String} options.container The DOM element or ID that will contain the widget.
+ * @param {object} options Object with the following properties:
+ * @param {Element|string} options.container The DOM element or ID that will contain the widget.
  * @param {Scene} options.scene The Scene instance to use.
  * @param {GeocoderService[]} [options.geocoderServices] The geocoder services to be used
- * @param {Boolean} [options.autoComplete = true] True if the geocoder should query as the user types to autocomplete
- * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
+ * @param {boolean} [options.autoComplete = true] True if the geocoder should query as the user types to autocomplete
+ * @param {number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
  * @param {Geocoder.DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
  */
 function Geocoder(options) {
@@ -193,7 +193,7 @@ Object.defineProperties(Geocoder.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 Geocoder.prototype.isDestroyed = function () {
   return false;

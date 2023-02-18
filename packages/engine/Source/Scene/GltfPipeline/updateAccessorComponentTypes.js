@@ -7,8 +7,8 @@ import WebGLConstants from "../../Core/WebGLConstants.js";
 /**
  * Update accessors referenced by JOINTS_0 and WEIGHTS_0 attributes to use correct component types.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @returns {Object} The glTF asset with compressed meshes.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @returns {object} The glTF asset with compressed meshes.
  *
  * @private
  */

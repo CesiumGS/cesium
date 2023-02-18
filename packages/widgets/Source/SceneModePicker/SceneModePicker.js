@@ -31,9 +31,9 @@ const columbusViewPath =
  * @alias SceneModePicker
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
- * @param {Number} [duration=2.0] The time, in seconds, it takes for the scene to transition.
+ * @param {number} [duration=2.0] The time, in seconds, it takes for the scene to transition.
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  *
@@ -180,7 +180,7 @@ Object.defineProperties(SceneModePicker.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 SceneModePicker.prototype.isDestroyed = function () {
   return false;

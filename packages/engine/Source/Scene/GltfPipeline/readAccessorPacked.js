@@ -7,8 +7,8 @@ import defined from "../../Core/defined.js";
 /**
  * Returns the accessor data in a contiguous array.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @param {Object} accessor The accessor.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @param {object} accessor The accessor.
  * @returns {Array} The accessor values in a contiguous array.
  *
  * @private

@@ -154,7 +154,7 @@ const S2_POSITION_TO_ORIENTATION_MASK = [
  * @alias S2Cell
  * @constructor
  *
- * @param {BigInt} [cellId] The 64-bit S2CellId.
+ * @param {bigint} [cellId] The 64-bit S2CellId.
  * @private
  */
 function S2Cell(cellId) {
@@ -177,7 +177,7 @@ function S2Cell(cellId) {
 /**
  * Creates a new S2Cell from a token. A token is a hexadecimal representation of the 64-bit S2CellId.
  *
- * @param {String} token The token for the S2 Cell.
+ * @param {string} token The token for the S2 Cell.
  * @returns {S2Cell} Returns a new S2Cell.
  * @private
  */
@@ -195,8 +195,8 @@ S2Cell.fromToken = function (token) {
 /**
  * Validates an S2 cell ID.
  *
- * @param {BigInt} [cellId] The S2CellId.
- * @returns {Boolean} Returns true if the cell ID is valid, returns false otherwise.
+ * @param {bigint} [cellId] The S2CellId.
+ * @returns {boolean} Returns true if the cell ID is valid, returns false otherwise.
  * @private
  */
 S2Cell.isValidId = function (cellId) {
@@ -229,8 +229,8 @@ S2Cell.isValidId = function (cellId) {
 /**
  * Validates an S2 cell token.
  *
- * @param {String} [token] The hexadecimal representation of an S2CellId.
- * @returns {Boolean} Returns true if the token is valid, returns false otherwise.
+ * @param {string} [token] The hexadecimal representation of an S2CellId.
+ * @returns {boolean} Returns true if the token is valid, returns false otherwise.
  * @private
  */
 S2Cell.isValidToken = function (token) {
@@ -248,8 +248,8 @@ S2Cell.isValidToken = function (token) {
 /**
  * Converts an S2 cell token to a 64-bit S2 cell ID.
  *
- * @param {String} [token] The hexadecimal representation of an S2CellId. Expected to be a valid S2 token.
- * @returns {BigInt} Returns the S2 cell ID.
+ * @param {string} [token] The hexadecimal representation of an S2CellId. Expected to be a valid S2 token.
+ * @returns {bigint} Returns the S2 cell ID.
  * @private
  */
 S2Cell.getIdFromToken = function (token) {
@@ -263,7 +263,7 @@ S2Cell.getIdFromToken = function (token) {
 /**
  * Converts a 64-bit S2 cell ID to an S2 cell token.
  *
- * @param {BigInt} [cellId] The S2 cell ID.
+ * @param {bigint} [cellId] The S2 cell ID.
  * @returns {string} Returns hexadecimal representation of an S2CellId.
  * @private
  */
@@ -284,7 +284,7 @@ S2Cell.getTokenFromId = function (cellId) {
 /**
  * Gets the level of the cell from the cell ID.
  *
- * @param {BigInt} [cellId] The S2 cell ID.
+ * @param {bigint} [cellId] The S2 cell ID.
  * @returns {number} Returns the level of the cell.
  * @private
  */
@@ -314,7 +314,7 @@ S2Cell.getLevel = function (cellId) {
 /**
  * Gets the child cell of the cell at the given index.
  *
- * @param {Number} index An integer index of the child.
+ * @param {number} index An integer index of the child.
  * @returns {S2Cell} The child of the S2Cell.
  * @private
  */
@@ -398,7 +398,7 @@ S2Cell.prototype.getCenter = function (ellipsoid) {
 /**
  * Get vertex of the S2 cell. Vertices are indexed in CCW order.
  *
- * @param {Number} index An integer index of the vertex. Must be in the range [0-3].
+ * @param {number} index An integer index of the vertex. Must be in the range [0-3].
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
  * @returns {Cartesian3} The position of the vertex of the S2 cell.
  * @private
@@ -427,9 +427,9 @@ S2Cell.prototype.getVertex = function (index, ellipsoid) {
 /**
  * Creates an S2Cell from its face, position along the Hilbert curve for a given level.
  *
- * @param {Number} face The root face of S2 this cell is on. Must be in the range [0-5].
- * @param {BigInt} position The position along the Hilbert curve. Must be in the range [0-4**level).
- * @param {Number} level The level of the S2 curve. Must be in the range [0-30].
+ * @param {number} face The root face of S2 this cell is on. Must be in the range [0-5].
+ * @param {bigint} position The position along the Hilbert curve. Must be in the range [0-4**level).
+ * @param {number} level The level of the S2 curve. Must be in the range [0-30].
  * @returns {S2Cell} A new S2Cell from the given parameters.
  * @private
  */
