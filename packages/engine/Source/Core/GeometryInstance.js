@@ -12,11 +12,11 @@ import Matrix4 from "./Matrix4.js";
  * @alias GeometryInstance
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Geometry|GeometryFactory} options.geometry The geometry to instance.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
- * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
- * @param {Object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
+ * @param {object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
+ * @param {object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
  *
  *
  * @example
@@ -83,7 +83,7 @@ function GeometryInstance(options) {
   /**
    * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
    *
-   * @type Object
+   * @type {object}
    *
    * @default undefined
    *
@@ -103,7 +103,7 @@ function GeometryInstance(options) {
    * Per-instance attributes like {@link ColorGeometryInstanceAttribute} or {@link ShowGeometryInstanceAttribute}.
    * {@link Geometry} attributes varying per vertex; these attributes are constant for the entire instance.
    *
-   * @type Object
+   * @type {object}
    *
    * @default undefined
    */

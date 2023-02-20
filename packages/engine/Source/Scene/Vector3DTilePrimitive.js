@@ -33,7 +33,7 @@ import Vector3DTileBatch from "./Vector3DTileBatch.js";
  * @alias Vector3DTilePrimitive
  * @constructor
  *
- * @param {Object} options An object with following properties:
+ * @param {object} options An object with following properties:
  * @param {Float32Array} options.positions The positions of the meshes.
  * @param {Uint16Array|Uint32Array} options.indices The indices of the triangulated meshes. The indices must be contiguous so that
  * the indices for mesh n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
@@ -108,7 +108,7 @@ function Vector3DTilePrimitive(options) {
 
   /**
    * Draw the wireframe of the classification meshes.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.debugWireframe = false;
@@ -117,7 +117,7 @@ function Vector3DTilePrimitive(options) {
 
   /**
    * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.forceRebatch = false;
@@ -156,7 +156,7 @@ Object.defineProperties(Vector3DTilePrimitive.prototype, {
    *
    * @memberof Vector3DTilePrimitive.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   trianglesLength: {
@@ -170,7 +170,7 @@ Object.defineProperties(Vector3DTilePrimitive.prototype, {
    *
    * @memberof Vector3DTilePrimitive.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   geometryByteLength: {
@@ -962,7 +962,7 @@ Vector3DTilePrimitive.prototype.createFeatures = function (content, features) {
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (mesh batch table color * color).
  *
- * @param {Boolean} enabled Whether to enable debug coloring.
+ * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
 Vector3DTilePrimitive.prototype.applyDebugSettings = function (enabled, color) {
@@ -1053,7 +1053,7 @@ Vector3DTilePrimitive.prototype.applyStyle = function (style, features) {
  * Call when updating the color of a mesh with batchId changes color. The meshes will need to be re-batched
  * on the next update.
  *
- * @param {Number} batchId The batch id of the meshes whose color has changed.
+ * @param {number} batchId The batch id of the meshes whose color has changed.
  * @param {Color} color The new polygon color.
  */
 Vector3DTilePrimitive.prototype.updateCommands = function (batchId, color) {
@@ -1255,7 +1255,7 @@ Vector3DTilePrimitive.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePrimitive.prototype.isDestroyed = function () {
   return false;

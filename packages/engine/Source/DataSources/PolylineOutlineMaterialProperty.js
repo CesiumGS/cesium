@@ -14,10 +14,10 @@ const defaultOutlineWidth = 1.0;
  * @alias PolylineOutlineMaterialProperty
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
  * @param {Property|Color} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property|Number} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
+ * @param {Property|number} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
  */
 function PolylineOutlineMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -41,7 +41,7 @@ Object.defineProperties(PolylineOutlineMaterialProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof PolylineOutlineMaterialProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -96,7 +96,7 @@ Object.defineProperties(PolylineOutlineMaterialProperty.prototype, {
  * Gets the {@link Material} type at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 PolylineOutlineMaterialProperty.prototype.getType = function (time) {
   return "PolylineOutline";
@@ -106,8 +106,8 @@ PolylineOutlineMaterialProperty.prototype.getType = function (time) {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 PolylineOutlineMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(result)) {
@@ -138,7 +138,7 @@ PolylineOutlineMaterialProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 PolylineOutlineMaterialProperty.prototype.equals = function (other) {
   return (

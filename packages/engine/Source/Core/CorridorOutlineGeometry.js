@@ -358,13 +358,13 @@ function computePositionsExtruded(params) {
  * @alias CorridorOutlineGeometry
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor outline.
- * @param {Number} options.width The distance between the edges of the corridor outline.
+ * @param {number} options.width The distance between the edges of the corridor outline.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
- * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Number} [options.height=0] The distance in meters between the positions and the ellipsoid surface.
- * @param {Number} [options.extrudedHeight] The distance in meters between the extruded face and the ellipsoid surface.
+ * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number} [options.height=0] The distance in meters between the positions and the ellipsoid surface.
+ * @param {number} [options.extrudedHeight] The distance in meters between the extruded face and the ellipsoid surface.
  * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
  *
  * @see CorridorOutlineGeometry.createGeometry
@@ -405,7 +405,7 @@ function CorridorOutlineGeometry(options) {
 
   /**
    * The number of elements used to pack the object into an array.
-   * @type {Number}
+   * @type {number}
    */
   this.packedLength =
     1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + 6;
@@ -415,10 +415,10 @@ function CorridorOutlineGeometry(options) {
  * Stores the provided instance into the provided array.
  *
  * @param {CorridorOutlineGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 CorridorOutlineGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -464,8 +464,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CorridorOutlineGeometry} [result] The object into which to store the result.
  * @returns {CorridorOutlineGeometry} The modified result parameter or a new CorridorOutlineGeometry instance if one was not provided.
  */

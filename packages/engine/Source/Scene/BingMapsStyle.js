@@ -1,7 +1,7 @@
 /**
  * The types of imagery provided by Bing Maps.
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @see BingMapsImageryProvider
  */
@@ -9,7 +9,7 @@ const BingMapsStyle = {
   /**
    * Aerial imagery.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   AERIAL: "Aerial",
@@ -17,7 +17,7 @@ const BingMapsStyle = {
   /**
    * Aerial imagery with a road overlay.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @deprecated See https://github.com/CesiumGS/cesium/issues/7128.
    * Use `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND` instead
@@ -27,7 +27,7 @@ const BingMapsStyle = {
   /**
    * Aerial imagery with a road overlay.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   AERIAL_WITH_LABELS_ON_DEMAND: "AerialWithLabelsOnDemand",
@@ -35,7 +35,7 @@ const BingMapsStyle = {
   /**
    * Roads without additional imagery.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @deprecated See https://github.com/CesiumGS/cesium/issues/7128.
    * Use `BingMapsStyle.ROAD_ON_DEMAND` instead
@@ -45,7 +45,7 @@ const BingMapsStyle = {
   /**
    * Roads without additional imagery.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   ROAD_ON_DEMAND: "RoadOnDemand",
@@ -53,7 +53,7 @@ const BingMapsStyle = {
   /**
    * A dark version of the road maps.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   CANVAS_DARK: "CanvasDark",
@@ -61,7 +61,7 @@ const BingMapsStyle = {
   /**
    * A lighter version of the road maps.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   CANVAS_LIGHT: "CanvasLight",
@@ -69,7 +69,7 @@ const BingMapsStyle = {
   /**
    * A grayscale version of the road maps.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   CANVAS_GRAY: "CanvasGray",
@@ -77,7 +77,7 @@ const BingMapsStyle = {
   /**
    * Ordnance Survey imagery. This imagery is visible only for the London, UK area.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   ORDNANCE_SURVEY: "OrdnanceSurvey",
@@ -85,7 +85,7 @@ const BingMapsStyle = {
   /**
    * Collins Bart imagery.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   COLLINS_BART: "CollinsBart",

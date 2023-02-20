@@ -15,11 +15,11 @@ const defaultDashPattern = 255.0;
  * @alias PolylineDashMaterialProperty
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
  * @param {Property|Color} [options.gapColor=Color.TRANSPARENT] A Property specifying the {@link Color} of the gaps in the line.
- * @param {Property|Number} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixels.
- * @param {Property|Number} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
+ * @param {Property|number} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixels.
+ * @param {Property|number} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
  */
 function PolylineDashMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -45,7 +45,7 @@ Object.defineProperties(PolylineDashMaterialProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof PolylineDashMaterialProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -104,7 +104,7 @@ Object.defineProperties(PolylineDashMaterialProperty.prototype, {
  * Gets the {@link Material} type at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 PolylineDashMaterialProperty.prototype.getType = function (time) {
   return "PolylineDash";
@@ -114,8 +114,8 @@ PolylineDashMaterialProperty.prototype.getType = function (time) {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 PolylineDashMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(result)) {
@@ -153,7 +153,7 @@ PolylineDashMaterialProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 PolylineDashMaterialProperty.prototype.equals = function (other) {
   return (

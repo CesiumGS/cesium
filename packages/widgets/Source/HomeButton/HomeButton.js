@@ -13,9 +13,9 @@ import HomeButtonViewModel from "./HomeButtonViewModel.js";
  * @alias HomeButton
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
- * @param {Number} [duration] The time, in seconds, it takes to complete the camera flight home.
+ * @param {number} [duration] The time, in seconds, it takes to complete the camera flight home.
  */
 function HomeButton(container, scene, duration) {
   //>>includeStart('debug', pragmas.debug);
@@ -78,7 +78,7 @@ Object.defineProperties(HomeButton.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 HomeButton.prototype.isDestroyed = function () {
   return false;

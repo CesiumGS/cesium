@@ -21,36 +21,36 @@ const defaultImageSize = new Cartesian2(1.0, 1.0);
  * @alias ParticleSystem
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.show=true] Whether to display the particle system.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.show=true] Whether to display the particle system.
  * @param {ParticleSystem.updateCallback} [options.updateCallback] The callback function to be called each frame to update a particle.
  * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
  * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
- * @param {Number} [options.emissionRate=5] The number of particles to emit per second.
+ * @param {number} [options.emissionRate=5] The number of particles to emit per second.
  * @param {ParticleBurst[]} [options.bursts] An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
- * @param {Boolean} [options.loop=true] Whether the particle system should loop its bursts when it is complete.
- * @param {Number} [options.scale=1.0] Sets the scale to apply to the image of the particle for the duration of its particleLife.
- * @param {Number} [options.startScale] The initial scale to apply to the image of the particle at the beginning of its life.
- * @param {Number} [options.endScale] The final scale to apply to the image of the particle at the end of its life.
+ * @param {boolean} [options.loop=true] Whether the particle system should loop its bursts when it is complete.
+ * @param {number} [options.scale=1.0] Sets the scale to apply to the image of the particle for the duration of its particleLife.
+ * @param {number} [options.startScale] The initial scale to apply to the image of the particle at the beginning of its life.
+ * @param {number} [options.endScale] The final scale to apply to the image of the particle at the end of its life.
  * @param {Color} [options.color=Color.WHITE] Sets the color of a particle for the duration of its particleLife.
  * @param {Color} [options.startColor] The color of the particle at the beginning of its life.
  * @param {Color} [options.endColor] The color of the particle at the end of its life.
- * @param {Object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
+ * @param {object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
  * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] If set, overrides the minimumImageSize and maximumImageSize inputs that scale the particle image's dimensions in pixels.
  * @param {Cartesian2} [options.minimumImageSize] Sets the minimum bound, width by height, above which to randomly scale the particle image's dimensions in pixels.
  * @param {Cartesian2} [options.maximumImageSize] Sets the maximum bound, width by height, below which to randomly scale the particle image's dimensions in pixels.
- * @param {Boolean} [options.sizeInMeters] Sets if the size of particles is in meters or pixels. <code>true</code> to size the particles in meters; otherwise, the size is in pixels.
- * @param {Number} [options.speed=1.0] If set, overrides the minimumSpeed and maximumSpeed inputs with this value.
- * @param {Number} [options.minimumSpeed] Sets the minimum bound in meters per second above which a particle's actual speed will be randomly chosen.
- * @param {Number} [options.maximumSpeed] Sets the maximum bound in meters per second below which a particle's actual speed will be randomly chosen.
- * @param {Number} [options.lifetime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
- * @param {Number} [options.particleLife=5.0] If set, overrides the minimumParticleLife and maximumParticleLife inputs with this value.
- * @param {Number} [options.minimumParticleLife] Sets the minimum bound in seconds for the possible duration of a particle's life above which a particle's actual life will be randomly chosen.
- * @param {Number} [options.maximumParticleLife] Sets the maximum bound in seconds for the possible duration of a particle's life below which a particle's actual life will be randomly chosen.
- * @param {Number} [options.mass=1.0] Sets the minimum and maximum mass of particles in kilograms.
- * @param {Number} [options.minimumMass] Sets the minimum bound for the mass of a particle in kilograms. A particle's actual mass will be chosen as a random amount above this value.
- * @param {Number} [options.maximumMass] Sets the maximum mass of particles in kilograms. A particle's actual mass will be chosen as a random amount below this value.
+ * @param {boolean} [options.sizeInMeters] Sets if the size of particles is in meters or pixels. <code>true</code> to size the particles in meters; otherwise, the size is in pixels.
+ * @param {number} [options.speed=1.0] If set, overrides the minimumSpeed and maximumSpeed inputs with this value.
+ * @param {number} [options.minimumSpeed] Sets the minimum bound in meters per second above which a particle's actual speed will be randomly chosen.
+ * @param {number} [options.maximumSpeed] Sets the maximum bound in meters per second below which a particle's actual speed will be randomly chosen.
+ * @param {number} [options.lifetime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
+ * @param {number} [options.particleLife=5.0] If set, overrides the minimumParticleLife and maximumParticleLife inputs with this value.
+ * @param {number} [options.minimumParticleLife] Sets the minimum bound in seconds for the possible duration of a particle's life above which a particle's actual life will be randomly chosen.
+ * @param {number} [options.maximumParticleLife] Sets the maximum bound in seconds for the possible duration of a particle's life below which a particle's actual life will be randomly chosen.
+ * @param {number} [options.mass=1.0] Sets the minimum and maximum mass of particles in kilograms.
+ * @param {number} [options.minimumMass] Sets the minimum bound for the mass of a particle in kilograms. A particle's actual mass will be chosen as a random amount above this value.
+ * @param {number} [options.maximumMass] Sets the maximum mass of particles in kilograms. A particle's actual mass will be chosen as a random amount below this value.
  * @demo {@link https://cesium.com/learn/cesiumjs-learn/cesiumjs-particle-systems/|Particle Systems Tutorial}
  * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
  * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
@@ -60,7 +60,7 @@ function ParticleSystem(options) {
 
   /**
    * Whether to display the particle system.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -74,14 +74,14 @@ function ParticleSystem(options) {
 
   /**
    * Whether the particle system should loop it's bursts when it is complete.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.loop = defaultValue(options.loop, true);
 
   /**
    * The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
-   * @type {Object}
+   * @type {object}
    * @default undefined
    */
   this.image = defaultValue(options.image, undefined);
@@ -290,7 +290,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * The initial scale to apply to the image of the particle at the beginning of its life.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   startScale: {
@@ -307,7 +307,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * The final scale to apply to the image of the particle at the end of its life.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   endScale: {
@@ -324,7 +324,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * The number of particles to emit per second.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 5
    */
   emissionRate: {
@@ -342,7 +342,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * Sets the minimum bound in meters per second above which a particle's actual speed will be randomly chosen.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   minimumSpeed: {
@@ -359,7 +359,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * Sets the maximum bound in meters per second below which a particle's actual speed will be randomly chosen.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   maximumSpeed: {
@@ -376,7 +376,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * Sets the minimum bound in seconds for the possible duration of a particle's life above which a particle's actual life will be randomly chosen.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 5.0
    */
   minimumParticleLife: {
@@ -393,7 +393,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * Sets the maximum bound in seconds for the possible duration of a particle's life below which a particle's actual life will be randomly chosen.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 5.0
    */
   maximumParticleLife: {
@@ -411,7 +411,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * Sets the minimum mass of particles in kilograms.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   minimumMass: {
@@ -428,7 +428,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * Sets the maximum mass of particles in kilograms.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   maximumMass: {
@@ -483,7 +483,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * Gets or sets if the particle size is in meters or pixels. <code>true</code> to size particles in meters; otherwise, the size is in pixels.
    * @memberof ParticleSystem.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   sizeInMeters: {
@@ -500,7 +500,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * How long the particle system will emit particles, in seconds.
    * @memberof ParticleSystem.prototype
-   * @type {Number}
+   * @type {number}
    * @default Number.MAX_VALUE
    */
   lifetime: {
@@ -527,7 +527,7 @@ Object.defineProperties(ParticleSystem.prototype, {
   /**
    * When <code>true</code>, the particle system has reached the end of its lifetime; <code>false</code> otherwise.
    * @memberof ParticleSystem.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isComplete: {
     get: function () {
@@ -864,7 +864,7 @@ ParticleSystem.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see ParticleSystem#destroy
  */
@@ -897,7 +897,7 @@ ParticleSystem.prototype.destroy = function () {
  * @callback ParticleSystem.updateCallback
  *
  * @param {Particle} particle The particle being updated.
- * @param {Number} dt The time in seconds since the last update.
+ * @param {number} dt The time in seconds since the last update.
  *
  * @example
  * function applyGravity(particle, dt) {

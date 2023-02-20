@@ -57,7 +57,7 @@ function createUniform(gl, activeUniform, uniformName, location) {
  */
 function UniformFloat(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -84,7 +84,7 @@ UniformFloat.prototype.set = function () {
  */
 function UniformFloatVec2(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -112,7 +112,7 @@ UniformFloatVec2.prototype.set = function () {
  */
 function UniformFloatVec3(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -152,7 +152,7 @@ UniformFloatVec3.prototype.set = function () {
  */
 function UniformFloatVec4(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -192,7 +192,7 @@ UniformFloatVec4.prototype.set = function () {
  */
 function UniformSampler(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -227,7 +227,7 @@ UniformSampler.prototype._setSampler = function (textureUnitIndex) {
  */
 function UniformInt(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -253,7 +253,7 @@ UniformInt.prototype.set = function () {
  */
 function UniformIntVec2(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -280,7 +280,7 @@ UniformIntVec2.prototype.set = function () {
  */
 function UniformIntVec3(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -307,7 +307,7 @@ UniformIntVec3.prototype.set = function () {
  */
 function UniformIntVec4(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -336,7 +336,7 @@ const scratchUniformArray = new Float32Array(4);
  */
 function UniformMat2(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -366,7 +366,7 @@ const scratchMat3Array = new Float32Array(9);
  */
 function UniformMat3(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -396,7 +396,7 @@ const scratchMat4Array = new Float32Array(16);
  */
 function UniformMat4(gl, activeUniform, uniformName, location) {
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;

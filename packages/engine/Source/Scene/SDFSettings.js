@@ -7,7 +7,7 @@ const SDFSettings = {
   /**
    * The font size in pixels
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   FONT_SIZE: 48.0,
@@ -15,7 +15,7 @@ const SDFSettings = {
   /**
    * Whitespace padding around glyphs.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   PADDING: 10.0,
@@ -23,7 +23,7 @@ const SDFSettings = {
   /**
    * How many pixels around the glyph shape to use for encoding distance
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RADIUS: 8.0,
@@ -31,7 +31,7 @@ const SDFSettings = {
   /**
    * How much of the radius (relative) is used for the inside part the glyph.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   CUTOFF: 0.25,

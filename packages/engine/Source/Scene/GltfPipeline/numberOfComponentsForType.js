@@ -3,8 +3,8 @@
 /**
  * Utility function for retrieving the number of components in a given type.
  *
- * @param {String} type glTF type
- * @returns {Number} The number of components in that type.
+ * @param {string} type glTF type
+ * @returns {number} The number of components in that type.
  *
  * @private
  */

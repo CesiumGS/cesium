@@ -41,9 +41,9 @@ function EncodedCartesian3() {
  * The fixed-point encoding follows {@link http://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
  * </p>
  *
- * @param {Number} value The floating-point value to encode.
- * @param {Object} [result] The object onto which to store the result.
- * @returns {Object} The modified result parameter or a new instance if one was not provided.
+ * @param {number} value The floating-point value to encode.
+ * @param {object} [result] The object onto which to store the result.
+ * @returns {object} The modified result parameter or a new instance if one was not provided.
  *
  * @example
  * const value = 1234567.1234567;
@@ -132,8 +132,8 @@ const encodedP = new EncodedCartesian3();
  * </p>
  *
  * @param {Cartesian3} cartesian The cartesian to encode.
- * @param {Number[]} cartesianArray The array to write to.
- * @param {Number} index The index into the array to start writing.  Six elements will be written.
+ * @param {number[]} cartesianArray The array to write to.
+ * @param {number} index The index into the array to start writing.  Six elements will be written.
  *
  * @exception {DeveloperError} index must be a number greater than or equal to 0.
  *

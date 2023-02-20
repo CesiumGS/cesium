@@ -6,7 +6,7 @@ import DeveloperError from "../../Core/DeveloperError.js";
  * which include individual glTF models, and various 3D Tiles formats
  * (including glTF via <code>3DTILES_content_gltf</code>).
  *
- * @enum {String}
+ * @enum {string}
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -18,7 +18,7 @@ const ModelType = {
    * which is for 3D Tiles
    * </p>
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   GLTF: "GLTF",
@@ -30,28 +30,28 @@ const ModelType = {
    * which is for individual models
    * </p>
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   TILE_GLTF: "TILE_GLTF",
   /**
    * A 3D Tiles 1.0 Batched 3D Model
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   TILE_B3DM: "B3DM",
   /**
    * A 3D Tiles 1.0 Instanced 3D Model
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   TILE_I3DM: "I3DM",
   /**
    * A 3D Tiles 1.0 Point Cloud
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   TILE_PNTS: "PNTS",
@@ -59,7 +59,7 @@ const ModelType = {
   /**
    * GeoJSON content for <code>MAXAR_content_geojson</code> extension
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   TILE_GEOJSON: "TILE_GEOJSON",
@@ -68,7 +68,7 @@ const ModelType = {
 /**
  * Check if a model is used for 3D Tiles.
  * @param {ModelType} modelType The type of model
- * @returns {Boolean} <code>true</code> if the model is a 3D Tiles format, <code>false</code> otherwise
+ * @returns {boolean} <code>true</code> if the model is a 3D Tiles format, <code>false</code> otherwise
  */
 ModelType.is3DTiles = function (modelType) {
   //>>includeStart('debug', pragmas.debug);

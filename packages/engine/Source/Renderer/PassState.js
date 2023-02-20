@@ -30,7 +30,7 @@ function PassState(context) {
    * When this is <code>undefined</code>, the {@link DrawCommand}'s property is used.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default undefined
    */
   this.blendingEnabled = undefined;
@@ -42,7 +42,7 @@ function PassState(context) {
    * When this is <code>undefined</code>, the {@link DrawCommand}'s property is used.
    * </p>
    *
-   * @type {Object}
+   * @type {object}
    * @default undefined
    */
   this.scissorTest = undefined;

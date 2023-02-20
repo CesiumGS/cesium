@@ -6,7 +6,7 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} PlaneGraphics.ConstructorOptions
+ * @typedef {object} PlaneGraphics.ConstructorOptions
  *
  * Initialization options for the PlaneGraphics constructor
  *

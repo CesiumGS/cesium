@@ -11,21 +11,21 @@ const defaultCredit = new Credit(
 );
 
 /**
- * @typedef {Object} MapboxImageryProvider.ConstructorOptions
+ * @typedef {object} MapboxImageryProvider.ConstructorOptions
  *
  * Initialization options for the MapboxImageryProvider constructor
  *
- * @property {String} [url='https://api.mapbox.com/v4/'] The Mapbox server url.
- * @property {String} mapId The Mapbox Map ID.
- * @property {String} accessToken The public access token for the imagery.
- * @property {String} [format='png'] The format of the image request.
+ * @property {string} [url='https://api.mapbox.com/v4/'] The Mapbox server url.
+ * @property {string} mapId The Mapbox Map ID.
+ * @property {string} accessToken The public access token for the imagery.
+ * @property {string} [format='png'] The format of the image request.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
 /**
@@ -66,7 +66,7 @@ function MapboxImageryProvider(options) {
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultAlpha = undefined;
@@ -75,7 +75,7 @@ function MapboxImageryProvider(options) {
    * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultNightAlpha = undefined;
@@ -84,7 +84,7 @@ function MapboxImageryProvider(options) {
    * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultDayAlpha = undefined;
@@ -93,7 +93,7 @@ function MapboxImageryProvider(options) {
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultBrightness = undefined;
@@ -102,7 +102,7 @@ function MapboxImageryProvider(options) {
    * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultContrast = undefined;
@@ -110,7 +110,7 @@ function MapboxImageryProvider(options) {
   /**
    * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultHue = undefined;
@@ -119,7 +119,7 @@ function MapboxImageryProvider(options) {
    * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultSaturation = undefined;
@@ -127,7 +127,7 @@ function MapboxImageryProvider(options) {
   /**
    * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultGamma = undefined;
@@ -197,7 +197,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets the URL of the Mapbox server.
    * @memberof MapboxImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -209,7 +209,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -221,7 +221,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -247,7 +247,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
    * Gets the width of each tile, in pixels.  This function should
    * not be called before {@link MapboxImageryProvider#ready} returns true.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -260,7 +260,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
    * Gets the height of each tile, in pixels.  This function should
    * not be called before {@link MapboxImageryProvider#ready} returns true.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -273,7 +273,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link MapboxImageryProvider#ready} returns true.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -290,7 +290,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
    * provider with more than a few tiles at the minimum level will lead to
    * rendering problems.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -374,7 +374,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -387,9 +387,9 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -402,11 +402,11 @@ MapboxImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * Requests the image for a given tile.  This function should
  * not be called before {@link MapboxImageryProvider#ready} returns true.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
@@ -421,12 +421,12 @@ MapboxImageryProvider.prototype.requestImage = function (x, y, level, request) {
  * This function is optional, so it may not exist on all ImageryProviders.
  *
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
+ * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.

@@ -10,10 +10,10 @@ import Spline from "./Spline.js";
  * @alias MorphWeightSpline
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+ * @param {object} options Object with the following properties:
+ * @param {number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
- * @param {Number[]} options.weights The array of floating-point control weights given. The weights are ordered such
+ * @param {number[]} options.weights The array of floating-point control weights given. The weights are ordered such
  *                that all weights for the targets are given in chronological order and order in which they appear in
  *                the glTF from which the morph targets come. This means for 2 targets, weights = [w(0,0), w(0,1), w(1,0), w(1,1) ...]
  *                where i and j in w(i,j) are the time indices and target indices, respectively.
@@ -69,7 +69,7 @@ Object.defineProperties(MorphWeightSpline.prototype, {
    *
    * @memberof WeightSpline.prototype
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @readonly
    */
   times: {
@@ -83,7 +83,7 @@ Object.defineProperties(MorphWeightSpline.prototype, {
    *
    * @memberof WeightSpline.prototype
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @readonly
    */
   weights: {
@@ -98,8 +98,8 @@ Object.defineProperties(MorphWeightSpline.prototype, {
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
  * @function
  *
- * @param {Number} time The time.
- * @returns {Number} The index for the element at the start of the interval.
+ * @param {number} time The time.
+ * @returns {number} The index for the element at the start of the interval.
  *
  * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
@@ -112,8 +112,8 @@ MorphWeightSpline.prototype.findTimeInterval =
  * Wraps the given time to the period covered by the spline.
  * @function
  *
- * @param {Number} time The time.
- * @return {Number} The time, wrapped around to the updated animation.
+ * @param {number} time The time.
+ * @return {number} The time, wrapped around to the updated animation.
  */
 MorphWeightSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
@@ -121,17 +121,17 @@ MorphWeightSpline.prototype.wrapTime = Spline.prototype.wrapTime;
  * Clamps the given time to the period covered by the spline.
  * @function
  *
- * @param {Number} time The time.
- * @return {Number} The time, clamped to the animation period.
+ * @param {number} time The time.
+ * @return {number} The time, clamped to the animation period.
  */
 MorphWeightSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
  *
- * @param {Number} time The time at which to evaluate the curve.
- * @param {Number[]} [result] The object onto which to store the result.
- * @returns {Number[]} The modified result parameter or a new instance of the point on the curve at the given time.
+ * @param {number} time The time at which to evaluate the curve.
+ * @param {number[]} [result] The object onto which to store the result.
+ * @returns {number[]} The modified result parameter or a new instance of the point on the curve at the given time.
  *
  * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element

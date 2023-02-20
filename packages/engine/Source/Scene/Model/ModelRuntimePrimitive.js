@@ -30,7 +30,7 @@ import WireframePipelineStage from "./WireframePipelineStage.js";
  * In memory representation of a single primitive, that is, a primitive
  * and its corresponding mesh.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {ModelComponents.Primitive} options.primitive The primitive component.
  * @param {ModelComponents.Node} options.node The node that this primitive belongs to.
  * @param {Model} options.model The {@link Model} this primitive belongs to.
@@ -141,7 +141,7 @@ function ModelRuntimePrimitive(options) {
    * Model; this is just a reference.
    * </p>
    *
-   * @type {Number[]}
+   * @type {number[]}
    *
    * @private
    */
@@ -157,7 +157,7 @@ function ModelRuntimePrimitive(options) {
    * Model; this is just a reference.
    * </p>
    *
-   * @type {Number[]}
+   * @type {number[]}
    *
    * @private
    */

@@ -3,13 +3,13 @@
 /**
  * The types of imagery provided by {@link createWorldImagery}.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const IonWorldImageryStyle = {
   /**
    * Aerial imagery.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   AERIAL: 2,
@@ -17,7 +17,7 @@ const IonWorldImageryStyle = {
   /**
    * Aerial imagery with a road overlay.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   AERIAL_WITH_LABELS: 3,
@@ -25,7 +25,7 @@ const IonWorldImageryStyle = {
   /**
    * Roads without additional imagery.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ROAD: 4,

@@ -103,7 +103,7 @@ CullingVolume.fromBoundingSphere = function (boundingSphere, result) {
 /**
  * Determines whether a bounding volume intersects the culling volume.
  *
- * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
+ * @param {object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
  * @returns {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
  */
 CullingVolume.prototype.computeVisibility = function (boundingVolume) {
@@ -132,12 +132,12 @@ CullingVolume.prototype.computeVisibility = function (boundingVolume) {
 /**
  * Determines whether a bounding volume intersects the culling volume.
  *
- * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
- * @param {Number} parentPlaneMask A bit mask from the boundingVolume's parent's check against the same culling
+ * @param {object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
+ * @param {number} parentPlaneMask A bit mask from the boundingVolume's parent's check against the same culling
  *                                 volume, such that if (planeMask & (1 << planeIndex) === 0), for k < 31, then
  *                                 the parent (and therefore this) volume is completely inside plane[planeIndex]
  *                                 and that plane check can be skipped.
- * @returns {Number} A plane mask as described above (which can be applied to this boundingVolume's children).
+ * @returns {number} A plane mask as described above (which can be applied to this boundingVolume's children).
  *
  * @private
  */
@@ -192,7 +192,7 @@ CullingVolume.prototype.computeVisibilityWithPlaneMask = function (
  * For plane masks (as used in {@link CullingVolume#computeVisibilityWithPlaneMask}), this special value
  * represents the case where the object bounding volume is entirely outside the culling volume.
  *
- * @type {Number}
+ * @type {number}
  * @private
  */
 CullingVolume.MASK_OUTSIDE = 0xffffffff;
@@ -201,7 +201,7 @@ CullingVolume.MASK_OUTSIDE = 0xffffffff;
  * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this value
  * represents the case where the object bounding volume is entirely inside the culling volume.
  *
- * @type {Number}
+ * @type {number}
  * @private
  */
 CullingVolume.MASK_INSIDE = 0x00000000;
@@ -210,7 +210,7 @@ CullingVolume.MASK_INSIDE = 0x00000000;
  * For plane masks (as used in {@link CullingVolume.prototype.computeVisibilityWithPlaneMask}), this value
  * represents the case where the object bounding volume (may) intersect all planes of the culling volume.
  *
- * @type {Number}
+ * @type {number}
  * @private
  */
 CullingVolume.MASK_INDETERMINATE = 0x7fffffff;

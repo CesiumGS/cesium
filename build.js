@@ -144,24 +144,24 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
 }
 
 /**
- * @typedef {Object} CesiumBundles
- * @property {Object} esmBundle The ESM bundle.
- * @property {Object} iifeBundle The IIFE bundle, for use in browsers.
- * @property {Object} nodeBundle The CommonJS bundle, for use in NodeJS.
+ * @typedef {object} CesiumBundles
+ * @property {object} esmBundle The ESM bundle.
+ * @property {object} iifeBundle The IIFE bundle, for use in browsers.
+ * @property {object} nodeBundle The CommonJS bundle, for use in NodeJS.
  */
 
 /**
  * Bundles all individual modules, optionally minifying and stripping out debug pragmas.
- * @param {Object} options
- * @param {String} options.path Directory where build artifacts are output
- * @param {Boolean} [options.minify=false] true if the output should be minified
- * @param {Boolean} [options.removePragmas=false] true if the output should have debug pragmas stripped out
- * @param {Boolean} [options.sourcemap=false] true if an external sourcemap should be generated
- * @param {Boolean} [options.iife=false] true if an IIFE style module should be built
- * @param {Boolean} [options.node=false] true if a CJS style node module should be built
- * @param {Boolean} [options.incremental=false] true if build output should be cached for repeated builds
- * @param {Boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
- * @returns {Promise.<CesiumBundles>}
+ * @param {object} options
+ * @param {string} options.path Directory where build artifacts are output
+ * @param {boolean} [options.minify=false] true if the output should be minified
+ * @param {boolean} [options.removePragmas=false] true if the output should have debug pragmas stripped out
+ * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
+ * @param {boolean} [options.iife=false] true if an IIFE style module should be built
+ * @param {boolean} [options.node=false] true if a CJS style node module should be built
+ * @param {boolean} [options.incremental=false] true if build output should be cached for repeated builds
+ * @param {boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
+ * @returns {Promise<CesiumBundles>}
  */
 export async function bundleCesiumJs(options) {
   const buildConfig = defaultESBuildOptions();
@@ -245,9 +245,9 @@ const workspaceSourceFiles = {
 /**
  * Generates export declaration from a file from a workspace.
  *
- * @param {String} workspace The workspace the file belongs to.
- * @param {String} file The file.
- * @returns {String} The export declaration.
+ * @param {string} workspace The workspace the file belongs to.
+ * @param {string} file The file.
+ * @returns {string} The export declaration.
  */
 function generateDeclaration(workspace, file) {
   let assignmentName = path.basename(file, path.extname(file));
@@ -319,11 +319,11 @@ function rollupWarning(message) {
 }
 
 /**
- * @param {Object} options
+ * @param {object} options
  * @param {boolean} [options.minify=false] true if the worker output should be minified
  * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
  * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
- * @param {String} options.path output directory
+ * @param {string} options.path output directory
  */
 export async function bundleCombinedWorkers(options) {
   // Bundle non ES6 workers.
@@ -386,15 +386,15 @@ export async function bundleCombinedWorkers(options) {
 
 /**
  * Bundles the workers and outputs the result to the specified directory
- * @param {Object} options
+ * @param {object} options
  * @param {boolean} [options.minify=false] true if the worker output should be minified
  * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
  * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
- * @param {Array.<String>} options.input The worker globs.
- * @param {Array.<String>} options.inputES6 The ES6 worker globs.
- * @param {String} options.path output directory
- * @param {String} options.copyrightHeader The copyright header to add to worker bundles
- * @returns {Promise.<*>}
+ * @param {string[]} options.input The worker globs.
+ * @param {string[]} options.inputES6 The ES6 worker globs.
+ * @param {string} options.path output directory
+ * @param {string} options.copyrightHeader The copyright header to add to worker bundles
+ * @returns {Promise<any>}
  */
 export async function bundleWorkers(options) {
   // Copy existing workers
@@ -621,8 +621,8 @@ const externalResolvePlugin = {
 
 /**
  * Creates a template html file in the Sandcastle app listing the gallery of demos
- * @param {Boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
- * @returns {Promise.<*>}
+ * @param {boolean} [noDevelopmentGallery=false] true if the development gallery should not be included in the list
+ * @returns {Promise<any>}
  */
 export async function createGalleryList(noDevelopmentGallery) {
   const demoObjects = [];
@@ -721,10 +721,10 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
 /**
  * Helper function to copy files.
  *
- * @param {Array.<String>} globs The file globs to be copied.
- * @param {String} destination The path to copy the files to.
- * @param {String} base The base path to omit from the globs when files are copied. Defaults to "".
- * @returns {Promise.<Buffer>} A promise containing the stream output as a buffer.
+ * @param {string[]} globs The file globs to be copied.
+ * @param {string} destination The path to copy the files to.
+ * @param {string} base The base path to omit from the globs when files are copied. Defaults to "".
+ * @returns {Promise<Buffer>} A promise containing the stream output as a buffer.
  */
 export async function copyFiles(globs, destination, base) {
   const stream = gulp
@@ -737,8 +737,8 @@ export async function copyFiles(globs, destination, base) {
 /**
  * Copy assets from engine.
  *
- * @param {String} destination The path to copy files to.
- * @returns {Promise.<>} A promise that completes when all assets are copied to the destination.
+ * @param {string} destination The path to copy files to.
+ * @returns {Promise<void>} A promise that completes when all assets are copied to the destination.
  */
 export async function copyEngineAssets(destination) {
   const engineStaticAssets = [
@@ -765,8 +765,8 @@ export async function copyEngineAssets(destination) {
 /**
  * Copy assets from widgets.
  *
- * @param {String} destination The path to copy files to.
- * @returns {Promise.<>} A promise that completes when all assets are copied to the destination.
+ * @param {string} destination The path to copy files to.
+ * @returns {Promise<void>} A promise that completes when all assets are copied to the destination.
  */
 export async function copyWidgetsAssets(destination) {
   const widgetsStaticAssets = [
@@ -805,10 +805,10 @@ export async function createJsHintOptions() {
 
 /**
  * Bundles spec files for testing in the browser and on the command line with karma.
- * @param {Object} options
- * @param {Boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
- * @param {Boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
- * @returns {Promise.<*>}
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
+ * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
+ * @returns {Promise<any>}
  */
 export function bundleCombinedSpecs(options) {
   options = options || {};
@@ -834,7 +834,7 @@ export function bundleCombinedSpecs(options) {
 /**
  * Creates the index.js for a package.
  *
- * @param {String} workspace The workspace to create the index.js for.
+ * @param {string} workspace The workspace to create the index.js for.
  * @returns
  */
 async function createIndexJs(workspace) {
@@ -873,9 +873,9 @@ async function createIndexJs(workspace) {
 
 /**
  * Creates a single entry point file by importing all individual spec files.
- * @param {Array.<String>} files The individual spec files.
- * @param {String} workspace The workspace.
- * @param {String} outputPath The path the file is written to.
+ * @param {string[]} files The individual spec files.
+ * @param {string} workspace The workspace.
+ * @param {string} outputPath The path the file is written to.
  */
 async function createSpecListForWorkspace(files, workspace, outputPath) {
   let contents = "";
@@ -896,12 +896,12 @@ async function createSpecListForWorkspace(files, workspace, outputPath) {
 /**
  * Bundles CSS files.
  *
- * @param {Object} options
- * @param {Array.<String>} options.filePaths The file paths to bundle.
- * @param {Boolean} options.sourcemap
- * @param {Boolean} options.minify
- * @param {String} options.outdir The output directory.
- * @param {String} options.outbase The
+ * @param {object} options
+ * @param {string[]} options.filePaths The file paths to bundle.
+ * @param {boolean} options.sourcemap
+ * @param {boolean} options.minify
+ * @param {string} options.outdir The output directory.
+ * @param {string} options.outbase The
  */
 async function bundleCSS(options) {
   // Configure options for esbuild.
@@ -927,13 +927,13 @@ const workspaceCssFiles = {
 /**
  * Bundles spec files for testing in the browser.
  *
- * @param {Object} options
- * @param {Boolean} [options.incremental=false] True if builds should be generated incrementally.
- * @param {String} options.outbase The base path the output files are relative to.
- * @param {String} options.outdir The directory to place the output in.
- * @param {String} options.specListFile The path to the SpecList.js file
- * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
- * @returns {Object} The bundle generated from Specs.
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {string} options.outbase The base path the output files are relative to.
+ * @param {string} options.outdir The directory to place the output in.
+ * @param {string} options.specListFile The path to the SpecList.js file
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ * @returns {object} The bundle generated from Specs.
  */
 async function bundleSpecs(options) {
   const incremental = options.incremental ?? true;
@@ -967,10 +967,10 @@ async function bundleSpecs(options) {
 /**
  * Builds the engine workspace.
  *
- * @param {Object} options
- * @param {Boolean} [options.incremental=false] True if builds should be generated incrementally.
- * @param {Boolean} [options.minify=false] True if bundles should be minified.
- * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.minify=false] True if bundles should be minified.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export const buildEngine = async (options) => {
   options = options || {};
@@ -1018,9 +1018,9 @@ export const buildEngine = async (options) => {
 /**
  * Builds the widgets workspace.
  *
- * @param {Object} options
- * @param {Boolean} [options.incremental=false] True if builds should be generated incrementally.
- * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] True if builds should be generated incrementally.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export const buildWidgets = async (options) => {
   options = options || {};
@@ -1052,16 +1052,16 @@ export const buildWidgets = async (options) => {
 /**
  * Build CesiumJS.
  *
- * @param {Object} options
- * @param {Boolean} [options.development=true] True if build is targeted for development.
- * @param {Boolean} [options.iife=true] True if IIFE bundle should be generated.
- * @param {Boolean} [options.incremental=true] True if builds should be generated incrementally.
- * @param {Boolean} [options.minify=false] True if bundles should be minified.
- * @param {Boolean} [options.node=true] True if CommonJS bundle should be generated.
- * @param {Boolean} options.outputDirectory The directory where the output should go.
- * @param {Boolean} [options.removePragmas=false] True if debug pragmas should be removed.
- * @param {Boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
- * @param {Boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
+ * @param {object} options
+ * @param {boolean} [options.development=true] True if build is targeted for development.
+ * @param {boolean} [options.iife=true] True if IIFE bundle should be generated.
+ * @param {boolean} [options.incremental=true] True if builds should be generated incrementally.
+ * @param {boolean} [options.minify=false] True if bundles should be minified.
+ * @param {boolean} [options.node=true] True if CommonJS bundle should be generated.
+ * @param {boolean} options.outputDirectory The directory where the output should go.
+ * @param {boolean} [options.removePragmas=false] True if debug pragmas should be removed.
+ * @param {boolean} [options.sourcemap=true] True if sourcemap should be included in the generated bundles.
+ * @param {boolean} [options.write=true] True if bundles generated are written to files instead of in-memory buffers.
  */
 export async function buildCesium(options) {
   const development = options.development ?? true;

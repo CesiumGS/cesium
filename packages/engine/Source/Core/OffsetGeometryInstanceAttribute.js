@@ -9,9 +9,9 @@ import defined from "./defined.js";
  * @alias OffsetGeometryInstanceAttribute
  * @constructor
  *
- * @param {Number} [x=0] The x translation
- * @param {Number} [y=0] The y translation
- * @param {Number} [z=0] The z translation
+ * @param {number} [x=0] The x translation
+ * @param {number} [y=0] The y translation
+ * @param {number} [z=0] The z translation
  *
  * @private
  *
@@ -54,7 +54,7 @@ Object.defineProperties(OffsetGeometryInstanceAttribute.prototype, {
    *
    * @memberof OffsetGeometryInstanceAttribute.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @default 3
@@ -72,7 +72,7 @@ Object.defineProperties(OffsetGeometryInstanceAttribute.prototype, {
    *
    * @memberof OffsetGeometryInstanceAttribute.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false

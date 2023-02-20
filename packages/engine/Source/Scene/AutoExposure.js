@@ -39,7 +39,7 @@ function AutoExposure() {
   /**
    * Whether or not to execute this post-process stage when ready.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.enabled = true;
   this._enabled = true;
@@ -47,7 +47,7 @@ function AutoExposure() {
   /**
    * The minimum value used to clamp the luminance.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0.1
    */
   this.minimumLuminance = 0.1;
@@ -55,7 +55,7 @@ function AutoExposure() {
   /**
    * The maximum value used to clamp the luminance.
    *
-   * @type {Number}
+   * @type {number}
    * @default 10.0
    */
   this.maximumLuminance = 10.0;
@@ -68,7 +68,7 @@ Object.defineProperties(AutoExposure.prototype, {
    * to load.
    *
    * @memberof AutoExposure.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -80,7 +80,7 @@ Object.defineProperties(AutoExposure.prototype, {
    * The unique name of this post-process stage for reference by other stages.
    *
    * @memberof AutoExposure.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -358,7 +358,7 @@ AutoExposure.prototype.execute = function (context, colorTexture) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see AutoExposure#destroy
  */

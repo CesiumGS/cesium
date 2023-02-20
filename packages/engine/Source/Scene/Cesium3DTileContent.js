@@ -22,7 +22,7 @@ function Cesium3DTileContent() {
    * not part of the public Cesium API.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -35,7 +35,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    *
    * @memberof Cesium3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   featuresLength: {
@@ -56,7 +56,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    *
    * @memberof Cesium3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   pointsLength: {
@@ -71,7 +71,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    *
    * @memberof Cesium3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   trianglesLength: {
@@ -86,7 +86,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    *
    * @memberof Cesium3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   geometryByteLength: {
@@ -101,7 +101,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    *
    * @memberof Cesium3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   texturesByteLength: {
@@ -118,7 +118,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    *
    * @memberof Cesium3DTileContent.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   batchTableByteLength: {
@@ -150,7 +150,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    *
    * @memberof Cesium3DTileContent.prototype
    *
-   * @type {Promise.<Cesium3DTileContent>}
+   * @type {Promise<Cesium3DTileContent>}
    * @readonly
    */
   readyPromise: {
@@ -194,7 +194,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
    * Gets the url of the tile's content.
    * @memberof Cesium3DTileContent.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -274,9 +274,9 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
 /**
  * Returns whether the feature has this property.
  *
- * @param {Number} batchId The batchId for the feature.
- * @param {String} name The case-sensitive name of the property.
- * @returns {Boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
+ * @param {number} batchId The batchId for the feature.
+ * @param {string} name The case-sensitive name of the property.
+ * @returns {boolean} <code>true</code> if the feature has this property; otherwise, <code>false</code>.
  */
 Cesium3DTileContent.prototype.hasProperty = function (batchId, name) {
   DeveloperError.throwInstantiationError();
@@ -292,7 +292,7 @@ Cesium3DTileContent.prototype.hasProperty = function (batchId, name) {
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/TileFormats/BatchTable}.
  *
- * @param {Number} batchId The batchId for the feature.
+ * @param {number} batchId The batchId for the feature.
  * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
  *
  * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
@@ -308,7 +308,7 @@ Cesium3DTileContent.prototype.getFeature = function (batchId) {
      * not part of the public Cesium API.
      * </p>
      *
-     * @param {Boolean} enabled Whether to enable or disable debug settings.
+     * @param {boolean} enabled Whether to enable or disable debug settings.
      * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
 
      * @private
@@ -360,7 +360,7 @@ Cesium3DTileContent.prototype.update = function (tileset, frameState) {
  * not part of the public Cesium API.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see Cesium3DTileContent#destroy
  *

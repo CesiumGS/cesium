@@ -90,77 +90,77 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the show frustums state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.frustums = false;
 
   /**
    * Gets or sets the show frustum planes state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.frustumPlanes = false;
 
   /**
    * Gets or sets the show performance display state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.performance = false;
 
   /**
    * Gets or sets the shader cache text.  This property is observable.
-   * @type {String}
+   * @type {string}
    * @default ''
    */
   this.shaderCacheText = "";
 
   /**
    * Gets or sets the show primitive bounding sphere state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.primitiveBoundingSphere = false;
 
   /**
    * Gets or sets the show primitive reference frame state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.primitiveReferenceFrame = false;
 
   /**
    * Gets or sets the filter primitive state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.filterPrimitive = false;
 
   /**
    * Gets or sets the show tile bounding sphere state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.tileBoundingSphere = false;
 
   /**
    * Gets or sets the filter tile state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.filterTile = false;
 
   /**
    * Gets or sets the show wireframe state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.wireframe = false;
 
   /**
    * Gets or sets the index of the depth frustum to display.  This property is observable.
-   * @type {Number}
+   * @type {number}
    * @default 1
    */
   this.depthFrustum = 1;
@@ -168,91 +168,91 @@ function CesiumInspectorViewModel(scene, performanceContainer) {
 
   /**
    * Gets or sets the suspend updates state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.suspendUpdates = false;
 
   /**
    * Gets or sets the show tile coordinates state.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.tileCoordinates = false;
 
   /**
    * Gets or sets the frustum statistic text.  This property is observable.
-   * @type {String}
+   * @type {string}
    * @default ''
    */
   this.frustumStatisticText = false;
 
   /**
    * Gets or sets the selected tile information text.  This property is observable.
-   * @type {String}
+   * @type {string}
    * @default ''
    */
   this.tileText = "";
 
   /**
    * Gets if a primitive has been selected.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.hasPickedPrimitive = false;
 
   /**
    * Gets if a tile has been selected.  This property is observable
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.hasPickedTile = false;
 
   /**
    * Gets if the picking primitive command is active.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.pickPrimitiveActive = false;
 
   /**
    * Gets if the picking tile command is active.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.pickTileActive = false;
 
   /**
    * Gets or sets if the cesium inspector drop down is visible.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.dropDownVisible = true;
 
   /**
    * Gets or sets if the general section is visible.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.generalVisible = true;
 
   /**
    * Gets or sets if the primitive section is visible.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.primitivesVisible = false;
 
   /**
    * Gets or sets if the terrain section is visible.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.terrainVisible = false;
 
   /**
    * Gets or sets the index of the depth frustum text.  This property is observable.
-   * @type {String}
+   * @type {string}
    * @default ''
    */
   this.depthFrustumText = "";
@@ -948,7 +948,7 @@ CesiumInspectorViewModel.prototype._update = function () {
 };
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 CesiumInspectorViewModel.prototype.isDestroyed = function () {
   return false;

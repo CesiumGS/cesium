@@ -18,7 +18,7 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @alias Vector3DTilePolygons
  * @constructor
  *
- * @param {Object} options An object with following properties:
+ * @param {object} options An object with following properties:
  * @param {Float32Array|Uint16Array} options.positions The positions of the polygons. The positions must be contiguous
  * so that the positions for polygon n are in [c, c + counts[n]] where c = sum{counts[0], counts[n - 1]} and they are the outer ring of
  * the polygon in counter-clockwise order.
@@ -26,8 +26,8 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @param {Uint32Array} options.indices The indices of the triangulated polygons. The indices must be contiguous so that
  * the indices for polygon n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
  * @param {Uint32Array} options.indexCounts The number of indices for each polygon.
- * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
- * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+ * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
+ * @param {number} options.maximumHeight The maximum height of the terrain covered by the tile.
  * @param {Float32Array} [options.polygonMinimumHeights] An array containing the minimum heights for each polygon.
  * @param {Float32Array} [options.polygonMaximumHeights] An array containing the maximum heights for each polygon.
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
@@ -83,14 +83,14 @@ function Vector3DTilePolygons(options) {
 
   /**
    * Draws the wireframe of the classification meshes.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.debugWireframe = false;
 
   /**
    * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.forceRebatch = false;
@@ -109,7 +109,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
    *
    * @memberof Vector3DTilePolygons.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   trianglesLength: {
@@ -126,7 +126,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
    *
    * @memberof Vector3DTilePolygons.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   geometryByteLength: {
@@ -383,7 +383,7 @@ Vector3DTilePolygons.prototype.createFeatures = function (content, features) {
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (polygon batch table color * color).
  *
- * @param {Boolean} enabled Whether to enable debug coloring.
+ * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
 Vector3DTilePolygons.prototype.applyDebugSettings = function (enabled, color) {
@@ -404,7 +404,7 @@ Vector3DTilePolygons.prototype.applyStyle = function (style, features) {
  * Call when updating the color of a polygon with batchId changes color. The polygons will need to be re-batched
  * on the next update.
  *
- * @param {Number} batchId The batch id of the polygon whose color has changed.
+ * @param {number} batchId The batch id of the polygon whose color has changed.
  * @param {Color} color The new polygon color.
  */
 Vector3DTilePolygons.prototype.updateCommands = function (batchId, color) {
@@ -455,7 +455,7 @@ Vector3DTilePolygons.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePolygons.prototype.isDestroyed = function () {
   return false;

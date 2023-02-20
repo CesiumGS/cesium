@@ -7,8 +7,8 @@ import defined from "./defined.js";
  *
  * @param {PixelFormat} internalFormat The pixel format of the compressed texture.
  * @param {PixelDatatype} pixelDatatype The pixel datatype of the compressed texture.
- * @param {Number} width The width of the texture.
- * @param {Number} height The height of the texture.
+ * @param {number} width The width of the texture.
+ * @param {number} height The height of the texture.
  * @param {Uint8Array} buffer The compressed texture buffer.
  */
 function CompressedTextureBuffer(
@@ -28,7 +28,7 @@ function CompressedTextureBuffer(
 Object.defineProperties(CompressedTextureBuffer.prototype, {
   /**
    * The format of the compressed texture.
-   * @type PixelFormat
+   * @type {PixelFormat}
    * @readonly
    * @memberof CompressedTextureBuffer.prototype
    */
@@ -39,7 +39,7 @@ Object.defineProperties(CompressedTextureBuffer.prototype, {
   },
   /**
    * The datatype of the compressed texture.
-   * @type PixelDatatype
+   * @type {PixelDatatype}
    * @readonly
    * @memberof CompressedTextureBuffer.prototype
    */
@@ -50,7 +50,7 @@ Object.defineProperties(CompressedTextureBuffer.prototype, {
   },
   /**
    * The width of the texture.
-   * @type Number
+   * @type {number}
    * @readonly
    * @memberof CompressedTextureBuffer.prototype
    */
@@ -61,7 +61,7 @@ Object.defineProperties(CompressedTextureBuffer.prototype, {
   },
   /**
    * The height of the texture.
-   * @type Number
+   * @type {number}
    * @readonly
    * @memberof CompressedTextureBuffer.prototype
    */
@@ -72,7 +72,7 @@ Object.defineProperties(CompressedTextureBuffer.prototype, {
   },
   /**
    * The compressed texture buffer.
-   * @type Uint8Array
+   * @type {Uint8Array}
    * @readonly
    * @memberof CompressedTextureBuffer.prototype
    */

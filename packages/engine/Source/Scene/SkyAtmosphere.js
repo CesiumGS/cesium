@@ -46,7 +46,7 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * Determines if the atmosphere is shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = true;
@@ -55,7 +55,7 @@ function SkyAtmosphere(ellipsoid) {
    * Compute atmosphere per-fragment instead of per-vertex.
    * This produces better looking atmosphere with a slight performance penalty.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.perFragmentAtmosphere = false;
@@ -83,7 +83,7 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * The intensity of the light that is used for computing the sky atmosphere color.
    *
-   * @type {Number}
+   * @type {number}
    * @default 50.0
    */
   this.atmosphereLightIntensity = 50.0;
@@ -107,7 +107,7 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
    *
-   * @type {Number}
+   * @type {number}
    * @default 10000.0
    */
   this.atmosphereRayleighScaleHeight = 10000.0;
@@ -115,7 +115,7 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
    *
-   * @type {Number}
+   * @type {number}
    * @default 3200.0
    */
   this.atmosphereMieScaleHeight = 3200.0;
@@ -125,7 +125,7 @@ function SkyAtmosphere(ellipsoid) {
    * <p>
    * Valid values are between -1.0 and 1.0.
    * </p>
-   * @type {Number}
+   * @type {number}
    * @default 0.9
    */
   this.atmosphereMieAnisotropy = 0.9;
@@ -133,7 +133,7 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A hue shift of 1.0 indicates a complete rotation of the hues available.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.hueShift = 0.0;
@@ -141,7 +141,7 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * The saturation shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A saturation shift of -1.0 is monochrome.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.saturationShift = 0.0;
@@ -149,7 +149,7 @@ function SkyAtmosphere(ellipsoid) {
   /**
    * The brightness shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A brightness shift of -1.0 is complete darkness, which will let space show through.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.brightnessShift = 0.0;
@@ -368,7 +368,7 @@ function hasColorCorrection(skyAtmosphere) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see SkyAtmosphere#destroy
  */

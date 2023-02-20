@@ -10,30 +10,30 @@ import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
  * @alias Cartographic
  * @constructor
  *
- * @param {Number} [longitude=0.0] The longitude, in radians.
- * @param {Number} [latitude=0.0] The latitude, in radians.
- * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
+ * @param {number} [longitude=0.0] The longitude, in radians.
+ * @param {number} [latitude=0.0] The latitude, in radians.
+ * @param {number} [height=0.0] The height, in meters, above the ellipsoid.
  *
  * @see Ellipsoid
  */
 function Cartographic(longitude, latitude, height) {
   /**
    * The longitude, in radians.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.longitude = defaultValue(longitude, 0.0);
 
   /**
    * The latitude, in radians.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.latitude = defaultValue(latitude, 0.0);
 
   /**
    * The height, in meters, above the ellipsoid.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.height = defaultValue(height, 0.0);
@@ -43,9 +43,9 @@ function Cartographic(longitude, latitude, height) {
  * Creates a new Cartographic instance from longitude and latitude
  * specified in radians.
  *
- * @param {Number} longitude The longitude, in radians.
- * @param {Number} latitude The latitude, in radians.
- * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
+ * @param {number} longitude The longitude, in radians.
+ * @param {number} latitude The latitude, in radians.
+ * @param {number} [height=0.0] The height, in meters, above the ellipsoid.
  * @param {Cartographic} [result] The object onto which to store the result.
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
  */
@@ -72,9 +72,9 @@ Cartographic.fromRadians = function (longitude, latitude, height, result) {
  * specified in degrees.  The values in the resulting object will
  * be in radians.
  *
- * @param {Number} longitude The longitude, in degrees.
- * @param {Number} latitude The latitude, in degrees.
- * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
+ * @param {number} longitude The longitude, in degrees.
+ * @param {number} latitude The latitude, in degrees.
+ * @param {number} [height=0.0] The height, in meters, above the ellipsoid.
  * @param {Cartographic} [result] The object onto which to store the result.
  * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
  */
@@ -213,7 +213,7 @@ Cartographic.clone = function (cartographic, result) {
  *
  * @param {Cartographic} [left] The first cartographic.
  * @param {Cartographic} [right] The second cartographic.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Cartographic.equals = function (left, right) {
   return (
@@ -233,8 +233,8 @@ Cartographic.equals = function (left, right) {
  *
  * @param {Cartographic} [left] The first cartographic.
  * @param {Cartographic} [right] The second cartographic.
- * @param {Number} [epsilon=0] The epsilon to use for equality testing.
- * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
+ * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Cartographic.equalsEpsilon = function (left, right, epsilon) {
   epsilon = defaultValue(epsilon, 0);
@@ -272,7 +272,7 @@ Cartographic.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Cartographic} [right] The second cartographic.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Cartographic.prototype.equals = function (right) {
   return Cartographic.equals(this, right);
@@ -284,8 +284,8 @@ Cartographic.prototype.equals = function (right) {
  * <code>false</code> otherwise.
  *
  * @param {Cartographic} [right] The second cartographic.
- * @param {Number} [epsilon=0] The epsilon to use for equality testing.
- * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
+ * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Cartographic.prototype.equalsEpsilon = function (right, epsilon) {
   return Cartographic.equalsEpsilon(this, right, epsilon);
@@ -294,7 +294,7 @@ Cartographic.prototype.equalsEpsilon = function (right, epsilon) {
 /**
  * Creates a string representing this cartographic in the format '(longitude, latitude, height)'.
  *
- * @returns {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
+ * @returns {string} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
  */
 Cartographic.prototype.toString = function () {
   return `(${this.longitude}, ${this.latitude}, ${this.height})`;

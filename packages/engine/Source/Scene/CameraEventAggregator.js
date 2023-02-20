@@ -368,7 +368,7 @@ Object.defineProperties(CameraEventAggregator.prototype, {
   /**
    * Gets whether any mouse button is down, a touch has started, or the wheel has been moved.
    * @memberof CameraEventAggregator.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   anyButtonDown: {
     get: function () {
@@ -391,7 +391,7 @@ Object.defineProperties(CameraEventAggregator.prototype, {
  *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
- * @returns {Boolean} Returns <code>true</code> if a mouse button down or touch has started and has been moved; otherwise, <code>false</code>
+ * @returns {boolean} Returns <code>true</code> if a mouse button down or touch has started and has been moved; otherwise, <code>false</code>
  */
 CameraEventAggregator.prototype.isMoving = function (type, modifier) {
   //>>includeStart('debug', pragmas.debug);
@@ -409,7 +409,7 @@ CameraEventAggregator.prototype.isMoving = function (type, modifier) {
  *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
- * @returns {Object} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code>.
+ * @returns {object} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code>.
  */
 CameraEventAggregator.prototype.getMovement = function (type, modifier) {
   //>>includeStart('debug', pragmas.debug);
@@ -428,7 +428,7 @@ CameraEventAggregator.prototype.getMovement = function (type, modifier) {
  *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
- * @returns {Object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
+ * @returns {object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
  */
 CameraEventAggregator.prototype.getLastMovement = function (type, modifier) {
   //>>includeStart('debug', pragmas.debug);
@@ -451,7 +451,7 @@ CameraEventAggregator.prototype.getLastMovement = function (type, modifier) {
  *
  * @param {CameraEventType} type The camera event type.
  * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
- * @returns {Boolean} Whether the mouse button is down or a touch has started.
+ * @returns {boolean} Whether the mouse button is down or a touch has started.
  */
 CameraEventAggregator.prototype.isButtonDown = function (type, modifier) {
   //>>includeStart('debug', pragmas.debug);
@@ -545,7 +545,7 @@ CameraEventAggregator.prototype.reset = function () {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see CameraEventAggregator#destroy
  */

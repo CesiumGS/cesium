@@ -6,9 +6,9 @@ import DeveloperError from "./DeveloperError.js";
  * Given a URI, returns the base path of the URI.
  * @function
  *
- * @param {String} uri The Uri.
- * @param {Boolean} [includeQuery = false] Whether or not to include the query string and fragment form the uri
- * @returns {String} The base path of the Uri.
+ * @param {string} uri The Uri.
+ * @param {boolean} [includeQuery = false] Whether or not to include the query string and fragment form the uri
+ * @returns {string} The base path of the Uri.
  *
  * @example
  * // basePath will be "/Gallery/";

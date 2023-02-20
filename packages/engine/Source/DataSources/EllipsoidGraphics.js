@@ -6,7 +6,7 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} EllipsoidGraphics.ConstructorOptions
+ * @typedef {object} EllipsoidGraphics.ConstructorOptions
  *
  * Initialization options for the EllipsoidGraphics constructor
  *

@@ -38,7 +38,7 @@ function ComputeCommand(options) {
    * An object with functions whose names match the uniforms in the shader program
    * and return values to set those uniforms.
    *
-   * @type {Object}
+   * @type {object}
    * @default undefined
    */
   this.uniformMap = options.uniformMap;
@@ -81,7 +81,7 @@ function ComputeCommand(options) {
    * Whether the renderer resources will persist beyond this call. If not, they
    * will be destroyed after completion.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.persists = defaultValue(options.persists, false);
@@ -100,7 +100,7 @@ function ComputeCommand(options) {
    * reference to the command, and can be used to selectively execute commands
    * with {@link Scene#debugCommandFilter}.
    *
-   * @type {Object}
+   * @type {object}
    * @default undefined
    *
    * @see Scene#debugCommandFilter

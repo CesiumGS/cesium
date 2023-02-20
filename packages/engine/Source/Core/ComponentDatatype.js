@@ -7,14 +7,14 @@ import WebGLConstants from "./WebGLConstants.js";
  * WebGL component datatypes.  Components are intrinsics,
  * which form attributes, which form vertices.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const ComponentDatatype = {
   /**
    * 8-bit signed byte corresponding to <code>gl.BYTE</code> and the type
    * of an element in <code>Int8Array</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   BYTE: WebGLConstants.BYTE,
@@ -23,7 +23,7 @@ const ComponentDatatype = {
    * 8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
    * of an element in <code>Uint8Array</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   UNSIGNED_BYTE: WebGLConstants.UNSIGNED_BYTE,
@@ -32,7 +32,7 @@ const ComponentDatatype = {
    * 16-bit signed short corresponding to <code>SHORT</code> and the type
    * of an element in <code>Int16Array</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   SHORT: WebGLConstants.SHORT,
@@ -41,7 +41,7 @@ const ComponentDatatype = {
    * 16-bit unsigned short corresponding to <code>UNSIGNED_SHORT</code> and the type
    * of an element in <code>Uint16Array</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   UNSIGNED_SHORT: WebGLConstants.UNSIGNED_SHORT,
@@ -52,7 +52,7 @@ const ComponentDatatype = {
    *
    * @memberOf ComponentDatatype
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   INT: WebGLConstants.INT,
@@ -63,7 +63,7 @@ const ComponentDatatype = {
    *
    * @memberOf ComponentDatatype
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   UNSIGNED_INT: WebGLConstants.UNSIGNED_INT,
@@ -72,7 +72,7 @@ const ComponentDatatype = {
    * 32-bit floating-point corresponding to <code>FLOAT</code> and the type
    * of an element in <code>Float32Array</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   FLOAT: WebGLConstants.FLOAT,
@@ -84,7 +84,7 @@ const ComponentDatatype = {
    *
    * @memberOf ComponentDatatype
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @default 0x140A
    */
@@ -95,7 +95,7 @@ const ComponentDatatype = {
  * Returns the size, in bytes, of the corresponding datatype.
  *
  * @param {ComponentDatatype} componentDatatype The component datatype to get the size of.
- * @returns {Number} The size in bytes.
+ * @returns {number} The size in bytes.
  *
  * @exception {DeveloperError} componentDatatype is not a valid value.
  *
@@ -177,7 +177,7 @@ ComponentDatatype.fromTypedArray = function (array) {
  * Validates that the provided component datatype is a valid {@link ComponentDatatype}
  *
  * @param {ComponentDatatype} componentDatatype The component datatype to validate.
- * @returns {Boolean} <code>true</code> if the provided component datatype is a valid value; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the provided component datatype is a valid value; otherwise, <code>false</code>.
  *
  * @example
  * if (!Cesium.ComponentDatatype.validate(componentDatatype)) {
@@ -202,7 +202,7 @@ ComponentDatatype.validate = function (componentDatatype) {
  * Creates a typed array corresponding to component data type.
  *
  * @param {ComponentDatatype} componentDatatype The component data type.
- * @param {Number|Array} valuesOrLength The length of the array to create or an array.
+ * @param {number|Array} valuesOrLength The length of the array to create or an array.
  * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} A typed array.
  *
  * @exception {DeveloperError} componentDatatype is not a valid value.
@@ -253,8 +253,8 @@ ComponentDatatype.createTypedArray = function (
  *
  * @param {ComponentDatatype} componentDatatype The type of the view to create.
  * @param {ArrayBuffer} buffer The buffer storage to use for the view.
- * @param {Number} [byteOffset] The offset, in bytes, to the first element in the view.
- * @param {Number} [length] The number of elements in the view.
+ * @param {number} [byteOffset] The offset, in bytes, to the first element in the view.
+ * @param {number} [length] The number of elements in the view.
  * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} A typed array view of the buffer.
  *
  * @exception {DeveloperError} componentDatatype is not a valid value.
@@ -308,7 +308,7 @@ ComponentDatatype.createArrayBufferView = function (
 /**
  * Get the ComponentDatatype from its name.
  *
- * @param {String} name The name of the ComponentDatatype.
+ * @param {string} name The name of the ComponentDatatype.
  * @returns {ComponentDatatype} The ComponentDatatype.
  *
  * @exception {DeveloperError} name is not a valid value.

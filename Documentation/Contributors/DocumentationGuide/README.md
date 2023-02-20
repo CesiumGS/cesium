@@ -57,7 +57,7 @@ Consider one of the simplest functions in CesiumJS, `defined`:
  * @function
  *
  * @param {*} value The object.
- * @returns {Boolean} Returns true if the object is defined, returns false otherwise.
+ * @returns {boolean} Returns true if the object is defined, returns false otherwise.
  *
  * @example
  * if (Cesium.defined(positions)) {
@@ -88,7 +88,7 @@ This guide describes best practices for writing doc. For complete details on JSD
 - Use `[]` for optional parameters and include the default value, e.g.,
 
 ```javascript
-* @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+* @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
 
 ```
 
@@ -130,12 +130,12 @@ The CesiumJS classes in the `Type` column are links to their doc.
 Each property of an `options` parameter (see the [Coding Guide](https://github.com/CesiumGS/cesium/true/main/Documentation/Contributors/CodingGuide/README.md#options-parameters)) should be documented with a separate `@param` tag, e.g.,
 
 ```javascript
- * @param {Object} [options] Object with the following properties:
- * @param {Number} [options.length=10000000.0] The length of the axes in meters.
- * @param {Number} [options.width=2.0] The width of the axes in pixels.
+ * @param {object} [options] Object with the following properties:
+ * @param {number} [options.length=10000000.0] The length of the axes in meters.
+ * @param {number} [options.width=2.0] The width of the axes in pixels.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 matrix that defines the reference frame, i.e., origin plus axes, to visualize.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
- * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
 ```
 
 generates
@@ -168,7 +168,7 @@ Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, r
 /**
  * Computes a Matrix4 instance from a column-major order array.
  *
- * @param {Number[]} values The column-major order array.
+ * @param {number[]} values The column-major order array.
  * @param {Matrix4} [result] The object in which the result will be stored. If undefined a new instance will be created.
  * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
  */
@@ -287,7 +287,7 @@ function Cartesian3(x, y) {
     /**
      * The X component.
      *
-     * @type {Number}
+     * @type {number}
      * @default 0.0
      */
     this.x = defaultValue(x, 0.0);
@@ -295,25 +295,25 @@ function Cartesian3(x, y) {
     // ...
 ```
 
-- Use `@memberOf` when documenting property getter/setters, e.g.,
+- Use `@memberof` when documenting property getter/setters, e.g.,
 
 ```javascript
 Object.defineProperties(Entity.prototype, {
-    /**
-     * Gets or sets whether this entity should be displayed. When set to true,
-     * the entity is only displayed if the parent entity's show property is also true.
-     *
-     * @memberof Entity.prototype
-     * @type {Boolean}
-     */
-    show : {
-        get : function() {
-           // ...
-        },
-        set : function(value) {
-           // ...
-        }
+  /**
+   * Gets or sets whether this entity should be displayed. When set to true,
+   * the entity is only displayed if the parent entity's show property is also true.
+   *
+   * @memberof Entity.prototype
+   * @type {boolean}
+   */
+  show: {
+    get: function() {
+      // ...
     },
+    set: function(value) {
+      // ...
+    }
+  },
     // ...
 ```
 
@@ -321,19 +321,19 @@ Object.defineProperties(Entity.prototype, {
 
 ```javascript
 Object.defineProperties(Entity.prototype, {
-    /**
-     * Gets the unique ID associated with this object.
-     *
-     * @memberof Entity.prototype
-     * @type {String}
-     * @readonly
-     */
-    id : {
-        get : function() {
-            return this._id;
-        }
-    },
-    // ...
+  /**
+   * Gets the unique ID associated with this object.
+   *
+   * @memberof Entity.prototype
+   * @type {string}
+   * @readonly
+   */
+  id: {
+    get: function() {
+      return this._id;
+    }
+  },
+  // ...
 ```
 
 - The description for readonly properties should start with "Gets", and the description for read/write properties should start with "Gets or sets."
@@ -358,8 +358,8 @@ Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
  * Creates a Cartesian4 from four consecutive elements in an array.
  * @function
  *
- * @param {Number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
- * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
+ * @param {number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
+ * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
  * @param {Cartesian4} [result] The object on which to store the result.
  * @returns {Cartesian4}  The modified result parameter or a new Cartesian4 instance if one was not provided.
  *
@@ -399,13 +399,13 @@ Queue.prototype.sort = function (compareFunction) {
  *
  * @param {*} a An item in the array.
  * @param {*} b An item in the array.
- * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+ * @returns {number} Returns a negative value if <code>a</code> is less than <code>b</code>,
  *          a positive value if <code>a</code> is greater than <code>b</code>, or
  *          0 if <code>a</code> is equal to <code>b</code>.
  *
  * @example
  * function compareNumbers(a, b) {
- *     return a - b;
+ *   return a - b;
  * }
  */
 ```

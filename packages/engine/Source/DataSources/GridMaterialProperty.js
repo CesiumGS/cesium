@@ -16,9 +16,9 @@ const defaultLineThickness = new Cartesian2(1, 1);
  * A {@link MaterialProperty} that maps to grid {@link Material} uniforms.
  * @alias GridMaterialProperty
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the grid {@link Color}.
- * @param {Property|Number} [options.cellAlpha=0.1] A numeric Property specifying cell alpha values.
+ * @param {Property|number} [options.cellAlpha=0.1] A numeric Property specifying cell alpha values.
  * @param {Property|Cartesian2} [options.lineCount=new Cartesian2(8, 8)] A {@link Cartesian2} Property specifying the number of grid lines along each axis.
  * @param {Property|Cartesian2} [options.lineThickness=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the thickness of grid lines along each axis.
  * @param {Property|Cartesian2} [options.lineOffset=new Cartesian2(0.0, 0.0)] A {@link Cartesian2} Property specifying starting offset of grid lines along each axis.
@@ -53,7 +53,7 @@ Object.defineProperties(GridMaterialProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof GridMaterialProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -128,7 +128,7 @@ Object.defineProperties(GridMaterialProperty.prototype, {
  * Gets the {@link Material} type at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 GridMaterialProperty.prototype.getType = function (time) {
   return "Grid";
@@ -138,8 +138,8 @@ GridMaterialProperty.prototype.getType = function (time) {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 GridMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(result)) {
@@ -182,7 +182,7 @@ GridMaterialProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 GridMaterialProperty.prototype.equals = function (other) {
   return (

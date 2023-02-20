@@ -9,7 +9,7 @@ const defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
 const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 
 /**
- * @typedef {Object} GridImageryProvider.ConstructorOptions
+ * @typedef {object} GridImageryProvider.ConstructorOptions
  *
  * Initialization options for the GridImageryProvider constructor
  *
@@ -17,14 +17,14 @@ const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @property {Number} [cells=8] The number of grids cells.
+ * @property {number} [cells=8] The number of grids cells.
  * @property {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
  * @property {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
- * @property {Number} [glowWidth=6] The width of lines used for rendering the line glow effect.
+ * @property {number} [glowWidth=6] The width of lines used for rendering the line glow effect.
  * @property {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
- * @property {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @property {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
- * @property {Number} [canvasSize=256] The size of the canvas used for rendering.
+ * @property {number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @property {number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @property {number} [canvasSize=256] The size of the canvas used for rendering.
  */
 
 /**
@@ -43,7 +43,7 @@ function GridImageryProvider(options) {
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultAlpha = undefined;
@@ -52,7 +52,7 @@ function GridImageryProvider(options) {
    * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultNightAlpha = undefined;
@@ -61,7 +61,7 @@ function GridImageryProvider(options) {
    * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultDayAlpha = undefined;
@@ -70,7 +70,7 @@ function GridImageryProvider(options) {
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultBrightness = undefined;
@@ -79,7 +79,7 @@ function GridImageryProvider(options) {
    * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultContrast = undefined;
@@ -87,7 +87,7 @@ function GridImageryProvider(options) {
   /**
    * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultHue = undefined;
@@ -96,7 +96,7 @@ function GridImageryProvider(options) {
    * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultSaturation = undefined;
@@ -104,7 +104,7 @@ function GridImageryProvider(options) {
   /**
    * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultGamma = undefined;
@@ -168,7 +168,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * Gets the width of each tile, in pixels. This function should
    * not be called before {@link GridImageryProvider#ready} returns true.
    * @memberof GridImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -181,7 +181,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * Gets the height of each tile, in pixels.  This function should
    * not be called before {@link GridImageryProvider#ready} returns true.
    * @memberof GridImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -194,7 +194,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link GridImageryProvider#ready} returns true.
    * @memberof GridImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -207,7 +207,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * Gets the minimum level-of-detail that can be requested.  This function should
    * not be called before {@link GridImageryProvider#ready} returns true.
    * @memberof GridImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -274,7 +274,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GridImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -286,7 +286,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof GridImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -315,7 +315,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof GridImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -388,9 +388,9 @@ GridImageryProvider.prototype._createGridCanvas = function () {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -403,11 +403,11 @@ GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * Requests the image for a given tile.  This function should
  * not be called before {@link GridImageryProvider#ready} returns true.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLCanvasElement>} The resolved image as a Canvas DOM object.
+ * @returns {Promise<HTMLCanvasElement>} The resolved image as a Canvas DOM object.
  */
 GridImageryProvider.prototype.requestImage = function (x, y, level, request) {
   return Promise.resolve(this._canvas);
@@ -417,11 +417,11 @@ GridImageryProvider.prototype.requestImage = function (x, y, level, request) {
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
  * @return {undefined} Undefined since picking is not supported.
  */
 GridImageryProvider.prototype.pickFeatures = function (

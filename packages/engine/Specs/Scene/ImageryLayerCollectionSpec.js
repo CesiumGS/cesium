@@ -266,7 +266,7 @@ describe(
      *
      * @param {Ray} ray The ray to test for intersection.
      * @param {Scene} scene The scene.
-     * @return {Promise.<Boolean>}
+     * @return {Promise<boolean>}
      *
      * @private
      *

@@ -8,26 +8,26 @@ import defined from "./defined.js";
  * @alias Spherical
  * @constructor
  *
- * @param {Number} [clock=0.0] The angular coordinate lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
- * @param {Number} [cone=0.0] The angular coordinate measured from the positive z-axis and toward the negative z-axis.
- * @param {Number} [magnitude=1.0] The linear coordinate measured from the origin.
+ * @param {number} [clock=0.0] The angular coordinate lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
+ * @param {number} [cone=0.0] The angular coordinate measured from the positive z-axis and toward the negative z-axis.
+ * @param {number} [magnitude=1.0] The linear coordinate measured from the origin.
  */
 function Spherical(clock, cone, magnitude) {
   /**
    * The clock component.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.clock = defaultValue(clock, 0.0);
   /**
    * The cone component.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.cone = defaultValue(cone, 0.0);
   /**
    * The magnitude component.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.magnitude = defaultValue(magnitude, 1.0);
@@ -109,7 +109,7 @@ Spherical.normalize = function (spherical, result) {
  *
  * @param {Spherical} left The first Spherical to be compared.
  * @param {Spherical} right The second Spherical to be compared.
- * @returns {Boolean} true if the first spherical is equal to the second spherical, false otherwise.
+ * @returns {boolean} true if the first spherical is equal to the second spherical, false otherwise.
  */
 Spherical.equals = function (left, right) {
   return (
@@ -127,8 +127,8 @@ Spherical.equals = function (left, right) {
  *
  * @param {Spherical} left The first Spherical to be compared.
  * @param {Spherical} right The second Spherical to be compared.
- * @param {Number} [epsilon=0.0] The epsilon to compare against.
- * @returns {Boolean} true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
+ * @param {number} [epsilon=0.0] The epsilon to compare against.
+ * @returns {boolean} true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
  */
 Spherical.equalsEpsilon = function (left, right, epsilon) {
   epsilon = defaultValue(epsilon, 0.0);
@@ -146,7 +146,7 @@ Spherical.equalsEpsilon = function (left, right, epsilon) {
  * Returns true if this spherical is equal to the provided spherical, false otherwise.
  *
  * @param {Spherical} other The Spherical to be compared.
- * @returns {Boolean} true if this spherical is equal to the provided spherical, false otherwise.
+ * @returns {boolean} true if this spherical is equal to the provided spherical, false otherwise.
  */
 Spherical.prototype.equals = function (other) {
   return Spherical.equals(this, other);
@@ -166,8 +166,8 @@ Spherical.prototype.clone = function (result) {
  * Returns true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
  *
  * @param {Spherical} other The Spherical to be compared.
- * @param {Number} epsilon The epsilon to compare against.
- * @returns {Boolean} true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
+ * @param {number} epsilon The epsilon to compare against.
+ * @returns {boolean} true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
  */
 Spherical.prototype.equalsEpsilon = function (other, epsilon) {
   return Spherical.equalsEpsilon(this, other, epsilon);
@@ -176,7 +176,7 @@ Spherical.prototype.equalsEpsilon = function (other, epsilon) {
 /**
  * Returns a string representing this instance in the format (clock, cone, magnitude).
  *
- * @returns {String} A string representing this instance.
+ * @returns {string} A string representing this instance.
  */
 Spherical.prototype.toString = function () {
   return `(${this.clock}, ${this.cone}, ${this.magnitude})`;

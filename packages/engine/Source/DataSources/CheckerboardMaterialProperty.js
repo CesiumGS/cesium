@@ -15,7 +15,7 @@ const defaultRepeat = new Cartesian2(2.0, 2.0);
  * @alias CheckerboardMaterialProperty
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Property|Color} [options.evenColor=Color.WHITE] A Property specifying the first {@link Color}.
  * @param {Property|Color} [options.oddColor=Color.BLACK] A Property specifying the second {@link Color}.
  * @param {Property|Cartesian2} [options.repeat=new Cartesian2(2.0, 2.0)] A {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
@@ -42,7 +42,7 @@ Object.defineProperties(CheckerboardMaterialProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof CheckerboardMaterialProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -99,7 +99,7 @@ Object.defineProperties(CheckerboardMaterialProperty.prototype, {
  * Gets the {@link Material} type at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 CheckerboardMaterialProperty.prototype.getType = function (time) {
   return "Checkerboard";
@@ -109,8 +109,8 @@ CheckerboardMaterialProperty.prototype.getType = function (time) {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 CheckerboardMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(result)) {
@@ -137,7 +137,7 @@ CheckerboardMaterialProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 CheckerboardMaterialProperty.prototype.equals = function (other) {
   return (

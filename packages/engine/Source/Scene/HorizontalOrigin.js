@@ -8,7 +8,7 @@
  * <img src='Images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
  * </div>
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @see Billboard#horizontalOrigin
  * @see Label#horizontalOrigin
@@ -17,7 +17,7 @@ const HorizontalOrigin = {
   /**
    * The origin is at the horizontal center of the object.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   CENTER: 0,
@@ -25,7 +25,7 @@ const HorizontalOrigin = {
   /**
    * The origin is on the left side of the object.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LEFT: 1,
@@ -33,7 +33,7 @@ const HorizontalOrigin = {
   /**
    * The origin is on the right side of the object.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RIGHT: -1,

@@ -3,13 +3,13 @@ import WebGLConstants from "./WebGLConstants.js";
 /**
  * The type of a geometric primitive, i.e., points, lines, and triangles.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const PrimitiveType = {
   /**
    * Points primitive where each vertex (or index) is a separate point.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   POINTS: WebGLConstants.POINTS,
@@ -17,7 +17,7 @@ const PrimitiveType = {
   /**
    * Lines primitive where each two vertices (or indices) is a line segment.  Line segments are not necessarily connected.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LINES: WebGLConstants.LINES,
@@ -26,7 +26,7 @@ const PrimitiveType = {
    * Line loop primitive where each vertex (or index) after the first connects a line to
    * the previous vertex, and the last vertex implicitly connects to the first.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LINE_LOOP: WebGLConstants.LINE_LOOP,
@@ -34,7 +34,7 @@ const PrimitiveType = {
   /**
    * Line strip primitive where each vertex (or index) after the first connects a line to the previous vertex.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LINE_STRIP: WebGLConstants.LINE_STRIP,
@@ -42,7 +42,7 @@ const PrimitiveType = {
   /**
    * Triangles primitive where each three vertices (or indices) is a triangle.  Triangles do not necessarily share edges.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   TRIANGLES: WebGLConstants.TRIANGLES,
@@ -51,7 +51,7 @@ const PrimitiveType = {
    * Triangle strip primitive where each vertex (or index) after the first two connect to
    * the previous two vertices forming a triangle.  For example, this can be used to model a wall.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   TRIANGLE_STRIP: WebGLConstants.TRIANGLE_STRIP,
@@ -61,7 +61,7 @@ const PrimitiveType = {
    * the previous vertex and the first vertex forming a triangle.  For example, this can be used
    * to model a cone or circle.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   TRIANGLE_FAN: WebGLConstants.TRIANGLE_FAN,

@@ -7,7 +7,7 @@ import defaultValue from "../../Core/defaultValue.js";
  * Skins should only be initialized after all of the {@link ModelRuntimeNode}s have been instantiated
  * by the scene graph.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {ModelComponents.Skin} options.skin The corresponding skin components from the 3D model
  * @param {ModelSceneGraph} options.sceneGraph The scene graph this skin belongs to.
  *

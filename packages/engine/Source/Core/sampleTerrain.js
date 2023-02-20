@@ -18,9 +18,9 @@ import defined from "./defined.js";
  * @function sampleTerrain
  *
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
- * @param {Number} level The terrain level-of-detail from which to query terrain heights.
+ * @param {number} level The terrain level-of-detail from which to query terrain heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.
- * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
+ * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
  *
  * @see sampleTerrainMostDetailed
  *
@@ -50,8 +50,8 @@ function sampleTerrain(terrainProvider, level, positions) {
 }
 
 /**
- * @param {Array.<Object>} tileRequests The mutated list of requests, the first one will be attempted
- * @param {Array.<Promise<void>>} results The list to put the result promises into
+ * @param {object[]} tileRequests The mutated list of requests, the first one will be attempted
+ * @param {Array<Promise<void>>} results The list to put the result promises into
  * @returns {boolean} true if the request was made, and we are okay to attempt the next item immediately,
  *  or false if we were throttled and should wait awhile before retrying.
  *
@@ -97,8 +97,8 @@ function delay(ms) {
 /**
  * Recursively consumes all the tileRequests until the list has been emptied
  *  and a Promise of each result has been put into the results list
- * @param {Array.<Object>} tileRequests The list of requests desired to be made
- * @param {Array.<Promise<void>>} results The list to put all the result promises into
+ * @param {object[]} tileRequests The list of requests desired to be made
+ * @param {Array<Promise<void>>} results The list to put all the result promises into
  * @returns {Promise<void>} A promise which resolves once all requests have been started
  *
  * @private
@@ -176,7 +176,7 @@ function doSampling(terrainProvider, level, positions) {
  * @param {Cartographic} position The position to interpolate for and assign the height value to
  * @param {TerrainData} terrainData
  * @param {Rectangle} rectangle
- * @returns {Boolean} If the height was actually interpolated and assigned
+ * @returns {boolean} If the height was actually interpolated and assigned
  * @private
  */
 function interpolateAndAssignHeight(position, terrainData, rectangle) {

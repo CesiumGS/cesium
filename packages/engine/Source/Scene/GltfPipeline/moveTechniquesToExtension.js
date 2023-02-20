@@ -7,8 +7,8 @@ import defined from "../../Core/defined.js";
 /**
  * Move glTF 1.0 material techniques to glTF 2.0 KHR_techniques_webgl extension.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @returns {Object} The updated glTF asset.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @returns {object} The updated glTF asset.
  *
  * @private
  */

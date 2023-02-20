@@ -42,10 +42,10 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
  * @augments ResourceLoader
  * @private
  *
- * @param {Object} options An object containing the following properties
+ * @param {object} options An object containing the following properties
  * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
- * @param {Number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
- * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
+ * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
 function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -86,7 +86,7 @@ Object.defineProperties(PntsLoader.prototype, {
    *
    * @memberof PntsLoader.prototype
    *
-   * @type {Promise.<PntsLoader>|undefined}
+   * @type {Promise<PntsLoader>|undefined}
    * @readonly
    * @private
    */
@@ -100,7 +100,7 @@ Object.defineProperties(PntsLoader.prototype, {
    *
    * @memberof PntsLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -144,7 +144,7 @@ Object.defineProperties(PntsLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<PntsLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<PntsLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 PntsLoader.prototype.load = function () {

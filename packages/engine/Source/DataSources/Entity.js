@@ -61,14 +61,14 @@ function createPropertyTypeDescriptor(name, Type) {
 }
 
 /**
- * @typedef {Object} Entity.ConstructorOptions
+ * @typedef {object} Entity.ConstructorOptions
  *
  * Initialization options for the Entity constructor
  *
- * @property {String} [id] A unique identifier for this object. If none is provided, a GUID is generated.
- * @property {String} [name] A human readable name to display to users. It does not have to be unique.
+ * @property {string} [id] A unique identifier for this object. If none is provided, a GUID is generated.
+ * @property {string} [name] A human readable name to display to users. It does not have to be unique.
  * @property {TimeIntervalCollection} [availability] The availability, if any, associated with this object.
- * @property {Boolean} [show] A boolean value indicating if the entity and its children are displayed.
+ * @property {boolean} [show] A boolean value indicating if the entity and its children are displayed.
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
  * @property {PositionProperty | Cartesian3} [position] A Property specifying the entity position.
  * @property {Property} [orientation] A Property specifying the entity orientation.
@@ -88,7 +88,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {PointGraphics | PointGraphics.ConstructorOptions} [point] A point to associate with this entity.
  * @property {PolygonGraphics | PolygonGraphics.ConstructorOptions} [polygon] A polygon to associate with this entity.
  * @property {PolylineGraphics | PolylineGraphics.ConstructorOptions} [polyline] A polyline to associate with this entity.
- * @property {PropertyBag | Object.<string,*>} [properties] Arbitrary properties to associate with this entity.
+ * @property {PropertyBag | Object<string,*>} [properties] Arbitrary properties to associate with this entity.
  * @property {PolylineVolumeGraphics | PolylineVolumeGraphics.ConstructorOptions} [polylineVolume] A polylineVolume to associate with this entity.
  * @property {RectangleGraphics | RectangleGraphics.ConstructorOptions} [rectangle] A rectangle to associate with this entity.
  * @property {WallGraphics | WallGraphics.ConstructorOptions} [wall] A wall to associate with this entity.
@@ -233,7 +233,7 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets the unique ID associated with this object.
    * @memberof Entity.prototype
-   * @type {String}
+   * @type {string}
    */
   id: {
     get: function () {
@@ -256,14 +256,14 @@ Object.defineProperties(Entity.prototype, {
    * Gets or sets the name of the object.  The name is intended for end-user
    * consumption and does not need to be unique.
    * @memberof Entity.prototype
-   * @type {String|undefined}
+   * @type {string|undefined}
    */
   name: createRawPropertyDescriptor("name"),
   /**
    * Gets or sets whether this entity should be displayed. When set to true,
    * the entity is only displayed if the parent entity's show property is also true.
    * @memberof Entity.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -295,7 +295,7 @@ Object.defineProperties(Entity.prototype, {
    * Gets whether this entity is being displayed, taking into account
    * the visibility of any ancestor entities.
    * @memberof Entity.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isShowing: {
     get: function () {
@@ -495,7 +495,7 @@ Object.defineProperties(Entity.prototype, {
  * Given a time, returns true if this object should have data during that time.
  *
  * @param {JulianDate} time The time to check availability for.
- * @returns {Boolean} true if the object should have data during the provided time, false otherwise.
+ * @returns {boolean} true if the object should have data during the provided time, false otherwise.
  */
 Entity.prototype.isAvailable = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -513,7 +513,7 @@ Entity.prototype.isAvailable = function (time) {
  * observed with {@link Entity#definitionChanged} and composited
  * with {@link CompositeEntityCollection}
  *
- * @param {String} propertyName The name of the property to add.
+ * @param {string} propertyName The name of the property to add.
  *
  * @exception {DeveloperError} "propertyName" is a reserved property name.
  * @exception {DeveloperError} "propertyName" is already a registered property.
@@ -546,7 +546,7 @@ Entity.prototype.addProperty = function (propertyName) {
 /**
  * Removed a property previously added with addProperty.
  *
- * @param {String} propertyName The name of the property to remove.
+ * @param {string} propertyName The name of the property to remove.
  *
  * @exception {DeveloperError} "propertyName" is a reserved property name.
  * @exception {DeveloperError} "propertyName" is not a registered property.
@@ -732,7 +732,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
  * instead be rendered as if height is 0.
  *
  * @param {Scene} scene The current scene.
- * @returns {Boolean} Whether or not the current scene supports materials for entities on terrain.
+ * @returns {boolean} Whether or not the current scene supports materials for entities on terrain.
  */
 Entity.supportsMaterialsforEntitiesOnTerrain = function (scene) {
   return GroundPrimitive.supportsMaterials(scene);
@@ -744,7 +744,7 @@ Entity.supportsMaterialsforEntitiesOnTerrain = function (scene) {
  * the provided heights and using the `arcType` parameter instead of clamped to the ground.
  *
  * @param {Scene} scene The current scene.
- * @returns {Boolean} Whether or not the current scene supports polylines on terrain or 3D TIles.
+ * @returns {boolean} Whether or not the current scene supports polylines on terrain or 3D TIles.
  */
 Entity.supportsPolylinesOnTerrain = function (scene) {
   return GroundPolylinePrimitive.isSupported(scene);

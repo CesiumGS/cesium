@@ -19,7 +19,7 @@ const diffScratch = new Cartesian3();
  * @alias BoxOutlineGeometry
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
  * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
  *
@@ -62,7 +62,7 @@ function BoxOutlineGeometry(options) {
 /**
  * Creates an outline of a cube centered at the origin given its dimensions.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
  * @returns {BoxOutlineGeometry}
  *
@@ -130,7 +130,7 @@ BoxOutlineGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 1;
 
@@ -138,10 +138,10 @@ BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 1;
  * Stores the provided instance into the provided array.
  *
  * @param {BoxOutlineGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 BoxOutlineGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -172,8 +172,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {BoxOutlineGeometry} [result] The object into which to store the result.
  * @returns {BoxOutlineGeometry} The modified result parameter or a new BoxOutlineGeometry instance if one was not provided.
  */
