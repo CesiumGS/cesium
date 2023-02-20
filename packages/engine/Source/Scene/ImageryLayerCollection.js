@@ -79,11 +79,11 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
  *
  * @example
  * const imageryLayer = Cesium.ImageryLayer.fromWorldImagery();
- * scene.imageryLayers.addImageryProvider(imageryLayer);
+ * scene.imageryLayers.add(imageryLayer);
  *
  * @example
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
- * scene.imageryLayers.addImageryProvider(imageryLayer);
+ * scene.imageryLayers.add(imageryLayer);
  */
 ImageryLayerCollection.prototype.add = function (layer, index) {
   const hasIndex = defined(index);

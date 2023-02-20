@@ -362,7 +362,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     await expectAsync(
       BingMapsImageryProvider.fromUrl("http://fake.fake.invalid/")
     ).toBeRejectedWithDeveloperError(
-      "key is required, actual value was undefined"
+      "options.key is required, actual value was undefined"
     );
   });
 

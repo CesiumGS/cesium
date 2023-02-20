@@ -18,6 +18,7 @@ import {
   NeverTileDiscardPolicy,
   QuadtreeTile,
   SingleTileImageryProvider,
+  TileCoordinatesImageryProvider,
   UrlTemplateImageryProvider,
   WebMapServiceImageryProvider,
 } from "../../index.js";
@@ -63,6 +64,55 @@ describe(
     CustomDiscardPolicy.prototype.shouldDiscardImage = function (image) {
       return this.shouldDiscard;
     };
+
+    it("constructs with default options", function () {
+      const provider = new TileCoordinatesImageryProvider();
+      const layer = new ImageryLayer(provider);
+
+      expect(layer.imageryProvider).toBe(provider);
+      expect(layer.show).toBeTrue();
+      expect(layer.errorEvent).toBeDefined();
+      expect(layer.readyEvent).toBeDefined();
+      expect(layer.ready).toBeTrue();
+    });
+
+    it("fromProviderAsync throws without provider promise", function () {
+      expect(() => ImageryLayer.fromProviderAsync()).toThrowDeveloperError(
+        "expected"
+      );
+    });
+
+    it("readyEvent is raised when asynchronous provider become ready", async function () {
+      const providerPromise = SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
+      );
+      const layer = ImageryLayer.fromProviderAsync(providerPromise);
+      expect(layer.ready).toBe(false);
+
+      const spyListener = jasmine.createSpy("listener");
+      layer.readyEvent.addEventListener(spyListener);
+
+      await providerPromise;
+
+      expect(spyListener).toHaveBeenCalled();
+      expect(layer.ready).toBeTrue();
+      expect(layer.imageryProvider).toBeInstanceOf(SingleTileImageryProvider);
+    });
+
+    it("errorEvent is raised when asynchronous provider cannot be constructed", async function () {
+      const providerPromise = Promise.reject();
+      const layer = ImageryLayer.fromProviderAsync(providerPromise);
+      expect(layer.ready).toBe(false);
+
+      const spyListener = jasmine.createSpy("listener");
+      layer.errorEvent.addEventListener(spyListener);
+
+      await expectAsync(providerPromise).toBeRejected();
+
+      expect(spyListener).toHaveBeenCalled();
+      expect(layer.ready).toBeFalse();
+      expect(layer.imageryProvider).toBeUndefined();
+    });
 
     it("discards tiles when the ImageryProviders discard policy says to do so", function () {
       Resource._Implementations.createImage = function (
