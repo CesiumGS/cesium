@@ -13,7 +13,7 @@ import gulp from "gulp";
 import rimraf from "rimraf";
 import { rollup } from "rollup";
 import rollupPluginStripPragma from "rollup-plugin-strip-pragma";
-import { terser } from "rollup-plugin-terser";
+import terser from "@rollup/plugin-terser";
 import rollupCommonjs from "@rollup/plugin-commonjs";
 import rollupResolve from "@rollup/plugin-node-resolve";
 import streamToPromise from "stream-to-promise";
