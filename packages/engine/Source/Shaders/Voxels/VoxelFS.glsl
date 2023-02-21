@@ -34,7 +34,8 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
     vec4 entry = shapeIntersection.entry.w >= voxelIntersection.entry.w ? shapeIntersection.entry : voxelIntersection.entry;
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    return vec4(normalize(entry.xyz), exit - entry.w);
+    float dt = (exit - entry.w) * RAY_SCALE;
+    return vec4(normalize(entry.xyz), dt);
 #else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     return vec4(viewRay.dir, u_stepSize / dimAtLevel);
@@ -64,7 +65,7 @@ void main()
         discard;
     }
 
-    float currT = shapeIntersection.entry.w + RAY_SHIFT;
+    float currT = shapeIntersection.entry.w * RAY_SCALE;
     float endT = shapeIntersection.exit.w;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
     vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
@@ -140,7 +141,7 @@ void main()
                     break;
                 } else {
                     // Found another intersection. Resume raymarching there
-                    currT = shapeIntersection.entry.w;
+                    currT = shapeIntersection.entry.w * RAY_SCALE;
                     endT = shapeIntersection.exit.w;
                     positionUv = viewPosUv + currT * viewDirUv;
                 }
