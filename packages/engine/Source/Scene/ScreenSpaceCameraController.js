@@ -2188,7 +2188,13 @@ function zoom3D(controller, startPosition, movement) {
     camera.position,
     zoom3DCartographic
   ).height;
-  if (height < controller._minimumPickingTerrainHeight && !inertiaMovement) {
+
+  const inertiaMovementApproachingGround = height < 5;
+
+  if (
+    height < controller._minimumPickingTerrainHeight ||
+    (inertiaMovement && height < inertiaMovementApproachingGround)
+  ) {
     intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
   }
 
