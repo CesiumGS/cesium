@@ -6,6 +6,10 @@
 
 #### Major Announcements :loudspeaker:
 
+##### Additions :tada:
+
+- Added smooth zoom with mouse wheel. [#11062](https://github.com/CesiumGS/cesium/pull/11062)
+
 ##### Fixes :wrench:
 
 - Fixed Primitive.getGeometryInstanceAttributes cache acquisition speed. [#11066](https://github.com/CesiumGS/cesium/issues/11066)
