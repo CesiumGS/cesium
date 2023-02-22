@@ -22,7 +22,14 @@ import mergeStream from "merge-stream";
 import streamToPromise from "stream-to-promise";
 import karma from "karma";
 import yargs from "yargs";
-import aws from "aws-sdk";
+import {
+  S3Client,
+  DeleteObjectsCommand,
+  HeadObjectCommand,
+  ListObjectsCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import mime from "mime";
 import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
@@ -778,7 +785,8 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   const sandcastlePrefix = "sandcastle/";
   const cesiumViewerPrefix = "cesiumjs/cesium-viewer/";
 
-  const s3 = new aws.S3({
+  const s3Client = new S3Client({
+    region: "us-east-1",
     maxRetries: 10,
     retryDelayOptions: {
       base: 500,
@@ -792,7 +800,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   const errors = [];
 
   if (!isProduction) {
-    await listAll(s3, bucketName, `${uploadDirectory}/`, existingBlobs);
+    await listAll(s3Client, bucketName, `${uploadDirectory}/`, existingBlobs);
   }
 
   async function getContents(file, blobName) {
@@ -835,13 +843,11 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     existingBlobs.splice(index, 1);
 
     // get file info
-    const data = await s3
-      .headObject({
-        Bucket: bucketName,
-        Key: blobName,
-      })
-      .promise();
-
+    const headObjectCommand = new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: blobName,
+    });
+    const data = await s3Client.send(headObjectCommand);
     const hash = createHash("md5").update(content).digest("hex");
 
     if (
@@ -895,13 +901,15 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       CacheControl: cacheControl,
     };
 
+    const putObjectCommand = new PutObjectCommand(params);
+
     if (dryRun) {
       uploaded++;
       return;
     }
 
     try {
-      await s3.putObject(params).promise();
+      await s3Client.send(putObjectCommand);
       uploaded++;
     } catch (e) {
       errors.push(e);
@@ -947,7 +955,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       uploadSandcastle(),
       uploadRefDoc(),
       uploadCesiumViewer(),
-      deployCesiumRelease(bucketName, s3, errors),
+      deployCesiumRelease(bucketName, s3Client, errors),
     ];
   } else {
     const files = await globby(
@@ -1007,23 +1015,23 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       batches.push(objectsToDelete);
 
       const deleteObjects = async (objects) => {
+        const deleteObjectsCommand = new DeleteObjectsCommand({
+          Bucket: bucketName,
+          Delete: {
+            Objects: objects,
+          },
+        });
+
         try {
           if (!dryRun) {
-            await s3
-              .deleteObjects({
-                Bucket: bucketName,
-                Delete: {
-                  Objects: objects,
-                },
-              })
-              .promise();
-          }
-
-          if (verbose) {
-            console.log(`Cleaned ${objects.length} files.`);
+            await s3Client.send(deleteObjectsCommand);
           }
         } catch (e) {
           errors.push(e);
+        }
+
+        if (verbose) {
+          console.log(`Cleaned ${objects.length} files.`);
         }
       };
 
@@ -1040,7 +1048,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   return Promise.reject("There was an error while deploying Cesium");
 }
 
-async function deployCesiumRelease(bucketName, s3, errors) {
+async function deployCesiumRelease(bucketName, s3Client, errors) {
   const releaseDir = "cesiumjs/releases";
   const quiet = process.env.TRAVIS;
 
@@ -1068,12 +1076,11 @@ async function deployCesiumRelease(bucketName, s3, errors) {
       url: body.assets[0].browser_download_url,
     };
 
-    await s3
-      .headObject({
-        Bucket: bucketName,
-        Key: posix.join(releaseDir, release.tag, "cesium.zip"),
-      })
-      .promise();
+    const headObjectCommand = new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: posix.join(releaseDir, release.tag, "cesium.zip"),
+    });
+    await s3Client.send(headObjectCommand);
     console.log(
       `Cesium version ${release.tag} up to date. Skipping release deployment.`
     );
@@ -1084,7 +1091,7 @@ async function deployCesiumRelease(bucketName, s3, errors) {
       const data = await download(release.url);
       // upload and unzip contents
       const key = posix.join(releaseDir, release.tag, "cesium.zip");
-      await uploadObject(bucketName, s3, key, data, quiet);
+      await uploadObject(bucketName, s3Client, key, data, quiet);
       const files = await decompress(data);
       const limit = pLimit(5);
       return Promise.all(
@@ -1097,7 +1104,7 @@ async function deployCesiumRelease(bucketName, s3, errors) {
 
             // Upload to release directory
             const key = posix.join(releaseDir, release.tag, file.path);
-            return uploadObject(bucketName, s3, key, file.data, quiet);
+            return uploadObject(bucketName, s3Client, key, file.data, quiet);
           });
         })
       );
@@ -1108,20 +1115,22 @@ async function deployCesiumRelease(bucketName, s3, errors) {
   }
 }
 
-function uploadObject(bucketName, s3, key, contents, quiet) {
+async function uploadObject(bucketName, s3Client, key, contents, quiet) {
   if (!quiet) {
     console.log(`Uploading ${key}...`);
   }
 
-  return s3
-    .upload({
+  const upload = new Upload({
+    client: s3Client,
+    params: {
       Bucket: bucketName,
       Key: key,
       Body: contents,
       ContentType: mime.getType(key) || undefined,
       CacheControl: "public, max-age=1800",
-    })
-    .promise();
+    },
+  });
+  return upload.done();
 }
 
 function getMimeType(filename) {
@@ -1165,15 +1174,14 @@ function getMimeType(filename) {
 }
 
 // get all files currently in bucket asynchronously
-async function listAll(s3, bucketName, prefix, files, marker) {
-  const data = await s3
-    .listObjects({
-      Bucket: bucketName,
-      MaxKeys: 1000,
-      Prefix: prefix,
-      Marker: marker,
-    })
-    .promise();
+async function listAll(s3Client, bucketName, prefix, files, marker) {
+  const listObjectsCommand = new ListObjectsCommand({
+    Bucket: bucketName,
+    MaxKeys: 1000,
+    Prefix: prefix,
+    Marker: marker,
+  });
+  const data = await s3Client.send(listObjectsCommand);
   const items = data.Contents;
   for (let i = 0; i < items.length; i++) {
     files.push(items[i].Key);
@@ -1181,7 +1189,13 @@ async function listAll(s3, bucketName, prefix, files, marker) {
 
   if (data.IsTruncated) {
     // get next page of results
-    return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
+    return listAll(
+      s3Client,
+      bucketName,
+      prefix,
+      files,
+      files[files.length - 1]
+    );
   }
 }
 
@@ -2200,7 +2214,7 @@ async function buildCesiumViewer() {
   };
   config.format = "iife";
   config.inject = ["Apps/CesiumViewer/index.js"];
-  config.external = ["https", "http", "zlib"];
+  config.external = ["https", "http", "url", "zlib"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
   config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones

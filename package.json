@@ -55,9 +55,10 @@
     "@cesium/widgets": "2.0.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.276.0",
+    "@aws-sdk/lib-storage": "^3.276.0",
     "@rollup/plugin-commonjs": "^23.0.5",
     "@rollup/plugin-node-resolve": "^15.0.1",
-    "aws-sdk": "^2.1276.0",
     "chokidar": "^3.5.3",
     "cloc": "^2.8.0",
     "compression": "^1.7.4",
