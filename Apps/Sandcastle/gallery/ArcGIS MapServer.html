@@ -32,10 +32,19 @@
       window.startup = function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        // An ArcGIS Access Token is required to authenticate requests to an ArcGIS Image Tile service.
+        // To access secure ArcGIS resources, you need to create an ArcGIS developer account at https://developers.arcgis.com/,
+        // then implement an authentication method to obtain an access token. See https://developers.arcgis.com/documentation/mapping-apis-and-services/security
+
+        //The access token can be assigned globally:
+        //Cesium.ArcGISMapServiceWorldImagery.defaultAccessToken = <token>
+        //or as a token parameter when creating the ArcGISMapServeImageryProvider.
         const viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
             url:
-              "https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/",
+              "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
+            //token: "<token>",
+            basemap_id: "satellite",
           }),
         });
         //Sandcastle_End

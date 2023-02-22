@@ -15,17 +15,20 @@ import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
+import ArcGISMapServiceWorldImagery from "./ArcGISMapServiceWorldImagery.js";
+import ArcGISMapServiceWorldOcean from "./ArcGISMapServiceWorldOcean.js";
+import ArcGISMapServiceWorldHillshade from "./ArcGISMapServiceWorldHillshade.js";
 import DiscardMissingTileImagePolicy from "./DiscardMissingTileImagePolicy.js";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
- * @typedef {object} ArcGisMapServerImageryProvider.ConstructorOptions
+ * @typedef {Object} ArcGisMapServerImageryProvider.ConstructorOptions
  *
  * Initialization options for the ArcGisMapServerImageryProvider constructor
  *
- * @property {Resource|string} url The URL of the ArcGIS MapServer service.
- * @property {string} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
+ * @property {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @property {String} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  If this value is not specified, a default
  *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -37,11 +40,10 @@ import ImageryProvider from "./ImageryProvider.js";
  *        these defaults should be correct tile discarding for a standard ArcGIS Server.  To ensure
  *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
  *        parameter.
- * @property {boolean} [usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
- *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
- *        'export' service is used.
- * @property {string} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
- * @property {boolean} [enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
+ * @property {Boolean} [usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
+ *        tiles are used if they are available. Exporting Tiles is not supported with this service.
+ * @property {String} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
+ * @property {Boolean} [enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
  *        the Identify service on the MapServer and return the features included in the response.  If false,
  *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
  *        without communicating with the server.  Set this property to false if you don't want this provider's features to
@@ -53,11 +55,14 @@ import ImageryProvider from "./ImageryProvider.js";
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
- * @property {number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
- * @property {number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
- * @property {number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
  *                                        a tiled server.
+ * @property {string} [basemap_id] The well known id of the ArcGIS BaseMap Layer. Use of these basemaps requires an ArcGIS Developer Account {@link href="https://developers.arcgis.com/"}.
+ *
+ *
  */
 
 /**
@@ -81,11 +86,15 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * @example
  * const esri = new Cesium.ArcGisMapServerImageryProvider({
- *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+ *     url : 'https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer'
+ *     token: 'ArcGIS Access Token'
  * });
  *
  * @see {@link https://developers.arcgis.com/rest/|ArcGIS Server REST API}
- * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+ * @see {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token }
+ * is required to authenticate requests to an ArcGIS Image Tile service.
+ * To access secure ArcGIS resources, you need to create an ArcGIS developer
+ * account or an ArcGIS online account, then implement an authentication method to obtain an access token.
  */
 function ArcGisMapServerImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -100,7 +109,7 @@ function ArcGisMapServerImageryProvider(options) {
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultAlpha = undefined;
@@ -109,7 +118,7 @@ function ArcGisMapServerImageryProvider(options) {
    * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultNightAlpha = undefined;
@@ -118,7 +127,7 @@ function ArcGisMapServerImageryProvider(options) {
    * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultDayAlpha = undefined;
@@ -127,7 +136,7 @@ function ArcGisMapServerImageryProvider(options) {
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultBrightness = undefined;
@@ -136,7 +145,7 @@ function ArcGisMapServerImageryProvider(options) {
    * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultContrast = undefined;
@@ -144,7 +153,7 @@ function ArcGisMapServerImageryProvider(options) {
   /**
    * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultHue = undefined;
@@ -153,7 +162,7 @@ function ArcGisMapServerImageryProvider(options) {
    * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultSaturation = undefined;
@@ -161,7 +170,7 @@ function ArcGisMapServerImageryProvider(options) {
   /**
    * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
    *
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultGamma = undefined;
@@ -184,6 +193,72 @@ function ArcGisMapServerImageryProvider(options) {
 
   const resource = Resource.createIfNeeded(options.url);
   resource.appendForwardSlash();
+
+  let accessToken;
+  switch (options.basemap_id) {
+    case "satellite":
+      {
+        accessToken = defaultValue(
+          options.token,
+          ArcGISMapServiceWorldImagery.defaultAccessToken
+        );
+        const server = Resource.createIfNeeded(
+          defaultValue(options.url, ArcGISMapServiceWorldImagery.defaultServer)
+        );
+        server.appendForwardSlash();
+        const defaultTokenCredit = ArcGISMapServiceWorldImagery.getDefaultTokenCredit(
+          accessToken
+        );
+        if (defined(defaultTokenCredit)) {
+          this._credit = Credit.clone(defaultTokenCredit);
+        }
+      }
+      break;
+    case "oceans":
+      {
+        accessToken = defaultValue(
+          options.token,
+          ArcGISMapServiceWorldOcean.defaultAccessToken
+        );
+        const server = Resource.createIfNeeded(
+          defaultValue(options.url, ArcGISMapServiceWorldOcean.defaultServer)
+        );
+        server.appendForwardSlash();
+        const defaultTokenCredit = ArcGISMapServiceWorldOcean.getDefaultTokenCredit(
+          accessToken
+        );
+        if (defined(defaultTokenCredit)) {
+          this._credit = Credit.clone(defaultTokenCredit);
+        }
+      }
+      break;
+    case "topo-vector":
+      {
+        accessToken = defaultValue(
+          options.token,
+          ArcGISMapServiceWorldHillshade.defaultAccessToken
+        );
+        const server = Resource.createIfNeeded(
+          defaultValue(
+            options.url,
+            ArcGISMapServiceWorldHillshade.defaultServer
+          )
+        );
+        server.appendForwardSlash();
+        const defaultTokenCredit = ArcGISMapServiceWorldHillshade.getDefaultTokenCredit(
+          accessToken
+        );
+        if (defined(defaultTokenCredit)) {
+          this._credit = Credit.clone(defaultTokenCredit);
+        }
+      }
+      break;
+    default:
+  }
+
+  if (!defined(options.token) && defined(accessToken)) {
+    options.token = accessToken;
+  }
 
   if (defined(options.token)) {
     resource.setQueryParameters({
@@ -212,14 +287,13 @@ function ArcGisMapServerImageryProvider(options) {
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
-  this._credit = credit;
 
   /**
    * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
    * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
    * {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
    * without communicating with the server.
-   * @type {boolean}
+   * @type {Boolean}
    * @default true
    */
   this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
@@ -227,16 +301,14 @@ function ArcGisMapServerImageryProvider(options) {
   this._errorEvent = new Event();
 
   this._ready = false;
+  const that = this;
 
   // Grab the details of this MapServer.
-  const that = this;
   let metadataError;
 
   function metadataSuccess(data) {
     const tileInfo = data.tileInfo;
-    if (!defined(tileInfo)) {
-      that._useTiles = false;
-    } else {
+    if (defined(tileInfo)) {
       that._tileWidth = tileInfo.rows;
       that._tileHeight = tileInfo.cols;
 
@@ -357,10 +429,26 @@ function ArcGisMapServerImageryProvider(options) {
       }
 
       that._useTiles = true;
+    } else {
+      const message = `The service does not have any Pre Cached Tiles or the required tileInfo resources and is not supported.`;
+      metadataError = TileProviderError.reportError(
+        metadataError,
+        that,
+        that._errorEvent,
+        message,
+        undefined,
+        undefined,
+        undefined
+      );
+      return Promise.reject(new RuntimeError(message));
     }
 
-    if (defined(data.copyrightText) && data.copyrightText.length > 0) {
-      that._credit = new Credit(data.copyrightText);
+    if (
+      defined(data.copyrightText) &&
+      data.copyrightText.length > 0 &&
+      !defined(that._credit)
+    ) {
+      that._credit = new Credit(data.copyrightText, true);
     }
 
     that._ready = true;
@@ -384,10 +472,10 @@ function ArcGisMapServerImageryProvider(options) {
   function requestMetadata() {
     const resource = that._resource.getDerivedResource({
       queryParameters: {
-        f: "json",
+        f: "pjson",
       },
     });
-    return resource.fetchJsonp().then(metadataSuccess).catch(metadataFailure);
+    return resource.fetchJson().then(metadataSuccess).catch(metadataFailure);
   }
 
   if (this._useTiles) {
@@ -405,42 +493,7 @@ function buildImageResource(imageryProvider, x, y, level, request) {
       url: `tile/${level}/${y}/${x}`,
       request: request,
     });
-  } else {
-    const nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(
-      x,
-      y,
-      level
-    );
-    const bbox = `${nativeRectangle.west},${nativeRectangle.south},${nativeRectangle.east},${nativeRectangle.north}`;
-
-    const query = {
-      bbox: bbox,
-      size: `${imageryProvider._tileWidth},${imageryProvider._tileHeight}`,
-      format: "png32",
-      transparent: true,
-      f: "image",
-    };
-
-    if (
-      imageryProvider._tilingScheme.projection instanceof GeographicProjection
-    ) {
-      query.bboxSR = 4326;
-      query.imageSR = 4326;
-    } else {
-      query.bboxSR = 3857;
-      query.imageSR = 3857;
-    }
-    if (imageryProvider.layers) {
-      query.layers = `show:${imageryProvider.layers}`;
-    }
-
-    resource = imageryProvider._resource.getDerivedResource({
-      url: "export",
-      request: request,
-      queryParameters: query,
-    });
   }
-
   return resource;
 }
 
@@ -448,7 +501,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the URL of the ArcGIS MapServer.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {string}
+   * @type {String}
    * @readonly
    */
   url: {
@@ -460,7 +513,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the ArcGIS token used to authenticate with the ArcGis MapServer service.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {string}
+   * @type {String}
    * @readonly
    */
   token: {
@@ -485,7 +538,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * Gets the width of each tile, in pixels. This function should
    * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {number}
+   * @type {Number}
    * @readonly
    */
   tileWidth: {
@@ -506,7 +559,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * Gets the height of each tile, in pixels.  This function should
    * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {number}
+   * @type {Number}
    * @readonly
    */
   tileHeight: {
@@ -527,7 +580,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {number|undefined}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -548,7 +601,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * Gets the minimum level-of-detail that can be requested.  This function should
    * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {number}
+   * @type {Number}
    * @readonly
    */
   minimumLevel: {
@@ -647,7 +700,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {boolean}
+   * @type {Boolean}
    * @readonly
    */
   ready: {
@@ -659,7 +712,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Promise<boolean>}
+   * @type {Promise.<Boolean>}
    * @readonly
    */
   readyPromise: {
@@ -688,7 +741,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * not have pre-cached tiles.
    * @memberof ArcGisMapServerImageryProvider.prototype
    *
-   * @type {boolean}
+   * @type {Boolean}
    * @readonly
    * @default true
    */
@@ -706,7 +759,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * and texture upload time are reduced.
    * @memberof ArcGisMapServerImageryProvider.prototype
    *
-   * @type {boolean}
+   * @type {Boolean}
    * @readonly
    * @default true
    */
@@ -720,7 +773,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * Gets the comma-separated list of layer IDs to show.
    * @memberof ArcGisMapServerImageryProvider.prototype
    *
-   * @type {string}
+   * @type {String}
    */
   layers: {
     get: function () {
@@ -732,9 +785,9 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {number} x The tile X coordinate.
- * @param {number} y The tile Y coordinate.
- * @param {number} level The tile level;
+ * @param {Number} x The tile X coordinate.
+ * @param {Number} y The tile Y coordinate.
+ * @param {Number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -751,11 +804,11 @@ ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
  * Requests the image for a given tile.  This function should
  * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
  *
- * @param {number} x The tile X coordinate.
- * @param {number} y The tile Y coordinate.
- * @param {number} level The tile level.
+ * @param {Number} x The tile X coordinate.
+ * @param {Number} y The tile Y coordinate.
+ * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
@@ -785,12 +838,12 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
      * Asynchronously determines what features, if any, are located at a given longitude and latitude within
      * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
      *
-     * @param {number} x The tile X coordinate.
-     * @param {number} y The tile Y coordinate.
-     * @param {number} level The tile level.
-     * @param {number} longitude The longitude at which to pick features.
-     * @param {number} latitude  The latitude at which to pick features.
-     * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Number} longitude The longitude at which to pick features.
+     * @param {Number} latitude  The latitude at which to pick features.
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *
