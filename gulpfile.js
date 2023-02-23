@@ -48,7 +48,6 @@ import {
   createJsHintOptions,
   defaultESBuildOptions,
   bundleCombinedWorkers,
-  bundleCombinedSpecs,
 } from "./build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -470,12 +469,8 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
-  function () {
-    return buildEngine();
-  },
-  function () {
-    return buildWidgets();
-  },
+  buildEngine,
+  buildWidgets,
   // Generate Build/CesiumUnminified
   function () {
     return buildCesium({
@@ -543,6 +538,14 @@ async function pruneScriptsForZip(packageJsonPath) {
   // Set server tasks to use production flag
   scripts["start"] = "node server.js --production";
   scripts["start-public"] = "node server.js --public --production";
+  scripts["start-public"] = "node server.js --public --production";
+  scripts["test"] = "gulp test --production";
+  scripts["test-all"] = "gulp test --all --production";
+  scripts["test-webgl"] = "gulp test --include WebGL --production";
+  scripts["test-non-webgl"] = "gulp test --exclude WebGL --production";
+  scripts["test-webgl-validation"] = "gulp test --webglValidation --production";
+  scripts["test-webgl-stub"] = "gulp test --webglStub --production";
+  scripts["test-release"] = "gulp test --release --production";
 
   // Write to a temporary package.json file.
   const noPreparePackageJson = join(
@@ -1509,10 +1512,8 @@ export async function coverage() {
   });
 }
 
+// Cache contexts for successive calls to test
 export async function test() {
-  await createCombinedSpecList();
-  await bundleCombinedSpecs();
-
   const enableAllBrowsers = argv.all ? true : false;
   const includeCategory = argv.include ? argv.include : "";
   const excludeCategory = argv.exclude ? argv.exclude : "";
@@ -1525,10 +1526,18 @@ export async function test() {
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
   const includeName = argv.includeName ? argv.includeName : "";
+  const isProduction = argv.production;
 
   let workspace = argv.workspace;
   if (workspace) {
     workspace = workspace.replaceAll(`@${scope}/`, ``);
+  }
+
+  if (!isProduction) {
+    console.log("Building specs...");
+    await buildCesium({
+      iife: true,
+    });
   }
 
   let browsers = ["Chrome"];
