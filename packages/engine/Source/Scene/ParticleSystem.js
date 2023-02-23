@@ -564,6 +564,11 @@ function updateParticlePool(system) {
     const particle = new Particle();
     particle._billboard = billboardCollection.add({
       image: image,
+      // Make the newly added billboards invisible when updating the particle pool
+      // to prevent the billboards from being displayed when the particles
+      // are not created. The billboard will always be set visible in
+      // updateBillboard function when its corresponding particle update.
+      show: false,
     });
     particlePool.push(particle);
   }
