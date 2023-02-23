@@ -2158,6 +2158,8 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
 const zoom3DUnitPosition = new Cartesian3();
 const zoom3DCartographic = new Cartographic();
 
+let preIntersectionDistance = 0;
+
 function zoom3D(controller, startPosition, movement) {
   if (defined(movement.distance)) {
     movement = movement.distance;
@@ -2189,10 +2191,10 @@ function zoom3D(controller, startPosition, movement) {
     zoom3DCartographic
   ).height;
 
-  const inertiaMovementApproachingGround = Math.abs(height) < 50;
+  const approachingCollision = Math.abs(preIntersectionDistance) < 100;
 
   const needPickGlobe = inertiaMovement
-    ? inertiaMovementApproachingGround
+    ? approachingCollision
     : height < controller._minimumPickingTerrainHeight;
   if (needPickGlobe) {
     intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
@@ -2201,6 +2203,7 @@ function zoom3D(controller, startPosition, movement) {
   let distance;
   if (defined(intersection)) {
     distance = Cartesian3.distance(ray.origin, intersection);
+    preIntersectionDistance = distance;
   }
 
   if (cameraUnderground) {
