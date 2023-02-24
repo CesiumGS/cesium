@@ -2191,7 +2191,7 @@ function zoom3D(controller, startPosition, movement) {
     zoom3DCartographic
   ).height;
 
-  const approachingCollision = Math.abs(preIntersectionDistance) < 100;
+  const approachingCollision = Math.abs(preIntersectionDistance) < 4000;
 
   const needPickGlobe = inertiaMovement
     ? approachingCollision
