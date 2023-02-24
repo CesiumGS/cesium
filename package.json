@@ -57,7 +57,7 @@
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.276.0",
     "@aws-sdk/lib-storage": "^3.276.0",
-    "@rollup/plugin-commonjs": "^23.0.5",
+    "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-terser": "^0.4.0",
     "chokidar": "^3.5.3",
@@ -110,7 +110,7 @@
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
     "rimraf": "^4.1.2",
-    "rollup": "^2.79.1",
+    "rollup": "^3.17.2",
     "rollup-plugin-strip-pragma": "^1.0.0",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
