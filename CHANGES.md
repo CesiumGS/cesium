@@ -6,11 +6,17 @@
 
 #### Major Announcements :loudspeaker:
 
+##### Additions :tada:
+
+- Added smooth zoom with mouse wheel. [#11062](https://github.com/CesiumGS/cesium/pull/11062)
+
 ##### Fixes :wrench:
 
 - Fixed Primitive.getGeometryInstanceAttributes cache acquisition speed. [#11066](https://github.com/CesiumGS/cesium/issues/11066)
 - Fixed requestWebgl1 hint error in context. [#11082](https://github.com/CesiumGS/cesium/issues/11082)
 - Replace constructor types with primitive types in JSDoc. [#11080](https://github.com/CesiumGS/cesium/pull/11080)
+- Fixed browser warning for `willReadFrequently` option. [#11025](https://github.com/CesiumGS/cesium/issues/11025)
+- Fixed textures visibility for particle systems. [#11099](https://github.com/CesiumGS/cesium/pull/11099)
 
 ### 1.102 - 2023-02-01
 

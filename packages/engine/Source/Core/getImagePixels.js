@@ -32,7 +32,8 @@ function getImagePixels(image, width, height) {
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
-    context2d = canvas.getContext("2d");
+    // Since we re-use contexts, use the willReadFrequently option – See https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+    context2d = canvas.getContext("2d", { willReadFrequently: true });
     context2d.globalCompositeOperation = "copy";
     context2DsByHeight[height] = context2d;
   }

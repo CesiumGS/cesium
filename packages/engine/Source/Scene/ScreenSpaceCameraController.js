@@ -591,9 +591,9 @@ function handleZoom(
     return;
   }
 
-  const sameStartPosition = Cartesian2.equals(
-    startPosition,
-    object._zoomMouseStart
+  const sameStartPosition = defaultValue(
+    movement.inertiaEnabled,
+    Cartesian2.equals(startPosition, object._zoomMouseStart)
   );
   let zoomingOnVector = object._zoomingOnVector;
   let rotatingZoom = object._rotatingZoom;
@@ -2162,6 +2162,7 @@ function zoom3D(controller, startPosition, movement) {
   if (defined(movement.distance)) {
     movement = movement.distance;
   }
+  const inertiaMovement = movement.inertiaEnabled;
 
   const ellipsoid = controller._ellipsoid;
   const scene = controller._scene;
@@ -2187,7 +2188,13 @@ function zoom3D(controller, startPosition, movement) {
     camera.position,
     zoom3DCartographic
   ).height;
-  if (height < controller._minimumPickingTerrainHeight) {
+
+  const inertiaMovementApproachingGround = Math.abs(height) < 50;
+
+  const needPickGlobe = inertiaMovement
+    ? inertiaMovementApproachingGround
+    : height < controller._minimumPickingTerrainHeight;
+  if (needPickGlobe) {
     intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
   }
 
