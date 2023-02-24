@@ -52,10 +52,6 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-<<<<<<< HEAD
-    "@tweenjs/tween.js": "^18.6.4",
-=======
->>>>>>> ab5e8839f7... All the Propeller mods in a single commit
     "@zip.js/zip.js": "2.4.x",
     "autolinker": "^3.14.3",
     "bitmap-sdf": "^1.0.3",
@@ -139,16 +135,11 @@
   },
   "scripts": {
     "prepare": "gulp prepare && husky install",
-<<<<<<< HEAD
-    "start": "node server.js",
-    "start-public": "node server.js --public",
-=======
     "codeship:decrypt": "./deployment/crypto.sh decrypt ./deployment/encrypted ./deployment/secrets",
     "codeship:encrypt": "./deployment/crypto.sh encrypt ./deployment/secrets ./deployment/encrypted",
     "convertToModules": "gulp convertToModules",
     "start": "node server.cjs",
     "start-public": "node server.cjs --public",
->>>>>>> ab5e8839f7... All the Propeller mods in a single commit
     "build": "gulp build",
     "build-watch": "gulp buildWatch",
     "build-ts": "gulp buildTs",
