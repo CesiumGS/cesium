@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Enumerates all possible filters used when minifying WebGL textures.
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @see TextureMagnificationFilter
  */
@@ -11,14 +11,14 @@ const TextureMinificationFilter = {
   /**
    * Samples the texture by returning the closest pixel.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NEAREST: WebGLConstants.NEAREST,
   /**
    * Samples the texture through bi-linear interpolation of the four nearest pixels. This produces smoother results than <code>NEAREST</code> filtering.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LINEAR: WebGLConstants.LINEAR,
@@ -28,7 +28,7 @@ const TextureMinificationFilter = {
    * Requires that the texture has a mipmap. The mip level is chosen by the view angle and screen-space size of the texture.
    * </p>
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NEAREST_MIPMAP_NEAREST: WebGLConstants.NEAREST_MIPMAP_NEAREST,
@@ -38,7 +38,7 @@ const TextureMinificationFilter = {
    * Requires that the texture has a mipmap. The mip level is chosen by the view angle and screen-space size of the texture.
    * </p>
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LINEAR_MIPMAP_NEAREST: WebGLConstants.LINEAR_MIPMAP_NEAREST,
@@ -51,7 +51,7 @@ const TextureMinificationFilter = {
    * Requires that the texture has a mipmap. The mip level is chosen by the view angle and screen-space size of the texture.
    * </p>
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NEAREST_MIPMAP_LINEAR: WebGLConstants.NEAREST_MIPMAP_LINEAR,
@@ -63,7 +63,7 @@ const TextureMinificationFilter = {
    * <p>
    * Requires that the texture has a mipmap. The mip level is chosen by the view angle and screen-space size of the texture.
    * </p>
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LINEAR_MIPMAP_LINEAR: WebGLConstants.LINEAR_MIPMAP_LINEAR,
@@ -75,7 +75,7 @@ const TextureMinificationFilter = {
  * @private
  *
  * @param textureMinificationFilter
- * @returns {Boolean} <code>true</code> if <code>textureMinificationFilter</code> is valid.
+ * @returns {boolean} <code>true</code> if <code>textureMinificationFilter</code> is valid.
  */
 TextureMinificationFilter.validate = function (textureMinificationFilter) {
   return (

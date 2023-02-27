@@ -1,3 +1,4 @@
+import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -325,7 +326,7 @@ const FeatureDetection = {
  * Detects whether the current browser supports Basis Universal textures and the web assembly modules needed to transcode them.
  *
  * @param {Scene} scene
- * @returns {Boolean} true if the browser supports web assembly modules and the scene supports Basis Universal textures, false if not.
+ * @returns {boolean} true if the browser supports web assembly modules and the scene supports Basis Universal textures, false if not.
  */
 FeatureDetection.supportsBasis = function (scene) {
   return FeatureDetection.supportsWebAssembly() && scene.context.supportsBasis;
@@ -334,7 +335,7 @@ FeatureDetection.supportsBasis = function (scene) {
 /**
  * Detects whether the current browser supports the full screen standard.
  *
- * @returns {Boolean} true if the browser supports the full screen standard, false if not.
+ * @returns {boolean} true if the browser supports the full screen standard, false if not.
  *
  * @see Fullscreen
  * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
@@ -346,7 +347,7 @@ FeatureDetection.supportsFullscreen = function () {
 /**
  * Detects whether the current browser supports typed arrays.
  *
- * @returns {Boolean} true if the browser supports typed arrays, false if not.
+ * @returns {boolean} true if the browser supports typed arrays, false if not.
  *
  * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
  */
@@ -357,7 +358,7 @@ FeatureDetection.supportsTypedArrays = function () {
 /**
  * Detects whether the current browser supports BigInt64Array typed arrays.
  *
- * @returns {Boolean} true if the browser supports BigInt64Array typed arrays, false if not.
+ * @returns {boolean} true if the browser supports BigInt64Array typed arrays, false if not.
  *
  * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
  */
@@ -368,7 +369,7 @@ FeatureDetection.supportsBigInt64Array = function () {
 /**
  * Detects whether the current browser supports BigUint64Array typed arrays.
  *
- * @returns {Boolean} true if the browser supports BigUint64Array typed arrays, false if not.
+ * @returns {boolean} true if the browser supports BigUint64Array typed arrays, false if not.
  *
  * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
  */
@@ -379,7 +380,7 @@ FeatureDetection.supportsBigUint64Array = function () {
 /**
  * Detects whether the current browser supports BigInt.
  *
- * @returns {Boolean} true if the browser supports BigInt, false if not.
+ * @returns {boolean} true if the browser supports BigInt, false if not.
  *
  * @see {@link https://tc39.es/ecma262/#sec-bigint-objects|BigInt Specification}
  */
@@ -390,7 +391,7 @@ FeatureDetection.supportsBigInt = function () {
 /**
  * Detects whether the current browser supports Web Workers.
  *
- * @returns {Boolean} true if the browsers supports Web Workers, false if not.
+ * @returns {boolean} true if the browsers supports Web Workers, false if not.
  *
  * @see {@link http://www.w3.org/TR/workers/}
  */
@@ -401,11 +402,28 @@ FeatureDetection.supportsWebWorkers = function () {
 /**
  * Detects whether the current browser supports Web Assembly.
  *
- * @returns {Boolean} true if the browsers supports Web Assembly, false if not.
+ * @returns {boolean} true if the browsers supports Web Assembly, false if not.
  *
  * @see {@link https://developer.mozilla.org/en-US/docs/WebAssembly}
  */
 FeatureDetection.supportsWebAssembly = function () {
   return typeof WebAssembly !== "undefined";
 };
+
+/**
+ * Detects whether the current browser supports a WebGL2 rendering context for the specified scene.
+ *
+ * @param {Scene} scene the Cesium scene specifying the rendering context
+ * @returns {boolean} true if the browser supports a WebGL2 rendering context, false if not.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext|WebGL2RenderingContext}
+ */
+FeatureDetection.supportsWebgl2 = function (scene) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("scene", scene);
+  //>>includeEnd('debug');
+
+  return scene.context.webgl2;
+};
+
 export default FeatureDetection;

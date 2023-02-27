@@ -12,7 +12,7 @@ const LoadState = Object.freeze({
  * @constructor
  *
  * @param {SpatialNode} spatialNode
- * @param {Number} keyframe
+ * @param {number} keyframe
  *
  * @private
  */

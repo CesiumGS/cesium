@@ -15,7 +15,7 @@ const BlendingState = {
   /**
    * Blending is disabled.
    *
-   * @type {Object}
+   * @type {object}
    * @constant
    */
   DISABLED: Object.freeze({
@@ -25,7 +25,7 @@ const BlendingState = {
   /**
    * Blending is enabled using alpha blending, <code>source(source.alpha) + destination(1 - source.alpha)</code>.
    *
-   * @type {Object}
+   * @type {object}
    * @constant
    */
   ALPHA_BLEND: Object.freeze({
@@ -41,7 +41,7 @@ const BlendingState = {
   /**
    * Blending is enabled using alpha blending with premultiplied alpha, <code>source + destination(1 - source.alpha)</code>.
    *
-   * @type {Object}
+   * @type {object}
    * @constant
    */
   PRE_MULTIPLIED_ALPHA_BLEND: Object.freeze({
@@ -57,7 +57,7 @@ const BlendingState = {
   /**
    * Blending is enabled using additive blending, <code>source(source.alpha) + destination</code>.
    *
-   * @type {Object}
+   * @type {object}
    * @constant
    */
   ADDITIVE_BLEND: Object.freeze({

@@ -6,13 +6,13 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} PolylineVolumeGraphics.ConstructorOptions
+ * @typedef {object} PolylineVolumeGraphics.ConstructorOptions
  *
  * Initialization options for the PolylineVolumeGraphics constructor
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the volume.
- * @property {Property | Array<Cartesian3>} [positions] A Property specifying the array of {@link Cartesian3} positions which define the line strip.
- * @property {Property | Array<Cartesian2>} [shape] A Property specifying the array of {@link Cartesian2} positions which define the shape to be extruded.
+ * @property {Property | Cartesian3[]} [positions] A Property specifying the array of {@link Cartesian3} positions which define the line strip.
+ * @property {Property | Cartesian2[]} [shape] A Property specifying the array of {@link Cartesian2} positions which define the shape to be extruded.
  * @property {Property | CornerType} [cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
  * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
  * @property {Property | boolean} [fill=true] A boolean Property specifying whether the volume is filled with the provided material.

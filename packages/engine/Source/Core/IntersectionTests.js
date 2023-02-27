@@ -77,9 +77,9 @@ const scratchQVec = new Cartesian3();
  * @param {Cartesian3} p0 The first vertex of the triangle.
  * @param {Cartesian3} p1 The second vertex of the triangle.
  * @param {Cartesian3} p2 The third vertex of the triangle.
- * @param {Boolean} [cullBackFaces=false] If <code>true</code>, will only compute an intersection with the front face of the triangle
+ * @param {boolean} [cullBackFaces=false] If <code>true</code>, will only compute an intersection with the front face of the triangle
  *                  and return undefined for intersections with the back face.
- * @returns {Number} The intersection as a parametric distance along the ray, or undefined if there is no intersection.
+ * @returns {number} The intersection as a parametric distance along the ray, or undefined if there is no intersection.
  */
 IntersectionTests.rayTriangleParametric = function (
   ray,
@@ -177,7 +177,7 @@ IntersectionTests.rayTriangleParametric = function (
  * @param {Cartesian3} p0 The first vertex of the triangle.
  * @param {Cartesian3} p1 The second vertex of the triangle.
  * @param {Cartesian3} p2 The third vertex of the triangle.
- * @param {Boolean} [cullBackFaces=false] If <code>true</code>, will only compute an intersection with the front face of the triangle
+ * @param {boolean} [cullBackFaces=false] If <code>true</code>, will only compute an intersection with the front face of the triangle
  *                  and return undefined for intersections with the back face.
  * @param {Cartesian3} [result] The <code>Cartesian3</code> onto which to store the result.
  * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
@@ -220,7 +220,7 @@ const scratchLineSegmentTriangleRay = new Ray();
  * @param {Cartesian3} p0 The first vertex of the triangle.
  * @param {Cartesian3} p1 The second vertex of the triangle.
  * @param {Cartesian3} p2 The third vertex of the triangle.
- * @param {Boolean} [cullBackFaces=false] If <code>true</code>, will only compute an intersection with the front face of the triangle
+ * @param {boolean} [cullBackFaces=false] If <code>true</code>, will only compute an intersection with the front face of the triangle
  *                  and return undefined for intersections with the back face.
  * @param {Cartesian3} [result] The <code>Cartesian3</code> onto which to store the result.
  * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
@@ -868,7 +868,7 @@ IntersectionTests.lineSegmentPlane = function (
  * @param {Cartesian3} p1 Second point of the triangle
  * @param {Cartesian3} p2 Third point of the triangle
  * @param {Plane} plane Intersection plane
- * @returns {Object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
+ * @returns {object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
  *
  * @example
  * const origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);

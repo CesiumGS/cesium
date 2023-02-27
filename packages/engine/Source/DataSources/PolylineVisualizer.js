@@ -197,7 +197,7 @@ function PolylineVisualizer(
  * Entity counterpart at the given time.
  *
  * @param {JulianDate} time The time to update to.
- * @returns {Boolean} True if the visualizer successfully updated to the provided time,
+ * @returns {boolean} True if the visualizer successfully updated to the provided time,
  * false if the visualizer is waiting for asynchronous primitives to be created.
  */
 PolylineVisualizer.prototype.update = function (time) {
@@ -329,7 +329,7 @@ PolylineVisualizer.prototype.getBoundingSphere = function (entity, result) {
 /**
  * Returns true if this object was destroyed; otherwise, false.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 PolylineVisualizer.prototype.isDestroyed = function () {
   return false;

@@ -4,8 +4,8 @@
  *
  * @private
  *
- * @param {Object} renderState
- * @returns {Object} Returns frozen renderState.
+ * @param {object} renderState
+ * @returns {object} Returns frozen renderState.
  *
  */
 function freezeRenderState(renderState) {

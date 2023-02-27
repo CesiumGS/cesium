@@ -16,7 +16,7 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @alias Vector3DTileGeometry
  * @constructor
  *
- * @param {Object} options An object with following properties:
+ * @param {object} options An object with following properties:
  * @param {Float32Array} [options.boxes] The boxes in the tile.
  * @param {Uint16Array} [options.boxBatchIds] The batch ids for each box.
  * @param {Float32Array} [options.cylinders] The cylinders in the tile.
@@ -80,14 +80,14 @@ function Vector3DTileGeometry(options) {
 
   /**
    * Draws the wireframe of the classification geometries.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.debugWireframe = false;
 
   /**
    * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.forceRebatch = false;
@@ -106,7 +106,7 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
    *
    * @memberof Vector3DTileGeometry.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   trianglesLength: {
@@ -123,7 +123,7 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
    *
    * @memberof Vector3DTileGeometry.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   geometryByteLength: {
@@ -393,7 +393,7 @@ Vector3DTileGeometry.prototype.createFeatures = function (content, features) {
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (geometry batch table color * color).
  *
- * @param {Boolean} enabled Whether to enable debug coloring.
+ * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
 Vector3DTileGeometry.prototype.applyDebugSettings = function (enabled, color) {
@@ -414,7 +414,7 @@ Vector3DTileGeometry.prototype.applyStyle = function (style, features) {
  * Call when updating the color of a geometry with batchId changes color. The geometries will need to be re-batched
  * on the next update.
  *
- * @param {Number} batchId The batch id of the geometries whose color has changed.
+ * @param {number} batchId The batch id of the geometries whose color has changed.
  * @param {Color} color The new polygon color.
  */
 Vector3DTileGeometry.prototype.updateCommands = function (batchId, color) {
@@ -466,7 +466,7 @@ Vector3DTileGeometry.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTileGeometry.prototype.isDestroyed = function () {
   return false;

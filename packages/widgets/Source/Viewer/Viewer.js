@@ -290,24 +290,24 @@ function enableVRUI(viewer, enabled) {
 }
 
 /**
- * @typedef {Object} Viewer.ConstructorOptions
+ * @typedef {object} Viewer.ConstructorOptions
  *
  * Initialization options for the Viewer constructor
  *
- * @property {Boolean} [animation=true] If set to false, the Animation widget will not be created.
- * @property {Boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
- * @property {Boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
- * @property {Boolean} [vrButton=false] If set to true, the VRButton widget will be created.
- * @property {Boolean|GeocoderService[]} [geocoder=true] If set to false, the Geocoder widget will not be created.
- * @property {Boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
- * @property {Boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
- * @property {Boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
- * @property {Boolean} [selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
- * @property {Boolean} [timeline=true] If set to false, the Timeline widget will not be created.
- * @property {Boolean} [navigationHelpButton=true] If set to false, the navigation help button will not be created.
- * @property {Boolean} [navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
- * @property {Boolean} [scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
- * @property {Boolean} [shouldAnimate=false] <code>true</code> if the clock should attempt to advance simulation time by default, <code>false</code> otherwise.  This option takes precedence over setting {@link Viewer#clockViewModel}.
+ * @property {boolean} [animation=true] If set to false, the Animation widget will not be created.
+ * @property {boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
+ * @property {boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
+ * @property {boolean} [vrButton=false] If set to true, the VRButton widget will be created.
+ * @property {boolean|GeocoderService[]} [geocoder=true] If set to false, the Geocoder widget will not be created.
+ * @property {boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
+ * @property {boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
+ * @property {boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
+ * @property {boolean} [selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
+ * @property {boolean} [timeline=true] If set to false, the Timeline widget will not be created.
+ * @property {boolean} [navigationHelpButton=true] If set to false, the navigation help button will not be created.
+ * @property {boolean} [navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
+ * @property {boolean} [scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+ * @property {boolean} [shouldAnimate=false] <code>true</code> if the clock should attempt to advance simulation time by default, <code>false</code> otherwise.  This option takes precedence over setting {@link Viewer#clockViewModel}.
  * @property {ClockViewModel} [clockViewModel=new ClockViewModel(clock)] The clock view model to use to control current time.
  * @property {ProviderViewModel} [selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
@@ -317,30 +317,30 @@ function enableVRUI(viewer, enabled) {
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
- * @property {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
- * @property {Boolean} [useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
- * @property {Number} [targetFrameRate] The target frame rate when using the default render loop.
- * @property {Boolean} [showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
- * @property {Boolean} [useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
- * @property {Boolean} [automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
+ * @property {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
+ * @property {boolean} [useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+ * @property {number} [targetFrameRate] The target frame rate when using the default render loop.
+ * @property {boolean} [showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+ * @property {boolean} [useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
+ * @property {boolean} [automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
  * @property {ContextOptions} [contextOptions] Context and WebGL creation properties passed to {@link Scene}.
  * @property {SceneMode} [sceneMode=SceneMode.SCENE3D] The initial scene mode.
  * @property {MapProjection} [mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
  * @property {Globe|false} [globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
- * @property {Boolean} [orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
- * @property {Element|String} [creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
- * @property {Element|String} [creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
+ * @property {boolean} [orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
+ * @property {Element|string} [creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
+ * @property {Element|string} [creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
  * @property {DataSourceCollection} [dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
  *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
- * @property {Boolean} [shadows=false] Determines if shadows are cast by light sources.
+ * @property {boolean} [shadows=false] Determines if shadows are cast by light sources.
  * @property {ShadowMode} [terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
  * @property {MapMode2D} [mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
- * @property {Boolean} [projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
- * @property {Boolean} [blurActiveElementOnCanvasFocus=true] If true, the active element will blur when the viewer's canvas is clicked. Setting this to false is useful for cases when the canvas is clicked only for retrieving position or an entity data without actually meaning to set the canvas to be the active element.
- * @property {Boolean} [requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
- * @property {Number} [maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
- * @property {Number} [depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
- * @property {Number} [msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
+ * @property {boolean} [projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
+ * @property {boolean} [blurActiveElementOnCanvasFocus=true] If true, the active element will blur when the viewer's canvas is clicked. Setting this to false is useful for cases when the canvas is clicked only for retrieving position or an entity data without actually meaning to set the canvas to be the active element.
+ * @property {boolean} [requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @property {number} [maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @property {number} [depthPlaneEllipsoidOffset=0.0] Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.
+ * @property {number} [msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  */
 
 /**
@@ -350,7 +350,7 @@ function enableVRUI(viewer, enabled) {
  * @alias Viewer
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Viewer.ConstructorOptions} [options] Object describing initialization options
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -1178,7 +1178,7 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Determines if shadows are cast by light sources.
    * @memberof Viewer.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   shadows: {
     get: function () {
@@ -1312,7 +1312,7 @@ Object.defineProperties(Viewer.prototype, {
    * than the underlying requestAnimationFrame implementation will have no effect.
    * @memberof Viewer.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   targetFrameRate: {
     get: function () {
@@ -1335,7 +1335,7 @@ Object.defineProperties(Viewer.prototype, {
    * after the error.
    * @memberof Viewer.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   useDefaultRenderLoop: {
     get: function () {
@@ -1355,7 +1355,7 @@ Object.defineProperties(Viewer.prototype, {
    * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
    * @memberof Viewer.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   resolutionScale: {
@@ -1376,7 +1376,7 @@ Object.defineProperties(Viewer.prototype, {
    * this flag is true or false.
    * @memberof Viewer.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   useBrowserRecommendedResolution: {
@@ -1396,7 +1396,7 @@ Object.defineProperties(Viewer.prototype, {
    *
    * @memberof Viewer.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   allowDataSourcesToSuspendAnimation: {
     get: function () {
@@ -1533,7 +1533,7 @@ Object.defineProperties(Viewer.prototype, {
  * to the provided viewer instance.
  *
  * @param {Viewer.ViewerMixin} mixin The Viewer mixin to add to this instance.
- * @param {Object} [options] The options object to be passed to the mixin function.
+ * @param {object} [options] The options object to be passed to the mixin function.
  *
  * @see viewerDragDropMixin
  */
@@ -1668,7 +1668,7 @@ Viewer.prototype.render = function () {
 };
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 Viewer.prototype.isDestroyed = function () {
   return false;
@@ -2029,9 +2029,9 @@ Viewer.prototype._onDataSourceRemoved = function (
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
  * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
- * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
+ * @returns {Promise<boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
  */
 Viewer.prototype.zoomTo = function (target, offset) {
   const options = {
@@ -2055,12 +2055,12 @@ Viewer.prototype.zoomTo = function (target, offset) {
  * target will be the range. The heading will be determined from the offset. If the heading cannot be
  * determined from the offset, the heading will be north.</p>
  *
- * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
- * @param {Object} [options] Object with the following properties:
- * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
- * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+ * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|Promise<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|TimeDynamicPointCloud|VoxelPrimitive>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, point cloud, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+ * @param {object} [options] Object with the following properties:
+ * @param {number} [options.duration=3.0] The duration of the flight in seconds.
+ * @param {number} [options.maximumHeight] The maximum height at the peak of the flight.
  * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
- * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the target is not currently visualized in the scene or the flight was cancelled. //TODO: Cleanup entity mentions
+ * @returns {Promise<boolean>} A Promise that resolves to true if the flight was successful or false if the target is not currently visualized in the scene or the flight was cancelled. //TODO: Cleanup entity mentions
  */
 Viewer.prototype.flyTo = function (target, options) {
   return zoomToOrFly(this, target, options, true);
@@ -2409,7 +2409,7 @@ function updateTrackedEntity(viewer) {
  * A function that augments a Viewer instance with additional functionality.
  * @callback Viewer.ViewerMixin
  * @param {Viewer} viewer The viewer instance.
- * @param {Object} options Options object to be passed to the mixin function.
+ * @param {object} options Options object to be passed to the mixin function.
  *
  * @see Viewer#extend
  */

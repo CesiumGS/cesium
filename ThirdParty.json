@@ -36,7 +36,7 @@
     "license": [
       "Apache-2.0"
     ],
-    "version": "2.4.1",
+    "version": "2.4.3",
     "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },
@@ -150,7 +150,7 @@
     "license": [
       "BSD-3-Clause"
     ],
-    "version": "7.1.2",
+    "version": "7.2.0",
     "url": "https://www.npmjs.com/package/protobufjs"
   },
   {

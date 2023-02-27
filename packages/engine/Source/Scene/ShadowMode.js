@@ -2,13 +2,13 @@
  * Specifies whether the object casts or receives shadows from light sources when
  * shadows are enabled.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const ShadowMode = {
   /**
    * The object does not cast or receive shadows.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   DISABLED: 0,
@@ -16,7 +16,7 @@ const ShadowMode = {
   /**
    * The object casts and receives shadows.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ENABLED: 1,
@@ -24,7 +24,7 @@ const ShadowMode = {
   /**
    * The object casts shadows only.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   CAST_ONLY: 2,
@@ -32,7 +32,7 @@ const ShadowMode = {
   /**
    * The object receives shadows only.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RECEIVE_ONLY: 3,

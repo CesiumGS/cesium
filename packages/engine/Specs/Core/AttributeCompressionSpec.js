@@ -1298,7 +1298,7 @@ describe("Core/AttributeCompression", function () {
     const input = new Uint16Array([
       0,
       //0b00001_000001_00001
-      2881,
+      2081,
       //0b10000_100000_01000
       33800,
       //0b11111_111111_11111
@@ -1319,10 +1319,11 @@ describe("Core/AttributeCompression", function () {
       31 / 31,
     ]);
 
-    const result = new Float32Array(input.length * 3);
+    const resultLength = input.length * 3;
+    const result = new Float32Array(resultLength);
     AttributeCompression.decodeRGB565(input, result);
 
-    for (let i = 0; i < input.length; i++) {
+    for (let i = 0; i < resultLength; i++) {
       expect(result[i]).toEqual(expected[i]);
     }
   });

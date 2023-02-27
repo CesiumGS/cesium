@@ -1,6 +1,6 @@
 /**
  * The state of a BoundingSphere computation being performed by a {@link Visualizer}.
- * @enum {Number}
+ * @enum {number}
  * @private
  */
 const BoundingSphereState = {

@@ -10,10 +10,10 @@ import Spline from "./Spline.js";
  * @alias LinearSpline
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+ * @param {object} options Object with the following properties:
+ * @param {number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
- * @param {Number[]|Cartesian3[]} options.points The array of control points.
+ * @param {number[]|Cartesian3[]} options.points The array of control points.
  *
  * @exception {DeveloperError} points.length must be greater than or equal to 2.
  * @exception {DeveloperError} times.length must be equal to points.length.
@@ -74,7 +74,7 @@ Object.defineProperties(LinearSpline.prototype, {
    *
    * @memberof LinearSpline.prototype
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @readonly
    */
   times: {
@@ -88,7 +88,7 @@ Object.defineProperties(LinearSpline.prototype, {
    *
    * @memberof LinearSpline.prototype
    *
-   * @type {Number[]|Cartesian3[]}
+   * @type {number[]|Cartesian3[]}
    * @readonly
    */
   points: {
@@ -103,8 +103,8 @@ Object.defineProperties(LinearSpline.prototype, {
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
  * @function
  *
- * @param {Number} time The time.
- * @returns {Number} The index for the element at the start of the interval.
+ * @param {number} time The time.
+ * @returns {number} The index for the element at the start of the interval.
  *
  * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
@@ -116,8 +116,8 @@ LinearSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
  * Wraps the given time to the period covered by the spline.
  * @function
  *
- * @param {Number} time The time.
- * @return {Number} The time, wrapped around to the updated animation.
+ * @param {number} time The time.
+ * @return {number} The time, wrapped around to the updated animation.
  */
 LinearSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
@@ -125,17 +125,17 @@ LinearSpline.prototype.wrapTime = Spline.prototype.wrapTime;
  * Clamps the given time to the period covered by the spline.
  * @function
  *
- * @param {Number} time The time.
- * @return {Number} The time, clamped to the animation period.
+ * @param {number} time The time.
+ * @return {number} The time, clamped to the animation period.
  */
 LinearSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
  *
- * @param {Number} time The time at which to evaluate the curve.
+ * @param {number} time The time at which to evaluate the curve.
  * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Number|Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
+ * @returns {number|Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
  *
  * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element

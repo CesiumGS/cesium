@@ -23,16 +23,16 @@ const sin = Math.sin;
  * @alias EllipsoidOutlineGeometry
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
  * @param {Cartesian3} [options.innerRadii=options.radii] The inner radii of the ellipsoid in the x, y, and z directions.
- * @param {Number} [options.minimumClock=0.0] The minimum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
- * @param {Number} [options.maximumClock=2*PI] The maximum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
- * @param {Number} [options.minimumCone=0.0] The minimum angle measured from the positive z-axis and toward the negative z-axis.
- * @param {Number} [options.maximumCone=PI] The maximum angle measured from the positive z-axis and toward the negative z-axis.
- * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
- * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
- * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
+ * @param {number} [options.minimumClock=0.0] The minimum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
+ * @param {number} [options.maximumClock=2*PI] The maximum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
+ * @param {number} [options.minimumCone=0.0] The minimum angle measured from the positive z-axis and toward the negative z-axis.
+ * @param {number} [options.maximumCone=PI] The maximum angle measured from the positive z-axis and toward the negative z-axis.
+ * @param {number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
+ * @param {number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
+ * @param {number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
  *
  * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
  * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
@@ -96,7 +96,7 @@ function EllipsoidOutlineGeometry(options) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 EllipsoidOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 8;
 
@@ -104,10 +104,10 @@ EllipsoidOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 8;
  * Stores the provided instance into the provided array.
  *
  * @param {EllipsoidOutlineGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 EllipsoidOutlineGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -157,8 +157,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {EllipsoidOutlineGeometry} [result] The object into which to store the result.
  * @returns {EllipsoidOutlineGeometry} The modified result parameter or a new EllipsoidOutlineGeometry instance if one was not provided.
  */

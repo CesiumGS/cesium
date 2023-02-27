@@ -11,7 +11,7 @@ import Matrix3 from "../Core/Matrix3.js";
  * @alias I3SGeometry
  * @internalConstructor
  * @privateParam {I3SNode} parent The parent of that geometry
- * @privateParam {String} uri The uri to load the data from
+ * @privateParam {string} uri The uri to load the data from
  */
 function I3SGeometry(parent, uri) {
   const dataProvider = parent._dataProvider;
@@ -51,7 +51,7 @@ Object.defineProperties(I3SGeometry.prototype, {
   /**
    * Gets the I3S data for this object.
    * @memberof I3SGeometry.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   data: {
@@ -62,7 +62,7 @@ Object.defineProperties(I3SGeometry.prototype, {
   /**
    * Gets the custom attributes of the geometry.
    * @memberof I3SGeometry.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   customAttributes: {
@@ -74,7 +74,7 @@ Object.defineProperties(I3SGeometry.prototype, {
 
 /**
  * Loads the content.
- * @returns {Promise.<Object>} A promise that is resolved when the geometry data is loaded
+ * @returns {Promise<object>} A promise that is resolved when the geometry data is loaded
  * @private
  */
 I3SGeometry.prototype.load = function () {
@@ -121,10 +121,10 @@ const scratchV2p = new Cartesian3();
 
 /**
  * Find a triangle touching the point [px, py, pz], then return the vertex closest to the search point
- * @param {Number} px The x component of the point to query
- * @param {Number} py The y component of the point to query
- * @param {Number} pz The z component of the point to query
- * @returns {Object} A structure containing the index of the closest point,
+ * @param {number} px The x component of the point to query
+ * @param {number} py The y component of the point to query
+ * @param {number} pz The z component of the point to query
+ * @returns {object} A structure containing the index of the closest point,
  * the squared distance from the queried point to the point that is found,
  * the distance from the queried point to the point that is found,
  * the queried position in local space,

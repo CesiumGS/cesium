@@ -27,11 +27,11 @@ const positionScratch = new Cartesian3();
  * @alias CylinderGeometry
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Number} options.length The length of the cylinder.
- * @param {Number} options.topRadius The radius of the top of the cylinder.
- * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
- * @param {Number} [options.slices=128] The number of edges around the perimeter of the cylinder.
+ * @param {object} options Object with the following properties:
+ * @param {number} options.length The length of the cylinder.
+ * @param {number} options.topRadius The radius of the top of the cylinder.
+ * @param {number} options.bottomRadius The radius of the bottom of the cylinder.
+ * @param {number} [options.slices=128] The number of edges around the perimeter of the cylinder.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  *
  * @exception {DeveloperError} options.slices must be greater than or equal to 3.
@@ -92,7 +92,7 @@ function CylinderGeometry(options) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 CylinderGeometry.packedLength = VertexFormat.packedLength + 5;
 
@@ -100,10 +100,10 @@ CylinderGeometry.packedLength = VertexFormat.packedLength + 5;
  * Stores the provided instance into the provided array.
  *
  * @param {CylinderGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 CylinderGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -142,8 +142,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CylinderGeometry} [result] The object into which to store the result.
  * @returns {CylinderGeometry} The modified result parameter or a new CylinderGeometry instance if one was not provided.
  */

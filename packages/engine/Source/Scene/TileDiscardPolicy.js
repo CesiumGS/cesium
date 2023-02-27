@@ -18,7 +18,7 @@ function TileDiscardPolicy(options) {
  * Determines if the discard policy is ready to process images.
  * @function
  *
- * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
+ * @returns {boolean} True if the discard policy is ready to process images; otherwise, false.
  */
 TileDiscardPolicy.prototype.isReady = DeveloperError.throwInstantiationError;
 
@@ -27,7 +27,7 @@ TileDiscardPolicy.prototype.isReady = DeveloperError.throwInstantiationError;
  * @function
  *
  * @param {HTMLImageElement} image An image to test.
- * @returns {Boolean} True if the image should be discarded; otherwise, false.
+ * @returns {boolean} True if the image should be discarded; otherwise, false.
  */
 TileDiscardPolicy.prototype.shouldDiscardImage =
   DeveloperError.throwInstantiationError;

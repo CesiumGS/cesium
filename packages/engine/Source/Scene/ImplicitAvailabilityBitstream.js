@@ -11,12 +11,12 @@ import RuntimeError from "../Core/RuntimeError.js";
  * @alias ImplicitAvailabilityBitstream
  * @constructor
  *
- * @param {Object} options An object with the following properties:
- * @param {Number} options.lengthBits The length of the bitstream in bits
- * @param {Boolean} [options.constant] A single boolean value indicating the value of all the bits in the bitstream if they are all the same
+ * @param {object} options An object with the following properties:
+ * @param {number} options.lengthBits The length of the bitstream in bits
+ * @param {boolean} [options.constant] A single boolean value indicating the value of all the bits in the bitstream if they are all the same
  * @param {Uint8Array} [options.bitstream] An array of bytes storing the bitstream in binary
- * @param {Number} [options.availableCount] A number indicating how many 1 bits are found in the bitstream
- * @param {Boolean} [options.computeAvailableCountEnabled=false] If true, and options.availableCount is undefined, the availableCount will be computed from the bitstream.
+ * @param {number} [options.availableCount] A number indicating how many 1 bits are found in the bitstream
+ * @param {boolean} [options.computeAvailableCountEnabled=false] If true, and options.availableCount is undefined, the availableCount will be computed from the bitstream.
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -64,7 +64,7 @@ function ImplicitAvailabilityBitstream(options) {
  * computing availableCount if not precomputed
  *
  * @param {Uint8Array} bitstream The bitstream typed array
- * @param {Number} lengthBits How many bits are in the bitstream
+ * @param {number} lengthBits How many bits are in the bitstream
  * @private
  */
 function count1Bits(bitstream, lengthBits) {
@@ -83,7 +83,7 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
    *
    * @memberof ImplicitAvailabilityBitstream.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -97,7 +97,7 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
    *
    * @memberof ImplicitAvailabilityBitstream.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -112,8 +112,8 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
  * Get a bit from the availability bitstream as a Boolean. If the bitstream
  * is a constant, the constant value is returned instead.
  *
- * @param {Number} index The integer index of the bit.
- * @returns {Boolean} The value of the bit
+ * @param {number} index The integer index of the bit.
+ * @returns {boolean} The value of the bit
  * @private
  */
 ImplicitAvailabilityBitstream.prototype.getBit = function (index) {

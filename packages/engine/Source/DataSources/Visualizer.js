@@ -26,7 +26,7 @@ function Visualizer() {
  *
  * @param {JulianDate} time The time.
  *
- * @returns {Boolean} True if the display was updated to the provided time,
+ * @returns {boolean} True if the display was updated to the provided time,
  * false if the visualizer is waiting for an asynchronous operation to
  * complete before data can be updated.
  */
@@ -49,7 +49,7 @@ Visualizer.prototype.getBoundingSphere = DeveloperError.throwInstantiationError;
  * Returns true if this object was destroyed; otherwise, false.
  * @function
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 Visualizer.prototype.isDestroyed = DeveloperError.throwInstantiationError;
 

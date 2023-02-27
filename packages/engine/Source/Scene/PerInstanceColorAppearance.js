@@ -14,14 +14,14 @@ import Appearance from "./Appearance.js";
  * @alias PerInstanceColorAppearance
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
- * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
- * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
- * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link PerInstanceColorAppearance#renderState} has backface culling enabled.
- * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
- * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
- * @param {Object} [options.renderState] Optional render state to override the default render state.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
+ * @param {boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+ * @param {boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
+ * @param {boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link PerInstanceColorAppearance#renderState} has backface culling enabled.
+ * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+ * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+ * @param {object} [options.renderState] Optional render state to override the default render state.
  *
  * @example
  * // A solid white line segment
@@ -97,7 +97,7 @@ function PerInstanceColorAppearance(options) {
    * When <code>true</code>, the geometry is expected to appear translucent so
    * {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -125,7 +125,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    *
    * @memberof PerInstanceColorAppearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   vertexShaderSource: {
@@ -139,7 +139,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    *
    * @memberof PerInstanceColorAppearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   fragmentShaderSource: {
@@ -158,7 +158,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    *
    * @memberof PerInstanceColorAppearance.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   renderState: {
@@ -174,7 +174,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    *
    * @memberof PerInstanceColorAppearance.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -207,7 +207,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    *
    * @memberof PerInstanceColorAppearance.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -226,7 +226,7 @@ Object.defineProperties(PerInstanceColorAppearance.prototype, {
    *
    * @memberof PerInstanceColorAppearance.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -267,7 +267,7 @@ PerInstanceColorAppearance.FLAT_VERTEX_FORMAT = VertexFormat.POSITION_ONLY;
  *
  * @function
  *
- * @returns {String} The full GLSL fragment shader source.
+ * @returns {string} The full GLSL fragment shader source.
  */
 PerInstanceColorAppearance.prototype.getFragmentShaderSource =
   Appearance.prototype.getFragmentShaderSource;
@@ -277,7 +277,7 @@ PerInstanceColorAppearance.prototype.getFragmentShaderSource =
  *
  * @function
  *
- * @returns {Boolean} <code>true</code> if the appearance is translucent.
+ * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 PerInstanceColorAppearance.prototype.isTranslucent =
   Appearance.prototype.isTranslucent;
@@ -289,7 +289,7 @@ PerInstanceColorAppearance.prototype.isTranslucent =
  *
  * @function
  *
- * @returns {Object} The render state.
+ * @returns {object} The render state.
  */
 PerInstanceColorAppearance.prototype.getRenderState =
   Appearance.prototype.getRenderState;

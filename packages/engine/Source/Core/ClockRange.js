@@ -2,7 +2,7 @@
  * Constants used by {@link Clock#tick} to determine behavior
  * when {@link Clock#startTime} or {@link Clock#stopTime} is reached.
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @see Clock
  * @see ClockStep
@@ -11,7 +11,7 @@ const ClockRange = {
   /**
    * {@link Clock#tick} will always advances the clock in its current direction.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   UNBOUNDED: 0,
@@ -20,7 +20,7 @@ const ClockRange = {
    * When {@link Clock#startTime} or {@link Clock#stopTime} is reached,
    * {@link Clock#tick} will not advance {@link Clock#currentTime} any further.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   CLAMPED: 1,
@@ -31,7 +31,7 @@ const ClockRange = {
    * time is moving backwards, {@link Clock#tick} will not advance past
    * {@link Clock#startTime}
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LOOP_STOP: 2,

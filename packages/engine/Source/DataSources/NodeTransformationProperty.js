@@ -12,7 +12,7 @@ const defaultNodeTransformation = new TranslationRotationScale();
  * @alias NodeTransformationProperty
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Property|Cartesian3} [options.translation=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the (x, y, z) translation to apply to the node.
  * @param {Property|Quaternion} [options.rotation=Quaternion.IDENTITY] A {@link Quaternion} Property specifying the (x, y, z, w) rotation to apply to the node.
  * @param {Property|Cartesian3} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
@@ -39,7 +39,7 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof NodeTransformationProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -130,7 +130,7 @@ NodeTransformationProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 NodeTransformationProperty.prototype.equals = function (other) {
   return (

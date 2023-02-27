@@ -105,14 +105,14 @@ const attributeLocationsInstanced = {
  * @alias BillboardCollection
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each billboard from model to world coordinates.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {Scene} [options.scene] Must be passed in for billboards that use the height reference property or will be depth tested against the globe.
  * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The billboard blending option. The default
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
- * @param {Boolean} [options.show=true] Determines if the billboards in the collection will be shown.
+ * @param {boolean} [options.show=true] Determines if the billboards in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many billboards, to
  * many collections with only a few billboards each.  Organize collections so that billboards
@@ -205,7 +205,7 @@ function BillboardCollection(options) {
   /**
    * Determines if billboards in this collection will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -253,7 +253,7 @@ function BillboardCollection(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -268,7 +268,7 @@ function BillboardCollection(options) {
    * Draws the texture atlas for this BillboardCollection as a fullscreen quad.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -348,7 +348,7 @@ Object.defineProperties(BillboardCollection.prototype, {
    * {@link BillboardCollection#get} to iterate over all the billboards
    * in the collection.
    * @memberof BillboardCollection.prototype
-   * @type {Number}
+   * @type {number}
    */
   length: {
     get: function () {
@@ -387,7 +387,7 @@ Object.defineProperties(BillboardCollection.prototype, {
    * and explicitly destroy the atlas to avoid attempting to destroy it multiple times.
    *
    * @memberof BillboardCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    *
    * @example
@@ -426,7 +426,7 @@ function destroyBillboards(billboards) {
  * Creates and adds a billboard with the specified initial properties to the collection.
  * The added billboard is returned so it can be modified or removed from the collection later.
  *
- * @param {Object}[options] A template describing the billboard's properties as shown in Example 1.
+ * @param {object}[options] A template describing the billboard's properties as shown in Example 1.
  * @returns {Billboard} The billboard that was added to the collection.
  *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -485,7 +485,7 @@ BillboardCollection.prototype.add = function (options) {
  * Removes a billboard from the collection.
  *
  * @param {Billboard} billboard The billboard to remove.
- * @returns {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
+ * @returns {boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
  *
  * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
  * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
@@ -577,7 +577,7 @@ BillboardCollection.prototype._updateBillboard = function (
  * Check whether this collection contains a given billboard.
  *
  * @param {Billboard} [billboard] The billboard to check for.
- * @returns {Boolean} true if this collection contains the billboard, false otherwise.
+ * @returns {boolean} true if this collection contains the billboard, false otherwise.
  *
  * @see BillboardCollection#get
  */
@@ -592,7 +592,7 @@ BillboardCollection.prototype.contains = function (billboard) {
  * {@link BillboardCollection#length} to iterate over all the billboards
  * in the collection.
  *
- * @param {Number} index The zero-based index of the billboard.
+ * @param {number} index The zero-based index of the billboard.
  * @returns {Billboard} The billboard at the specified index.
  *
  * @performance Expected constant time.  If billboards were removed from the collection and
@@ -2373,7 +2373,7 @@ BillboardCollection.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see BillboardCollection#destroy
  */

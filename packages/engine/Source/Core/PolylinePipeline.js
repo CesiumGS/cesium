@@ -188,7 +188,7 @@ function generateCartesianRhumbArc(
  * transformation matrix, where the upper left 3x3 elements are a rotation matrix, and
  * the upper three elements in the fourth column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
  * The matrix is not verified to be in the proper form.
- * @returns {Object} An object with a <code>positions</code> property that is an array of positions and a
+ * @returns {object} An object with a <code>positions</code> property that is an array of positions and a
  * <code>segments</code> property.
  *
  *
@@ -307,12 +307,12 @@ PolylinePipeline.wrapLongitude = function (positions, modelMatrix) {
 
 /**
  * Subdivides polyline and raises all points to the specified height.  Returns an array of numbers to represent the positions.
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
- * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
- * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
+ * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
- * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
+ * @returns {number[]} A new array of positions of type {number} that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromDegreesArray([
@@ -414,12 +414,12 @@ const scratchCartographic1 = new Cartographic();
 
 /**
  * Subdivides polyline and raises all points to the specified height using Rhumb lines.  Returns an array of numbers to represent the positions.
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
- * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
- * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
+ * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
- * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
+ * @returns {number[]} A new array of positions of type {number} that have been subdivided and raised to the surface of the ellipsoid.
  *
  * @example
  * const positions = Cesium.Cartesian3.fromDegreesArray([
@@ -520,10 +520,10 @@ PolylinePipeline.generateRhumbArc = function (options) {
 
 /**
  * Subdivides polyline and raises all points to the specified height. Returns an array of new {Cartesian3} positions.
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
- * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
- * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
+ * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
  *
@@ -550,10 +550,10 @@ PolylinePipeline.generateCartesianArc = function (options) {
 
 /**
  * Subdivides polyline and raises all points to the specified height using Rhumb Lines. Returns an array of new {Cartesian3} positions.
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
- * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
- * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number|number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
+ * @param {number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
  * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
  *

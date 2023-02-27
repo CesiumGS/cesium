@@ -72,7 +72,7 @@ function VoxelBoxShape() {
   );
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderUniforms = {
@@ -84,7 +84,7 @@ function VoxelBoxShape() {
   };
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderDefines = {
@@ -96,7 +96,7 @@ function VoxelBoxShape() {
 
   /**
    * The maximum number of intersections against the shape for any ray direction.
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.shaderMaximumIntersectionsLength = 0; // not known until update
@@ -144,7 +144,7 @@ const transformXYZToXZY = Matrix4.fromRotation(
  * @param {Cartesian3} maxBounds The maximum bounds.
  * @param {Cartesian3} [clipMinBounds=VoxelBoxShape.DefaultMinBounds] The minimum clip bounds.
  * @param {Cartesian3} [clipMaxBounds=VoxelBoxShape.DefaultMaxBounds] The maximum clip bounds.
- * @returns {Boolean} Whether the shape is visible.
+ * @returns {boolean} Whether the shape is visible.
  */
 VoxelBoxShape.prototype.update = function (
   modelMatrix,
@@ -394,10 +394,10 @@ const scratchTileMaxBounds = new Cartesian3();
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
  *
- * @param {Number} tileLevel The tile's level.
- * @param {Number} tileX The tile's x coordinate.
- * @param {Number} tileY The tile's y coordinate.
- * @param {Number} tileZ The tile's z coordinate.
+ * @param {number} tileLevel The tile's level.
+ * @param {number} tileX The tile's x coordinate.
+ * @param {number} tileY The tile's y coordinate.
+ * @param {number} tileZ The tile's z coordinate.
  * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified tile
  * @returns {OrientedBoundingBox} The oriented bounding box.
  */
@@ -447,7 +447,7 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
  * The update function must be called before calling this function.
  *
  * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
- * @returns {Number} The step size.
+ * @returns {number} The step size.
  */
 VoxelBoxShape.prototype.computeApproximateStepSize = function (dimensions) {
   //>>includeStart('debug', pragmas.debug);

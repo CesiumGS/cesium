@@ -29,7 +29,7 @@ Object.defineProperties(MaterialProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof MaterialProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -54,7 +54,7 @@ Object.defineProperties(MaterialProperty.prototype, {
  * @function
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 MaterialProperty.prototype.getType = DeveloperError.throwInstantiationError;
 
@@ -63,8 +63,8 @@ MaterialProperty.prototype.getType = DeveloperError.throwInstantiationError;
  * @function
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 MaterialProperty.prototype.getValue = DeveloperError.throwInstantiationError;
 
@@ -74,7 +74,7 @@ MaterialProperty.prototype.getValue = DeveloperError.throwInstantiationError;
  * @function
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 MaterialProperty.prototype.equals = DeveloperError.throwInstantiationError;
 

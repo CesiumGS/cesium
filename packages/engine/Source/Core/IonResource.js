@@ -15,7 +15,7 @@ import RuntimeError from "./RuntimeError.js";
  * @constructor
  * @augments Resource
  *
- * @param {Object} endpoint The result of the Cesium ion asset endpoint service.
+ * @param {object} endpoint The result of the Cesium ion asset endpoint service.
  * @param {Resource} endpointResource The resource used to retreive the endpoint.
  *
  * @see Ion
@@ -80,11 +80,11 @@ if (defined(Object.create)) {
 /**
  * Asynchronously creates an instance.
  *
- * @param {Number} assetId The Cesium ion asset id.
- * @param {Object} [options] An object with the following properties:
- * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
- * @param {String|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
- * @returns {Promise.<IonResource>} A Promise to am instance representing the Cesium ion Asset.
+ * @param {number} assetId The Cesium ion asset id.
+ * @param {object} [options] An object with the following properties:
+ * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
+ * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
+ * @returns {Promise<IonResource>} A Promise to am instance representing the Cesium ion Asset.
  *
  * @example
  * //Load a Cesium3DTileset with asset ID of 124624234

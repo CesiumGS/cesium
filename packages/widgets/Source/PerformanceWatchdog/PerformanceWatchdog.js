@@ -13,10 +13,10 @@ import PerformanceWatchdogViewModel from "./PerformanceWatchdogViewModel.js";
  * @alias PerformanceWatchdog
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Element|String} options.container The DOM element or ID that will contain the widget.
+ * @param {object} [options] Object with the following properties:
+ * @param {Element|string} options.container The DOM element or ID that will contain the widget.
  * @param {Scene} options.scene The {@link Scene} for which to monitor performance.
- * @param {String} [options.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
+ * @param {string} [options.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
  *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
  *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
  */
@@ -87,7 +87,7 @@ Object.defineProperties(PerformanceWatchdog.prototype, {
 
 /**
  * @memberof PerformanceWatchdog
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 PerformanceWatchdog.prototype.isDestroyed = function () {
   return false;

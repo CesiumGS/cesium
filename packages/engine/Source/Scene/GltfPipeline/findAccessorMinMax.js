@@ -7,8 +7,8 @@ import defined from "../../Core/defined.js";
 /**
  * Finds the min and max values of the accessor.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @param {Object} accessor The accessor object from the glTF asset to read.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @param {object} accessor The accessor object from the glTF asset to read.
  * @returns {{min: Array, max: Array}} min holding the array of minimum values and max holding the array of maximum values.
  *
  * @private

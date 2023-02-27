@@ -3539,29 +3539,29 @@ function load(dataSource, entityCollection, data, options) {
 // https://github.com/microsoft/TypeScript/issues/20077 and/or
 // https://github.com/jsdoc/jsdoc/issues/1199 actually get resolved
 /**
- * @typedef {Object} KmlDataSource.LoadOptions
+ * @typedef {object} KmlDataSource.LoadOptions
  *
  * Initialization options for the `load` method.
  *
- * @property {String} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
- * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
+ * @property {string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+ * @property {boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @property {Element|String} [screenOverlayContainer] A container for ScreenOverlay images.
+ * @property {Element|string} [screenOverlayContainer] A container for ScreenOverlay images.
  */
 
 /**
- * @typedef {Object} KmlDataSource.ConstructorOptions
+ * @typedef {object} KmlDataSource.ConstructorOptions
  *
  * Options for constructing a new KmlDataSource, or calling the static `load` method.
  *
  * @property {Camera} [camera] The camera that is used for viewRefreshModes and sending camera properties to network links.
  * @property {HTMLCanvasElement} [canvas] The canvas that is used for sending viewer properties to network links.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  *
- * @property {String} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
- * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
+ * @property {string} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+ * @property {boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @property {Element|String} [screenOverlayContainer] A container for ScreenOverlay images.
+ * @property {Element|string} [screenOverlayContainer] A container for ScreenOverlay images.
 
 */
 
@@ -3667,10 +3667,10 @@ function KmlDataSource(options) {
 /**
  * Creates a Promise to a new instance loaded with the provided KML data.
  *
- * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+ * @param {Resource|string|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
  * @param {KmlDataSource.ConstructorOptions} [options] An object specifying configuration options
  *
- * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
+ * @returns {Promise<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
 KmlDataSource.load = function (data, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -3683,7 +3683,7 @@ Object.defineProperties(KmlDataSource.prototype, {
    * Gets or sets a human-readable name for this instance.
    * This will be automatically be set to the KML document name on load.
    * @memberof KmlDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   name: {
     get: function () {
@@ -3721,7 +3721,7 @@ Object.defineProperties(KmlDataSource.prototype, {
   /**
    * Gets a value indicating if the data source is currently loading data.
    * @memberof KmlDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isLoading: {
     get: function () {
@@ -3781,7 +3781,7 @@ Object.defineProperties(KmlDataSource.prototype, {
   /**
    * Gets whether or not this data source should be displayed.
    * @memberof KmlDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -3836,10 +3836,10 @@ Object.defineProperties(KmlDataSource.prototype, {
 /**
  * Asynchronously loads the provided KML data, replacing any existing data.
  *
- * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+ * @param {Resource|string|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
  * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
+ * @returns {Promise<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
  */
 KmlDataSource.prototype.load = function (data, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -4113,7 +4113,7 @@ const entitiesToIgnore = new AssociativeArray();
  * Updates any NetworkLink that require updating.
  *
  * @param {JulianDate} time The simulation time.
- * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
 KmlDataSource.prototype.update = function (time) {
   const networkLinks = this._networkLinks;
@@ -4253,10 +4253,10 @@ KmlDataSource.prototype.update = function (time) {
 function KmlFeatureData() {
   /**
    * @typedef KmlFeatureData.Author
-   * @type {Object}
-   * @property {String} name Gets the name.
-   * @property {String} uri Gets the URI.
-   * @property {Number} age Gets the email.
+   * @type {object}
+   * @property {string} name Gets the name.
+   * @property {string} uri Gets the URI.
+   * @property {number} age Gets the email.
    */
 
   /**
@@ -4271,13 +4271,13 @@ function KmlFeatureData() {
 
   /**
    * @typedef KmlFeatureData.Link
-   * @type {Object}
-   * @property {String} href Gets the href.
-   * @property {String} hreflang Gets the language of the linked resource.
-   * @property {String} rel Gets the link relation.
-   * @property {String} type Gets the link type.
-   * @property {String} title Gets the link title.
-   * @property {String} length Gets the link length.
+   * @type {object}
+   * @property {string} href Gets the href.
+   * @property {string} hreflang Gets the language of the linked resource.
+   * @property {string} rel Gets the link relation.
+   * @property {string} type Gets the link type.
+   * @property {string} title Gets the link title.
+   * @property {string} length Gets the link length.
    */
 
   /**
@@ -4295,24 +4295,24 @@ function KmlFeatureData() {
 
   /**
    * Gets the unstructured address field.
-   * @type {String}
+   * @type {string}
    */
   this.address = undefined;
   /**
    * Gets the phone number.
-   * @type {String}
+   * @type {string}
    */
   this.phoneNumber = undefined;
   /**
    * Gets the snippet.
-   * @type {String}
+   * @type {string}
    */
   this.snippet = undefined;
   /**
    * Gets the extended data, parsed into a JSON object.
    * Currently only the <code>Data</code> property is supported.
    * <code>SchemaData</code> and custom data are ignored.
-   * @type {String}
+   * @type {string}
    */
   this.extendedData = undefined;
 }

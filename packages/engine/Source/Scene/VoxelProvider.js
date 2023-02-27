@@ -22,7 +22,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * Gets a value indicating whether or not the provider is ready for use.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -33,7 +33,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * Gets the promise that will be resolved when the provider is ready for use.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Promise.<VoxelProvider>}
+   * @type {Promise<VoxelProvider>}
    * @readonly
    */
   readyPromise: {
@@ -141,7 +141,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
-   * @type {String[]}
+   * @type {string[]}
    * @readonly
    */
   names: {
@@ -177,7 +177,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Number[][]|undefined}
+   * @type {number[][]|undefined}
    * @readonly
    */
   minimumValues: {
@@ -189,7 +189,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Number[][]|undefined}
+   * @type {number[][]|undefined}
    * @readonly
    */
   maximumValues: {
@@ -201,7 +201,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumTileCount: {
@@ -213,7 +213,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * This should not be called before {@link VoxelProvider#ready} returns true.
    *
    * @memberof VoxelProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -240,12 +240,12 @@ Object.defineProperties(VoxelProvider.prototype, {
  * This function should not be called before {@link VoxelProvider#ready} returns true.
  * @function
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Number} [options.tileLevel=0] The tile's level.
- * @param {Number} [options.tileX=0] The tile's X coordinate.
- * @param {Number} [options.tileY=0] The tile's Y coordinate.
- * @param {Number} [options.tileZ=0] The tile's Z coordinate.
- * @privateparam {Number} [options.keyframe=0] The requested keyframe.
+ * @param {object} [options] Object with the following properties:
+ * @param {number} [options.tileLevel=0] The tile's level.
+ * @param {number} [options.tileX=0] The tile's X coordinate.
+ * @param {number} [options.tileY=0] The tile's Y coordinate.
+ * @param {number} [options.tileZ=0] The tile's Z coordinate.
+ * @privateparam {number} [options.keyframe=0] The requested keyframe.
  * @returns {Promise<Array[]>|undefined} A promise to an array of typed arrays containing the requested voxel data or undefined if there was a problem loading the data.
  *
  * @exception {DeveloperError} The provider must be ready.

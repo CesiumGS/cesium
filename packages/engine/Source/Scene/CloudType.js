@@ -1,14 +1,14 @@
 /**
  * Specifies the type of the cloud that is added to a {@link CloudCollection} in {@link CloudCollection#add}.
  *
- * @enum {Number}
+ * @enum {number}
  */
 
 const CloudType = {
   /**
    * Cumulus cloud.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   CUMULUS: 0,
@@ -18,7 +18,7 @@ const CloudType = {
  * Validates that the provided cloud type is a valid {@link CloudType}
  *
  * @param {CloudType} cloudType The cloud type to validate.
- * @returns {Boolean} <code>true</code> if the provided cloud type is a valid value; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the provided cloud type is a valid value; otherwise, <code>false</code>.
  *
  * @example
  * if (!Cesium.CloudType.validate(cloudType)) {

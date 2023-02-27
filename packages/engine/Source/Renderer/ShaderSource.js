@@ -304,11 +304,11 @@ function combineShader(shaderSource, isFragmentShader, context) {
 /**
  * An object containing various inputs that will be combined to form a final GLSL shader string.
  *
- * @param {Object} [options] Object with the following properties:
- * @param {String[]} [options.sources] An array of strings to combine containing GLSL code for the shader.
- * @param {String[]} [options.defines] An array of strings containing GLSL identifiers to <code>#define</code>.
- * @param {String} [options.pickColorQualifier] The GLSL qualifier, <code>uniform</code> or <code>in</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
- * @param {Boolean} [options.includeBuiltIns=true] If true, referenced built-in functions will be included with the combined shader.  Set to false if this shader will become a source in another shader, to avoid duplicating functions.
+ * @param {object} [options] Object with the following properties:
+ * @param {string[]} [options.sources] An array of strings to combine containing GLSL code for the shader.
+ * @param {string[]} [options.defines] An array of strings containing GLSL identifiers to <code>#define</code>.
+ * @param {string} [options.pickColorQualifier] The GLSL qualifier, <code>uniform</code> or <code>in</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
+ * @param {boolean} [options.includeBuiltIns=true] If true, referenced built-in functions will be included with the combined shader.  Set to false if this shader will become a source in another shader, to avoid duplicating functions.
  *
  * @exception {DeveloperError} options.pickColorQualifier must be 'uniform' or 'in'.
  *
@@ -368,7 +368,7 @@ ShaderSource.replaceMain = function (source, renamedMain) {
  * {@link ShaderSource#createCombinedFragmentShader} are both expensive to
  * compute, create a simpler string key for lookups in the {@link ShaderCache}.
  *
- * @returns {String} A key for identifying this shader
+ * @returns {string} A key for identifying this shader
  *
  * @private
  */
@@ -388,7 +388,7 @@ ShaderSource.prototype.getCacheKey = function () {
  *
  * @param {Context} context The current rendering context
  *
- * @returns {String} The combined shader string.
+ * @returns {string} The combined shader string.
  */
 ShaderSource.prototype.createCombinedVertexShader = function (context) {
   return combineShader(this, false, context);
@@ -399,7 +399,7 @@ ShaderSource.prototype.createCombinedVertexShader = function (context) {
  *
  * @param {Context} context The current rendering context
  *
- * @returns {String} The combined shader string.
+ * @returns {string} The combined shader string.
  */
 ShaderSource.prototype.createCombinedFragmentShader = function (context) {
   return combineShader(this, true, context);

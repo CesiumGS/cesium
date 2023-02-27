@@ -68,7 +68,7 @@ function PointVisualizer(entityCluster, entityCollection) {
  * Entity counterpart at the given time.
  *
  * @param {JulianDate} time The time to update to.
- * @returns {Boolean} This function always returns true.
+ * @returns {boolean} This function always returns true.
  */
 PointVisualizer.prototype.update = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -350,7 +350,7 @@ PointVisualizer.prototype.getBoundingSphere = function (entity, result) {
 /**
  * Returns true if this object was destroyed; otherwise, false.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 PointVisualizer.prototype.isDestroyed = function () {
   return false;

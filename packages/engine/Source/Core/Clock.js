@@ -13,15 +13,15 @@ import JulianDate from "./JulianDate.js";
  * @alias Clock
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {JulianDate} [options.startTime] The start time of the clock.
  * @param {JulianDate} [options.stopTime] The stop time of the clock.
  * @param {JulianDate} [options.currentTime] The current time.
- * @param {Number} [options.multiplier=1.0] Determines how much time advances when {@link Clock#tick} is called, negative values allow for advancing backwards.
+ * @param {number} [options.multiplier=1.0] Determines how much time advances when {@link Clock#tick} is called, negative values allow for advancing backwards.
  * @param {ClockStep} [options.clockStep=ClockStep.SYSTEM_CLOCK_MULTIPLIER] Determines if calls to {@link Clock#tick} are frame dependent or system clock dependent.
  * @param {ClockRange} [options.clockRange=ClockRange.UNBOUNDED] Determines how the clock should behave when {@link Clock#startTime} or {@link Clock#stopTime} is reached.
- * @param {Boolean} [options.canAnimate=true] Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered, for example.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
- * @param {Boolean} [options.shouldAnimate=false] Indicates whether {@link Clock#tick} should attempt to advance time.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
+ * @param {boolean} [options.canAnimate=true] Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered, for example.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
+ * @param {boolean} [options.shouldAnimate=false] Indicates whether {@link Clock#tick} should attempt to advance time.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
  *
  * @exception {DeveloperError} startTime must come before stopTime.
  *
@@ -109,7 +109,7 @@ function Clock(options) {
    * Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered,
    * for example.  The clock will only advance time when both
    * {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.canAnimate = defaultValue(options.canAnimate, true);
@@ -178,7 +178,7 @@ Object.defineProperties(Clock.prototype, {
    * {@link Clock#clockStep} from {@link ClockStep.SYSTEM_CLOCK} to
    * {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}.
    * @memberof Clock.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   multiplier: {
@@ -230,7 +230,7 @@ Object.defineProperties(Clock.prototype, {
    * {@link Clock#clockStep} from {@link ClockStep.SYSTEM_CLOCK} to
    * {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}.
    * @memberof Clock.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   shouldAnimate: {

@@ -940,6 +940,7 @@ function Foo() {
 - Remove all use of the deprecated API inside Cesium except for unit tests that specifically test the deprecated API.
 - Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/CesiumGS/cesium/blob/main/CHANGES.md). Include what Cesium version it will be removed in.
 - Create an [issue](https://github.com/CesiumGS/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
+- Upon removal of the API, add a mention of it in the `Breaking Changes` section of [`CHANGES.md`](https://github.com/CesiumGS/cesium/blob/main/CHANGES.md).
 
 ## Third-Party Libraries
 

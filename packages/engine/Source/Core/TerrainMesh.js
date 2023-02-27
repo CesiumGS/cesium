@@ -13,21 +13,21 @@ import defaultValue from "./defaultValue.js";
  *                       the Cartesian position of the vertex, H is the height above the ellipsoid, and
  *                       U and V are the texture coordinates.
  * @param {Uint8Array|Uint16Array|Uint32Array} indices The indices describing how the vertices are connected to form triangles.
- * @param {Number} indexCountWithoutSkirts The index count of the mesh not including skirts.
- * @param {Number} vertexCountWithoutSkirts The vertex count of the mesh not including skirts.
- * @param {Number} minimumHeight The lowest height in the tile, in meters above the ellipsoid.
- * @param {Number} maximumHeight The highest height in the tile, in meters above the ellipsoid.
+ * @param {number} indexCountWithoutSkirts The index count of the mesh not including skirts.
+ * @param {number} vertexCountWithoutSkirts The vertex count of the mesh not including skirts.
+ * @param {number} minimumHeight The lowest height in the tile, in meters above the ellipsoid.
+ * @param {number} maximumHeight The highest height in the tile, in meters above the ellipsoid.
  * @param {BoundingSphere} boundingSphere3D A bounding sphere that completely contains the tile.
  * @param {Cartesian3} occludeePointInScaledSpace The occludee point of the tile, represented in ellipsoid-
  *                     scaled space, and used for horizon culling.  If this point is below the horizon,
  *                     the tile is considered to be entirely below the horizon.
- * @param {Number} [vertexStride=6] The number of components in each vertex.
+ * @param {number} [vertexStride=6] The number of components in each vertex.
  * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding box that completely contains the tile.
  * @param {TerrainEncoding} encoding Information used to decode the mesh.
- * @param {Number[]} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
- * @param {Number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
- * @param {Number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
- * @param {Number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
+ * @param {number[]} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
+ * @param {number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
+ * @param {number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
+ * @param {number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
  *
  * @private
  */
@@ -69,7 +69,7 @@ function TerrainMesh(
    * The number of components in each vertex.  Typically this is 6 for the 6 components
    * [X, Y, Z, H, U, V], but if each vertex has additional data (such as a vertex normal), this value
    * may be higher.
-   * @type {Number}
+   * @type {number}
    */
   this.stride = defaultValue(vertexStride, 6);
 
@@ -81,25 +81,25 @@ function TerrainMesh(
 
   /**
    * The index count of the mesh not including skirts.
-   * @type {Number}
+   * @type {number}
    */
   this.indexCountWithoutSkirts = indexCountWithoutSkirts;
 
   /**
    * The vertex count of the mesh not including skirts.
-   * @type {Number}
+   * @type {number}
    */
   this.vertexCountWithoutSkirts = vertexCountWithoutSkirts;
 
   /**
    * The lowest height in the tile, in meters above the ellipsoid.
-   * @type {Number}
+   * @type {number}
    */
   this.minimumHeight = minimumHeight;
 
   /**
    * The highest height in the tile, in meters above the ellipsoid.
-   * @type {Number}
+   * @type {number}
    */
   this.maximumHeight = maximumHeight;
 
@@ -131,25 +131,25 @@ function TerrainMesh(
 
   /**
    * The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
-   * @type {Number[]}
+   * @type {number[]}
    */
   this.westIndicesSouthToNorth = westIndicesSouthToNorth;
 
   /**
    * The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
-   * @type {Number[]}
+   * @type {number[]}
    */
   this.southIndicesEastToWest = southIndicesEastToWest;
 
   /**
    * The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
-   * @type {Number[]}
+   * @type {number[]}
    */
   this.eastIndicesNorthToSouth = eastIndicesNorthToSouth;
 
   /**
    * The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
-   * @type {Number[]}
+   * @type {number[]}
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 }

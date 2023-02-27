@@ -19,7 +19,7 @@ const ModelSilhouettePipelineStage = {
  * Tracks how many silhouettes have been created. This value is used to
  * assign a reference number to the stencil.
  *
- * @type {Number}
+ * @type {number}
  * @private
  */
 ModelSilhouettePipelineStage.silhouettesLength = 0;

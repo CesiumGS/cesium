@@ -13,12 +13,12 @@ import NodeStatisticsPipelineStage from "./NodeStatisticsPipelineStage.js";
 /**
  * An in-memory representation of a node as part of the {@link ModelSceneGraph}.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {ModelComponents.Node} options.node The corresponding node components from the 3D model.
  * @param {Matrix4} options.transform The transform of this node, excluding transforms from the node's ancestors or children.
  * @param {Matrix4} options.transformToRoot The product of the transforms of all the node's ancestors, excluding the node's own transform.
  * @param {ModelSceneGraph} options.sceneGraph The scene graph this node belongs to.
- * @param {Number[]} options.children The indices of the children of this node in the runtime nodes array of the scene graph.
+ * @param {number[]} options.children The indices of the children of this node in the runtime nodes array of the scene graph.
  *
  * @alias ModelRuntimeNode
  * @constructor
@@ -67,7 +67,7 @@ function ModelRuntimeNode(options) {
    * Whether or not to show this node and its children. This can be toggled
    * by the user through {@link ModelNode}.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    *
@@ -81,7 +81,7 @@ function ModelRuntimeNode(options) {
    * own transform. If this is true, the node will ignore animations in the
    * model's asset.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -222,7 +222,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
    * The indices of the children of this node in the scene graph.
    *
    * @memberof ModelRuntimeNode.prototype
-   * @type {Number[]}
+   * @type {number[]}
    * @readonly
    *
    * @private
@@ -438,7 +438,7 @@ Object.defineProperties(ModelRuntimeNode.prototype, {
    * in the model's asset to affect the node's properties.
    *
    * @memberof ModelRuntimeNode.prototype
-   * @type {Number[]}
+   * @type {number[]}
    *
    * @private
    */
@@ -541,7 +541,7 @@ function updateTransformFromParameters(runtimeNode, transformParameters) {
 /**
  * Returns the child with the given index.
  *
- * @param {Number} index The index of the child.
+ * @param {number} index The index of the child.
  *
  * @returns {ModelRuntimeNode}
  *

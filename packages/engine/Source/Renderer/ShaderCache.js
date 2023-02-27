@@ -29,11 +29,11 @@ Object.defineProperties(ShaderCache.prototype, {
      * replace an existing reference to a shader program, which is passed as the first argument.
      * </p>
      *
-     * @param {Object} options Object with the following properties:
+     * @param {object} options Object with the following properties:
      * @param {ShaderProgram} [options.shaderProgram] The shader program that is being reassigned.
-     * @param {String|ShaderSource} options.vertexShaderSource The GLSL source for the vertex shader.
-     * @param {String|ShaderSource} options.fragmentShaderSource The GLSL source for the fragment shader.
-     * @param {Object} options.attributeLocations Indices for the attribute inputs to the vertex shader.
+     * @param {string|ShaderSource} options.vertexShaderSource The GLSL source for the vertex shader.
+     * @param {string|ShaderSource} options.fragmentShaderSource The GLSL source for the fragment shader.
+     * @param {object} options.attributeLocations Indices for the attribute inputs to the vertex shader.
 
      * @returns {ShaderProgram} The cached or newly created shader program.
      *
@@ -65,10 +65,10 @@ function toSortedJson(dictionary) {
  * Returns a shader program from the cache, or creates and caches a new shader program,
  * given the GLSL vertex and fragment shader source and attribute locations.
  *
- * @param {Object} options Object with the following properties:
- * @param {String|ShaderSource} options.vertexShaderSource The GLSL source for the vertex shader.
- * @param {String|ShaderSource} options.fragmentShaderSource The GLSL source for the fragment shader.
- * @param {Object} options.attributeLocations Indices for the attribute inputs to the vertex shader.
+ * @param {object} options Object with the following properties:
+ * @param {string|ShaderSource} options.vertexShaderSource The GLSL source for the vertex shader.
+ * @param {string|ShaderSource} options.fragmentShaderSource The GLSL source for the fragment shader.
+ * @param {object} options.attributeLocations Indices for the attribute inputs to the vertex shader.
  *
  * @returns {ShaderProgram} The cached or newly created shader program.
  */

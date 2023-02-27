@@ -21,7 +21,7 @@ Object.defineProperties(DataSourceCollection.prototype, {
   /**
    * Gets the number of data sources in this collection.
    * @memberof DataSourceCollection.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -73,10 +73,10 @@ Object.defineProperties(DataSourceCollection.prototype, {
 /**
  * Adds a data source to the collection.
  *
- * @param {DataSource|Promise.<DataSource>} dataSource A data source or a promise to a data source to add to the collection.
+ * @param {DataSource|Promise<DataSource>} dataSource A data source or a promise to a data source to add to the collection.
  *                                        When passing a promise, the data source will not actually be added
  *                                        to the collection until the promise resolves successfully.
- * @returns {Promise.<DataSource>} A Promise that resolves once the data source has been added to the collection.
+ * @returns {Promise<DataSource>} A Promise that resolves once the data source has been added to the collection.
  */
 DataSourceCollection.prototype.add = function (dataSource) {
   //>>includeStart('debug', pragmas.debug);
@@ -102,8 +102,8 @@ DataSourceCollection.prototype.add = function (dataSource) {
  * Removes a data source from this collection, if present.
  *
  * @param {DataSource} dataSource The data source to remove.
- * @param {Boolean} [destroy=false] Whether to destroy the data source in addition to removing it.
- * @returns {Boolean} true if the data source was in the collection and was removed,
+ * @param {boolean} [destroy=false] Whether to destroy the data source in addition to removing it.
+ * @returns {boolean} true if the data source was in the collection and was removed,
  *                    false if the data source was not in the collection.
  */
 DataSourceCollection.prototype.remove = function (dataSource, destroy) {
@@ -127,7 +127,7 @@ DataSourceCollection.prototype.remove = function (dataSource, destroy) {
 /**
  * Removes all data sources from this collection.
  *
- * @param {Boolean} [destroy=false] whether to destroy the data sources in addition to removing them.
+ * @param {boolean} [destroy=false] whether to destroy the data sources in addition to removing them.
  */
 DataSourceCollection.prototype.removeAll = function (destroy) {
   destroy = defaultValue(destroy, false);
@@ -148,7 +148,7 @@ DataSourceCollection.prototype.removeAll = function (destroy) {
  * Checks to see if the collection contains a given data source.
  *
  * @param {DataSource} dataSource The data source to check for.
- * @returns {Boolean} true if the collection contains the data source, false otherwise.
+ * @returns {boolean} true if the collection contains the data source, false otherwise.
  */
 DataSourceCollection.prototype.contains = function (dataSource) {
   return this.indexOf(dataSource) !== -1;
@@ -158,7 +158,7 @@ DataSourceCollection.prototype.contains = function (dataSource) {
  * Determines the index of a given data source in the collection.
  *
  * @param {DataSource} dataSource The data source to find the index of.
- * @returns {Number} The index of the data source in the collection, or -1 if the data source does not exist in the collection.
+ * @returns {number} The index of the data source in the collection, or -1 if the data source does not exist in the collection.
  */
 DataSourceCollection.prototype.indexOf = function (dataSource) {
   return this._dataSources.indexOf(dataSource);
@@ -167,7 +167,7 @@ DataSourceCollection.prototype.indexOf = function (dataSource) {
 /**
  * Gets a data source by index from the collection.
  *
- * @param {Number} index the index to retrieve.
+ * @param {number} index the index to retrieve.
  * @returns {DataSource} The data source at the specified index.
  */
 DataSourceCollection.prototype.get = function (index) {
@@ -183,7 +183,7 @@ DataSourceCollection.prototype.get = function (index) {
 /**
  * Gets a data source by name from the collection.
  *
- * @param {String} name The name to retrieve.
+ * @param {string} name The name to retrieve.
  * @returns {DataSource[]} A list of all data sources matching the provided name.
  */
 DataSourceCollection.prototype.getByName = function (name) {
@@ -306,7 +306,7 @@ DataSourceCollection.prototype.lowerToBottom = function (dataSource) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} true if this object was destroyed; otherwise, false.
+ * @returns {boolean} true if this object was destroyed; otherwise, false.
  *
  * @see DataSourceCollection#destroy
  */

@@ -12,15 +12,15 @@ import CesiumMath from "./Math.js";
  * @constructor
  * @implements {ArrayLike<number>}
  *
- * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
- * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
- * @param {Number} [column2Row0=0.0] The value for column 2, row 0.
- * @param {Number} [column0Row1=0.0] The value for column 0, row 1.
- * @param {Number} [column1Row1=0.0] The value for column 1, row 1.
- * @param {Number} [column2Row1=0.0] The value for column 2, row 1.
- * @param {Number} [column0Row2=0.0] The value for column 0, row 2.
- * @param {Number} [column1Row2=0.0] The value for column 1, row 2.
- * @param {Number} [column2Row2=0.0] The value for column 2, row 2.
+ * @param {number} [column0Row0=0.0] The value for column 0, row 0.
+ * @param {number} [column1Row0=0.0] The value for column 1, row 0.
+ * @param {number} [column2Row0=0.0] The value for column 2, row 0.
+ * @param {number} [column0Row1=0.0] The value for column 0, row 1.
+ * @param {number} [column1Row1=0.0] The value for column 1, row 1.
+ * @param {number} [column2Row1=0.0] The value for column 2, row 1.
+ * @param {number} [column0Row2=0.0] The value for column 0, row 2.
+ * @param {number} [column1Row2=0.0] The value for column 1, row 2.
+ * @param {number} [column2Row2=0.0] The value for column 2, row 2.
  *
  * @see Matrix3.fromArray
  * @see Matrix3.fromColumnMajorArray
@@ -60,7 +60,7 @@ function Matrix3(
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 Matrix3.packedLength = 9;
 
@@ -68,10 +68,10 @@ Matrix3.packedLength = 9;
  * Stores the provided instance into the provided array.
  *
  * @param {Matrix3} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 Matrix3.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -97,8 +97,8 @@ Matrix3.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Matrix3} [result] The object into which to store the result.
  * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
  */
@@ -130,8 +130,8 @@ Matrix3.unpack = function (array, startingIndex, result) {
  * are stored in column-major order.
  *
  * @param {Matrix3[]} array The array of matrices to pack.
- * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 9 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 9) elements.
- * @returns {Number[]} The packed array.
+ * @param {number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 9 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 9) elements.
+ * @returns {number[]} The packed array.
  */
 Matrix3.packArray = function (array, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -161,7 +161,7 @@ Matrix3.packArray = function (array, result) {
 /**
  * Unpacks an array of column-major matrix components into an array of Matrix3s.
  *
- * @param {Number[]} array The array of components to unpack.
+ * @param {number[]} array The array of components to unpack.
  * @param {Matrix3[]} [result] The array onto which to store the result.
  * @returns {Matrix3[]} The unpacked array.
  */
@@ -228,8 +228,8 @@ Matrix3.clone = function (matrix, result) {
  * Creates a Matrix3 from 9 consecutive elements in an array.
  *
  * @function
- * @param {Number[]} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
- * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
+ * @param {number[]} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+ * @param {number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
  * @param {Matrix3} [result] The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
  *
@@ -251,7 +251,7 @@ Matrix3.fromArray = Matrix3.unpack;
 /**
  * Creates a Matrix3 instance from a column-major order array.
  *
- * @param {Number[]} values The column-major order array.
+ * @param {number[]} values The column-major order array.
  * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
  */
@@ -267,7 +267,7 @@ Matrix3.fromColumnMajorArray = function (values, result) {
  * Creates a Matrix3 instance from a row-major order array.
  * The resulting matrix will be in column-major order.
  *
- * @param {Number[]} values The row-major order array.
+ * @param {number[]} values The row-major order array.
  * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
  */
@@ -435,7 +435,7 @@ Matrix3.fromScale = function (scale, result) {
 /**
  * Computes a Matrix3 instance representing a uniform scale.
  *
- * @param {Number} scale The uniform scale factor.
+ * @param {number} scale The uniform scale factor.
  * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
  *
@@ -515,7 +515,7 @@ Matrix3.fromCrossProduct = function (vector, result) {
 /**
  * Creates a rotation matrix around the x-axis.
  *
- * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
+ * @param {number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
  * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
  *
@@ -563,7 +563,7 @@ Matrix3.fromRotationX = function (angle, result) {
 /**
  * Creates a rotation matrix around the y-axis.
  *
- * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
+ * @param {number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
  * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
  *
@@ -611,7 +611,7 @@ Matrix3.fromRotationY = function (angle, result) {
 /**
  * Creates a rotation matrix around the z-axis.
  *
- * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
+ * @param {number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
  * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
  * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
  *
@@ -661,8 +661,8 @@ Matrix3.fromRotationZ = function (angle, result) {
  * The array will be in column-major order.
  *
  * @param {Matrix3} matrix The matrix to use..
- * @param {Number[]} [result] The Array onto which to store the result.
- * @returns {Number[]} The modified Array parameter or a new Array instance if one was not provided.
+ * @param {number[]} [result] The Array onto which to store the result.
+ * @returns {number[]} The modified Array parameter or a new Array instance if one was not provided.
  */
 Matrix3.toArray = function (matrix, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -697,9 +697,9 @@ Matrix3.toArray = function (matrix, result) {
 /**
  * Computes the array index of the element at the provided row and column.
  *
- * @param {Number} column The zero-based index of the column.
- * @param {Number} row The zero-based index of the row.
- * @returns {Number} The index of the element at the provided row and column.
+ * @param {number} column The zero-based index of the column.
+ * @param {number} row The zero-based index of the row.
+ * @returns {number} The index of the element at the provided row and column.
  *
  * @exception {DeveloperError} row must be 0, 1, or 2.
  * @exception {DeveloperError} column must be 0, 1, or 2.
@@ -725,7 +725,7 @@ Matrix3.getElementIndex = function (column, row) {
  * Retrieves a copy of the matrix column at the provided index as a Cartesian3 instance.
  *
  * @param {Matrix3} matrix The matrix to use.
- * @param {Number} index The zero-based index of the column to retrieve.
+ * @param {number} index The zero-based index of the column to retrieve.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
  *
@@ -754,7 +754,7 @@ Matrix3.getColumn = function (matrix, index, result) {
  * Computes a new matrix that replaces the specified column in the provided matrix with the provided Cartesian3 instance.
  *
  * @param {Matrix3} matrix The matrix to use.
- * @param {Number} index The zero-based index of the column to set.
+ * @param {number} index The zero-based index of the column to set.
  * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified column.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
@@ -782,7 +782,7 @@ Matrix3.setColumn = function (matrix, index, cartesian, result) {
  * Retrieves a copy of the matrix row at the provided index as a Cartesian3 instance.
  *
  * @param {Matrix3} matrix The matrix to use.
- * @param {Number} index The zero-based index of the row to retrieve.
+ * @param {number} index The zero-based index of the row to retrieve.
  * @param {Cartesian3} result The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter.
  *
@@ -810,7 +810,7 @@ Matrix3.getRow = function (matrix, index, result) {
  * Computes a new matrix that replaces the specified row in the provided matrix with the provided Cartesian3 instance.
  *
  * @param {Matrix3} matrix The matrix to use.
- * @param {Number} index The zero-based index of the row to set.
+ * @param {number} index The zero-based index of the row to set.
  * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified row.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
@@ -883,7 +883,7 @@ const scaleScratch2 = new Cartesian3();
  * This assumes the matrix is an affine transformation.
  *
  * @param {Matrix3} matrix The matrix to use.
- * @param {Number} scale The uniform scale that replaces the scale of the provided matrix.
+ * @param {number} scale The uniform scale that replaces the scale of the provided matrix.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
  *
@@ -960,7 +960,7 @@ const scaleScratch3 = new Cartesian3();
  * The maximum scale is the maximum length of the column vectors.
  *
  * @param {Matrix3} matrix The matrix.
- * @returns {Number} The maximum scale.
+ * @returns {number} The maximum scale.
  */
 Matrix3.getMaximumScale = function (matrix) {
   Matrix3.getScale(matrix, scaleScratch3);
@@ -1167,7 +1167,7 @@ Matrix3.multiplyByVector = function (matrix, cartesian, result) {
  * Computes the product of a matrix and a scalar.
  *
  * @param {Matrix3} matrix The matrix.
- * @param {Number} scalar The number to multiply by.
+ * @param {number} scalar The number to multiply by.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
  */
@@ -1234,7 +1234,7 @@ Matrix3.multiplyByScale = function (matrix, scale, result) {
  * Computes the product of a matrix times a uniform scale, as if the scale were a scale matrix.
  *
  * @param {Matrix3} matrix The matrix on the left-hand side.
- * @param {Number} scale The uniform scale on the right-hand side.
+ * @param {number} scale The uniform scale on the right-hand side.
  * @param {Matrix3} result The object onto which to store the result.
  * @returns {Matrix3} The modified result parameter.
  *
@@ -1429,8 +1429,8 @@ const jMatrixTranspose = new Matrix3();
  * </p>
  *
  * @param {Matrix3} matrix The matrix to decompose into diagonal and unitary matrix. Expected to be symmetric.
- * @param {Object} [result] An object with unitary and diagonal properties which are matrices onto which to store the result.
- * @returns {Object} An object with unitary and diagonal properties which are the unitary and diagonal matrices, respectively.
+ * @param {object} [result] An object with unitary and diagonal properties which are matrices onto which to store the result.
+ * @returns {object} An object with unitary and diagonal properties which are the unitary and diagonal matrices, respectively.
  *
  * @example
  * const a = //... symetric matrix
@@ -1520,7 +1520,7 @@ Matrix3.abs = function (matrix, result) {
  * Computes the determinant of the provided matrix.
  *
  * @param {Matrix3} matrix The matrix to use.
- * @returns {Number} The value of the determinant of the matrix.
+ * @returns {number} The value of the determinant of the matrix.
  */
 Matrix3.determinant = function (matrix) {
   //>>includeStart('debug', pragmas.debug);
@@ -1618,7 +1618,7 @@ Matrix3.inverseTranspose = function (matrix, result) {
  *
  * @param {Matrix3} [left] The first matrix.
  * @param {Matrix3} [right] The second matrix.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 Matrix3.equals = function (left, right) {
   return (
@@ -1644,8 +1644,8 @@ Matrix3.equals = function (left, right) {
  *
  * @param {Matrix3} [left] The first matrix.
  * @param {Matrix3} [right] The second matrix.
- * @param {Number} [epsilon=0] The epsilon to use for equality testing.
- * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
+ * @returns {boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix3.equalsEpsilon = function (left, right, epsilon) {
   epsilon = defaultValue(epsilon, 0);
@@ -1689,7 +1689,7 @@ Matrix3.ZERO = Object.freeze(
 /**
  * The index into Matrix3 for column 0, row 0.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN0ROW0 = 0;
@@ -1697,7 +1697,7 @@ Matrix3.COLUMN0ROW0 = 0;
 /**
  * The index into Matrix3 for column 0, row 1.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN0ROW1 = 1;
@@ -1705,7 +1705,7 @@ Matrix3.COLUMN0ROW1 = 1;
 /**
  * The index into Matrix3 for column 0, row 2.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN0ROW2 = 2;
@@ -1713,7 +1713,7 @@ Matrix3.COLUMN0ROW2 = 2;
 /**
  * The index into Matrix3 for column 1, row 0.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN1ROW0 = 3;
@@ -1721,7 +1721,7 @@ Matrix3.COLUMN1ROW0 = 3;
 /**
  * The index into Matrix3 for column 1, row 1.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN1ROW1 = 4;
@@ -1729,7 +1729,7 @@ Matrix3.COLUMN1ROW1 = 4;
 /**
  * The index into Matrix3 for column 1, row 2.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN1ROW2 = 5;
@@ -1737,7 +1737,7 @@ Matrix3.COLUMN1ROW2 = 5;
 /**
  * The index into Matrix3 for column 2, row 0.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN2ROW0 = 6;
@@ -1745,7 +1745,7 @@ Matrix3.COLUMN2ROW0 = 6;
 /**
  * The index into Matrix3 for column 2, row 1.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN2ROW1 = 7;
@@ -1753,7 +1753,7 @@ Matrix3.COLUMN2ROW1 = 7;
 /**
  * The index into Matrix3 for column 2, row 2.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  */
 Matrix3.COLUMN2ROW2 = 8;
@@ -1763,7 +1763,7 @@ Object.defineProperties(Matrix3.prototype, {
    * Gets the number of items in the collection.
    * @memberof Matrix3.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   length: {
     get: function () {
@@ -1787,7 +1787,7 @@ Matrix3.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Matrix3} [right] The right hand side matrix.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 Matrix3.prototype.equals = function (right) {
   return Matrix3.equals(this, right);
@@ -1816,8 +1816,8 @@ Matrix3.equalsArray = function (matrix, array, offset) {
  * <code>false</code> otherwise.
  *
  * @param {Matrix3} [right] The right hand side matrix.
- * @param {Number} [epsilon=0] The epsilon to use for equality testing.
- * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
+ * @returns {boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix3.prototype.equalsEpsilon = function (right, epsilon) {
   return Matrix3.equalsEpsilon(this, right, epsilon);
@@ -1827,7 +1827,7 @@ Matrix3.prototype.equalsEpsilon = function (right, epsilon) {
  * Creates a string representing this Matrix with each row being
  * on a separate line and in the format '(column0, column1, column2)'.
  *
- * @returns {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2)'.
+ * @returns {string} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2)'.
  */
 Matrix3.prototype.toString = function () {
   return (

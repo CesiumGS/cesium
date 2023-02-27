@@ -250,7 +250,7 @@ Object.defineProperties(Billboard.prototype, {
    * Determines if this billboard will be shown.  Use this to hide or show a billboard, instead
    * of removing it and re-adding it to the collection.
    * @memberof Billboard.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   show: {
@@ -606,7 +606,7 @@ Object.defineProperties(Billboard.prototype, {
    * and <code>2.0</code>.
    * </div>
    * @memberof Billboard.prototype
-   * @type {Number}
+   * @type {number}
    */
   scale: {
     get: function () {
@@ -671,7 +671,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Gets or sets the rotation angle in radians.
    * @memberof Billboard.prototype
-   * @type {Number}
+   * @type {number}
    */
   rotation: {
     get: function () {
@@ -730,7 +730,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Gets or sets a width for the billboard. If undefined, the image width will be used.
    * @memberof Billboard.prototype
-   * @type {Number}
+   * @type {number}
    */
   width: {
     get: function () {
@@ -752,7 +752,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Gets or sets a height for the billboard. If undefined, the image height will be used.
    * @memberof Billboard.prototype
-   * @type {Number}
+   * @type {number}
    */
   height: {
     get: function () {
@@ -775,7 +775,7 @@ Object.defineProperties(Billboard.prototype, {
    * Gets or sets if the billboard size is in meters or pixels. <code>true</code> to size the billboard in meters;
    * otherwise, the size is in pixels.
    * @memberof Billboard.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   sizeInMeters: {
@@ -830,7 +830,7 @@ Object.defineProperties(Billboard.prototype, {
    * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
    * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
    * @memberof Billboard.prototype
-   * @type {Number}
+   * @type {number}
    */
   disableDepthTestDistance: {
     get: function () {
@@ -857,7 +857,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Gets or sets the user-defined object returned when the billboard is picked.
    * @memberof Billboard.prototype
-   * @type {Object}
+   * @type {object}
    */
   id: {
     get: function () {
@@ -908,7 +908,7 @@ Object.defineProperties(Billboard.prototype, {
    * </p>
    *
    * @memberof Billboard.prototype
-   * @type {String}
+   * @type {string}
    * @example
    * // load an image from a URL
    * b.image = 'some/image/url.png';
@@ -947,7 +947,7 @@ Object.defineProperties(Billboard.prototype, {
    *
    * @memberof Billboard.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -980,7 +980,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Determines whether or not this billboard will be shown or hidden because it was clustered.
    * @memberof Billboard.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   clusterShow: {
@@ -1023,7 +1023,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * The outline width of this Billboard in pixels.  Effective only for SDF billboards like Label glyphs.
    * @memberof Billboard.prototype
-   * @type {Number}
+   * @type {number}
    * @private
    */
   outlineWidth: {
@@ -1208,8 +1208,8 @@ Billboard.prototype._loadImage = function () {
  * To load an image from a URL, setting the {@link Billboard#image} property is more convenient.
  * </p>
  *
- * @param {String} id The id of the image.  This can be any string that uniquely identifies the image.
- * @param {HTMLImageElement|HTMLCanvasElement|String|Resource|Billboard.CreateImageCallback} image The image to load.  This parameter
+ * @param {string} id The id of the image.  This can be any string that uniquely identifies the image.
+ * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Billboard.CreateImageCallback} image The image to load.  This parameter
  *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
  *        or a function which will be called to create the image if it hasn't been loaded already.
  * @example
@@ -1256,7 +1256,7 @@ Billboard.prototype.setImage = function (id, image) {
  * Uses a sub-region of the image with the given id as the image for this billboard,
  * measured in pixels from the bottom-left.
  *
- * @param {String} id The id of the image to use.
+ * @param {string} id The id of the image to use.
  * @param {BoundingRectangle} subRegion The sub-region of the image.
  *
  * @exception {RuntimeError} image with id must be in the atlas
@@ -1489,7 +1489,7 @@ Billboard.getScreenSpaceBoundingBox = function (
  * are equal.  Billboards in different collections can be equal.
  *
  * @param {Billboard} other The billboard to compare for equality.
- * @returns {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
  */
 Billboard.prototype.equals = function (other) {
   return (
@@ -1546,7 +1546,7 @@ Billboard.prototype._destroy = function () {
 /**
  * A function that creates an image.
  * @callback Billboard.CreateImageCallback
- * @param {String} id The identifier of the image to load.
+ * @param {string} id The identifier of the image to load.
  * @returns {HTMLImageElement|HTMLCanvasElement|Promise<HTMLImageElement|HTMLCanvasElement>} The image, or a promise that will resolve to an image.
  */
 export default Billboard;

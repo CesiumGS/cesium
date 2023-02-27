@@ -411,15 +411,15 @@ function createLayeredEntries(layers) {
 /**
  * @typedef createElevationBandMaterialEntry
  *
- * @property {Number} height The height.
+ * @property {number} height The height.
  * @property {Color} color The color at this height.
  */
 /**
  * @typedef createElevationBandMaterialBand
  *
  * @property {createElevationBandMaterialEntry[]} entries A list of elevation entries. They will automatically be sorted from lowest to highest. If there is only one entry and <code>extendsDownards</code> and <code>extendUpwards</code> are both <code>false</code>, they will both be set to <code>true</code>.
- * @property {Boolean} [extendDownwards=false] If <code>true</code>, the band's minimum elevation color will extend infinitely downwards.
- * @property {Boolean} [extendUpwards=false] If <code>true</code>, the band's maximum elevation color will extend infinitely upwards.
+ * @property {boolean} [extendDownwards=false] If <code>true</code>, the band's minimum elevation color will extend infinitely downwards.
+ * @property {boolean} [extendUpwards=false] If <code>true</code>, the band's maximum elevation color will extend infinitely upwards.
  */
 
 /**
@@ -430,7 +430,7 @@ function createLayeredEntries(layers) {
  *
  * @function createElevationBandMaterial
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene where the visualization is taking place.
  * @param {createElevationBandMaterialBand[]} options.layers A list of bands ordered from lowest to highest precedence.
  * @returns {Material} A new {@link Material} instance.
@@ -550,7 +550,7 @@ function createElevationBandMaterial(options) {
  * Function for checking if the context will allow floating point textures for heights.
  *
  * @param {Context} context The {@link Context}.
- * @returns {Boolean} <code>true</code> if floating point textures can be used for heights.
+ * @returns {boolean} <code>true</code> if floating point textures can be used for heights.
  * @private
  */
 createElevationBandMaterial._useFloatTexture = function (context) {

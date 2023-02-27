@@ -22,7 +22,7 @@ function ClearCommand(options) {
   /**
    * The value to clear the depth buffer to.  When <code>undefined</code>, the depth buffer is not cleared.
    *
-   * @type {Number}
+   * @type {number}
    *
    * @default undefined
    */
@@ -31,7 +31,7 @@ function ClearCommand(options) {
   /**
    * The value to clear the stencil buffer to.  When <code>undefined</code>, the stencil buffer is not cleared.
    *
-   * @type {Number}
+   * @type {number}
    *
    * @default undefined
    */
@@ -63,7 +63,7 @@ function ClearCommand(options) {
    * reference to the command, and can be used to selectively execute commands
    * with {@link Scene#debugCommandFilter}.
    *
-   * @type {Object}
+   * @type {object}
    *
    * @default undefined
    *

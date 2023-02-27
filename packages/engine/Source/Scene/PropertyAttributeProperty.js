@@ -9,8 +9,8 @@ import defined from "../Core/defined.js";
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension}
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.property The property JSON object.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
  *
  * @alias PropertyAttributeProperty
@@ -66,7 +66,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
    * The attribute semantic
    *
    * @memberof PropertyAttributeProperty.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -81,7 +81,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
    * undefined, they default to identity so this property is set false
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @private
    */
@@ -95,7 +95,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
    * The offset to be added to property values as part of the value transform.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
    * @private
    */
@@ -109,7 +109,7 @@ Object.defineProperties(PropertyAttributeProperty.prototype, {
    * The scale to be multiplied to property values as part of the value transform.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
    * @private
    */

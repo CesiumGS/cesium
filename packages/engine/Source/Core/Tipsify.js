@@ -21,13 +21,13 @@ const Tipsify = {};
 /**
  * Calculates the average cache miss ratio (ACMR) for a given set of indices.
  *
- * @param {Object} options Object with the following properties:
- * @param {Number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
+ * @param {object} options Object with the following properties:
+ * @param {number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
  *                        in the vertex buffer that define the geometry's triangles.
- * @param {Number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
+ * @param {number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
  *                                     If not supplied, this value will be computed.
- * @param {Number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
- * @returns {Number} The average cache miss ratio (ACMR).
+ * @param {number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
+ * @returns {number} The average cache miss ratio (ACMR).
  *
  * @exception {DeveloperError} indices length must be a multiple of three.
  * @exception {DeveloperError} cacheSize must be greater than two.
@@ -99,13 +99,13 @@ Tipsify.calculateACMR = function (options) {
 /**
  * Optimizes triangles for the post-vertex shader cache.
  *
- * @param {Object} options Object with the following properties:
- * @param {Number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
+ * @param {object} options Object with the following properties:
+ * @param {number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
  *                        in the vertex buffer that define the geometry's triangles.
- * @param {Number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
+ * @param {number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
  *                                     If not supplied, this value will be computed.
- * @param {Number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
- * @returns {Number[]} A list of the input indices in an optimized order.
+ * @param {number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
+ * @returns {number[]} A list of the input indices in an optimized order.
  *
  * @exception {DeveloperError} indices length must be a multiple of three.
  * @exception {DeveloperError} cacheSize must be greater than two.

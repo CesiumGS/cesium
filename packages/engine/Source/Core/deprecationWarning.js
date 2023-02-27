@@ -9,8 +9,8 @@ import oneTimeWarning from "./oneTimeWarning.js";
  *
  * @function deprecationWarning
  *
- * @param {String} identifier The unique identifier for this deprecated API.
- * @param {String} message The message to log to the console.
+ * @param {string} identifier The unique identifier for this deprecated API.
+ * @param {string} message The message to log to the console.
  *
  * @example
  * // Deprecated function or class

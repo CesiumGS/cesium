@@ -18,8 +18,8 @@ import ShadowVolumeAppearanceFS from "../Shaders/ShadowVolumeAppearanceFS.js";
 /**
  * Creates shaders for a ClassificationPrimitive to use a given Appearance, as well as for picking.
  *
- * @param {Boolean} extentsCulling Discard fragments outside the instance's texture coordinate extents.
- * @param {Boolean} planarExtents If true, texture coordinates will be computed using planes instead of spherical coordinates.
+ * @param {boolean} extentsCulling Discard fragments outside the instance's texture coordinate extents.
+ * @param {boolean} planarExtents If true, texture coordinates will be computed using planes instead of spherical coordinates.
  * @param {Appearance} appearance An Appearance to be used with a ClassificationPrimitive via GroundPrimitive.
  * @private
  */
@@ -73,7 +73,7 @@ function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
 /**
  * Create the fragment shader for a ClassificationPrimitive's color pass when rendering for color.
  *
- * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
+ * @param {boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
  * @returns {ShaderSource} Shader source for the fragment shader.
  */
 ShadowVolumeAppearance.prototype.createFragmentShader = function (
@@ -175,11 +175,11 @@ ShadowVolumeAppearance.prototype.createPickFragmentShader = function (
 /**
  * Create the vertex shader for a ClassificationPrimitive's color pass on the final of 3 shadow volume passes
  *
- * @param {String[]} defines External defines to pass to the vertex shader.
- * @param {String} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position.
- * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
+ * @param {string[]} defines External defines to pass to the vertex shader.
+ * @param {string} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position.
+ * @param {boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
  * @param {MapProjection} mapProjection Current scene's map projection.
- * @returns {String} Shader source for the vertex shader.
+ * @returns {string} Shader source for the vertex shader.
  */
 ShadowVolumeAppearance.prototype.createVertexShader = function (
   defines,
@@ -208,11 +208,11 @@ ShadowVolumeAppearance.prototype.createVertexShader = function (
 /**
  * Create the vertex shader for a ClassificationPrimitive's pick pass on the final of 3 shadow volume passes
  *
- * @param {String[]} defines External defines to pass to the vertex shader.
- * @param {String} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position and picking.
- * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
+ * @param {string[]} defines External defines to pass to the vertex shader.
+ * @param {string} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position and picking.
+ * @param {boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
  * @param {MapProjection} mapProjection Current scene's map projection.
- * @returns {String} Shader source for the vertex shader.
+ * @returns {string} Shader source for the vertex shader.
  */
 ShadowVolumeAppearance.prototype.createPickVertexShader = function (
   defines,
@@ -675,11 +675,11 @@ const encodeScratch = new EncodedCartesian3();
  * @private
  *
  * @param {Rectangle} boundingRectangle Rectangle object that the points will approximately bound
- * @param {Number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
+ * @param {number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
  * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
  * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
- * @param {Number} [height=0] The maximum height for the shadow volume.
- * @returns {Object} An attributes dictionary containing planar texture coordinate attributes.
+ * @param {number} [height=0] The maximum height for the shadow volume.
+ * @returns {object} An attributes dictionary containing planar texture coordinate attributes.
  */
 ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function (
   boundingRectangle,
@@ -793,10 +793,10 @@ const sphericalScratch = new Cartesian2();
  * @private
  *
  * @param {Rectangle} boundingRectangle Rectangle object that the spherical extents will approximately bound
- * @param {Number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
+ * @param {number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
  * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
  * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
- * @returns {Object} An attributes dictionary containing spherical texture coordinate attributes.
+ * @returns {object} An attributes dictionary containing spherical texture coordinate attributes.
  */
 ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function (
   boundingRectangle,
@@ -929,7 +929,7 @@ ShadowVolumeAppearance.shouldUseSphericalCoordinates = function (rectangle) {
  * Texture coordinates for ground primitives are computed either using spherical coordinates for large areas or
  * using distance from planes for small areas.
  *
- * @type {Number}
+ * @type {number}
  * @constant
  * @private
  */

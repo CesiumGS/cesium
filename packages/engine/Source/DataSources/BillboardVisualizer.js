@@ -75,7 +75,7 @@ function BillboardVisualizer(entityCluster, entityCollection) {
  * Entity counterpart at the given time.
  *
  * @param {JulianDate} time The time to update to.
- * @returns {Boolean} This function always returns true.
+ * @returns {boolean} This function always returns true.
  */
 BillboardVisualizer.prototype.update = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -274,7 +274,7 @@ BillboardVisualizer.prototype.getBoundingSphere = function (entity, result) {
 /**
  * Returns true if this object was destroyed; otherwise, false.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 BillboardVisualizer.prototype.isDestroyed = function () {
   return false;

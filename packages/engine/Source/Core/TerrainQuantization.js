@@ -1,7 +1,7 @@
 /**
  * This enumerated type is used to determine how the vertices of the terrain mesh are compressed.
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @private
  */
@@ -9,7 +9,7 @@ const TerrainQuantization = {
   /**
    * The vertices are not compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NONE: 0,
@@ -17,7 +17,7 @@ const TerrainQuantization = {
   /**
    * The vertices are compressed to 12 bits.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   BITS12: 1,
