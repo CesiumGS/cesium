@@ -8,6 +8,9 @@
 struct Ray {
     vec3 pos;
     vec3 dir;
+#if defined(SHAPE_BOX)
+    vec3 dInv;
+#endif
 };
 
 struct Intersections {
@@ -128,7 +131,6 @@ vec2 nextIntersection(inout Intersections ix) {
         }
 
         // exiting positive or entering negative after being inside positive
-        // TODO: Can this be simplified?
         bool exitPositive = !enter && currShapeIsPositive && ix.surroundCount == 0;
         bool enterNegativeFromPositive = enter && !currShapeIsPositive && ix.surroundCount == 2 && ix.surroundIsPositive;
         if (exitPositive || enterNegativeFromPositive) {

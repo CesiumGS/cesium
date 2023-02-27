@@ -88,6 +88,8 @@ function VoxelRenderResources(primitive) {
     customShader.fragmentShaderText,
     "#line 0",
     IntersectionUtils,
+    Octree,
+    Megatexture,
   ]);
 
   if (clippingPlanesLength > 0) {
@@ -121,10 +123,11 @@ function VoxelRenderResources(primitive) {
 
   const shapeType = primitive._provider.shape;
   if (shapeType === "BOX") {
+    shaderBuilder.addDefine("SHAPE_BOX", undefined, ShaderDestination.FRAGMENT);
     shaderBuilder.addFragmentLines([
+      convertUvToBox,
       IntersectBox,
       Intersection,
-      convertUvToBox,
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
@@ -140,7 +143,7 @@ function VoxelRenderResources(primitive) {
     ]);
   }
 
-  shaderBuilder.addFragmentLines([Octree, Megatexture, VoxelFS]);
+  shaderBuilder.addFragmentLines([VoxelFS]);
 
   const shape = primitive._shape;
   const shapeDefines = shape.shaderDefines;

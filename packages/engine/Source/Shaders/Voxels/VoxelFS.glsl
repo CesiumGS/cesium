@@ -13,6 +13,7 @@
 
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
+uniform float u_stepSize;
 
 #if defined(PICKING)
     uniform vec4 u_pickColor;
@@ -27,6 +28,19 @@ float hash(vec2 p)
 }
 #endif
 
+float getStepSize(in SampleData sampleData, in Ray viewRay, in vec2 entryExit) {
+#if defined(SHAPE_BOX)
+    Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
+    vec2 voxelIntersection = intersectBox(viewRay, voxelBox);
+    float entry = max(voxelIntersection.x, entryExit.x);
+    float exit = min(voxelIntersection.y, entryExit.y);
+    return (exit - entry);
+#else
+    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
+    return u_stepSize / dimAtLevel;
+#endif
+}
+
 void main()
 {
     vec4 fragCoord = gl_FragCoord;
@@ -35,34 +49,36 @@ void main()
     vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
     vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
     vec3 viewPosUv = u_cameraPositionUv;
+    #if defined(SHAPE_BOX)
+        vec3 dInv = 1.0 / viewDirUv;
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv, dInv);
+    #else
+        Ray viewRayUv = Ray(viewPosUv, viewDirUv);
+    #endif
 
     Intersections ix;
-    vec2 entryExitT = intersectScene(screenCoord, viewPosUv, viewDirUv, ix);
+    vec2 entryExitT = intersectScene(screenCoord, viewRayUv, ix);
 
     // Exit early if the scene was completely missed.
     if (entryExitT.x == NO_HIT) {
         discard;
     }
 
-    float currT = entryExitT.x;
+    float currT = entryExitT.x + 0.0001;
     float endT = entryExitT.y;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
-    // TODO: is it possible for this to be out of bounds, and does it matter?
     vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
 
     // Traverse the tree from the start position
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
+    float stepT = getStepSize(sampleDatas[0], viewRayUv, entryExitT);
 
-    // TODO:
-    //  - jitter doesn't affect the first traversal?
-    //  - jitter is always > 0?
-    //  - jitter is only applied at one step?
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
-        currT += noise * traversalData.stepT;
-        positionUv += noise * traversalData.stepT * viewDirUv;
+        currT += noise * stepT;
+        positionUv += noise * stepT * viewDirUv;
     #endif
 
     FragmentInput fragmentInput;
@@ -83,7 +99,7 @@ void main()
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
-        fragmentInput.voxel.travelDistance = traversalData.stepT;
+        fragmentInput.voxel.travelDistance = stepT;
 
         // Run the custom shader
         czm_modelMaterial materialOutput;
@@ -103,14 +119,15 @@ void main()
             break;
         }
 
-        if (traversalData.stepT == 0.0) {
-            // Shape is infinitely thin, no need to traverse further
-            break;
+        if (stepT == 0.0) {
+            // Shape is infinitely thin. The ray may have hit the edge of a
+            // foreground voxel. Step ahead slightly to check for more voxels
+            stepT == 0.00001;
         }
 
         // Keep raymarching
-        currT += traversalData.stepT;
-        positionUv += traversalData.stepT * viewDirUv;
+        currT += stepT;
+        positionUv += stepT * viewDirUv;
 
         // Check if there's more intersections.
         if (currT > endT) {
@@ -130,9 +147,10 @@ void main()
         }
 
         // Traverse the tree from the current ray position.
-        // This is similar to traverseOctree but is faster when the ray is in the same tile as the previous step.
+        // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
+        stepT = getStepSize(sampleDatas[0], viewRayUv, entryExitT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
