@@ -1186,6 +1186,10 @@ async function listAll(s3Client, bucketName, prefix, files, marker) {
   });
   const data = await s3Client.send(listObjectsCommand);
   const items = data.Contents;
+  if (!items) {
+    return;
+  }
+
   for (let i = 0; i < items.length; i++) {
     files.push(items[i].Key);
   }
