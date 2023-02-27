@@ -8,11 +8,11 @@
 uniform sampler2D u_octreeInternalNodeTexture;
 uniform vec2 u_octreeInternalNodeTexelSizeUv;
 uniform int u_octreeInternalNodeTilesPerRow;
+#if (SAMPLE_COUNT > 1)
 uniform sampler2D u_octreeLeafNodeTexture;
 uniform vec2 u_octreeLeafNodeTexelSizeUv;
 uniform int u_octreeLeafNodeTilesPerRow;
-
-uniform float u_stepSize;
+#endif
 
 struct OctreeNodeData {
     int data;
@@ -20,14 +20,13 @@ struct OctreeNodeData {
 };
 
 struct TraversalData {
-    float stepT;
     ivec4 octreeCoords;
     int parentOctreeIndex;
 };
 
 struct SampleData {
     int megatextureIndex;
-    bool usingParentMegatextureIndex;
+    ivec4 tileCoords;
     vec3 tileUv;
     #if (SAMPLE_COUNT > 1)
         float weight;
@@ -79,52 +78,53 @@ int getOctreeParentIndex(in int octreeIndex) {
 * into the uv-space of a tile within the tileset
 */
 vec3 getTileUv(in vec3 shapePosition, in ivec4 octreeCoords) {
-	// TODO: use bit-shifting (only in WebGL2)
+	// PERFORMANCE_IDEA: use bit-shifting (only in WebGL2)
     float dimAtLevel = pow(2.0, float(octreeCoords.w));
     return shapePosition * dimAtLevel - vec3(octreeCoords.xyz);
 }
 
-void setSampleUv(in vec3 shapePosition, in ivec4 octreeCoords, inout SampleData sampleData) {
-    ivec4 sampleCoords = sampleData.usingParentMegatextureIndex
+void getOctreeLeafSampleData(in OctreeNodeData data, in ivec4 octreeCoords, out SampleData sampleData) {
+    sampleData.megatextureIndex = data.data;
+    sampleData.tileCoords = (data.flag == OCTREE_FLAG_PACKED_LEAF_FROM_PARENT)
         ? ivec4(octreeCoords.xyz / 2, octreeCoords.w - 1)
         : octreeCoords;
-    sampleData.tileUv = getTileUv(shapePosition, sampleCoords);
-}
-
-void getOctreeLeafSampleData(in OctreeNodeData data, out SampleData sampleData) {
-    sampleData.megatextureIndex = data.data;
-    sampleData.usingParentMegatextureIndex = data.flag == OCTREE_FLAG_PACKED_LEAF_FROM_PARENT;
 }
 
 #if (SAMPLE_COUNT > 1)
-void getOctreeLeafSampleDatas(in OctreeNodeData data, out SampleData sampleData0, out SampleData sampleData1) {
+void getOctreeLeafSampleDatas(in OctreeNodeData data, in ivec4 octreeCoords, out SampleData sampleDatas[SAMPLE_COUNT]) {
     int leafIndex = data.data;
     int leafNodeTexelCount = 2;
     // Adding 0.5 moves to the center of the texel
     float leafCoordXStart = float(intMod(leafIndex, u_octreeLeafNodeTilesPerRow) * leafNodeTexelCount) + 0.5;
     float leafCoordY = float(leafIndex / u_octreeLeafNodeTilesPerRow) + 0.5;
 
+    // Get an interpolation weight and a flag to determine whether to read the parent texture
     vec2 leafUv0 = u_octreeLeafNodeTexelSizeUv * vec2(leafCoordXStart + 0.0, leafCoordY);
-    vec2 leafUv1 = u_octreeLeafNodeTexelSizeUv * vec2(leafCoordXStart + 1.0, leafCoordY);
     vec4 leafData0 = texture(u_octreeLeafNodeTexture, leafUv0);
-    vec4 leafData1 = texture(u_octreeLeafNodeTexture, leafUv1);
-
     float lerp = normU8x2_toFloat(leafData0.xy);
-
-    sampleData0.megatextureIndex = normU8x2_toInt(leafData1.xy);
-    sampleData1.megatextureIndex = normU8x2_toInt(leafData1.zw);
+    sampleDatas[0].weight = 1.0 - lerp;
+    sampleDatas[1].weight = lerp;
     // TODO: this looks wrong? Should be comparing to OCTREE_FLAG_PACKED_LEAF_FROM_PARENT
-    sampleData0.usingParentMegatextureIndex = normU8_toInt(leafData0.z) == 1;
-    sampleData1.usingParentMegatextureIndex = normU8_toInt(leafData0.w) == 1;
-    sampleData0.weight = 1.0 - lerp;
-    sampleData1.weight = lerp;
+    sampleDatas[0].tileCoords = (normU8_toInt(leafData0.z) == 1)
+        ? ivec4(octreeCoords.xyz / 2, octreeCoords.w - 1)
+        : octreeCoords;
+    sampleDatas[1].tileCoords = (normU8_toInt(leafData0.w) == 1)
+        ? ivec4(octreeCoords.xyz / 2, octreeCoords.w - 1)
+        : octreeCoords;
+
+    // Get megatexture indices for both samples
+    vec2 leafUv1 = u_octreeLeafNodeTexelSizeUv * vec2(leafCoordXStart + 1.0, leafCoordY);
+    vec4 leafData1 = texture(u_octreeLeafNodeTexture, leafUv1);
+    sampleDatas[0].megatextureIndex = normU8x2_toInt(leafData1.xy);
+    sampleDatas[1].megatextureIndex = normU8x2_toInt(leafData1.zw);
 }
 #endif
 
-void traverseOctreeDownwards(in vec3 shapePosition, inout TraversalData traversalData, out SampleData sampleDatas[SAMPLE_COUNT]) {
+OctreeNodeData traverseOctreeDownwards(in vec3 shapePosition, inout TraversalData traversalData) {
     float sizeAtLevel = 1.0 / pow(2.0, float(traversalData.octreeCoords.w));
     vec3 start = vec3(traversalData.octreeCoords.xyz) * sizeAtLevel;
     vec3 end = start + vec3(sizeAtLevel);
+    OctreeNodeData childData;
 
     for (int i = 0; i < OCTREE_MAX_LEVELS; ++i) {
         // Find out which octree child contains the position
@@ -132,32 +132,24 @@ void traverseOctreeDownwards(in vec3 shapePosition, inout TraversalData traversa
         vec3 center = 0.5 * (start + end);
         vec3 childCoord = step(center, shapePosition);
 
-        OctreeNodeData childData = getOctreeChildData(traversalData.parentOctreeIndex, ivec3(childCoord));
-
         // Get octree coords for the next level down
         ivec4 octreeCoords = traversalData.octreeCoords;
         traversalData.octreeCoords = ivec4(octreeCoords.xyz * 2 + ivec3(childCoord), octreeCoords.w + 1);
 
-        if (childData.flag == OCTREE_FLAG_INTERNAL) {
-            // interior tile - keep going deeper
-            start = mix(start, center, childCoord);
-            end = mix(center, end, childCoord);
-            traversalData.parentOctreeIndex = childData.data;
-        } else {
+        childData = getOctreeChildData(traversalData.parentOctreeIndex, ivec3(childCoord));
+
+        if (childData.flag != OCTREE_FLAG_INTERNAL) {
             // leaf tile - stop traversing
-            float dimAtLevel = pow(2.0, float(traversalData.octreeCoords.w));
-            traversalData.stepT = u_stepSize / dimAtLevel;
-            #if (SAMPLE_COUNT == 1)
-                getOctreeLeafSampleData(childData, sampleDatas[0]);
-                setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[0]);
-            #else
-                getOctreeLeafSampleDatas(childData, sampleDatas[0], sampleDatas[1]);
-                setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[0]);
-                setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[1]);
-            #endif
-            return;
+            break;
         }
+
+        // interior tile - keep going deeper
+        start = mix(start, center, childCoord);
+        end = mix(center, end, childCoord);
+        traversalData.parentOctreeIndex = childData.data;
     }
+
+    return childData;
 }
 
 /**
@@ -168,21 +160,19 @@ void traverseOctreeFromBeginning(in vec3 shapePosition, out TraversalData traver
     traversalData.octreeCoords = ivec4(0);
     traversalData.parentOctreeIndex = 0;
 
-    OctreeNodeData rootData = getOctreeNodeData(vec2(0.0));
-    if (rootData.flag == OCTREE_FLAG_LEAF) {
-        // No child data, only the root tile has data
-        traversalData.stepT = u_stepSize;
-        #if (SAMPLE_COUNT == 1)
-            getOctreeLeafSampleData(rootData, sampleDatas[0]);
-            setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[0]);
-        #else
-            getOctreeLeafSampleDatas(rootData, sampleDatas[0], sampleDatas[1]);
-            setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[0]);
-            setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[1]);
-        #endif
-    } else {
-        traverseOctreeDownwards(shapePosition, traversalData, sampleDatas);
+    OctreeNodeData nodeData = getOctreeNodeData(vec2(0.0));
+    if (nodeData.flag != OCTREE_FLAG_LEAF) {
+        nodeData = traverseOctreeDownwards(shapePosition, traversalData);
     }
+
+    #if (SAMPLE_COUNT == 1)
+        getOctreeLeafSampleData(nodeData, traversalData.octreeCoords, sampleDatas[0]);
+        sampleDatas[0].tileUv = getTileUv(shapePosition, sampleDatas[0].tileCoords);
+    #else
+        getOctreeLeafSampleDatas(nodeData, traversalData.octreeCoords, sampleDatas);
+        sampleDatas[0].tileUv = getTileUv(shapePosition, sampleDatas[0].tileCoords);
+        sampleDatas[1].tileUv = getTileUv(shapePosition, sampleDatas[1].tileCoords);
+    #endif
 }
 
 bool inRange(in vec3 v, in vec3 minVal, in vec3 maxVal) {
@@ -199,23 +189,32 @@ bool insideTile(in vec3 shapePosition, in ivec4 octreeCoords) {
 void traverseOctreeFromExisting(in vec3 shapePosition, inout TraversalData traversalData, inout SampleData sampleDatas[SAMPLE_COUNT]) {
     if (insideTile(shapePosition, traversalData.octreeCoords)) {
         for (int i = 0; i < SAMPLE_COUNT; i++) {
-            setSampleUv(shapePosition, traversalData.octreeCoords, sampleDatas[i]);
+            sampleDatas[0].tileUv = getTileUv(shapePosition, sampleDatas[0].tileCoords);
         }
-    } else {
-        // Go up tree
-        for (int i = 0; i < OCTREE_MAX_LEVELS; ++i)
-        {
-            traversalData.octreeCoords.xyz /= 2;
-            traversalData.octreeCoords.w -= 1;
-
-            if (!insideTile(shapePosition, traversalData.octreeCoords)) {
-                traversalData.parentOctreeIndex = getOctreeParentIndex(traversalData.parentOctreeIndex);
-            } else {
-                break;
-            }
-        }
-
-        // Go down tree
-        traverseOctreeDownwards(shapePosition, traversalData, sampleDatas);
+        return;
     }
+
+    // Go up tree until we find a parent tile containing shapePosition
+    for (int i = 0; i < OCTREE_MAX_LEVELS; ++i) {
+        traversalData.octreeCoords.xyz /= 2;
+        traversalData.octreeCoords.w -= 1;
+
+        if (insideTile(shapePosition, traversalData.octreeCoords)) {
+            break;
+        }
+
+        traversalData.parentOctreeIndex = getOctreeParentIndex(traversalData.parentOctreeIndex);
+    }
+
+    // Go down tree
+    OctreeNodeData nodeData = traverseOctreeDownwards(shapePosition, traversalData);
+
+    #if (SAMPLE_COUNT == 1)
+        getOctreeLeafSampleData(nodeData, traversalData.octreeCoords, sampleDatas[0]);
+        sampleDatas[0].tileUv = getTileUv(shapePosition, sampleDatas[0].tileCoords);
+    #else
+        getOctreeLeafSampleDatas(nodeData, traversalData.octreeCoords, sampleDatas);
+        sampleDatas[0].tileUv = getTileUv(shapePosition, sampleDatas[0].tileCoords);
+        sampleDatas[1].tileUv = getTileUv(shapePosition, sampleDatas[1].tileCoords);
+    #endif
 }

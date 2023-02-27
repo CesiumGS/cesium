@@ -92,7 +92,7 @@ Object.defineProperties(ShaderBuilder.prototype, {
    * the vertex shader.
    *
    * @memberof ShaderBuilder.prototype
-   * @type {Object.<String, Number>}
+   * @type {Object<string, number>}
    * @readonly
    * @private
    */
@@ -107,8 +107,8 @@ Object.defineProperties(ShaderBuilder.prototype, {
  * Add a <code>#define</code> macro to one or both of the shaders. These lines
  * will appear at the top of the final shader source.
  *
- * @param {String} identifier An identifier for the macro. Identifiers must use uppercase letters with underscores to be consistent with Cesium's style guide.
- * @param {String} [value] The value of the macro. If undefined, the define will not include a value. The value will be converted to GLSL code via <code>toString()</code>
+ * @param {string} identifier An identifier for the macro. Identifiers must use uppercase letters with underscores to be consistent with Cesium's style guide.
+ * @param {string} [value] The value of the macro. If undefined, the define will not include a value. The value will be converted to GLSL code via <code>toString()</code>
  * @param {ShaderDestination} [destination=ShaderDestination.BOTH] Whether the define appears in the vertex shader, the fragment shader, or both.
  *
  * @example
@@ -141,8 +141,8 @@ ShaderBuilder.prototype.addDefine = function (identifier, value, destination) {
 
 /**
  * Add a new dynamically-generated struct to the shader
- * @param {String} structId A unique ID to identify this struct in {@link ShaderBuilder#addStructField}
- * @param {String} structName The name of the struct as it will appear in the shader.
+ * @param {string} structId A unique ID to identify this struct in {@link ShaderBuilder#addStructField}
+ * @param {string} structName The name of the struct as it will appear in the shader.
  * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
  *
  * @example
@@ -174,9 +174,9 @@ ShaderBuilder.prototype.addStruct = function (
 
 /**
  * Add a field to a dynamically-generated struct.
- * @param {String} structId The ID of the struct. This must be created first with {@link ShaderBuilder#addStruct}
- * @param {String} type The GLSL type of the field
- * @param {String} identifier The identifier of the field.
+ * @param {string} structId The ID of the struct. This must be created first with {@link ShaderBuilder#addStruct}
+ * @param {string} type The GLSL type of the field
+ * @param {string} identifier The identifier of the field.
  *
  * @example
  * // generates the following struct in the fragment shader
@@ -200,8 +200,8 @@ ShaderBuilder.prototype.addStructField = function (structId, type, identifier) {
 
 /**
  * Add a new dynamically-generated function to the shader.
- * @param {String} functionName The name of the function. This will be used to identify the function in {@link ShaderBuilder#addFunctionLines}.
- * @param {String} signature The full signature of the function as it will appear in the shader. Do not include the curly braces.
+ * @param {string} functionName The name of the function. This will be used to identify the function in {@link ShaderBuilder#addFunctionLines}.
+ * @param {string} signature The full signature of the function as it will appear in the shader. Do not include the curly braces.
  * @param {ShaderDestination} destination Whether the struct will appear in the vertex shader, the fragment shader, or both.
  * @example
  * // generates the following function in the vertex shader
@@ -233,8 +233,8 @@ ShaderBuilder.prototype.addFunction = function (
 
 /**
  * Add lines to a dynamically-generated function
- * @param {String} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
- * @param {String|String[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
+ * @param {string} functionName The name of the function. This must be created beforehand using {@link ShaderBuilder#addFunction}
+ * @param {string|string[]} lines One or more lines of GLSL code to add to the function body. Do not include any preceding or ending whitespace, but do include the semicolon for each line.
  *
  * @example
  * // generates the following function in the vertex shader
@@ -265,8 +265,8 @@ ShaderBuilder.prototype.addFunctionLines = function (functionName, lines) {
  * Add a uniform declaration to one or both of the shaders. These lines
  * will appear grouped near the top of the final shader source.
  *
- * @param {String} type The GLSL type of the uniform.
- * @param {String} identifier An identifier for the uniform. Identifiers must begin with <code>u_</code> to be consistent with Cesium's style guide.
+ * @param {string} type The GLSL type of the uniform.
+ * @param {string} identifier An identifier for the uniform. Identifiers must begin with <code>u_</code> to be consistent with Cesium's style guide.
  * @param {ShaderDestination} [destination=ShaderDestination.BOTH] Whether the uniform appears in the vertex shader, the fragment shader, or both.
  *
  * @example
@@ -302,9 +302,9 @@ ShaderBuilder.prototype.addUniform = function (type, identifier, destination) {
  * {@link ShaderBuilder#addAttribute}
  * </p>
  *
- * @param {String} type The GLSL type of the attribute
- * @param {String} identifier An identifier for the attribute. Identifiers must begin with <code>a_</code> to be consistent with Cesium's style guide.
- * @return {Number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}. This will always be 0.
+ * @param {string} type The GLSL type of the attribute
+ * @param {string} identifier An identifier for the attribute. Identifiers must begin with <code>a_</code> to be consistent with Cesium's style guide.
+ * @return {number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}. This will always be 0.
  *
  * @example
  * // creates the line "in vec3 a_position;"
@@ -338,9 +338,9 @@ ShaderBuilder.prototype.setPositionAttribute = function (type, identifier) {
  * reserved for the position attribute. See {@link ShaderBuilder#setPositionAttribute}
  * </p>
  *
- * @param {String} type The GLSL type of the attribute
- * @param {String} identifier An identifier for the attribute. Identifiers must begin with <code>a_</code> to be consistent with Cesium's style guide.
- * @return {Number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}
+ * @param {string} type The GLSL type of the attribute
+ * @param {string} identifier An identifier for the attribute. Identifiers must begin with <code>a_</code> to be consistent with Cesium's style guide.
+ * @return {number} The integer location of the attribute. This location can be used when creating attributes for a {@link VertexArray}
  *
  * @example
  * // creates the line "in vec2 a_texCoord0;" in the vertex shader
@@ -367,8 +367,8 @@ ShaderBuilder.prototype.addAttribute = function (type, identifier) {
 /**
  * Add a varying declaration to both the vertex and fragment shaders.
  *
- * @param {String} type The GLSL type of the varying
- * @param {String} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
+ * @param {string} type The GLSL type of the varying
+ * @param {string} identifier An identifier for the varying. Identifiers must begin with <code>v_</code> to be consistent with Cesium's style guide.
  *
  * @example
  * // creates the line "in vec3 v_color;" in the vertex shader
@@ -389,7 +389,7 @@ ShaderBuilder.prototype.addVarying = function (type, identifier) {
 /**
  * Appends lines of GLSL code to the vertex shader
  *
- * @param {String|String[]} lines One or more lines to add to the end of the vertex shader source
+ * @param {string|string[]} lines One or more lines to add to the end of the vertex shader source
  *
  * @example
  * shaderBuilder.addVertexLines([
@@ -421,7 +421,7 @@ ShaderBuilder.prototype.addVertexLines = function (lines) {
 /**
  * Appends lines of GLSL code to the fragment shader
  *
- * @param {String[]} lines The lines to add to the end of the fragment shader source
+ * @param {string[]} lines The lines to add to the end of the fragment shader source
  *
  * @example
  * shaderBuilder.addFragmentLines([

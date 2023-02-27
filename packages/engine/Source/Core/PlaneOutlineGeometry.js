@@ -21,7 +21,7 @@ function PlaneOutlineGeometry() {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 PlaneOutlineGeometry.packedLength = 0;
 
@@ -29,9 +29,9 @@ PlaneOutlineGeometry.packedLength = 0;
  * Stores the provided instance into the provided array.
  *
  * @param {PlaneOutlineGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
+ * @param {number[]} array The array to pack into.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 PlaneOutlineGeometry.pack = function (value, array) {
   //>>includeStart('debug', pragmas.debug);
@@ -45,8 +45,8 @@ PlaneOutlineGeometry.pack = function (value, array) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PlaneOutlineGeometry} [result] The object into which to store the result.
  * @returns {PlaneOutlineGeometry} The modified result parameter or a new PlaneOutlineGeometry instance if one was not provided.
  */

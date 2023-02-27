@@ -5,7 +5,7 @@
  * in the 3D Tiles spec.
  * </p>
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @private
  */
@@ -13,7 +13,7 @@ const Cesium3DTileRefine = {
   /**
    * Render this tile and, if it doesn't meet the screen space error, also refine to its children.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ADD: 0,
@@ -21,7 +21,7 @@ const Cesium3DTileRefine = {
   /**
    * Render this tile or, if it doesn't meet the screen space error, refine to its descendants instead.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   REPLACE: 1,

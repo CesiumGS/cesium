@@ -5,7 +5,7 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} BillboardGraphics.ConstructorOptions
+ * @typedef {object} BillboardGraphics.ConstructorOptions
  *
  * Initialization options for the BillboardGraphics constructor
  *

@@ -3,7 +3,7 @@
  *
  * @function
  *
- * @returns {String}
+ * @returns {string}
  *
  *
  * @example

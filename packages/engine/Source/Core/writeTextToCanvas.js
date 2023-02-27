@@ -101,17 +101,17 @@ let imageSmoothingEnabledName;
  * Writes the given text into a new canvas.  The canvas will be sized to fit the text.
  * If text is blank, returns undefined.
  *
- * @param {String} text The text to write.
- * @param {Object} [options] Object with the following properties:
- * @param {String} [options.font='10px sans-serif'] The CSS font to use.
- * @param {String} [options.textBaseline='bottom'] The baseline of the text.
- * @param {Boolean} [options.fill=true] Whether to fill the text.
- * @param {Boolean} [options.stroke=false] Whether to stroke the text.
+ * @param {string} text The text to write.
+ * @param {object} [options] Object with the following properties:
+ * @param {string} [options.font='10px sans-serif'] The CSS font to use.
+ * @param {string} [options.textBaseline='bottom'] The baseline of the text.
+ * @param {boolean} [options.fill=true] Whether to fill the text.
+ * @param {boolean} [options.stroke=false] Whether to stroke the text.
  * @param {Color} [options.fillColor=Color.WHITE] The fill color.
  * @param {Color} [options.strokeColor=Color.BLACK] The stroke color.
- * @param {Number} [options.strokeWidth=1] The stroke width.
+ * @param {number} [options.strokeWidth=1] The stroke width.
  * @param {Color} [options.backgroundColor=Color.TRANSPARENT] The background color of the canvas.
- * @param {Number} [options.padding=0] The pixel size of the padding to add around the text.
+ * @param {number} [options.padding=0] The pixel size of the padding to add around the text.
  * @returns {HTMLCanvasElement|undefined} A new canvas with the given text drawn into it.  The dimensions object
  *                   from measureText will also be added to the returned canvas. If text is
  *                   blank, returns undefined.
@@ -143,7 +143,8 @@ function writeTextToCanvas(text, options) {
   canvas.width = 1;
   canvas.height = 1;
   canvas.style.font = font;
-  const context2D = canvas.getContext("2d");
+  // Since multiple read-back operations are expected for labels, use the willReadFrequently option – See https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+  const context2D = canvas.getContext("2d", { willReadFrequently: true });
 
   if (!defined(imageSmoothingEnabledName)) {
     if (defined(context2D.imageSmoothingEnabled)) {

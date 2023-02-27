@@ -10,9 +10,9 @@ import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
  * @alias GetFeatureInfoFormat
  * @constructor
  *
- * @param {String} type The type of response to expect from a GetFeatureInfo request.  Valid
+ * @param {string} type The type of response to expect from a GetFeatureInfo request.  Valid
  *        values are 'json', 'xml', 'html', or 'text'.
- * @param {String} [format] The info format to request from the WMS server.  This is usually a
+ * @param {string} [format] The info format to request from the WMS server.  This is usually a
  *        MIME type such as 'application/json' or text/xml'.  If this parameter is not specified, the provider will request 'json'
  *        using 'application/json', 'xml' using 'text/xml', 'html' using 'text/html', and 'text' using 'text/plain'.
  * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the WMS server

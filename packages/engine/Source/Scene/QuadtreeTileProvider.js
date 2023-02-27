@@ -19,7 +19,7 @@ function QuadtreeTileProvider() {
  * @memberof QuadtreeTileProvider
  *
  * @param {TilingScheme} tilingScheme The tiling scheme for which to compute the geometric error.
- * @returns {Number} The maximum geometric error at level zero, in meters.
+ * @returns {number} The maximum geometric error at level zero, in meters.
  */
 QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError = function (
   tilingScheme
@@ -45,7 +45,7 @@ Object.defineProperties(QuadtreeTileProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof QuadtreeTileProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   ready: {
     get: DeveloperError.throwInstantiationError,
@@ -120,8 +120,8 @@ QuadtreeTileProvider.prototype.endUpdate =
  * @memberof QuadtreeTileProvider
  * @function
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error in meters.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error in meters.
  */
 QuadtreeTileProvider.prototype.getLevelMaximumGeometricError =
   DeveloperError.throwInstantiationError;
@@ -184,7 +184,7 @@ QuadtreeTileProvider.prototype.showTileThisFrame =
  * @param {QuadtreeTile} tile The tile instance.
  * @param {FrameState} frameState The state information of the current rendering frame.
  *
- * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
+ * @returns {number} The distance from the camera to the closest point on the tile, in meters.
  */
 QuadtreeTileProvider.prototype.computeDistanceToTile =
   DeveloperError.throwInstantiationError;
@@ -197,7 +197,7 @@ QuadtreeTileProvider.prototype.computeDistanceToTile =
  *
  * @memberof QuadtreeTileProvider
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see QuadtreeTileProvider#destroy
  */

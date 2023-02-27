@@ -21,13 +21,13 @@ import Material from "./Material.js";
  * @internalConstructor
  * @class
  *
- * @privateParam {Object} options Object with the following properties:
- * @privateParam {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
- * @privateParam {Number} [options.width=1.0] The width of the polyline in pixels.
- * @privateParam {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
+ * @privateParam {object} options Object with the following properties:
+ * @privateParam {boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
+ * @privateParam {number} [options.width=1.0] The width of the polyline in pixels.
+ * @privateParam {boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
  * @privateParam {Material} [options.material=Material.ColorType] The material.
  * @privateParam {Cartesian3[]} [options.positions] The positions.
- * @privateParam {Object} [options.id] The user-defined object to be returned when this polyline is picked.
+ * @privateParam {object} [options.id] The user-defined object to be returned when this polyline is picked.
  * @privateParam {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
  * @privateParam {PolylineCollection} polylineCollection The renderable polyline collection.
  *
@@ -118,7 +118,7 @@ Object.defineProperties(Polyline.prototype, {
    * Determines if this polyline will be shown.  Use this to hide or show a polyline, instead
    * of removing it and re-adding it to the collection.
    * @memberof Polyline.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -221,7 +221,7 @@ Object.defineProperties(Polyline.prototype, {
   /**
    * Gets or sets the width of the polyline.
    * @memberof Polyline.prototype
-   * @type {Number}
+   * @type {number}
    */
   width: {
     get: function () {
@@ -245,7 +245,7 @@ Object.defineProperties(Polyline.prototype, {
   /**
    * Gets or sets whether a line segment will be added between the first and last polyline positions.
    * @memberof Polyline.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   loop: {
     get: function () {
@@ -316,7 +316,7 @@ Object.defineProperties(Polyline.prototype, {
   /**
    * Gets the destruction status of this polyline
    * @memberof Polyline.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    * @private
    */

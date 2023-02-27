@@ -65,7 +65,7 @@ Object.defineProperties(Occluder.prototype, {
   /**
    * The radius of the occluder.
    * @memberof Occluder.prototype
-   * @type {Number}
+   * @type {number}
    */
   radius: {
     get: function () {
@@ -175,7 +175,7 @@ const tempVecScratch = new Cartesian3();
  * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
  *
  * @param {Cartesian3} occludee The point surrounding the occludee object.
- * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+ * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
  *
  *
  * @example
@@ -211,7 +211,7 @@ const occludeePositionScratch = new Cartesian3();
  * Determines whether or not a sphere, the <code>occludee</code>, is hidden from view by the occluder.
  *
  * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
- * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+ * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
  *
  *
  * @example
@@ -389,7 +389,7 @@ const occludeePointScratch = new Cartesian3();
  * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
  * @param {Cartesian3} occludeePosition The point where the occludee (bounding sphere of radius 0) is located.
  * @param {Cartesian3[]} positions List of altitude points on the horizon near the surface of the occluder.
- * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
+ * @returns {object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
  * which is a boolean value.
  *
  * @exception {DeveloperError} <code>positions</code> must contain at least one element.
@@ -500,7 +500,7 @@ const computeOccludeePointFromRectangleScratch = [];
  *
  * @param {Rectangle} rectangle The rectangle used to create a bounding sphere.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
- * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
+ * @returns {object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
  * which is a boolean value.
  */
 Occluder.computeOccludeePointFromRectangle = function (rectangle, ellipsoid) {

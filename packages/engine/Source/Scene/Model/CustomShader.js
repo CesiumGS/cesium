@@ -11,9 +11,9 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
 /**
  * An object describing a uniform, its type, and an initial value
  *
- * @typedef {Object} UniformSpecifier
+ * @typedef {object} UniformSpecifier
  * @property {UniformType} type The Glsl type of the uniform.
- * @property {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|TextureUniform} value The initial value of the uniform
+ * @property {boolean|number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|TextureUniform} value The initial value of the uniform
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -29,13 +29,13 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  *   <li>Using a dictionary automatically de-duplicates variable names</li>
  *   <li>Queries such as <code>variableSet.hasOwnProperty("position")</code> are straightforward</li>
  * </ul>
- * @typedef {Object<String, Boolean>} VariableSet
+ * @typedef {Object<string, boolean>} VariableSet
  * @private
  */
 
 /**
  * Variable sets parsed from the user-defined vertex shader text.
- * @typedef {Object} VertexVariableSets
+ * @typedef {object} VertexVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the vertex shader via the <code>vsInput.attributes</code> struct.
  * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the vertex shader via the <code>vsInput.featureIds</code> struct.
  * @property {VariableSet} metadataSet A set of all unique metadata properties used in the vertex shader via the <code>vsInput.metadata</code> struct.
@@ -44,7 +44,7 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
 
 /**
  * Variable sets parsed from the user-defined fragment shader text.
- * @typedef {Object} FragmentVariableSets
+ * @typedef {object} FragmentVariableSets
  * @property {VariableSet} attributeSet A set of all unique attributes used in the fragment shader via the <code>fsInput.attributes</code> struct
  * @property {VariableSet} featureIdSet A set of all unique feature ID sets used in the fragment shader via the <code>fsInput.featureIds</code> struct.
  * @property {VariableSet} metadataSet A set of all unique metadata properties used in the fragment shader via the <code>fsInput.metadata</code> struct.
@@ -74,14 +74,14 @@ import CustomShaderTranslucencyMode from "./CustomShaderTranslucencyMode.js";
  * See the {@link https://github.com/CesiumGS/cesium/tree/main/Documentation/CustomShaderGuide|Custom Shader Guide} for more detailed documentation.
  * </p>
  *
- * @param {Object} options An object with the following options
+ * @param {object} options An object with the following options
  * @param {CustomShaderMode} [options.mode=CustomShaderMode.MODIFY_MATERIAL] The custom shader mode, which determines how the custom shader code is inserted into the fragment shader.
  * @param {LightingModel} [options.lightingModel] The lighting model (e.g. PBR or unlit). If present, this overrides the default lighting for the model.
  * @param {CustomShaderTranslucencyMode} [options.translucencyMode=CustomShaderTranslucencyMode.INHERIT] The translucency mode, which determines how the custom shader will be applied. If the value is CustomShaderTransulcencyMode.OPAQUE or CustomShaderTransulcencyMode.TRANSLUCENT, the custom shader will override settings from the model's material. If the value is CustomShaderTransulcencyMode.INHERIT, the custom shader will render as either opaque or translucent depending on the primitive's material settings.
- * @param {Object.<String, UniformSpecifier>} [options.uniforms] A dictionary for user-defined uniforms. The key is the uniform name that will appear in the GLSL code. The value is an object that describes the uniform type and initial value
- * @param {Object.<String, VaryingType>} [options.varyings] A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
- * @param {String} [options.vertexShaderText] The custom vertex shader as a string of GLSL code. It must include a GLSL function called vertexMain. See the example for the expected signature. If not specified, the custom vertex shader step will be skipped in the computed vertex shader.
- * @param {String} [options.fragmentShaderText] The custom fragment shader as a string of GLSL code. It must include a GLSL function called fragmentMain. See the example for the expected signature. If not specified, the custom fragment shader step will be skipped in the computed fragment shader.
+ * @param {Object<string, UniformSpecifier>} [options.uniforms] A dictionary for user-defined uniforms. The key is the uniform name that will appear in the GLSL code. The value is an object that describes the uniform type and initial value
+ * @param {Object<string, VaryingType>} [options.varyings] A dictionary for declaring additional GLSL varyings used in the shader. The key is the varying name that will appear in the GLSL code. The value is the data type of the varying. For each varying, the declaration will be added to the top of the shader automatically. The caller is responsible for assigning a value in the vertex shader and using the value in the fragment shader.
+ * @param {string} [options.vertexShaderText] The custom vertex shader as a string of GLSL code. It must include a GLSL function called vertexMain. See the example for the expected signature. If not specified, the custom vertex shader step will be skipped in the computed vertex shader.
+ * @param {string} [options.fragmentShaderText] The custom fragment shader as a string of GLSL code. It must include a GLSL function called fragmentMain. See the example for the expected signature. If not specified, the custom fragment shader step will be skipped in the computed fragment shader.
  *
  * @alias CustomShader
  * @constructor
@@ -141,7 +141,7 @@ function CustomShader(options) {
   /**
    * Additional uniforms as declared by the user.
    *
-   * @type {Object.<String, UniformSpecifier>}
+   * @type {Object<string, UniformSpecifier>}
    * @readonly
    */
   this.uniforms = defaultValue(options.uniforms, defaultValue.EMPTY_OBJECT);
@@ -149,21 +149,21 @@ function CustomShader(options) {
    * Additional varyings as declared by the user.
    * This is used by {@link CustomShaderPipelineStage}
    *
-   * @type {Object.<String, VaryingType>}
+   * @type {Object<string, VaryingType>}
    * @readonly
    */
   this.varyings = defaultValue(options.varyings, defaultValue.EMPTY_OBJECT);
   /**
    * The user-defined GLSL code for the vertex shader
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.vertexShaderText = options.vertexShaderText;
   /**
    * The user-defined GLSL code for the fragment shader
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.fragmentShaderText = options.fragmentShaderText;
@@ -205,7 +205,7 @@ function CustomShader(options) {
    * The map of uniform names to a function that returns a value. This map
    * is combined with the overall uniform map used by the {@link DrawCommand}
    *
-   * @type {Object.<String, Function>}
+   * @type {Object<string, Function>}
    * @readonly
    * @private
    */
@@ -404,8 +404,8 @@ function validateBuiltinVariables(customShader) {
 
 /**
  * Update the value of a uniform declared in the shader
- * @param {String} uniformName The GLSL name of the uniform. This must match one of the uniforms declared in the constructor
- * @param {Boolean|Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|String|Resource} value The new value of the uniform.
+ * @param {string} uniformName The GLSL name of the uniform. This must match one of the uniforms declared in the constructor
+ * @param {boolean|number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|string|Resource} value The new value of the uniform.
  */
 CustomShader.prototype.setUniform = function (uniformName, value) {
   //>>includeStart('debug', pragmas.debug);
@@ -440,7 +440,7 @@ CustomShader.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see CustomShader#destroy
  * @private

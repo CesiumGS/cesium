@@ -16,7 +16,7 @@ const ShaderDestination = {
  * Check if a variable should be included in the vertex shader.
  *
  * @param {ShaderDestination} destination The ShaderDestination to check
- * @return {Boolean} <code>true</code> if the variable appears in the vertex shader, or <code>false</code> otherwise
+ * @return {boolean} <code>true</code> if the variable appears in the vertex shader, or <code>false</code> otherwise
  * @private
  */
 ShaderDestination.includesVertexShader = function (destination) {
@@ -34,7 +34,7 @@ ShaderDestination.includesVertexShader = function (destination) {
  * Check if a variable should be included in the vertex shader.
  *
  * @param {ShaderDestination} destination The ShaderDestination to check
- * @return {Boolean} <code>true</code> if the variable appears in the vertex shader, or <code>false</code> otherwise
+ * @return {boolean} <code>true</code> if the variable appears in the vertex shader, or <code>false</code> otherwise
  * @private
  */
 ShaderDestination.includesFragmentShader = function (destination) {

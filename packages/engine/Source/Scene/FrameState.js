@@ -60,7 +60,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * The maximum level-of-detail of the specular environment atlas used for image-based lighting for PBR models.
-   * @type {Number}
+   * @type {number}
    */
   this.specularEnvironmentMapsMaximumLOD = undefined;
 
@@ -76,14 +76,14 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * The current morph transition time between 2D/Columbus View and 3D,
    * with 0.0 being 2D or Columbus View and 1.0 being 3D.
    *
-   * @type {Number}
+   * @type {number}
    */
   this.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
 
   /**
    * The current frame number.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0
    */
   this.frameNumber = 0;
@@ -91,7 +91,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * <code>true</code> if a new frame has been issued and the frame number has been updated.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.newFrame = false;
@@ -130,7 +130,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * Whether the camera is underground.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.cameraUnderground = false;
@@ -163,7 +163,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * The maximum screen-space error used to drive level-of-detail refinement.  Higher
    * values will provide better performance but lower visual quality.
    *
-   * @type {Number}
+   * @type {number}
    * @default 2
    */
   this.maximumScreenSpaceError = undefined;
@@ -172,19 +172,19 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * Ratio between a pixel and a density-independent pixel. Provides a standard unit of
    * measure for real pixel measurements appropriate to a particular device.
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.pixelRatio = 1.0;
 
   /**
    * @typedef FrameState.Passes
-   * @type {Object}
-   * @property {Boolean} render <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
-   * @property {Boolean} pick <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
-   * @property {Boolean} depth <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
-   * @property {Boolean} postProcess <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
-   * @property {Boolean} offscreen <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
+   * @type {object}
+   * @property {boolean} render <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
+   * @property {boolean} pick <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
+   * @property {boolean} depth <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
+   * @property {boolean} postProcess <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
+   * @property {boolean} offscreen <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
    */
 
   /**
@@ -246,18 +246,18 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * Gets whether or not to optimize for 3D only.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.scene3DOnly = false;
 
   /**
    * @typedef FrameState.Fog
-   * @type {Object}
-   * @property {Boolean} enabled <code>true</code> if fog is enabled, <code>false</code> otherwise.
-   * @property {Number} density A positive number used to mix the color and fog color based on camera distance.
-   * @property {Number} sse A scalar used to modify the screen space error of geometry partially in fog.
-   * @property {Number} minimumBrightness The minimum brightness of terrain with fog applied.
+   * @type {object}
+   * @property {boolean} enabled <code>true</code> if fog is enabled, <code>false</code> otherwise.
+   * @property {number} density A positive number used to mix the color and fog color based on camera distance.
+   * @property {number} sse A scalar used to modify the screen space error of geometry partially in fog.
+   * @property {number} minimumBrightness The minimum brightness of terrain with fog applied.
    */
 
   /**
@@ -276,30 +276,30 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
   /**
    * A scalar used to exaggerate the terrain.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.terrainExaggeration = 1.0;
 
   /**
    * The height relative to which terrain is exaggerated.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.terrainExaggerationRelativeHeight = 0.0;
 
   /**
    * @typedef FrameState.ShadowState
-   * @type {Object}
-   * @property {Boolean} shadowsEnabled Whether there are any active shadow maps this frame.
-   * @property {Boolean} lightShadowsEnabled Whether there are any active shadow maps that originate from light sources. Does not include shadow maps that are used for analytical purposes.
+   * @type {object}
+   * @property {boolean} shadowsEnabled Whether there are any active shadow maps this frame.
+   * @property {boolean} lightShadowsEnabled Whether there are any active shadow maps that originate from light sources. Does not include shadow maps that are used for analytical purposes.
    * @property {ShadowMap[]} shadowMaps All shadow maps that are enabled this frame.
    * @property {ShadowMap[]} lightShadowMaps Shadow maps that originate from light sources. Does not include shadow maps that are used for analytical purposes. Only these shadow maps will be used to generate receive shadows shaders.
-   * @property {Number} nearPlane The near plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
-   * @property {Number} farPlane The far plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
-   * @property {Number} closestObjectSize The size of the bounding volume that is closest to the camera. This is used to place more shadow detail near the object.
-   * @property {Number} lastDirtyTime The time when a shadow map was last dirty
-   * @property {Boolean} outOfView Whether the shadows maps are out of view this frame
+   * @property {number} nearPlane The near plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
+   * @property {number} farPlane The far plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
+   * @property {number} closestObjectSize The size of the bounding volume that is closest to the camera. This is used to place more shadow detail near the object.
+   * @property {number} lastDirtyTime The time when a shadow map was last dirty
+   * @property {boolean} outOfView Whether the shadows maps are out of view this frame
    */
 
   /**
@@ -338,14 +338,14 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * The position of the splitter to use when rendering different things on either side of a splitter.
    * This value should be between 0.0 and 1.0 with 0 being the far left of the viewport and 1 being the far right of the viewport.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.splitPosition = 0.0;
 
   /**
    * Distances to the near and far planes of the camera frustums
-   * @type {Number[]}
+   * @type {number[]}
    * @default []
    */
   this.frustumSplits = [];
@@ -368,14 +368,14 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * The distance from the camera at which to disable the depth test of billboards, labels and points
    * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
    * be applied. When less than zero, the depth test should never be applied.
-   * @type {Number}
+   * @type {number}
    */
   this.minimumDisableDepthTestDistance = undefined;
 
   /**
    * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally and
    * unclassified 3D Tile geometry will render with the color multiplied with {@link FrameState#invertClassificationColor}.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.invertClassification = false;
@@ -389,7 +389,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * Whether or not the scene uses a logarithmic depth buffer.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.useLogDepth = false;
@@ -404,7 +404,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
   /**
    * The minimum terrain height out of all rendered terrain tiles. Used to improve culling for objects underneath the ellipsoid but above terrain.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.minimumTerrainHeight = 0.0;
@@ -414,6 +414,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
  * A function that will be called at the end of the frame.
  *
  * @callback FrameState.AfterRenderCallback
- * @returns {Boolean} true if another render should be requested in request render mode
+ * @returns {boolean} true if another render should be requested in request render mode
  */
 export default FrameState;

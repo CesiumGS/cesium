@@ -29,18 +29,18 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
  * @alias Vector3DTilePolylines
  * @constructor
  *
- * @param {Object} options An object with following properties:
+ * @param {object} options An object with following properties:
  * @param {Uint16Array} options.positions The positions of the polylines
  * @param {Uint32Array} options.counts The number or positions in the each polyline.
  * @param {Uint16Array} options.widths The width of each polyline.
- * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
- * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+ * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
+ * @param {number} options.maximumHeight The maximum height of the terrain covered by the tile.
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
  * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
  * @param {Uint16Array} options.batchIds The batch ids for each polyline.
  * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
- * @param {Boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
+ * @param {boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
  *
  * @private
  */
@@ -99,7 +99,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    *
    * @memberof Vector3DTilePolylines.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   trianglesLength: {
@@ -113,7 +113,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    *
    * @memberof Vector3DTilePolylines.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   geometryByteLength: {
@@ -528,7 +528,7 @@ Vector3DTilePolylines.getPolylinePositions = function (polylines, batchId) {
 /**
  * Get the polyline positions for the given feature.
  *
- * @param {Number} batchId The batch ID of the feature.
+ * @param {number} batchId The batch ID of the feature.
  */
 Vector3DTilePolylines.prototype.getPositions = function (batchId) {
   return Vector3DTilePolylines.getPolylinePositions(this, batchId);
@@ -552,7 +552,7 @@ Vector3DTilePolylines.prototype.createFeatures = function (content, features) {
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (polyline batch table color * color).
  *
- * @param {Boolean} enabled Whether to enable debug coloring.
+ * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
 Vector3DTilePolylines.prototype.applyDebugSettings = function (enabled, color) {
@@ -651,7 +651,7 @@ Vector3DTilePolylines.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePolylines.prototype.isDestroyed = function () {
   return false;

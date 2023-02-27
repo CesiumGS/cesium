@@ -315,7 +315,7 @@ Object.defineProperties(EllipsoidGeodesic.prototype, {
   /**
    * Gets the surface distance between the start and end point
    * @memberof EllipsoidGeodesic.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   surfaceDistance: {
@@ -355,7 +355,7 @@ Object.defineProperties(EllipsoidGeodesic.prototype, {
   /**
    * Gets the heading at the initial point.
    * @memberof EllipsoidGeodesic.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   startHeading: {
@@ -371,7 +371,7 @@ Object.defineProperties(EllipsoidGeodesic.prototype, {
   /**
    * Gets the heading at the final point.
    * @memberof EllipsoidGeodesic.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   endHeading: {
@@ -403,7 +403,7 @@ EllipsoidGeodesic.prototype.setEndPoints = function (start, end) {
 /**
  * Provides the location of a point at the indicated portion along the geodesic.
  *
- * @param {Number} fraction The portion of the distance between the initial and final points.
+ * @param {number} fraction The portion of the distance between the initial and final points.
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the geodesic.
  */
@@ -420,7 +420,7 @@ EllipsoidGeodesic.prototype.interpolateUsingFraction = function (
 /**
  * Provides the location of a point at the indicated distance along the geodesic.
  *
- * @param {Number} distance The distance from the inital point to the point of interest along the geodesic
+ * @param {number} distance The distance from the inital point to the point of interest along the geodesic
  * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the geodesic.
  *

@@ -29,7 +29,7 @@ Object.defineProperties(PositionProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof PositionProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -85,7 +85,7 @@ PositionProperty.prototype.getValueInReferenceFrame =
  * @function
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 PositionProperty.prototype.equals = DeveloperError.throwInstantiationError;
 

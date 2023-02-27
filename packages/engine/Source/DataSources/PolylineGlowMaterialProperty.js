@@ -14,10 +14,10 @@ const defaultTaperPower = 1.0;
  * @alias PolylineGlowMaterialProperty
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
- * @param {Property|Number} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
- * @param {Property|Number} [options.taperPower=1.0] A numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
+ * @param {Property|number} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
+ * @param {Property|number} [options.taperPower=1.0] A numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
  */
 function PolylineGlowMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -40,7 +40,7 @@ Object.defineProperties(PolylineGlowMaterialProperty.prototype, {
    * Gets a value indicating if this property is constant.  A property is considered
    * constant if getValue always returns the same result for the current definition.
    * @memberof PolylineGlowMaterialProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -89,7 +89,7 @@ Object.defineProperties(PolylineGlowMaterialProperty.prototype, {
  * Gets the {@link Material} type at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 PolylineGlowMaterialProperty.prototype.getType = function (time) {
   return "PolylineGlow";
@@ -99,8 +99,8 @@ PolylineGlowMaterialProperty.prototype.getType = function (time) {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 PolylineGlowMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(result)) {
@@ -132,7 +132,7 @@ PolylineGlowMaterialProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 PolylineGlowMaterialProperty.prototype.equals = function (other) {
   return (

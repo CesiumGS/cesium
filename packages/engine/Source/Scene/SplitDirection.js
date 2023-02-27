@@ -1,7 +1,7 @@
 /**
  * The direction to display a primitive or ImageryLayer relative to the {@link Scene#splitPosition}.
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @see ImageryLayer#splitDirection
  * @see Cesium3DTileset#splitDirection
@@ -10,7 +10,7 @@ const SplitDirection = {
   /**
    * Display the primitive or ImageryLayer to the left of the {@link Scene#splitPosition}.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LEFT: -1.0,
@@ -18,7 +18,7 @@ const SplitDirection = {
   /**
    *  Always display the primitive or ImageryLayer.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NONE: 0.0,
@@ -26,7 +26,7 @@ const SplitDirection = {
   /**
    * Display the primitive or ImageryLayer to the right of the {@link Scene#splitPosition}.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RIGHT: 1.0,

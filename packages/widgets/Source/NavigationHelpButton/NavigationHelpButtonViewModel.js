@@ -9,7 +9,7 @@ import createCommand from "../createCommand.js";
 function NavigationHelpButtonViewModel() {
   /**
    * Gets or sets whether the instructions are currently shown.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.showInstructions = false;
@@ -30,7 +30,7 @@ function NavigationHelpButtonViewModel() {
   /**
    * Gets or sets the tooltip.  This property is observable.
    *
-   * @type {String}
+   * @type {string}
    */
   this.tooltip = "Navigation Instructions";
 

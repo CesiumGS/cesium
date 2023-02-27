@@ -4,14 +4,14 @@
  * @demo The {@link https://sandcastle.cesium.com/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
  * demonstrates the three corner types, as used by {@link CorridorGraphics}.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const CornerType = {
   /**
    * <img src="Images/CornerTypeRounded.png" style="vertical-align: middle;" width="186" height="189" />
    *
    * Corner has a smooth edge.
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ROUNDED: 0,
@@ -20,7 +20,7 @@ const CornerType = {
    * <img src="Images/CornerTypeMitered.png" style="vertical-align: middle;" width="186" height="189" />
    *
    * Corner point is the intersection of adjacent edges.
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MITERED: 1,
@@ -29,7 +29,7 @@ const CornerType = {
    * <img src="Images/CornerTypeBeveled.png" style="vertical-align: middle;" width="186" height="189" />
    *
    * Corner is clipped.
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   BEVELED: 2,

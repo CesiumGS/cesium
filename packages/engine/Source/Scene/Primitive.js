@@ -63,20 +63,20 @@ import ShadowMode from "./ShadowMode.js";
  * @alias Primitive
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
  * @param {Appearance} [options.appearance] The appearance used to render the primitive.
  * @param {Appearance} [options.depthFailAppearance] The appearance used to shade this primitive when it fails the depth test.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
- * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
- * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
- * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
- * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
- * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
- * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+ * @param {boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+ * @param {boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
+ * @param {boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+ * @param {boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+ * @param {boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
+ * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
  *
  * @example
@@ -233,7 +233,7 @@ function Primitive(options) {
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default true
    */
@@ -254,7 +254,7 @@ function Primitive(options) {
    * based on their bounding volume.  Set this to <code>false</code> for a small performance gain
    * if you are manually culling the primitive.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -266,7 +266,7 @@ function Primitive(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -386,7 +386,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -402,7 +402,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -418,7 +418,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -434,7 +434,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -450,7 +450,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -466,7 +466,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -484,7 +484,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -496,7 +496,7 @@ Object.defineProperties(Primitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Primitive.prototype
-   * @type {Promise.<Primitive>}
+   * @type {Promise<Primitive>}
    * @readonly
    */
   readyPromise: {
@@ -2388,7 +2388,7 @@ function createPickIdProperty(primitive, properties, index) {
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
  *
  * @param {*} id The id of the {@link GeometryInstance}.
- * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
+ * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
  *
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
@@ -2463,7 +2463,7 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see Primitive#destroy
  */

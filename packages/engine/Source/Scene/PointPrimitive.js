@@ -147,7 +147,7 @@ Object.defineProperties(PointPrimitive.prototype, {
    * Determines if this point will be shown.  Use this to hide or show a point, instead
    * of removing it and re-adding it to the collection.
    * @memberof PointPrimitive.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -286,7 +286,7 @@ Object.defineProperties(PointPrimitive.prototype, {
   /**
    * Gets or sets the inner size of the point in pixels.
    * @memberof PointPrimitive.prototype
-   * @type {Number}
+   * @type {number}
    */
   pixelSize: {
     get: function () {
@@ -369,7 +369,7 @@ Object.defineProperties(PointPrimitive.prototype, {
    * Gets or sets the outline width in pixels.  This width adds to pixelSize,
    * increasing the total size of the point.
    * @memberof PointPrimitive.prototype
-   * @type {Number}
+   * @type {number}
    */
   outlineWidth: {
     get: function () {
@@ -421,7 +421,7 @@ Object.defineProperties(PointPrimitive.prototype, {
    * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
    * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
    * @memberof PointPrimitive.prototype
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   disableDepthTestDistance: {
@@ -472,7 +472,7 @@ Object.defineProperties(PointPrimitive.prototype, {
   /**
    * Determines whether or not this point will be shown or hidden because it was clustered.
    * @memberof PointPrimitive.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   clusterShow: {
@@ -635,7 +635,7 @@ PointPrimitive.getScreenSpaceBoundingBox = function (
  * are equal.  Points in different collections can be equal.
  *
  * @param {PointPrimitive} other The point to compare for equality.
- * @returns {Boolean} <code>true</code> if the points are equal; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the points are equal; otherwise, <code>false</code>.
  */
 PointPrimitive.prototype.equals = function (other) {
   return (

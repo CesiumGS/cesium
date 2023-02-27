@@ -142,10 +142,10 @@ MaterialPipelineStage.process = function (
  * Process a single texture transformation and add it to the shader and uniform map.
  *
  * @param {ShaderBuilder} shaderBuilder The shader builder to modify
- * @param {Object.<String, Function>} uniformMap The uniform map to modify.
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
- * @param {String} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
- * @param {String} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
+ * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
  *
  * @private
  */
@@ -180,10 +180,10 @@ function processTextureTransform(
  * Process a single texture and add it to the shader and uniform map.
  *
  * @param {ShaderBuilder} shaderBuilder The shader builder to modify
- * @param {Object.<String, Function>} uniformMap The uniform map to modify.
+ * @param {Object<string, Function>} uniformMap The uniform map to modify.
  * @param {ModelComponents.TextureReader} textureReader The texture to add to the shader
- * @param {String} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
- * @param {String} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
+ * @param {string} uniformName The name of the sampler uniform such as <code>u_baseColorTexture</code>
+ * @param {string} defineName The name of the texture for use in the defines, minus any prefix or suffix. For example, "BASE_COLOR" or "EMISSIVE"
  *
  * @private
  */

@@ -9,8 +9,8 @@ import MetadataEntity from "./MetadataEntity.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.content Either the content metadata JSON (3D Tiles 1.1) or the extension JSON attached to the content.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.content Either the content metadata JSON (3D Tiles 1.1) or the extension JSON attached to the content.
  * @param {MetadataClass} options.class The class that the content metadata conforms to.
  *
  * @alias ContentMetadata
@@ -53,7 +53,7 @@ Object.defineProperties(ContentMetadata.prototype, {
    * Extra user-defined properties.
    *
    * @memberof ContentMetadata.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -67,7 +67,7 @@ Object.defineProperties(ContentMetadata.prototype, {
    * An object containing extensions.
    *
    * @memberof ContentMetadata.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -81,8 +81,8 @@ Object.defineProperties(ContentMetadata.prototype, {
 /**
  * Returns whether the content has this property.
  *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether the content has this property.
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @returns {boolean} Whether the content has this property.
  * @private
  */
 ContentMetadata.prototype.hasProperty = function (propertyId) {
@@ -92,8 +92,8 @@ ContentMetadata.prototype.hasProperty = function (propertyId) {
 /**
  * Returns whether the content has a property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {Boolean} Whether the content has a property with the given semantic.
+ * @param {string} semantic The case-sensitive semantic of the property.
+ * @returns {boolean} Whether the content has a property with the given semantic.
  * @private
  */
 ContentMetadata.prototype.hasPropertyBySemantic = function (semantic) {
@@ -107,8 +107,8 @@ ContentMetadata.prototype.hasPropertyBySemantic = function (semantic) {
 /**
  * Returns an array of property IDs.
  *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The property IDs.
  * @private
  */
 ContentMetadata.prototype.getPropertyIds = function (results) {
@@ -121,7 +121,7 @@ ContentMetadata.prototype.getPropertyIds = function (results) {
  * If the property is normalized the normalized value is returned.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the content does not have this property.
  * @private
  */
@@ -135,9 +135,9 @@ ContentMetadata.prototype.getProperty = function (propertyId) {
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 ContentMetadata.prototype.setProperty = function (propertyId, value) {
@@ -152,7 +152,7 @@ ContentMetadata.prototype.setProperty = function (propertyId, value) {
 /**
  * Returns a copy of the value of the property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the content does not have this semantic.
  * @private
  */
@@ -167,9 +167,9 @@ ContentMetadata.prototype.getPropertyBySemantic = function (semantic) {
 /**
  * Sets the value of the property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 ContentMetadata.prototype.setPropertyBySemantic = function (semantic, value) {

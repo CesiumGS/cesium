@@ -4,13 +4,13 @@ import WebGLConstants from "./WebGLConstants.js";
 /**
  * The format of a pixel, i.e., the number of components it has and what they represent.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const PixelFormat = {
   /**
    * A pixel format containing a depth value.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   DEPTH_COMPONENT: WebGLConstants.DEPTH_COMPONENT,
@@ -18,7 +18,7 @@ const PixelFormat = {
   /**
    * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8}.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   DEPTH_STENCIL: WebGLConstants.DEPTH_STENCIL,
@@ -26,7 +26,7 @@ const PixelFormat = {
   /**
    * A pixel format containing an alpha channel.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ALPHA: WebGLConstants.ALPHA,
@@ -34,7 +34,7 @@ const PixelFormat = {
   /**
    * A pixel format containing a red channel
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RED: WebGLConstants.RED,
@@ -42,7 +42,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red and green channels.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RG: WebGLConstants.RG,
@@ -50,7 +50,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, and blue channels.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGB: WebGLConstants.RGB,
@@ -58,7 +58,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA: WebGLConstants.RGBA,
@@ -66,7 +66,7 @@ const PixelFormat = {
   /**
    * A pixel format containing a luminance (intensity) channel.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LUMINANCE: WebGLConstants.LUMINANCE,
@@ -74,7 +74,7 @@ const PixelFormat = {
   /**
    * A pixel format containing luminance (intensity) and alpha channels.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LUMINANCE_ALPHA: WebGLConstants.LUMINANCE_ALPHA,
@@ -82,7 +82,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, and blue channels that is DXT1 compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGB_DXT1: WebGLConstants.COMPRESSED_RGB_S3TC_DXT1_EXT,
@@ -90,7 +90,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT1 compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA_DXT1: WebGLConstants.COMPRESSED_RGBA_S3TC_DXT1_EXT,
@@ -98,7 +98,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT3 compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA_DXT3: WebGLConstants.COMPRESSED_RGBA_S3TC_DXT3_EXT,
@@ -106,7 +106,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT5 compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA_DXT5: WebGLConstants.COMPRESSED_RGBA_S3TC_DXT5_EXT,
@@ -114,7 +114,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, and blue channels that is PVR 4bpp compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGB_PVRTC_4BPPV1: WebGLConstants.COMPRESSED_RGB_PVRTC_4BPPV1_IMG,
@@ -122,7 +122,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, and blue channels that is PVR 2bpp compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGB_PVRTC_2BPPV1: WebGLConstants.COMPRESSED_RGB_PVRTC_2BPPV1_IMG,
@@ -130,7 +130,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels that is PVR 4bpp compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA_PVRTC_4BPPV1: WebGLConstants.COMPRESSED_RGBA_PVRTC_4BPPV1_IMG,
@@ -138,7 +138,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels that is PVR 2bpp compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA_PVRTC_2BPPV1: WebGLConstants.COMPRESSED_RGBA_PVRTC_2BPPV1_IMG,
@@ -146,7 +146,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels that is ASTC compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA_ASTC: WebGLConstants.COMPRESSED_RGBA_ASTC_4x4_WEBGL,
@@ -154,7 +154,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, and blue channels that is ETC1 compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGB_ETC1: WebGLConstants.COMPRESSED_RGB_ETC1_WEBGL,
@@ -162,7 +162,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, and blue channels that is ETC2 compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGB8_ETC2: WebGLConstants.COMPRESSED_RGB8_ETC2,
@@ -170,7 +170,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels that is ETC2 compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA8_ETC2_EAC: WebGLConstants.COMPRESSED_RGBA8_ETC2_EAC,
@@ -178,7 +178,7 @@ const PixelFormat = {
   /**
    * A pixel format containing red, green, blue, and alpha channels that is BC7 compressed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RGBA_BC7: WebGLConstants.COMPRESSED_RGBA_BPTC_UNORM,

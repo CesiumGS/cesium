@@ -50,7 +50,7 @@ function CacheEntry(resourceLoader) {
  * Gets a resource from the cache. If the resource exists its reference count is
  * incremented. Otherwise, if no resource loader exists, undefined is returned.
  *
- * @param {String} cacheKey The cache key of the resource.
+ * @param {string} cacheKey The cache key of the resource.
  *
  * @returns {ResourceLoader|undefined} The resource.
  * @private
@@ -71,7 +71,7 @@ ResourceCache.get = function (cacheKey) {
 /**
  * Loads a resource and adds it to the cache.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {ResourceLoader} options.resourceLoader The resource.
  *
  * @exception {DeveloperError} Resource with this cacheKey is already in the cach
@@ -138,8 +138,8 @@ ResourceCache.unload = function (resourceLoader) {
 /**
  * Loads a schema from the cache.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
+ * @param {object} options Object with the following properties:
+ * @param {object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
  *
  * @returns {MetadataSchemaLoader} The schema resource.
@@ -186,9 +186,9 @@ ResourceCache.loadSchema = function (options) {
 /**
  * Load an embedded buffer from the cache.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Resource} options.parentResource The {@link Resource} containing the embedded buffer.
- * @param {Number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
+ * @param {number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents.
  *
  * @returns {BufferLoader} The buffer loader.
@@ -234,7 +234,7 @@ ResourceCache.loadEmbeddedBuffer = function (options) {
 /**
  * Loads an external buffer from the cache.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Resource} options.resource The {@link Resource} pointing to the external buffer.
  *
  * @returns {BufferLoader} The buffer loader.
@@ -272,11 +272,11 @@ ResourceCache.loadExternalBuffer = function (options) {
 /**
  * Loads a glTF JSON from the cache.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Uint8Array} [options.typedArray] The typed array containing the glTF contents.
- * @param {Object} [options.gltfJson] The parsed glTF JSON contents.
+ * @param {object} [options.gltfJson] The parsed glTF JSON contents.
  *
  * @returns {GltfJsonLoader} The glTF JSON.
  * @private
@@ -321,9 +321,9 @@ ResourceCache.loadGltfJson = function (options) {
 /**
  * Loads a glTF buffer view from the cache.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.bufferViewId The bufferView ID.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {number} options.bufferViewId The bufferView ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
@@ -375,9 +375,9 @@ ResourceCache.loadBufferView = function (options) {
 /**
  * Loads Draco data from the cache.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {Object} options.draco The Draco extension object.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.draco The Draco extension object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
@@ -429,19 +429,19 @@ ResourceCache.loadDraco = function (options) {
 /**
  * Loads a glTF vertex buffer from the cache.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {FrameState} options.frameState The frame state.
- * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
- * @param {Object} [options.draco] The Draco extension object.
- * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
- * @param {Number} [options.accessorId] The accessor ID.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
- * @param {Boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
- * @param {Boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
+ * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+ * @param {object} [options.draco] The Draco extension object.
+ * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
+ * @param {number} [options.accessorId] The accessor ID.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.dequantize=false] Determines whether or not the vertex buffer will be dequantized on the CPU.
+ * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
+ * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
  * @exception {DeveloperError} When options.draco is defined options.accessorId must also be defined.
@@ -564,16 +564,16 @@ function hasDracoCompression(draco, semantic) {
 /**
  * Loads a glTF index buffer from the cache.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {FrameState} options.frameState The frame state.
- * @param {Object} [options.draco] The Draco extension object.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
- * @param {Boolean} [options.loadTypedArray=false] Load index buffer as a typed array.
+ * @param {object} [options.draco] The Draco extension object.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
+ * @param {boolean} [options.loadTypedArray=false] Load index buffer as a typed array.
  * @returns {GltfIndexBufferLoader} The index buffer loader.
  * @private
  */
@@ -645,9 +645,9 @@ ResourceCache.loadIndexBuffer = function (options) {
 /**
  * Loads a glTF image from the cache.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.imageId The image ID.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
@@ -699,14 +699,14 @@ ResourceCache.loadImage = function (options) {
 /**
  * Loads a glTF texture from the cache.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {Object} options.textureInfo The texture info object.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.textureInfo The texture info object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {FrameState} options.frameState The frame state.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @returns {GltfTextureLoader} The texture loader.
  * @private

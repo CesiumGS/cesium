@@ -164,7 +164,7 @@ AxisAlignedBoundingBox.clone = function (box, result) {
  *
  * @param {AxisAlignedBoundingBox} [left] The first AxisAlignedBoundingBox.
  * @param {AxisAlignedBoundingBox} [right] The second AxisAlignedBoundingBox.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 AxisAlignedBoundingBox.equals = function (left, right) {
   return (
@@ -251,7 +251,7 @@ AxisAlignedBoundingBox.prototype.intersectPlane = function (plane) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {AxisAlignedBoundingBox} [right] The right hand side AxisAlignedBoundingBox.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 AxisAlignedBoundingBox.prototype.equals = function (right) {
   return AxisAlignedBoundingBox.equals(this, right);

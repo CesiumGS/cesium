@@ -51,7 +51,7 @@ Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   /**
    * The url to the KTX2 file containing the specular environment map and convoluted mipmaps.
    * @memberof OctahedralProjectedCubeMap.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -85,7 +85,7 @@ Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   /**
    * The maximum number of mip levels.
    * @memberOf OctahedralProjectedCubeMap.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   maximumMipmapLevel: {
@@ -96,7 +96,7 @@ Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
   /**
    * Determines if the texture atlas is complete and ready to use.
    * @memberof OctahedralProjectedCubeMap.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -416,7 +416,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see OctahedralProjectedCubeMap#destroy
  */

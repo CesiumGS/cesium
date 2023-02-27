@@ -8,11 +8,11 @@ const removeDuplicatesEpsilon = CesiumMath.EPSILON10;
 /**
  * Removes adjacent duplicate values in an array of values.
  *
- * @param {Array.<*>} [values] The array of values.
+ * @param {any[]} [values] The array of values.
  * @param {Function} equalsEpsilon Function to compare values with an epsilon. Boolean equalsEpsilon(left, right, epsilon).
- * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value. If they are equal, the last value is removed.
- * @param {Array.<Number>} [removedIndices=undefined] Store the indices that correspond to the duplicate items removed from the array, if there were any.
- * @returns {Array.<*>|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
+ * @param {boolean} [wrapAround=false] Compare the last value in the array against the first value. If they are equal, the last value is removed.
+ * @param {number[]} [removedIndices=undefined] Store the indices that correspond to the duplicate items removed from the array, if there were any.
+ * @returns {any[]|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
  *
  * @example
  * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0), (1.0, 1.0, 1.0)]

@@ -7,7 +7,7 @@ const ResourceLoaderState = {
   /**
    * The resource has not yet been loaded.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @private
    */
@@ -15,7 +15,7 @@ const ResourceLoaderState = {
   /**
    * The resource is loading. In this state, external resources are fetched as needed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @private
    */
@@ -23,7 +23,7 @@ const ResourceLoaderState = {
   /**
    * The resource has finished loading, but requires further processing. GPU resources are allocated in this state as needed.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @private
    */
@@ -31,7 +31,7 @@ const ResourceLoaderState = {
   /**
    * The resource has finished loading and processing; the results are ready to be used.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @private
    */
@@ -39,7 +39,7 @@ const ResourceLoaderState = {
   /**
    * The resource loading or processing has failed due to an error.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    * @private
    */

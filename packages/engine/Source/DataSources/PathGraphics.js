@@ -6,7 +6,7 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} PathGraphics.ConstructorOptions
+ * @typedef {object} PathGraphics.ConstructorOptions
  *
  * Initialization options for the PathGraphics constructor
  *

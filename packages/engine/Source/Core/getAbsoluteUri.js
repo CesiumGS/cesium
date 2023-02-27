@@ -7,9 +7,9 @@ import DeveloperError from "./DeveloperError.js";
  * Given a relative Uri and a base Uri, returns the absolute Uri of the relative Uri.
  * @function
  *
- * @param {String} relative The relative Uri.
- * @param {String} [base] The base Uri.
- * @returns {String} The absolute Uri of the given relative Uri.
+ * @param {string} relative The relative Uri.
+ * @param {string} [base] The base Uri.
+ * @returns {string} The absolute Uri of the given relative Uri.
  *
  * @example
  * //absolute Uri will be "https://test.com/awesome.png";

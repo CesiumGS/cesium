@@ -38,10 +38,10 @@ const defaultInitialSize = new Cartesian2(16.0, 16.0);
  * @alias TextureAtlas
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Scene} options.context The context in which the texture gets created.
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
- * @param {Number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
+ * @param {number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
  * @param {Cartesian2} [options.initialSize=new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
  *
  * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
@@ -84,7 +84,7 @@ Object.defineProperties(TextureAtlas.prototype, {
   /**
    * The amount of spacing between adjacent images in pixels.
    * @memberof TextureAtlas.prototype
-   * @type {Number}
+   * @type {number}
    */
   borderWidthInPixels: {
     get: function () {
@@ -130,7 +130,7 @@ Object.defineProperties(TextureAtlas.prototype, {
    * Texture coordinates are subject to change if the texture atlas resizes, so it is
    * important to check {@link TextureAtlas#getGUID} before using old values.
    * @memberof TextureAtlas.prototype
-   * @type {Number}
+   * @type {number}
    */
   numberOfImages: {
     get: function () {
@@ -144,7 +144,7 @@ Object.defineProperties(TextureAtlas.prototype, {
    * Classes that use a texture atlas should check if the GUID
    * has changed before processing the atlas data.
    * @memberof TextureAtlas.prototype
-   * @type {String}
+   * @type {string}
    */
   guid: {
     get: function () {
@@ -368,8 +368,8 @@ function getIndex(atlas, image) {
 /**
  * If the image is already in the atlas, the existing index is returned. Otherwise, the result is undefined.
  *
- * @param {String} id An identifier to detect whether the image already exists in the atlas.
- * @returns {Number|undefined} The image index, or undefined if the image does not exist in the atlas.
+ * @param {string} id An identifier to detect whether the image already exists in the atlas.
+ * @returns {number|undefined} The image index, or undefined if the image does not exist in the atlas.
  */
 TextureAtlas.prototype.getImageIndex = function (id) {
   //>>includeStart('debug', pragmas.debug);
@@ -385,9 +385,9 @@ TextureAtlas.prototype.getImageIndex = function (id) {
  * Adds an image to the atlas synchronously.  If the image is already in the atlas, the atlas is unchanged and
  * the existing index is used.
  *
- * @param {String} id An identifier to detect whether the image already exists in the atlas.
+ * @param {string} id An identifier to detect whether the image already exists in the atlas.
  * @param {HTMLImageElement|HTMLCanvasElement} image An image or canvas to add to the texture atlas.
- * @returns {Number} The image index.
+ * @returns {number} The image index.
  */
 TextureAtlas.prototype.addImageSync = function (id, image) {
   //>>includeStart('debug', pragmas.debug);
@@ -417,10 +417,10 @@ TextureAtlas.prototype.addImageSync = function (id, image) {
  * Adds an image to the atlas.  If the image is already in the atlas, the atlas is unchanged and
  * the existing index is used.
  *
- * @param {String} id An identifier to detect whether the image already exists in the atlas.
- * @param {HTMLImageElement|HTMLCanvasElement|String|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
+ * @param {string} id An identifier to detect whether the image already exists in the atlas.
+ * @param {HTMLImageElement|HTMLCanvasElement|string|Resource|Promise|TextureAtlas.CreateImageCallback} image An image or canvas to add to the texture atlas,
  *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
- * @returns {Promise.<Number>} A Promise for the image index.
+ * @returns {Promise<number>} A Promise for the image index.
  */
 TextureAtlas.prototype.addImage = function (id, image) {
   //>>includeStart('debug', pragmas.debug);
@@ -470,10 +470,10 @@ TextureAtlas.prototype.addImage = function (id, image) {
 /**
  * Add a sub-region of an existing atlas image as additional image indices.
  *
- * @param {String} id The identifier of the existing image.
+ * @param {string} id The identifier of the existing image.
  * @param {BoundingRectangle} subRegion An {@link BoundingRectangle} sub-region measured in pixels from the bottom-left.
  *
- * @returns {Promise.<Number>} A Promise for the image index.
+ * @returns {Promise<number>} A Promise for the image index.
  */
 TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
   //>>includeStart('debug', pragmas.debug);
@@ -520,7 +520,7 @@ TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see TextureAtlas#destroy
  */
@@ -552,7 +552,7 @@ TextureAtlas.prototype.destroy = function () {
 /**
  * A function that creates an image.
  * @callback TextureAtlas.CreateImageCallback
- * @param {String} id The identifier of the image to load.
+ * @param {string} id The identifier of the image to load.
  * @returns {HTMLImageElement|Promise<HTMLImageElement>} The image, or a promise that will resolve to an image.
  */
 export default TextureAtlas;

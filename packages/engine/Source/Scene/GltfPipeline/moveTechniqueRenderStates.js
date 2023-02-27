@@ -53,8 +53,8 @@ function getSupportedBlendFactors(value, defaultValue) {
 /**
  * Move glTF 1.0 technique render states to glTF 2.0 materials properties and KHR_blend extension.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @returns {Object} The updated glTF asset.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @returns {object} The updated glTF asset.
  *
  * @private
  */

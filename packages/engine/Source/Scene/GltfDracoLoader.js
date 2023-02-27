@@ -15,13 +15,13 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Object} options.gltf The glTF JSON.
- * @param {Object} options.draco The Draco extension object.
+ * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.draco The Draco extension object.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {String} [options.cacheKey] The cache key of the resource.
+ * @param {string} [options.cacheKey] The cache key of the resource.
  *
  * @private
  */
@@ -68,7 +68,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    *
    * @memberof GltfDracoLoader.prototype
    *
-   * @type {Promise.<GltfDracoLoader>}
+   * @type {Promise<GltfDracoLoader>}
    * @readonly
    * @private
    */
@@ -82,7 +82,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    *
    * @memberof GltfDracoLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -96,7 +96,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
    *
    * @memberof GltfDracoLoader.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -109,7 +109,7 @@ Object.defineProperties(GltfDracoLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfDracoLoader.prototype.load = function () {

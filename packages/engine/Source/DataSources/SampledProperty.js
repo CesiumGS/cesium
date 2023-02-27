@@ -118,7 +118,7 @@ function mergeNewSamples(epoch, times, values, newData, packedLength) {
  * @alias SampledProperty
  * @constructor
  *
- * @param {Number|Packable} type The type of property.
+ * @param {number|Packable} type The type of property.
  * @param {Packable[]} [derivativeTypes] When supplied, indicates that samples will contain derivative information of the specified types.
  *
  *
@@ -221,7 +221,7 @@ Object.defineProperties(SampledProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof SampledProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -266,7 +266,7 @@ Object.defineProperties(SampledProperty.prototype, {
   /**
    * Gets the degree of interpolation to perform when retrieving a value.
    * @memberof SampledProperty.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1
    */
   interpolationDegree: {
@@ -307,7 +307,7 @@ Object.defineProperties(SampledProperty.prototype, {
    * Gets or sets the amount of time to extrapolate forward before
    * the property becomes undefined.  A value of 0 will extrapolate forever.
    * @memberof SampledProperty.prototype
-   * @type {Number}
+   * @type {number}
    * @default 0
    */
   forwardExtrapolationDuration: {
@@ -343,7 +343,7 @@ Object.defineProperties(SampledProperty.prototype, {
    * Gets or sets the amount of time to extrapolate backward
    * before the property becomes undefined.  A value of 0 will extrapolate forever.
    * @memberof SampledProperty.prototype
-   * @type {Number}
+   * @type {number}
    * @default 0
    */
   backwardExtrapolationDuration: {
@@ -363,8 +363,8 @@ Object.defineProperties(SampledProperty.prototype, {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 SampledProperty.prototype.getValue = function (time, result) {
   //>>includeStart('debug', pragmas.debug);
@@ -535,9 +535,9 @@ SampledProperty.prototype.getValue = function (time, result) {
 /**
  * Sets the algorithm and degree to use when interpolating a value.
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
- * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
+ * @param {number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
  */
 SampledProperty.prototype.setInterpolationOptions = function (options) {
   if (!defined(options)) {
@@ -676,7 +676,7 @@ SampledProperty.prototype.addSamples = function (
  * Adds samples as a single packed array where each new sample is represented as a date,
  * followed by the packed representation of the corresponding value and derivatives.
  *
- * @param {Number[]} packedSamples The array of packed samples.
+ * @param {number[]} packedSamples The array of packed samples.
  * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
  */
 SampledProperty.prototype.addSamplesPackedArray = function (
@@ -702,7 +702,7 @@ SampledProperty.prototype.addSamplesPackedArray = function (
  * Removes a sample at the given time, if present.
  *
  * @param {JulianDate} time The sample time.
- * @returns {Boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
  */
 SampledProperty.prototype.removeSample = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -760,7 +760,7 @@ SampledProperty.prototype.removeSamples = function (timeInterval) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 SampledProperty.prototype.equals = function (other) {
   if (this === other) {

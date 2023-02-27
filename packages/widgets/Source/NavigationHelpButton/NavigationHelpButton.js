@@ -17,9 +17,9 @@ import NavigationHelpButtonViewModel from "./NavigationHelpButtonViewModel.js";
  * @alias NavigationHelpButton
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Element|String} options.container The DOM element or ID that will contain the widget.
- * @param {Boolean} [options.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
+ * @param {object} options Object with the following properties:
+ * @param {Element|string} options.container The DOM element or ID that will contain the widget.
+ * @param {boolean} [options.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  *
@@ -249,7 +249,7 @@ Object.defineProperties(NavigationHelpButton.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 NavigationHelpButton.prototype.isDestroyed = function () {
   return false;

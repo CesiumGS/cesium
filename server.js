@@ -41,8 +41,7 @@ import {
   createJsHintOptions,
   createCombinedSpecList,
   glslToJavaScript,
-  buildEngine,
-  buildWidgets,
+  createIndexJs,
   buildCesium,
 } from "./build.js";
 
@@ -85,27 +84,17 @@ function formatTimeSinceInSeconds(start) {
 async function generateDevelopmentBuild() {
   const startTime = performance.now();
 
-  // Build @cesium/engine
+  // Build @cesium/engine index.js
   console.log("[1/3] Building @cesium/engine...");
-  await buildEngine({
-    sourcemap: true,
-    incremental: true,
-    write: false,
-    minify: false,
-  });
+  await createIndexJs("engine");
 
-  // Build @cesium/widgets
+  // Build @cesium/widgets index.js
   console.log("[2/3] Building @cesium/widgets...");
-  await buildWidgets({
-    sourcemap: true,
-    incremental: true,
-    write: false,
-    minify: false,
-  });
+  await createIndexJs("widgets");
 
-  // Build CesiumJS
+  // Build CesiumJS and save returned contexts for rebuilding upon request
   console.log("[3/3] Building CesiumJS...");
-  const bundles = await buildCesium({
+  const contexts = await buildCesium({
     development: true,
     iife: true,
     incremental: true,
@@ -121,11 +110,7 @@ async function generateDevelopmentBuild() {
     `Cesium built in ${formatTimeSinceInSeconds(startTime)} seconds.`
   );
 
-  return {
-    esmResult: bundles.esmBundle,
-    iifeResult: bundles.iifeBundle,
-    specResult: bundles.specsBundle,
-  };
+  return contexts;
 }
 
 const serveResult = (result, fileName, res, next) => {
@@ -151,11 +136,9 @@ const serveResult = (result, fileName, res, next) => {
   let esmResult, iifeResult, specResult;
   const production = argv.production;
 
+  let contexts;
   if (!production) {
-    const bundles = await generateDevelopmentBuild();
-    esmResult = bundles.esmResult;
-    iifeResult = bundles.iifeResult;
-    specResult = bundles.specResult;
+    contexts = await generateDevelopmentBuild();
   }
 
   // eventually this mime type configuration will need to change
@@ -241,7 +224,7 @@ const serveResult = (result, fileName, res, next) => {
           sourcemap: true,
         });
         console.log(
-          `Rebuilt Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
+          `Built Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
         );
       } catch (e) {
         console.error(e);
@@ -258,9 +241,9 @@ const serveResult = (result, fileName, res, next) => {
         try {
           const start = performance.now();
           await createCesiumJs();
-          iifeResult = await iifeResult.rebuild();
+          iifeResult = await contexts.iife.rebuild();
           console.log(
-            `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
+            `Built Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
           );
         } catch (e) {
           next(e);
@@ -280,9 +263,9 @@ const serveResult = (result, fileName, res, next) => {
         try {
           const start = performance.now();
           await createCesiumJs();
-          iifeResult = await iifeResult.rebuild();
+          iifeResult = await contexts.iife.rebuild();
           console.log(
-            `Rebuilt Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
+            `Built Cesium.js in ${formatTimeSinceInSeconds(start)} seconds.`
           );
         } catch (e) {
           next(e);
@@ -302,9 +285,9 @@ const serveResult = (result, fileName, res, next) => {
         try {
           const start = performance.now();
           await createCesiumJs();
-          esmResult = await esmResult.rebuild();
+          esmResult = await contexts.esm.rebuild();
           console.log(
-            `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
+            `Built index.js in ${formatTimeSinceInSeconds(start)} seconds.`
           );
         } catch (e) {
           next(e);
@@ -323,9 +306,9 @@ const serveResult = (result, fileName, res, next) => {
         try {
           const start = performance.now();
           await createCesiumJs();
-          esmResult = await esmResult.rebuild();
+          esmResult = await contexts.esm.rebuild();
           console.log(
-            `Rebuilt index.js in ${formatTimeSinceInSeconds(start)} seconds.`
+            `Built index.js in ${formatTimeSinceInSeconds(start)} seconds.`
           );
         } catch (e) {
           next(e);
@@ -378,10 +361,10 @@ const serveResult = (result, fileName, res, next) => {
       if (!specResult?.outputFiles || specResult.outputFiles.length === 0) {
         try {
           const start = performance.now();
-          specRebuildPromise = specResult.rebuild();
+          specRebuildPromise = contexts.specs.rebuild();
           specResult = await specRebuildPromise;
           console.log(
-            `Rebuilt Specs/* in ${formatTimeSinceInSeconds(start)} seconds.`
+            `Built Specs/* in ${formatTimeSinceInSeconds(start)} seconds.`
           );
         } catch (e) {
           next(e);
@@ -545,9 +528,9 @@ const serveResult = (result, fileName, res, next) => {
       });
 
       if (!production) {
-        esmResult.rebuild.dispose();
-        iifeResult.rebuild.dispose();
-        specResult.rebuild.dispose();
+        contexts.esm.dispose();
+        contexts.iife.dispose();
+        contexts.specs.dispose();
       }
 
       isFirstSig = false;

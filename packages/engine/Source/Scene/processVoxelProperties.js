@@ -151,6 +151,7 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvLocal");
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirUv");
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirWorld");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "surfaceNormal");
   shaderBuilder.addStructField(voxelStructId, "float", "travelDistance");
 
   // FragmentInput struct
@@ -355,7 +356,7 @@ function processVoxelProperties(renderResources, primitive) {
  * @function
  *
  * @param {MetadataType} type The {@link MetadataType}.
- * @returns {String} The GLSL type.
+ * @returns {string} The GLSL type.
  *
  * @private
  */
@@ -377,7 +378,7 @@ function getGlslType(type) {
  * @function
  *
  * @param {MetadataType} type The {@link MetadataType}.
- * @returns {String} The GLSL swizzle.
+ * @returns {string} The GLSL swizzle.
  *
  * @private
  */
@@ -399,7 +400,7 @@ function getGlslTextureSwizzle(type) {
  * @function
  *
  * @param {MetadataType} type The {@link MetadataType}.
- * @returns {String} The GLSL type.
+ * @returns {string} The GLSL type.
  *
  * @private
  */
@@ -421,8 +422,8 @@ function getGlslPartialDerivativeType(type) {
  *
  * @function
  *
- * @param {Number} number The number to convert.
- * @returns {String} The number as floating point in GLSL.
+ * @param {number} number The number to convert.
+ * @returns {string} The number as floating point in GLSL.
  *
  * @private
  */
@@ -440,8 +441,8 @@ function getGlslNumberAsFloat(number) {
  * @function
  *
  * @param {MetadataType} type
- * @param {Number} index
- * @returns {String}
+ * @param {number} index
+ * @returns {string}
  *
  * @private
  */

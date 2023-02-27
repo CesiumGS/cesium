@@ -5,8 +5,8 @@ import defined from "../../Core/defined.js";
  * Adds extras._pipeline to each object that can have extras in the glTF asset.
  * This stage runs before updateVersion and handles both glTF 1.0 and glTF 2.0 assets.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @returns {Object} The glTF asset with the added pipeline extras.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @returns {object} The glTF asset with the added pipeline extras.
  *
  * @private
  */

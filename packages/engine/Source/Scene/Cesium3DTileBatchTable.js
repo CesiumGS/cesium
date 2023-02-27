@@ -88,7 +88,7 @@ Object.defineProperties(Cesium3DTileBatchTable.prototype, {
    * buffers and any binary properties. JSON data is not counted.
    *
    * @memberof Cesium3DTileBatchTable.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */

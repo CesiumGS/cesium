@@ -36,7 +36,7 @@ const ApproximateTerrainHeights = {};
 
 /**
  * Initializes the minimum and maximum terrain heights
- * @return {Promise.<void>}
+ * @return {Promise<void>}
  */
 ApproximateTerrainHeights.initialize = function () {
   let initPromise = ApproximateTerrainHeights._initPromise;
@@ -57,7 +57,7 @@ ApproximateTerrainHeights.initialize = function () {
  * Computes the minimum and maximum terrain heights for a given rectangle
  * @param {Rectangle} rectangle The bounding rectangle
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
- * @return {{minimumTerrainHeight: Number, maximumTerrainHeight: Number}}
+ * @return {{minimumTerrainHeight: number, maximumTerrainHeight: number}}
  */
 ApproximateTerrainHeights.getMinimumMaximumHeights = function (
   rectangle,
@@ -243,7 +243,7 @@ Object.defineProperties(ApproximateTerrainHeights, {
   /**
    * Determines if the terrain heights are initialized and ready to use. To initialize the terrain heights,
    * call {@link ApproximateTerrainHeights#initialize} and wait for the returned promise to resolve.
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @memberof ApproximateTerrainHeights
    */

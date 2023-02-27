@@ -17,28 +17,28 @@ const defaultParameters = Object.freeze({
 });
 
 /**
- * @typedef {Object} WebMapTileServiceImageryProvider.ConstructorOptions
+ * @typedef {object} WebMapTileServiceImageryProvider.ConstructorOptions
  *
  * Initialization options for the WebMapTileServiceImageryProvider constructor
  *
- * @property {Resource|String} url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
- * @property {String} [format='image/jpeg'] The MIME type for images to retrieve from the server.
- * @property {String} layer The layer name for WMTS requests.
- * @property {String} style The style name for WMTS requests.
- * @property {String} tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
+ * @property {Resource|string} url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
+ * @property {string} [format='image/jpeg'] The MIME type for images to retrieve from the server.
+ * @property {string} layer The layer name for WMTS requests.
+ * @property {string} style The style name for WMTS requests.
+ * @property {string} tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
  * @property {Array} [tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
- * @property {Object} [dimensions] A object containing static dimensions and their values.
- * @property {Number} [tileWidth=256] The tile width in pixels.
- * @property {Number} [tileHeight=256] The tile height in pixels.
+ * @property {object} [dimensions] A object containing static dimensions and their values.
+ * @property {number} [tileWidth=256] The tile width in pixels.
+ * @property {number} [tileHeight=256] The tile height in pixels.
  * @property {TilingScheme} [tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
- * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {string|string[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
  */
@@ -140,7 +140,7 @@ function WebMapTileServiceImageryProvider(options) {
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultAlpha = undefined;
@@ -149,7 +149,7 @@ function WebMapTileServiceImageryProvider(options) {
    * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultNightAlpha = undefined;
@@ -158,7 +158,7 @@ function WebMapTileServiceImageryProvider(options) {
    * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultDayAlpha = undefined;
@@ -167,7 +167,7 @@ function WebMapTileServiceImageryProvider(options) {
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultBrightness = undefined;
@@ -176,7 +176,7 @@ function WebMapTileServiceImageryProvider(options) {
    * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultContrast = undefined;
@@ -184,7 +184,7 @@ function WebMapTileServiceImageryProvider(options) {
   /**
    * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultHue = undefined;
@@ -193,7 +193,7 @@ function WebMapTileServiceImageryProvider(options) {
    * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultSaturation = undefined;
@@ -201,7 +201,7 @@ function WebMapTileServiceImageryProvider(options) {
   /**
    * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultGamma = undefined;
@@ -390,7 +390,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets the URL of the service hosting the imagery.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -415,7 +415,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * Gets the width of each tile, in pixels. This function should
    * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -428,7 +428,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * Gets the height of each tile, in pixels.  This function should
    * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -441,7 +441,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -454,7 +454,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * Gets the minimum level-of-detail that can be requested.  This function should
    * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -521,7 +521,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets the mime type of images returned by this imagery provider.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   format: {
@@ -533,7 +533,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -543,7 +543,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -572,7 +572,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -611,7 +611,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets or sets an object that contains static dimensions and their values.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Object}
+   * @type {object}
    */
   dimensions: {
     get: function () {
@@ -631,9 +631,9 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -650,11 +650,11 @@ WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
  * Requests the image for a given tile.  This function should
  * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
@@ -692,11 +692,11 @@ WebMapTileServiceImageryProvider.prototype.requestImage = function (
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
  * @return {undefined} Undefined since picking is not supported.
  */
 WebMapTileServiceImageryProvider.prototype.pickFeatures = function (

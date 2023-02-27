@@ -6,7 +6,7 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} BoxGraphics.ConstructorOptions
+ * @typedef {object} BoxGraphics.ConstructorOptions
  *
  * Initialization options for the BoxGraphics constructor
  *

@@ -893,7 +893,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
 }
 
 /**
- * @typedef {Object} ScreenSpaceEventHandler.PositionedEvent
+ * @typedef {object} ScreenSpaceEventHandler.PositionedEvent
  *
  * An Event that occurs at a single position on screen.
  *
@@ -909,7 +909,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  */
 
 /**
- * @typedef {Object} ScreenSpaceEventHandler.MotionEvent
+ * @typedef {object} ScreenSpaceEventHandler.MotionEvent
  *
  * An Event that starts at one position and ends at another.
  *
@@ -926,7 +926,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  */
 
 /**
- * @typedef {Object} ScreenSpaceEventHandler.TwoPointEvent
+ * @typedef {object} ScreenSpaceEventHandler.TwoPointEvent
  *
  * An Event that occurs at a two positions on screen.
  *
@@ -943,7 +943,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  */
 
 /**
- * @typedef {Object} ScreenSpaceEventHandler.TwoPointMotionEvent
+ * @typedef {object} ScreenSpaceEventHandler.TwoPointMotionEvent
  *
  * An Event that starts at a two positions on screen and moves to two other positions.
  *
@@ -1093,7 +1093,7 @@ ScreenSpaceEventHandler.prototype.removeInputAction = function (
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see ScreenSpaceEventHandler#destroy
  */
@@ -1125,7 +1125,7 @@ ScreenSpaceEventHandler.prototype.destroy = function () {
 /**
  * The amount of time, in milliseconds, that mouse events will be disabled after
  * receiving any touch events, such that any emulated mouse events will be ignored.
- * @type {Number}
+ * @type {number}
  * @default 800
  */
 ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds = 800;
@@ -1133,7 +1133,7 @@ ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds = 800;
 /**
  * The amount of time, in milliseconds, before a touch on the screen becomes a
  * touch and hold.
- * @type {Number}
+ * @type {number}
  * @default 1500
  */
 ScreenSpaceEventHandler.touchHoldDelayMilliseconds = 1500;

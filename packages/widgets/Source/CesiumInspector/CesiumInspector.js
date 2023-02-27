@@ -14,7 +14,7 @@ import CesiumInspectorViewModel from "./CesiumInspectorViewModel.js";
  * @alias CesiumInspector
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
@@ -303,7 +303,7 @@ Object.defineProperties(CesiumInspector.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 CesiumInspector.prototype.isDestroyed = function () {
   return false;

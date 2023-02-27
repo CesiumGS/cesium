@@ -6,7 +6,7 @@ import VoxelEllipsoidShape from "./VoxelEllipsoidShape.js";
 /**
  * An enum of voxel shapes. The shape controls how the voxel grid is mapped to 3D space.
  *
- * @enum {String}
+ * @enum {string}
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
@@ -14,7 +14,7 @@ const VoxelShapeType = {
   /**
    * A box shape.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -22,7 +22,7 @@ const VoxelShapeType = {
   /**
    * An ellipsoid shape.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -30,7 +30,7 @@ const VoxelShapeType = {
   /**
    * A cylinder shape.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */

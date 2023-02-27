@@ -12,9 +12,9 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @alias PrimitiveCollection
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.show=true] Determines if the primitives in the collection will be shown.
- * @param {Boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.show=true] Determines if the primitives in the collection will be shown.
+ * @param {boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
  *
  * @example
  * const billboards = new Cesium.BillboardCollection();
@@ -38,7 +38,7 @@ function PrimitiveCollection(options) {
   /**
    * Determines if primitives in this collection will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -48,7 +48,7 @@ function PrimitiveCollection(options) {
    * {@link PrimitiveCollection#destroy} or  {@link PrimitiveCollection#remove} or implicitly
    * by {@link PrimitiveCollection#removeAll}.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    *
    * @example
@@ -76,7 +76,7 @@ Object.defineProperties(PrimitiveCollection.prototype, {
    *
    * @memberof PrimitiveCollection.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -89,9 +89,9 @@ Object.defineProperties(PrimitiveCollection.prototype, {
 /**
  * Adds a primitive to the collection.
  *
- * @param {Object} primitive The primitive to add.
- * @param {Number} [index] The index to add the layer at.  If omitted, the primitive will be added at the bottom of all existing primitives.
- * @returns {Object} The primitive added to the collection.
+ * @param {object} primitive The primitive to add.
+ * @param {number} [index] The index to add the layer at.  If omitted, the primitive will be added at the bottom of all existing primitives.
+ * @returns {object} The primitive added to the collection.
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
@@ -134,8 +134,8 @@ PrimitiveCollection.prototype.add = function (primitive, index) {
 /**
  * Removes a primitive from the collection.
  *
- * @param {Object} [primitive] The primitive to remove.
- * @returns {Boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
+ * @param {object} [primitive] The primitive to remove.
+ * @returns {boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
@@ -201,8 +201,8 @@ PrimitiveCollection.prototype.removeAll = function () {
 /**
  * Determines if this collection contains a primitive.
  *
- * @param {Object} [primitive] The primitive to check for.
- * @returns {Boolean} <code>true</code> if the primitive is in the collection; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
+ * @param {object} [primitive] The primitive to check for.
+ * @returns {boolean} <code>true</code> if the primitive is in the collection; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
@@ -231,7 +231,7 @@ function getPrimitiveIndex(compositePrimitive, primitive) {
  * Raises a primitive "up one" in the collection.  If all primitives in the collection are drawn
  * on the globe surface, this visually moves the primitive up one.
  *
- * @param {Object} [primitive] The primitive to raise.
+ * @param {object} [primitive] The primitive to raise.
  *
  * @exception {DeveloperError} primitive is not in this collection.
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -257,7 +257,7 @@ PrimitiveCollection.prototype.raise = function (primitive) {
  * Raises a primitive to the "top" of the collection.  If all primitives in the collection are drawn
  * on the globe surface, this visually moves the primitive to the top.
  *
- * @param {Object} [primitive] The primitive to raise the top.
+ * @param {object} [primitive] The primitive to raise the top.
  *
  * @exception {DeveloperError} primitive is not in this collection.
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -283,7 +283,7 @@ PrimitiveCollection.prototype.raiseToTop = function (primitive) {
  * Lowers a primitive "down one" in the collection.  If all primitives in the collection are drawn
  * on the globe surface, this visually moves the primitive down one.
  *
- * @param {Object} [primitive] The primitive to lower.
+ * @param {object} [primitive] The primitive to lower.
  *
  * @exception {DeveloperError} primitive is not in this collection.
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -309,7 +309,7 @@ PrimitiveCollection.prototype.lower = function (primitive) {
  * Lowers a primitive to the "bottom" of the collection.  If all primitives in the collection are drawn
  * on the globe surface, this visually moves the primitive to the bottom.
  *
- * @param {Object} [primitive] The primitive to lower to the bottom.
+ * @param {object} [primitive] The primitive to lower to the bottom.
  *
  * @exception {DeveloperError} primitive is not in this collection.
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -334,8 +334,8 @@ PrimitiveCollection.prototype.lowerToBottom = function (primitive) {
 /**
  * Returns the primitive in the collection at the specified index.
  *
- * @param {Number} index The zero-based index of the primitive to return.
- * @returns {Object} The primitive at the <code>index</code>.
+ * @param {number} index The zero-based index of the primitive to return.
+ * @returns {object} The primitive at the <code>index</code>.
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
@@ -432,7 +432,7 @@ PrimitiveCollection.prototype.postPassesUpdate = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see PrimitiveCollection#destroy
  */

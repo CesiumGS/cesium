@@ -6,8 +6,8 @@ import defined from "../../Core/defined.js";
  * Adds an extension to gltf.extensionsRequired if it does not already exist.
  * Initializes extensionsRequired if it is not defined.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @param {String} extension The extension to add.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @param {string} extension The extension to add.
  *
  * @private
  */

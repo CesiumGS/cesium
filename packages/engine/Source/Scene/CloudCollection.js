@@ -76,12 +76,12 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * @alias CloudCollection
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.show=true] Whether to display the clouds.
- * @param {Number} [options.noiseDetail=16.0] Desired amount of detail in the noise texture.
- * @param {Number} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
- * @param {Boolean} [options.debugBillboards=false] For debugging only. Determines if the billboards are rendered with an opaque color.
- * @param {Boolean} [options.debugEllipsoids=false] For debugging only. Determines if the clouds will be rendered as opaque ellipsoids.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.show=true] Whether to display the clouds.
+ * @param {number} [options.noiseDetail=16.0] Desired amount of detail in the noise texture.
+ * @param {number} [options.noiseOffset=Cartesian3.ZERO] Desired translation of data in noise texture.
+ * @param {boolean} [options.debugBillboards=false] For debugging only. Determines if the billboards are rendered with an opaque color.
+ * @param {boolean} [options.debugEllipsoids=false] For debugging only. Determines if the clouds will be rendered as opaque ellipsoids.
  * @see CloudCollection#add
  * @see CloudCollection#remove
  * @see CumulusCloud
@@ -139,7 +139,7 @@ function CloudCollection(options) {
    * </tr></table>
    * </div>
    *
-   * @type {Number}
+   * @type {number}
    *
    * @default 16.0
    */
@@ -195,7 +195,7 @@ function CloudCollection(options) {
   /**
    * Determines if billboards in this collection will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -208,7 +208,7 @@ function CloudCollection(options) {
    * Renders the billboards with one opaque color for the sake of debugging.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -222,7 +222,7 @@ function CloudCollection(options) {
    * If <code>debugBillboards</code> is also true, then the ellipsoids will draw on top of the billboards.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -244,7 +244,7 @@ Object.defineProperties(CloudCollection.prototype, {
   /**
    * Returns the number of clouds in this collection.
    * @memberof CloudCollection.prototype
-   * @type {Number}
+   * @type {number}
    */
   length: {
     get: function () {
@@ -267,7 +267,7 @@ function destroyClouds(clouds) {
  * Creates and adds a cloud with the specified initial properties to the collection.
  * The added cloud is returned so it can be modified or removed from the collection later.
  *
- * @param {Object}[options] A template describing the cloud's properties as shown in Example 1.
+ * @param {object}[options] A template describing the cloud's properties as shown in Example 1.
  * @returns {CumulusCloud} The cloud that was added to the collection.
  *
  * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -321,7 +321,7 @@ CloudCollection.prototype.add = function (options) {
  * Removes a cloud from the collection.
  *
  * @param {CumulusCloud} cloud The cloud to remove.
- * @returns {Boolean} <code>true</code> if the cloud was removed; <code>false</code> if the cloud was not found in the collection.
+ * @returns {boolean} <code>true</code> if the cloud was removed; <code>false</code> if the cloud was not found in the collection.
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
@@ -403,7 +403,7 @@ CloudCollection.prototype._updateCloud = function (cloud, propertyChanged) {
  * Check whether this collection contains a given cloud.
  *
  * @param {CumulusCloud} [cloud] The cloud to check for.
- * @returns {Boolean} true if this collection contains the cloud, false otherwise.
+ * @returns {boolean} true if this collection contains the cloud, false otherwise.
  *
  * @see CloudCollection#get
  */
@@ -417,7 +417,7 @@ CloudCollection.prototype.contains = function (cloud) {
  * it to the left, changing their indices. This function is commonly used with
  * {@link CloudCollection#length} to iterate over all the clouds in the collection.
  *
- * @param {Number} index The zero-based index of the cloud.
+ * @param {number} index The zero-based index of the cloud.
  * @returns {CumulusCloud} The cloud at the specified index.
  *
  * @performance Expected constant time. If clouds were removed from the collection and
@@ -1013,7 +1013,7 @@ CloudCollection.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see CloudCollection#destroy
  */

@@ -1,13 +1,13 @@
 /**
  * ArcType defines the path that should be taken connecting vertices.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const ArcType = {
   /**
    * Straight line that does not conform to the surface of the ellipsoid.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NONE: 0,
@@ -15,7 +15,7 @@ const ArcType = {
   /**
    * Follow geodesic path.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   GEODESIC: 1,
@@ -23,7 +23,7 @@ const ArcType = {
   /**
    * Follow rhumb or loxodrome path.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RHUMB: 2,

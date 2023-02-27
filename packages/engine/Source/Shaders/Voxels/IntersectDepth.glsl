@@ -7,7 +7,7 @@
 
 uniform mat4 u_transformPositionViewToUv;
 
-void intersectDepth(vec2 screenCoord, Ray ray, inout Intersections ix) {
+void intersectDepth(in vec2 screenCoord, in Ray ray, inout Intersections ix) {
     float logDepthOrDepth = czm_unpackDepth(texture(czm_globeDepthTexture, screenCoord));
     if (logDepthOrDepth != 0.0) {
         // Calculate how far the ray must travel before it hits the depth buffer.
