@@ -5,7 +5,7 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} LabelGraphics.ConstructorOptions
+ * @typedef {object} LabelGraphics.ConstructorOptions
  *
  * Initialization options for the LabelGraphics constructor
  *

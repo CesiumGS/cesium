@@ -35,14 +35,14 @@ const attributeLocations = {
  * @alias EllipsoidPrimitive
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Cartesian3} [options.center=Cartesian3.ZERO] The center of the ellipsoid in the ellipsoid's model coordinates.
  * @param {Cartesian3} [options.radii] The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
  * @param {Material} [options.material=Material.ColorType] The surface appearance of the primitive.
- * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  *
  * @private
  */
@@ -108,7 +108,7 @@ function EllipsoidPrimitive(options) {
   /**
    * Determines if the ellipsoid primitive will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -143,7 +143,7 @@ function EllipsoidPrimitive(options) {
   /**
    * User-defined object returned when the ellipsoid is picked.
    *
-   * @type Object
+   * @type {object}
    *
    * @default undefined
    *
@@ -158,7 +158,7 @@ function EllipsoidPrimitive(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -471,7 +471,7 @@ EllipsoidPrimitive.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see EllipsoidPrimitive#destroy
  */

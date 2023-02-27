@@ -2,7 +2,7 @@
  * Constants to determine how an interpolated value is extrapolated
  * when querying outside the bounds of available data.
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @see SampledProperty
  */
@@ -10,7 +10,7 @@ const ExtrapolationType = {
   /**
    * No extrapolation occurs.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NONE: 0,
@@ -18,7 +18,7 @@ const ExtrapolationType = {
   /**
    * The first or last value is used when outside the range of sample data.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   HOLD: 1,
@@ -26,7 +26,7 @@ const ExtrapolationType = {
   /**
    * The value is extrapolated.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   EXTRAPOLATE: 2,

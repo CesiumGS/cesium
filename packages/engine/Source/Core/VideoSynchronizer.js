@@ -10,11 +10,11 @@ import JulianDate from "./JulianDate.js";
  * @alias VideoSynchronizer
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Clock} [options.clock] The clock instance used to drive the video.
  * @param {HTMLVideoElement} [options.element] The video element to be synchronized.
  * @param {JulianDate} [options.epoch=Iso8601.MINIMUM_VALUE] The simulation time that marks the start of the video.
- * @param {Number} [options.tolerance=1.0] The maximum amount of time, in seconds, that the clock and video can diverge.
+ * @param {number} [options.tolerance=1.0] The maximum amount of time, in seconds, that the clock and video can diverge.
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Video.html|Video Material Demo}
  */
@@ -43,7 +43,7 @@ function VideoSynchronizer(options) {
    * Lower values make the synchronization more accurate but video
    * performance might suffer.  Higher values provide better performance
    * but at the cost of accuracy.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.tolerance = defaultValue(options.tolerance, 1.0);
@@ -134,7 +134,7 @@ VideoSynchronizer.prototype.destroy = function () {
 /**
  * Returns true if this object was destroyed; otherwise, false.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 VideoSynchronizer.prototype.isDestroyed = function () {
   return false;

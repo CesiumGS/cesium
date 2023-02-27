@@ -13,13 +13,13 @@ import CullFace from "./CullFace.js";
  * @alias Appearance
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link Appearance#renderState} has alpha blending enabled.
- * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link Appearance#renderState} has backface culling enabled.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link Appearance#renderState} has alpha blending enabled.
+ * @param {boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link Appearance#renderState} has backface culling enabled.
  * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
- * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
- * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
- * @param {Object} [options.renderState] Optional render state to override the default render state.
+ * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+ * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+ * @param {object} [options.renderState] Optional render state to override the default render state.
  *
  * @see MaterialAppearance
  * @see EllipsoidSurfaceAppearance
@@ -46,7 +46,7 @@ function Appearance(options) {
   /**
    * When <code>true</code>, the geometry is expected to appear translucent.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -64,7 +64,7 @@ Object.defineProperties(Appearance.prototype, {
    *
    * @memberof Appearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   vertexShaderSource: {
@@ -80,7 +80,7 @@ Object.defineProperties(Appearance.prototype, {
    *
    * @memberof Appearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   fragmentShaderSource: {
@@ -94,7 +94,7 @@ Object.defineProperties(Appearance.prototype, {
    *
    * @memberof Appearance.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   renderState: {
@@ -108,7 +108,7 @@ Object.defineProperties(Appearance.prototype, {
    *
    * @memberof Appearance.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -124,7 +124,7 @@ Object.defineProperties(Appearance.prototype, {
  * Procedurally creates the full GLSL fragment shader source for this appearance
  * taking into account {@link Appearance#fragmentShaderSource} and {@link Appearance#material}.
  *
- * @returns {String} The full GLSL fragment shader source.
+ * @returns {string} The full GLSL fragment shader source.
  */
 Appearance.prototype.getFragmentShaderSource = function () {
   const parts = [];
@@ -145,7 +145,7 @@ Appearance.prototype.getFragmentShaderSource = function () {
 /**
  * Determines if the geometry is translucent based on {@link Appearance#translucent} and {@link Material#isTranslucent}.
  *
- * @returns {Boolean} <code>true</code> if the appearance is translucent.
+ * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 Appearance.prototype.isTranslucent = function () {
   return (
@@ -159,7 +159,7 @@ Appearance.prototype.isTranslucent = function () {
  * it can contain a subset of render state properties identical to the render state
  * created in the context.
  *
- * @returns {Object} The render state.
+ * @returns {object} The render state.
  */
 Appearance.prototype.getRenderState = function () {
   const translucent = this.isTranslucent();

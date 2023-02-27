@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * The data type of a pixel.
  *
- * @enum {Number}
+ * @enum {number}
  * @see PostProcessStage
  */
 const PixelDatatype = {

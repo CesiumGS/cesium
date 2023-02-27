@@ -24,7 +24,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * This manages the derived commands and pushes only the necessary commands depending
  * on the given frame state.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
  *
@@ -346,7 +346,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
    * translucent.
    *
    * @memberof ModelDrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -390,7 +390,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
    * Whether to draw the bounding sphere associated with this draw command.
    *
    * @memberof ModelDrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */

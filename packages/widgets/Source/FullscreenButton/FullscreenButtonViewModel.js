@@ -14,8 +14,8 @@ import createCommand from "../createCommand.js";
  * @alias FullscreenButtonViewModel
  * @constructor
  *
- * @param {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
- * @param {Element|String} [container] The DOM element or ID that will contain the widget.
+ * @param {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
+ * @param {Element|string} [container] The DOM element or ID that will contain the widget.
  */
 function FullscreenButtonViewModel(fullscreenElement, container) {
   if (!defined(container)) {
@@ -33,7 +33,7 @@ function FullscreenButtonViewModel(fullscreenElement, container) {
   /**
    * Gets whether or not fullscreen mode is active.  This property is observable.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.isFullscreen = undefined;
   knockout.defineProperty(this, "isFullscreen", {
@@ -45,7 +45,7 @@ function FullscreenButtonViewModel(fullscreenElement, container) {
   /**
    * Gets or sets whether or not fullscreen functionality should be enabled.  This property is observable.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @see Fullscreen.enabled
    */
   this.isFullscreenEnabled = undefined;
@@ -61,7 +61,7 @@ function FullscreenButtonViewModel(fullscreenElement, container) {
   /**
    * Gets the tooltip.  This property is observable.
    *
-   * @type {String}
+   * @type {string}
    */
   this.tooltip = undefined;
   knockout.defineProperty(this, "tooltip", function () {
@@ -128,7 +128,7 @@ Object.defineProperties(FullscreenButtonViewModel.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 FullscreenButtonViewModel.prototype.isDestroyed = function () {
   return false;

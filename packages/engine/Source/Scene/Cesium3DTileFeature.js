@@ -49,7 +49,7 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    *
    * @memberof Cesium3DTileFeature.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -160,7 +160,7 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
    *
    * @memberof Cesium3DTileFeature.prototype
    *
-   * @type {Number}
+   * @type {number}
    *
    * @readonly
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -187,8 +187,8 @@ Object.defineProperties(Cesium3DTileFeature.prototype, {
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
- * @param {String} name The case-sensitive name of the property.
- * @returns {Boolean} Whether the feature contains this property.
+ * @param {string} name The case-sensitive name of the property.
+ * @returns {boolean} Whether the feature contains this property.
  */
 Cesium3DTileFeature.prototype.hasProperty = function (name) {
   return this._content.batchTable.hasProperty(this._batchId, name);
@@ -200,8 +200,8 @@ Cesium3DTileFeature.prototype.hasProperty = function (name) {
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The IDs of the feature's properties.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The IDs of the feature's properties.
  */
 Cesium3DTileFeature.prototype.getPropertyIds = function (results) {
   return this._content.batchTable.getPropertyIds(this._batchId, results);
@@ -213,7 +213,7 @@ Cesium3DTileFeature.prototype.getPropertyIds = function (results) {
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
- * @param {String} name The case-sensitive name of the property.
+ * @param {string} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
@@ -259,8 +259,8 @@ Cesium3DTileFeature.prototype.getProperty = function (name) {
  * </p>
  *
  * @param {Cesium3DTileContent} content The content for accessing the metadata
- * @param {Number} batchId The batch ID (or feature ID) of the feature to get a property for
- * @param {String} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+ * @param {number} batchId The batch ID (or feature ID) of the feature to get a property for
+ * @param {string} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
  * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -353,7 +353,7 @@ Cesium3DTileFeature.getPropertyInherited = function (content, batchId, name) {
  * tileset. Within each granularity, semantics are resolved first, then other
  * properties.
  * </p>
- * @param {String} name The case-sensitive name of the property.
+ * @param {string} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
@@ -371,7 +371,7 @@ Cesium3DTileFeature.prototype.getPropertyInherited = function (name) {
  * If a property with the given name doesn't exist, it is created.
  * </p>
  *
- * @param {String} name The case-sensitive name of the property.
+ * @param {string} name The case-sensitive name of the property.
  * @param {*} value The value of the property that will be copied.
  *
  * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
@@ -404,8 +404,8 @@ Cesium3DTileFeature.prototype.setProperty = function (name, value) {
  * This function returns <code>false</code> if no batch table hierarchy is present.
  * </p>
  *
- * @param {String} className The name to check against.
- * @returns {Boolean} Whether the feature's class name equals <code>className</code>
+ * @param {string} className The name to check against.
+ * @returns {boolean} Whether the feature's class name equals <code>className</code>
  *
  * @private
  */
@@ -419,8 +419,8 @@ Cesium3DTileFeature.prototype.isExactClass = function (className) {
  * This function returns <code>false</code> if no batch table hierarchy is present.
  * </p>
  *
- * @param {String} className The name to check against.
- * @returns {Boolean} Whether the feature's class or inherited classes are named <code>className</code>
+ * @param {string} className The name to check against.
+ * @returns {boolean} Whether the feature's class or inherited classes are named <code>className</code>
  *
  * @private
  */
@@ -434,7 +434,7 @@ Cesium3DTileFeature.prototype.isClass = function (className) {
  * This function returns <code>undefined</code> if no batch table hierarchy is present.
  * </p>
  *
- * @returns {String} The feature's class name.
+ * @returns {string} The feature's class name.
  *
  * @private
  */

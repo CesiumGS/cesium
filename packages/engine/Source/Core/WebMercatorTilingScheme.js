@@ -12,12 +12,12 @@ import WebMercatorProjection from "./WebMercatorProjection.js";
  * @alias WebMercatorTilingScheme
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
  * the WGS84 ellipsoid.
- * @param {Number} [options.numberOfLevelZeroTilesX=1] The number of tiles in the X direction at level zero of
+ * @param {number} [options.numberOfLevelZeroTilesX=1] The number of tiles in the X direction at level zero of
  *        the tile tree.
- * @param {Number} [options.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
+ * @param {number} [options.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
  *        the tile tree.
  * @param {Cartesian2} [options.rectangleSouthwestInMeters] The southwest corner of the rectangle covered by the
  *        tiling scheme, in meters.  If this parameter or rectangleNortheastInMeters is not specified, the entire
@@ -113,8 +113,8 @@ Object.defineProperties(WebMercatorTilingScheme.prototype, {
 /**
  * Gets the total number of tiles in the X direction at a specified level-of-detail.
  *
- * @param {Number} level The level-of-detail.
- * @returns {Number} The number of tiles in the X direction at the given level.
+ * @param {number} level The level-of-detail.
+ * @returns {number} The number of tiles in the X direction at the given level.
  */
 WebMercatorTilingScheme.prototype.getNumberOfXTilesAtLevel = function (level) {
   return this._numberOfLevelZeroTilesX << level;
@@ -123,8 +123,8 @@ WebMercatorTilingScheme.prototype.getNumberOfXTilesAtLevel = function (level) {
 /**
  * Gets the total number of tiles in the Y direction at a specified level-of-detail.
  *
- * @param {Number} level The level-of-detail.
- * @returns {Number} The number of tiles in the Y direction at the given level.
+ * @param {number} level The level-of-detail.
+ * @returns {number} The number of tiles in the Y direction at the given level.
  */
 WebMercatorTilingScheme.prototype.getNumberOfYTilesAtLevel = function (level) {
   return this._numberOfLevelZeroTilesY << level;
@@ -163,10 +163,10 @@ WebMercatorTilingScheme.prototype.rectangleToNativeRectangle = function (
  * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
  * of the tiling scheme.
  *
- * @param {Number} x The integer x coordinate of the tile.
- * @param {Number} y The integer y coordinate of the tile.
- * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
- * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
+ * @param {number} x The integer x coordinate of the tile.
+ * @param {number} y The integer y coordinate of the tile.
+ * @param {number} level The tile level-of-detail.  Zero is the least detailed.
+ * @param {object} [result] The instance to which to copy the result, or undefined if a new instance
  *        should be created.
  * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
  *          if 'result' is undefined.
@@ -206,10 +206,10 @@ WebMercatorTilingScheme.prototype.tileXYToNativeRectangle = function (
 /**
  * Converts tile x, y coordinates and level to a cartographic rectangle in radians.
  *
- * @param {Number} x The integer x coordinate of the tile.
- * @param {Number} y The integer y coordinate of the tile.
- * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
- * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
+ * @param {number} x The integer x coordinate of the tile.
+ * @param {number} y The integer y coordinate of the tile.
+ * @param {number} level The tile level-of-detail.  Zero is the least detailed.
+ * @param {object} [result] The instance to which to copy the result, or undefined if a new instance
  *        should be created.
  * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
  *          if 'result' is undefined.
@@ -242,7 +242,7 @@ WebMercatorTilingScheme.prototype.tileXYToRectangle = function (
  * a given cartographic position.
  *
  * @param {Cartographic} position The position.
- * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
+ * @param {number} level The tile level-of-detail.  Zero is the least detailed.
  * @param {Cartesian2} [result] The instance to which to copy the result, or undefined if a new instance
  *        should be created.
  * @returns {Cartesian2} The specified 'result', or a new object containing the tile x, y coordinates

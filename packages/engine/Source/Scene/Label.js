@@ -240,7 +240,7 @@ Object.defineProperties(Label.prototype, {
    * Determines if this label will be shown.  Use this to hide or show a label, instead
    * of removing it and re-adding it to the collection.
    * @memberof Label.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   show: {
@@ -351,7 +351,7 @@ Object.defineProperties(Label.prototype, {
   /**
    * Gets or sets the text of this label.
    * @memberof Label.prototype
-   * @type {String}
+   * @type {string}
    */
   text: {
     get: function () {
@@ -380,7 +380,7 @@ Object.defineProperties(Label.prototype, {
   /**
    * Gets or sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
    * @memberof Label.prototype
-   * @type {String}
+   * @type {string}
    * @default '30px sans-serif'
    * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
    */
@@ -458,7 +458,7 @@ Object.defineProperties(Label.prototype, {
   /**
    * Gets or sets the outline width of this label.
    * @memberof Label.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
    */
@@ -484,7 +484,7 @@ Object.defineProperties(Label.prototype, {
    * Determines if a background behind this label will be shown.
    * @memberof Label.prototype
    * @default false
-   * @type {Boolean}
+   * @type {boolean}
    */
   showBackground: {
     get: function () {
@@ -946,7 +946,7 @@ Object.defineProperties(Label.prototype, {
    * and <code>2.0</code>.
    * </div>
    * @memberof Label.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   scale: {
@@ -984,7 +984,7 @@ Object.defineProperties(Label.prototype, {
    * Gets the total scale of the label, which is the label's scale multiplied by the computed relative size
    * of the desired font compared to the generated glyph size.
    * @memberof Label.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   totalScale: {
@@ -1036,7 +1036,7 @@ Object.defineProperties(Label.prototype, {
    * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
    * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
    * @memberof Label.prototype
-   * @type {Number}
+   * @type {number}
    */
   disableDepthTestDistance: {
     get: function () {
@@ -1143,7 +1143,7 @@ Object.defineProperties(Label.prototype, {
   /**
    * Determines whether or not this label will be shown or hidden because it was clustered.
    * @memberof Label.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    * @private
    */
@@ -1318,7 +1318,7 @@ Label.getScreenSpaceBoundingBox = function (
  * are equal.  Labels in different collections can be equal.
  *
  * @param {Label} other The label to compare for equality.
- * @returns {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
  */
 Label.prototype.equals = function (other) {
   return (
@@ -1365,7 +1365,7 @@ Label.prototype.equals = function (other) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 Label.prototype.isDestroyed = function () {
   return false;
@@ -1374,7 +1374,7 @@ Label.prototype.isDestroyed = function () {
 /**
  * Determines whether or not run the algorithm, that match the text of the label to right-to-left languages
  * @memberof Label
- * @type {Boolean}
+ * @type {boolean}
  * @default false
  *
  * @example
@@ -1476,8 +1476,8 @@ const rtlChars = new RegExp(`[${hebrew}${arabic}]`);
 
 /**
  *
- * @param {String} value the text to parse and reorder
- * @returns {String} the text as rightToLeft direction
+ * @param {string} value the text to parse and reorder
+ * @returns {string} the text as rightToLeft direction
  * @private
  */
 function reverseRtl(value) {

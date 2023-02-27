@@ -6,14 +6,14 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} WallGraphics.ConstructorOptions
+ * @typedef {object} WallGraphics.ConstructorOptions
  *
  * Initialization options for the WallGraphics constructor
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the wall.
- * @property {Property | Array<Cartesian3>} [positions] A Property specifying the array of {@link Cartesian3} positions which define the top of the wall.
- * @property {Property | Array<number>} [minimumHeights] A Property specifying an array of heights to be used for the bottom of the wall instead of the globe surface.
- * @property {Property | Array<number>} [maximumHeights] A Property specifying an array of heights to be used for the top of the wall instead of the height of each position.
+ * @property {Property | Cartesian3[]} [positions] A Property specifying the array of {@link Cartesian3} positions which define the top of the wall.
+ * @property {Property | number[]} [minimumHeights] A Property specifying an array of heights to be used for the bottom of the wall instead of the globe surface.
+ * @property {Property | number[]} [maximumHeights] A Property specifying an array of heights to be used for the top of the wall instead of the height of each position.
  * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
  * @property {Property | boolean} [fill=true] A boolean Property specifying whether the wall is filled with the provided material.
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the wall.

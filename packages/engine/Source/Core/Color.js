@@ -26,10 +26,10 @@ function hue2rgb(m1, m2, h) {
 /**
  * A color, specified using red, green, blue, and alpha values,
  * which range from <code>0</code> (no intensity) to <code>1.0</code> (full intensity).
- * @param {Number} [red=1.0] The red component.
- * @param {Number} [green=1.0] The green component.
- * @param {Number} [blue=1.0] The blue component.
- * @param {Number} [alpha=1.0] The alpha component.
+ * @param {number} [red=1.0] The red component.
+ * @param {number} [green=1.0] The green component.
+ * @param {number} [blue=1.0] The blue component.
+ * @param {number} [alpha=1.0] The alpha component.
  *
  * @constructor
  * @alias Color
@@ -39,25 +39,25 @@ function hue2rgb(m1, m2, h) {
 function Color(red, green, blue, alpha) {
   /**
    * The red component.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.red = defaultValue(red, 1.0);
   /**
    * The green component.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.green = defaultValue(green, 1.0);
   /**
    * The blue component.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.blue = defaultValue(blue, 1.0);
   /**
    * The alpha component.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.alpha = defaultValue(alpha, 1.0);
@@ -91,10 +91,10 @@ Color.fromCartesian4 = function (cartesian, result) {
  * Creates a new Color specified using red, green, blue, and alpha values
  * that are in the range of 0 to 255, converting them internally to a range of 0.0 to 1.0.
  *
- * @param {Number} [red=255] The red component.
- * @param {Number} [green=255] The green component.
- * @param {Number} [blue=255] The blue component.
- * @param {Number} [alpha=255] The alpha component.
+ * @param {number} [red=255] The red component.
+ * @param {number} [green=255] The green component.
+ * @param {number} [blue=255] The blue component.
+ * @param {number} [alpha=255] The alpha component.
  * @param {Color} [result] The object onto which to store the result.
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  */
@@ -120,7 +120,7 @@ Color.fromBytes = function (red, green, blue, alpha, result) {
  * of the specified color, but with the specified alpha value.
  *
  * @param {Color} color The base color
- * @param {Number} alpha The new alpha component.
+ * @param {number} alpha The new alpha component.
  * @param {Color} [result] The object onto which to store the result.
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  *
@@ -156,7 +156,7 @@ if (FeatureDetection.supportsTypedArrays()) {
  * Creates a new Color from a single numeric unsigned 32-bit RGBA value, using the endianness
  * of the system.
  *
- * @param {Number} rgba A single numeric unsigned 32-bit RGBA value.
+ * @param {number} rgba A single numeric unsigned 32-bit RGBA value.
  * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
  * @returns {Color} The color object.
  *
@@ -180,10 +180,10 @@ Color.fromRgba = function (rgba, result) {
 /**
  * Creates a Color instance from hue, saturation, and lightness.
  *
- * @param {Number} [hue=0] The hue angle 0...1
- * @param {Number} [saturation=0] The saturation value 0...1
- * @param {Number} [lightness=0] The lightness value 0...1
- * @param {Number} [alpha=1.0] The alpha component 0...1
+ * @param {number} [hue=0] The hue angle 0...1
+ * @param {number} [saturation=0] The saturation value 0...1
+ * @param {number} [lightness=0] The lightness value 0...1
+ * @param {number} [alpha=1.0] The alpha component 0...1
  * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
  * @returns {Color} The color object.
  *
@@ -228,19 +228,19 @@ Color.fromHsl = function (hue, saturation, lightness, alpha, result) {
  * Creates a random color using the provided options. For reproducible random colors, you should
  * call {@link CesiumMath#setRandomNumberSeed} once at the beginning of your application.
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Number} [options.red] If specified, the red component to use instead of a randomized value.
- * @param {Number} [options.minimumRed=0.0] The maximum red value to generate if none was specified.
- * @param {Number} [options.maximumRed=1.0] The minimum red value to generate if none was specified.
- * @param {Number} [options.green] If specified, the green component to use instead of a randomized value.
- * @param {Number} [options.minimumGreen=0.0] The maximum green value to generate if none was specified.
- * @param {Number} [options.maximumGreen=1.0] The minimum green value to generate if none was specified.
- * @param {Number} [options.blue] If specified, the blue component to use instead of a randomized value.
- * @param {Number} [options.minimumBlue=0.0] The maximum blue value to generate if none was specified.
- * @param {Number} [options.maximumBlue=1.0] The minimum blue value to generate if none was specified.
- * @param {Number} [options.alpha] If specified, the alpha component to use instead of a randomized value.
- * @param {Number} [options.minimumAlpha=0.0] The maximum alpha value to generate if none was specified.
- * @param {Number} [options.maximumAlpha=1.0] The minimum alpha value to generate if none was specified.
+ * @param {object} [options] Object with the following properties:
+ * @param {number} [options.red] If specified, the red component to use instead of a randomized value.
+ * @param {number} [options.minimumRed=0.0] The maximum red value to generate if none was specified.
+ * @param {number} [options.maximumRed=1.0] The minimum red value to generate if none was specified.
+ * @param {number} [options.green] If specified, the green component to use instead of a randomized value.
+ * @param {number} [options.minimumGreen=0.0] The maximum green value to generate if none was specified.
+ * @param {number} [options.maximumGreen=1.0] The minimum green value to generate if none was specified.
+ * @param {number} [options.blue] If specified, the blue component to use instead of a randomized value.
+ * @param {number} [options.minimumBlue=0.0] The maximum blue value to generate if none was specified.
+ * @param {number} [options.maximumBlue=1.0] The minimum blue value to generate if none was specified.
+ * @param {number} [options.alpha] If specified, the alpha component to use instead of a randomized value.
+ * @param {number} [options.minimumAlpha=0.0] The maximum alpha value to generate if none was specified.
+ * @param {number} [options.maximumAlpha=1.0] The minimum alpha value to generate if none was specified.
  * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
  * @returns {Color} The modified result parameter or a new instance if result was undefined.
  *
@@ -359,7 +359,7 @@ const hslParenthesesMatcher = /^hsla?\(\s*([0-9.]+)\s*,\s*([0-9.]+%)\s*,\s*([0-9
 /**
  * Creates a Color instance from a CSS color value.
  *
- * @param {String} color The CSS color value in #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(), rgba(), hsl(), or hsla() format.
+ * @param {string} color The CSS color value in #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(), rgba(), hsl(), or hsla() format.
  * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
  * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
  *
@@ -435,7 +435,7 @@ Color.fromCssColorString = function (color, result) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 Color.packedLength = 4;
 
@@ -443,10 +443,10 @@ Color.packedLength = 4;
  * Stores the provided instance into the provided array.
  *
  * @param {Color} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 Color.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -466,8 +466,8 @@ Color.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Color} [result] The object into which to store the result.
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  */
@@ -491,8 +491,8 @@ Color.unpack = function (array, startingIndex, result) {
  * Converts a 'byte' color component in the range of 0 to 255 into
  * a 'float' color component in the range of 0 to 1.0.
  *
- * @param {Number} number The number to be converted.
- * @returns {Number} The converted number.
+ * @param {number} number The number to be converted.
+ * @returns {number} The converted number.
  */
 Color.byteToFloat = function (number) {
   return number / 255.0;
@@ -502,8 +502,8 @@ Color.byteToFloat = function (number) {
  * Converts a 'float' color component in the range of 0 to 1.0 into
  * a 'byte' color component in the range of 0 to 255.
  *
- * @param {Number} number The number to be converted.
- * @returns {Number} The converted number.
+ * @param {number} number The number to be converted.
+ * @returns {number} The converted number.
  */
 Color.floatToByte = function (number) {
   return number === 1.0 ? 255.0 : (number * 256.0) | 0;
@@ -535,7 +535,7 @@ Color.clone = function (color, result) {
  *
  * @param {Color} left The first Color to compare for equality.
  * @param {Color} right The second Color to compare for equality.
- * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
  */
 Color.equals = function (left, right) {
   return (
@@ -575,7 +575,7 @@ Color.prototype.clone = function (result) {
  * Returns true if this Color equals other.
  *
  * @param {Color} other The Color to compare for equality.
- * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
  */
 Color.prototype.equals = function (other) {
   return Color.equals(this, other);
@@ -585,8 +585,8 @@ Color.prototype.equals = function (other) {
  * Returns <code>true</code> if this Color equals other componentwise within the specified epsilon.
  *
  * @param {Color} other The Color to compare for equality.
- * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
- * @returns {Boolean} <code>true</code> if the Colors are equal within the specified epsilon; otherwise, <code>false</code>.
+ * @param {number} [epsilon=0.0] The epsilon to use for equality testing.
+ * @returns {boolean} <code>true</code> if the Colors are equal within the specified epsilon; otherwise, <code>false</code>.
  */
 Color.prototype.equalsEpsilon = function (other, epsilon) {
   return (
@@ -602,7 +602,7 @@ Color.prototype.equalsEpsilon = function (other, epsilon) {
 /**
  * Creates a string representing this Color in the format '(red, green, blue, alpha)'.
  *
- * @returns {String} A string representing this Color in the format '(red, green, blue, alpha)'.
+ * @returns {string} A string representing this Color in the format '(red, green, blue, alpha)'.
  */
 Color.prototype.toString = function () {
   return `(${this.red}, ${this.green}, ${this.blue}, ${this.alpha})`;
@@ -611,7 +611,7 @@ Color.prototype.toString = function () {
 /**
  * Creates a string containing the CSS color value for this color.
  *
- * @returns {String} The CSS equivalent of this color.
+ * @returns {string} The CSS equivalent of this color.
  *
  * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
  */
@@ -628,7 +628,7 @@ Color.prototype.toCssColorString = function () {
 /**
  * Creates a string containing CSS hex string color value for this color.
  *
- * @returns {String} The CSS hex string equivalent of this color.
+ * @returns {string} The CSS hex string equivalent of this color.
  */
 Color.prototype.toCssHexString = function () {
   let r = Color.floatToByte(this.red).toString(16);
@@ -657,8 +657,8 @@ Color.prototype.toCssHexString = function () {
  * Converts this color to an array of red, green, blue, and alpha values
  * that are in the range of 0 to 255.
  *
- * @param {Number[]} [result] The array to store the result in, if undefined a new instance will be created.
- * @returns {Number[]} The modified result parameter or a new instance if result was undefined.
+ * @param {number[]} [result] The array to store the result in, if undefined a new instance will be created.
+ * @returns {number[]} The modified result parameter or a new instance if result was undefined.
  */
 Color.prototype.toBytes = function (result) {
   const red = Color.floatToByte(this.red);
@@ -680,7 +680,7 @@ Color.prototype.toBytes = function (result) {
  * Converts this color to a single numeric unsigned 32-bit RGBA value, using the endianness
  * of the system.
  *
- * @returns {Number} A single numeric unsigned 32-bit RGBA value.
+ * @returns {number} A single numeric unsigned 32-bit RGBA value.
  *
  *
  * @example
@@ -700,7 +700,7 @@ Color.prototype.toRgba = function () {
 /**
  * Brightens this color by the provided magnitude.
  *
- * @param {Number} magnitude A positive number indicating the amount to brighten.
+ * @param {number} magnitude A positive number indicating the amount to brighten.
  * @param {Color} result The object onto which to store the result.
  * @returns {Color} The modified result parameter.
  *
@@ -725,7 +725,7 @@ Color.prototype.brighten = function (magnitude, result) {
 /**
  * Darkens this color by the provided magnitude.
  *
- * @param {Number} magnitude A positive number indicating the amount to darken.
+ * @param {number} magnitude A positive number indicating the amount to darken.
  * @param {Color} result The object onto which to store the result.
  * @returns {Color} The modified result parameter.
  *
@@ -751,7 +751,7 @@ Color.prototype.darken = function (magnitude, result) {
  * Creates a new Color that has the same red, green, and blue components
  * as this Color, but with the specified alpha value.
  *
- * @param {Number} alpha The new alpha component.
+ * @param {number} alpha The new alpha component.
  * @param {Color} [result] The object onto which to store the result.
  * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
  *
@@ -876,7 +876,7 @@ Color.mod = function (left, right, result) {
  *
  * @param {Color} start The color corresponding to t at 0.0.
  * @param {Color} end The color corresponding to t at 1.0.
- * @param {Number} t The point along t at which to interpolate.
+ * @param {number} t The point along t at which to interpolate.
  * @param {Color} result The object onto which to store the result.
  * @returns {Color} The modified result parameter.
  */
@@ -899,7 +899,7 @@ Color.lerp = function (start, end, t, result) {
  * Multiplies the provided Color componentwise by the provided scalar.
  *
  * @param {Color} color The Color to be scaled.
- * @param {Number} scalar The scalar to multiply with.
+ * @param {number} scalar The scalar to multiply with.
  * @param {Color} result The object onto which to store the result.
  * @returns {Color} The modified result parameter.
  */
@@ -921,7 +921,7 @@ Color.multiplyByScalar = function (color, scalar, result) {
  * Divides the provided Color componentwise by the provided scalar.
  *
  * @param {Color} color The Color to be divided.
- * @param {Number} scalar The scalar to divide with.
+ * @param {number} scalar The scalar to divide with.
  * @param {Color} result The object onto which to store the result.
  * @returns {Color} The modified result parameter.
  */

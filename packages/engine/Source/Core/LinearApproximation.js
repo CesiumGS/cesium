@@ -14,8 +14,8 @@ const LinearApproximation = {
  * Given the desired degree, returns the number of data points required for interpolation.
  * Since linear interpolation can only generate a first degree polynomial, this function
  * always returns 2.
- * @param {Number} degree The desired degree of interpolation.
- * @returns {Number} This function always returns 2.
+ * @param {number} degree The desired degree of interpolation.
+ * @returns {number} This function always returns 2.
  *
  */
 LinearApproximation.getRequiredDataPoints = function (degree) {
@@ -25,15 +25,15 @@ LinearApproximation.getRequiredDataPoints = function (degree) {
 /**
  * Interpolates values using linear approximation.
  *
- * @param {Number} x The independent variable for which the dependent variables will be interpolated.
- * @param {Number[]} xTable The array of independent variables to use to interpolate.  The values
+ * @param {number} x The independent variable for which the dependent variables will be interpolated.
+ * @param {number[]} xTable The array of independent variables to use to interpolate.  The values
  * in this array must be in increasing order and the same value must not occur twice in the array.
- * @param {Number[]} yTable The array of dependent variables to use to interpolate.  For a set of three
+ * @param {number[]} yTable The array of dependent variables to use to interpolate.  For a set of three
  * dependent values (p,q,w) at time 1 and time 2 this should be as follows: {p1, q1, w1, p2, q2, w2}.
- * @param {Number} yStride The number of dependent variable values in yTable corresponding to
+ * @param {number} yStride The number of dependent variable values in yTable corresponding to
  * each independent variable value in xTable.
- * @param {Number[]} [result] An existing array into which to store the result.
- * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
+ * @param {number[]} [result] An existing array into which to store the result.
+ * @returns {number[]} The array of interpolated values, or the result parameter if one was provided.
  */
 LinearApproximation.interpolateOrderZero = function (
   x,

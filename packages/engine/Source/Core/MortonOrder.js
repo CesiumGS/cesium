@@ -22,8 +22,8 @@ const MortonOrder = {};
  *  output: 20
  *
  * @private
- * @param {Number} v A 16-bit unsigned integer.
- * @returns {Number} A 32-bit unsigned integer.
+ * @param {number} v A 16-bit unsigned integer.
+ * @returns {number} A 32-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
  * @private
  */
@@ -46,8 +46,8 @@ function insertOneSpacing(v) {
  *  output: 72
  *
  * @private
- * @param {Number} v A 10-bit unsigned integer.
- * @returns {Number} A 30-bit unsigned integer.
+ * @param {number} v A 10-bit unsigned integer.
+ * @returns {number} A 30-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
  */
 function insertTwoSpacing(v) {
@@ -69,8 +69,8 @@ function insertTwoSpacing(v) {
  *  output: 6
  *
  * @private
- * @param {Number} v A 32-bit unsigned integer.
- * @returns {Number} A 16-bit unsigned integer.
+ * @param {number} v A 32-bit unsigned integer.
+ * @returns {number} A 16-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
  */
 function removeOneSpacing(v) {
@@ -93,8 +93,8 @@ function removeOneSpacing(v) {
  *  output: 6
  *
  * @private
- * @param {Number} v A 30-bit unsigned integer.
- * @returns {Number} A 10-bit unsigned integer.
+ * @param {number} v A 30-bit unsigned integer.
+ * @returns {number} A 10-bit unsigned integer.
  * @see {@link https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/}
  */
 function removeTwoSpacing(v) {
@@ -110,9 +110,9 @@ function removeTwoSpacing(v) {
  * Computes the Morton index from 2D coordinates. This is equivalent to interleaving their bits.
  * The inputs must be 16-bit unsigned integers (resulting in 32-bit Morton index) due to 32-bit bitwise operator limitation in JavaScript.
  *
- * @param {Number} x The X coordinate in the range [0, (2^16)-1].
- * @param {Number} y The Y coordinate in the range [0, (2^16)-1].
- * @returns {Number} The Morton index.
+ * @param {number} x The X coordinate in the range [0, (2^16)-1].
+ * @param {number} y The Y coordinate in the range [0, (2^16)-1].
+ * @returns {number} The Morton index.
  * @private
  */
 MortonOrder.encode2D = function (x, y) {
@@ -135,9 +135,9 @@ MortonOrder.encode2D = function (x, y) {
  * Computes the 2D coordinates from a Morton index. This is equivalent to deinterleaving their bits.
  * The input must be a 32-bit unsigned integer (resulting in 16 bits per coordinate) due to 32-bit bitwise operator limitation in JavaScript.
  *
- * @param {Number} mortonIndex The Morton index in the range [0, (2^32)-1].
- * @param {Number[]} [result] The array onto which to store the result.
- * @returns {Number[]} An array containing the 2D coordinates correspoding to the Morton index.
+ * @param {number} mortonIndex The Morton index in the range [0, (2^32)-1].
+ * @param {number[]} [result] The array onto which to store the result.
+ * @returns {number[]} An array containing the 2D coordinates correspoding to the Morton index.
  * @private
  */
 MortonOrder.decode2D = function (mortonIndex, result) {
@@ -161,10 +161,10 @@ MortonOrder.decode2D = function (mortonIndex, result) {
  * Computes the Morton index from 3D coordinates. This is equivalent to interleaving their bits.
  * The inputs must be 10-bit unsigned integers (resulting in 30-bit Morton index) due to 32-bit bitwise operator limitation in JavaScript.
  *
- * @param {Number} x The X coordinate in the range [0, (2^10)-1].
- * @param {Number} y The Y coordinate in the range [0, (2^10)-1].
- * @param {Number} z The Z coordinate in the range [0, (2^10)-1].
- * @returns {Number} The Morton index.
+ * @param {number} x The X coordinate in the range [0, (2^10)-1].
+ * @param {number} y The Y coordinate in the range [0, (2^10)-1].
+ * @param {number} z The Z coordinate in the range [0, (2^10)-1].
+ * @returns {number} The Morton index.
  * @private
  */
 MortonOrder.encode3D = function (x, y, z) {
@@ -188,9 +188,9 @@ MortonOrder.encode3D = function (x, y, z) {
  * Computes the 3D coordinates from a Morton index. This is equivalent to deinterleaving their bits.
  * The input must be a 30-bit unsigned integer (resulting in 10 bits per coordinate) due to 32-bit bitwise operator limitation in JavaScript.
  *
- * @param {Number} mortonIndex The Morton index in the range [0, (2^30)-1].
- * @param {Number[]} [result] The array onto which to store the result.
- * @returns {Number[]} An array containing the 3D coordinates corresponding to the Morton index.
+ * @param {number} mortonIndex The Morton index in the range [0, (2^30)-1].
+ * @param {number[]} [result] The array onto which to store the result.
+ * @returns {number[]} An array containing the 3D coordinates corresponding to the Morton index.
  * @private
  */
 MortonOrder.decode3D = function (mortonIndex, result) {

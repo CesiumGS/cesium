@@ -5,7 +5,7 @@ import defined from "../../Core/defined.js";
 /**
  * Calls the provider handler function on each texture used by the material.
  * Mimics the behavior of functions in gltf-pipeline ForEach.
- * @param {Object} material The glTF material.
+ * @param {object} material The glTF material.
  * @param {forEachTextureInMaterial~handler} handler Function that is called for each texture in the material.
  *
  * @private
@@ -130,8 +130,8 @@ function forEachTextureInMaterial(material, handler) {
 /**
  * Function that is called for each texture in the material. If this function returns a value the for each stops and returns that value.
  * @callback forEachTextureInMaterial~handler
- * @param {Number} The texture index.
- * @param {Object} The texture info object.
+ * @param {number} The texture index.
+ * @param {object} The texture info object.
  *
  * @private
  */

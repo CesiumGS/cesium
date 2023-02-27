@@ -7,7 +7,7 @@ import DeveloperError from "./DeveloperError.js";
  * to a {@link Geometry} to request that certain properties be computed, e.g., just position,
  * position and normal, etc.
  *
- * @param {Object} [options] An object with boolean properties corresponding to VertexFormat properties as shown in the code example.
+ * @param {object} [options] An object with boolean properties corresponding to VertexFormat properties as shown in the code example.
  *
  * @alias VertexFormat
  * @constructor
@@ -31,7 +31,7 @@ function VertexFormat(options) {
    * 64-bit floating-point (for precision).  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -43,7 +43,7 @@ function VertexFormat(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -55,7 +55,7 @@ function VertexFormat(options) {
    * 32-bit floating-point.  2 components per attribute
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -67,7 +67,7 @@ function VertexFormat(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -79,7 +79,7 @@ function VertexFormat(options) {
    * 32-bit floating-point.  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -91,7 +91,7 @@ function VertexFormat(options) {
    * 8-bit unsigned byte.  3 components per attribute.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    */
@@ -220,7 +220,7 @@ VertexFormat.DEFAULT = VertexFormat.POSITION_NORMAL_AND_ST;
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 VertexFormat.packedLength = 6;
 
@@ -228,10 +228,10 @@ VertexFormat.packedLength = 6;
  * Stores the provided instance into the provided array.
  *
  * @param {VertexFormat} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 VertexFormat.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -258,8 +258,8 @@ VertexFormat.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {VertexFormat} [result] The object into which to store the result.
  * @returns {VertexFormat} The modified result parameter or a new VertexFormat instance if one was not provided.
  */

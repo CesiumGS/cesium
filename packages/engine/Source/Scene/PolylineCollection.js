@@ -77,10 +77,10 @@ const attributeLocations = {
  * @alias PolylineCollection
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each polyline from model to world coordinates.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
- * @param {Boolean} [options.show=true] Determines if the polylines in the collection will be shown.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.show=true] Determines if the polylines in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many polylines, to
  * many collections with only a few polylines each.  Organize collections so that polylines
@@ -120,7 +120,7 @@ function PolylineCollection(options) {
   /**
    * Determines if polylines in this collection will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -145,7 +145,7 @@ function PolylineCollection(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -200,7 +200,7 @@ Object.defineProperties(PolylineCollection.prototype, {
    * {@link PolylineCollection#get} to iterate over all the polylines
    * in the collection.
    * @memberof PolylineCollection.prototype
-   * @type {Number}
+   * @type {number}
    */
   length: {
     get: function () {
@@ -214,7 +214,7 @@ Object.defineProperties(PolylineCollection.prototype, {
      * Creates and adds a polyline with the specified initial properties to the collection.
      * The added polyline is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[options] A template describing the polyline's properties as shown in Example 1.
+     * @param {object}[options] A template describing the polyline's properties as shown in Example 1.
      * @returns {Polyline} The polyline that was added to the collection.
      *
      * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
@@ -251,7 +251,7 @@ PolylineCollection.prototype.add = function (options) {
  * Removes a polyline from the collection.
  *
  * @param {Polyline} polyline The polyline to remove.
- * @returns {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
+ * @returns {boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
  *
  * @performance After calling <code>remove</code>, {@link PolylineCollection#update} is called and
  * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
@@ -320,7 +320,7 @@ PolylineCollection.prototype.removeAll = function () {
  * Determines if this collection contains the specified polyline.
  *
  * @param {Polyline} polyline The polyline to check for.
- * @returns {Boolean} true if this collection contains the polyline, false otherwise.
+ * @returns {boolean} true if this collection contains the polyline, false otherwise.
  *
  * @see PolylineCollection#get
  */
@@ -335,7 +335,7 @@ PolylineCollection.prototype.contains = function (polyline) {
  * {@link PolylineCollection#length} to iterate over all the polylines
  * in the collection.
  *
- * @param {Number} index The zero-based index of the polyline.
+ * @param {number} index The zero-based index of the polyline.
  * @returns {Polyline} The polyline at the specified index.
  *
  * @performance If polylines were removed from the collection and
@@ -786,7 +786,7 @@ function createCommandLists(
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see PolylineCollection#destroy
  */

@@ -14,11 +14,11 @@ import OrthographicOffCenterFrustum from "./OrthographicOffCenterFrustum.js";
  * @alias OrthographicFrustum
  * @constructor
  *
- * @param {Object} [options] An object with the following properties:
- * @param {Number} [options.width] The width of the frustum in meters.
- * @param {Number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
- * @param {Number} [options.near=1.0] The distance of the near plane.
- * @param {Number} [options.far=500000000.0] The distance of the far plane.
+ * @param {object} [options] An object with the following properties:
+ * @param {number} [options.width] The width of the frustum in meters.
+ * @param {number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
+ * @param {number} [options.near=1.0] The distance of the near plane.
+ * @param {number} [options.far=500000000.0] The distance of the far plane.
  *
  * @example
  * const maxRadii = ellipsoid.maximumRadius;
@@ -34,7 +34,7 @@ function OrthographicFrustum(options) {
 
   /**
    * The horizontal width of the frustum in meters.
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   this.width = options.width;
@@ -42,7 +42,7 @@ function OrthographicFrustum(options) {
 
   /**
    * The aspect ratio of the frustum's width to it's height.
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   this.aspectRatio = options.aspectRatio;
@@ -50,7 +50,7 @@ function OrthographicFrustum(options) {
 
   /**
    * The distance of the near plane.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.near = defaultValue(options.near, 1.0);
@@ -58,7 +58,7 @@ function OrthographicFrustum(options) {
 
   /**
    * The distance of the far plane.
-   * @type {Number}
+   * @type {number}
    * @default 500000000.0;
    */
   this.far = defaultValue(options.far, 500000000.0);
@@ -67,7 +67,7 @@ function OrthographicFrustum(options) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 OrthographicFrustum.packedLength = 4;
 
@@ -75,10 +75,10 @@ OrthographicFrustum.packedLength = 4;
  * Stores the provided instance into the provided array.
  *
  * @param {OrthographicFrustum} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 OrthographicFrustum.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -99,8 +99,8 @@ OrthographicFrustum.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {OrthographicFrustum} [result] The object into which to store the result.
  * @returns {OrthographicFrustum} The modified result parameter or a new OrthographicFrustum instance if one was not provided.
  */
@@ -211,10 +211,10 @@ OrthographicFrustum.prototype.computeCullingVolume = function (
 /**
  * Returns the pixel's width and height in meters.
  *
- * @param {Number} drawingBufferWidth The width of the drawing buffer.
- * @param {Number} drawingBufferHeight The height of the drawing buffer.
- * @param {Number} distance The distance to the near plane in meters.
- * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
+ * @param {number} drawingBufferWidth The width of the drawing buffer.
+ * @param {number} drawingBufferHeight The height of the drawing buffer.
+ * @param {number} distance The distance to the near plane in meters.
+ * @param {number} pixelRatio The scaling factor from pixel space to coordinate space.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
  *
@@ -276,7 +276,7 @@ OrthographicFrustum.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {OrthographicFrustum} [other] The right hand side OrthographicFrustum.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 OrthographicFrustum.prototype.equals = function (other) {
   if (!defined(other) || !(other instanceof OrthographicFrustum)) {
@@ -299,9 +299,9 @@ OrthographicFrustum.prototype.equals = function (other) {
  * <code>false</code> otherwise.
  *
  * @param {OrthographicFrustum} other The right hand side OrthographicFrustum.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
- * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
- * @returns {Boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+ * @returns {boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
  */
 OrthographicFrustum.prototype.equalsEpsilon = function (
   other,

@@ -4,13 +4,13 @@
  * partially inside the frustum and partially outside (INTERSECTING), or somewhere entirely
  * outside of the frustum's 6 planes (OUTSIDE).
  *
- * @enum {Number}
+ * @enum {number}
  */
 const Intersect = {
   /**
    * Represents that an object is not contained within the frustum.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   OUTSIDE: -1,
@@ -18,7 +18,7 @@ const Intersect = {
   /**
    * Represents that an object intersects one of the frustum's planes.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   INTERSECTING: 0,
@@ -26,7 +26,7 @@ const Intersect = {
   /**
    * Represents that an object is fully within the frustum.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   INSIDE: 1,

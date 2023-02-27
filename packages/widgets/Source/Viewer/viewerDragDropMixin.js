@@ -17,11 +17,11 @@ import {
  * @function viewerDragDropMixin
 
  * @param {Viewer} viewer The viewer instance.
- * @param {Object} [options] Object with the following properties:
- * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
- * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
- * @param {Boolean} [options.flyToOnDrop=true] When true, dropping files will fly to the data source once it is loaded.
- * @param {Boolean} [options.clampToGround=true] When true, datasources are clamped to the ground.
+ * @param {object} [options] Object with the following properties:
+ * @param {Element|string} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
+ * @param {boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
+ * @param {boolean} [options.flyToOnDrop=true] When true, dropping files will fly to the data source once it is loaded.
+ * @param {boolean} [options.clampToGround=true] When true, datasources are clamped to the ground.
  * @param {Proxy} [options.proxy] The proxy to be used for KML network links.
  *
  * @exception {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
@@ -138,7 +138,7 @@ function viewerDragDropMixin(viewer, options) {
     /**
      * Gets or sets a value indicating if existing data sources should be cleared before adding the newly dropped sources.
      * @memberof viewerDragDropMixin.prototype
-     * @type {Boolean}
+     * @type {boolean}
      */
     clearOnDrop: {
       get: function () {
@@ -152,7 +152,7 @@ function viewerDragDropMixin(viewer, options) {
     /**
      * Gets or sets a value indicating if the camera should fly to the data source after it is loaded.
      * @memberof viewerDragDropMixin.prototype
-     * @type {Boolean}
+     * @type {boolean}
      */
     flyToOnDrop: {
       get: function () {
@@ -180,7 +180,7 @@ function viewerDragDropMixin(viewer, options) {
     /**
      * Gets or sets a value indicating if the datasources should be clamped to the ground
      * @memberof viewerDragDropMixin.prototype
-     * @type {Boolean}
+     * @type {boolean}
      */
     clampToGround: {
       get: function () {

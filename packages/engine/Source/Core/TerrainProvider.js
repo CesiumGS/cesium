@@ -59,7 +59,7 @@ Object.defineProperties(TerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof TerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -69,7 +69,7 @@ Object.defineProperties(TerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof TerrainProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -82,7 +82,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * as a reflective surface with animated waves.  This function should not be
    * called before {@link TerrainProvider#ready} returns true.
    * @memberof TerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasWaterMask: {
@@ -93,7 +93,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * Gets a value indicating whether or not the requested tiles include vertex normals.
    * This function should not be called before {@link TerrainProvider#ready} returns true.
    * @memberof TerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasVertexNormals: {
@@ -122,8 +122,8 @@ const regularGridIndicesCache = [];
  * same list of indices.  The total number of vertices must be less than or equal
  * to 65536.
  *
- * @param {Number} width The number of vertices in the regular grid in the horizontal direction.
- * @param {Number} height The number of vertices in the regular grid in the vertical direction.
+ * @param {number} width The number of vertices in the regular grid in the horizontal direction.
+ * @param {number} height The number of vertices in the regular grid in the vertical direction.
  * @returns {Uint16Array|Uint32Array} The list of indices. Uint16Array gets returned for 64KB or less and Uint32Array for 4GB or less.
  */
 TerrainProvider.getRegularGridIndices = function (width, height) {
@@ -372,7 +372,7 @@ function addSkirtIndices(edgeIndices, vertexIndex, indices, offset) {
  * {@link Globe.maximumScreenSpaceError} screen pixels and will probably go very slowly.
  * A value of 0.5 will cut the estimated level zero geometric error in half, allowing twice the
  * screen pixels between adjacent heightmap vertices and thus rendering more quickly.
- * @type {Number}
+ * @type {number}
  */
 TerrainProvider.heightmapTerrainQuality = 0.25;
 
@@ -380,9 +380,9 @@ TerrainProvider.heightmapTerrainQuality = 0.25;
  * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
  *
  * @param {Ellipsoid} ellipsoid The ellipsoid to which the terrain is attached.
- * @param {Number} tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
- * @param {Number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
- * @returns {Number} An estimated geometric error.
+ * @param {number} tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
+ * @param {number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
+ * @returns {number} An estimated geometric error.
  */
 TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function (
   ellipsoid,
@@ -404,12 +404,12 @@ TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function (
  * may optionally include a water mask and an indication of which child tiles are available.
  * @function
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  */
@@ -421,8 +421,8 @@ TerrainProvider.prototype.requestTileGeometry =
  * called before {@link TerrainProvider#ready} returns true.
  * @function
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
  */
 TerrainProvider.prototype.getLevelMaximumGeometricError =
   DeveloperError.throwInstantiationError;
@@ -431,10 +431,10 @@ TerrainProvider.prototype.getLevelMaximumGeometricError =
  * Determines whether data for a tile is available to be loaded.
  * @function
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported by the terrain provider, otherwise true or false.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported by the terrain provider, otherwise true or false.
  */
 TerrainProvider.prototype.getTileDataAvailable =
   DeveloperError.throwInstantiationError;
@@ -443,9 +443,9 @@ TerrainProvider.prototype.getTileDataAvailable =
  * Makes sure we load availability data for a tile
  * @function
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 TerrainProvider.prototype.loadTileDataAvailability =

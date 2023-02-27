@@ -19,7 +19,7 @@ const orthographicPath =
  * @alias ProjectionPicker
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene The Scene instance to use.
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -149,7 +149,7 @@ Object.defineProperties(ProjectionPicker.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 ProjectionPicker.prototype.isDestroyed = function () {
   return false;

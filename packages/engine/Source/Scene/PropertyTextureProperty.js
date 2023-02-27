@@ -13,10 +13,10 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.property The property JSON object.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
- * @param {Object.<Number, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
+ * @param {Object<number, Texture>} options.textures An object mapping texture IDs to {@link Texture} objects.
  *
  * @alias PropertyTextureProperty
  * @constructor
@@ -97,7 +97,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
    * undefined, they default to identity so this property is set false
    *
    * @memberof PropertyTextureProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @private
    */
@@ -111,7 +111,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
    * The offset to be added to property values as part of the value transform.
    *
    * @memberof PropertyTextureProperty.prototype
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
    * @private
    */
@@ -125,7 +125,7 @@ Object.defineProperties(PropertyTextureProperty.prototype, {
    * The scale to be multiplied to property values as part of the value transform.
    *
    * @memberof PropertyTextureProperty.prototype
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @readonly
    * @private
    */
@@ -248,8 +248,8 @@ PropertyTextureProperty.prototype.unpackInShader = function (packedValueGlsl) {
  * Reformat from an array of channel indices like <code>[0, 1]</code> to a
  * string of channels as would be used in GLSL swizzling (e.g. "rg")
  *
- * @param {Number[]} channels the channel indices
- * @return {String} The channels as a string of "r", "g", "b" or "a" characters.
+ * @param {number[]} channels the channel indices
+ * @return {string} The channels as a string of "r", "g", "b" or "a" characters.
  * @private
  */
 function reformatChannels(channels) {

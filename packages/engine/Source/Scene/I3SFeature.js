@@ -37,7 +37,7 @@ Object.defineProperties(I3SFeature.prototype, {
   /**
    * Gets the I3S data for this object.
    * @memberof I3SFeature.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   data: {

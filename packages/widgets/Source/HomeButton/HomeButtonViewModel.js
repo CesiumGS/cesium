@@ -8,7 +8,7 @@ import createCommand from "../createCommand.js";
  * @constructor
  *
  * @param {Scene} scene The scene instance to use.
- * @param {Number} [duration] The duration of the camera flight in seconds.
+ * @param {number} [duration] The duration of the camera flight in seconds.
  */
 function HomeButtonViewModel(scene, duration) {
   //>>includeStart('debug', pragmas.debug);
@@ -28,7 +28,7 @@ function HomeButtonViewModel(scene, duration) {
   /**
    * Gets or sets the tooltip.  This property is observable.
    *
-   * @type {String}
+   * @type {string}
    */
   this.tooltip = "View Home";
 
@@ -66,7 +66,7 @@ Object.defineProperties(HomeButtonViewModel.prototype, {
    * The duration will be computed based on the distance when undefined.
    * @memberof HomeButtonViewModel.prototype
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    */
   duration: {
     get: function () {

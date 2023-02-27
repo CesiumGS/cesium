@@ -28,9 +28,9 @@ const ALL_CHILDREN = 15;
  * @alias ArcGISTiledElevationTerrainProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the ArcGIS ImageServer service.
- * @param {String} [options.token] The authorization token to use to connect to the service.
+ * @param {object} options Object with the following properties:
+ * @param {Resource|string|Promise<Resource>|Promise<string>} options.url The URL of the ArcGIS ImageServer service.
+ * @param {string} [options.token] The authorization token to use to connect to the service.
  * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
  *                    If neither parameter is specified, the WGS84 ellipsoid is used.
@@ -271,7 +271,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -283,7 +283,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -298,7 +298,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * as a reflective surface with animated waves.  This function should not be
    * called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasWaterMask: {
@@ -311,7 +311,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * Gets a value indicating whether or not the requested tiles include vertex normals.
    * This function should not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasVertexNormals: {
@@ -347,11 +347,11 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
  * {@link ArcGISTiledElevationTerrainProvider#ready} returns true.  The result includes terrain
  * data and indicates that all child tiles are available.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  */
@@ -459,8 +459,8 @@ function isTileAvailable(that, level, x, y) {
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
  */
 ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   level
@@ -479,10 +479,10 @@ ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError = fu
 /**
  * Determines whether data for a tile is available to be loaded.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
   x,
@@ -506,9 +506,9 @@ ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
 /**
  * Makes sure we load availability data for a tile
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined} This provider does not support loading availability.
  */
 ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability = function (

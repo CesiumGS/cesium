@@ -26,17 +26,17 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * @alias PostProcessStage
  * @constructor
  *
- * @param {Object} options An object with the following properties:
- * @param {String} options.fragmentShader The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous stage. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.
- * @param {Object} [options.uniforms] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
- * @param {Number} [options.textureScale=1.0] A number in the range (0.0, 1.0] used to scale the texture dimensions. A scale of 1.0 will render this post-process stage  to a texture the size of the viewport.
- * @param {Boolean} [options.forcePowerOfTwo=false] Whether or not to force the texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
+ * @param {object} options An object with the following properties:
+ * @param {string} options.fragmentShader The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous stage. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.
+ * @param {object} [options.uniforms] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
+ * @param {number} [options.textureScale=1.0] A number in the range (0.0, 1.0] used to scale the texture dimensions. A scale of 1.0 will render this post-process stage  to a texture the size of the viewport.
+ * @param {boolean} [options.forcePowerOfTwo=false] Whether or not to force the texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
  * @param {PostProcessStageSampleMode} [options.sampleMode=PostProcessStageSampleMode.NEAREST] How to sample the input color texture.
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The color pixel format of the output texture.
  * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The pixel data type of the output texture.
  * @param {Color} [options.clearColor=Color.BLACK] The color to clear the output texture to.
  * @param {BoundingRectangle} [options.scissorRectangle] The rectangle to use for the scissor test.
- * @param {String} [options.name=createGuid()] The unique name of this post-process stage for reference by other stages in a composite. If a name is not supplied, a GUID will be generated.
+ * @param {string} [options.name=createGuid()] The unique name of this post-process stage for reference by other stages in a composite. If a name is not supplied, a GUID will be generated.
  *
  * @exception {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
  * @exception {DeveloperError} options.pixelFormat must be a color format.
@@ -176,7 +176,7 @@ function PostProcessStage(options) {
   /**
    * Whether or not to execute this post-process stage when ready.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.enabled = true;
   this._enabled = true;
@@ -189,7 +189,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * to load.
    *
    * @memberof PostProcessStage.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -201,7 +201,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * The unique name of this post-process stage for reference by other stages in a {@link PostProcessStageComposite}.
    *
    * @memberof PostProcessStage.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -221,7 +221,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * </p>
    *
    * @memberof PostProcessStage.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   fragmentShader: {
@@ -244,7 +244,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * </p>
    *
    * @memberof PostProcessStage.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   uniforms: {
@@ -256,7 +256,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * A number in the range (0.0, 1.0] used to scale the output texture dimensions. A scale of 1.0 will render this post-process stage to a texture the size of the viewport.
    *
    * @memberof PostProcessStage.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   textureScale: {
@@ -268,7 +268,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * Whether or not to force the output texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
    *
    * @memberof PostProcessStage.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   forcePowerOfTwo: {
@@ -875,7 +875,7 @@ function createSelectedTexture(stage, context) {
 /**
  * A function that will be called before execute. Used to create WebGL resources and load any textures.
  * @param {Context} context The context.
- * @param {Boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
+ * @param {boolean} useLogDepth Whether the scene uses a logarithmic depth buffer.
  * @private
  */
 PostProcessStage.prototype.update = function (context, useLogDepth) {
@@ -995,7 +995,7 @@ PostProcessStage.prototype.execute = function (
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see PostProcessStage#destroy
  */

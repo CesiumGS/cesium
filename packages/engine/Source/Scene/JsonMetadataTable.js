@@ -7,9 +7,9 @@ import MetadataEntity from "./MetadataEntity.js";
 /**
  * A table for storing free-form JSON metadata, as in the 3D Tiles batch table.
  *
- * @param {Object} options Object with the following properties:
- * @param {Number} options.count The number of entities in the table.
- * @param {Object.<String, Array>} options.properties The JSON representation of the metadata table. All the arrays must have exactly options.count elements.
+ * @param {object} options Object with the following properties:
+ * @param {number} options.count The number of entities in the table.
+ * @param {Object<string, Array>} options.properties The JSON representation of the metadata table. All the arrays must have exactly options.count elements.
  *
  * @alias JsonMetadataTable
  * @constructor
@@ -33,8 +33,8 @@ function JsonMetadataTable(options) {
 /**
  * Returns whether the table has this property.
  *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether the table has this property.
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @returns {boolean} Whether the table has this property.
  * @private
  */
 JsonMetadataTable.prototype.hasProperty = function (propertyId) {
@@ -44,8 +44,8 @@ JsonMetadataTable.prototype.hasProperty = function (propertyId) {
 /**
  * Returns an array of property IDs.
  *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The property IDs.
  * @private
  */
 JsonMetadataTable.prototype.getPropertyIds = function (results) {
@@ -55,8 +55,8 @@ JsonMetadataTable.prototype.getPropertyIds = function (results) {
 /**
  * Returns a copy of the value of the property with the given ID.
  *
- * @param {Number} index The index of the entity.
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {number} index The index of the entity.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
  * @exception {DeveloperError} index is out of bounds
@@ -84,8 +84,8 @@ JsonMetadataTable.prototype.getProperty = function (index, propertyId) {
  * Sets the value of the property with the given ID. If the property did not
  * exist, it will be created.
  *
- * @param {Number} index The index of the entity.
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {number} index The index of the entity.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
  *
  * @exception {DeveloperError} index is out of bounds

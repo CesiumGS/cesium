@@ -178,7 +178,7 @@ function bind(gl, attributes, indexBuffer) {
  * Creates a vertex array, which defines the attributes making up a vertex, and contains an optional index buffer
  * to select vertices for rendering.  Attributes are defined using object literals as shown in Example 1 below.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Context} options.context The context in which the VertexArray gets created.
  * @param {Object[]} options.attributes An array of attributes.
  * @param {IndexBuffer} [options.indexBuffer] An optional index buffer.
@@ -531,7 +531,7 @@ function interleaveAttributes(attributes) {
  * <br />
  * If <code>options</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
  *
- * @param {Object} options An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
+ * @param {object} options An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
  *
  * @exception {RuntimeError} Each attribute list must have the same number of vertices.
  * @exception {DeveloperError} The geometry must have zero or one index lists.

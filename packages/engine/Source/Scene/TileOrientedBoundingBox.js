@@ -106,7 +106,7 @@ Object.defineProperties(TileOrientedBoundingBox.prototype, {
    *
    * @memberof TileOrientedBoundingBox.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   boundingVolume: {
@@ -133,7 +133,7 @@ Object.defineProperties(TileOrientedBoundingBox.prototype, {
  * Computes the distance between this bounding box and the camera attached to frameState.
  *
  * @param {FrameState} frameState The frameState to which the camera is attached.
- * @returns {Number} The distance between the camera and the bounding box in meters. Returns 0 if the camera is inside the bounding volume.
+ * @returns {number} The distance between the camera and the bounding box in meters. Returns 0 if the camera is inside the bounding volume.
  */
 TileOrientedBoundingBox.prototype.distanceToCamera = function (frameState) {
   //>>includeStart('debug', pragmas.debug);

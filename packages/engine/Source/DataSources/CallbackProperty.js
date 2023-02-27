@@ -9,7 +9,7 @@ import Event from "../Core/Event.js";
  * @constructor
  *
  * @param {CallbackProperty.Callback} callback The function to be called when the property is evaluated.
- * @param {Boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.
+ * @param {boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.
  */
 function CallbackProperty(callback, isConstant) {
   this._callback = undefined;
@@ -23,7 +23,7 @@ Object.defineProperties(CallbackProperty.prototype, {
    * Gets a value indicating if this property is constant.
    * @memberof CallbackProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -50,8 +50,8 @@ Object.defineProperties(CallbackProperty.prototype, {
  * Gets the value of the property.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied or is unsupported.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied or is unsupported.
  */
 CallbackProperty.prototype.getValue = function (time, result) {
   return this._callback(time, result);
@@ -61,7 +61,7 @@ CallbackProperty.prototype.getValue = function (time, result) {
  * Sets the callback to be used.
  *
  * @param {CallbackProperty.Callback} callback The function to be called when the property is evaluated.
- * @param {Boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.
+ * @param {boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.
  */
 CallbackProperty.prototype.setCallback = function (callback, isConstant) {
   //>>includeStart('debug', pragmas.debug);
@@ -89,7 +89,7 @@ CallbackProperty.prototype.setCallback = function (callback, isConstant) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 CallbackProperty.prototype.equals = function (other) {
   return (
@@ -105,7 +105,7 @@ CallbackProperty.prototype.equals = function (other) {
  * @callback CallbackProperty.Callback
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into. If omitted, the function must create and return a new instance.
- * @returns {Object} The modified result parameter, or a new instance if the result parameter was not supplied or is unsupported.
+ * @param {object} [result] The object to store the value into. If omitted, the function must create and return a new instance.
+ * @returns {object} The modified result parameter, or a new instance if the result parameter was not supplied or is unsupported.
  */
 export default CallbackProperty;

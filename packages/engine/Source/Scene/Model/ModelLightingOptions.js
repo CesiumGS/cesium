@@ -4,7 +4,7 @@ import LightingModel from "./LightingModel.js";
 /**
  * Options for configuring the {@link LightingPipelineStage}
  *
- * @param {Object} options An object containing the following options
+ * @param {object} options An object containing the following options
  * @param {LightingModel} [options.lightingModel=LightingModel.UNLIT] The lighting model to use
  *
  * @alias ModelLightingOptions

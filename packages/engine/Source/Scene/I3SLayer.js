@@ -12,8 +12,8 @@ import I3SNode from "./I3SNode.js";
  * @alias I3SLayer
  * @internalConstructor
  * @privateParam {I3SDataProvider} dataProvider The i3s data provider
- * @privateParam {Object} layerData The layer data that is loaded from the scene layer
- * @privateParam {Number} index The index of the layer to be reflected
+ * @privateParam {object} layerData The layer data that is loaded from the scene layer
+ * @privateParam {number} index The index of the layer to be reflected
  */
 function I3SLayer(dataProvider, layerData, index) {
   this._dataProvider = dataProvider;
@@ -95,7 +95,7 @@ Object.defineProperties(I3SLayer.prototype, {
   /**
    * Gets the I3S data for this object.
    * @memberof I3SLayer.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   data: {
@@ -107,7 +107,7 @@ Object.defineProperties(I3SLayer.prototype, {
   /**
    * The version string of the loaded I3S dataset
    * @memberof I3SLayer.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   version: {
@@ -119,7 +119,7 @@ Object.defineProperties(I3SLayer.prototype, {
   /**
    * The major version number of the loaded I3S dataset
    * @memberof I3SLayer.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   majorVersion: {
@@ -131,7 +131,7 @@ Object.defineProperties(I3SLayer.prototype, {
   /**
    * The minor version number of the loaded I3S dataset
    * @memberof I3SLayer.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minorVersion: {
@@ -143,7 +143,7 @@ Object.defineProperties(I3SLayer.prototype, {
   /**
    * When <code>true</code>, when the loaded I3S version is 1.6 or older
    * @memberof I3SLayer.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   legacyVersion16: {

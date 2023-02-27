@@ -1,13 +1,13 @@
 /**
  * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const ScreenSpaceEventType = {
   /**
    * Represents a mouse left button down event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LEFT_DOWN: 0,
@@ -15,7 +15,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse left button up event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LEFT_UP: 1,
@@ -23,7 +23,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse left click event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LEFT_CLICK: 2,
@@ -31,7 +31,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse left double click event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LEFT_DOUBLE_CLICK: 3,
@@ -39,7 +39,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse left button down event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RIGHT_DOWN: 5,
@@ -47,7 +47,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse right button up event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RIGHT_UP: 6,
@@ -55,7 +55,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse right click event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RIGHT_CLICK: 7,
@@ -63,7 +63,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse middle button down event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MIDDLE_DOWN: 10,
@@ -71,7 +71,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse middle button up event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MIDDLE_UP: 11,
@@ -79,7 +79,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse middle click event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MIDDLE_CLICK: 12,
@@ -87,7 +87,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse move event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MOUSE_MOVE: 15,
@@ -95,7 +95,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a mouse wheel event.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   WHEEL: 16,
@@ -103,7 +103,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents the start of a two-finger event on a touch surface.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   PINCH_START: 17,
@@ -111,7 +111,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents the end of a two-finger event on a touch surface.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   PINCH_END: 18,
@@ -119,7 +119,7 @@ const ScreenSpaceEventType = {
   /**
    * Represents a change of a two-finger event on a touch surface.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   PINCH_MOVE: 19,

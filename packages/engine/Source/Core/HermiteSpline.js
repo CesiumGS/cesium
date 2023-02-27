@@ -119,8 +119,8 @@ function generateNatural(points) {
  * @alias HermiteSpline
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+ * @param {object} options Object with the following properties:
+ * @param {number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
  *                The values are in no way connected to the clock time. They are the parameterization for the curve.
  * @param {Cartesian3[]} options.points The array of control points.
  * @param {Cartesian3[]} options.inTangents The array of incoming tangents at each control point.
@@ -229,7 +229,7 @@ Object.defineProperties(HermiteSpline.prototype, {
    *
    * @memberof HermiteSpline.prototype
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @readonly
    */
   times: {
@@ -285,8 +285,8 @@ Object.defineProperties(HermiteSpline.prototype, {
  * Creates a spline where the tangents at each control point are the same.
  * The curves are guaranteed to be at least in the class C<sup>1</sup>.
  *
- * @param {Object} options Object with the following properties:
- * @param {Number[]} options.times The array of control point times.
+ * @param {object} options Object with the following properties:
+ * @param {number[]} options.times The array of control point times.
  * @param {Cartesian3[]} options.points The array of control points.
  * @param {Cartesian3[]} options.tangents The array of tangents at the control points.
  * @returns {HermiteSpline} A hermite spline.
@@ -357,8 +357,8 @@ HermiteSpline.createC1 = function (options) {
  * Creates a natural cubic spline. The tangents at the control points are generated
  * to create a curve in the class C<sup>2</sup>.
  *
- * @param {Object} options Object with the following properties:
- * @param {Number[]} options.times The array of control point times.
+ * @param {object} options Object with the following properties:
+ * @param {number[]} options.times The array of control point times.
  * @param {Cartesian3[]} options.points The array of control points.
  * @returns {HermiteSpline|LinearSpline} A hermite spline, or a linear spline if less than 3 control points were given.
  *
@@ -422,9 +422,9 @@ HermiteSpline.createNaturalCubic = function (options) {
  * Creates a clamped cubic spline. The tangents at the interior control points are generated
  * to create a curve in the class C<sup>2</sup>.
  *
- * @param {Object} options Object with the following properties:
- * @param {Number[]} options.times The array of control point times.
- * @param {Number[]|Cartesian3[]} options.points The array of control points.
+ * @param {object} options Object with the following properties:
+ * @param {number[]} options.times The array of control point times.
+ * @param {number[]|Cartesian3[]} options.points The array of control points.
  * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
  * @param {Cartesian3} options.lastTangent The incoming tangent of the last control point.
  * @returns {HermiteSpline|LinearSpline} A hermite spline, or a linear spline if less than 3 control points were given.
@@ -523,8 +523,8 @@ HermiteSpline.hermiteCoefficientMatrix = new Matrix4(
  * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
  * @function
  *
- * @param {Number} time The time.
- * @returns {Number} The index for the element at the start of the interval.
+ * @param {number} time The time.
+ * @returns {number} The index for the element at the start of the interval.
  *
  * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
  *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
@@ -539,8 +539,8 @@ const scratchTemp = new Cartesian3();
  * Wraps the given time to the period covered by the spline.
  * @function
  *
- * @param {Number} time The time.
- * @return {Number} The time, wrapped around to the updated animation.
+ * @param {number} time The time.
+ * @return {number} The time, wrapped around to the updated animation.
  */
 HermiteSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
@@ -548,15 +548,15 @@ HermiteSpline.prototype.wrapTime = Spline.prototype.wrapTime;
  * Clamps the given time to the period covered by the spline.
  * @function
  *
- * @param {Number} time The time.
- * @return {Number} The time, clamped to the animation period.
+ * @param {number} time The time.
+ * @return {number} The time, clamped to the animation period.
  */
 HermiteSpline.prototype.clampTime = Spline.prototype.clampTime;
 
 /**
  * Evaluates the curve at a given time.
  *
- * @param {Number} time The time at which to evaluate the curve.
+ * @param {number} time The time at which to evaluate the curve.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
  *

@@ -9,8 +9,8 @@ import MetadataEntity from "./MetadataEntity.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata|3DTILES_metadata Extension} for 3D Tiles
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.tileset The tileset metadata JSON object.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.tileset The tileset metadata JSON object.
  * @param {MetadataClass} options.class The class that tileset metadata conforms to.
  *
  * @alias TilesetMetadata
@@ -69,7 +69,7 @@ Object.defineProperties(TilesetMetadata.prototype, {
    * An object containing extensions.
    *
    * @memberof TilesetMetadata.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -83,8 +83,8 @@ Object.defineProperties(TilesetMetadata.prototype, {
 /**
  * Returns whether the tileset has this property.
  *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether the tileset has this property.
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @returns {boolean} Whether the tileset has this property.
  * @private
  */
 TilesetMetadata.prototype.hasProperty = function (propertyId) {
@@ -94,8 +94,8 @@ TilesetMetadata.prototype.hasProperty = function (propertyId) {
 /**
  * Returns whether the tileset has a property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {Boolean} Whether the tileset has a property with the given semantic.
+ * @param {string} semantic The case-sensitive semantic of the property.
+ * @returns {boolean} Whether the tileset has a property with the given semantic.
  * @private
  */
 TilesetMetadata.prototype.hasPropertyBySemantic = function (semantic) {
@@ -109,8 +109,8 @@ TilesetMetadata.prototype.hasPropertyBySemantic = function (semantic) {
 /**
  * Returns an array of property IDs.
  *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The property IDs.
  * @private
  */
 TilesetMetadata.prototype.getPropertyIds = function (results) {
@@ -123,7 +123,7 @@ TilesetMetadata.prototype.getPropertyIds = function (results) {
  * If the property is normalized the normalized value is returned.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the tileset does not have this property.
  * @private
  */
@@ -137,9 +137,9 @@ TilesetMetadata.prototype.getProperty = function (propertyId) {
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 TilesetMetadata.prototype.setProperty = function (propertyId, value) {
@@ -154,7 +154,7 @@ TilesetMetadata.prototype.setProperty = function (propertyId, value) {
 /**
  * Returns a copy of the value of the property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the tileset does not have this semantic.
  * @private
  */
@@ -169,9 +169,9 @@ TilesetMetadata.prototype.getPropertyBySemantic = function (semantic) {
 /**
  * Sets the value of the property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 TilesetMetadata.prototype.setPropertyBySemantic = function (semantic, value) {

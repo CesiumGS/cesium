@@ -33,9 +33,9 @@ import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The tile this content belongs to.
  * @param {Resource} resource The resource for the tileset
- * @param {Object} [json] The JSON object containing the subtree. Mutually exclusive with arrayBuffer.
+ * @param {object} [json] The JSON object containing the subtree. Mutually exclusive with arrayBuffer.
  * @param {ArrayBuffer} [arrayBuffer] The array buffer that stores the content payload. Mutually exclusive with json.
- * @param {Number} [byteOffset=0] The offset into the array buffer, if one was provided
+ * @param {number} [byteOffset=0] The offset into the array buffer, if one was provided
  *
  * @exception {DeveloperError} One of json and arrayBuffer must be defined.
  *
@@ -189,9 +189,9 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
  * up a promise chain to expand the immediate subtree.
  *
  * @param {Implicit3DTileContent} content The implicit content
- * @param {Object} [json] The JSON containing the subtree. Mutually exclusive with arrayBuffer.
+ * @param {object} [json] The JSON containing the subtree. Mutually exclusive with arrayBuffer.
  * @param {ArrayBuffer} [arrayBuffer] The ArrayBuffer containing a subtree binary. Mutually exclusive with json.
- * @param {Number} [byteOffset=0] The byte offset into the arrayBuffer
+ * @param {number} [byteOffset=0] The byte offset into the arrayBuffer
  * @private
  */
 function initialize(content, json, arrayBuffer, byteOffset) {
@@ -262,9 +262,9 @@ function expandSubtree(content, subtree) {
 /**
  * A pair of (tile, childIndex) used for finding child subtrees.
  *
- * @typedef {Object} ChildSubtreeLocator
+ * @typedef {object} ChildSubtreeLocator
  * @property {Cesium3DTile} tile One of the tiles in the bottommost row of the subtree.
- * @property {Number} childIndex The morton index of the child tile relative to its parent
+ * @property {number} childIndex The morton index of the child tile relative to its parent
  * @private
  */
 
@@ -303,7 +303,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
  * Results of transcodeSubtreeTiles, containing the root tile of the
  * subtree and the bottom row of nodes for further processing.
  *
- * @typedef {Object} TranscodedSubtree
+ * @typedef {object} TranscodedSubtree
  * @property {Cesium3DTile} rootTile The transcoded root tile of the subtree
  * @property {Array<Cesium3DTile|undefined>} bottomRow The bottom row of transcoded tiles. This is helpful for processing child subtrees
  * @private
@@ -317,7 +317,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
  * @param {Implicit3DTileContent} content The implicit content
  * @param {ImplicitSubtree} subtree The subtree to get availability information
  * @param {Cesium3DTile} placeholderTile The placeholder tile, used for constructing the subtree root tile
- * @param {Number} childIndex The Morton index of the root tile relative to parentOfRootTile
+ * @param {number} childIndex The Morton index of the root tile relative to parentOfRootTile
  * @returns {TranscodedSubtree} The newly created subtree of tiles
  * @private
  */
@@ -407,9 +407,9 @@ function getGeometricError(tileMetadata, implicitTileset, implicitCoordinates) {
  * @param {Implicit3DTileContent} implicitContent The implicit content
  * @param {ImplicitSubtree} subtree The subtree the child tile belongs to
  * @param {Cesium3DTile} parentTile The parent of the new child tile
- * @param {Number} childIndex The morton index of the child tile relative to its parent
- * @param {Number} childBitIndex The index of the child tile within the tile's availability information.
- * @param {Boolean} [parentIsPlaceholderTile=false] True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @param {number} childIndex The morton index of the child tile relative to its parent
+ * @param {number} childBitIndex The index of the child tile within the tile's availability information.
+ * @param {boolean} [parentIsPlaceholderTile=false] True if parentTile is a placeholder tile. This is true for the root of each subtree.
  * @returns {Cesium3DTile} The new child tile.
  * @private
  */
@@ -532,11 +532,11 @@ function deriveChildTile(
  * Returns true if the minimumHeight/maximumHeight parameter
  * is defined and the bounding volume is a region or S2 cell.
  *
- * @param {Object} [boundingVolume] The bounding volume
- * @param {Object} [tileBounds] The tile bounds
- * @param {Number} [tileBounds.minimumHeight] The minimum height
- * @param {Number} [tileBounds.maximumHeight] The maximum height
- * @returns {Boolean} Whether the bounding volume's heights can be updated
+ * @param {object} [boundingVolume] The bounding volume
+ * @param {object} [tileBounds] The tile bounds
+ * @param {number} [tileBounds.minimumHeight] The minimum height
+ * @param {number} [tileBounds.maximumHeight] The maximum height
+ * @returns {boolean} Whether the bounding volume's heights can be updated
  * @private
  */
 function canUpdateHeights(boundingVolume, tileBounds) {
@@ -557,10 +557,10 @@ function canUpdateHeights(boundingVolume, tileBounds) {
  * minimumHeight/maximumHeight parameter is defined and the
  * bounding volume is a region or S2 cell.
  *
- * @param {Object} boundingVolume The bounding volume
- * @param {Object} [tileBounds] The tile bounds
- * @param {Number} [tileBounds.minimumHeight] The new minimum height
- * @param {Number} [tileBounds.maximumHeight] The new maximum height
+ * @param {object} boundingVolume The bounding volume
+ * @param {object} [tileBounds] The tile bounds
+ * @param {number} [tileBounds.minimumHeight] The new minimum height
+ * @param {number} [tileBounds.maximumHeight] The new maximum height
  * @private
  */
 function updateHeights(boundingVolume, tileBounds) {
@@ -591,8 +591,8 @@ function updateHeights(boundingVolume, tileBounds) {
  * minimumHeight/maximumHeight parameter is defined.
  *
  * @param {Array} region A 6-element array describing the bounding region
- * @param {Number} [minimumHeight] The new minimum height
- * @param {Number} [maximumHeight] The new maximum height
+ * @param {number} [minimumHeight] The new minimum height
+ * @param {number} [maximumHeight] The new maximum height
  * @private
  */
 function updateRegionHeights(region, minimumHeight, maximumHeight) {
@@ -612,9 +612,9 @@ function updateRegionHeights(region, minimumHeight, maximumHeight) {
  * semantics. Heights are only updated if the respective
  * minimumHeight/maximumHeight parameter is defined.
  *
- * @param {Object} s2CellVolume An object describing the S2 cell
- * @param {Number} [minimumHeight] The new minimum height
- * @param {Number} [maximumHeight] The new maximum height
+ * @param {object} s2CellVolume An object describing the S2 cell
+ * @param {number} [minimumHeight] The new minimum height
+ * @param {number} [maximumHeight] The new maximum height
  * @private
  */
 function updateS2CellHeights(s2CellVolume, minimumHeight, maximumHeight) {
@@ -652,11 +652,11 @@ function updateS2CellHeights(s2CellVolume, minimumHeight, maximumHeight) {
  *
  * @param {ImplicitTileset} implicitTileset The implicit tileset struct which holds the root bounding volume
  * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the child tile
- * @param {Number} childIndex The morton index of the child tile relative to its parent
- * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @param {number} childIndex The morton index of the child tile relative to its parent
+ * @param {boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
  * @param {Cesium3DTile} parentTile The parent of the new child tile
- * @param {Object} [tileBounds] The tile bounds
- * @returns {Object} An object containing the JSON for a bounding volume
+ * @param {object} [tileBounds] The tile bounds
+ * @returns {object} An object containing the JSON for a bounding volume
  * @private
  */
 function getTileBoundingVolume(
@@ -712,9 +712,9 @@ function getTileBoundingVolume(
  * </ol>
  * </p>
  *
- * @param {Object} tileBoundingVolume An object containing the JSON for the tile's bounding volume
- * @param {Object} [contentBounds] The content bounds
- * @returns {Object|undefined} An object containing the JSON for a bounding volume, or <code>undefined</code> if there is no bounding volume
+ * @param {object} tileBoundingVolume An object containing the JSON for the tile's bounding volume
+ * @param {object} [contentBounds] The content bounds
+ * @returns {object|undefined} An object containing the JSON for a bounding volume, or <code>undefined</code> if there is no bounding volume
  * @private
  */
 function getContentBoundingVolume(tileBoundingVolume, contentBounds) {
@@ -742,10 +742,10 @@ function getContentBoundingVolume(tileBoundingVolume, contentBounds) {
  *
  * @param {ImplicitTileset} implicitTileset The implicit tileset struct which holds the root bounding volume
  * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the child tile
- * @param {Number} childIndex The morton index of the child tile relative to its parent
- * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @param {number} childIndex The morton index of the child tile relative to its parent
+ * @param {boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
  * @param {Cesium3DTile} parentTile The parent of the new child tile
- * @returns {Object} An object containing the JSON for a bounding volume
+ * @returns {object} An object containing the JSON for a bounding volume
  * @private
  */
 function deriveBoundingVolume(
@@ -807,14 +807,14 @@ function deriveBoundingVolume(
  * dimensions, i.e. (x, y), leaving the z axis unchanged.
  * </p>
  *
- * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @param {boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
  * @param {Cesium3DTile} parentTile The parent of the new child tile
- * @param {Number} childIndex The morton index of the child tile relative to its parent
- * @param {Number} level The level of the descendant tile relative to the root implicit tile
- * @param {Number} x The x coordinate of the descendant tile
- * @param {Number} y The y coordinate of the descendant tile
- * @param {Number} [z] The z coordinate of the descendant tile (octree only)
- * @returns {Object} An object with the 3DTILES_bounding_volume_S2 extension.
+ * @param {number} childIndex The morton index of the child tile relative to its parent
+ * @param {number} level The level of the descendant tile relative to the root implicit tile
+ * @param {number} x The x coordinate of the descendant tile
+ * @param {number} y The y coordinate of the descendant tile
+ * @param {number} [z] The z coordinate of the descendant tile (octree only)
+ * @returns {object} An object with the 3DTILES_bounding_volume_S2 extension.
  * @private
  */
 function deriveBoundingVolumeS2(
@@ -908,12 +908,12 @@ const scratchHalfAxes = new Matrix3();
  * than recursively subdividing to minimize floating point error.
  * </p>
  *
- * @param {Number[]} rootBox An array of 12 numbers representing the bounding box of the root tile
- * @param {Number} level The level of the descendant tile relative to the root implicit tile
- * @param {Number} x The x coordinate of the descendant tile
- * @param {Number} y The y coordinate of the descendant tile
- * @param {Number} [z] The z coordinate of the descendant tile (octree only)
- * @returns {Number[]} An array of 12 numbers representing the bounding box of the descendant tile.
+ * @param {number[]} rootBox An array of 12 numbers representing the bounding box of the root tile
+ * @param {number} level The level of the descendant tile relative to the root implicit tile
+ * @param {number} x The x coordinate of the descendant tile
+ * @param {number} y The y coordinate of the descendant tile
+ * @param {number} [z] The z coordinate of the descendant tile (octree only)
+ * @returns {number[]} An array of 12 numbers representing the bounding box of the descendant tile.
  * @private
  */
 function deriveBoundingBox(rootBox, level, x, y, z) {
@@ -985,12 +985,12 @@ const scratchRectangle = new Rectangle();
  * This computes the child volume directly from the root bounding volume rather
  * than recursively subdividing to minimize floating point error.
  * </p>
- * @param {Number[]} rootRegion An array of 6 numbers representing the root implicit tile
- * @param {Number} level The level of the descendant tile relative to the root implicit tile
- * @param {Number} x The x coordinate of the descendant tile
- * @param {Number} y The x coordinate of the descendant tile
- * @param {Number} [z] The z coordinate of the descendant tile (octree only)
- * @returns {Number[]} An array of 6 numbers representing the bounding region of the descendant tile
+ * @param {number[]} rootRegion An array of 6 numbers representing the root implicit tile
+ * @param {number} level The level of the descendant tile relative to the root implicit tile
+ * @param {number} x The x coordinate of the descendant tile
+ * @param {number} y The x coordinate of the descendant tile
+ * @param {number} [z] The z coordinate of the descendant tile (octree only)
+ * @returns {number[]} An array of 6 numbers representing the bounding region of the descendant tile
  * @private
  */
 function deriveBoundingRegion(rootRegion, level, x, y, z) {
@@ -1039,7 +1039,7 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
  *
  * @param {Implicit3DTileContent} content The content object.
  * @param {Cesium3DTile} parentTile The parent of the new child subtree.
- * @param {Number} childIndex The morton index of the child tile relative to its parent
+ * @param {number} childIndex The morton index of the child tile relative to its parent
  * @returns {Cesium3DTile} The new placeholder tile
  * @private
  */
@@ -1099,7 +1099,7 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
  * this file and Cesium3DTile.js
  * @param {Implicit3DTileContent} content The implicit content
  * @param {Resource} baseResource The base resource for the tileset
- * @param {Object} tileJson The JSON header for the tile
+ * @param {object} tileJson The JSON header for the tile
  * @param {Cesium3DTile} parentTile The parent of the new tile
  * @returns {Cesium3DTile} The newly created tile.
  * @private

@@ -25,10 +25,10 @@ import defined from "./defined.js";
  * //     }
  * // }
  *
- * @param {Object} [object1] The first object to merge.
- * @param {Object} [object2] The second object to merge.
- * @param {Boolean} [deep=false] Perform a recursive merge.
- * @returns {Object} The combined object containing all properties from both objects.
+ * @param {object} [object1] The first object to merge.
+ * @param {object} [object2] The second object to merge.
+ * @param {boolean} [deep=false] Perform a recursive merge.
+ * @returns {object} The combined object containing all properties from both objects.
  *
  * @function
  */

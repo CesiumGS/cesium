@@ -389,7 +389,7 @@ PostProcessStageTextureCache.prototype.clear = function (context) {
 
 /**
  * Gets the stage with the given name.
- * @param {String} name The name of the stage.
+ * @param {string} name The name of the stage.
  * @return {PostProcessStage|PostProcessStageComposite}
  */
 PostProcessStageTextureCache.prototype.getStageByName = function (name) {
@@ -398,7 +398,7 @@ PostProcessStageTextureCache.prototype.getStageByName = function (name) {
 
 /**
  * Gets the output texture for a stage with the given name.
- * @param {String} name The name of the stage.
+ * @param {string} name The name of the stage.
  * @return {Texture|undefined} The output texture of the stage with the given name.
  */
 PostProcessStageTextureCache.prototype.getOutputTexture = function (name) {
@@ -408,7 +408,7 @@ PostProcessStageTextureCache.prototype.getOutputTexture = function (name) {
 /**
  * Gets the framebuffer for a stage with the given name.
  *
- * @param {String} name The name of the stage.
+ * @param {string} name The name of the stage.
  * @return {Framebuffer|undefined} The framebuffer for the stage with the given name.
  */
 PostProcessStageTextureCache.prototype.getFramebuffer = function (name) {
@@ -426,7 +426,7 @@ PostProcessStageTextureCache.prototype.getFramebuffer = function (name) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see PostProcessStageTextureCache#destroy
  */

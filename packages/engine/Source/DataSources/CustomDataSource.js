@@ -11,7 +11,7 @@ import EntityCollection from "./EntityCollection.js";
  * @alias CustomDataSource
  * @constructor
  *
- * @param {String} [name] A human-readable name for this instance.
+ * @param {string} [name] A human-readable name for this instance.
  *
  * @example
  * const dataSource = new Cesium.CustomDataSource('myData');
@@ -40,7 +40,7 @@ Object.defineProperties(CustomDataSource.prototype, {
   /**
    * Gets or sets a human-readable name for this instance.
    * @memberof CustomDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   name: {
     get: function () {
@@ -82,7 +82,7 @@ Object.defineProperties(CustomDataSource.prototype, {
   /**
    * Gets or sets whether the data source is currently loading data.
    * @memberof CustomDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isLoading: {
     get: function () {
@@ -125,7 +125,7 @@ Object.defineProperties(CustomDataSource.prototype, {
   /**
    * Gets whether or not this data source should be displayed.
    * @memberof CustomDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -164,7 +164,7 @@ Object.defineProperties(CustomDataSource.prototype, {
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
  *
  * @param {JulianDate} time The simulation time.
- * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
 CustomDataSource.prototype.update = function (time) {
   return true;

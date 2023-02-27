@@ -16,7 +16,7 @@ Object.defineProperties(Queue.prototype, {
    *
    * @memberof Queue.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -114,7 +114,7 @@ Queue.prototype.sort = function (compareFunction) {
  *
  * @param {*} a An item in the array.
  * @param {*} b An item in the array.
- * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+ * @returns {number} Returns a negative value if <code>a</code> is less than <code>b</code>,
  *          a positive value if <code>a</code> is greater than <code>b</code>, or
  *          0 if <code>a</code> is equal to <code>b</code>.
  *
