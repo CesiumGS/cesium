@@ -151,6 +151,7 @@ function processVoxelProperties(renderResources, primitive) {
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvLocal");
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirUv");
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirWorld");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "surfaceNormal");
   shaderBuilder.addStructField(voxelStructId, "float", "travelDistance");
 
   // FragmentInput struct

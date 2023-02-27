@@ -28,16 +28,17 @@ float hash(vec2 p)
 }
 #endif
 
-float getStepSize(in SampleData sampleData, in Ray viewRay, in vec2 entryExit) {
+vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection) {
 #if defined(SHAPE_BOX)
     Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
-    vec2 voxelIntersection = intersectBox(viewRay, voxelBox);
-    float entry = max(voxelIntersection.x, entryExit.x);
-    float exit = min(voxelIntersection.y, entryExit.y);
-    return (exit - entry);
+    RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
+    vec4 entry = shapeIntersection.entry.w >= voxelIntersection.entry.w ? shapeIntersection.entry : voxelIntersection.entry;
+    float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
+    float dt = (exit - entry.w) * RAY_SCALE;
+    return vec4(normalize(entry.xyz), dt);
 #else
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    return u_stepSize / dimAtLevel;
+    return vec4(viewRay.dir, u_stepSize / dimAtLevel);
 #endif
 }
 
@@ -57,15 +58,15 @@ void main()
     #endif
 
     Intersections ix;
-    vec2 entryExitT = intersectScene(screenCoord, viewRayUv, ix);
+    RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayUv, ix);
 
     // Exit early if the scene was completely missed.
-    if (entryExitT.x == NO_HIT) {
+    if (shapeIntersection.entry.w == NO_HIT) {
         discard;
     }
 
-    float currT = entryExitT.x + 0.0001;
-    float endT = entryExitT.y;
+    float currT = shapeIntersection.entry.w * RAY_SCALE;
+    float endT = shapeIntersection.exit.w;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
     vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
 
@@ -73,12 +74,12 @@ void main()
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    float stepT = getStepSize(sampleDatas[0], viewRayUv, entryExitT);
+    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection);
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
-        currT += noise * stepT;
-        positionUv += noise * stepT * viewDirUv;
+        currT += noise * step.w;
+        positionUv += noise * step.w * viewDirUv;
     #endif
 
     FragmentInput fragmentInput;
@@ -99,7 +100,8 @@ void main()
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
-        fragmentInput.voxel.travelDistance = stepT;
+        fragmentInput.voxel.surfaceNormal = step.xyz;
+        fragmentInput.voxel.travelDistance = step.w;
 
         // Run the custom shader
         czm_modelMaterial materialOutput;
@@ -119,28 +121,28 @@ void main()
             break;
         }
 
-        if (stepT == 0.0) {
+        if (step.w == 0.0) {
             // Shape is infinitely thin. The ray may have hit the edge of a
             // foreground voxel. Step ahead slightly to check for more voxels
-            stepT == 0.00001;
+            step.w == 0.00001;
         }
 
         // Keep raymarching
-        currT += stepT;
-        positionUv += stepT * viewDirUv;
+        currT += step.w;
+        positionUv += step.w * viewDirUv;
 
         // Check if there's more intersections.
         if (currT > endT) {
             #if (INTERSECTION_COUNT == 1)
                 break;
             #else
-                vec2 entryExitT = nextIntersection(ix);
-                if (entryExitT.x == NO_HIT) {
+                shapeIntersection = nextIntersection(ix);
+                if (shapeIntersection.entry.w == NO_HIT) {
                     break;
                 } else {
                     // Found another intersection. Resume raymarching there
-                    currT = entryExitT.x;
-                    endT = entryExitT.y;
+                    currT = shapeIntersection.entry.w * RAY_SCALE;
+                    endT = shapeIntersection.exit.w;
                     positionUv = viewPosUv + currT * viewDirUv;
                 }
             #endif
@@ -150,7 +152,7 @@ void main()
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        stepT = getStepSize(sampleDatas[0], viewRayUv, entryExitT);
+        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
