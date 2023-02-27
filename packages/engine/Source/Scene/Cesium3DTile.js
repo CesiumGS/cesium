@@ -583,7 +583,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    *
    * @memberof Cesium3DTile.prototype
    *
-   * @type {*}
+   * @type {object}
    * @readonly
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
    */
@@ -1151,11 +1151,7 @@ function requestMultipleContents(tile) {
       }
 
       if (tile.isDestroyed()) {
-        multipleContentFailed(
-          tile,
-          tileset,
-          "Tile was unloaded while content was loading"
-        );
+        multipleContentFailed(tile, tileset);
         return;
       }
 
@@ -1180,11 +1176,7 @@ function requestMultipleContents(tile) {
       }
 
       if (tile.isDestroyed()) {
-        multipleContentFailed(
-          tile,
-          tileset,
-          "Tile was unloaded while content was processing"
-        );
+        multipleContentFailed(tile, tileset);
         return;
       }
 
@@ -1196,8 +1188,8 @@ function requestMultipleContents(tile) {
       tile._contentState = Cesium3DTileContentState.READY;
       return content;
     })
-    .catch(function (error) {
-      multipleContentFailed(tile, tileset, error);
+    .catch(function () {
+      multipleContentFailed(tile, tileset);
     });
 
   return 0;
@@ -1207,9 +1199,8 @@ function requestMultipleContents(tile) {
  * @private
  * @param {Cesium3DTile} tile
  * @param {Cesium3DTileset} tileset
- * @param {*} error
  */
-function multipleContentFailed(tile, tileset, error) {
+function multipleContentFailed(tile, tileset) {
   // note: The Multiple3DTileContent handles decrementing the number of pending
   // requests if the state is LOADING.
   if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
@@ -1647,7 +1638,7 @@ const scratchTransform = new Matrix4();
 
 /**
  * @private
- * @param {*} box
+ * @param {Array} box An array of 12 numbers that define an oriented bounding box
  * @param {Matrix4} transform
  * @param {TileBoundingVolume} [result]
  * @returns {TileOrientedBoundingBox}
@@ -1670,7 +1661,7 @@ function createBox(box, transform, result) {
 
 /**
  * @private
- * @param {*} region
+ * @param {Array} region An array of six numbers that define a bounding geographic region in EPSG:4979 coordinates with the order [west, south, east, north, minimum height, maximum height]
  * @param {Matrix4} transform
  * @param {Matrix4} initialTransform
  * @param {TileOrientedBoundingBox} [result]
@@ -1718,7 +1709,7 @@ function createBoxFromTransformedRegion(
 
 /**
  * @private
- * @param {*} region
+ * @param {Array} region An array of six numbers that define a bounding geographic region in EPSG:4979 coordinates with the order [west, south, east, north, minimum height, maximum height]
  * @param {Matrix4} transform
  * @param {Matrix4} initialTransform
  * @param {TileBoundingVolume} [result]
@@ -1751,7 +1742,7 @@ function createRegion(region, transform, initialTransform, result) {
 
 /**
  * @private
- * @param {*} sphere
+ * @param {Array} sphere An array of four numbers that define a bounding sphere
  * @param {Matrix4} transform
  * @param {TileBoundingVolume} [result]
  * @returns {TileBoundingSphere}
