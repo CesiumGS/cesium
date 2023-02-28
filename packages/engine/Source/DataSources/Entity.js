@@ -597,7 +597,12 @@ Entity.prototype.merge = function (source) {
     //While source is required by the API to be an Entity, we internally call this method from the
     //constructor with an options object to configure initial custom properties.
     //So we need to ignore reserved-non-property.
-    if (name === "parent" || name === "name" || name === "availability") {
+    if (
+      name === "parent" ||
+      name === "name" ||
+      name === "availability" ||
+      name === "children"
+    ) {
       continue;
     }
 
