@@ -224,6 +224,12 @@ function ScreenSpaceCameraController(scene) {
   this.minimumPickingTerrainHeight = 150000.0;
   this._minimumPickingTerrainHeight = this.minimumPickingTerrainHeight;
   /**
+   * The minimum distance the camera must be before testing for collision with terrain when zoom with inertia.
+   * @type {number}
+   * @default 4000.0
+   */
+  this.minimumPickingTerrainDistanceWithInertia = 4000.0;
+  /**
    * The minimum height the camera must be before testing for collision with terrain.
    * @type {number}
    * @default 15000.0
@@ -2191,7 +2197,9 @@ function zoom3D(controller, startPosition, movement) {
     zoom3DCartographic
   ).height;
 
-  const approachingCollision = Math.abs(preIntersectionDistance) < 4000;
+  const approachingCollision =
+    Math.abs(preIntersectionDistance) <
+    controller.minimumPickingTerrainDistanceWithInertia;
 
   const needPickGlobe = inertiaMovement
     ? approachingCollision
