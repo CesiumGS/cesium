@@ -2056,8 +2056,7 @@ Cesium3DTileset.prototype.loadTileset = function (
       this._allTilesAdditive && tile.refine === Cesium3DTileRefine.ADD;
     const children = tile._header.children;
     if (defined(children)) {
-      const length = children.length;
-      for (let i = 0; i < length; ++i) {
+      for (let i = 0; i < children.length; ++i) {
         const childHeader = children[i];
         const childTile = makeTile(this, resource, childHeader, tile);
         tile.children.push(childTile);
@@ -2857,8 +2856,7 @@ function destroySubtree(tileset, tile) {
   while (stack.length > 0) {
     tile = stack.pop();
     const children = tile.children;
-    const length = children.length;
-    for (let i = 0; i < length; ++i) {
+    for (let i = 0; i < children.length; ++i) {
       stack.push(children[i]);
     }
     if (tile !== root) {
@@ -3198,8 +3196,7 @@ Cesium3DTileset.prototype.destroy = function () {
       tile.destroy();
 
       const children = tile.children;
-      const length = children.length;
-      for (let i = 0; i < length; ++i) {
+      for (let i = 0; i < children.length; ++i) {
         stack.push(children[i]);
       }
     }
