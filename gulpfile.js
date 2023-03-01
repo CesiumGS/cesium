@@ -1095,8 +1095,9 @@ async function deployCesiumRelease(bucketName, s3Client, errors) {
       `Cesium version ${release.tag} up to date. Skipping release deployment.`
     );
   } catch (error) {
+    const { httpStatusCode } = error.$$metadata;
     // The current version is not uploaded
-    if (error.code === "NotFound") {
+    if (httpStatusCode === 404) {
       console.log("Updating cesium version...");
       const data = await download(release.url);
       // upload and unzip contents
