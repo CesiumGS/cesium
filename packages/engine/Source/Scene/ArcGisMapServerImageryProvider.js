@@ -29,7 +29,7 @@ import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
  * Initialization options for the ArcGisMapServerImageryProvider constructor
  *
  * @property {Resource|string} url The URL of the ArcGIS MapServer service.
- * @property {string} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
+ * @property {string} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service. To get a token, create an ArcGIS developer account at {@link https://developers.arcgis.com}.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  If this value is not specified, a default
  *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -94,9 +94,6 @@ import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
  *
  * @see {@link https://developers.arcgis.com/rest/|ArcGIS Server REST API}
  * @see {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token }
- * is required to authenticate requests to an ArcGIS Image Tile service.
- * To access secure ArcGIS resources, you need to create an ArcGIS developer
- * account or an ArcGIS online account, then implement an authentication method to obtain an access token.
  */
 function ArcGisMapServerImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

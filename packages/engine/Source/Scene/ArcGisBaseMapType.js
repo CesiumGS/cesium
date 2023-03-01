@@ -1,5 +1,5 @@
 /**
- * ArcGisBaseMapType defines the types of ArcGIS Basemap layers supported by default.
+ * ArcGisBaseMapType enumerates the ArcGIS image tile layers that are supported by default.
  *
  * @enum {number}
  * @see ArcGisMapServerImageryProvider
