@@ -14,7 +14,7 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * @function
  *
  * @param {Cesium3DTileset} tileset The tileset to query for tile metadata
- * @param {Object} tileHeader the JSON header for a {@link Cesium3DTile}
+ * @param {object} tileHeader the JSON header for a {@link Cesium3DTile}
  * @return {TileMetadata} the tile metadata, or <code>undefined</code> if not found
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.

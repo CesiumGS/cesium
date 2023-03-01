@@ -105,7 +105,7 @@ Object.defineProperties(EllipsoidGeometryUpdater.prototype, {
  * Creates the geometry instance which represents the fill of the geometry.
  *
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
- * @param {Boolean} [skipModelMatrix=false] Whether to compute a model matrix for the geometry instance
+ * @param {boolean} [skipModelMatrix=false] Whether to compute a model matrix for the geometry instance
  * @param {Matrix4} [modelMatrixResult] Used to store the result of the model matrix calculation
  * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
  *
@@ -189,7 +189,7 @@ EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function (
  * Creates the geometry instance which represents the outline of the geometry.
  *
  * @param {JulianDate} time The time to use when retrieving initial attribute values.
- * @param {Boolean} [skipModelMatrix=false] Whether to compute a model matrix for the geometry instance
+ * @param {boolean} [skipModelMatrix=false] Whether to compute a model matrix for the geometry instance
  * @param {Matrix4} [modelMatrixResult] Used to store the result of the model matrix calculation
  * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
  *

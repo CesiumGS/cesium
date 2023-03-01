@@ -14,13 +14,13 @@ import PerspectiveOffCenterFrustum from "./PerspectiveOffCenterFrustum.js";
  * @alias PerspectiveFrustum
  * @constructor
  *
- * @param {Object} [options] An object with the following properties:
- * @param {Number} [options.fov] The angle of the field of view (FOV), in radians.
- * @param {Number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
- * @param {Number} [options.near=1.0] The distance of the near plane.
- * @param {Number} [options.far=500000000.0] The distance of the far plane.
- * @param {Number} [options.xOffset=0.0] The offset in the x direction.
- * @param {Number} [options.yOffset=0.0] The offset in the y direction.
+ * @param {object} [options] An object with the following properties:
+ * @param {number} [options.fov] The angle of the field of view (FOV), in radians.
+ * @param {number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
+ * @param {number} [options.near=1.0] The distance of the near plane.
+ * @param {number} [options.far=500000000.0] The distance of the far plane.
+ * @param {number} [options.xOffset=0.0] The offset in the x direction.
+ * @param {number} [options.yOffset=0.0] The offset in the y direction.
  *
  * @example
  * const frustum = new Cesium.PerspectiveFrustum({
@@ -41,7 +41,7 @@ function PerspectiveFrustum(options) {
    * The angle of the field of view (FOV), in radians.  This angle will be used
    * as the horizontal FOV if the width is greater than the height, otherwise
    * it will be the vertical FOV.
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   this.fov = options.fov;
@@ -52,7 +52,7 @@ function PerspectiveFrustum(options) {
 
   /**
    * The aspect ratio of the frustum's width to it's height.
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   this.aspectRatio = options.aspectRatio;
@@ -60,7 +60,7 @@ function PerspectiveFrustum(options) {
 
   /**
    * The distance of the near plane.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.near = defaultValue(options.near, 1.0);
@@ -68,7 +68,7 @@ function PerspectiveFrustum(options) {
 
   /**
    * The distance of the far plane.
-   * @type {Number}
+   * @type {number}
    * @default 500000000.0
    */
   this.far = defaultValue(options.far, 500000000.0);
@@ -76,7 +76,7 @@ function PerspectiveFrustum(options) {
 
   /**
    * Offsets the frustum in the x direction.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.xOffset = defaultValue(options.xOffset, 0.0);
@@ -84,7 +84,7 @@ function PerspectiveFrustum(options) {
 
   /**
    * Offsets the frustum in the y direction.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.yOffset = defaultValue(options.yOffset, 0.0);
@@ -93,7 +93,7 @@ function PerspectiveFrustum(options) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 PerspectiveFrustum.packedLength = 6;
 
@@ -101,10 +101,10 @@ PerspectiveFrustum.packedLength = 6;
  * Stores the provided instance into the provided array.
  *
  * @param {PerspectiveFrustum} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 PerspectiveFrustum.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -127,8 +127,8 @@ PerspectiveFrustum.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PerspectiveFrustum} [result] The object into which to store the result.
  * @returns {PerspectiveFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
  */
@@ -253,7 +253,7 @@ Object.defineProperties(PerspectiveFrustum.prototype, {
   /**
    * Gets the angle of the vertical field of view, in radians.
    * @memberof PerspectiveFrustum.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @default undefined
    */
@@ -301,10 +301,10 @@ PerspectiveFrustum.prototype.computeCullingVolume = function (
 /**
  * Returns the pixel's width and height in meters.
  *
- * @param {Number} drawingBufferWidth The width of the drawing buffer.
- * @param {Number} drawingBufferHeight The height of the drawing buffer.
- * @param {Number} distance The distance to the near plane in meters.
- * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
+ * @param {number} drawingBufferWidth The width of the drawing buffer.
+ * @param {number} drawingBufferHeight The height of the drawing buffer.
+ * @param {number} distance The distance to the near plane in meters.
+ * @param {number} pixelRatio The scaling factor from pixel space to coordinate space.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
  *
@@ -377,7 +377,7 @@ PerspectiveFrustum.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {PerspectiveFrustum} [other] The right hand side PerspectiveFrustum.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 PerspectiveFrustum.prototype.equals = function (other) {
   if (!defined(other) || !(other instanceof PerspectiveFrustum)) {
@@ -400,9 +400,9 @@ PerspectiveFrustum.prototype.equals = function (other) {
  * <code>false</code> otherwise.
  *
  * @param {PerspectiveFrustum} other The right hand side PerspectiveFrustum.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
- * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
- * @returns {Boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+ * @returns {boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
  */
 PerspectiveFrustum.prototype.equalsEpsilon = function (
   other,

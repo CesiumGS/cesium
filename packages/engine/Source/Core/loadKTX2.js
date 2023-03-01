@@ -5,12 +5,12 @@ import KTX2Transcoder from "./KTX2Transcoder.js";
 /**
  * Stores the supported formats that KTX2 can transcode to. Called during context creation.
  *
- * @param {Boolean} s3tc Whether or not S3TC is supported
- * @param {Boolean} pvrtc Whether or not PVRTC is supported
- * @param {Boolean} astc Whether or not ASTC is supported
- * @param {Boolean} etc Whether or not ETC is supported
- * @param {Boolean} etc1 Whether or not ETC1 is supported
- * @param {Boolean} bc7 Whether or not BC7 is supported
+ * @param {boolean} s3tc Whether or not S3TC is supported
+ * @param {boolean} pvrtc Whether or not PVRTC is supported
+ * @param {boolean} astc Whether or not ASTC is supported
+ * @param {boolean} etc Whether or not ETC is supported
+ * @param {boolean} etc1 Whether or not ETC1 is supported
+ * @param {boolean} bc7 Whether or not BC7 is supported
  * @private
  */
 let supportedTranscoderFormats;
@@ -51,8 +51,8 @@ loadKTX2.setKTX2SupportedFormats = function (
  *
  * @function loadKTX2
  *
- * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
- * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @param {Resource|string|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
+ * @returns {Promise<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  * @exception {RuntimeError} Invalid KTX2 file.
  * @exception {RuntimeError} KTX2 texture arrays are not supported.

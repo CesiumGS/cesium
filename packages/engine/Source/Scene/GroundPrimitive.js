@@ -50,19 +50,19 @@ const GroundPrimitiveUniformMap = {
  * @alias GroundPrimitive
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
  * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to a flat PerInstanceColorAppearance when GeometryInstances have a color attribute.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
- * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
- * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
- * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
- * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
- * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+ * @param {boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+ * @param {boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
+ * @param {boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+ * @param {boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+ * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
  * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
- * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
  *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
  *
  * @example
@@ -161,7 +161,7 @@ function GroundPrimitive(options) {
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -183,7 +183,7 @@ function GroundPrimitive(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -198,7 +198,7 @@ function GroundPrimitive(options) {
    * Draws the shadow volume for each geometry in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -276,7 +276,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
    *
    * @memberof GroundPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -292,7 +292,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
    *
    * @memberof GroundPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -308,7 +308,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
    *
    * @memberof GroundPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -324,7 +324,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
    *
    * @memberof GroundPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -340,7 +340,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
    *
    * @memberof GroundPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -356,7 +356,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
    *
    * @memberof GroundPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -374,7 +374,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
    *
    * @memberof GroundPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -386,7 +386,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof GroundPrimitive.prototype
-   * @type {Promise.<GroundPrimitive>}
+   * @type {Promise<GroundPrimitive>}
    * @readonly
    */
   readyPromise: {
@@ -401,7 +401,7 @@ Object.defineProperties(GroundPrimitive.prototype, {
  *
  * @function
  * @param {Scene} scene The scene.
- * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
+ * @returns {boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
  */
 GroundPrimitive.isSupported = ClassificationPrimitive.isSupported;
 
@@ -956,7 +956,7 @@ GroundPrimitive.prototype.getBoundingSphere = function (id) {
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
  *
  * @param {*} id The id of the {@link GeometryInstance}.
- * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
+ * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
  *
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
@@ -983,7 +983,7 @@ GroundPrimitive.prototype.getGeometryInstanceAttributes = function (id) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see GroundPrimitive#destroy
  */
@@ -1016,7 +1016,7 @@ GroundPrimitive.prototype.destroy = function () {
  * Exposed for testing.
  *
  * @param {Context} context Rendering context
- * @returns {Boolean} Whether or not the current context supports materials on GroundPrimitives.
+ * @returns {boolean} Whether or not the current context supports materials on GroundPrimitives.
  * @private
  */
 GroundPrimitive._supportsMaterials = function (context) {
@@ -1028,7 +1028,7 @@ GroundPrimitive._supportsMaterials = function (context) {
  * Materials on GroundPrimitives require support for the WEBGL_depth_texture extension.
  *
  * @param {Scene} scene The current scene.
- * @returns {Boolean} Whether or not the current scene supports materials on GroundPrimitives.
+ * @returns {boolean} Whether or not the current scene supports materials on GroundPrimitives.
  */
 GroundPrimitive.supportsMaterials = function (scene) {
   //>>includeStart('debug', pragmas.debug);

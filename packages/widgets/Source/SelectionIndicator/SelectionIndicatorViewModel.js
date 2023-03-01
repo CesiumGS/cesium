@@ -55,7 +55,7 @@ function SelectionIndicatorViewModel(
 
   /**
    * Gets or sets the visibility of the selection indicator.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.showSelection = false;
 
@@ -70,7 +70,7 @@ function SelectionIndicatorViewModel(
   /**
    * Gets the visibility of the position indicator.  This can be false even if an
    * object is selected, when the selected object has no position.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.isVisible = undefined;
   knockout.defineProperty(this, "isVisible", {

@@ -1,13 +1,13 @@
 /**
  * State of the request.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const RequestState = {
   /**
    * Initial unissued state.
    *
-   * @type Number
+   * @type {number}
    * @constant
    */
   UNISSUED: 0,
@@ -15,7 +15,7 @@ const RequestState = {
   /**
    * Issued but not yet active. Will become active when open slots are available.
    *
-   * @type Number
+   * @type {number}
    * @constant
    */
   ISSUED: 1,
@@ -23,7 +23,7 @@ const RequestState = {
   /**
    * Actual http request has been sent.
    *
-   * @type Number
+   * @type {number}
    * @constant
    */
   ACTIVE: 2,
@@ -31,7 +31,7 @@ const RequestState = {
   /**
    * Request completed successfully.
    *
-   * @type Number
+   * @type {number}
    * @constant
    */
   RECEIVED: 3,
@@ -39,7 +39,7 @@ const RequestState = {
   /**
    * Request was cancelled, either explicitly or automatically because of low priority.
    *
-   * @type Number
+   * @type {number}
    * @constant
    */
   CANCELLED: 4,
@@ -47,7 +47,7 @@ const RequestState = {
   /**
    * Request failed.
    *
-   * @type Number
+   * @type {number}
    * @constant
    */
   FAILED: 5,

@@ -10,10 +10,10 @@ import TerrainProvider from "./TerrainProvider.js";
 
 /**
  * @callback CustomHeightmapTerrainProvider.GeometryCallback
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array|Number[]|Promise.<Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array|Number[]>|undefined} An array or a promise to an array of heights in row-major order. If undefined, the globe will render the parent tile.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array|number[]|Promise<Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array|number[]>|undefined} An array or a promise to an array of heights in row-major order. If undefined, the globe will render the parent tile.
  */
 
 /**
@@ -28,17 +28,17 @@ import TerrainProvider from "./TerrainProvider.js";
  * @alias CustomHeightmapTerrainProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {CustomHeightmapTerrainProvider.GeometryCallback} options.callback The callback function for requesting tile geometry.
- * @param {Number} options.width The number of columns per heightmap tile.
- * @param {Number} options.height The number of rows per heightmap tile.
+ * @param {number} options.width The number of columns per heightmap tile.
+ * @param {number} options.height The number of rows per heightmap tile.
  * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
  * surface is broken into tiles. If this parameter is not provided, a {@link GeographicTilingScheme}
  * is used.
  * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  * parameter is specified, the WGS84 ellipsoid is used.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -135,7 +135,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof CustomHeightmapTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -147,7 +147,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof CustomHeightmapTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -163,7 +163,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * Water mask is not supported by {@link CustomHeightmapTerrainProvider}, so the return
    * value will always be false.
    * @memberof CustomHeightmapTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasWaterMask: {
@@ -177,7 +177,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
    * Vertex normals are not supported by {@link CustomHeightmapTerrainProvider}, so the return
    * value will always be false.
    * @memberof CustomHeightmapTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasVertexNormals: {
@@ -189,7 +189,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
   /**
    * Gets the number of columns per heightmap tile.
    * @memberof CustomHeightmapTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   width: {
@@ -201,7 +201,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
   /**
    * Gets the number of rows per heightmap tile.
    * @memberof CustomHeightmapTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   height: {
@@ -215,12 +215,12 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
  * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry. If this method
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry. If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  */
@@ -241,7 +241,7 @@ CustomHeightmapTerrainProvider.prototype.requestTileGeometry = function (
   return Promise.resolve(promise).then(function (heightmapData) {
     let buffer = heightmapData;
     if (Array.isArray(buffer)) {
-      // HeightmapTerrainData expects a TypedArray, so convert from Number[] to Float64Array
+      // HeightmapTerrainData expects a TypedArray, so convert from number[] to Float64Array
       buffer = new Float64Array(buffer);
     }
 
@@ -256,8 +256,8 @@ CustomHeightmapTerrainProvider.prototype.requestTileGeometry = function (
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
  */
 CustomHeightmapTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   level
@@ -268,10 +268,10 @@ CustomHeightmapTerrainProvider.prototype.getLevelMaximumGeometricError = functio
 /**
  * Determines whether data for a tile is available to be loaded.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 CustomHeightmapTerrainProvider.prototype.getTileDataAvailable = function (
   x,
@@ -284,9 +284,9 @@ CustomHeightmapTerrainProvider.prototype.getTileDataAvailable = function (
 /**
  * Makes sure we load availability data for a tile
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 CustomHeightmapTerrainProvider.prototype.loadTileDataAvailability = function (

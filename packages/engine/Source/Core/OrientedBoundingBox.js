@@ -55,7 +55,7 @@ function OrientedBoundingBox(center, halfAxes) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 OrientedBoundingBox.packedLength =
   Cartesian3.packedLength + Matrix3.packedLength;
@@ -64,10 +64,10 @@ OrientedBoundingBox.packedLength =
  * Stores the provided instance into the provided array.
  *
  * @param {OrientedBoundingBox} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 OrientedBoundingBox.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -86,8 +86,8 @@ OrientedBoundingBox.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {OrientedBoundingBox} [result] The object into which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
  */
@@ -328,8 +328,8 @@ const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
  * There are no guarantees about the orientation of the bounding box.
  *
  * @param {Rectangle} rectangle The cartographic rectangle on the surface of the ellipsoid.
- * @param {Number} [minimumHeight=0.0] The minimum height (elevation) within the tile.
- * @param {Number} [maximumHeight=0.0] The maximum height (elevation) within the tile.
+ * @param {number} [minimumHeight=0.0] The minimum height (elevation) within the tile.
+ * @param {number} [maximumHeight=0.0] The maximum height (elevation) within the tile.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle is defined.
  * @param {OrientedBoundingBox} [result] The object onto which to store the result.
  * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if none was provided.
@@ -724,7 +724,7 @@ const scratchPPrime = new Cartesian3();
  *
  * @param {OrientedBoundingBox} box The box.
  * @param {Cartesian3} cartesian The point
- * @returns {Number} The distance squared from the oriented bounding box to the point. Returns 0 if the point is inside the box.
+ * @returns {number} The distance squared from the oriented bounding box to the point. Returns 0 if the point is inside the box.
  *
  * @example
  * // Sort bounding boxes from back to front
@@ -1126,7 +1126,7 @@ const scratchBoundingSphere = new BoundingSphere();
  *
  * @param {OrientedBoundingBox} box The bounding box surrounding the occludee object.
  * @param {Occluder} occluder The occluder.
- * @returns {Boolean} <code>true</code> if the box is not visible; otherwise <code>false</code>.
+ * @returns {boolean} <code>true</code> if the box is not visible; otherwise <code>false</code>.
  */
 OrientedBoundingBox.isOccluded = function (box, occluder) {
   //>>includeStart('debug', pragmas.debug);
@@ -1163,7 +1163,7 @@ OrientedBoundingBox.prototype.intersectPlane = function (plane) {
  * Computes the estimated distance squared from the closest point on a bounding box to a point.
  *
  * @param {Cartesian3} cartesian The point
- * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+ * @returns {number} The estimated distance squared from the bounding sphere to the point.
  *
  * @example
  * // Sort bounding boxes from back to front
@@ -1223,7 +1223,7 @@ OrientedBoundingBox.prototype.computeTransformation = function (result) {
  * Determines whether or not a bounding box is hidden from view by the occluder.
  *
  * @param {Occluder} occluder The occluder.
- * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
+ * @returns {boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
  */
 OrientedBoundingBox.prototype.isOccluded = function (occluder) {
   return OrientedBoundingBox.isOccluded(this, occluder);
@@ -1235,7 +1235,7 @@ OrientedBoundingBox.prototype.isOccluded = function (occluder) {
  *
  * @param {OrientedBoundingBox} left The first OrientedBoundingBox.
  * @param {OrientedBoundingBox} right The second OrientedBoundingBox.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 OrientedBoundingBox.equals = function (left, right) {
   return (
@@ -1262,7 +1262,7 @@ OrientedBoundingBox.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {OrientedBoundingBox} [right] The right hand side OrientedBoundingBox.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 OrientedBoundingBox.prototype.equals = function (right) {
   return OrientedBoundingBox.equals(this, right);

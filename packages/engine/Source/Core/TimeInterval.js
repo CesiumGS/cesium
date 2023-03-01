@@ -11,12 +11,12 @@ import JulianDate from "./JulianDate.js";
  * @alias TimeInterval
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {JulianDate} [options.start=new JulianDate()] The start time of the interval.
  * @param {JulianDate} [options.stop=new JulianDate()] The stop time of the interval.
- * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
- * @param {Object} [options.data] Arbitrary data associated with this interval.
+ * @param {boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
+ * @param {object} [options.data] Arbitrary data associated with this interval.
  *
  * @example
  * // Create an instance that spans August 1st, 1980 and is associated
@@ -83,14 +83,14 @@ function TimeInterval(options) {
 
   /**
    * Gets or sets whether or not the start time is included in this interval.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.isStartIncluded = defaultValue(options.isStartIncluded, true);
 
   /**
    * Gets or sets whether or not the stop time is included in this interval.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.isStopIncluded = defaultValue(options.isStopIncluded, true);
@@ -100,7 +100,7 @@ Object.defineProperties(TimeInterval.prototype, {
   /**
    * Gets whether or not this interval is empty.
    * @memberof TimeInterval.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isEmpty: {
@@ -128,11 +128,11 @@ const scratchInterval = {
  *
  * @throws DeveloperError if options.iso8601 does not match proper formatting.
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.iso8601 An ISO 8601 interval.
- * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
- * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
- * @param {Object} [options.data] Arbitrary data associated with this interval.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.iso8601 An ISO 8601 interval.
+ * @param {boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
+ * @param {boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
+ * @param {object} [options.data] Arbitrary data associated with this interval.
  * @param {TimeInterval} [result] An existing instance to use for the result.
  * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
  */
@@ -175,8 +175,8 @@ TimeInterval.fromIso8601 = function (options, result) {
  * Creates an ISO8601 representation of the provided interval.
  *
  * @param {TimeInterval} timeInterval The interval to be converted.
- * @param {Number} [precision] The number of fractional digits used to represent the seconds component.  By default, the most precise representation is used.
- * @returns {String} The ISO8601 representation of the provided interval.
+ * @param {number} [precision] The number of fractional digits used to represent the seconds component.  By default, the most precise representation is used.
+ * @returns {string} The ISO8601 representation of the provided interval.
  */
 TimeInterval.toIso8601 = function (timeInterval, precision) {
   //>>includeStart('debug', pragmas.debug);
@@ -217,7 +217,7 @@ TimeInterval.clone = function (timeInterval, result) {
  * @param {TimeInterval} [left] The first instance.
  * @param {TimeInterval} [right] The second instance.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
- * @returns {Boolean} <code>true</code> if the dates are equal; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the dates are equal; otherwise, <code>false</code>.
  */
 TimeInterval.equals = function (left, right, dataComparer) {
   return (
@@ -242,9 +242,9 @@ TimeInterval.equals = function (left, right, dataComparer) {
  *
  * @param {TimeInterval} [left] The first instance.
  * @param {TimeInterval} [right] The second instance.
- * @param {Number} [epsilon=0] The maximum number of seconds that should separate the two instances.
+ * @param {number} [epsilon=0] The maximum number of seconds that should separate the two instances.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
- * @returns {Boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
+ * @returns {boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 TimeInterval.equalsEpsilon = function (left, right, epsilon, dataComparer) {
   epsilon = defaultValue(epsilon, 0);
@@ -331,7 +331,7 @@ TimeInterval.intersect = function (left, right, result, mergeCallback) {
  *
  * @param {TimeInterval} timeInterval The interval.
  * @param {JulianDate} julianDate The date to check.
- * @returns {Boolean} <code>true</code> if the interval contains the specified date, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the interval contains the specified date, <code>false</code> otherwise.
  */
 TimeInterval.contains = function (timeInterval, julianDate) {
   //>>includeStart('debug', pragmas.debug);
@@ -375,7 +375,7 @@ TimeInterval.prototype.clone = function (result) {
  *
  * @param {TimeInterval} [right] The right hand side interval.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 TimeInterval.prototype.equals = function (right, dataComparer) {
   return TimeInterval.equals(this, right, dataComparer);
@@ -387,9 +387,9 @@ TimeInterval.prototype.equals = function (right, dataComparer) {
  * <code>false</code> otherwise.
  *
  * @param {TimeInterval} [right] The right hand side interval.
- * @param {Number} [epsilon=0] The epsilon to use for equality testing.
+ * @param {number} [epsilon=0] The epsilon to use for equality testing.
  * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
- * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
 TimeInterval.prototype.equalsEpsilon = function (right, epsilon, dataComparer) {
   return TimeInterval.equalsEpsilon(this, right, epsilon, dataComparer);
@@ -398,7 +398,7 @@ TimeInterval.prototype.equalsEpsilon = function (right, epsilon, dataComparer) {
 /**
  * Creates a string representing this TimeInterval in ISO8601 format.
  *
- * @returns {String} A string representing this TimeInterval in ISO8601 format.
+ * @returns {string} A string representing this TimeInterval in ISO8601 format.
  */
 TimeInterval.prototype.toString = function () {
   return TimeInterval.toIso8601(this);
@@ -433,6 +433,6 @@ TimeInterval.EMPTY = Object.freeze(
  * @callback TimeInterval.DataComparer
  * @param {*} leftData The first data instance.
  * @param {*} rightData The second data instance.
- * @returns {Boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
  */
 export default TimeInterval;

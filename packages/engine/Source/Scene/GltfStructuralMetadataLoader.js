@@ -18,16 +18,16 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {String} [options.extension] The <code>EXT_structural_metadata</code> extension object. If this is undefined, then extensionLegacy must be defined.
- * @param {String} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {string} [options.extension] The <code>EXT_structural_metadata</code> extension object. If this is undefined, then extensionLegacy must be defined.
+ * @param {string} [options.extensionLegacy] The legacy <code>EXT_feature_metadata</code> extension for backwards compatibility.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  * @param {FrameState} options.frameState The frame state.
- * @param {String} [options.cacheKey] The cache key of the resource.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {string} [options.cacheKey] The cache key of the resource.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -88,7 +88,7 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
    *
    * @memberof GltfStructuralMetadataLoader.prototype
    *
-   * @type {Promise.<GltfStructuralMetadataLoader>|undefined}
+   * @type {Promise<GltfStructuralMetadataLoader>|undefined}
    * @readonly
    * @private
    */
@@ -102,7 +102,7 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
    *
    * @memberof GltfStructuralMetadataLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -129,7 +129,7 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<GltfStructuralMetadataLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GltfStructuralMetadataLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfStructuralMetadataLoader.prototype.load = function () {

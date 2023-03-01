@@ -23,8 +23,8 @@ import ExpressionNodeType from "./ExpressionNodeType.js";
  * @alias Expression
  * @constructor
  *
- * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
- * @param {Object} [defines] Defines in the style.
+ * @param {string} [expression] The expression defined using the 3D Tiles Styling language.
+ * @param {object} [defines] Defines in the style.
  *
  * @example
  * const expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
@@ -63,7 +63,7 @@ Object.defineProperties(Expression.prototype, {
    *
    * @memberof Expression.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    *
    * @default undefined
@@ -131,8 +131,8 @@ const scratchStorage = {
  * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
  *
  * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
- * @param {Object} [result] The object onto which to store the result.
- * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
+ * @param {object} [result] The object onto which to store the result.
+ * @returns {boolean|number|string|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
  */
 Expression.prototype.evaluate = function (feature, result) {
   scratchStorage.reset();
@@ -170,12 +170,12 @@ Expression.prototype.evaluateColor = function (feature, result) {
  * Gets the shader function for this expression.
  * Returns undefined if the shader function can't be generated from this expression.
  *
- * @param {String} functionSignature Signature of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
- * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
- * @param {String} returnType The return type of the generated function.
+ * @param {string} functionSignature Signature of the generated function.
+ * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
+ * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
+ * @param {string} returnType The return type of the generated function.
  *
- * @returns {String} The shader function.
+ * @returns {string} The shader function.
  *
  * @private
  */
@@ -203,10 +203,10 @@ Expression.prototype.getShaderFunction = function (
  * Gets the shader expression for this expression.
  * Returns undefined if the shader expression can't be generated from this expression.
  *
- * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
- * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+ * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
+ * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
- * @returns {String} The shader expression.
+ * @returns {string} The shader expression.
  *
  * @private
  */
@@ -223,7 +223,7 @@ Expression.prototype.getShaderExpression = function (
 /**
  * Gets the variables used by the expression.
  *
- * @returns {String[]} The variables used by the expression.
+ * @returns {string[]} The variables used by the expression.
  *
  * @private
  */

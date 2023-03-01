@@ -44,8 +44,8 @@ Object.defineProperties(WebMercatorProjection.prototype, {
  * Converts a Mercator angle, in the range -PI to PI, to a geodetic latitude
  * in the range -PI/2 to PI/2.
  *
- * @param {Number} mercatorAngle The angle to convert.
- * @returns {Number} The geodetic latitude in radians.
+ * @param {number} mercatorAngle The angle to convert.
+ * @returns {number} The geodetic latitude in radians.
  */
 WebMercatorProjection.mercatorAngleToGeodeticLatitude = function (
   mercatorAngle
@@ -57,8 +57,8 @@ WebMercatorProjection.mercatorAngleToGeodeticLatitude = function (
  * Converts a geodetic latitude in radians, in the range -PI/2 to PI/2, to a Mercator
  * angle in the range -PI to PI.
  *
- * @param {Number} latitude The geodetic latitude in radians.
- * @returns {Number} The Mercator angle.
+ * @param {number} latitude The geodetic latitude in radians.
+ * @returns {number} The Mercator angle.
  */
 WebMercatorProjection.geodeticLatitudeToMercatorAngle = function (latitude) {
   // Clamp the latitude coordinate to the valid Mercator bounds.
@@ -83,7 +83,7 @@ WebMercatorProjection.geodeticLatitudeToMercatorAngle = function (latitude) {
  * The constant value is computed by calling:
  *    WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
  *
- * @type {Number}
+ * @type {number}
  */
 WebMercatorProjection.MaximumLatitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(
   Math.PI

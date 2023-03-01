@@ -19,8 +19,8 @@ const allElementTypes = [
 /**
  * Removes unused elements from gltf.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @param {String[]} [elementTypes=['mesh', 'node', 'material', 'accessor', 'bufferView', 'buffer']] Element types to be removed. Needs to be a subset of ['mesh', 'node', 'material', 'accessor', 'bufferView', 'buffer'], other items will be ignored.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @param {string[]} [elementTypes=['mesh', 'node', 'material', 'accessor', 'bufferView', 'buffer']] Element types to be removed. Needs to be a subset of ['mesh', 'node', 'material', 'accessor', 'bufferView', 'buffer'], other items will be ignored.
  *
  * @private
  */

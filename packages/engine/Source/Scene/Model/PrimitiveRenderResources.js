@@ -57,7 +57,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * The index to give to the next vertex attribute added to the attributes
    * array. POSITION takes index 0. Inherited from the node render resources.
    *
-   * @type {Number}
+   * @type {number}
    *
    * @private
    */
@@ -68,7 +68,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * offset/repeat in the feature ID attribute. Inherited from the node render
    * resources.
    *
-   * @type {Number}
+   * @type {number}
    *
    * @private
    */
@@ -79,7 +79,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * A dictionary mapping uniform name to functions that return the uniform
    * values. Inherited from the node render resources.
    *
-   * @type {Object.<String, Function>}
+   * @type {Object<string, Function>}
    * @readonly
    *
    * @private
@@ -103,7 +103,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * is created when the {@link DrawCommand} is constructed. Inherited from
    * the node render resources.
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    *
    * @private
@@ -114,7 +114,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * Whether the model has a silhouette. This value indicates what draw commands
    * are needed. Inherited from the node render resources.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -126,7 +126,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * optimization. This value indicates what draw commands are needed.
    * Inherited from the node render resources.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -148,7 +148,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * The number of instances. Default is 0, if instancing is not used.
    * Inherited from the node render resources.
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -180,7 +180,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * The number of indices in the primitive. The interpretation of this
    * depends on the primitive type.
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -194,7 +194,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * When present, picking and styling can use this. This value is set by
    * SelectedFeatureIdPipelineStage.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    *
    * @private
@@ -287,7 +287,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
    * The shader variable to use for picking. If picking is enabled, this value
    * is set by PickingPipelineStage.
    *
-   * @type {String}
+   * @type {string}
    *
    * @private
    */

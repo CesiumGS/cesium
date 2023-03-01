@@ -18,7 +18,7 @@ import StencilOperation from "../StencilOperation.js";
  * derived commands and returns only the necessary commands depending on the
  * given frame state.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {DrawCommand} options.command The draw command from which to derive other commands from.
  * @param {PrimitiveRenderResources} options.primitiveRenderResources The render resources of the primitive associated with the command.
  *
@@ -348,7 +348,7 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
    * The batch lengths used to generate multiple draw commands.
    *
    * @memberof ClassificationModelDrawCommand.prototype
-   * @type {Number[]}
+   * @type {number[]}
    *
    * @readonly
    * @private
@@ -363,7 +363,7 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
    * The batch offsets used to generate multiple draw commands.
    *
    * @memberof ClassificationModelDrawCommand.prototype
-   * @type {Number[]}
+   * @type {number[]}
    *
    * @readonly
    * @private

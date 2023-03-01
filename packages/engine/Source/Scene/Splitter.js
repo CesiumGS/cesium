@@ -36,8 +36,8 @@ const Splitter = {
   /**
    * Add `czm_splitDirection` to the given uniform map.
    *
-   * @param {Object} object The object on which the `splitDirection` property may be found.
-   * @param {Object} uniformMap The uniform map.
+   * @param {object} object The object on which the `splitDirection` property may be found.
+   * @param {object} uniformMap The uniform map.
    */
   addUniforms: function addUniforms(object, uniformMap) {
     uniformMap.czm_splitDirection = function () {

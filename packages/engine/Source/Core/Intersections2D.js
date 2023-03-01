@@ -16,15 +16,15 @@ const Intersections2D = {};
  * polygon on a given side of the threshold.  The resulting polygon may have 0, 1, 2,
  * 3, or 4 vertices.
  *
- * @param {Number} threshold The threshold coordinate value at which to clip the triangle.
- * @param {Boolean} keepAbove true to keep the portion of the triangle above the threshold, or false
+ * @param {number} threshold The threshold coordinate value at which to clip the triangle.
+ * @param {boolean} keepAbove true to keep the portion of the triangle above the threshold, or false
  *                            to keep the portion below.
- * @param {Number} u0 The coordinate of the first vertex in the triangle, in counter-clockwise order.
- * @param {Number} u1 The coordinate of the second vertex in the triangle, in counter-clockwise order.
- * @param {Number} u2 The coordinate of the third vertex in the triangle, in counter-clockwise order.
- * @param {Number[]} [result] The array into which to copy the result.  If this parameter is not supplied,
+ * @param {number} u0 The coordinate of the first vertex in the triangle, in counter-clockwise order.
+ * @param {number} u1 The coordinate of the second vertex in the triangle, in counter-clockwise order.
+ * @param {number} u2 The coordinate of the third vertex in the triangle, in counter-clockwise order.
+ * @param {number[]} [result] The array into which to copy the result.  If this parameter is not supplied,
  *                            a new array is constructed and returned.
- * @returns {Number[]} The polygon that results after the clip, specified as a list of
+ * @returns {number[]} The polygon that results after the clip, specified as a list of
  *                     vertices.  The vertices are specified in counter-clockwise order.
  *                     Each vertex is either an index from the existing list (identified as
  *                     a 0, 1, or 2) or -1 indicating a new vertex not in the original triangle.
@@ -217,14 +217,14 @@ Intersections2D.clipTriangleAtAxisAlignedThreshold = function (
 /**
  * Compute the barycentric coordinates of a 2D position within a 2D triangle.
  *
- * @param {Number} x The x coordinate of the position for which to find the barycentric coordinates.
- * @param {Number} y The y coordinate of the position for which to find the barycentric coordinates.
- * @param {Number} x1 The x coordinate of the triangle's first vertex.
- * @param {Number} y1 The y coordinate of the triangle's first vertex.
- * @param {Number} x2 The x coordinate of the triangle's second vertex.
- * @param {Number} y2 The y coordinate of the triangle's second vertex.
- * @param {Number} x3 The x coordinate of the triangle's third vertex.
- * @param {Number} y3 The y coordinate of the triangle's third vertex.
+ * @param {number} x The x coordinate of the position for which to find the barycentric coordinates.
+ * @param {number} y The y coordinate of the position for which to find the barycentric coordinates.
+ * @param {number} x1 The x coordinate of the triangle's first vertex.
+ * @param {number} y1 The y coordinate of the triangle's first vertex.
+ * @param {number} x2 The x coordinate of the triangle's second vertex.
+ * @param {number} y2 The y coordinate of the triangle's second vertex.
+ * @param {number} x3 The x coordinate of the triangle's third vertex.
+ * @param {number} y3 The y coordinate of the triangle's third vertex.
  * @param {Cartesian3} [result] The instance into to which to copy the result.  If this parameter
  *                     is undefined, a new instance is created and returned.
  * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
@@ -294,14 +294,14 @@ Intersections2D.computeBarycentricCoordinates = function (
 /**
  * Compute the intersection between 2 line segments
  *
- * @param {Number} x00 The x coordinate of the first line's first vertex.
- * @param {Number} y00 The y coordinate of the first line's first vertex.
- * @param {Number} x01 The x coordinate of the first line's second vertex.
- * @param {Number} y01 The y coordinate of the first line's second vertex.
- * @param {Number} x10 The x coordinate of the second line's first vertex.
- * @param {Number} y10 The y coordinate of the second line's first vertex.
- * @param {Number} x11 The x coordinate of the second line's second vertex.
- * @param {Number} y11 The y coordinate of the second line's second vertex.
+ * @param {number} x00 The x coordinate of the first line's first vertex.
+ * @param {number} y00 The y coordinate of the first line's first vertex.
+ * @param {number} x01 The x coordinate of the first line's second vertex.
+ * @param {number} y01 The y coordinate of the first line's second vertex.
+ * @param {number} x10 The x coordinate of the second line's first vertex.
+ * @param {number} y10 The y coordinate of the second line's first vertex.
+ * @param {number} x11 The x coordinate of the second line's second vertex.
+ * @param {number} y11 The y coordinate of the second line's second vertex.
  * @param {Cartesian2} [result] The instance into to which to copy the result. If this parameter
  *                     is undefined, a new instance is created and returned.
  * @returns {Cartesian2} The intersection point, undefined if there is no intersection point or lines are coincident.

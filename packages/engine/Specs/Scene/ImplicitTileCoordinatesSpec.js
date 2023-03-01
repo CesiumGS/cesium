@@ -7,10 +7,10 @@ import {
 describe("Scene/ImplicitTileCoordinates", function () {
   /**
    * Helper function for creating quadtree implicit tile coordinates
-   * @param {Number} level
-   * @param {Number} x
-   * @param {Number} y
-   * @param {Number} [subtreeLevels=2]
+   * @param {number} level
+   * @param {number} x
+   * @param {number} y
+   * @param {number} [subtreeLevels=2]
    * @returns {ImplicitTileCoordinates}
    */
   function quadtreeCoordinates(level, x, y, subtreeLevels) {
@@ -25,11 +25,11 @@ describe("Scene/ImplicitTileCoordinates", function () {
 
   /**
    * Helper function for creating octree implicit tile coordinates
-   * @param {Number} level
-   * @param {Number} x
-   * @param {Number} y
-   * @param {Number} z
-   * @param {Number} [subtreeLevels=2]
+   * @param {number} level
+   * @param {number} x
+   * @param {number} y
+   * @param {number} z
+   * @param {number} [subtreeLevels=2]
    * @returns {ImplicitTileCoordinates}
    */
   function octreeCoordinates(level, x, y, z, subtreeLevels) {

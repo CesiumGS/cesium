@@ -11,9 +11,9 @@ import CubeMap from "./CubeMap.js";
  * @function loadCubeMap
  *
  * @param {Context} context The context to use to create the cube map.
- * @param {Object} urls The source URL of each image.  See the example below.
- * @param {Boolean} [skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the images will be ignored.
- * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
+ * @param {object} urls The source URL of each image.  See the example below.
+ * @param {boolean} [skipColorSpaceConversion=false] If true, any custom gamma or color profiles in the images will be ignored.
+ * @returns {Promise<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
  *
  * @exception {DeveloperError} context is required.
  * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.

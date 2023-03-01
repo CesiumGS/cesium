@@ -45,7 +45,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * A dictionary mapping uniform name to functions that return the uniform
    * values. Inherited from the model render resources.
    *
-   * @type {Object.<String, Function>}
+   * @type {Object<string, Function>}
    * @readonly
    *
    * @private
@@ -69,7 +69,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * when the {@link DrawCommand} is constructed. Inherited from the model
    * render resources.
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    *
    * @private
@@ -83,7 +83,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * Whether the model has a silhouette. This value indicates what draw commands
    * are needed. Inherited from the model render resources.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -95,7 +95,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * optimization. This value indicates what draw commands are needed.
    * Inherited from the model render resources.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -129,7 +129,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * The index to give to the next vertex attribute added to the attributes array.
    * POSITION takes index 0.
    *
-   * @type {Number}
+   * @type {number}
    *
    * @private
    */
@@ -139,7 +139,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
    * The set index to assign to feature ID vertex attribute(s) created from the
    * offset/repeat in the feature ID attribute.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0
    *
    * @private
@@ -149,7 +149,7 @@ function NodeRenderResources(modelRenderResources, runtimeNode) {
   /**
    * The number of instances. This value is set by InstancingPipelineStage.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0
    *
    * @private

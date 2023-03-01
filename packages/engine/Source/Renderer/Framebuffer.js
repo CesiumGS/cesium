@@ -33,7 +33,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * Framebuffers are used for render-to-texture effects; they allow us to render to
  * textures in one pass, and read from it in a later pass.
  *
- * @param {Object} options The initial framebuffer attachments as shown in the example below. <code>context</code> is required. The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, <code>depthStencilRenderbuffer</code>, and <code>destroyAttachments</code>.
+ * @param {object} options The initial framebuffer attachments as shown in the example below. <code>context</code> is required. The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, <code>depthStencilRenderbuffer</code>, and <code>destroyAttachments</code>.
  *
  * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
  * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
@@ -101,7 +101,7 @@ function Framebuffer(options) {
    * {@link Framebuffer#destroy} is called or when a new attachment is assigned
    * to an attachment point.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    *
    * @see Framebuffer#destroy
@@ -292,7 +292,7 @@ Object.defineProperties(Framebuffer.prototype, {
    * The status of the framebuffer. If the status is not WebGLConstants.FRAMEBUFFER_COMPLETE,
    * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.
    * @memberof Framebuffer.prototype
-   * @type {Number}
+   * @type {number}
    */
   status: {
     get: function () {
@@ -338,7 +338,7 @@ Object.defineProperties(Framebuffer.prototype, {
    * depth and depth-stencil textures, and depth and depth-stencil renderbuffers.  When
    * rendering to a framebuffer, a depth attachment is required for the depth test to have effect.
    * @memberof Framebuffer.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   hasDepthAttachment: {
     get: function () {

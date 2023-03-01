@@ -9,7 +9,7 @@ import defined from "./defined.js";
  * @constructor
  * @private
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Heap.ComparatorCallback} options.comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
  */
 function Heap(options) {
@@ -30,7 +30,7 @@ Object.defineProperties(Heap.prototype, {
    *
    * @memberof Heap.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -58,7 +58,7 @@ Object.defineProperties(Heap.prototype, {
    *
    * @memberof Heap.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   maximumLength: {
     get: function () {
@@ -105,7 +105,7 @@ function swap(array, a, b) {
 /**
  * Resizes the internal array of the heap.
  *
- * @param {Number} [length] The length to resize internal array to. Defaults to the current length of the heap.
+ * @param {number} [length] The length to resize internal array to. Defaults to the current length of the heap.
  */
 Heap.prototype.reserve = function (length) {
   length = defaultValue(length, this._length);
@@ -115,7 +115,7 @@ Heap.prototype.reserve = function (length) {
 /**
  * Update the heap so that index and all descendants satisfy the heap property.
  *
- * @param {Number} [index=0] The starting index to heapify from.
+ * @param {number} [index=0] The starting index to heapify from.
  */
 Heap.prototype.heapify = function (index) {
   index = defaultValue(index, 0);
@@ -204,7 +204,7 @@ Heap.prototype.insert = function (element) {
 /**
  * Remove the element specified by index from the heap and return it.
  *
- * @param {Number} [index=0] The index to remove.
+ * @param {number} [index=0] The index to remove.
  * @returns {*} The specified element of the heap.
  */
 Heap.prototype.pop = function (index) {
@@ -229,6 +229,6 @@ Heap.prototype.pop = function (index) {
  * @callback Heap.ComparatorCallback
  * @param {*} a An element in the heap.
  * @param {*} b An element in the heap.
- * @returns {Number} If the result of the comparison is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
+ * @returns {number} If the result of the comparison is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
  */
 export default Heap;

@@ -15,7 +15,7 @@ import Primitive from "./Primitive.js";
  * @constructor
  *
  * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the bounding sphere.
- * @param {Number} [radius=0.0] The radius of the bounding sphere.
+ * @param {number} [radius=0.0] The radius of the bounding sphere.
  *
  * @private
  */
@@ -46,7 +46,7 @@ Object.defineProperties(TileBoundingSphere.prototype, {
    *
    * @memberof TileBoundingSphere.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   radius: {
@@ -60,7 +60,7 @@ Object.defineProperties(TileBoundingSphere.prototype, {
    *
    * @memberof TileBoundingSphere.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   boundingVolume: {
@@ -87,7 +87,7 @@ Object.defineProperties(TileBoundingSphere.prototype, {
  * Computes the distance between this bounding sphere and the camera attached to frameState.
  *
  * @param {FrameState} frameState The frameState to which the camera is attached.
- * @returns {Number} The distance between the camera and the bounding sphere in meters. Returns 0 if the camera is inside the bounding volume.
+ * @returns {number} The distance between the camera and the bounding sphere in meters. Returns 0 if the camera is inside the bounding volume.
  *
  */
 TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
@@ -122,7 +122,7 @@ TileBoundingSphere.prototype.intersectPlane = function (plane) {
  * Update the bounding sphere after the tile is transformed.
  *
  * @param {Cartesian3} center The center of the bounding sphere.
- * @param {Number} radius The radius of the bounding sphere.
+ * @param {number} radius The radius of the bounding sphere.
  */
 TileBoundingSphere.prototype.update = function (center, radius) {
   Cartesian3.clone(center, this._boundingSphere.center);

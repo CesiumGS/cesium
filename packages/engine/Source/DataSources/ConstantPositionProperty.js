@@ -28,7 +28,7 @@ Object.defineProperties(ConstantPositionProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof ConstantPositionProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -69,8 +69,8 @@ Object.defineProperties(ConstantPositionProperty.prototype, {
  * Gets the value of the property at the provided time in the fixed frame.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 ConstantPositionProperty.prototype.getValue = function (time, result) {
   return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
@@ -133,7 +133,7 @@ ConstantPositionProperty.prototype.getValueInReferenceFrame = function (
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 ConstantPositionProperty.prototype.equals = function (other) {
   return (

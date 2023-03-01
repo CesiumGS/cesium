@@ -4,59 +4,61 @@
 
 #define NO_HIT (-czm_infinity)
 #define INF_HIT (czm_infinity * 0.5)
+#define RAY_SHIFT (0.000003163)
+#define RAY_SCALE (1.003163)
 
 struct Ray {
     vec3 pos;
     vec3 dir;
+#if defined(SHAPE_BOX)
+    vec3 dInv;
+#endif
+};
+
+struct RayShapeIntersection {
+    vec4 entry;
+    vec4 exit;
 };
 
 struct Intersections {
     // Don't access these member variables directly - call the functions instead.
 
-    #if (INTERSECTION_COUNT > 1)
-        // Store an array of intersections. Each intersection is composed of:
-        //  x for the T value
-        //  y for the shape type - which encodes positive vs negative and entering vs exiting
-        // For example:
-        //  y = 0: positive shape entry
-        //  y = 1: positive shape exit
-        //  y = 2: negative shape entry
-        //  y = 3: negative shape exit
-        vec2 intersections[INTERSECTION_COUNT * 2];
+    // Store an array of ray-surface intersections. Each intersection is composed of:
+    //  .xyz for the surface normal at the intersection point
+    //  .w for the T value
+    // The scale of the normal encodes the shape intersection type:
+    //  length(intersection.xyz) = 1: positive shape entry
+    //  length(intersection.xyz) = 2: positive shape exit
+    //  length(intersection.xyz) = 3: negative shape entry
+    //  length(intersection.xyz) = 4: negative shape exit
+    // INTERSECTION_COUNT is the number of ray-*shape* (volume) intersections,
+    // so we need twice as many to track ray-*surface* intersections
+    vec4 intersections[INTERSECTION_COUNT * 2];
 
+    #if (INTERSECTION_COUNT > 1)
         // Maintain state for future nextIntersection calls
         int index;
         int surroundCount;
         bool surroundIsPositive;
-    #else
-        // When there's only one positive shape intersection none of the extra stuff is needed.
-        float intersections[2];
     #endif
 };
 
-// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (INTERSECTION_COUNT > 1)
-    #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)].x
-#else
-    #define getIntersection(/*inout Intersections*/ ix, /*int*/ index) (ix).intersections[(index)]
-#endif
+RayShapeIntersection getFirstIntersection(in Intersections ix) 
+{
+    return RayShapeIntersection(ix.intersections[0], ix.intersections[1]);
+}
 
-// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#define getIntersectionPair(/*inout Intersections*/ ix, /*int*/ index) vec2(getIntersection((ix), (index) * 2 + 0), getIntersection((ix), (index) * 2 + 1))
+vec4 encodeIntersectionType(vec4 intersection, int index, bool entry)
+{
+    float scale = float(index > 0) * 2.0 + float(!entry) + 1.0;
+    return vec4(intersection.xyz * scale, intersection.w);
+}
 
-// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (INTERSECTION_COUNT > 1)
-    #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = vec2((t), float(!positive) * 2.0 + float(!enter))
-#else
-    #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*enter*/ enter) (ix).intersections[(index)] = (t)
-#endif
-
-// Using a define instead of a real function because WebGL1 cannot access array with non-constant index.
-#if (INTERSECTION_COUNT > 1)
-    #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec2((entryExit).x, float((index) > 0) * 2.0 + 0.0); (ix).intersections[(index) * 2 + 1] = vec2((entryExit).y, float((index) > 0) * 2.0 + 1.0)
-#else
-    #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = (entryExit).x; (ix).intersections[(index) * 2 + 1] = (entryExit).y
-#endif
+// Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
+#define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*bool*/ enter) (ix).intersections[(index)] = vec4(0.0, float(!positive) * 2.0 + float(!enter) + 1.0, 0.0, (t))
+#define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec4(0.0, float((index) > 0) * 2.0 + 1.0, 0.0, (entryExit).x); (ix).intersections[(index) * 2 + 1] = vec4(0.0, float((index) > 0) * 2.0 + 2.0, 0.0, (entryExit).y)
+#define setSurfaceIntersection(/*inout Intersections*/ ix, /*int*/ index, /*vec4*/ intersection) (ix).intersections[(index)] = intersection;
+#define setShapeIntersection(/*inout Intersections*/ ix, /*int*/ index, /*RayShapeIntersection*/ intersection) (ix).intersections[(index) * 2 + 0] = encodeIntersectionType((intersection).entry, (index), true); (ix).intersections[(index) * 2 + 1] = encodeIntersectionType((intersection).exit, (index), false)
 
 #if (INTERSECTION_COUNT > 1)
 void initializeIntersections(inout Intersections ix) {
@@ -70,21 +72,13 @@ void initializeIntersections(inout Intersections ix) {
             // loop with non-constant condition, so it has to break early instead
             if (i >= n) { break; }
 
-            vec2 intersect0 = ix.intersections[i + 0];
-            vec2 intersect1 = ix.intersections[i + 1];
+            vec4 intersect0 = ix.intersections[i + 0];
+            vec4 intersect1 = ix.intersections[i + 1];
 
-            float t0 = intersect0.x;
-            float t1 = intersect1.x;
-            float b0 = intersect0.y;
-            float b1 = intersect1.y;
+            bool inOrder = intersect0.w <= intersect1.w;
 
-            float tmin = min(t0, t1);
-            float tmax = max(t0, t1);
-            float bmin = tmin == t0 ? b0 : b1;
-            float bmax = tmin == t0 ? b1 : b0;
-
-            ix.intersections[i + 0] = vec2(tmin, bmin);
-            ix.intersections[i + 1] = vec2(tmax, bmax);
+            ix.intersections[i + 0] = inOrder ? intersect0 : intersect1;
+            ix.intersections[i + 1] = inOrder ? intersect1 : intersect0;
         }
     }
 
@@ -96,13 +90,14 @@ void initializeIntersections(inout Intersections ix) {
 #endif
 
 #if (INTERSECTION_COUNT > 1)
-vec2 nextIntersection(inout Intersections ix) {
-    vec2 entryExitT = vec2(NO_HIT);
+RayShapeIntersection nextIntersection(inout Intersections ix) {
+    vec4 surfaceIntersection = vec4(0.0, 0.0, 0.0, NO_HIT);
+    RayShapeIntersection shapeIntersection = RayShapeIntersection(surfaceIntersection, surfaceIntersection);
 
     const int passCount = INTERSECTION_COUNT * 2;
 
     if (ix.index == passCount) {
-        return entryExitT;
+        return shapeIntersection;
     }
 
     for (int i = 0; i < passCount; ++i) {
@@ -114,25 +109,24 @@ vec2 nextIntersection(inout Intersections ix) {
 
         ix.index = i + 1;
 
-        vec2 intersect = ix.intersections[i];
-        float t = intersect.x;
-        bool currShapeIsPositive = intersect.y < 2.0;
-        bool enter = mod(intersect.y, 2.0) == 0.0;
+        surfaceIntersection = ix.intersections[i];
+        int intersectionType = int(length(surfaceIntersection.xyz) - 0.5);
+        bool currShapeIsPositive = intersectionType < 2;
+        bool enter = intMod(intersectionType, 2) == 0;
 
         ix.surroundCount += enter ? +1 : -1;
         ix.surroundIsPositive = currShapeIsPositive ? enter : ix.surroundIsPositive;
 
         // entering positive or exiting negative
         if (ix.surroundCount == 1 && ix.surroundIsPositive && enter == currShapeIsPositive) {
-            entryExitT.x = t;
+            shapeIntersection.entry = surfaceIntersection;
         }
 
         // exiting positive or entering negative after being inside positive
-        // TODO: Can this be simplified?
         bool exitPositive = !enter && currShapeIsPositive && ix.surroundCount == 0;
         bool enterNegativeFromPositive = enter && !currShapeIsPositive && ix.surroundCount == 2 && ix.surroundIsPositive;
         if (exitPositive || enterNegativeFromPositive) {
-            entryExitT.y = t;
+            shapeIntersection.exit = surfaceIntersection;
 
             // entry and exit have been found, so the loop can stop
             if (exitPositive) {
@@ -143,9 +137,8 @@ vec2 nextIntersection(inout Intersections ix) {
         }
     }
 
-    return entryExitT;
+    return shapeIntersection;
 }
 #endif
 
 // NOTE: initializeIntersections, nextIntersection aren't even declared unless INTERSECTION_COUNT > 1
-// export { NO_HIT, INF_HIT, Ray, Intersections, getIntersectionPair, setIntersectionPair, initializeIntersections, nextIntersection };

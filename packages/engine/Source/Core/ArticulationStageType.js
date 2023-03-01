@@ -3,7 +3,7 @@
  * in the AGI_articulations extension.
  *
  * @alias {ArticulationStageType}
- * @enum {String}
+ * @enum {string}
  *
  * @private
  */

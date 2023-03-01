@@ -5,7 +5,7 @@
  * @constructor
  *
  * @param {JulianDate} [date] A Julian date representing the time of the leap second.
- * @param {Number} [offset] The cumulative number of seconds that TAI is ahead of UTC at the provided date.
+ * @param {number} [offset] The cumulative number of seconds that TAI is ahead of UTC at the provided date.
  */
 function LeapSecond(date, offset) {
   /**
@@ -17,7 +17,7 @@ function LeapSecond(date, offset) {
   /**
    * Gets or sets the cumulative number of seconds between the UTC and TAI time standards at the time
    * of this leap second.
-   * @type {Number}
+   * @type {number}
    */
   this.offset = offset;
 }

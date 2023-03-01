@@ -22,7 +22,14 @@ import mergeStream from "merge-stream";
 import streamToPromise from "stream-to-promise";
 import karma from "karma";
 import yargs from "yargs";
-import aws from "aws-sdk";
+import {
+  S3Client,
+  DeleteObjectsCommand,
+  HeadObjectCommand,
+  ListObjectsCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import mime from "mime";
 import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
@@ -41,7 +48,6 @@ import {
   createJsHintOptions,
   defaultESBuildOptions,
   bundleCombinedWorkers,
-  bundleCombinedSpecs,
 } from "./build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -470,12 +476,8 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
-  function () {
-    return buildEngine();
-  },
-  function () {
-    return buildWidgets();
-  },
+  buildEngine,
+  buildWidgets,
   // Generate Build/CesiumUnminified
   function () {
     return buildCesium({
@@ -506,7 +508,7 @@ export const release = gulp.series(
  * Removes scripts from package.json files to ensure that
  * they still work when run from within the ZIP file.
  *
- * @param {String} packageJsonPath The path to the package.json.
+ * @param {string} packageJsonPath The path to the package.json.
  * @returns {WritableStream} A stream that writes to the updated package.json file.
  */
 async function pruneScriptsForZip(packageJsonPath) {
@@ -543,6 +545,14 @@ async function pruneScriptsForZip(packageJsonPath) {
   // Set server tasks to use production flag
   scripts["start"] = "node server.js --production";
   scripts["start-public"] = "node server.js --public --production";
+  scripts["start-public"] = "node server.js --public --production";
+  scripts["test"] = "gulp test --production";
+  scripts["test-all"] = "gulp test --all --production";
+  scripts["test-webgl"] = "gulp test --include WebGL --production";
+  scripts["test-non-webgl"] = "gulp test --exclude WebGL --production";
+  scripts["test-webgl-validation"] = "gulp test --webglValidation --production";
+  scripts["test-webgl-stub"] = "gulp test --webglStub --production";
+  scripts["test-release"] = "gulp test --release --production";
 
   // Write to a temporary package.json file.
   const noPreparePackageJson = join(
@@ -785,7 +795,8 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   const sandcastlePrefix = "sandcastle/";
   const cesiumViewerPrefix = "cesiumjs/cesium-viewer/";
 
-  const s3 = new aws.S3({
+  const s3Client = new S3Client({
+    region: "us-east-1",
     maxRetries: 10,
     retryDelayOptions: {
       base: 500,
@@ -799,7 +810,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   const errors = [];
 
   if (!isProduction) {
-    await listAll(s3, bucketName, `${uploadDirectory}/`, existingBlobs);
+    await listAll(s3Client, bucketName, `${uploadDirectory}/`, existingBlobs);
   }
 
   async function getContents(file, blobName) {
@@ -842,13 +853,11 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     existingBlobs.splice(index, 1);
 
     // get file info
-    const data = await s3
-      .headObject({
-        Bucket: bucketName,
-        Key: blobName,
-      })
-      .promise();
-
+    const headObjectCommand = new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: blobName,
+    });
+    const data = await s3Client.send(headObjectCommand);
     const hash = createHash("md5").update(content).digest("hex");
 
     if (
@@ -902,13 +911,15 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       CacheControl: cacheControl,
     };
 
+    const putObjectCommand = new PutObjectCommand(params);
+
     if (dryRun) {
       uploaded++;
       return;
     }
 
     try {
-      await s3.putObject(params).promise();
+      await s3Client.send(putObjectCommand);
       uploaded++;
     } catch (e) {
       errors.push(e);
@@ -954,7 +965,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       uploadSandcastle(),
       uploadRefDoc(),
       uploadCesiumViewer(),
-      deployCesiumRelease(bucketName, s3, errors),
+      deployCesiumRelease(bucketName, s3Client, errors),
     ];
   } else {
     const files = await globby(
@@ -1014,23 +1025,23 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       batches.push(objectsToDelete);
 
       const deleteObjects = async (objects) => {
+        const deleteObjectsCommand = new DeleteObjectsCommand({
+          Bucket: bucketName,
+          Delete: {
+            Objects: objects,
+          },
+        });
+
         try {
           if (!dryRun) {
-            await s3
-              .deleteObjects({
-                Bucket: bucketName,
-                Delete: {
-                  Objects: objects,
-                },
-              })
-              .promise();
-          }
-
-          if (verbose) {
-            console.log(`Cleaned ${objects.length} files.`);
+            await s3Client.send(deleteObjectsCommand);
           }
         } catch (e) {
           errors.push(e);
+        }
+
+        if (verbose) {
+          console.log(`Cleaned ${objects.length} files.`);
         }
       };
 
@@ -1047,7 +1058,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   return Promise.reject("There was an error while deploying Cesium");
 }
 
-async function deployCesiumRelease(bucketName, s3, errors) {
+async function deployCesiumRelease(bucketName, s3Client, errors) {
   const releaseDir = "cesiumjs/releases";
   const quiet = process.env.TRAVIS;
 
@@ -1075,12 +1086,11 @@ async function deployCesiumRelease(bucketName, s3, errors) {
       url: body.assets[0].browser_download_url,
     };
 
-    await s3
-      .headObject({
-        Bucket: bucketName,
-        Key: posix.join(releaseDir, release.tag, "cesium.zip"),
-      })
-      .promise();
+    const headObjectCommand = new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: posix.join(releaseDir, release.tag, "cesium.zip"),
+    });
+    await s3Client.send(headObjectCommand);
     console.log(
       `Cesium version ${release.tag} up to date. Skipping release deployment.`
     );
@@ -1091,7 +1101,7 @@ async function deployCesiumRelease(bucketName, s3, errors) {
       const data = await download(release.url);
       // upload and unzip contents
       const key = posix.join(releaseDir, release.tag, "cesium.zip");
-      await uploadObject(bucketName, s3, key, data, quiet);
+      await uploadObject(bucketName, s3Client, key, data, quiet);
       const files = await decompress(data);
       const limit = pLimit(5);
       return Promise.all(
@@ -1104,7 +1114,7 @@ async function deployCesiumRelease(bucketName, s3, errors) {
 
             // Upload to release directory
             const key = posix.join(releaseDir, release.tag, file.path);
-            return uploadObject(bucketName, s3, key, file.data, quiet);
+            return uploadObject(bucketName, s3Client, key, file.data, quiet);
           });
         })
       );
@@ -1115,20 +1125,22 @@ async function deployCesiumRelease(bucketName, s3, errors) {
   }
 }
 
-function uploadObject(bucketName, s3, key, contents, quiet) {
+async function uploadObject(bucketName, s3Client, key, contents, quiet) {
   if (!quiet) {
     console.log(`Uploading ${key}...`);
   }
 
-  return s3
-    .upload({
+  const upload = new Upload({
+    client: s3Client,
+    params: {
       Bucket: bucketName,
       Key: key,
       Body: contents,
       ContentType: mime.getType(key) || undefined,
       CacheControl: "public, max-age=1800",
-    })
-    .promise();
+    },
+  });
+  return upload.done();
 }
 
 function getMimeType(filename) {
@@ -1172,23 +1184,32 @@ function getMimeType(filename) {
 }
 
 // get all files currently in bucket asynchronously
-async function listAll(s3, bucketName, prefix, files, marker) {
-  const data = await s3
-    .listObjects({
-      Bucket: bucketName,
-      MaxKeys: 1000,
-      Prefix: prefix,
-      Marker: marker,
-    })
-    .promise();
+async function listAll(s3Client, bucketName, prefix, files, marker) {
+  const listObjectsCommand = new ListObjectsCommand({
+    Bucket: bucketName,
+    MaxKeys: 1000,
+    Prefix: prefix,
+    Marker: marker,
+  });
+  const data = await s3Client.send(listObjectsCommand);
   const items = data.Contents;
+  if (!items) {
+    return;
+  }
+
   for (let i = 0; i < items.length; i++) {
     files.push(items[i].Key);
   }
 
   if (data.IsTruncated) {
     // get next page of results
-    return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
+    return listAll(
+      s3Client,
+      bucketName,
+      prefix,
+      files,
+      files[files.length - 1]
+    );
   }
 }
 
@@ -1257,15 +1278,15 @@ async function setStatus(state, targetUrl, description, context) {
 /**
  * Generates coverage report.
  *
- * @param {Object} options An object with the following properties:
- * @param {String} options.outputDirectory The output directory for the generated build artifacts.
- * @param {String} options.coverageDirectory The path where the coverage reports should be saved to.
- * @param {String} options.specList The path to the spec list for the package.
+ * @param {object} options An object with the following properties:
+ * @param {string} options.outputDirectory The output directory for the generated build artifacts.
+ * @param {string} options.coverageDirectory The path where the coverage reports should be saved to.
+ * @param {string} options.specList The path to the spec list for the package.
  * @param {RegExp} options.filter The filter for finding which files should be instrumented.
- * @param {Boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
- * @param {Boolean} [options.suppressPassed=false] True if output should be suppressed for tests that pass.
- * @param {Boolean} [options.failTaskOnError=false] True if the gulp task should fail on errors in the tests.
- * @param {String} options.workspace The name of the workspace, if any.
+ * @param {boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
+ * @param {boolean} [options.suppressPassed=false] True if output should be suppressed for tests that pass.
+ * @param {boolean} [options.failTaskOnError=false] True if the gulp task should fail on errors in the tests.
+ * @param {string} options.workspace The name of the workspace, if any.
  */
 export async function runCoverage(options) {
   const webglStub = options.webglStub ?? false;
@@ -1502,10 +1523,8 @@ export async function coverage() {
   });
 }
 
+// Cache contexts for successive calls to test
 export async function test() {
-  await createCombinedSpecList();
-  await bundleCombinedSpecs();
-
   const enableAllBrowsers = argv.all ? true : false;
   const includeCategory = argv.include ? argv.include : "";
   const excludeCategory = argv.exclude ? argv.exclude : "";
@@ -1518,10 +1537,18 @@ export async function test() {
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
   const includeName = argv.includeName ? argv.includeName : "";
+  const isProduction = argv.production;
 
   let workspace = argv.workspace;
   if (workspace) {
     workspace = workspace.replaceAll(`@${scope}/`, ``);
+  }
+
+  if (!isProduction) {
+    console.log("Building specs...");
+    await buildCesium({
+      iife: true,
+    });
   }
 
   let browsers = ["Chrome"];
@@ -1642,7 +1669,7 @@ export async function test() {
  * Generates TypeScript definition file (.d.ts) for a package.
  *
  * @param {*} workspaceName
- * @param {String} definitionsPath The path of the .d.ts file to generate.
+ * @param {string} definitionsPath The path of the .d.ts file to generate.
  * @param {*} configurationPath
  * @param {*} processSourceFunc
  * @param {*} processModulesFunc
@@ -1927,9 +1954,9 @@ ${source}
 
 /**
  * Reads `ThirdParty.extra.json` file
- * @param path {string} Path to `ThirdParty.extra.json`
- * @param discoveredDependencies {Array<string>} List of previously discovered modules
- * @returns {Promise<Array<Object>>} A promise to an array of objects with 'name`, `license`, and `url` strings
+ * @param {string} path Path to `ThirdParty.extra.json`
+ * @param {string[]} discoveredDependencies  List of previously discovered modules
+ * @returns {Promise<object[]>} A promise to an array of objects with 'name`, `license`, and `url` strings
  */
 async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
   if (!existsSync(path)) {
@@ -1980,10 +2007,10 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
 /**
  * Extracts name, license, and url from `package.json` file.
  *
- * @param packageName {string} Name of package
- * @param discoveredDependencies {Array<string>} List of previously discovered modules
- * @param licenseOverride {Array<string>} If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
- * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
+ * @param {string} packageName Name of package
+ * @param {string[]} discoveredDependencies List of previously discovered modules
+ * @param {string[]} licenseOverride If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
+ * @returns {Promise<object>} A promise to an object with 'name`, `license`, and `url` strings
  */
 async function getLicenseDataFromPackage(
   packageJson,
@@ -2207,7 +2234,7 @@ async function buildCesiumViewer() {
   };
   config.format = "iife";
   config.inject = ["Apps/CesiumViewer/index.js"];
-  config.external = ["https", "http", "zlib"];
+  config.external = ["https", "http", "url", "zlib"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
   config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones

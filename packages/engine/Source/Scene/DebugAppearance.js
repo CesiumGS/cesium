@@ -14,13 +14,13 @@ import Appearance from "./Appearance.js";
  * @alias DebugAppearance
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.attributeName The name of the attribute to visualize.
- * @param {Boolean} [options.perInstanceAttribute=false] Boolean that determines whether this attribute is a per-instance geometry attribute.
- * @param {String} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
- * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
- * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
- * @param {Object} [options.renderState] Optional render state to override the default render state.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.attributeName The name of the attribute to visualize.
+ * @param {boolean} [options.perInstanceAttribute=false] Boolean that determines whether this attribute is a per-instance geometry attribute.
+ * @param {string} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
+ * @param {string} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+ * @param {string} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+ * @param {object} [options.renderState] Optional render state to override the default render state.
  *
  * @exception {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
  *
@@ -122,7 +122,7 @@ function DebugAppearance(options) {
   /**
    * When <code>true</code>, the geometry is expected to appear translucent.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -149,7 +149,7 @@ Object.defineProperties(DebugAppearance.prototype, {
    *
    * @memberof DebugAppearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   vertexShaderSource: {
@@ -165,7 +165,7 @@ Object.defineProperties(DebugAppearance.prototype, {
    *
    * @memberof DebugAppearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   fragmentShaderSource: {
@@ -179,7 +179,7 @@ Object.defineProperties(DebugAppearance.prototype, {
    *
    * @memberof DebugAppearance.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   renderState: {
@@ -193,7 +193,7 @@ Object.defineProperties(DebugAppearance.prototype, {
    *
    * @memberof DebugAppearance.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -209,7 +209,7 @@ Object.defineProperties(DebugAppearance.prototype, {
    *
    * @memberof DebugAppearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   attributeName: {
@@ -223,7 +223,7 @@ Object.defineProperties(DebugAppearance.prototype, {
    *
    * @memberof DebugAppearance.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   glslDatatype: {
@@ -239,7 +239,7 @@ Object.defineProperties(DebugAppearance.prototype, {
  *
  * @function
  *
- * @returns {String} The full GLSL fragment shader source.
+ * @returns {string} The full GLSL fragment shader source.
  */
 DebugAppearance.prototype.getFragmentShaderSource =
   Appearance.prototype.getFragmentShaderSource;
@@ -249,7 +249,7 @@ DebugAppearance.prototype.getFragmentShaderSource =
  *
  * @function
  *
- * @returns {Boolean} <code>true</code> if the appearance is translucent.
+ * @returns {boolean} <code>true</code> if the appearance is translucent.
  */
 DebugAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
 
@@ -260,7 +260,7 @@ DebugAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
  *
  * @function
  *
- * @returns {Object} The render state.
+ * @returns {object} The render state.
  */
 DebugAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
 export default DebugAppearance;

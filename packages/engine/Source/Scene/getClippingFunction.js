@@ -8,7 +8,7 @@ const textureResolutionScratch = new Cartesian2();
  *
  * @param {ClippingPlaneCollection} clippingPlaneCollection ClippingPlaneCollection with a defined texture.
  * @param {Context} context The current rendering context.
- * @returns {String} A string containing GLSL functions for retrieving clipping planes.
+ * @returns {string} A string containing GLSL functions for retrieving clipping planes.
  * @private
  */
 function getClippingFunction(clippingPlaneCollection, context) {

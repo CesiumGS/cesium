@@ -24,12 +24,12 @@ const DEFAULT_HEIGHT = 1000;
  * @alias GeocoderViewModel
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The Scene instance to use.
  * @param {GeocoderService[]} [options.geocoderServices] Geocoder services to use for geocoding queries.
  *        If more than one are supplied, suggestions will be gathered for the geocoders that support it,
  *        and if no suggestion is selected the result from the first geocoder service wil be used.
- * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
+ * @param {number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
  * @param {Geocoder.DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
  */
 function GeocoderViewModel(options) {
@@ -144,14 +144,14 @@ function GeocoderViewModel(options) {
   /**
    * Gets or sets a value indicating if this instance should always show its text input field.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.keepExpanded = false;
 
   /**
    * True if the geocoder should query as the user types to autocomplete
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.autoComplete = defaultValue(options.autocomplete, true);
@@ -185,7 +185,7 @@ function GeocoderViewModel(options) {
   /**
    * Gets a value indicating whether a search is currently in progress.  This property is observable.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.isSearchInProgress = undefined;
   knockout.defineProperty(this, "isSearchInProgress", {
@@ -198,7 +198,7 @@ function GeocoderViewModel(options) {
    * Gets or sets the text to search for.  The text can be an address, or longitude, latitude,
    * and optional height, where longitude and latitude are in degrees and height is in meters.
    *
-   * @type {String}
+   * @type {string}
    */
   this.searchText = undefined;
   knockout.defineProperty(this, "searchText", {
@@ -224,7 +224,7 @@ function GeocoderViewModel(options) {
    * A value of zero causes the camera to instantly switch to the geocoding location.
    * The duration will be computed based on the distance when undefined.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.flightDuration = undefined;
@@ -285,7 +285,7 @@ Object.defineProperties(GeocoderViewModel.prototype, {
    * Gets the currently selected geocoder search suggestion
    * @memberof GeocoderViewModel.prototype
    *
-   * @type {Object}
+   * @type {object}
    */
   selectedSuggestion: {
     get: function () {

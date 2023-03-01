@@ -18,14 +18,14 @@ import KDBush from "kdbush";
 /**
  * Defines how screen space objects (billboards, points, labels) are clustered.
  *
- * @param {Object} [options] An object with the following properties:
- * @param {Boolean} [options.enabled=false] Whether or not to enable clustering.
- * @param {Number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
- * @param {Number} [options.minimumClusterSize=2] The minimum number of screen space objects that can be clustered.
- * @param {Boolean} [options.clusterBillboards=true] Whether or not to cluster the billboards of an entity.
- * @param {Boolean} [options.clusterLabels=true] Whether or not to cluster the labels of an entity.
- * @param {Boolean} [options.clusterPoints=true] Whether or not to cluster the points of an entity.
- * @param {Boolean} [options.show=true] Determines if the entities in the cluster will be shown.
+ * @param {object} [options] An object with the following properties:
+ * @param {boolean} [options.enabled=false] Whether or not to enable clustering.
+ * @param {number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
+ * @param {number} [options.minimumClusterSize=2] The minimum number of screen space objects that can be clustered.
+ * @param {boolean} [options.clusterBillboards=true] Whether or not to cluster the billboards of an entity.
+ * @param {boolean} [options.clusterLabels=true] Whether or not to cluster the labels of an entity.
+ * @param {boolean} [options.clusterPoints=true] Whether or not to cluster the points of an entity.
+ * @param {boolean} [options.show=true] Determines if the entities in the cluster will be shown.
  *
  * @alias EntityCluster
  * @constructor
@@ -70,7 +70,7 @@ function EntityCluster(options) {
   /**
    * Determines if entities in this collection will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -517,7 +517,7 @@ Object.defineProperties(EntityCluster.prototype, {
   /**
    * Gets or sets whether clustering is enabled.
    * @memberof EntityCluster.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   enabled: {
     get: function () {
@@ -531,7 +531,7 @@ Object.defineProperties(EntityCluster.prototype, {
   /**
    * Gets or sets the pixel range to extend the screen space bounding box.
    * @memberof EntityCluster.prototype
-   * @type {Number}
+   * @type {number}
    */
   pixelRange: {
     get: function () {
@@ -545,7 +545,7 @@ Object.defineProperties(EntityCluster.prototype, {
   /**
    * Gets or sets the minimum number of screen space objects that can be clustered.
    * @memberof EntityCluster.prototype
-   * @type {Number}
+   * @type {number}
    */
   minimumClusterSize: {
     get: function () {
@@ -570,7 +570,7 @@ Object.defineProperties(EntityCluster.prototype, {
   /**
    * Gets or sets whether clustering billboard entities is enabled.
    * @memberof EntityCluster.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   clusterBillboards: {
     get: function () {
@@ -585,7 +585,7 @@ Object.defineProperties(EntityCluster.prototype, {
   /**
    * Gets or sets whether clustering labels entities is enabled.
    * @memberof EntityCluster.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   clusterLabels: {
     get: function () {
@@ -599,7 +599,7 @@ Object.defineProperties(EntityCluster.prototype, {
   /**
    * Gets or sets whether clustering point entities is enabled.
    * @memberof EntityCluster.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   clusterPoints: {
     get: function () {
@@ -981,7 +981,7 @@ EntityCluster.prototype.destroy = function () {
  * @callback EntityCluster.newClusterCallback
  *
  * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
- * @param {Object} cluster An object containing the Billboard, Label, and Point
+ * @param {object} cluster An object containing the Billboard, Label, and Point
  * primitives that represent this cluster of entities.
  * @param {Billboard} cluster.billboard
  * @param {Label} cluster.label

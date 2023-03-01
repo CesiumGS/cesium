@@ -12,7 +12,7 @@ import Framebuffer from "./Framebuffer.js";
  * second is bound to DRAW_FRAMEBUFFER during the blit, and has texture attachments
  * to store the copied pixels.
  *
- * @param {Object} options The initial framebuffer attachments. <code>context</code>, <code>width</code>, and <code>height</code> are required. The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthStencilTexture</code>, <code>depthStencilRenderbuffer</code>, and <code>destroyAttachments</code>.
+ * @param {object} options The initial framebuffer attachments. <code>context</code>, <code>width</code>, and <code>height</code> are required. The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthStencilTexture</code>, <code>depthStencilRenderbuffer</code>, and <code>destroyAttachments</code>.
  *
  * @exception {DeveloperError} Both color renderbuffer and texture attachments must be provided.
  * @exception {DeveloperError} Both depth-stencil renderbuffer and texture attachments must be provided.

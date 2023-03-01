@@ -1,13 +1,13 @@
 /**
  * The encoding that is used for a heightmap
  *
- * @enum {Number}
+ * @enum {number}
  */
 const HeightmapEncoding = {
   /**
    * No encoding
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NONE: 0,
@@ -15,7 +15,7 @@ const HeightmapEncoding = {
   /**
    * LERC encoding
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    *
    * @see {@link https://github.com/Esri/lerc|The LERC specification}

@@ -16,9 +16,9 @@ import defined from "../../Core/defined.js";
  * @alias ModelFeature
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Model} options.model The model the feature belongs to.
- * @param {Number} options.featureId The unique integral identifier for this feature.
+ * @param {number} options.featureId The unique integral identifier for this feature.
  *
  * @example
  * // On mouse over, display all the properties for a feature in the console log.
@@ -48,7 +48,7 @@ Object.defineProperties(ModelFeature.prototype, {
    *
    * @memberof ModelFeature.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -123,7 +123,7 @@ Object.defineProperties(ModelFeature.prototype, {
    *
    * @memberof ModelFeature.prototype
    *
-   * @type {Number}
+   * @type {number}
    *
    * @readonly
    * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -138,8 +138,8 @@ Object.defineProperties(ModelFeature.prototype, {
 /**
  * Returns whether the feature contains this property.
  *
- * @param {String} name The case-sensitive name of the property.
- * @returns {Boolean} Whether the feature contains this property.
+ * @param {string} name The case-sensitive name of the property.
+ * @returns {boolean} Whether the feature contains this property.
  */
 ModelFeature.prototype.hasProperty = function (name) {
   return this._featureTable.hasProperty(this._featureId, name);
@@ -148,7 +148,7 @@ ModelFeature.prototype.hasProperty = function (name) {
 /**
  * Returns a copy of the value of the feature's property with the given name.
  *
- * @param {String} name The case-sensitive name of the property.
+ * @param {string} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
@@ -178,7 +178,7 @@ ModelFeature.prototype.getProperty = function (name) {
  * previous {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_feature_metadata|EXT_feature_metadata Extension} for glTF.
  * </p>
  *
- * @param {String} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
+ * @param {string} name The semantic or property ID of the feature. Semantics are checked before property IDs in each granularity of metadata.
  * @return {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -194,8 +194,8 @@ ModelFeature.prototype.getPropertyInherited = function (name) {
 /**
  * Returns an array of property IDs for the feature.
  *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The IDs of the feature's properties.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The IDs of the feature's properties.
  */
 ModelFeature.prototype.getPropertyIds = function (results) {
   return this._featureTable.getPropertyIds(results);
@@ -204,9 +204,9 @@ ModelFeature.prototype.getPropertyIds = function (results) {
 /**
  * Sets the value of the feature's property with the given name.
  *
- * @param {String} name The case-sensitive name of the property.
+ * @param {string} name The case-sensitive name of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  *
  * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
  *

@@ -43,7 +43,7 @@ function Sun() {
   /**
    * Determines if the sun will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = true;
@@ -89,7 +89,7 @@ Object.defineProperties(Sun.prototype, {
    * Use larger values for a more pronounced flare around the Sun.
    *
    * @memberof Sun.prototype
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   glowFactor: {
@@ -322,7 +322,7 @@ Sun.prototype.update = function (frameState, passState, useHdr) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see Sun#destroy
  */

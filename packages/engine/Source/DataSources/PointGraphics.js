@@ -5,7 +5,7 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} PointGraphics.ConstructorOptions
+ * @typedef {object} PointGraphics.ConstructorOptions
  *
  * Initialization options for the PointGraphics constructor
  *

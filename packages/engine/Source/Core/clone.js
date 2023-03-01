@@ -5,9 +5,9 @@ import defaultValue from "./defaultValue.js";
  *
  * @function
  *
- * @param {Object} object The object to clone.
- * @param {Boolean} [deep=false] If true, all properties will be deep cloned recursively.
- * @returns {Object} The cloned object.
+ * @param {object} object The object to clone.
+ * @param {boolean} [deep=false] If true, all properties will be deep cloned recursively.
+ * @returns {object} The cloned object.
  */
 function clone(object, deep) {
   if (object === null || typeof object !== "object") {

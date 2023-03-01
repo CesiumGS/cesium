@@ -138,7 +138,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * The error, in meters, introduced if this tile is rendered and its children are not.
    * This is used to compute screen space error, i.e., the error measured in pixels.
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.geometricError = header.geometricError;
@@ -264,7 +264,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * When <code>true</code>, the tile has no content.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -277,7 +277,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * This is <code>false</code> until the tile's content is loaded.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -290,7 +290,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * This is <code>false</code> until the tile's implicit content is loaded.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -305,7 +305,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * This is <code>false</code> until the tile's content is loaded.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -319,7 +319,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    *
    * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_multiple_contents|3DTILES_multiple_contents extension}
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -362,7 +362,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * The time in seconds after the tile's content is ready when the content expires and new content is requested.
    *
-   * @type {Number}
+   * @type {number}
    */
   this.expireDuration = expireDuration;
 
@@ -376,7 +376,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   /**
    * The time when a style was last applied to this tile.
    *
-   * @type {Number}
+   * @type {number}
    *
    * @private
    */
@@ -395,7 +395,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * Tracks if the tile's relationship with a ClippingPlaneCollection has changed with regards
    * to the ClippingPlaneCollection's state.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -405,7 +405,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * Tracks if the tile's request should be deferred until all non-deferred
    * tiles load.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -621,7 +621,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    *
    * @memberof Cesium3DTile.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -644,7 +644,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    *
    * @memberof Cesium3DTile.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -661,7 +661,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    *
    * @memberof Cesium3DTile.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -678,7 +678,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    *
    * @memberof Cesium3DTile.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -695,7 +695,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    *
    * @memberof Cesium3DTile.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -714,7 +714,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    * The promise remains <code>undefined</code> until the tile's content is requested.
    * </p>
    *
-   * @type {Promise.<Cesium3DTileContent>}
+   * @type {Promise<Cesium3DTileContent>}
    * @readonly
    *
    * @private
@@ -731,7 +731,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
    * The promise remains <code>undefined</code> until the tile's content is requested.
    * </p>
    *
-   * @type {Promise.<Cesium3DTileContent>}
+   * @type {Promise<Cesium3DTileContent>}
    * @readonly
    *
    * @private
@@ -1049,7 +1049,7 @@ function createPriorityFunction(tile) {
  * The request may not be made if the Cesium Request Scheduler can't prioritize it.
  * </p>
  *
- * @return {Number} The number of requests that were attempted but not scheduled.
+ * @return {number} The number of requests that were attempted but not scheduled.
  * @private
  */
 Cesium3DTile.prototype.requestContent = function () {
@@ -1449,8 +1449,8 @@ function getContentBoundingVolume(tile, frameState) {
  * Determines whether the tile's bounding volume intersects the culling volume.
  *
  * @param {FrameState} frameState The frame state.
- * @param {Number} parentVisibilityPlaneMask The parent's plane mask to speed up the visibility check.
- * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
+ * @param {number} parentVisibilityPlaneMask The parent's plane mask to speed up the visibility check.
+ * @returns {number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
  *
  * @private
  */
@@ -1527,7 +1527,7 @@ Cesium3DTile.prototype.contentVisibility = function (frameState) {
  * Computes the (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
  *
  * @param {FrameState} frameState The frame state.
- * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
+ * @returns {number} The distance, in meters, or zero if the camera is inside the bounding volume.
  *
  * @private
  */
@@ -1542,7 +1542,7 @@ const scratchToTileCenter = new Cartesian3();
  * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
  *
  * @param {FrameState} frameState The frame state.
- * @returns {Number} The distance, in meters.
+ * @returns {number} The distance, in meters.
  *
  * @private
  */
@@ -1561,7 +1561,7 @@ Cesium3DTile.prototype.distanceToTileCenter = function (frameState) {
  * Checks if the camera is inside the viewer request volume.
  *
  * @param {FrameState} frameState The frame state.
- * @returns {Boolean} Whether the camera is inside the volume.
+ * @returns {boolean} Whether the camera is inside the volume.
  *
  * @private
  */
@@ -1687,7 +1687,7 @@ function createSphere(sphere, transform, result) {
 /**
  * Create a bounding volume from the tile's bounding volume header.
  *
- * @param {Object} boundingVolumeHeader The tile's bounding volume header.
+ * @param {object} boundingVolumeHeader The tile's bounding volume header.
  * @param {Matrix4} transform The transform to apply to the bounding volume.
  * @param {TileBoundingVolume} [result] The object onto which to store the result.
  *

@@ -6,7 +6,7 @@ import defined from "../Core/defined.js";
  * @alias I3SField
  * @internalConstructor
  * @privateParam {I3SNode} parent The parent of that geometry
- * @privateParam {Object} storageInfo The structure containing the storage info of the field
+ * @privateParam {object} storageInfo The structure containing the storage info of the field
  */
 function I3SField(parent, storageInfo) {
   this._storageInfo = storageInfo;
@@ -38,7 +38,7 @@ Object.defineProperties(I3SField.prototype, {
   /**
    * Gets the header for this field.
    * @memberof I3SField.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   header: {
@@ -49,7 +49,7 @@ Object.defineProperties(I3SField.prototype, {
   /**
    * Gets the values for this field.
    * @memberof I3SField.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   values: {
@@ -62,7 +62,7 @@ Object.defineProperties(I3SField.prototype, {
   /**
    * Gets the name for the field.
    * @memberof I3SField.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -94,7 +94,7 @@ function getNumericTypeSize(type) {
 
 /**
  * Loads the content.
- * @returns {Promise.<void>} A promise that is resolved when the field data is loaded
+ * @returns {Promise<void>} A promise that is resolved when the field data is loaded
  */
 I3SField.prototype.load = function () {
   const that = this;

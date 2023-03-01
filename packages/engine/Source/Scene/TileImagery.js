@@ -10,7 +10,7 @@ import ImageryState from "./ImageryState.js";
  * @param {Imagery} imagery The imagery tile.
  * @param {Cartesian4} textureCoordinateRectangle The texture rectangle of the tile that is covered
  *        by the imagery, where X=west, Y=south, Z=east, W=north.
- * @param {Boolean} useWebMercatorT true to use the Web Mercator texture coordinates for this imagery tile.
+ * @param {boolean} useWebMercatorT true to use the Web Mercator texture coordinates for this imagery tile.
  */
 function TileImagery(imagery, textureCoordinateRectangle, useWebMercatorT) {
   this.readyImagery = undefined;
@@ -38,10 +38,10 @@ TileImagery.prototype.freeResources = function () {
  *
  * @param {Tile} tile The tile to which this instance belongs.
  * @param {FrameState} frameState The frameState.
- * @param {Boolean} skipLoading True to skip loading, e.g. new requests, creating textures. This function will
+ * @param {boolean} skipLoading True to skip loading, e.g. new requests, creating textures. This function will
  *                  still synchronously process imagery that's already mostly ready to go, e.g. use textures
  *                  already loaded on ancestor tiles.
- * @returns {Boolean} True if this instance is done loading; otherwise, false.
+ * @returns {boolean} True if this instance is done loading; otherwise, false.
  */
 TileImagery.prototype.processStateMachine = function (
   tile,

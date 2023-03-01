@@ -108,7 +108,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   /**
    * Gets the unique ID associated with this updater
    * @memberof PolylineGeometryUpdater.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   id: {
@@ -132,7 +132,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Gets a value indicating if the geometry has a fill component.
    * @memberof PolylineGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   fillEnabled: {
@@ -144,7 +144,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Gets a value indicating if fill visibility varies with simulation time.
    * @memberof PolylineGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasConstantFill: {
@@ -184,7 +184,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Gets a value indicating if the geometry has an outline component.
    * @memberof PolylineGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   outlineEnabled: {
@@ -194,7 +194,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Gets a value indicating if outline visibility varies with simulation time.
    * @memberof PolylineGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasConstantOutline: {
@@ -253,7 +253,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * returned by GeometryUpdater#createDynamicUpdater.
    * @memberof PolylineGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isDynamic: {
@@ -266,7 +266,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * This property is only valid for static geometry.
    * @memberof PolylineGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isClosed: {
@@ -277,7 +277,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * of this updater change.
    * @memberof PolylineGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   geometryChanged: {
@@ -304,7 +304,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
    * Returns false if polylines on terrain is not supported.
    * @memberof PolylineGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   clampToGround: {
@@ -315,7 +315,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
 
   /**
    * Gets the zindex
-   * @type {Number}
+   * @type {number}
    * @memberof PolylineGeometryUpdater.prototype
    * @readonly
    */
@@ -330,7 +330,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
  * Checks if the geometry is outlined at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve visibility.
- * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
+ * @returns {boolean} true if geometry is outlined at the provided time, false otherwise.
  */
 PolylineGeometryUpdater.prototype.isOutlineVisible = function (time) {
   return false;
@@ -340,7 +340,7 @@ PolylineGeometryUpdater.prototype.isOutlineVisible = function (time) {
  * Checks if the geometry is filled at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve visibility.
- * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
+ * @returns {boolean} true if geometry is filled at the provided time, false otherwise.
  */
 PolylineGeometryUpdater.prototype.isFilled = function (time) {
   const entity = this._entity;
@@ -460,7 +460,7 @@ PolylineGeometryUpdater.prototype.createOutlineGeometryInstance = function (
 /**
  * Returns true if this object was destroyed; otherwise, false.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 PolylineGeometryUpdater.prototype.isDestroyed = function () {
   return false;

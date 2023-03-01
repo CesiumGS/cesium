@@ -157,7 +157,7 @@ Object.defineProperties(I3SNode.prototype, {
   /**
    * Gets the I3S data for this object.
    * @memberof I3SNode.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   data: {
@@ -217,7 +217,7 @@ I3SNode.prototype.load = function () {
 
 /**
  * Loads the node fields.
- * @returns {Promise.<void>} A promise that is resolved when the I3S Node fields are loaded
+ * @returns {Promise<void>} A promise that is resolved when the I3S Node fields are loaded
  */
 I3SNode.prototype.loadFields = function () {
   // Check if we must load fields
@@ -243,7 +243,7 @@ I3SNode.prototype.loadFields = function () {
 /**
  * Returns the fields for a given picked position
  * @param {Cartesian3} pickedPosition The picked position
- * @returns {Object} Object containing field names and their values
+ * @returns {object} Object containing field names and their values
  */
 I3SNode.prototype.getFieldsForPickedPosition = function (pickedPosition) {
   const geometry = this.geometryData[0];
@@ -270,8 +270,8 @@ I3SNode.prototype.getFieldsForPickedPosition = function (pickedPosition) {
 
 /**
  * Returns the fields for a given feature
- * @param {Number} featureIndex Index of the feature whose attributes we want to get
- * @returns {Object} Object containing field names and their values
+ * @param {number} featureIndex Index of the feature whose attributes we want to get
+ * @returns {object} Object containing field names and their values
  */
 I3SNode.prototype.getFieldsForFeature = function (featureIndex) {
   const featureFields = {};
@@ -848,7 +848,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
   /**
    * Gets the I3S Node for the tile.
    * @memberof Cesium3DTile.prototype
-   * @type {String}
+   * @type {string}
    */
   i3sNode: {
     get: function () {

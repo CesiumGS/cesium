@@ -29,7 +29,7 @@ function TextureManager() {
 
 /**
  * Get one of the loaded textures
- * @param {String} textureId The unique ID of the texture loaded by {@link TextureManager#loadTexture2D}
+ * @param {string} textureId The unique ID of the texture loaded by {@link TextureManager#loadTexture2D}
  * @return {Texture} The texture or <code>undefined</code> if no texture exists
  */
 TextureManager.prototype.getTexture = function (textureId) {
@@ -60,7 +60,7 @@ function fetchTexture2D(textureManager, textureId, textureUniform) {
  * Load a texture 2D asynchronously. Note that {@link TextureManager#update}
  * must be called in the render loop to finish processing the textures.
  *
- * @param {String} textureId A unique ID to identify this texture.
+ * @param {string} textureId A unique ID to identify this texture.
  * @param {TextureUniform} textureUniform A description of the texture
  *
  * @private
@@ -203,7 +203,7 @@ TextureManager.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see TextureManager#destroy
  * @private

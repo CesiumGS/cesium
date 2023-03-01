@@ -7,14 +7,14 @@ import WebGLConstants from "./WebGLConstants.js";
  * Constants for WebGL index datatypes.  These corresponds to the
  * <code>type</code> parameter of {@link http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml|drawElements}.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const IndexDatatype = {
   /**
    * 8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
    * of an element in <code>Uint8Array</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   UNSIGNED_BYTE: WebGLConstants.UNSIGNED_BYTE,
@@ -23,7 +23,7 @@ const IndexDatatype = {
    * 16-bit unsigned short corresponding to <code>UNSIGNED_SHORT</code> and the type
    * of an element in <code>Uint16Array</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   UNSIGNED_SHORT: WebGLConstants.UNSIGNED_SHORT,
@@ -32,7 +32,7 @@ const IndexDatatype = {
    * 32-bit unsigned int corresponding to <code>UNSIGNED_INT</code> and the type
    * of an element in <code>Uint32Array</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   UNSIGNED_INT: WebGLConstants.UNSIGNED_INT,
@@ -42,7 +42,7 @@ const IndexDatatype = {
  * Returns the size, in bytes, of the corresponding datatype.
  *
  * @param {IndexDatatype} indexDatatype The index datatype to get the size of.
- * @returns {Number} The size in bytes.
+ * @returns {number} The size in bytes.
  *
  * @example
  * // Returns 2
@@ -68,7 +68,7 @@ IndexDatatype.getSizeInBytes = function (indexDatatype) {
 /**
  * Gets the datatype with a given size in bytes.
  *
- * @param {Number} sizeInBytes The size of a single index in bytes.
+ * @param {number} sizeInBytes The size of a single index in bytes.
  * @returns {IndexDatatype} The index datatype with the given size.
  */
 IndexDatatype.fromSizeInBytes = function (sizeInBytes) {
@@ -92,7 +92,7 @@ IndexDatatype.fromSizeInBytes = function (sizeInBytes) {
  * Validates that the provided index datatype is a valid {@link IndexDatatype}.
  *
  * @param {IndexDatatype} indexDatatype The index datatype to validate.
- * @returns {Boolean} <code>true</code> if the provided index datatype is a valid value; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the provided index datatype is a valid value; otherwise, <code>false</code>.
  *
  * @example
  * if (!Cesium.IndexDatatype.validate(indexDatatype)) {
@@ -112,8 +112,8 @@ IndexDatatype.validate = function (indexDatatype) {
  * Creates a typed array that will store indices, using either <code><Uint16Array</code>
  * or <code>Uint32Array</code> depending on the number of vertices.
  *
- * @param {Number} numberOfVertices Number of vertices that the indices will reference.
- * @param {Number|Array} indicesLengthOrArray Passed through to the typed array constructor.
+ * @param {number} numberOfVertices Number of vertices that the indices will reference.
+ * @param {number|Array} indicesLengthOrArray Passed through to the typed array constructor.
  * @returns {Uint16Array|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
  *
  * @example
@@ -140,10 +140,10 @@ IndexDatatype.createTypedArray = function (
  * Creates a typed array from a source array buffer.  The resulting typed array will store indices, using either <code><Uint16Array</code>
  * or <code>Uint32Array</code> depending on the number of vertices.
  *
- * @param {Number} numberOfVertices Number of vertices that the indices will reference.
+ * @param {number} numberOfVertices Number of vertices that the indices will reference.
  * @param {ArrayBuffer} sourceArray Passed through to the typed array constructor.
- * @param {Number} byteOffset Passed through to the typed array constructor.
- * @param {Number} length Passed through to the typed array constructor.
+ * @param {number} byteOffset Passed through to the typed array constructor.
+ * @param {number} length Passed through to the typed array constructor.
  * @returns {Uint16Array|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>sourceArray</code>, <code>byteOffset</code>, and <code>length</code>.
  *
  */

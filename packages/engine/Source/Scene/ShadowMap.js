@@ -59,20 +59,20 @@ import ShadowMapShader from "./ShadowMapShader.js";
  * @internalConstructor
  * @class
  *
- * @privateParam {Object} options An object containing the following properties:
+ * @privateParam {object} options An object containing the following properties:
  * @privateParam {Context} options.context The context
  * @privateParam {Camera} options.lightCamera A camera representing the light source.
- * @privateParam {Boolean} [options.enabled=true] Whether the shadow map is enabled.
- * @privateParam {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
- * @privateParam {Number} [options.pointLightRadius=100.0] Radius of the point light.
- * @privateParam {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
- * @privateParam {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
- * @privateParam {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
- * @privateParam {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
- * @privateParam {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
- * @privateParam {Number} [options.darkness=0.3] The shadow darkness.
- * @privateParam {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
- * @privateParam {Boolean} [options.fadingEnabled=true] Whether shadows start to fade out once the light gets closer to the horizon.
+ * @privateParam {boolean} [options.enabled=true] Whether the shadow map is enabled.
+ * @privateParam {boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
+ * @privateParam {number} [options.pointLightRadius=100.0] Radius of the point light.
+ * @privateParam {boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
+ * @privateParam {number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
+ * @privateParam {number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
+ * @privateParam {number} [options.size=2048] The width and height, in pixels, of each shadow map.
+ * @privateParam {boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
+ * @privateParam {number} [options.darkness=0.3] The shadow darkness.
+ * @privateParam {boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
+ * @privateParam {boolean} [options.fadingEnabled=true] Whether shadows start to fade out once the light gets closer to the horizon.
  *
  * @exception {DeveloperError} Only one or four cascades are supported.
  *
@@ -114,7 +114,7 @@ function ShadowMap(options) {
   /**
    * Determines the darkness of the shadows.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0.3
    */
   this.darkness = defaultValue(options.darkness, 0.3);
@@ -123,7 +123,7 @@ function ShadowMap(options) {
   /**
    * Determines whether shadows start to fade out once the light gets closer to the horizon.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.fadingEnabled = defaultValue(options.fadingEnabled, true);
@@ -131,7 +131,7 @@ function ShadowMap(options) {
   /**
    * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
    *
-   * @type {Number}
+   * @type {number}
    * @default 5000.0
    */
   this.maximumDistance = defaultValue(options.maximumDistance, 5000.0);
@@ -355,7 +355,7 @@ Object.defineProperties(ShadowMap.prototype, {
    * Determines if the shadow map will be shown.
    *
    * @memberof ShadowMap.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   enabled: {
@@ -372,7 +372,7 @@ Object.defineProperties(ShadowMap.prototype, {
    * Determines if a normal bias will be applied to shadows.
    *
    * @memberof ShadowMap.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   normalOffset: {
@@ -392,7 +392,7 @@ Object.defineProperties(ShadowMap.prototype, {
    * Determines if soft shadows are enabled. Uses pcf filtering which requires more texture reads and may hurt performance.
    *
    * @memberof ShadowMap.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   softShadows: {
@@ -409,7 +409,7 @@ Object.defineProperties(ShadowMap.prototype, {
    * The width and height, in pixels, of each shadow map.
    *
    * @memberof ShadowMap.prototype
-   * @type {Number}
+   * @type {number}
    * @default 2048
    */
   size: {
@@ -425,7 +425,7 @@ Object.defineProperties(ShadowMap.prototype, {
    * Whether the shadow map is out of view of the scene camera.
    *
    * @memberof ShadowMap.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @private
    */
@@ -467,7 +467,7 @@ Object.defineProperties(ShadowMap.prototype, {
    * Whether the light source is a point light.
    *
    * @memberof ShadowMap.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @private
    */
@@ -481,7 +481,7 @@ Object.defineProperties(ShadowMap.prototype, {
    * Debug option for visualizing the cascades by color.
    *
    * @memberof ShadowMap.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    * @private
    */

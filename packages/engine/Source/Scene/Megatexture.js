@@ -23,9 +23,9 @@ import TextureWrap from "../Renderer/TextureWrap.js";
  *
  * @param {Context} context
  * @param {Cartesian3} dimensions
- * @param {Number} channelCount
+ * @param {number} channelCount
  * @param {MetadataComponentType} componentType
- * @param {Number} [textureMemoryByteLength]
+ * @param {number} [textureMemoryByteLength]
  *
  * @private
  */
@@ -106,7 +106,7 @@ function Megatexture(
   }
 
   /**
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.channelCount = channelCount;
@@ -124,7 +124,7 @@ function Megatexture(
   this.voxelCountPerTile = Cartesian3.clone(dimensions, new Cartesian3());
 
   /**
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.maximumTileCount =
@@ -245,7 +245,7 @@ function Megatexture(
   this.emptyList = this.nodes[0];
 
   /**
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.occupiedCount = 0;
@@ -255,13 +255,13 @@ function Megatexture(
  * @alias MegatextureNode
  * @constructor
  *
- * @param {Number} index
+ * @param {number} index
  *
  * @private
  */
 function MegatextureNode(index) {
   /**
-   * @type {Number}
+   * @type {number}
    */
   this.index = index;
 
@@ -278,7 +278,7 @@ function MegatextureNode(index) {
 
 /**
  * @param {Array} data
- * @returns {Number}
+ * @returns {number}
  */
 Megatexture.prototype.add = function (data) {
   if (this.isFull()) {
@@ -307,7 +307,7 @@ Megatexture.prototype.add = function (data) {
 };
 
 /**
- * @param {Number} index
+ * @param {number} index
  */
 Megatexture.prototype.remove = function (index) {
   if (index < 0 || index >= this.maximumTileCount) {
@@ -334,18 +334,18 @@ Megatexture.prototype.remove = function (index) {
 };
 
 /**
- * @returns {Boolean}
+ * @returns {boolean}
  */
 Megatexture.prototype.isFull = function () {
   return this.emptyList === undefined;
 };
 
 /**
- * @param {Number} tileCount
+ * @param {number} tileCount
  * @param {Cartesian3} dimensions
- * @param {Number} channelCount number of channels in the metadata. Must be 1 to 4.
+ * @param {number} channelCount number of channels in the metadata. Must be 1 to 4.
  * @param {MetadataComponentType} componentType
- * @returns {Number}
+ * @returns {number}
  */
 Megatexture.getApproximateTextureMemoryByteLength = function (
   tileCount,
@@ -393,7 +393,7 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
 };
 
 /**
- * @param {Number} index
+ * @param {number} index
  * @param {Float32Array|Uint16Array|Uint8Array} data
  */
 Megatexture.prototype.writeDataToTexture = function (index, data) {
@@ -459,7 +459,7 @@ Megatexture.prototype.writeDataToTexture = function (index, data) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see Megatexture#destroy
  */

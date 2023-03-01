@@ -28,7 +28,7 @@ const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
  *
  * @param {*} arrayBuffer The array buffer containing the pnts
  * @param {*} [byteOffset=0] The byte offset of the beginning of the pnts in the array buffer
- * @returns {Object} An object containing a parsed representation of the point cloud
+ * @returns {object} An object containing a parsed representation of the point cloud
  */
 PntsParser.parse = function (arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);

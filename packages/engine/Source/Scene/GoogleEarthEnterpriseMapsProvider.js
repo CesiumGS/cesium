@@ -14,12 +14,12 @@ import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
- * @typedef {Object} GoogleEarthEnterpriseMapsProvider.ConstructorOptions
+ * @typedef {object} GoogleEarthEnterpriseMapsProvider.ConstructorOptions
  *
  * Initialization options for the GoogleEarthEnterpriseMapsProvider constructor
  *
- * @property {Resource|String} url The url of the Google Earth server hosting the imagery.
- * @property {Number} channel The channel (id) to be used when requesting data from the server.
+ * @property {Resource|string} url The url of the Google Earth server hosting the imagery.
+ * @property {number} channel The channel (id) to be used when requesting data from the server.
  *        The channel number can be found by looking at the json file located at:
  *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
  *        differ depending on your Google Earth Enterprise server configuration. Look for the "id" that
@@ -37,8 +37,8 @@ import ImageryProvider from "./ImageryProvider.js";
  *            }
  *          ]
  *        }
- * @property {String} [path="/default_map"] The path of the Google Earth server hosting the imagery.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the Google Earth
+ * @property {string} [path="/default_map"] The path of the Google Earth server hosting the imagery.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the Google Earth
  *        Enterprise server, or undefined if there is no limit.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
@@ -104,7 +104,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultAlpha = undefined;
@@ -113,7 +113,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
    * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultNightAlpha = undefined;
@@ -122,7 +122,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
    * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultDayAlpha = undefined;
@@ -131,7 +131,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultBrightness = undefined;
@@ -140,7 +140,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
    * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultContrast = undefined;
@@ -148,7 +148,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   /**
    * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultHue = undefined;
@@ -157,7 +157,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
    * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default undefined
    */
   this.defaultSaturation = undefined;
@@ -165,7 +165,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   /**
    * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
    *
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @default 1.9
    */
   this.defaultGamma = 1.9;
@@ -342,7 +342,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the URL of the Google Earth MapServer.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -354,7 +354,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the url path of the data on the Google Earth server.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   path: {
@@ -378,7 +378,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the imagery channel (id) currently being used.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   channel: {
@@ -391,7 +391,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * Gets the width of each tile, in pixels. This function should
    * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -412,7 +412,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * Gets the height of each tile, in pixels.  This function should
    * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -433,7 +433,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -454,7 +454,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * Gets the minimum level-of-detail that can be requested.  This function should
    * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -496,7 +496,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * Gets the version of the data used by this provider.  This function should
    * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   version: {
@@ -517,7 +517,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * Gets the type of data that is being requested from the provider.  This function should
    * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   requestType: {
@@ -594,7 +594,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -606,7 +606,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -635,7 +635,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -648,9 +648,9 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -667,11 +667,11 @@ GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
  * Requests the image for a given tile.  This function should
  * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
@@ -710,11 +710,11 @@ GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function (
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
  * @return {undefined} Undefined since picking is not supported.
  */
 GoogleEarthEnterpriseMapsProvider.prototype.pickFeatures = function (
@@ -733,7 +733,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider, {
   /**
    * Gets or sets the URL to the Google Earth logo for display in the credit.
    * @memberof GoogleEarthEnterpriseMapsProvider
-   * @type {String}
+   * @type {string}
    */
   logoUrl: {
     get: function () {

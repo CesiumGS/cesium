@@ -62,9 +62,9 @@ function initialize(ellipsoid, x, y, z) {
  * @alias Ellipsoid
  * @constructor
  *
- * @param {Number} [x=0] The radius in the x direction.
- * @param {Number} [y=0] The radius in the y direction.
- * @param {Number} [z=0] The radius in the z direction.
+ * @param {number} [x=0] The radius in the x direction.
+ * @param {number} [y=0] The radius in the y direction.
+ * @param {number} [z=0] The radius in the z direction.
  *
  * @exception {DeveloperError} All radii components must be greater than or equal to zero.
  *
@@ -145,7 +145,7 @@ Object.defineProperties(Ellipsoid.prototype, {
   /**
    * Gets the minimum radius of the ellipsoid.
    * @memberof Ellipsoid.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumRadius: {
@@ -156,7 +156,7 @@ Object.defineProperties(Ellipsoid.prototype, {
   /**
    * Gets the maximum radius of the ellipsoid.
    * @memberof Ellipsoid.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   maximumRadius: {
@@ -267,7 +267,7 @@ Ellipsoid.prototype.clone = function (result) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 Ellipsoid.packedLength = Cartesian3.packedLength;
 
@@ -275,10 +275,10 @@ Ellipsoid.packedLength = Cartesian3.packedLength;
  * Stores the provided instance into the provided array.
  *
  * @param {Ellipsoid} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 Ellipsoid.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -296,8 +296,8 @@ Ellipsoid.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {Ellipsoid} [result] The object into which to store the result.
  * @returns {Ellipsoid} The modified result parameter or a new Ellipsoid instance if one was not provided.
  */
@@ -618,7 +618,7 @@ Ellipsoid.prototype.transformPositionFromScaledSpace = function (
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Ellipsoid} [right] The other Ellipsoid.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 Ellipsoid.prototype.equals = function (right) {
   return (
@@ -630,7 +630,7 @@ Ellipsoid.prototype.equals = function (right) {
 /**
  * Creates a string representing this Ellipsoid in the format '(radii.x, radii.y, radii.z)'.
  *
- * @returns {String} A string representing this ellipsoid in the format '(radii.x, radii.y, radii.z)'.
+ * @returns {string} A string representing this ellipsoid in the format '(radii.x, radii.y, radii.z)'.
  */
 Ellipsoid.prototype.toString = function () {
   return this._radii.toString();
@@ -640,7 +640,7 @@ Ellipsoid.prototype.toString = function () {
  * Computes a point which is the intersection of the surface normal with the z-axis.
  *
  * @param {Cartesian3} position the position. must be on the surface of the ellipsoid.
- * @param {Number} [buffer = 0.0] A buffer to subtract from the ellipsoid size when checking if the point is inside the ellipsoid.
+ * @param {number} [buffer = 0.0] A buffer to subtract from the ellipsoid size when checking if the point is inside the ellipsoid.
  *                                In earth case, with common earth datums, there is no need for this buffer since the intersection point is always (relatively) very close to the center.
  *                                In WGS84 datum, intersection point is at max z = +-42841.31151331382 (0.673% of z-axis).
  *                                Intersection point could be outside the ellipsoid if the ratio of MajorAxis / AxisOfRotation is bigger than the square root of 2
@@ -714,10 +714,10 @@ const weights = [
 /**
  * Compute the 10th order Gauss-Legendre Quadrature of the given definite integral.
  *
- * @param {Number} a The lower bound for the integration.
- * @param {Number} b The upper bound for the integration.
+ * @param {number} a The lower bound for the integration.
+ * @param {number} b The upper bound for the integration.
  * @param {Ellipsoid~RealValuedScalarFunction} func The function to integrate.
- * @returns {Number} The value of the integral of the given function over the given domain.
+ * @returns {number} The value of the integral of the given function over the given domain.
  *
  * @private
  */
@@ -748,8 +748,8 @@ function gaussLegendreQuadrature(a, b, func) {
  * A real valued scalar function.
  * @callback Ellipsoid~RealValuedScalarFunction
  *
- * @param {Number} x The value used to evaluate the function.
- * @returns {Number} The value of the function at x.
+ * @param {number} x The value used to evaluate the function.
+ * @returns {number} The value of the function at x.
  *
  * @private
  */
@@ -759,7 +759,7 @@ function gaussLegendreQuadrature(a, b, func) {
  * Gauss-Legendre 10th order quadrature.
  *
  * @param {Rectangle} rectangle The rectangle used for computing the surface area.
- * @returns {Number} The approximate area of the rectangle on the surface of this ellipsoid.
+ * @returns {number} The approximate area of the rectangle on the surface of this ellipsoid.
  */
 Ellipsoid.prototype.surfaceArea = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);

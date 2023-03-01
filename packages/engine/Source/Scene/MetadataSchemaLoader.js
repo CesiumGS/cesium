@@ -15,10 +15,10 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
+ * @param {object} options Object with the following properties:
+ * @param {object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
- * @param {String} [options.cacheKey] The cache key of the resource.
+ * @param {string} [options.cacheKey] The cache key of the resource.
  *
  * @exception {DeveloperError} One of options.schema and options.resource must be defined.
  *
@@ -57,7 +57,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    *
    * @memberof MetadataSchemaLoader.prototype
    *
-   * @type {Promise.<MetadataSchemaLoader>|undefined}
+   * @type {Promise<MetadataSchemaLoader>|undefined}
    * @readonly
    * @private
    */
@@ -71,7 +71,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
    *
    * @memberof MetadataSchemaLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -98,7 +98,7 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<MetadataSchemaLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<MetadataSchemaLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 MetadataSchemaLoader.prototype.load = function () {

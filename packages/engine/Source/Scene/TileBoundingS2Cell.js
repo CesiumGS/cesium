@@ -23,12 +23,12 @@ let centerCartographicScratch = new Cartographic();
  * @alias TileBoundingS2Cell
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.token The token of the S2 cell.
- * @param {Number} [options.minimumHeight=0.0] The minimum height of the bounding volume.
- * @param {Number} [options.maximumHeight=0.0] The maximum height of the bounding volume.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.token The token of the S2 cell.
+ * @param {number} [options.minimumHeight=0.0] The minimum height of the bounding volume.
+ * @param {number} [options.maximumHeight=0.0] The maximum height of the bounding volume.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
- * @param {Boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingS2Cell#boundingVolume} and
+ * @param {boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingS2Cell#boundingVolume} and
  *                  {@link TileBoundingS2Cell#boundingSphere}. If false, these properties will be undefined.
  *
  * @private
@@ -332,7 +332,7 @@ Object.defineProperties(TileBoundingS2Cell.prototype, {
    *
    * @memberof TileOrientedBoundingBox.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   boundingVolume: {

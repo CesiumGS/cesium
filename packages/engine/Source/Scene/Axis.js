@@ -6,13 +6,13 @@ import Matrix4 from "../Core/Matrix4.js";
 /**
  * An enum describing the x, y, and z axes and helper conversion functions.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const Axis = {
   /**
    * Denotes the x-axis.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   X: 0,
@@ -20,7 +20,7 @@ const Axis = {
   /**
    * Denotes the y-axis.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   Y: 1,
@@ -28,7 +28,7 @@ const Axis = {
   /**
    * Denotes the z-axis.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   Z: 2,
@@ -97,8 +97,8 @@ Axis.Y_UP_TO_X_UP = Matrix4.fromRotationTranslation(
 /**
  * Gets the axis by name
  *
- * @param {String} name The name of the axis.
- * @returns {Number} The axis enum.
+ * @param {string} name The name of the axis.
+ * @returns {number} The axis enum.
  */
 Axis.fromName = function (name) {
   //>>includeStart('debug', pragmas.debug);

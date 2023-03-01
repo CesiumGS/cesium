@@ -39,7 +39,7 @@ ShadowMapShader.createShadowCastVertexShader = function (
     }
 
     const shadowVS =
-      "in vec3 v_positionEC; \n" +
+      "out vec3 v_positionEC; \n" +
       "void main() \n" +
       "{ \n" +
       "    czm_shadow_cast_main(); \n" +

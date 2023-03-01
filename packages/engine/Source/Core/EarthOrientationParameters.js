@@ -20,11 +20,11 @@ import TimeStandard from "./TimeStandard.js";
  * @alias EarthOrientationParameters
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Object} [options.data] The actual EOP data.  If neither this
+ * @param {object} [options] Object with the following properties:
+ * @param {object} [options.data] The actual EOP data.  If neither this
  *                 parameter nor options.data is specified, all EOP values are assumed
  *                 to be 0.0.
- * @param {Boolean} [options.addNewLeapSeconds=true] True if leap seconds that
+ * @param {boolean} [options.addNewLeapSeconds=true] True if leap seconds that
  *                  are specified in the EOP data but not in {@link JulianDate.leapSeconds}
  *                  should be added to {@link JulianDate.leapSeconds}.  False if
  *                  new leap seconds should be handled correctly in the context
@@ -75,12 +75,12 @@ function EarthOrientationParameters(options) {
 
 /**
  *
- * @param {Resource|String} [url] The URL from which to obtain EOP data.  If neither this
+ * @param {Resource|string} [url] The URL from which to obtain EOP data.  If neither this
  *                 parameter nor options.data is specified, all EOP values are assumed
  *                 to be 0.0.  If options.data is specified, this parameter is
  *                 ignored.
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.addNewLeapSeconds=true] True if leap seconds that
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.addNewLeapSeconds=true] True if leap seconds that
  *                  are specified in the EOP data but not in {@link JulianDate.leapSeconds}
  *                  should be added to {@link JulianDate.leapSeconds}.  False if
  *                  new leap seconds should be handled correctly in the context
