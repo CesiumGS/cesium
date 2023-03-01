@@ -143,7 +143,8 @@ function writeTextToCanvas(text, options) {
   canvas.width = 1;
   canvas.height = 1;
   canvas.style.font = font;
-  const context2D = canvas.getContext("2d");
+  // Since multiple read-back operations are expected for labels, use the willReadFrequently option – See https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+  const context2D = canvas.getContext("2d", { willReadFrequently: true });
 
   if (!defined(imageSmoothingEnabledName)) {
     if (defined(context2D.imageSmoothingEnabled)) {

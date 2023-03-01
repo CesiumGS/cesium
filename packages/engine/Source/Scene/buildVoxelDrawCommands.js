@@ -82,6 +82,7 @@ function buildVoxelDrawCommands(primitive, context) {
     renderState: renderState,
     shaderProgram: shaderProgram,
     uniformMap: renderResources.uniformMap,
+    modelMatrix: primitive._compoundModelMatrix,
     pass: Pass.VOXELS,
     executeInClosestFrustum: true,
     owner: this,
