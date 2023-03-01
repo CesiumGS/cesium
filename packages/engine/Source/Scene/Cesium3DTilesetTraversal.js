@@ -142,6 +142,7 @@ function executeBaseAndSkipTraversal(tileset, root, frameState) {
  * The private ._skipLevelOfDetail flag on a Cesium3DTileset is updated in
  * Cesium3DTileset.prototype.prePassesUpdate to confirm if skipping is actually
  * possible and allowed, even when the public .skipLevelOfDetail flag is true
+ *
  * @private
  * @param {Cesium3DTileset} tileset
  * @returns {boolean} Whether to do LOD skipping
@@ -166,20 +167,22 @@ function addEmptyTile(tileset, tile) {
  * @param {FrameState} frameState
  */
 function selectTile(tileset, tile, frameState) {
-  if (tile.contentVisibility(frameState) !== Intersect.OUTSIDE) {
-    const tileContent = tile.content;
-    if (tileContent.featurePropertiesDirty) {
-      // A feature's property in this tile changed, the tile needs to be re-styled.
-      tileContent.featurePropertiesDirty = false;
-      tile.lastStyleTime = 0; // Force applying the style to this tile
-      tileset._selectedTilesToStyle.push(tile);
-    } else if (tile._selectedFrame < frameState.frameNumber - 1) {
-      // Tile is newly selected; it is selected this frame, but was not selected last frame.
-      tileset._selectedTilesToStyle.push(tile);
-    }
-    tile._selectedFrame = frameState.frameNumber;
-    tileset._selectedTiles.push(tile);
+  if (tile.contentVisibility(frameState) === Intersect.OUTSIDE) {
+    return;
   }
+
+  const tileContent = tile.content;
+  if (tileContent.featurePropertiesDirty) {
+    // A feature's property in this tile changed, the tile needs to be re-styled.
+    tileContent.featurePropertiesDirty = false;
+    tile.lastStyleTime = 0; // Force applying the style to this tile
+    tileset._selectedTilesToStyle.push(tile);
+  } else if (tile._selectedFrame < frameState.frameNumber - 1) {
+    // Tile is newly selected; it is selected this frame, but was not selected last frame.
+    tileset._selectedTilesToStyle.push(tile);
+  }
+  tile._selectedFrame = frameState.frameNumber;
+  tileset._selectedTiles.push(tile);
 }
 
 /**
@@ -339,6 +342,8 @@ function isOnScreenLongEnough(tileset, tile, frameState) {
 }
 
 /**
+ * Add a tile to the list of requested tiles, if appropriate
+ *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
@@ -367,6 +372,8 @@ function loadTile(tileset, tile, frameState) {
 }
 
 /**
+ * Wrap Cesium3DTile.prototype.updateVisibility to avoid repeated updates
+ *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
@@ -393,8 +400,7 @@ function updateVisibility(tileset, tile, frameState) {
 function anyChildrenVisible(tileset, tile, frameState) {
   let anyVisible = false;
   const children = tile.children;
-  const length = children.length;
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < children.length; ++i) {
     const child = children[i];
     updateVisibility(tileset, child, frameState);
     anyVisible = anyVisible || isVisible(child);
@@ -492,6 +498,8 @@ function updateTile(tileset, tile, frameState) {
 }
 
 /**
+ * Update links to the ancestor tiles that have content
+ *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -500,21 +508,24 @@ function updateTileAncestorContentLinks(tile, frameState) {
   tile._ancestorWithContent = undefined;
   tile._ancestorWithContentAvailable = undefined;
 
-  const parent = tile.parent;
-  if (defined(parent)) {
-    // ancestorWithContent is an ancestor that has content or has the potential to have
-    // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
-    // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
-    const hasContent =
-      !hasUnloadedContent(parent) ||
-      parent._requestedFrame === frameState.frameNumber;
-    tile._ancestorWithContent = hasContent
-      ? parent
-      : parent._ancestorWithContent;
-    tile._ancestorWithContentAvailable = parent.contentAvailable
-      ? parent
-      : parent._ancestorWithContentAvailable; // Links a descendant up to its contentAvailable ancestor as the traversal progresses.
+  const { parent } = tile;
+  if (!defined(parent)) {
+    return;
   }
+  const parentHasContent =
+    !hasUnloadedContent(parent) ||
+    parent._requestedFrame === frameState.frameNumber;
+
+  // ancestorWithContent is an ancestor that has content or has the potential to have
+  // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
+  tile._ancestorWithContent = parentHasContent
+    ? parent
+    : parent._ancestorWithContent;
+
+  // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded
+  tile._ancestorWithContentAvailable = parent.contentAvailable
+    ? parent
+    : parent._ancestorWithContentAvailable;
 }
 
 /**
@@ -601,9 +612,8 @@ function updateAndPushChildren(tileset, tile, stack, frameState) {
   let minIndex = -1;
   let minimumPriority = Number.MAX_VALUE;
 
-  let child;
   for (let i = 0; i < children.length; ++i) {
-    child = children[i];
+    const child = children[i];
     if (isVisible(child)) {
       stack.push(child);
       if (child._foveatedFactor < minimumPriority) {
@@ -658,8 +668,7 @@ function updateAndPushChildren(tileset, tile, stack, frameState) {
     );
 
     for (let i = 0; i < children.length; ++i) {
-      child = children[i];
-      child._priorityHolder = priorityHolder;
+      children[i]._priorityHolder = priorityHolder;
     }
   }
 
