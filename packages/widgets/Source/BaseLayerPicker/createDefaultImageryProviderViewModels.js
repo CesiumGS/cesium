@@ -6,6 +6,7 @@ import {
   IonWorldImageryStyle,
   OpenStreetMapImageryProvider,
   TileMapServiceImageryProvider,
+  ArcGisBaseMapType,
 } from "@cesium/engine";
 import ProviderViewModel from "./ProviderViewModel.js";
 
@@ -60,13 +61,13 @@ function createDefaultImageryProviderViewModels() {
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "Esri World Imagery",
+      name: "ArcGIS World Imagery",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/esriWorldImagery.png"
+        "Widgets/Images/ImageryProviders/ArcGISMapServiceWorldImagery.png"
       ),
       tooltip:
         "\
-World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower \
+ArcGIS World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower \
 resolution satellite imagery worldwide. The map includes 15m TerraColor imagery at small and mid-scales (~1:591M down to ~1:288k) \
 for the world. The map features Maxar imagery at 0.3m resolution for select metropolitan areas around the world, 0.5m \
 resolution across the United States and parts of Western Europe, and 1m resolution imagery across the rest of the world. \
@@ -76,11 +77,11 @@ For more information on this map, including the terms of use, visit us online at
 https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
+        return ArcGisMapServerImageryProvider.fromBasemapType({
+          style: ArcGisBaseMapType.SATELLITE,
           url:
             "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
           enablePickFeatures: false,
-          basemap_id: "satellite",
         });
       },
     })
@@ -88,24 +89,24 @@ https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9",
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "Esri World Hillshade",
+      name: "ArcGIS World Hillshade",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/esriWorldHillShade.png"
+        "Widgets/Images/ImageryProviders/ArcGISMapServiceWorldHillshade.png"
       ),
       tooltip:
         "\
-This map portrays elevation as an artistic hillshade. This map is designed to be used as a backdrop for topographical, soil, hydro, \
+ArcGIS World Hillsahde map portrays elevation as an artistic hillshade. This map is designed to be used as a backdrop for topographical, soil, hydro, \
 landcover or other outdoor recreational maps. The map was compiled from a variety of sources from several data providers. \
 The basemap has global coverage down to a scale of ~1:72k. In select areas of the United States and Europe, coverage is available \
 down to ~1:9k. For more information on this map, including the terms of use, visit us online at \n\
 https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
+        return ArcGisMapServerImageryProvider.fromBasemapType({
+          style: ArcGisBaseMapType.HILLSHADE,
           url:
             "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
           enablePickFeatures: false,
-          basemap_id: "topo-vector",
         });
       },
     })
@@ -115,11 +116,11 @@ https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d",
     new ProviderViewModel({
       name: "Esri World Ocean",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/esriWorldOceanImagery.png"
+        "Widgets/Images/ImageryProviders/ArcGISMapServiceWorldOcean.png"
       ),
       tooltip:
         "\
-This map is designed to be used as a base map by marine GIS professionals and as a reference map by anyone interested in ocean data.  \
+ArcGIS World Ocean map is designed to be used as a base map by marine GIS professionals and as a reference map by anyone interested in ocean data.  \
 The base map features marine bathymetry. Land features include inland waters and roads overlaid on land cover and shaded relief imagery. \
 The map was compiled from a variety of best available sources from several data providers, including General Bathymetric Chart of the Oceans GEBCO_08 Grid, \
 National Oceanic and Atmospheric Administration (NOAA), and National Geographic, Garmin, HERE, Geonames.org, and Esri, and various other contributors. \
@@ -129,11 +130,11 @@ For more information on this map, including our terms of use, visit us online at
 https://www.arcgis.com/home/item.html?id=1e126e7520f9466c9ca28b8f28b5e500",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
+        return ArcGisMapServerImageryProvider.fromBasemapType({
+          style: ArcGisBaseMapType.OCEANS,
           url:
             "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
           enablePickFeatures: false,
-          basemap_id: "oceans",
         });
       },
     })

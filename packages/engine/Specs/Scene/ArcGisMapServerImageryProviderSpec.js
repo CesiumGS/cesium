@@ -73,7 +73,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     const expectedParams = {
       callback: functionName,
-      f: "json",
+      f: "pjson",
     };
     if (defined(token)) {
       expectedParams.token = token;

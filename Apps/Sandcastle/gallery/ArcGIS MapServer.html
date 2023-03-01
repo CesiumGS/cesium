@@ -39,14 +39,22 @@
         //The access token can be assigned globally:
         //Cesium.ArcGISMapServiceWorldImagery.defaultAccessToken = <token>
         //or as a token parameter when creating the ArcGISMapServeImageryProvider.
+        //const viewer = new Cesium.Viewer("cesiumContainer", {
+        //imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
+        //url:
+        //"https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
+        //token: "<token>"
+        //}),
+        //});
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          imageryProvider: new Cesium.ArcGisMapServerImageryProvider({
-            url:
-              "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
-            //token: "<token>",
-            basemap_id: "satellite",
-          }),
+          imageryProvider: Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+            {
+              style: Cesium.ArcGisBaseMapType.SATELLITE, //other supported styles include : Cesium.ArcGisMapServerImageryProvider.HILLSHADE
+              //and Cesium.ArcGisMapServerImageryProvider.OCEANS
+            }
+          ),
         });
+
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

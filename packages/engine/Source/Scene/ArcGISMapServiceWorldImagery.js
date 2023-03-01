@@ -2,7 +2,6 @@ import Credit from "../Core/Credit.js";
 import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 
-const ArcGISMapServiceWorldImagery = {};
 let defaultTokenCredit;
 const defaultAccessToken =
   "AAPK2f7a9a89c6dc40ad926c3499141fecffWllt95jAiepZyFUkh3j3qU-pKQzn9odSccP_HhOnzggTIrQ90vijnlPCzvS4NJ3t";
@@ -18,16 +17,17 @@ const defaultAccessToken =
  * @see ArcGisMapServerImageryProvider
  * @namespace ArcGISMapServiceWorldImagery
  */
+const ArcGISMapServiceWorldImagery = {};
 /**
- * Gets or sets the default Cesium ion access token.
+ * Gets or sets the default ArcGIS Tiled Map Server access token.
  *
- * @type {String}
+ * @type {string}
  */
 ArcGISMapServiceWorldImagery.defaultAccessToken = defaultAccessToken;
 /**
- * Gets or sets the default Cesium ion server.
+ * Gets or sets the default ArcGIS Tiled Map server.
  *
- * @type {String|Resource}
+ * @type {string|Resource}
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer
  */
 ArcGISMapServiceWorldImagery.defaultServer = new Resource({
@@ -35,6 +35,11 @@ ArcGISMapServiceWorldImagery.defaultServer = new Resource({
     "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
 });
 
+/**
+ *
+ * @param  {string} providedKey
+ * @return {string|undefined}
+ */
 ArcGISMapServiceWorldImagery.getDefaultTokenCredit = function (providedKey) {
   if (providedKey !== defaultAccessToken) {
     return undefined;
