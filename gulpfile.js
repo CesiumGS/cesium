@@ -1088,29 +1088,32 @@ async function deployCesiumRelease(bucketName, s3Client, errors) {
       `Cesium version ${release.tag} up to date. Skipping release deployment.`
     );
   } catch (error) {
-    // The current version is not uploaded
-    if (error.code === "NotFound") {
-      console.log("Updating cesium version...");
-      const data = await download(release.url);
-      // upload and unzip contents
-      const key = posix.join(releaseDir, release.tag, "cesium.zip");
-      await uploadObject(bucketName, s3Client, key, data, quiet);
-      const files = await decompress(data);
-      const limit = pLimit(5);
-      return Promise.all(
-        files.map((file) => {
-          return limit(() => {
-            if (file.path.startsWith("Apps")) {
-              // skip uploading apps and sandcastle
-              return;
-            }
+    if (error.$metadata) {
+      const { httpStatusCode } = error.$metadata;
+      // The current version is not uploaded
+      if (httpStatusCode === 404) {
+        console.log("Updating cesium version...");
+        const data = await download(release.url);
+        // upload and unzip contents
+        const key = posix.join(releaseDir, release.tag, "cesium.zip");
+        await uploadObject(bucketName, s3Client, key, data, quiet);
+        const files = await decompress(data);
+        const limit = pLimit(5);
+        return Promise.all(
+          files.map((file) => {
+            return limit(async () => {
+              if (file.path.startsWith("Apps")) {
+                // skip uploading apps and sandcastle
+                return;
+              }
 
-            // Upload to release directory
-            const key = posix.join(releaseDir, release.tag, file.path);
-            return uploadObject(bucketName, s3Client, key, file.data, quiet);
-          });
-        })
-      );
+              // Upload to release directory
+              const key = posix.join(releaseDir, release.tag, file.path);
+              return uploadObject(bucketName, s3Client, key, file.data, quiet);
+            });
+          })
+        );
+      }
     }
 
     // else, unexpected error
