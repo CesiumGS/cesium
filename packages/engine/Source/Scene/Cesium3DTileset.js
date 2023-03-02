@@ -2297,7 +2297,8 @@ function requestContent(tileset, tile) {
     return;
   }
 
-  const statistics = tileset._statistics;
+  const { statistics } = tileset;
+  const { contentExpired } = tile;
   const attemptedRequests = tile.requestContent();
 
   if (attemptedRequests > 0) {
@@ -2305,7 +2306,7 @@ function requestContent(tileset, tile) {
     return;
   }
 
-  if (tile.contentExpired) {
+  if (contentExpired) {
     if (tile.hasTilesetContent || tile.hasImplicitContent) {
       destroySubtree(tileset, tile);
     } else {
