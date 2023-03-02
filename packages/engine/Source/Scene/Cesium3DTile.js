@@ -52,9 +52,10 @@ import Pass from "../Renderer/Pass.js";
  *
  * @alias Cesium3DTile
  * @constructor
- * @param {Cesium3DTileset} tileset
- * @param {Resource} baseResource
- * @param {Cesium3DTile} parent
+ * @param {Cesium3DTileset} tileset The tileset
+ * @param {Resource} baseResource The base resource for the tileset
+ * @param {object} header The JSON header for the tile
+ * @param {Cesium3DTile} parent The parent tile of the new tile
  */
 function Cesium3DTile(tileset, baseResource, header, parent) {
   this._tileset = tileset;
