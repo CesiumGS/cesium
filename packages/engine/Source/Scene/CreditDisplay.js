@@ -283,7 +283,7 @@ function appendCss(container) {
     return undefined;
   }
 
-  const shadowRootOrDocumentHead = getShadowRoot(container) || document.head;
+  const shadowRootOrDocumentHead = defaultValue(getShadowRoot(container), document.head);
   const css = document.createElement("style");
   css.innerHTML = style;
   shadowRootOrDocumentHead.appendChild(css);
