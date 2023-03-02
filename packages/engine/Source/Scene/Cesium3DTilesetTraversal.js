@@ -95,7 +95,7 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
 /**
  * @private
  * @param {Cesium3DTile} tile
- * @returns {boolean} Whether the tile is visible
+ * @returns {boolean} Whether the tile is within the current field of view
  */
 function isVisible(tile) {
   return tile._visible && tile._inRequestVolume;
@@ -115,6 +115,8 @@ function skipLevelOfDetail(tileset) {
 }
 
 /**
+ * Mark a tile as selected, and add it to the tileset's list of selected tiles
+ *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -139,6 +141,8 @@ function selectTile(tile, frameState) {
 }
 
 /**
+ * Mark descendant tiles for rendering, and update as needed
+ *
  * @private
  * @param {Cesium3DTile} root
  * @param {FrameState} frameState
@@ -170,6 +174,10 @@ function selectDescendants(root, frameState) {
 }
 
 /**
+ * Mark a tile as selected if it has content available.
+ * If its content is not available, and we are skipping levels of detail,
+ * select an ancestor or descendant tile instead
+ *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -424,16 +432,16 @@ function updateTileVisibility(tile, frameState) {
 }
 
 /**
+ * Reset some of the tile's flags and re-evaluate visibility and priority
+ *
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
  */
 function updateTile(tile, frameState) {
-  // Reset some of the tile's flags and re-evaluate visibility
   updateTileVisibility(tile, frameState);
   tile.updateExpiration();
 
-  // Request priority
   tile._wasMinPriorityChild = false;
   tile._priorityHolder = tile;
   updateMinimumMaximumPriority(tile);
@@ -495,10 +503,13 @@ function hasUnloadedContent(tile) {
 }
 
 /**
+ * Determine if a tile has reached the limit of level of detail skipping.
+ * If so, it should _not_ be skipped: it should be loaded and rendered
+ *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
- * @returns {boolean}
+ * @returns {boolean} true if this tile should not be skipped
  */
 function reachedSkippingThreshold(tileset, tile) {
   const ancestor = tile._ancestorWithContent;
@@ -622,6 +633,9 @@ function updateAndPushChildren(tile, stack, frameState) {
 }
 
 /**
+ * Determine if a tile is part of the base traversal.
+ * If not, this tile could be considered for level of detail skipping
+ *
  * @private
  * @param {Cesium3DTile} tile
  * @param {number} baseScreenSpaceError
@@ -647,6 +661,9 @@ function inBaseTraversal(tile, baseScreenSpaceError) {
 }
 
 /**
+ * Determine if a tile can and should be traversed for children tiles that
+ * would contribute to rendering the current view
+ *
  * @private
  * @param {Cesium3DTile} tile
  * @returns {boolean}
@@ -693,11 +710,11 @@ function executeTraversal(root, baseScreenSpaceError, frameState) {
     const parent = tile.parent;
     const parentRefines = !defined(parent) || parent._refines;
 
-    const refines = canTraverse(tile)
+    tile._refines = canTraverse(tile)
       ? updateAndPushChildren(tile, stack, frameState) && parentRefines
       : false;
 
-    const stoppedRefining = !refines && parentRefines;
+    const stoppedRefining = !tile._refines && parentRefines;
 
     if (hasEmptyContent(tile)) {
       // Add empty tile just to show its debug bounding volume
@@ -725,14 +742,13 @@ function executeTraversal(root, baseScreenSpaceError, frameState) {
         selectDesiredTile(tile, frameState);
         loadTile(tile, frameState);
       } else if (reachedSkippingThreshold(tileset, tile)) {
-        // In skip traversal, load tiles that aren't skipped. In practice roughly half the tiles stay unloaded.
+        // In skip traversal, load tiles that aren't skipped
         loadTile(tile, frameState);
       }
     }
 
     visitTile(tile, frameState);
     touchTile(tile, frameState);
-    tile._refines = refines;
   }
 }
 
