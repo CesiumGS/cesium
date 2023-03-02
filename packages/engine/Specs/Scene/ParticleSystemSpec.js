@@ -370,7 +370,7 @@ describe("Scene/ParticleSystem", function () {
       new ParticleSystem({
         image: greenImage,
         emitter: new CircleEmitter(1.0),
-        emissoinRate: 10000,
+        emissionRate: 10000,
         imageSize: new Cartesian2(100, 100),
       })
     );
