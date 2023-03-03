@@ -147,8 +147,8 @@
     "deploy-s3": "gulp deployS3",
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
-    "prettier": "prettier --write \"**/*\"",
-    "prettier-check": "prettier --check \"**/*\""
+    "prettier": "prettier --write --no-config \"**/*\"",
+    "prettier-check": "prettier --check --no-config \"**/*\""
   },
   "engines": {
     "node": ">=14.0.0"
@@ -156,11 +156,11 @@
   "lint-staged": {
     "*.{js,cjs,html}": [
       "eslint --cache --quiet",
-      "prettier --write"
+      "prettier --write --no-config"
     ],
     "*.md": [
       "markdownlint --ignore CHANGES.md --ignore \"./**/LICENSE.md\"",
-      "prettier --write"
+      "prettier --write --no-config"
     ]
   },
   "workspaces": [
