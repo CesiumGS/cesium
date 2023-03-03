@@ -69,14 +69,11 @@ void computeScattering(
     // The ray should end at the exit from the atmosphere or at the distance to the vertex, whichever is smaller.
     primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, lprl);
 
+    // Setup for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
+    float rayPositionLength = primaryRayAtmosphereIntersect.start;
     // Sky vs horizon: constant step in one case, increasing step in the other case
     float rayStepLengthIncrease = (1.0 - w_stop_gt_lprl)*(primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / (float(PRIMARY_STEPS*(PRIMARY_STEPS+1))/2.0);
     float rayStepLength         = w_stop_gt_lprl * (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / max(7.0,float(PRIMARY_STEPS));
-
-
-    // Setup for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
-    float rayStepLength = (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / float(PRIMARY_STEPS);
-    float rayPositionLength = primaryRayAtmosphereIntersect.start;
 
     vec3 rayleighAccumulation = vec3(0.0);
     vec3 mieAccumulation = vec3(0.0);
