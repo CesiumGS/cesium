@@ -1,20 +1,20 @@
 /*eslint-env node*/
-import {writeFileSync, copyFileSync, readFileSync, existsSync} from "fs";
-import {readFile, writeFile} from "fs/promises";
-import {join, basename, resolve, posix, dirname} from "path";
-import {exec, execSync} from "child_process";
-import {createHash} from "crypto";
-import {gzipSync} from "zlib";
-import {createInterface} from "readline";
+import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
+import { readFile, writeFile } from "fs/promises";
+import { join, basename, resolve, posix, dirname } from "path";
+import { exec, execSync } from "child_process";
+import { createHash } from "crypto";
+import { gzipSync } from "zlib";
+import { createInterface } from "readline";
 import fetch from "node-fetch";
-import {createRequire} from "module";
+import { createRequire } from "module";
 
 import gulp from "gulp";
 import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
 import gulpReplace from "gulp-replace";
-import {globby} from "globby";
+import { globby } from "globby";
 import open from "open";
 import rimraf from "rimraf";
 import mkdirp from "mkdirp";
@@ -29,11 +29,11 @@ import {
   ListObjectsCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
-import {Upload} from "@aws-sdk/lib-storage";
+import { Upload } from "@aws-sdk/lib-storage";
 import mime from "mime";
 import typeScript from "typescript";
-import {build as esbuild} from "esbuild";
-import {createInstrumenter} from "istanbul-lib-instrument";
+import { build as esbuild } from "esbuild";
+import { createInstrumenter } from "istanbul-lib-instrument";
 import pLimit from "p-limit";
 import download from "download";
 import decompress from "decompress";
@@ -106,8 +106,8 @@ const shaderFiles = [
 ];
 
 // Print an esbuild warning
-function printBuildWarning({location, text}) {
-  const {column, file, line, lineText, suggestion} = location;
+function printBuildWarning({ location, text }) {
+  const { column, file, line, lineText, suggestion } = location;
 
   let message = `\n
   > ${file}:${line}:${column}: warning: ${text}
@@ -1003,7 +1003,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     existingBlobs.forEach(function (file) {
       // Don't delete generated zip files
       if (!/\.(zip|tgz)$/.test(file)) {
-        objectsToDelete.push({Key: file});
+        objectsToDelete.push({ Key: file });
       }
     });
 
@@ -1089,7 +1089,7 @@ async function deployCesiumRelease(bucketName, s3Client, errors) {
     );
   } catch (error) {
     if (error.$metadata) {
-      const {httpStatusCode} = error.$metadata;
+      const { httpStatusCode } = error.$metadata;
       // The current version is not uploaded
       if (httpStatusCode === 404) {
         console.log("Updating cesium version...");
@@ -1152,22 +1152,22 @@ function getMimeType(filename) {
     if (mimeType === "image/svg+xml") {
       compress = true;
     }
-    return {type: mimeType, compress: compress};
+    return { type: mimeType, compress: compress };
   }
 
   //Non-standard mime types not handled by mime
   if (/\.(glsl|LICENSE|config|state)$/i.test(filename)) {
-    return {type: "text/plain", compress: true};
+    return { type: "text/plain", compress: true };
   } else if (/\.(czml|topojson)$/i.test(filename)) {
-    return {type: "application/json", compress: true};
+    return { type: "application/json", compress: true };
   } else if (/\.tgz$/i.test(filename)) {
-    return {type: "application/octet-stream", compress: false};
+    return { type: "application/octet-stream", compress: false };
   }
 
   // Handle dotfiles, such as .jshintrc
   const baseName = basename(filename);
   if (baseName[0] === "." || baseName.indexOf(".") === -1) {
-    return {type: "text/plain", compress: true};
+    return { type: "text/plain", compress: true };
   }
 
   // Everything else can be octet-stream compressed but print a warning
@@ -1176,7 +1176,7 @@ function getMimeType(filename) {
     console.log(`Unknown mime type for ${filename}`);
   }
 
-  return {type: "application/octet-stream", compress: true};
+  return { type: "application/octet-stream", compress: true };
 }
 
 // get all files currently in bucket asynchronously
@@ -1310,14 +1310,14 @@ export async function runCoverage(options) {
           filter: options.filter,
         },
         async (args) => {
-          const source = await readFile(args.path, {encoding: "utf8"});
+          const source = await readFile(args.path, { encoding: "utf8" });
           try {
             const generatedCode = instrumenter.instrumentSync(
               source,
               args.path
             );
 
-            return {contents: generatedCode};
+            return { contents: generatedCode };
           } catch (e) {
             return {
               errors: {
@@ -1369,10 +1369,10 @@ export async function runCoverage(options) {
       type: "module",
     },
     // Static assets are always served from the shared/combined folders.
-    {pattern: "Build/CesiumUnminified/**", included: false},
-    {pattern: "Specs/Data/**", included: false},
-    {pattern: "Specs/TestWorkers/**", included: false},
-    {pattern: "Specs/TestWorkers/**/*.wasm", included: false},
+    { pattern: "Build/CesiumUnminified/**", included: false },
+    { pattern: "Specs/Data/**", included: false },
+    { pattern: "Specs/TestWorkers/**", included: false },
+    { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
   ];
 
   let proxies;
@@ -1389,13 +1389,13 @@ export async function runCoverage(options) {
         included: true,
         type: "module",
       },
-      {pattern: "Specs/Data/**", included: false},
-      {pattern: "packages/engine/Build/Workers/**", included: false},
-      {pattern: "packages/engine/Source/Assets/**", included: false},
-      {pattern: "packages/engine/Source/ThirdParty/**", included: false},
-      {pattern: "packages/engine/Source/Widget/*.css", included: false},
-      {pattern: "Specs/TestWorkers/**/*.wasm", included: false},
-      {pattern: "Specs/TestWorkers/**", included: false},
+      { pattern: "Specs/Data/**", included: false },
+      { pattern: "packages/engine/Build/Workers/**", included: false },
+      { pattern: "packages/engine/Source/Assets/**", included: false },
+      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
+      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Specs/TestWorkers/**", included: false },
     ];
 
     proxies = {
@@ -1447,7 +1447,7 @@ export async function runCoverage(options) {
         ],
       },
     },
-    {promiseConfig: true, throwErrors: true}
+    { promiseConfig: true, throwErrors: true }
   );
 
   return new Promise((resolve, reject) => {
@@ -1553,14 +1553,14 @@ export async function test() {
   }
 
   let files = [
-    {pattern: "Specs/Data/**", included: false},
-    {pattern: "Specs/TestWorkers/**/*.wasm", included: false},
-    {pattern: "Build/CesiumUnminified/Cesium.js", included: true},
-    {pattern: "Build/CesiumUnminified/Cesium.js.map", included: false},
-    {pattern: "Build/CesiumUnminified/**", included: false},
-    {pattern: "Build/Specs/karma-main.js", included: true, type: "module"},
-    {pattern: "Build/Specs/SpecList.js", included: true, type: "module"},
-    {pattern: "Specs/TestWorkers/**", included: false},
+    { pattern: "Specs/Data/**", included: false },
+    { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+    { pattern: "Build/CesiumUnminified/Cesium.js", included: true },
+    { pattern: "Build/CesiumUnminified/Cesium.js.map", included: false },
+    { pattern: "Build/CesiumUnminified/**", included: false },
+    { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
+    { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
+    { pattern: "Specs/TestWorkers/**", included: false },
   ];
 
   let proxies;
@@ -1578,13 +1578,13 @@ export async function test() {
         included: true,
         type: "module",
       },
-      {pattern: "Specs/Data/**", included: false},
-      {pattern: "packages/engine/Build/Workers/**", included: false},
-      {pattern: "packages/engine/Source/Assets/**", included: false},
-      {pattern: "packages/engine/Source/ThirdParty/**", included: false},
-      {pattern: "packages/engine/Source/Widget/*.css", included: false},
-      {pattern: "Specs/TestWorkers/**/*.wasm", included: false},
-      {pattern: "Specs/TestWorkers/**", included: false},
+      { pattern: "Specs/Data/**", included: false },
+      { pattern: "packages/engine/Build/Workers/**", included: false },
+      { pattern: "packages/engine/Source/Assets/**", included: false },
+      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
+      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Specs/TestWorkers/**", included: false },
     ];
 
     proxies = {
@@ -1601,15 +1601,15 @@ export async function test() {
 
   if (release) {
     files = [
-      {pattern: "Specs/Data/**", included: false},
-      {pattern: "Specs/TestWorkers/**/*.wasm", included: false},
-      {pattern: "Specs/ThirdParty/**", included: false, type: "module"},
-      {pattern: "Build/Cesium/Cesium.js", included: true},
-      {pattern: "Build/Cesium/Cesium.js.map", included: false},
-      {pattern: "Build/Cesium/**", included: false},
-      {pattern: "Build/Specs/karma-main.js", included: true},
-      {pattern: "Build/Specs/SpecList.js", included: true, type: "module"},
-      {pattern: "Specs/TestWorkers/**", included: false},
+      { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Specs/ThirdParty/**", included: false, type: "module" },
+      { pattern: "Build/Cesium/Cesium.js", included: true },
+      { pattern: "Build/Cesium/Cesium.js.map", included: false },
+      { pattern: "Build/Cesium/**", included: false },
+      { pattern: "Build/Specs/karma-main.js", included: true },
+      { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
+      { pattern: "Specs/TestWorkers/**", included: false },
     ];
   }
 
@@ -1646,7 +1646,7 @@ export async function test() {
         ],
       },
     },
-    {promiseConfig: true, throwErrors: true}
+    { promiseConfig: true, throwErrors: true }
   );
 
   return new Promise((resolve, reject) => {
