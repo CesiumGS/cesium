@@ -30,6 +30,8 @@ vec4 handleAlpha(vec3 color, float alpha)
 
 SelectedFeature selectedFeature;
 
+//uniform sampler2D czm_globeDepthTexture;
+
 void main()
 {
     #ifdef HAS_MODEL_SPLITTER
@@ -70,6 +72,11 @@ void main()
     #ifdef HAS_MODEL_COLOR
     modelColorStage(material);
     #endif
+
+    vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
+    float globeDepth = czm_unpackDepth(texture(czm_globeDepthTexture, coords));
+    czm_writeLogDepth();
+    if (gl_FragDepth > globeDepth) material.diffuse = vec3(1.0, 0.0, 0.0);
 
     #ifdef HAS_PRIMITIVE_OUTLINE
     primitiveOutlineStage(material);
