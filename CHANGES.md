@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.104 - 2023-04-03
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
+
 ### 1.103 - 2023-03-01
 
 #### @cesium/engine

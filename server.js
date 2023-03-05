@@ -321,8 +321,12 @@ const serveResult = (result, fileName, res, next) => {
     const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
     glslWatcher.on("all", async () => {
       await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
-      esmResult.outputFiles = [];
-      iifeResult.outputFiles = [];
+      if (esmResult) {
+        esmResult.outputFiles = [];
+      }
+      if (iifeResult) {
+        iifeResult.outputFiles = [];
+      }
     });
 
     let jsHintOptionsCache;
@@ -330,8 +334,12 @@ const serveResult = (result, fileName, res, next) => {
       ignoreInitial: true,
     });
     sourceCodeWatcher.on("all", () => {
-      esmResult.outputFiles = [];
-      iifeResult.outputFiles = [];
+      if (esmResult) {
+        esmResult.outputFiles = [];
+      }
+      if (iifeResult) {
+        iifeResult.outputFiles = [];
+      }
       jsHintOptionsCache = undefined;
     });
 
