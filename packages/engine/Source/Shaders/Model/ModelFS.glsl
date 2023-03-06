@@ -76,7 +76,8 @@ void main()
     vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
     float globeDepth = czm_unpackDepth(texture(czm_globeDepthTexture, coords));
     czm_writeLogDepth();
-    if (gl_FragDepth > globeDepth) material.diffuse = vec3(1.0, 0.0, 0.0);
+    if (globeDepth != 0.0 && gl_FragDepth > globeDepth) material.diffuse *= vec3(0.5, 0.5, 0.5);
+    //if (globeDepth != 0.0 && gl_FragDepth > globeDepth) material.alpha = 0.5;
 
     #ifdef HAS_PRIMITIVE_OUTLINE
     primitiveOutlineStage(material);
