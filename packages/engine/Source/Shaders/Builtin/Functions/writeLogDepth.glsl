@@ -1,5 +1,5 @@
 #ifdef LOG_DEPTH
-varying float v_depthFromNearPlusOne;
+in float v_depthFromNearPlusOne;
 
 #ifdef POLYGON_OFFSET
 uniform vec2 u_polygonOffset;
@@ -27,7 +27,7 @@ uniform vec2 u_polygonOffset;
  */
 void czm_writeLogDepth(float depth)
 {
-#if defined(GL_EXT_frag_depth) && defined(LOG_DEPTH)
+#if (defined(LOG_DEPTH) && (__VERSION__ == 300 || defined(GL_EXT_frag_depth)))
     // Discard the vertex if it's not between the near and far planes.
     // We allow a bit of epsilon on the near plane comparison because a 1.0
     // from the vertex shader (indicating the vertex should be _on_ the near
@@ -41,8 +41,8 @@ void czm_writeLogDepth(float depth)
     float factor = u_polygonOffset[0];
     float units = u_polygonOffset[1];
 
-// If we can't compute derivatives, just leave out the factor I guess?
-#ifdef GL_OES_standard_derivatives
+#if (__VERSION__ == 300 || defined(GL_OES_standard_derivatives))
+    // This factor doesn't work in IE 10
     if (factor != 0.0) {
         // m = sqrt(dZdX^2 + dZdY^2);
         float x = dFdx(depth);
@@ -56,11 +56,11 @@ void czm_writeLogDepth(float depth)
 
 #endif
 
-    gl_FragDepthEXT = log2(depth) * czm_oneOverLog2FarDepthFromNearPlusOne;
+    gl_FragDepth = log2(depth) * czm_oneOverLog2FarDepthFromNearPlusOne;
 
 #ifdef POLYGON_OFFSET
     // Apply the units after the log depth.
-    gl_FragDepthEXT += czm_epsilon7 * units;
+    gl_FragDepth += czm_epsilon7 * units;
 #endif
 
 #endif

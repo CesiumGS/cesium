@@ -20,19 +20,19 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Object} options.gltf The glTF JSON.
+ * @param {object} options.gltf The glTF JSON.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
- * @param {Object} [options.draco] The Draco extension object.
- * @param {String} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
- * @param {Number} [options.accessorId] The accessor id.
- * @param {String} [options.cacheKey] The cache key of the resource.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
- * @param {Boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
+ * @param {number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+ * @param {object} [options.draco] The Draco extension object.
+ * @param {string} [options.attributeSemantic] The attribute semantic, e.g. POSITION or NORMAL.
+ * @param {number} [options.accessorId] The accessor id.
+ * @param {string} [options.cacheKey] The cache key of the resource.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.loadBuffer=false] Load vertex buffer as a GPU vertex buffer.
+ * @param {boolean} [options.loadTypedArray=false] Load vertex buffer as a typed array.
  *
  * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
  * @exception {DeveloperError} When options.draco is defined options.attributeSemantic must also be defined.
@@ -129,7 +129,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    *
    * @memberof GltfVertexBufferLoader.prototype
    *
-   * @type {Promise.<GltfVertexBufferLoader>|undefined}
+   * @type {Promise<GltfVertexBufferLoader>|undefined}
    * @readonly
    * @private
    */
@@ -143,7 +143,7 @@ Object.defineProperties(GltfVertexBufferLoader.prototype, {
    *
    * @memberof GltfVertexBufferLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -206,7 +206,7 @@ function hasDracoCompression(draco, semantic) {
 
 /**
  * Loads the resource.
- * @returns {Promise.<GltfVertexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GltfVertexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfVertexBufferLoader.prototype.load = function () {

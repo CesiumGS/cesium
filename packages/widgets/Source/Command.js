@@ -14,7 +14,7 @@ import { DeveloperError } from "@cesium/engine";
 function Command() {
   /**
    * Gets whether this command can currently be executed.  This property is observable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default undefined
    */
   this.canExecute = undefined;

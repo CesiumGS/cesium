@@ -9,14 +9,14 @@ import RequestType from "./RequestType.js";
  * @alias Request
  * @constructor
 
- * @param {Object} [options] An object with the following properties:
- * @param {String} [options.url] The url to request.
+ * @param {object} [options] An object with the following properties:
+ * @param {string} [options.url] The url to request.
  * @param {Request.RequestCallback} [options.requestFunction] The function that makes the actual data request.
  * @param {Request.CancelCallback} [options.cancelFunction] The function that is called when the request is cancelled.
  * @param {Request.PriorityCallback} [options.priorityFunction] The function that is called to update the request's priority, which occurs once per frame.
- * @param {Number} [options.priority=0.0] The initial priority of the request.
- * @param {Boolean} [options.throttle=false] Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the request will be throttled and sent based on priority.
- * @param {Boolean} [options.throttleByServer=false] Whether to throttle the request by server.
+ * @param {number} [options.priority=0.0] The initial priority of the request.
+ * @param {boolean} [options.throttle=false] Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the request will be throttled and sent based on priority.
+ * @param {boolean} [options.throttleByServer=false] Whether to throttle the request by server.
  * @param {RequestType} [options.type=RequestType.OTHER] The type of request.
  */
 function Request(options) {
@@ -28,7 +28,7 @@ function Request(options) {
   /**
    * The URL to request.
    *
-   * @type {String}
+   * @type {string}
    */
   this.url = options.url;
 
@@ -60,7 +60,7 @@ function Request(options) {
    *
    * If priorityFunction is defined, this value is updated every frame with the result of that call.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.priority = defaultValue(options.priority, 0.0);
@@ -69,7 +69,7 @@ function Request(options) {
    * Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the
    * request will be throttled and sent based on priority.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -81,7 +81,7 @@ function Request(options) {
    * for HTTP/1 servers, and an unlimited amount of connections for HTTP/2 servers. Setting this value
    * to <code>true</code> is preferable for requests going through HTTP/1 servers.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -101,7 +101,7 @@ function Request(options) {
   /**
    * A key used to identify the server that a request is going to. It is derived from the url's authority and scheme.
    *
-   * @type {String}
+   * @type {string}
    *
    * @private
    */
@@ -118,7 +118,7 @@ function Request(options) {
   /**
    * The requests's deferred promise.
    *
-   * @type {Object}
+   * @type {object}
    *
    * @private
    */
@@ -127,7 +127,7 @@ function Request(options) {
   /**
    * Whether the request was explicitly cancelled.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @private
    */
@@ -187,6 +187,6 @@ Request.prototype.clone = function (result) {
 /**
  * The function that is called to update the request's priority, which occurs once per frame.
  * @callback Request.PriorityCallback
- * @returns {Number} The updated priority value.
+ * @returns {number} The updated priority value.
  */
 export default Request;

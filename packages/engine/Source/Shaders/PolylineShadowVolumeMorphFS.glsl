@@ -1,12 +1,12 @@
-varying vec3 v_forwardDirectionEC;
-varying vec3 v_texcoordNormalizationAndHalfWidth;
-varying float v_batchId;
+in vec3 v_forwardDirectionEC;
+in vec3 v_texcoordNormalizationAndHalfWidth;
+in float v_batchId;
 
 #ifdef PER_INSTANCE_COLOR
-varying vec4 v_color;
+in vec4 v_color;
 #else
-varying vec2 v_alignedPlaneDistances;
-varying float v_texcoordT;
+in vec2 v_alignedPlaneDistances;
+in float v_texcoordT;
 #endif
 
 float rayPlaneDistanceUnsafe(vec3 origin, vec3 direction, vec3 planeNormal, float planeDistance) {
@@ -20,7 +20,7 @@ void main(void)
     eyeCoordinate /= eyeCoordinate.w;
 
 #ifdef PER_INSTANCE_COLOR
-    gl_FragColor = czm_gammaCorrect(v_color);
+    out_FragColor = czm_gammaCorrect(v_color);
 #else // PER_INSTANCE_COLOR
     // Use distances for planes aligned with segment to prevent skew in dashing
     float distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -v_forwardDirectionEC, v_forwardDirectionEC.xyz, v_alignedPlaneDistances.x);
@@ -40,6 +40,6 @@ void main(void)
     materialInput.str = vec3(s, v_texcoordT, 0.0);
 
     czm_material material = czm_getMaterial(materialInput);
-    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
+    out_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #endif // PER_INSTANCE_COLOR
 }

@@ -7,8 +7,8 @@ const blobUriRegex = /^blob:/i;
  *
  * @function isBlobUri
  *
- * @param {String} uri The uri to test.
- * @returns {Boolean} true when the uri is a blob uri; otherwise, false.
+ * @param {string} uri The uri to test.
+ * @returns {boolean} true when the uri is a blob uri; otherwise, false.
  *
  * @private
  */

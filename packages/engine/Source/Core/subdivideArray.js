@@ -7,7 +7,7 @@ import DeveloperError from "./DeveloperError.js";
  * @function subdivideArray
  *
  * @param {Array} array The array to divide.
- * @param {Number} numberOfArrays The number of arrays to divide the provided array into.
+ * @param {number} numberOfArrays The number of arrays to divide the provided array into.
  *
  * @exception {DeveloperError} numberOfArrays must be greater than 0.
  */

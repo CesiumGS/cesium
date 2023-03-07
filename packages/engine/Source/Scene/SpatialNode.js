@@ -11,12 +11,12 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @alias SpatialNode
  * @constructor
  *
- * @param {Number} level
- * @param {Number} x
- * @param {Number} y
- * @param {Number} z
+ * @param {number} level
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
  * @param {SpatialNode} parent
- * @param {VoxelShapeType} shape
+ * @param {VoxelShape} shape
  * @param {Cartesian3} voxelDimensions
  *
  * @private
@@ -65,16 +65,6 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   this.computeBoundingVolumes(shape, voxelDimensions);
 }
 
-/**
- * @param {SpatialNode} a
- * @param {SpatialNode} b
- * @returns {Boolean}
- */
-SpatialNode.spatialComparator = function (a, b) {
-  // The higher of the two screen space errors is prioritized
-  return b.screenSpaceError - a.screenSpaceError;
-};
-
 const scratchObbHalfScale = new Cartesian3();
 
 /**
@@ -103,9 +93,40 @@ SpatialNode.prototype.computeBoundingVolumes = function (
 };
 
 /**
+ * @param {VoxelShape} shape The shape of the parent VoxelPrimitive
+ * @param {Cartesian3} voxelDimensions
+ * @private
+ */
+SpatialNode.prototype.constructChildNodes = function (shape, voxelDimensions) {
+  const { level, x, y, z } = this;
+  const xMin = x * 2;
+  const yMin = y * 2;
+  const zMin = z * 2;
+  const yMax = yMin + 1;
+  const xMax = xMin + 1;
+  const zMax = zMin + 1;
+  const childLevel = level + 1;
+
+  const childCoords = [
+    [childLevel, xMin, yMin, zMin],
+    [childLevel, xMax, yMin, zMin],
+    [childLevel, xMin, yMax, zMin],
+    [childLevel, xMax, yMax, zMin],
+    [childLevel, xMin, yMin, zMax],
+    [childLevel, xMax, yMin, zMax],
+    [childLevel, xMin, yMax, zMax],
+    [childLevel, xMax, yMax, zMax],
+  ];
+
+  this.children = childCoords.map(([level, x, y, z]) => {
+    return new SpatialNode(level, x, y, z, this, shape, voxelDimensions);
+  });
+};
+
+/**
  * @param {FrameState} frameState
- * @param {Number} visibilityPlaneMask
- * @returns {Number} A plane mask as described in {@link CullingVolume#computeVisibilityWithPlaneMask}.
+ * @param {number} visibilityPlaneMask
+ * @returns {number} A plane mask as described in {@link CullingVolume#computeVisibilityWithPlaneMask}.
  */
 SpatialNode.prototype.visibility = function (frameState, visibilityPlaneMask) {
   const obb = this.orientedBoundingBox;
@@ -115,7 +136,7 @@ SpatialNode.prototype.visibility = function (frameState, visibilityPlaneMask) {
 
 /**
  * @param {Cartesian3} cameraPosition
- * @param {Number} screenSpaceErrorMultiplier
+ * @param {number} screenSpaceErrorMultiplier
  */
 SpatialNode.prototype.computeScreenSpaceError = function (
   cameraPosition,
@@ -139,9 +160,9 @@ const scratchBinarySearchKeyframeNode = {
 /**
  * Find the index of a given key frame position within an array of KeyframeNodes,
  * or the complement (~) of the index where it would be in the sorted array.
- * @param {Number} keyframe
+ * @param {number} keyframe
  * @param {KeyframeNode[]} keyframeNodes
- * @returns {Number}
+ * @returns {number}
  * @private
  */
 function findKeyframeIndex(keyframe, keyframeNodes) {
@@ -156,7 +177,7 @@ function findKeyframeIndex(keyframe, keyframeNodes) {
 /**
  * Computes the most suitable keyframes for rendering, balancing between temporal and visual quality.
  *
- * @param {Number} keyframeLocation
+ * @param {number} keyframeLocation
  */
 SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
   keyframeLocation
@@ -173,66 +194,43 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
   let minimumDistanceNext = +Number.MAX_VALUE;
 
   while (defined(spatialNode)) {
-    const renderableKeyframeNodes = spatialNode.renderableKeyframeNodes;
+    const { renderableKeyframeNodes } = spatialNode;
 
     if (renderableKeyframeNodes.length >= 1) {
-      let keyframeNodeIndexPrev = findKeyframeIndex(
+      const indexPrev = getKeyframeIndexPrev(
         targetKeyframePrev,
         renderableKeyframeNodes
       );
-      if (keyframeNodeIndexPrev < 0) {
-        keyframeNodeIndexPrev = CesiumMath.clamp(
-          ~keyframeNodeIndexPrev - 1,
-          0,
-          renderableKeyframeNodes.length - 1
-        );
-      }
-      const keyframeNodePrev = renderableKeyframeNodes[keyframeNodeIndexPrev];
-      const keyframePrev = keyframeNodePrev.keyframe;
+      const keyframeNodePrev = renderableKeyframeNodes[indexPrev];
 
-      let keyframeNodeNext;
-      if (
+      const indexNext =
         targetKeyframeNext === targetKeyframePrev ||
-        targetKeyframePrev < keyframePrev
-      ) {
-        keyframeNodeNext = keyframeNodePrev;
-      } else {
-        const keyframeNodeIndexNext = Math.min(
-          keyframeNodeIndexPrev + 1,
-          renderableKeyframeNodes.length - 1
-        );
-        keyframeNodeNext = renderableKeyframeNodes[keyframeNodeIndexNext];
-      }
-      const keyframeNext = keyframeNodeNext.keyframe;
+        targetKeyframePrev < keyframeNodePrev.keyframe
+          ? indexPrev
+          : Math.min(indexPrev + 1, renderableKeyframeNodes.length - 1);
+      const keyframeNodeNext = renderableKeyframeNodes[indexNext];
 
-      const keyframeDistancePrev = targetKeyframePrev - keyframePrev;
-      const keyframeDistanceNext = keyframeNext - targetKeyframeNext;
-      const levelDistance = startLevel - spatialNode.level;
-
-      // Balance temporal and visual quality
-      const levelWeight = Math.exp(levelDistance * 4.0);
-      const normalKeyframeWeight = 1.0;
-      const reverseKeyframeWeight = 200.0; // Keyframes on the opposite of the desired direction are deprioritized.
-      const distancePrev =
-        levelDistance * levelWeight +
-        (keyframeDistancePrev >= 0
-          ? keyframeDistancePrev * normalKeyframeWeight
-          : -keyframeDistancePrev * reverseKeyframeWeight);
-      const distanceNext =
-        levelDistance * levelWeight +
-        (keyframeDistanceNext >= 0
-          ? keyframeDistanceNext * normalKeyframeWeight
-          : -keyframeDistanceNext * reverseKeyframeWeight);
-
-      if (distancePrev < minimumDistancePrev) {
-        minimumDistancePrev = distancePrev;
+      const distancePrev = targetKeyframePrev - keyframeNodePrev.keyframe;
+      const weightedDistancePrev = getWeightedKeyframeDistance(
+        startLevel - spatialNode.level,
+        distancePrev
+      );
+      if (weightedDistancePrev < minimumDistancePrev) {
+        minimumDistancePrev = weightedDistancePrev;
         bestKeyframeNodePrev = keyframeNodePrev;
       }
-      if (distanceNext < minimumDistanceNext) {
-        minimumDistanceNext = distanceNext;
+
+      const distanceNext = keyframeNodeNext.keyframe - targetKeyframeNext;
+      const weightedDistanceNext = getWeightedKeyframeDistance(
+        startLevel - spatialNode.level,
+        distanceNext
+      );
+      if (weightedDistanceNext < minimumDistanceNext) {
+        minimumDistanceNext = weightedDistanceNext;
         bestKeyframeNodeNext = keyframeNodeNext;
       }
-      if (keyframeDistancePrev === 0 && keyframeDistanceNext === 0) {
+
+      if (distancePrev === 0 && distanceNext === 0) {
         // Nothing higher up will be better, so break early.
         break;
       }
@@ -243,31 +241,49 @@ SpatialNode.prototype.computeSurroundingRenderableKeyframeNodes = function (
 
   this.renderableKeyframeNodePrevious = bestKeyframeNodePrev;
   this.renderableKeyframeNodeNext = bestKeyframeNodeNext;
-  if (defined(bestKeyframeNodePrev) && defined(bestKeyframeNodeNext)) {
-    const bestKeyframePrev = bestKeyframeNodePrev.keyframe;
-    const bestKeyframeNext = bestKeyframeNodeNext.keyframe;
-    this.renderableKeyframeNodeLerp =
-      bestKeyframePrev === bestKeyframeNext
-        ? 0.0
-        : CesiumMath.clamp(
-            (keyframeLocation - bestKeyframePrev) /
-              (bestKeyframeNext - bestKeyframePrev),
-            0.0,
-            1.0
-          );
+
+  if (!defined(bestKeyframeNodePrev) || !defined(bestKeyframeNodeNext)) {
+    return;
   }
+
+  const bestKeyframePrev = bestKeyframeNodePrev.keyframe;
+  const bestKeyframeNext = bestKeyframeNodeNext.keyframe;
+  this.renderableKeyframeNodeLerp =
+    bestKeyframePrev === bestKeyframeNext
+      ? 0.0
+      : CesiumMath.clamp(
+          (keyframeLocation - bestKeyframePrev) /
+            (bestKeyframeNext - bestKeyframePrev),
+          0.0,
+          1.0
+        );
 };
 
+function getKeyframeIndexPrev(targetKeyframe, keyframeNodes) {
+  const keyframeIndex = findKeyframeIndex(targetKeyframe, keyframeNodes);
+  return keyframeIndex < 0
+    ? CesiumMath.clamp(~keyframeIndex - 1, 0, keyframeNodes.length - 1)
+    : keyframeIndex;
+}
+
+function getWeightedKeyframeDistance(levelDistance, keyframeDistance) {
+  // Balance quality between visual (levelDistance) and temporal (keyframeDistance)
+  const levelWeight = Math.exp(levelDistance * 4.0);
+  // Keyframes on the opposite of the desired direction are deprioritized.
+  const keyframeWeight = keyframeDistance >= 0 ? 1.0 : -200.0;
+  return levelDistance * levelWeight + keyframeDistance * keyframeWeight;
+}
+
 /**
- * @param {Number} frameNumber
- * @returns {Boolean}
+ * @param {number} frameNumber
+ * @returns {boolean}
  */
 SpatialNode.prototype.isVisited = function (frameNumber) {
   return this.visitedFrameNumber === frameNumber;
 };
 
 /**
- * @param {Number} keyframe
+ * @param {number} keyframe
  */
 SpatialNode.prototype.createKeyframeNode = function (keyframe) {
   let index = findKeyframeIndex(keyframe, this.keyframeNodes);
@@ -355,8 +371,8 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
 };
 
 /**
- * @param {Number} frameNumber
- * @returns Boolean
+ * @param {number} frameNumber
+ * @returns {boolean}
  */
 SpatialNode.prototype.isRenderable = function (frameNumber) {
   const previousNode = this.renderableKeyframeNodePrevious;

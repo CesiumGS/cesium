@@ -1,28 +1,28 @@
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
-attribute float batchId;
+in vec3 position3DHigh;
+in vec3 position3DLow;
+in float batchId;
 
 #ifdef EXTRUDED_GEOMETRY
-attribute vec3 extrudeDirection;
+in vec3 extrudeDirection;
 
 uniform float u_globeMinimumAltitude;
 #endif // EXTRUDED_GEOMETRY
 
 #ifdef PER_INSTANCE_COLOR
-varying vec4 v_color;
+out vec4 v_color;
 #endif // PER_INSTANCE_COLOR
 
 #ifdef TEXTURE_COORDINATES
 #ifdef SPHERICAL
-varying vec4 v_sphericalExtents;
+out vec4 v_sphericalExtents;
 #else // SPHERICAL
-varying vec2 v_inversePlaneExtents;
-varying vec4 v_westPlane;
-varying vec4 v_southPlane;
+out vec2 v_inversePlaneExtents;
+out vec4 v_westPlane;
+out vec4 v_southPlane;
 #endif // SPHERICAL
-varying vec3 v_uvMinAndSphericalLongitudeRotation;
-varying vec3 v_uMaxAndInverseDistance;
-varying vec3 v_vMaxAndInverseDistance;
+out vec3 v_uvMinAndSphericalLongitudeRotation;
+out vec3 v_uMaxAndInverseDistance;
+out vec3 v_vMaxAndInverseDistance;
 #endif // TEXTURE_COORDINATES
 
 void main()

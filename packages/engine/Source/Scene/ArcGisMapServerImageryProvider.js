@@ -21,12 +21,12 @@ import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
- * @typedef {Object} ArcGisMapServerImageryProvider.ConstructorOptions
+ * @typedef {object} ArcGisMapServerImageryProvider.ConstructorOptions
  *
  * Initialization options for the ArcGisMapServerImageryProvider constructor
  *
- * @property {Resource|String} [url] The URL of the ArcGIS MapServer service. Deprecated.
- * @property {String} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service. Deprecated.
+ * @property {Resource|string} [url] The URL of the ArcGIS MapServer service. Deprecated.
+ * @property {string} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service. Deprecated.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  If this value is not specified, a default
  *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -38,11 +38,11 @@ import ImageryProvider from "./ImageryProvider.js";
  *        these defaults should be correct tile discarding for a standard ArcGIS Server.  To ensure
  *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
  *        parameter.
- * @property {Boolean} [usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
+ * @property {boolean} [usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
  *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
  *        'export' service is used.
- * @property {String} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
- * @property {Boolean} [enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
+ * @property {string} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
+ * @property {boolean} [enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
  *        the Identify service on the MapServer and return the features included in the response.  If false,
  *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
  *        without communicating with the server.  Set this property to false if you don't want this provider's features to
@@ -54,10 +54,10 @@ import ImageryProvider from "./ImageryProvider.js";
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
- * @property {Number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
- * @property {Number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
- * @property {Number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
+ * @property {number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+ * @property {number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+ * @property {number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
  *                                        a tiled server.
  */
 
@@ -328,7 +328,7 @@ function ArcGisMapServerImageryProvider(options) {
    * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
    * {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
    * without communicating with the server.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
@@ -340,7 +340,7 @@ function ArcGisMapServerImageryProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "ArcGisMapServerImageryProvider options.url",
-      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ArcGisMapServerImageryProvider.fromUrl instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGisMapServerImageryProvider.fromUrl instead."
     );
     const resource = Resource.createIfNeeded(options.url);
     resource.appendForwardSlash();
@@ -421,7 +421,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the URL of the ArcGIS MapServer.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -433,7 +433,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the ArcGIS token used to authenticate with the ArcGis MapServer service.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   token: {
@@ -457,7 +457,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the width of each tile, in pixels.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -469,7 +469,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the height of each tile, in pixels.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -481,7 +481,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the maximum level-of-detail that can be requested.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -493,7 +493,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the minimum level-of-detail that can be requested.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -557,7 +557,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -565,7 +565,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.ready",
-        "ArcGisMapServerImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ArcGisMapServerImageryProvider.fromUrl instead."
+        "ArcGisMapServerImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGisMapServerImageryProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -574,7 +574,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -582,7 +582,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.readyPromise",
-        "ArcGisMapServerImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ArcGisMapServerImageryProvider.fromUrl instead."
+        "ArcGisMapServerImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGisMapServerImageryProvider.fromUrl instead."
       );
       return this._readyPromise;
     },
@@ -606,7 +606,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * ArcGIS MapServer.
    * @memberof ArcGisMapServerImageryProvider.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @default true
    */
@@ -624,7 +624,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * and texture upload time are reduced.
    * @memberof ArcGisMapServerImageryProvider.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @default true
    */
@@ -638,7 +638,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * Gets the comma-separated list of layer IDs to show.
    * @memberof ArcGisMapServerImageryProvider.prototype
    *
-   * @type {String}
+   * @type {string}
    */
   layers: {
     get: function () {
@@ -657,14 +657,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultAlpha",
-        "ArcGisMapServerImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "ArcGisMapServerImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultAlpha",
-        "ArcGisMapServerImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "ArcGisMapServerImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -681,14 +681,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultNightAlpha",
-        "ArcGisMapServerImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "ArcGisMapServerImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this._defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultNightAlpha",
-        "ArcGisMapServerImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "ArcGisMapServerImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this._defaultNightAlpha = value;
     },
@@ -705,14 +705,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultDayAlpha",
-        "ArcGisMapServerImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "ArcGisMapServerImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultDayAlpha",
-        "ArcGisMapServerImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "ArcGisMapServerImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -729,14 +729,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultBrightness",
-        "ArcGisMapServerImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "ArcGisMapServerImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultBrightness",
-        "ArcGisMapServerImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "ArcGisMapServerImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -753,14 +753,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultContrast",
-        "ArcGisMapServerImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "ArcGisMapServerImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultContrast",
-        "ArcGisMapServerImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "ArcGisMapServerImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -776,14 +776,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultHue",
-        "ArcGisMapServerImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "ArcGisMapServerImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultHue",
-        "ArcGisMapServerImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "ArcGisMapServerImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -800,14 +800,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultSaturation",
-        "ArcGisMapServerImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "ArcGisMapServerImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultSaturation",
-        "ArcGisMapServerImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "ArcGisMapServerImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -823,14 +823,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultGamma",
-        "ArcGisMapServerImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "ArcGisMapServerImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultGamma",
-        "ArcGisMapServerImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "ArcGisMapServerImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -846,14 +846,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultMinificationFilter",
-        "ArcGisMapServerImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "ArcGisMapServerImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultMinificationFilter",
-        "ArcGisMapServerImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "ArcGisMapServerImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -869,14 +869,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultMagnificationFilter",
-        "ArcGisMapServerImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "ArcGisMapServerImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "ArcGisMapServerImageryProvider.defaultMagnificationFilter",
-        "ArcGisMapServerImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "ArcGisMapServerImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },
@@ -931,9 +931,9 @@ ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
 ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
@@ -947,11 +947,11 @@ ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
 /**
  * Requests the image for a given tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
 ArcGisMapServerImageryProvider.prototype.requestImage = function (
@@ -971,12 +971,12 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
      * Asynchronously determines what features, if any, are located at a given longitude and latitude within
      * a tile.
      *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Number} longitude The longitude at which to pick features.
-     * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+     * @param {number} x The tile X coordinate.
+     * @param {number} y The tile Y coordinate.
+     * @param {number} level The tile level.
+     * @param {number} longitude The longitude at which to pick features.
+     * @param {number} latitude  The latitude at which to pick features.
+     * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      */

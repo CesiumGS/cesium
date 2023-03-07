@@ -12,7 +12,7 @@ const articulationEpsilon = CesiumMath.EPSILON16;
  * An in-memory representation of an articulation stage belonging to a
  * {@link ModelArticulation}.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {ModelComponents.ArticulationStage} options.stage The articulation stage components from the 3D model.
  * @param {ModelArticulation} options.runtimeArticulation The runtime articulation that this stage belongs to.
  *
@@ -76,7 +76,7 @@ Object.defineProperties(ModelArticulationStage.prototype, {
    * The name of this articulation stage.
    *
    * @memberof ModelArticulationStage.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    *
    * @private
@@ -107,7 +107,7 @@ Object.defineProperties(ModelArticulationStage.prototype, {
    * The minimum value of this articulation stage.
    *
    * @memberof ModelArticulationStage.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -122,7 +122,7 @@ Object.defineProperties(ModelArticulationStage.prototype, {
    * The maximum value of this articulation stage.
    *
    * @memberof ModelArticulationStage.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -137,7 +137,7 @@ Object.defineProperties(ModelArticulationStage.prototype, {
    * The current value of this articulation stage.
    *
    * @memberof ModelArticulationStage.prototype
-   * @type {Number}
+   * @type {number}
    *
    * @private
    */

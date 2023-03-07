@@ -15,12 +15,12 @@ import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
- * @typedef {Object} GoogleEarthEnterpriseMapsProvider.ConstructorOptions
+ * @typedef {object} GoogleEarthEnterpriseMapsProvider.ConstructorOptions
  *
  * Initialization options for the GoogleEarthEnterpriseMapsProvider constructor
  *
- * @property {Resource|String} [url] The url of the Google Earth server hosting the imagery. Deprecated.
- * @property {Number} channel The channel (id) to be used when requesting data from the server.
+ * @property {Resource|string} [url] The url of the Google Earth server hosting the imagery. Deprecated.
+ * @property {number} channel The channel (id) to be used when requesting data from the server.
  *        The channel number can be found by looking at the json file located at:
  *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
  *        differ depending on your Google Earth Enterprise server configuration. Look for the "id" that
@@ -38,8 +38,8 @@ import ImageryProvider from "./ImageryProvider.js";
  *            }
  *          ]
  *        }
- * @property {String} [path="/default_map"] The path of the Google Earth server hosting the imagery.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the Google Earth
+ * @property {string} [path="/default_map"] The path of the Google Earth server hosting the imagery.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the Google Earth
  *        Enterprise server, or undefined if there is no limit.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
@@ -246,7 +246,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
 
     deprecationWarning(
       "GoogleEarthEnterpriseMapsProvider.url",
-      "GoogleEarthEnterpriseMapsProvider.url and GoogleEarthEnterpriseMapsProvider.channel were deprecated in CesiumJS 1.102.  They will be removed in 1.104. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
+      "GoogleEarthEnterpriseMapsProvider.url and GoogleEarthEnterpriseMapsProvider.channel were deprecated in CesiumJS 1.104.  They will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
     );
 
     const url = options.url;
@@ -290,7 +290,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the URL of the Google Earth MapServer.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -302,7 +302,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the url path of the data on the Google Earth server.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   path: {
@@ -326,7 +326,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the imagery channel (id) currently being used.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   channel: {
@@ -338,7 +338,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the width of each tile, in pixels.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -350,7 +350,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the height of each tile, in pixels.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -362,7 +362,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the maximum level-of-detail that can be requested.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -374,7 +374,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the minimum level-of-detail that can be requested.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -398,7 +398,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the version of the data used by this provider.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   version: {
@@ -410,7 +410,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the type of data that is being requested from the provider.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   requestType: {
@@ -461,7 +461,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -469,7 +469,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.ready",
-        "GoogleEarthEnterpriseMapsProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
+        "GoogleEarthEnterpriseMapsProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -478,7 +478,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -486,7 +486,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.readyPromise",
-        "GoogleEarthEnterpriseMapsProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
+        "GoogleEarthEnterpriseMapsProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
       );
       return this._readyPromise;
     },
@@ -512,7 +512,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -532,14 +532,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -556,14 +556,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this.defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this.defaultNightAlpha = value;
     },
@@ -580,14 +580,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -604,14 +604,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultBrightness",
-        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultBrightness",
-        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -628,14 +628,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultContrast",
-        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultContrast",
-        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -651,14 +651,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultHue",
-        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultHue",
-        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -675,14 +675,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultSaturation",
-        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultSaturation",
-        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -698,14 +698,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultGamma",
-        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultGamma",
-        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -721,14 +721,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -744,14 +744,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },
@@ -821,9 +821,9 @@ GoogleEarthEnterpriseMapsProvider.fromUrl = async function (
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
 GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
@@ -837,11 +837,11 @@ GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
 /**
  * Requests the image for a given tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
 GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function (
@@ -870,11 +870,11 @@ GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function (
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
  * @return {undefined} Undefined since picking is not supported.
  */
 GoogleEarthEnterpriseMapsProvider.prototype.pickFeatures = function (
@@ -893,7 +893,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider, {
   /**
    * Gets or sets the URL to the Google Earth logo for display in the credit.
    * @memberof GoogleEarthEnterpriseMapsProvider
-   * @type {String}
+   * @type {string}
    */
   logoUrl: {
     get: function () {

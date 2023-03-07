@@ -1,57 +1,112 @@
 # Change Log
 
-### 1.102 - 2023-02-01
+### 1.104 - 2023-04-03
 
 #### @cesium/engine
-
-##### Fixes :wrench:
-
-- Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
-- Fixed an edge case in `viewer.flyTo` when flying to a imagery layer with certain terrain providers. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
-- Fixed `SingleTileImageryProvider` fetching image when `show` is `false` by allowing lazy-loading for `SingleTileImageryProvider` if `tileWidth` and `tileHeight` are provided to the constructor. [#9529](https://github.com/CesiumGS/cesium/issues/9529)
 
 ##### Additions :tada:
 
 - Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `ImageryLayer.fromProviderAsync`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `Terrain`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling.
 
+##### Fixes :wrench:
+
+- Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
+- Fixed `SingleTileImageryProvider` fetching image when `show` is `false` by allowing lazy-loading for `SingleTileImageryProvider` if `tileWidth` and `tileHeight` are provided to the constructor. [#9529](https://github.com/CesiumGS/cesium/issues/9529)
+
 ##### Deprecated :hourglass_flowing_sand:
 
-- `CesiumWidget` constructor option `options.imageryProvider` haw been deprecated in Cesium 1.102. It will be removed in 1.104. Use `options.baseLayer` instead.
-- `ImageryProvider.ready` and `ImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `ImageryProvider.defaultAlpha`, `ImageryProvider.defaultNightAlpha`, `ImageryProvider.defaultDayAlpha`, `ImageryProvider.defaultBrightness`, `ImageryProvider.defaultContrast`, `ImageryProvider.defaultHue`, `ImageryProvider.defaultSaturation`, `ImageryProvider.defaultGamma`, `ImageryProvider.defaultMinificationFilter`, `ImageryProvider.defaultMagnificationFilter` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ImageryLayer.alpha`, `ImageryLayer.nightAlpha`, `ImageryLayer.dayAlpha`, `ImageryLayer.brightness`, `ImageryLayer.contrast`, `ImageryLayer.hue`, `ImageryLayer.saturation`, `ImageryLayer.gamma`, `ImageryLayer.minificationFilter`, `ImageryLayer.magnificationFilter`instead.
-- `ImageryLayer.getViewableRectangle` was deprecated in Cesium 1.102. It will be removed in 1.104. Use `ImageryLayer.getImageryRectangle` instead.
-- `ArcGisMapServerImageryProvider` constructor parameter `url`,`ArcGisMapServerImageryProvider.ready`, and `ArcGisMapServerImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ArcGisMapServerImageryProvider.fromUrl` instead.
-- `BingMapsImageryProvider` constructor parameter `url`,`BingMapsImageryProvider.ready`, and `BingMapsImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `BingMapsImageryProvider.fromUrl` instead.
-- `GoogleEarthEnterpriseImageryProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseImageryProvider.ready`, and `GoogleEarthEnterpriseImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseImageryProvider.fromMetadata` instead.
-- `GoogleEarthEnterpriseMapsProvider` constructor parameters `options.url` and `options.channel`, `GoogleEarthEnterpriseMapsProvider.ready`, and `GoogleEarthEnterpriseMapsProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseMapsProvider.fromUrl` instead.
-- `GridImageryProvider.ready` and `GridImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `IonImageryProvider` constructor parameter `assetId`,`BIonImageryProvider.ready`, and `IonImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `IonImageryProvider.fromAssetId` instead.
-- `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `MapboxStyleImageryProvider.ready` and `MapboxStyleImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `OpenStreetMapImageryProvider.ready` and `OpenStreetMapImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `SingleTileImageryProvider` constructor parameters `options.tileHeight` and `options.tileWidth` became required in CesiumJS 1.102. Omitting these properties will result in an error in 1.104. Provide `options.tileHeight` and `options.tileWidth`, or use `SingleTileImageryProvider.fromUrl` instead.
-- `SingleTileImageryProvider.ready` and `SingleTileImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `SingleTileImageryProvider.fromUrl` instead.
-- `TileCoordinatesImageryProvider.ready` and `TileCoordinatesImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `TileMapServiceImageryProvider` constructor parameter `options.url`, `TileMapServiceImageryProvider.ready`, and `TileMapServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `TileMapServiceImageryProvider.fromUrl` instead.
-- `UrlTemplateImageryProvider.reinitialize`, `UrlTemplateImageryProvider.ready`, and `UrlTemplateImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `WebMapServiceImageryProvider.ready`, and `WebMapServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `WebMapTileServiceImageryProvider.ready`, and `WebMapTileServiceImageryProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `TerrainProvider.ready` and `TerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `createWorldImagery` was deprecated in Cesium 1.102. It will be removed in 1.104. Use `createWorldImageryAsync` instead.
-- `ArcGISTiledElevationTerrainProvider` constructor parameter `options.url`, `ArcGISTiledElevationTerrainProvider.ready`, and `ArcGISTiledElevationTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ArcGISTiledElevationTerrainProvider.fromUrl` instead.
-- `CesiumTerrainProvider` constructor parameter `options.url`, `CesiumTerrainProvider.ready`, and `CesiumTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `CesiumTerrainProvider.fromUrl` instead.
-- `CustomHeightmapTerrainProvider.ready`, and `CustomHeightmapTerrainProvider.readyPromise` were deprecated in Cesium 1.102.
-- `EllipsoidTerrainProvider.ready`, and `EllipsoidTerrainProvider.readyPromise` were deprecated in Cesium 1.102.
-- `GoogleEarthEnterpriseMetadata` constructor parameter `options.url` and `GoogleEarthEnterpriseMetadata.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseMetadata.fromUrl` instead.
-- `GoogleEarthEnterpriseTerrainProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseTerrainProvider.ready`, and `GoogleEarthEnterpriseTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseTerrainProvider.fromMetadata` instead.
-- `VRTheWorldTerrainProvider` constructor parameter `options.url`, `VRTheWorldTerrainProvider.ready`, and `VRTheWorldTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `VRTheWorldTerrainProvider.fromUrl` instead.
-- `createWorldTerrain` was deprecated in CesiumJS 1.102. It will be removed in 1.104. Use createWorldTerrainAsync instead.
+- `CesiumWidget` constructor option `options.imageryProvider` haw been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
+- `ImageryProvider.ready` and `ImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `ImageryProvider.defaultAlpha`, `ImageryProvider.defaultNightAlpha`, `ImageryProvider.defaultDayAlpha`, `ImageryProvider.defaultBrightness`, `ImageryProvider.defaultContrast`, `ImageryProvider.defaultHue`, `ImageryProvider.defaultSaturation`, `ImageryProvider.defaultGamma`, `ImageryProvider.defaultMinificationFilter`, `ImageryProvider.defaultMagnificationFilter` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `ImageryLayer.alpha`, `ImageryLayer.nightAlpha`, `ImageryLayer.dayAlpha`, `ImageryLayer.brightness`, `ImageryLayer.contrast`, `ImageryLayer.hue`, `ImageryLayer.saturation`, `ImageryLayer.gamma`, `ImageryLayer.minificationFilter`, `ImageryLayer.magnificationFilter`instead.
+- `ImageryLayer.getViewableRectangle` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `ImageryLayer.getImageryRectangle` instead.
+- `ArcGisMapServerImageryProvider` constructor parameter `url`,`ArcGisMapServerImageryProvider.ready`, and `ArcGisMapServerImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `ArcGisMapServerImageryProvider.fromUrl` instead.
+- `BingMapsImageryProvider` constructor parameter `url`,`BingMapsImageryProvider.ready`, and `BingMapsImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `BingMapsImageryProvider.fromUrl` instead.
+- `GoogleEarthEnterpriseImageryProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseImageryProvider.ready`, and `GoogleEarthEnterpriseImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `GoogleEarthEnterpriseImageryProvider.fromMetadata` instead.
+- `GoogleEarthEnterpriseMapsProvider` constructor parameters `options.url` and `options.channel`, `GoogleEarthEnterpriseMapsProvider.ready`, and `GoogleEarthEnterpriseMapsProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `GoogleEarthEnterpriseMapsProvider.fromUrl` instead.
+- `GridImageryProvider.ready` and `GridImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `IonImageryProvider` constructor parameter `assetId`,`BIonImageryProvider.ready`, and `IonImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `IonImageryProvider.fromAssetId` instead.
+- `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `MapboxStyleImageryProvider.ready` and `MapboxStyleImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `OpenStreetMapImageryProvider.ready` and `OpenStreetMapImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `SingleTileImageryProvider` constructor parameters `options.tileHeight` and `options.tileWidth` became required in CesiumJS 1.104. Omitting these properties will result in an error in 1.107. Provide `options.tileHeight` and `options.tileWidth`, or use `SingleTileImageryProvider.fromUrl` instead.
+- `SingleTileImageryProvider.ready` and `SingleTileImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `SingleTileImageryProvider.fromUrl` instead.
+- `TileCoordinatesImageryProvider.ready` and `TileCoordinatesImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `TileMapServiceImageryProvider` constructor parameter `options.url`, `TileMapServiceImageryProvider.ready`, and `TileMapServiceImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `TileMapServiceImageryProvider.fromUrl` instead.
+- `UrlTemplateImageryProvider.reinitialize`, `UrlTemplateImageryProvider.ready`, and `UrlTemplateImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `WebMapServiceImageryProvider.ready`, and `WebMapServiceImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `WebMapTileServiceImageryProvider.ready`, and `WebMapTileServiceImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `TerrainProvider.ready` and `TerrainProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `createWorldImagery` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `createWorldImageryAsync` instead.
+- `ArcGISTiledElevationTerrainProvider` constructor parameter `options.url`, `ArcGISTiledElevationTerrainProvider.ready`, and `ArcGISTiledElevationTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `ArcGISTiledElevationTerrainProvider.fromUrl` instead.
+- `CesiumTerrainProvider` constructor parameter `options.url`, `CesiumTerrainProvider.ready`, and `CesiumTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `CesiumTerrainProvider.fromUrl` instead.
+- `CustomHeightmapTerrainProvider.ready`, and `CustomHeightmapTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104.
+- `EllipsoidTerrainProvider.ready`, and `EllipsoidTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104.
+- `GoogleEarthEnterpriseMetadata` constructor parameter `options.url` and `GoogleEarthEnterpriseMetadata.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `GoogleEarthEnterpriseMetadata.fromUrl` instead.
+- `GoogleEarthEnterpriseTerrainProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseTerrainProvider.ready`, and `GoogleEarthEnterpriseTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `GoogleEarthEnterpriseTerrainProvider.fromMetadata` instead.
+- `VRTheWorldTerrainProvider` constructor parameter `options.url`, `VRTheWorldTerrainProvider.ready`, and `VRTheWorldTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `VRTheWorldTerrainProvider.fromUrl` instead.
+- `createWorldTerrain` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use createWorldTerrainAsync instead.
 
 #### @cesium/widgets
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `Viewer` constructor option `options.imageryProvider` haw been deprecated in Cesium 1.102. It will be removed in 1.104. Use `options.baseLayer` instead.
+- `Viewer` constructor option `options.imageryProvider` haw been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
+
+### 1.103 - 2023-03-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added smooth zoom with mouse wheel. [#11062](https://github.com/CesiumGS/cesium/pull/11062)
+- Enabled lighting on voxels with BOX shape. [#11076](https://github.com/CesiumGS/cesium/pull/11076)
+
+##### Fixes :wrench:
+
+- Fixed browser warning for `willReadFrequently` option. [#11025](https://github.com/CesiumGS/cesium/issues/11025)
+- Replaced constructor types with primitive types in JSDoc and generated TypeScript definitions. [#11080](https://github.com/CesiumGS/cesium/pull/11080)
+- Adjusted render order of voxels and opaque entities. [#11120](https://github.com/CesiumGS/cesium/pull/11120)
+- Fixed artifacts on edges of voxels with BOX shape. [#11050](https://github.com/CesiumGS/cesium/pull/11050)
+- Fixed initial textures visibility for particle systems. [#11099](https://github.com/CesiumGS/cesium/pull/11099)
+- Fixed Primitive.getGeometryInstanceAttributes cache acquisition speed. [#11066](https://github.com/CesiumGS/cesium/issues/11066)
+- Fixed requestWebgl1 hint error in context. [#11082](https://github.com/CesiumGS/cesium/issues/11082)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Replaced constructor types with primitive types in JSDoc and generated TypeScript definitions. [#11080](https://github.com/CesiumGS/cesium/pull/11080)
+
+### 1.102 - 2023-02-01
+
+#### @cesium/engine
+
+#### Major Announcements :loudspeaker:
+
+- CesiumJS now defaults to using a WebGL2 context for rendering. WebGL2 is widely supported on all platforms and this results in better feature support across devices, especially mobile.
+  - WebGL1 is supported. If WebGL2 is not available, CesiumJS will automatically fall back to WebGL1.
+  - In order to work in a WebGL2 context, any custom materials, custom primitives or custom shaders will need to be upgraded to use GLSL 300.
+  - Otherwise to request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions` as shown below:
+    ```js
+    const viewer = new Viewer("cesiumContainer", {
+      contextOptions: {
+        requestWebgl1: true,
+      },
+    });
+    ```
+
+##### Additions :tada:
+
+- Added `FeatureDetection.supportsWebgl2` to detect if a WebGL2 rendering context in the current browser.
+
+##### Fixes :wrench:
+
+- Fixed label background rendering. [#11040](https://github.com/CesiumGS/cesium/issues/11040)
+- Fixed a bug decoding glTF Draco attributes with quantization bits above 16. [#7471](https://github.com/CesiumGS/cesium/issues/7471)
+- Fixed an edge case in `viewer.flyTo` when flying to a imagery layer with certain terrain providers. [#10937](https://github.com/CesiumGS/cesium/issues/10937)
+- Fixed a crash in terrain sampling if any points have an undefined position due to being outside the rectangle. [#10931](https://github.com/CesiumGS/cesium/pull/10931)
+- Fixed a bug where scale was not being applied to the top-level tileset geometric error. [#11047](https://github.com/CesiumGS/cesium/pull/11047)
+- Updating Bing Maps top page hyperlink to Bing Maps ToU hyperlink [#11049](https://github.com/CesiumGS/cesium/pull/11049)
 
 ### 1.101 - 2023-01-02
 
@@ -113,6 +168,10 @@
     - `Widgets`(CSS files only)
   - The ability to import modules and TypeScript definitions from individual files has been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
 
+#### Breaking Changes :mega:
+
+- The viewer parameter in `KmlTour.prototype.play` was removed. Instead of a `Viewer`, pass a `CesiumWidget` instead. [#10845](https://github.com/CesiumGS/cesium/pull/10845)
+
 ### 1.99 - 2022-11-01
 
 #### Major Announcements :loudspeaker:
@@ -128,6 +187,10 @@
     - `ThirdParty`
     - `Widgets`(CSS files only)
   - The ability to import modules and TypeScript definitions from individual files will been removed. Any imports should originate from the `cesium` module (`import { Cartesian3 } from "cesium";`) or the combined `Cesium.js` file (`import { Cartesian3 } from "Source/Cesium.js";`);
+
+#### Breaking Changes :mega:
+
+- The polyfills `requestAnimationFrame` and `cancelAnimationFrame` have been removed. Use the native browser methods instead. [#10579](https://github.com/CesiumGS/cesium/pull/10579)
 
 ##### Additions :tada:
 
@@ -152,6 +215,7 @@
 #### Breaking Changes :mega:
 
 - As of the previous release (1.97), `new Model()` is an internal constructor and must not be used directly. Use `Model.fromGltf()` instead. [#10778](https://github.com/CesiumGS/cesium/pull/10778)
+- The `.getPropertyNames` methods of `Cesium3DTileFeature`, `Cesium3DTilePointFeature`, and `ModelFeature` have been removed. Use the `.getPropertyIds` methods instead.
 
 ##### Additions :tada:
 
@@ -227,6 +291,7 @@
 ##### Breaking Changes :mega:
 
 - `Model.boundingSphere` now returns the bounding sphere in ECEF coordinates instead of the local coordinate system. [#10589](https://github.com/CesiumGS/cesium/pull/10589)
+- `Cesium3DTileStyle.readyPromise` and `Cesium3DTileStyle.ready` have been removed. If loading a style from a url, use `Cesium3DTileStyle.fromUrl` instead. [#10348](https://github.com/CesiumGS/cesium/pull/10348)
 
 ##### Additions :tada:
 
@@ -318,7 +383,7 @@
 - Removed individual image-based lighting parameters from `Model` and `Cesium3DTileset`. [#10388](https://github.com/CesiumGS/cesium/pull/10388)
 - Models and tilesets rendered with `ModelExperimental` must set `enableDebugWireframe` to true in order for `debugWireframe` to work in WebGL1. [#10344](https://github.com/CesiumGS/cesium/pull/10344)
 - Removed `ImagerySplitPosition` and `Scene.imagerySplitPosition`. Use `SplitDirection` and `Scene.splitPosition` instead.[#10418](https://github.com/CesiumGS/cesium/pull/10418)
-- Removed restriction on enabling `Scene.orderIndependentTranslucency` on iPad and iOS. [#10417](https://github.com/CesiumGS/cesium/pull/10417)
+- Tilesets and models should now specify image-based lighting parameters in `ImageBasedLighting` instead of as individual options. [#10226](https://github.com/CesiumGS/cesium/pull/10226)
 
 ##### Additions :tada:
 

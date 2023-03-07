@@ -25,7 +25,7 @@ function GoogleEarthEnterpriseDiscardPolicy() {
 
 /**
  * Determines if the discard policy is ready to process images.
- * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
+ * @returns {boolean} True if the discard policy is ready to process images; otherwise, false.
  */
 GoogleEarthEnterpriseDiscardPolicy.prototype.isReady = function () {
   return true;
@@ -35,7 +35,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.isReady = function () {
  * Given a tile image, decide whether to discard that image.
  *
  * @param {HTMLImageElement} image An image to test.
- * @returns {Boolean} True if the image should be discarded; otherwise, false.
+ * @returns {boolean} True if the image should be discarded; otherwise, false.
  */
 GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
   image
@@ -44,17 +44,17 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
 };
 
 /**
- * @typedef {Object} GoogleEarthEnterpriseImageryProvider.ConstructorOptions
+ * @typedef {object} GoogleEarthEnterpriseImageryProvider.ConstructorOptions
  *
  * Initialization options for the GoogleEarthEnterpriseImageryProvider constructor
  *
- * @property {Resource|String} [url] The url of the Google Earth Enterprise server hosting the imagery. Deprecated.
+ * @property {Resource|string} [url] The url of the Google Earth Enterprise server hosting the imagery. Deprecated.
  * @property {GoogleEarthEnterpriseMetadata} [metadata] A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider. Deprecated.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded. If this value is not specified, a default
  *        is to discard tiles that fail to download.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
 /**
@@ -141,7 +141,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "GoogleEarthEnterpriseImageryProvider options.url",
-      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
     );
     const resource = Resource.createIfNeeded(options.url);
     metadata = new GoogleEarthEnterpriseMetadata(resource);
@@ -150,7 +150,7 @@ function GoogleEarthEnterpriseImageryProvider(options) {
   if (defined(options.metadata)) {
     deprecationWarning(
       "GoogleEarthEnterpriseImageryProvider options.metadata",
-      "options.metadata was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+      "options.metadata was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
     );
     metadata = options.metadata;
   }
@@ -200,7 +200,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets the name of the Google Earth Enterprise server url hosting the imagery.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -224,7 +224,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets the width of each tile, in pixels.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -236,7 +236,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets the height of each tile, in pixels.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -248,7 +248,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets the maximum level-of-detail that can be requested.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -260,7 +260,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets the minimum level-of-detail that can be requested.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -324,7 +324,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -332,7 +332,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.ready",
-        "GoogleEarthEnterpriseImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+        "GoogleEarthEnterpriseImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
       );
       return this._ready;
     },
@@ -341,7 +341,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -349,7 +349,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.readyPromise",
-        "GoogleEarthEnterpriseImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
+        "GoogleEarthEnterpriseImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use GoogleEarthEnterpriseImageryProvider.fromMetadata instead."
       );
       return this._readyPromise;
     },
@@ -375,7 +375,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  Setting this property to false reduces memory usage
    * and texture upload time.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -395,14 +395,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultAlpha",
-        "GoogleEarthEnterpriseImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultAlpha",
-        "GoogleEarthEnterpriseImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -419,14 +419,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultNightAlpha",
-        "GoogleEarthEnterpriseImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this.defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultNightAlpha",
-        "GoogleEarthEnterpriseImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this.defaultNightAlpha = value;
     },
@@ -443,14 +443,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultDayAlpha",
-        "GoogleEarthEnterpriseImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultDayAlpha",
-        "GoogleEarthEnterpriseImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -467,14 +467,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultBrightness",
-        "GoogleEarthEnterpriseImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultBrightness",
-        "GoogleEarthEnterpriseImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -491,14 +491,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultContrast",
-        "GoogleEarthEnterpriseImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultContrast",
-        "GoogleEarthEnterpriseImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -514,14 +514,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultHue",
-        "GoogleEarthEnterpriseImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultHue",
-        "GoogleEarthEnterpriseImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -538,14 +538,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultSaturation",
-        "GoogleEarthEnterpriseImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultSaturation",
-        "GoogleEarthEnterpriseImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -561,14 +561,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultGamma",
-        "GoogleEarthEnterpriseImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultGamma",
-        "GoogleEarthEnterpriseImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -584,14 +584,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultMinificationFilter",
-        "GoogleEarthEnterpriseImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultMinificationFilter",
-        "GoogleEarthEnterpriseImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -607,14 +607,14 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultMagnificationFilter",
-        "GoogleEarthEnterpriseImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseImageryProvider.defaultMagnificationFilter",
-        "GoogleEarthEnterpriseImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "GoogleEarthEnterpriseImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },
@@ -655,9 +655,9 @@ GoogleEarthEnterpriseImageryProvider.fromMetadata = function (
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
 GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
@@ -680,11 +680,11 @@ GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
 /**
  * Requests the image for a given tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
 GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
@@ -759,11 +759,11 @@ GoogleEarthEnterpriseImageryProvider.prototype.requestImage = function (
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
  * @return {undefined} Undefined since picking is not supported.
  */
 GoogleEarthEnterpriseImageryProvider.prototype.pickFeatures = function (

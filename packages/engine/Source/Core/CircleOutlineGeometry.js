@@ -11,14 +11,14 @@ import Ellipsoid from "./Ellipsoid.js";
  * @alias CircleOutlineGeometry
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.center The circle's center point in the fixed frame.
- * @param {Number} options.radius The radius in meters.
+ * @param {number} options.radius The radius in meters.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
- * @param {Number} [options.height=0.0] The distance in meters between the circle and the ellipsoid surface.
- * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
- * @param {Number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
- * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom of an extruded circle.
+ * @param {number} [options.height=0.0] The distance in meters between the circle and the ellipsoid surface.
+ * @param {number} [options.granularity=0.02] The angular distance between points on the circle in radians.
+ * @param {number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
+ * @param {number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom of an extruded circle.
  *
  * @exception {DeveloperError} radius must be greater than zero.
  * @exception {DeveloperError} granularity must be greater than zero.
@@ -58,7 +58,7 @@ function CircleOutlineGeometry(options) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 CircleOutlineGeometry.packedLength = EllipseOutlineGeometry.packedLength;
 
@@ -66,10 +66,10 @@ CircleOutlineGeometry.packedLength = EllipseOutlineGeometry.packedLength;
  * Stores the provided instance into the provided array.
  *
  * @param {CircleOutlineGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 CircleOutlineGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -102,8 +102,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {CircleOutlineGeometry} [result] The object into which to store the result.
  * @returns {CircleOutlineGeometry} The modified result parameter or a new CircleOutlineGeometry instance if one was not provided.
  */

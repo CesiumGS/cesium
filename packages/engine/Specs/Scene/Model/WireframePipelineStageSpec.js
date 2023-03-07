@@ -24,12 +24,12 @@ describe(
     let scene;
     let sceneWithWebgl2;
     beforeAll(function () {
-      scene = createScene();
-      sceneWithWebgl2 = createScene({
+      scene = createScene({
         contextOptions: {
-          requestWebgl1: false,
+          sceneWithWebgl1: true,
         },
       });
+      sceneWithWebgl2 = createScene();
     });
 
     afterAll(function () {

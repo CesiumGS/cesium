@@ -247,7 +247,7 @@ DynamicGeometryUpdater.prototype.getBoundingSphere = function (result) {
  * @memberof DynamicGeometryUpdater
  * @function
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 DynamicGeometryUpdater.prototype.isDestroyed = function () {
   return false;

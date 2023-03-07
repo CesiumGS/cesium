@@ -23,13 +23,13 @@ import Primitive from "./Primitive.js";
  * @alias DebugCameraPrimitive
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Camera} options.camera The camera.
- * @param {Number[]} [options.frustumSplits] Distances to the near and far planes of the camera frustums. This overrides the camera's frustum near and far values.
+ * @param {number[]} [options.frustumSplits] Distances to the near and far planes of the camera frustums. This overrides the camera's frustum near and far values.
  * @param {Color} [options.color=Color.CYAN] The color of the debug outline.
- * @param {Boolean} [options.updateOnChange=true] Whether the primitive updates when the underlying camera changes.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
- * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}.
+ * @param {boolean} [options.updateOnChange=true] Whether the primitive updates when the underlying camera changes.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}.
  *
  * @example
  * primitives.add(new Cesium.DebugCameraPrimitive({
@@ -54,7 +54,7 @@ function DebugCameraPrimitive(options) {
   /**
    * Determines if this primitive will be shown.
    *
-   * @type Boolean
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -220,7 +220,7 @@ DebugCameraPrimitive.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see DebugCameraPrimitive#destroy
  */

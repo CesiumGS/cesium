@@ -25,7 +25,7 @@ import PolylineVisualizer from "./PolylineVisualizer.js";
  * @alias DataSourceDisplay
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene in which to display the data.
  * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
  * @param {DataSourceDisplay.VisualizersCallback} [options.visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
@@ -192,7 +192,7 @@ Object.defineProperties(DataSourceDisplay.prototype, {
   /**
    * Gets a value indicating whether or not all entities in the data source are ready
    * @memberof DataSourceDisplay.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -208,7 +208,7 @@ Object.defineProperties(DataSourceDisplay.prototype, {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see DataSourceDisplay#destroy
  */
@@ -259,7 +259,7 @@ DataSourceDisplay.prototype.destroy = function () {
  * Updates the display to the provided time.
  *
  * @param {JulianDate} time The simulation time.
- * @returns {Boolean} True if all data sources are ready to be displayed, false otherwise.
+ * @returns {boolean} True if all data sources are ready to be displayed, false otherwise.
  */
 DataSourceDisplay.prototype.update = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -335,7 +335,7 @@ const getBoundingSphereBoundingSphereScratch = new BoundingSphere();
  * The bounding sphere is in the fixed frame of the scene's globe.
  *
  * @param {Entity} entity The entity whose bounding sphere to compute.
- * @param {Boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
+ * @param {boolean} allowPartial If true, pending bounding spheres are ignored and an answer will be returned from the currently available data.
  *                               If false, the the function will halt and return pending if any of the bounding spheres are pending.
  * @param {BoundingSphere} result The bounding sphere onto which to store the result.
  * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,

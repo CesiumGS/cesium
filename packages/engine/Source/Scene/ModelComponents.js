@@ -25,7 +25,7 @@ function Quantization() {
   /**
    * Whether the quantized attribute is oct-encoded.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this.octEncoded = false;
@@ -33,7 +33,7 @@ function Quantization() {
   /**
    * Whether the oct-encoded values are stored as ZXY instead of XYZ. This is true when decoding from Draco.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this.octEncodedZXY = false;
@@ -43,7 +43,7 @@ function Quantization() {
    * This is typically computed as (1 << quantizationBits) - 1.
    * For oct-encoded values this value is a single Number.
    *
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
   this.normalizationRange = undefined;
@@ -53,7 +53,7 @@ function Quantization() {
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the offset should be a Cartesian4.
    *
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
   this.quantizedVolumeOffset = undefined;
@@ -63,7 +63,7 @@ function Quantization() {
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the dimensions should be a Cartesian4.
    *
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
   this.quantizedVolumeDimensions = undefined;
@@ -75,7 +75,7 @@ function Quantization() {
    * The type should match the attribute type - e.g. if the attribute type
    * is AttributeType.VEC4 the dimensions should be a Cartesian4.
    *
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
   this.quantizedVolumeStepSize = undefined;
@@ -118,7 +118,7 @@ function Attribute() {
   /**
    * The attribute name. Must be unique within the attributes array.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.name = undefined;
@@ -182,7 +182,7 @@ function Attribute() {
   /**
    * Whether the attribute is normalized.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    * @private
    */
@@ -191,7 +191,7 @@ function Attribute() {
   /**
    * The number of elements.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.count = undefined;
@@ -206,7 +206,7 @@ function Attribute() {
    * Must be defined for POSITION attributes.
    * </p>
    *
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
   this.min = undefined;
@@ -221,7 +221,7 @@ function Attribute() {
    * Must be defined for POSITION attributes.
    * </p>
    *
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
   this.max = undefined;
@@ -229,7 +229,7 @@ function Attribute() {
   /**
    * A constant value used for all elements when typed array and buffer are undefined.
    *
-   * @type {Number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
+   * @type {number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4}
    * @private
    */
   this.constant = undefined;
@@ -262,7 +262,7 @@ function Attribute() {
   /**
    * The byte offset of elements in the buffer.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0
    * @private
    */
@@ -271,7 +271,7 @@ function Attribute() {
   /**
    * The byte stride of elements in the buffer. When undefined the elements are tightly packed.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.byteStride = undefined;
@@ -297,7 +297,7 @@ function Indices() {
   /**
    * The number of indices.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.count = undefined;
@@ -332,7 +332,7 @@ function FeatureIdAttribute() {
   /**
    * How many unique features are defined in this set of feature IDs
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.featureCount = undefined;
@@ -340,7 +340,7 @@ function FeatureIdAttribute() {
   /**
    * This value indicates that no feature is indicated with this vertex
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.nullFeatureId = undefined;
@@ -350,7 +350,7 @@ function FeatureIdAttribute() {
    * feature IDs are used for classification, but no metadata is associated.
    *
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.propertyTableId = undefined;
@@ -358,7 +358,7 @@ function FeatureIdAttribute() {
   /**
    * The set index of feature ID attribute containing feature IDs.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.setIndex = undefined;
@@ -367,7 +367,7 @@ function FeatureIdAttribute() {
    * The label to identify this set of feature IDs. This is used in picking,
    * styling and shaders.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.label = undefined;
@@ -377,7 +377,7 @@ function FeatureIdAttribute() {
    * This will always be either "featureId_N" for primitives or
    * "instanceFeatureId_N" for instances.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.positionalLabel = undefined;
@@ -397,7 +397,7 @@ function FeatureIdImplicitRange() {
   /**
    * How many unique features are defined in this set of feature IDs
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.featureCount = undefined;
@@ -405,7 +405,7 @@ function FeatureIdImplicitRange() {
   /**
    * This value indicates that no feature is indicated with this vertex
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.nullFeatureId = undefined;
@@ -414,7 +414,7 @@ function FeatureIdImplicitRange() {
    * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.propertyTableId = undefined;
@@ -422,7 +422,7 @@ function FeatureIdImplicitRange() {
   /**
    * The first feature ID to use when setIndex is undefined
    *
-   * @type {Number}
+   * @type {number}
    * @default 0
    * @private
    */
@@ -431,7 +431,7 @@ function FeatureIdImplicitRange() {
   /**
    * Number of times each feature ID is repeated before being incremented.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.repeat = undefined;
@@ -440,7 +440,7 @@ function FeatureIdImplicitRange() {
    * The label to identify this set of feature IDs. This is used in picking,
    * styling and shaders.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.label = undefined;
@@ -450,7 +450,7 @@ function FeatureIdImplicitRange() {
    * This will always be either "featureId_N" for primitives or
    * "instanceFeatureId_N" for instances.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.positionalLabel = undefined;
@@ -468,7 +468,7 @@ function FeatureIdTexture() {
   /**
    * How many unique features are defined in this set of feature IDs
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.featureCount = undefined;
@@ -476,7 +476,7 @@ function FeatureIdTexture() {
   /**
    * This value indicates that no feature is indicated with this texel
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.nullFeatureId = undefined;
@@ -485,7 +485,7 @@ function FeatureIdTexture() {
    * The ID of the property table that feature IDs index into. If undefined,
    * feature IDs are used for classification, but no metadata is associated.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.propertyTableId = undefined;
@@ -502,7 +502,7 @@ function FeatureIdTexture() {
    * The label to identify this set of feature IDs. This is used in picking,
    * styling and shaders.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.label = undefined;
@@ -512,7 +512,7 @@ function FeatureIdTexture() {
    * This will always be either "featureId_N" for primitives or
    * "instanceFeatureId_N" for instances.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.positionalLabel = undefined;
@@ -589,7 +589,7 @@ function Primitive() {
    * The feature IDs associated with this primitive. Feature ID types may
    * be interleaved
    *
-   * @type {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>}
+   * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>}
    * @private
    */
   this.featureIds = [];
@@ -598,7 +598,7 @@ function Primitive() {
    * The property texture IDs. These indices correspond to the array of
    * property textures.
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @private
    */
   this.propertyTextureIds = [];
@@ -607,7 +607,7 @@ function Primitive() {
    * The property attribute IDs. These indices correspond to the array of
    * property attributes in the EXT_structural_metadata extension.
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @private
    */
   this.propertyAttributeIds = [];
@@ -643,7 +643,7 @@ function Instances() {
    * The feature ID attributes associated with this set of instances.
    * Feature ID attribute types may be interleaved.
    *
-   * @type {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange>}
+   * @type {Array<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange>}
    * @private
    */
   this.featureIds = [];
@@ -653,7 +653,7 @@ function Instances() {
    * use EXT_mesh_gpu_instancing, the transform is applied in object space. For i3dm files,
    * the instance transform is in world space.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this.transformInWorldSpace = false;
@@ -672,7 +672,7 @@ function Skin() {
    * The index of the skin in the glTF. This is useful for finding the skin
    * that applies to a node after the skin is instantiated at runtime.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.index = undefined;
@@ -706,7 +706,7 @@ function Node() {
   /**
    * The name of the node.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.name = undefined;
@@ -715,7 +715,7 @@ function Node() {
    * The index of the node in the glTF. This is useful for finding the nodes
    * that belong to a skin after they have been instantiated at runtime.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.index = undefined;
@@ -790,7 +790,7 @@ function Node() {
    * An array of weights to be applied to the primitives' morph targets.
    * These are supplied by either the node or its mesh.
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @private
    */
   this.morphWeights = [];
@@ -799,7 +799,7 @@ function Node() {
    * The name of the articulation affecting this node, as defined by the
    * AGI_articulations extension.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.articulationName = undefined;
@@ -828,7 +828,7 @@ function Scene() {
  * this enum are used to look up the appropriate property on the runtime node.
  *
  * @alias {ModelComponents.AnimatedPropertyType}
- * @enum {String}
+ * @enum {string}
  *
  * @private
  */
@@ -852,7 +852,7 @@ function AnimationSampler() {
   /**
    * The timesteps of the animation.
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @private
    */
   this.input = [];
@@ -868,7 +868,7 @@ function AnimationSampler() {
   /**
    * The keyframe data of the animation.
    *
-   * @type {Number[]|Cartesian3[]|Quaternion[]}
+   * @type {number[]|Cartesian3[]|Quaternion[]}
    * @private
    */
   this.output = [];
@@ -938,7 +938,7 @@ function Animation() {
   /**
    * The name of the animation.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.name = undefined;
@@ -973,7 +973,7 @@ function ArticulationStage() {
   /**
    * The name of the articulation stage.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.name = undefined;
@@ -989,7 +989,7 @@ function ArticulationStage() {
   /**
    * The minimum value for the range of motion of this articulation stage.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.minimumValue = undefined;
@@ -997,7 +997,7 @@ function ArticulationStage() {
   /**
    * The maximum value for the range of motion of this articulation stage.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.maximumValue = undefined;
@@ -1005,7 +1005,7 @@ function ArticulationStage() {
   /**
    * The initial value for this articulation stage.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.initialValue = undefined;
@@ -1023,7 +1023,7 @@ function Articulation() {
   /**
    * The name of the articulation.
    *
-   * @type {String}
+   * @type {string}
    * @private
    */
   this.name = undefined;
@@ -1165,7 +1165,7 @@ function TextureReader() {
    * when textures are shared to avoid attaching a texture in multiple uniform
    * slots in the shader.
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.index = undefined;
@@ -1173,7 +1173,7 @@ function TextureReader() {
   /**
    * The texture coordinate set.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0
    * @private
    */
@@ -1190,7 +1190,7 @@ function TextureReader() {
   /**
    * The texture channels to read from. When undefined all channels are read.
    *
-   * @type {String}
+   * @type {string}
    */
   this.channels = undefined;
 }
@@ -1234,7 +1234,7 @@ function MetallicRoughness() {
   /**
    * The metallic factor.
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    * @private
    */
@@ -1243,7 +1243,7 @@ function MetallicRoughness() {
   /**
    * The roughness factor.
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    * @private
    */
@@ -1315,7 +1315,7 @@ function SpecularGlossiness() {
   /**
    * The glossiness factor.
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    * @private
    */
@@ -1407,7 +1407,7 @@ function Material() {
   /**
    * The alpha cutoff value of the material for the MASK alpha mode.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0.5
    * @private
    */
@@ -1416,7 +1416,7 @@ function Material() {
   /**
    * Specifies whether the material is double sided.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    * @private
    */
@@ -1425,7 +1425,7 @@ function Material() {
   /**
    * Specifies whether the material is unlit.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    * @private
    */

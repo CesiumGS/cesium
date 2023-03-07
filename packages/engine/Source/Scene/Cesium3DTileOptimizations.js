@@ -25,7 +25,7 @@ const scratchAxis = new Cartesian3();
  * partially outside of the parent bounds.
  *
  * @param {Cesium3DTile} tile The tile to check.
- * @returns {Boolean} Whether the childrenWithinParent optimization is supported.
+ * @returns {boolean} Whether the childrenWithinParent optimization is supported.
  */
 Cesium3DTileOptimizations.checkChildrenWithinParent = function (tile) {
   //>>includeStart('debug', pragmas.debug);

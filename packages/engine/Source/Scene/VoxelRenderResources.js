@@ -68,7 +68,7 @@ function VoxelRenderResources(primitive) {
    * A dictionary mapping uniform name to functions that return the uniform
    * values.
    *
-   * @type {Object.<String, Function>}
+   * @type {Object<string, Function>}
    */
   this.uniformMap = uniformMap;
 
@@ -87,7 +87,9 @@ function VoxelRenderResources(primitive) {
   shaderBuilder.addFragmentLines([
     customShader.fragmentShaderText,
     "#line 0",
+    Octree,
     IntersectionUtils,
+    Megatexture,
   ]);
 
   if (clippingPlanesLength > 0) {
@@ -121,10 +123,11 @@ function VoxelRenderResources(primitive) {
 
   const shapeType = primitive._provider.shape;
   if (shapeType === "BOX") {
+    shaderBuilder.addDefine("SHAPE_BOX", undefined, ShaderDestination.FRAGMENT);
     shaderBuilder.addFragmentLines([
+      convertUvToBox,
       IntersectBox,
       Intersection,
-      convertUvToBox,
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
@@ -140,7 +143,7 @@ function VoxelRenderResources(primitive) {
     ]);
   }
 
-  shaderBuilder.addFragmentLines([Octree, Megatexture, VoxelFS]);
+  shaderBuilder.addFragmentLines([VoxelFS]);
 
   const shape = primitive._shape;
   const shapeDefines = shape.shaderDefines;

@@ -7,8 +7,8 @@ import DeveloperError from "./DeveloperError.js";
  * the value in the object will be an array of values.
  * @function queryToObject
  *
- * @param {String} queryString The query string.
- * @returns {Object} An object containing the parameters parsed from the query string.
+ * @param {string} queryString The query string.
+ * @returns {object} An object containing the parameters parsed from the query string.
  *
  *
  * @example

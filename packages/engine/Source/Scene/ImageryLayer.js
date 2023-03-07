@@ -45,27 +45,27 @@ import TileImagery from "./TileImagery.js";
  *
  * Initialization options for the ImageryLayer constructor.
  *
- * @property {Rectangle} [options.rectangle=imageryProvider.rectangle] The rectangle of the layer.  This rectangle
+ * @property {Rectangle} [rectangle=imageryProvider.rectangle] The rectangle of the layer.  This rectangle
  *        can limit the visible portion of the imagery provider.
- * @property {Number|Function} [options.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+ * @property {number|Function} [alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile.
- * @property {Number|Function} [options.nightAlpha=1.0] The alpha blending value of this layer on the night side of the globe, from 0.0 to 1.0.
+ * @property {number|Function} [nightAlpha=1.0] The alpha blending value of this layer on the night side of the globe, from 0.0 to 1.0.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile. This only takes effect when <code>enableLighting</code> is <code>true</code>.
- * @property {Number|Function} [options.dayAlpha=1.0] The alpha blending value of this layer on the day side of the globe, from 0.0 to 1.0.
+ * @property {number|Function} [dayAlpha=1.0] The alpha blending value of this layer on the day side of the globe, from 0.0 to 1.0.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile. This only takes effect when <code>enableLighting</code> is <code>true</code>.
- * @property {Number|Function} [options.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
+ * @property {number|Function} [brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
  *                          color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -73,7 +73,7 @@ import TileImagery from "./TileImagery.js";
  *                          imagery tile for which the brightness is required, and it is expected to return
  *                          the brightness value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @property {Number|Function} [options.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
+ * @property {number|Function} [contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
  *                          Less than 1.0 reduces the contrast while greater than 1.0 increases it.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -81,14 +81,14 @@ import TileImagery from "./TileImagery.js";
  *                          imagery tile for which the contrast is required, and it is expected to return
  *                          the contrast value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @property {Number|Function} [options.hue=0.0] The hue of this layer.  0.0 uses the unmodified imagery color.
+ * @property {number|Function} [hue=0.0] The hue of this layer.  0.0 uses the unmodified imagery color.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates
  *                          of the imagery tile for which the hue is required, and it is expected to return
  *                          the contrast value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @property {Number|Function} [options.saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
+ * @property {number|Function} [saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
  *                          Less than 1.0 reduces the saturation while greater than 1.0 increases it.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -96,34 +96,34 @@ import TileImagery from "./TileImagery.js";
  *                          of the imagery tile for which the saturation is required, and it is expected to return
  *                          the contrast value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @property {Number|Function} [options.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
+ * @property {number|Function} [gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the gamma is required, and it is expected to return
  *                          the gamma value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @property {SplitDirection|Function} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this layer.
- * @property {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The
+ * @property {SplitDirection|Function} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this layer.
+ * @property {TextureMinificationFilter} [minificationFilter=TextureMinificationFilter.LINEAR] The
  *                                    texture minification filter to apply to this layer. Possible values
  *                                    are <code>TextureMinificationFilter.LINEAR</code> and
  *                                    <code>TextureMinificationFilter.NEAREST</code>.
- * @property {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The
+ * @property {TextureMagnificationFilter} [magnificationFilter=TextureMagnificationFilter.LINEAR] The
  *                                     texture minification filter to apply to this layer. Possible values
  *                                     are <code>TextureMagnificationFilter.LINEAR</code> and
  *                                     <code>TextureMagnificationFilter.NEAREST</code>.
- * @property {Boolean} [options.show=true] True if the layer is shown; otherwise, false.
- * @property {Number} [options.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
+ * @property {boolean} [show=true] True if the layer is shown; otherwise, false.
+ * @property {number} [maximumAnisotropy=maximum supported] The maximum anisotropy level to use
  *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
  *        by the WebGL stack will be used.  Larger values make the imagery look better in horizon
  *        views.
- * @property {Number} [options.minimumTerrainLevel] The minimum terrain level-of-detail at which to show this imagery layer,
+ * @property {number} [minimumTerrainLevel] The minimum terrain level-of-detail at which to show this imagery layer,
  *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
- * @property {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
+ * @property {number} [maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
  *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
- * @property {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
- * @property {Color} [options.colorToAlpha] Color to be used as alpha.
- * @property {Number} [options.colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
+ * @property {Rectangle} [cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
+ * @property {Color} [colorToAlpha] Color to be used as alpha.
+ * @property {number} [colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
  */
 
 /**
@@ -170,7 +170,7 @@ function ImageryLayer(imageryProvider, options) {
    * The alpha blending value of this layer, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.alpha = defaultValue(
@@ -182,7 +182,7 @@ function ImageryLayer(imageryProvider, options) {
    * The alpha blending value of this layer on the night side of the globe, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque. This only takes effect when {@link Globe#enableLighting} is <code>true</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.nightAlpha = defaultValue(
@@ -194,7 +194,7 @@ function ImageryLayer(imageryProvider, options) {
    * The alpha blending value of this layer on the day side of the globe, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque. This only takes effect when {@link Globe#enableLighting} is <code>true</code>.
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.dayAlpha = defaultValue(
@@ -206,7 +206,7 @@ function ImageryLayer(imageryProvider, options) {
    * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {Number}
+   * @type {number}
    * @default {@link ImageryLayer.DEFAULT_BRIGHTNESS}
    */
   this.brightness = defaultValue(
@@ -221,7 +221,7 @@ function ImageryLayer(imageryProvider, options) {
    * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {Number}
+   * @type {number}
    * @default {@link ImageryLayer.DEFAULT_CONTRAST}
    */
   this.contrast = defaultValue(
@@ -235,7 +235,7 @@ function ImageryLayer(imageryProvider, options) {
   /**
    * The hue of this layer in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {Number}
+   * @type {number}
    * @default {@link ImageryLayer.DEFAULT_HUE}
    */
   this.hue = defaultValue(
@@ -247,7 +247,7 @@ function ImageryLayer(imageryProvider, options) {
    * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {Number}
+   * @type {number}
    * @default {@link ImageryLayer.DEFAULT_SATURATION}
    */
   this.saturation = defaultValue(
@@ -261,7 +261,7 @@ function ImageryLayer(imageryProvider, options) {
   /**
    * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
    *
-   * @type {Number}
+   * @type {number}
    * @default {@link ImageryLayer.DEFAULT_GAMMA}
    */
   this.gamma = defaultValue(
@@ -321,7 +321,7 @@ function ImageryLayer(imageryProvider, options) {
   /**
    * Determines if this layer is shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -366,7 +366,7 @@ function ImageryLayer(imageryProvider, options) {
   /**
    * Normalized (0-1) threshold for color-to-alpha.
    *
-   * @type {Number}
+   * @type {number}
    */
   this.colorToAlphaThreshold = defaultValue(
     options.colorToAlphaThreshold,
@@ -443,35 +443,35 @@ Object.defineProperties(ImageryLayer.prototype, {
 /**
  * This value is used as the default brightness for the imagery layer if one is not provided during construction
  * or by the imagery provider. This value does not modify the brightness of the imagery.
- * @type {Number}
+ * @type {number}
  * @default 1.0
  */
 ImageryLayer.DEFAULT_BRIGHTNESS = 1.0;
 /**
  * This value is used as the default contrast for the imagery layer if one is not provided during construction
  * or by the imagery provider. This value does not modify the contrast of the imagery.
- * @type {Number}
+ * @type {number}
  * @default 1.0
  */
 ImageryLayer.DEFAULT_CONTRAST = 1.0;
 /**
  * This value is used as the default hue for the imagery layer if one is not provided during construction
  * or by the imagery provider. This value does not modify the hue of the imagery.
- * @type {Number}
+ * @type {number}
  * @default 0.0
  */
 ImageryLayer.DEFAULT_HUE = 0.0;
 /**
  * This value is used as the default saturation for the imagery layer if one is not provided during construction
  * or by the imagery provider. This value does not modify the saturation of the imagery.
- * @type {Number}
+ * @type {number}
  * @default 1.0
  */
 ImageryLayer.DEFAULT_SATURATION = 1.0;
 /**
  * This value is used as the default gamma for the imagery layer if one is not provided during construction
  * or by the imagery provider. This value does not modify the gamma of the imagery.
- * @type {Number}
+ * @type {number}
  * @default 1.0
  */
 ImageryLayer.DEFAULT_GAMMA = 1.0;
@@ -503,7 +503,7 @@ ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
 /**
  * This value is used as the default threshold for color-to-alpha if one is not provided
  * during construction or by the imagery provider.
- * @type {Number}
+ * @type {number}
  * @default 0.004
  */
 ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
@@ -622,7 +622,7 @@ ImageryLayer.fromWorldImagery = function (options) {
  * it actually does not, by stretching the texels at the edges over the entire
  * globe.
  *
- * @returns {Boolean} true if this is the base layer; otherwise, false.
+ * @returns {boolean} true if this is the base layer; otherwise, false.
  */
 ImageryLayer.prototype.isBaseLayer = function () {
   return this._isBaseLayer;
@@ -634,7 +634,7 @@ ImageryLayer.prototype.isBaseLayer = function () {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see ImageryLayer#destroy
  */
@@ -671,7 +671,7 @@ const terrainRectangleScratch = new Rectangle();
  * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
  * producing the overall bounds of imagery that can be produced by this layer.
  *
- * @returns {Promise.<Rectangle>} A promise to a rectangle which defines the overall bounds of imagery that can be produced by this layer.
+ * @returns {Promise<Rectangle>} A promise to a rectangle which defines the overall bounds of imagery that can be produced by this layer.
  *
  * @example
  * // Zoom to an imagery layer.
@@ -684,7 +684,7 @@ const terrainRectangleScratch = new Rectangle();
 ImageryLayer.prototype.getViewableRectangle = async function () {
   deprecationWarning(
     "ImageryLayer.getViewableRectangle",
-    "ImageryLayer.getViewableRectangle was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.getImageryRectangle instead."
+    "ImageryLayer.getViewableRectangle was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.getImageryRectangle instead."
   );
 
   const imageryProvider = this._imageryProvider;
@@ -722,8 +722,8 @@ ImageryLayer.prototype.getImageryRectangle = function () {
  *
  * @param {Tile} tile The terrain tile.
  * @param {TerrainProvider|undefined} terrainProvider The terrain provider associated with the terrain tile.
- * @param {Number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
- * @returns {Boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
+ * @param {number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
+ * @returns {boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
  */
 ImageryLayer.prototype._createTileImagerySkeletons = function (
   tile,
@@ -1403,7 +1403,7 @@ ImageryLayer.prototype._finalizeReprojectTexture = function (context, texture) {
  *
  * @param {FrameState} frameState The frameState.
  * @param {Imagery} imagery The imagery instance to reproject.
- * @param {Boolean} [needGeographicProjection=true] True to reproject to geographic, or false if Web Mercator is fine.
+ * @param {boolean} [needGeographicProjection=true] True to reproject to geographic, or false if Web Mercator is fine.
  */
 ImageryLayer.prototype._reprojectTexture = function (
   frameState,
@@ -1719,9 +1719,9 @@ function reprojectToGeographic(command, context, texture, rectangle) {
  * Gets the level with the specified world coordinate spacing between texels, or less.
  *
  * @param {ImageryLayer} layer The imagery layer to use.
- * @param {Number} texelSpacing The texel spacing for which to find a corresponding level.
- * @param {Number} latitudeClosestToEquator The latitude closest to the equator that we're concerned with.
- * @returns {Number} The level with the specified texel spacing or less.
+ * @param {number} texelSpacing The texel spacing for which to find a corresponding level.
+ * @param {number} latitudeClosestToEquator The latitude closest to the equator that we're concerned with.
+ * @returns {number} The level with the specified texel spacing or less.
  * @private
  */
 function getLevelWithMaximumTexelSpacing(

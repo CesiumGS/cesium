@@ -8,7 +8,7 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  *
  * @function
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {IonWorldImageryStyle} [options.style=IonWorldImageryStyle] The style of base imagery, only AERIAL, AERIAL_WITH_LABELS, and ROAD are currently supported.
  * @returns {IonImageryProvider}
  * @deprecated
@@ -33,7 +33,7 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
 function createWorldImagery(options) {
   deprecationWarning(
     "createWorldImagery",
-    "createWorldImagery was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use createWorldImageryAsync instead."
+    "createWorldImagery was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createWorldImageryAsync instead."
   );
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

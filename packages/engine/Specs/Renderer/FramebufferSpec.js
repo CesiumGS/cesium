@@ -176,7 +176,7 @@ describe(
 
       // 3 of 3.  Render green to default color buffer by reading from previous color attachment
       const fs =
-        "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
+        "uniform sampler2D u_texture; void main() { out_FragColor = texture(u_texture, vec2(0.0)); }";
       const uniformMap = {
         u_texture: function () {
           return colorTexture;
@@ -216,7 +216,7 @@ describe(
 
       // 3 of 3.  Render green to default color buffer by reading from previous color attachment
       const fs =
-        "uniform samplerCube u_cubeMap; void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
+        "uniform samplerCube u_cubeMap; void main() { out_FragColor = czm_textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }";
       const uniformMap = {
         u_cubeMap: function () {
           return cubeMap;
@@ -234,8 +234,8 @@ describe(
 
     function renderColorTexture(framebuffer, color, expectedColor) {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "uniform vec4 color; void main() { gl_FragColor = color; }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "uniform vec4 color; void main() { out_FragColor = color; }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -360,8 +360,8 @@ describe(
 
       // 1 of 3.  Render green point into color attachment.
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -404,9 +404,9 @@ describe(
 
       // 3 of 3.  Render green to default color buffer by reading from previous color attachment
       const vs2 =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
       const fs2 =
-        "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }";
+        "uniform sampler2D u_texture; void main() { out_FragColor = texture(u_texture, vec2(0.0)).rrrr; }";
       let sp2 = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs2,
@@ -509,8 +509,8 @@ describe(
       });
 
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -619,9 +619,9 @@ describe(
 
       // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
       const fs =
-        "#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }";
+        "layout (location = 0) out vec4 out_FragData_0;\n layout (location = 1) out vec4 out_FragData_1; \n void main() { out_FragData_0 = vec4(1.0, 0.0, 0.0, 1.0); out_FragData_1 = vec4(0.0, 1.0, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -659,9 +659,9 @@ describe(
 
       // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
       const vs2 =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
       const fs2 =
-        "uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = texture2D(u_texture0, vec2(0.0)) + texture2D(u_texture1, vec2(0.0)); }";
+        "uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { out_FragColor = texture(u_texture0, vec2(0.0)) + texture(u_texture1, vec2(0.0)); }";
       let sp2 = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs2,
@@ -879,8 +879,8 @@ describe(
       });
 
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,

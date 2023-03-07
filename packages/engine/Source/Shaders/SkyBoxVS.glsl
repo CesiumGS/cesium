@@ -1,6 +1,6 @@
-attribute vec3 position;
+in vec3 position;
 
-varying vec3 v_texCoord;
+out vec3 v_texCoord;
 
 void main()
 {

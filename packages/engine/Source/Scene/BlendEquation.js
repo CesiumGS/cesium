@@ -3,13 +3,13 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Determines how two pixels' values are combined.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const BlendEquation = {
   /**
    * Pixel values are added componentwise.  This is used in additive blending for translucency.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   ADD: WebGLConstants.FUNC_ADD,
@@ -17,7 +17,7 @@ const BlendEquation = {
   /**
    * Pixel values are subtracted componentwise (source - destination).  This is used in alpha blending for translucency.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   SUBTRACT: WebGLConstants.FUNC_SUBTRACT,
@@ -25,7 +25,7 @@ const BlendEquation = {
   /**
    * Pixel values are subtracted componentwise (destination - source).
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   REVERSE_SUBTRACT: WebGLConstants.FUNC_REVERSE_SUBTRACT,
@@ -35,7 +35,7 @@ const BlendEquation = {
    *
    * This equation operates on each pixel color component.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MIN: WebGLConstants.MIN,
@@ -45,7 +45,7 @@ const BlendEquation = {
    *
    * This equation operates on each pixel color component.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MAX: WebGLConstants.MAX,

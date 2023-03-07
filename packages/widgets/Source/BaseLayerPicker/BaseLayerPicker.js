@@ -24,8 +24,8 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  * @alias BaseLayerPicker
  * @constructor
  *
- * @param {Element|String} container The parent HTML container node or ID for this widget.
- * @param {Object} options Object with the following properties:
+ * @param {Element|string} container The parent HTML container node or ID for this widget.
+ * @param {object} options Object with the following properties:
  * @param {Globe} options.globe The Globe to use.
  * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
  * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
@@ -282,7 +282,7 @@ Object.defineProperties(BaseLayerPicker.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 BaseLayerPicker.prototype.isDestroyed = function () {
   return false;

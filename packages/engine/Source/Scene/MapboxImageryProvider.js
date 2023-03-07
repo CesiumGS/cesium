@@ -12,21 +12,21 @@ const defaultCredit = new Credit(
 );
 
 /**
- * @typedef {Object} MapboxImageryProvider.ConstructorOptions
+ * @typedef {object} MapboxImageryProvider.ConstructorOptions
  *
  * Initialization options for the MapboxImageryProvider constructor
  *
- * @property {String} [url='https://api.mapbox.com/v4/'] The Mapbox server url.
- * @property {String} mapId The Mapbox Map ID.
- * @property {String} accessToken The public access token for the imagery.
- * @property {String} [format='png'] The format of the image request.
+ * @property {string} [url='https://api.mapbox.com/v4/'] The Mapbox server url.
+ * @property {string} mapId The Mapbox Map ID.
+ * @property {string} accessToken The public access token for the imagery.
+ * @property {string} [format='png'] The format of the image request.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
 /**
@@ -126,7 +126,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets the URL of the Mapbox server.
    * @memberof MapboxImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -138,7 +138,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -146,7 +146,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.ready",
-        "MapboxImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+        "MapboxImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
       );
       return this._imageryProvider.ready;
     },
@@ -155,7 +155,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -163,7 +163,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.readyPromise",
-        "MapboxImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+        "MapboxImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
       );
       return this._imageryProvider._readyPromise;
     },
@@ -184,7 +184,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets the width of each tile, in pixels.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -196,7 +196,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets the height of each tile, in pixels.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -208,7 +208,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets the maximum level-of-detail that can be requested.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -224,7 +224,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
    * provider with more than a few tiles at the minimum level will lead to
    * rendering problems.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -305,7 +305,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -325,14 +325,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultAlpha",
-        "MapboxImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "MapboxImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultAlpha",
-        "MapboxImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "MapboxImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -349,14 +349,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultNightAlpha",
-        "MapboxImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "MapboxImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this.defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultNightAlpha",
-        "MapboxImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "MapboxImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this.defaultNightAlpha = value;
     },
@@ -373,14 +373,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultDayAlpha",
-        "MapboxImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "MapboxImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultDayAlpha",
-        "MapboxImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "MapboxImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -397,14 +397,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultBrightness",
-        "MapboxImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "MapboxImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultBrightness",
-        "MapboxImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "MapboxImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -421,14 +421,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultContrast",
-        "MapboxImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "MapboxImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultContrast",
-        "MapboxImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "MapboxImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -444,14 +444,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultHue",
-        "MapboxImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "MapboxImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultHue",
-        "MapboxImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "MapboxImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -468,14 +468,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultSaturation",
-        "MapboxImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "MapboxImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultSaturation",
-        "MapboxImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "MapboxImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -491,14 +491,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultGamma",
-        "MapboxImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "MapboxImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultGamma",
-        "MapboxImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "MapboxImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -514,14 +514,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultMinificationFilter",
-        "MapboxImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "MapboxImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultMinificationFilter",
-        "MapboxImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "MapboxImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -537,14 +537,14 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxImageryProvider.defaultMagnificationFilter",
-        "MapboxImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "MapboxImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxImageryProvider.defaultMagnificationFilter",
-        "MapboxImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "MapboxImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },
@@ -554,9 +554,9 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
 MapboxImageryProvider.prototype.getTileCredits = function (x, y, level) {
@@ -566,11 +566,11 @@ MapboxImageryProvider.prototype.getTileCredits = function (x, y, level) {
 /**
  * Requests the image for a given tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
@@ -583,12 +583,12 @@ MapboxImageryProvider.prototype.requestImage = function (x, y, level, request) {
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
  * a tile. This function is optional, so it may not exist on all ImageryProviders.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
+ * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.

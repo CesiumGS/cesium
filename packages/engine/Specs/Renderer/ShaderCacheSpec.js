@@ -15,9 +15,8 @@ describe(
     });
 
     it("adds and removes", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       const cache = new ShaderCache(context);
 
@@ -44,9 +43,8 @@ describe(
     });
 
     it("adds and removes 2", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       const cache = new ShaderCache(context);
       const sp = cache.getShaderProgram({
@@ -68,9 +66,8 @@ describe(
     });
 
     it("has a cache hit", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       // These functions can be expensive for large shaders, so they should
       // only be called the first time a shader is created.
@@ -121,9 +118,8 @@ describe(
     });
 
     it("cache handles unordered attributeLocations dictionary", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       // Create a case where JSON.stringify(x) may produce two different results
       // without sorting the keys
@@ -183,10 +179,9 @@ describe(
     });
 
     it("replaces a shader program", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
-      const fs2 = "void main() { gl_FragColor = vec4(0.5); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
+      const fs2 = "void main() { out_FragColor = vec4(0.5); }";
       const attributeLocations = {
         position: 0,
       };
@@ -212,9 +207,8 @@ describe(
     });
 
     it("avoids thrashing", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       const cache = new ShaderCache(context);
       const sp = cache.getShaderProgram({
@@ -247,9 +241,8 @@ describe(
     });
 
     it("create derived shader program", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       const cache = new ShaderCache(context);
       const sp = cache.getShaderProgram({
@@ -264,7 +257,7 @@ describe(
       let spDerived = cache.getDerivedShaderProgram(sp, keyword);
       expect(spDerived).not.toBeDefined();
 
-      const fsDerived = "void main() { gl_FragColor = vec4(vec3(1.0), 0.5); }";
+      const fsDerived = "void main() { out_FragColor = vec4(vec3(1.0), 0.5); }";
       spDerived = cache.createDerivedShaderProgram(sp, keyword, {
         vertexShaderSource: vs,
         fragmentShaderSource: fsDerived,
@@ -278,9 +271,8 @@ describe(
     });
 
     it("replaces derived shader program", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       const cache = new ShaderCache(context);
       const sp = cache.getShaderProgram({
@@ -293,7 +285,7 @@ describe(
       const derivedKeywords = sp._cachedShader.derivedKeywords;
 
       const keyword = "derived";
-      const fsDerived = "void main() { gl_FragColor = vec4(vec3(1.0), 0.5); }";
+      const fsDerived = "void main() { out_FragColor = vec4(vec3(1.0), 0.5); }";
       const spDerived = cache.replaceDerivedShaderProgram(sp, keyword, {
         vertexShaderSource: vs,
         fragmentShaderSource: fsDerived,
@@ -305,7 +297,8 @@ describe(
       expect(spDerived).toBeDefined();
       expect(derivedKeywords.length).toBe(1);
 
-      const fsDerived2 = "void main() { gl_FragColor = vec4(vec3(0.5), 0.5); }";
+      const fsDerived2 =
+        "void main() { out_FragColor = vec4(vec3(0.5), 0.5); }";
       const spDerived2 = cache.replaceDerivedShaderProgram(sp, keyword, {
         vertexShaderSource: vs,
         fragmentShaderSource: fsDerived2,
@@ -322,9 +315,8 @@ describe(
     });
 
     it("destroying a shader program destroys its derived shaders", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       const cache = new ShaderCache(context);
       const sp = cache.getShaderProgram({
@@ -336,7 +328,7 @@ describe(
       });
 
       const keyword = "derived";
-      const fsDerived = "void main() { gl_FragColor = vec4(vec3(1.0), 0.5); }";
+      const fsDerived = "void main() { out_FragColor = vec4(vec3(1.0), 0.5); }";
       const spDerived = cache.createDerivedShaderProgram(sp, keyword, {
         vertexShaderSource: vs,
         fragmentShaderSource: fsDerived,
@@ -356,9 +348,8 @@ describe(
     });
 
     it("is destroyed", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
 
       const cache = new ShaderCache(context);
       const sp = cache.getShaderProgram({

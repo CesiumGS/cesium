@@ -33,13 +33,13 @@ import ClippingPlane from "./ClippingPlane.js";
  * @alias ClippingPlaneCollection
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {ClippingPlane[]} [options.planes=[]] An array of {@link ClippingPlane} objects used to selectively disable rendering on the outside of each plane.
- * @param {Boolean} [options.enabled=true] Determines whether the clipping planes are active.
+ * @param {boolean} [options.enabled=true] Determines whether the clipping planes are active.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
- * @param {Boolean} [options.unionClippingRegions=false] If true, a region will be clipped if it is on the outside of any plane in the collection. Otherwise, a region will only be clipped if it is on the outside of every plane.
+ * @param {boolean} [options.unionClippingRegions=false] If true, a region will be clipped if it is on the outside of any plane in the collection. Otherwise, a region will only be clipped if it is on the outside of every plane.
  * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
- * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
+ * @param {number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
  *
  * @demo {@link https://sandcastle.cesium.com/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
  * @demo {@link https://sandcastle.cesium.com/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
@@ -99,7 +99,7 @@ function ClippingPlaneCollection(options) {
   /**
    * The width, in pixels, of the highlight applied to the edge along which an object is clipped.
    *
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
@@ -163,7 +163,7 @@ Object.defineProperties(ClippingPlaneCollection.prototype, {
    * in the collection.
    *
    * @memberof ClippingPlaneCollection.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -178,7 +178,7 @@ Object.defineProperties(ClippingPlaneCollection.prototype, {
    * outside of every plane.
    *
    * @memberof ClippingPlaneCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   unionClippingRegions: {
@@ -200,7 +200,7 @@ Object.defineProperties(ClippingPlaneCollection.prototype, {
    * If true, clipping will be enabled.
    *
    * @memberof ClippingPlaneCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   enabled: {
@@ -249,7 +249,7 @@ Object.defineProperties(ClippingPlaneCollection.prototype, {
    * If this value changes, then shader regeneration is necessary.
    *
    * @memberof ClippingPlaneCollection.prototype
-   * @returns {Number} A Number that describes the ClippingPlaneCollection's state.
+   * @returns {number} A Number that describes the ClippingPlaneCollection's state.
    * @readonly
    * @private
    */
@@ -303,7 +303,7 @@ ClippingPlaneCollection.prototype.add = function (plane) {
  * {@link ClippingPlaneCollection#length} to iterate over all the planes
  * in the collection.
  *
- * @param {Number} index The zero-based index of the plane.
+ * @param {number} index The zero-based index of the plane.
  * @returns {ClippingPlane} The ClippingPlane at the specified index.
  *
  * @see ClippingPlaneCollection#length
@@ -331,7 +331,7 @@ function indexOf(planes, plane) {
  * Checks whether this collection contains a ClippingPlane equal to the given ClippingPlane.
  *
  * @param {ClippingPlane} [clippingPlane] The ClippingPlane to check for.
- * @returns {Boolean} true if this collection contains the ClippingPlane, false otherwise.
+ * @returns {boolean} true if this collection contains the ClippingPlane, false otherwise.
  *
  * @see ClippingPlaneCollection#get
  */
@@ -343,7 +343,7 @@ ClippingPlaneCollection.prototype.contains = function (clippingPlane) {
  * Removes the first occurrence of the given ClippingPlane from the collection.
  *
  * @param {ClippingPlane} clippingPlane
- * @returns {Boolean} <code>true</code> if the plane was removed; <code>false</code> if the plane was not found in the collection.
+ * @returns {boolean} <code>true</code> if the plane was removed; <code>false</code> if the plane was not found in the collection.
  *
  * @see ClippingPlaneCollection#add
  * @see ClippingPlaneCollection#contains
@@ -612,7 +612,7 @@ const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
  * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link TileBoundingVolume}.
  * @private
  *
- * @param {Object} tileBoundingVolume The volume to determine the intersection with the planes.
+ * @param {object} tileBoundingVolume The volume to determine the intersection with the planes.
  * @param {Matrix4} [transform] An optional, additional matrix to transform the plane to world coordinates.
  * @returns {Intersect} {@link Intersect.INSIDE} if the entire volume is on the side of the planes
  *                      the normal is pointing and should be entirely rendered, {@link Intersect.OUTSIDE}
@@ -661,8 +661,8 @@ ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = functi
  * Destroys the owner's previous ClippingPlaneCollection if setting is successful.
  *
  * @param {ClippingPlaneCollection} [clippingPlaneCollection] A ClippingPlaneCollection (or undefined) being attached to an object
- * @param {Object} owner An Object that should receive the new ClippingPlaneCollection
- * @param {String} key The Key for the Object to reference the ClippingPlaneCollection
+ * @param {object} owner An Object that should receive the new ClippingPlaneCollection
+ * @param {string} key The Key for the Object to reference the ClippingPlaneCollection
  * @private
  */
 ClippingPlaneCollection.setOwner = function (
@@ -693,7 +693,7 @@ ClippingPlaneCollection.setOwner = function (
  * Function for checking if the context will allow clipping planes with floating point textures.
  *
  * @param {Context} context The Context that will contain clipped objects and clipping textures.
- * @returns {Boolean} <code>true</code> if floating point textures can be used for clipping planes.
+ * @returns {boolean} <code>true</code> if floating point textures can be used for clipping planes.
  * @private
  */
 ClippingPlaneCollection.useFloatTexture = function (context) {
@@ -739,7 +739,7 @@ ClippingPlaneCollection.getTextureResolution = function (
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see ClippingPlaneCollection#destroy
  */

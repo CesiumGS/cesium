@@ -204,7 +204,7 @@ Timeline.prototype.removeEventListener = function (type, listener, useCapture) {
 };
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 Timeline.prototype.isDestroyed = function () {
   return false;

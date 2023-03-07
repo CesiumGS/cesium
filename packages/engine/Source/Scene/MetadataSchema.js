@@ -11,15 +11,15 @@ import MetadataEnum from "./MetadataEnum.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {String} [options.id] The ID of the schema
- * @param {String} [options.name] The name of the schema.
- * @param {String} [options.description] The description of the schema.
- * @param {String} [options.version] The application-specific version of the schema.
- * @param {Object.<String, MetadataClass>} [options.classes] Classes defined in the schema, where each key is the class ID.
- * @param {Object.<String, MetadataEnum>} [options.enums] Enums defined in the schema, where each key is the enum ID.
+ * @param {object} options Object with the following properties:
+ * @param {string} [options.id] The ID of the schema
+ * @param {string} [options.name] The name of the schema.
+ * @param {string} [options.description] The description of the schema.
+ * @param {string} [options.version] The application-specific version of the schema.
+ * @param {Object<string, MetadataClass>} [options.classes] Classes defined in the schema, where each key is the class ID.
+ * @param {Object<string, MetadataEnum>} [options.enums] Enums defined in the schema, where each key is the enum ID.
  * @param {*} [options.extras] Extra user-defined properties.
- * @param {Object} [options.extensions] An object containing extensions.
+ * @param {object} [options.extensions] An object containing extensions.
  *
  * @alias MetadataSchema
  * @constructor
@@ -44,7 +44,7 @@ function MetadataSchema(options) {
 /**
  * Creates a {@link MetadataSchema} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
  *
- * @param {Object} schema The schema JSON object.
+ * @param {object} schema The schema JSON object.
  *
  * @returns {MetadataSchema} The newly created metadata schema
  *
@@ -98,7 +98,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * Classes defined in the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {Object.<String, MetadataClass>}
+   * @type {Object<string, MetadataClass>}
    * @readonly
    */
   classes: {
@@ -111,7 +111,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * Enums defined in the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {Object.<String, MetadataEnum>}
+   * @type {Object<string, MetadataEnum>}
    * @readonly
    */
   enums: {
@@ -124,7 +124,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * The ID of the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   id: {
@@ -137,7 +137,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * The name of the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -150,7 +150,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * The description of the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   description: {
@@ -163,7 +163,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * The application-specific version of the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   version: {
@@ -189,7 +189,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * An object containing extensions.
    *
    * @memberof MetadataSchema.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   extensions: {

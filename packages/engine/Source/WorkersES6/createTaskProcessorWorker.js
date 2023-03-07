@@ -100,10 +100,10 @@ function createTaskProcessorWorker(workerFunction) {
  * A function that performs a calculation in a Web Worker.
  * @callback createTaskProcessorWorker.WorkerFunction
  *
- * @param {Object} parameters Parameters to the calculation.
+ * @param {object} parameters Parameters to the calculation.
  * @param {Array} transferableObjects An array that should be filled with references to objects inside
  *        the result that should be transferred back to the main document instead of copied.
- * @returns {Object} The result of the calculation.
+ * @returns {object} The result of the calculation.
  *
  * @example
  * function calculate(parameters, transferableObjects) {
@@ -124,6 +124,6 @@ function createTaskProcessorWorker(workerFunction) {
  * specifically, task ID management and posting a response message containing the result.
  * @callback createTaskProcessorWorker.TaskProcessorWorkerFunction
  *
- * @param {Object} event The onmessage event object.
+ * @param {object} event The onmessage event object.
  */
 export default createTaskProcessorWorker;

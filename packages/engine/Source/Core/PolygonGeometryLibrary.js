@@ -192,8 +192,8 @@ PolygonGeometryLibrary.subdivideRhumbLineCount = function (
  * @param {Cartesian2} t1 Second texture coordinate.
  * @param {Cartesian3} p0 First world position.
  * @param {Cartesian3} p1 Second world position.
- * @param {Number} minDistance Minimum distance for a segment.
- * @param {Array<Cartesian2>} result The subdivided texture coordinates.
+ * @param {number} minDistance Minimum distance for a segment.
+ * @param {Cartesian2[]} result The subdivided texture coordinates.
  *
  * @private
  */
@@ -266,8 +266,8 @@ PolygonGeometryLibrary.subdivideLine = function (p0, p1, minDistance, result) {
  * @param {Ellipsoid} ellipsoid The ellipsoid.
  * @param {Cartesian3} p0 First world position.
  * @param {Cartesian3} p1 Second world position.
- * @param {Number} minDistance Minimum distance for a segment.
- * @param {Array<Cartesian2>} result The subdivided texture coordinates.
+ * @param {number} minDistance Minimum distance for a segment.
+ * @param {Cartesian2[]} result The subdivided texture coordinates.
  *
  * @private
  */

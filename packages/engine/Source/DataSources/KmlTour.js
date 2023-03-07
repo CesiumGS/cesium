@@ -8,8 +8,8 @@ import Event from "../Core/Event.js";
  * @alias KmlTour
  * @constructor
  *
- * @param {String} name name parsed from KML
- * @param {String} id id parsed from KML
+ * @param {string} name name parsed from KML
+ * @param {string} id id parsed from KML
  * @param {Array} playlist array with KmlTourFlyTos and KmlTourWaits
  *
  * @see KmlTourFlyTo
@@ -20,22 +20,22 @@ import Event from "../Core/Event.js";
 function KmlTour(name, id) {
   /**
    * Id of kml gx:Tour entry
-   * @type String
+   * @type {string}
    */
   this.id = id;
   /**
    * Tour name
-   * @type String
+   * @type {string}
    */
   this.name = name;
   /**
    * Index of current entry from playlist
-   * @type Number
+   * @type {number}
    */
   this.playlistIndex = 0;
   /**
    * Array of playlist entries
-   * @type Array
+   * @type {Array}
    */
   this.playlist = [];
   /**
@@ -86,7 +86,7 @@ KmlTour.prototype.addPlaylistEntry = function (entry) {
  * Play this tour.
  *
  * @param {Viewer|CesiumWidget} widget The widget.
- * @param {Object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
+ * @param {object} [cameraOptions] these options will be merged with {@link Camera#flyTo}
  * options for FlyTo playlist entries.
  */
 KmlTour.prototype.play = function (widget, cameraOptions) {

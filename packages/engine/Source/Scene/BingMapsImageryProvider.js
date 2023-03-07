@@ -16,17 +16,17 @@ import DiscardEmptyTilePolicy from "./DiscardEmptyTileImagePolicy.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
- * @typedef {Object} BingMapsImageryProvider.ConstructorOptions
+ * @typedef {object} BingMapsImageryProvider.ConstructorOptions
  *
  * Initialization options for the BingMapsImageryProvider constructor
  *
- * @property {Resource|String} [url] The url of the Bing Maps server hosting the imagery. Deprecated.
- * @property {String} [key] The Bing Maps key for your application, which can be
+ * @property {Resource|string} [url] The url of the Bing Maps server hosting the imagery. Deprecated.
+ * @property {string} [key] The Bing Maps key for your application, which can be
  *        created at {@link https://www.bingmapsportal.com/}.
- * @property {String} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
+ * @property {string} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
  *        By default, tiles are loaded using the same protocol as the page.
  * @property {BingMapsStyle} [mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
- * @property {String} [culture=''] The culture to use when requesting Bing Maps imagery. Not
+ * @property {string} [culture=''] The culture to use when requesting Bing Maps imagery. Not
  *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
  *        for information on the supported cultures.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -223,7 +223,7 @@ function BingMapsImageryProvider(options) {
 
   this._proxy = options.proxy;
   this._credit = new Credit(
-    `<a href="http://www.bing.com"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
+    `<a href="https://www.microsoft.com/en-us/maps/product/enduserterms"><img src="${BingMapsImageryProvider.logoUrl}" title="Bing Imagery"/></a>`
   );
 
   this._tilingScheme = new WebMercatorTilingScheme({
@@ -245,7 +245,7 @@ function BingMapsImageryProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "BingMapsImageryProvider options.url",
-      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use BingMapsImageryProvider.fromUrl instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use BingMapsImageryProvider.fromUrl instead."
     );
 
     //>>includeStart('debug', pragmas.debug);
@@ -297,7 +297,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets the name of the BingMaps server url hosting the imagery.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -321,7 +321,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets the Bing Maps key.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   key: {
@@ -347,7 +347,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
    * all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
    * for information on the supported cultures.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   culture: {
@@ -359,7 +359,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets the width of each tile, in pixels.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -371,7 +371,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets the height of each tile, in pixels.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -383,7 +383,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets the maximum level-of-detail that can be requested.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -395,7 +395,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets the minimum level-of-detail that can be requested.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -459,7 +459,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -467,7 +467,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.ready",
-        "BingMapsImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use BingMapsImageryProvider.fromUrl instead."
+        "BingMapsImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use BingMapsImageryProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -476,7 +476,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -484,7 +484,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.readyPromise",
-        "BingMapsImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use BingMapsImageryProvider.fromUrl instead."
+        "BingMapsImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use BingMapsImageryProvider.fromUrl instead."
       );
       return this._readyPromise;
     },
@@ -510,7 +510,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  Setting this property to false reduces memory usage
    * and texture upload time.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -530,14 +530,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultAlpha",
-        "BingMapsImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "BingMapsImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultAlpha",
-        "BingMapsImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "BingMapsImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -554,14 +554,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultNightAlpha",
-        "BingMapsImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "BingMapsImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this.defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultNightAlpha",
-        "BingMapsImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "BingMapsImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this.defaultNightAlpha = value;
     },
@@ -578,14 +578,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultDayAlpha",
-        "BingMapsImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "BingMapsImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultDayAlpha",
-        "BingMapsImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "BingMapsImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -602,14 +602,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultBrightness",
-        "BingMapsImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "BingMapsImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultBrightness",
-        "BingMapsImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "BingMapsImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -626,14 +626,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultContrast",
-        "BingMapsImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "BingMapsImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultContrast",
-        "BingMapsImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "BingMapsImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -649,14 +649,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultHue",
-        "BingMapsImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "BingMapsImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultHue",
-        "BingMapsImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "BingMapsImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -673,14 +673,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultSaturation",
-        "BingMapsImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "BingMapsImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultSaturation",
-        "BingMapsImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "BingMapsImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -696,14 +696,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultGamma",
-        "BingMapsImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "BingMapsImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultGamma",
-        "BingMapsImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "BingMapsImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -719,14 +719,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultMinificationFilter",
-        "BingMapsImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "BingMapsImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultMinificationFilter",
-        "BingMapsImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "BingMapsImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -742,14 +742,14 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "BingMapsImageryProvider.defaultMagnificationFilter",
-        "BingMapsImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "BingMapsImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "BingMapsImageryProvider.defaultMagnificationFilter",
-        "BingMapsImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "BingMapsImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },
@@ -823,9 +823,9 @@ const rectangleScratch = new Rectangle();
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
 BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
@@ -847,11 +847,11 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
 /**
  * Requests the image for a given tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
 BingMapsImageryProvider.prototype.requestImage = function (
@@ -884,11 +884,11 @@ BingMapsImageryProvider.prototype.requestImage = function (
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
  * @return {undefined} Undefined since picking is not supported.
  */
 BingMapsImageryProvider.prototype.pickFeatures = function (
@@ -905,9 +905,9 @@ BingMapsImageryProvider.prototype.pickFeatures = function (
  * Converts a tiles (x, y, level) position into a quadkey used to request an image
  * from a Bing Maps server.
  *
- * @param {Number} x The tile's x coordinate.
- * @param {Number} y The tile's y coordinate.
- * @param {Number} level The tile's zoom level.
+ * @param {number} x The tile's x coordinate.
+ * @param {number} y The tile's y coordinate.
+ * @param {number} level The tile's zoom level.
  *
  * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
  * @see BingMapsImageryProvider#quadKeyToTileXY
@@ -935,7 +935,7 @@ BingMapsImageryProvider.tileXYToQuadKey = function (x, y, level) {
  * Converts a tile's quadkey used to request an image from a Bing Maps server into the
  * (x, y, level) position.
  *
- * @param {String} quadkey The tile's quad key
+ * @param {string} quadkey The tile's quad key
  *
  * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
  * @see BingMapsImageryProvider#tileXYToQuadKey
@@ -969,7 +969,7 @@ Object.defineProperties(BingMapsImageryProvider, {
   /**
    * Gets or sets the URL to the Bing logo for display in the credit.
    * @memberof BingMapsImageryProvider
-   * @type {String}
+   * @type {string}
    */
   logoUrl: {
     get: function () {

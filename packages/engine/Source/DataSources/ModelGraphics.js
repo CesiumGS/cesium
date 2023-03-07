@@ -19,7 +19,7 @@ function createArticulationStagePropertyBag(value) {
 }
 
 /**
- * @typedef {Object} ModelGraphics.ConstructorOptions
+ * @typedef {object} ModelGraphics.ConstructorOptions
  *
  * Initialization options for the ModelGraphics constructor
  *
@@ -41,8 +41,8 @@ function createArticulationStagePropertyBag(value) {
  * @property {Property | Cartesian2} [imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
  * @property {Property | Color} [lightColor] A property specifying the light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
- * @property {PropertyBag | Object.<string, TranslationRotationScale>} [nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
- * @property {PropertyBag | Object.<string, number>} [articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
+ * @property {PropertyBag | Object<string, TranslationRotationScale>} [nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
+ * @property {PropertyBag | Object<string, number>} [articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
  * @property {Property | ClippingPlaneCollection} [clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @property {Property | CustomShader} [customShader] A property specifying the {@link CustomShader} to apply to this model.
  */

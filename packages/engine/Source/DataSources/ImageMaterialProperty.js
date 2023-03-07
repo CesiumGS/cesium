@@ -15,11 +15,11 @@ const defaultColor = Color.WHITE;
  * @alias ImageMaterialProperty
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property|String|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} [options.image] A Property specifying the Image, URL, Canvas, or Video.
+ * @param {object} [options] Object with the following properties:
+ * @param {Property|string|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} [options.image] A Property specifying the Image, URL, Canvas, or Video.
  * @param {Property|Cartesian2} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
  * @param {Property|Color} [options.color=Color.WHITE] The color applied to the image
- * @param {Property|Boolean} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
+ * @param {Property|boolean} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
  */
 function ImageMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -46,7 +46,7 @@ Object.defineProperties(ImageMaterialProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof ImageMaterialProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -108,7 +108,7 @@ Object.defineProperties(ImageMaterialProperty.prototype, {
  * Gets the {@link Material} type at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the type.
- * @returns {String} The type of material.
+ * @returns {string} The type of material.
  */
 ImageMaterialProperty.prototype.getType = function (time) {
   return "Image";
@@ -118,8 +118,8 @@ ImageMaterialProperty.prototype.getType = function (time) {
  * Gets the value of the property at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve the value.
- * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
- * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+ * @param {object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+ * @returns {object} The modified result parameter or a new instance if the result parameter was not supplied.
  */
 ImageMaterialProperty.prototype.getValue = function (time, result) {
   if (!defined(result)) {
@@ -151,7 +151,7 @@ ImageMaterialProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 ImageMaterialProperty.prototype.equals = function (other) {
   return (

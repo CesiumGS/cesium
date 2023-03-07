@@ -8,9 +8,9 @@ import IonResource from "./IonResource.js";
  *
  * @function
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
- * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
+ * @param {object} [options] Object with the following properties:
+ * @param {boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
+ * @param {boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
  * @returns {CesiumTerrainProvider}
  *
  * @see Ion
@@ -34,7 +34,7 @@ import IonResource from "./IonResource.js";
 function createWorldTerrain(options) {
   deprecationWarning(
     "createWorldTerrain",
-    "createWorldTerrain was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use createWorldTerrainAsync instead."
+    "createWorldTerrain was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createWorldTerrainAsync instead."
   );
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

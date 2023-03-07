@@ -6,10 +6,10 @@ describe(
   "Renderer/Buffer",
   function () {
     createBufferSpecs({});
-    const c = createContext({ requestWebgl1: false });
+    const c = createContext({});
     // Don't repeat WebGL 1 tests when WebGL 2 is not supported
     if (c.webgl2) {
-      createBufferSpecs({ requestWebgl1: false });
+      createBufferSpecs({});
     }
     c.destroyForSpecs();
 

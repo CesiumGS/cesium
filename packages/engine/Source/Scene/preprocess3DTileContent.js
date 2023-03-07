@@ -9,10 +9,10 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  * {@link Cesium3DTileContentType} and the payload. The payload is either
  * binary or JSON depending on the content type.
  *
- * @typedef {Object} PreprocessedContent
+ * @typedef {object} PreprocessedContent
  * @property {Cesium3DTileContentType} contentType The type of the content
  * @property {Uint8Array} [binaryPayload] For binary files, the payload is returned as a typed array with byteOffset of 0
- * @property {Object} [jsonPayload] For JSON files, the results are returned as a JSON object.
+ * @property {object} [jsonPayload] For JSON files, the results are returned as a JSON object.
  * @private
  */
 

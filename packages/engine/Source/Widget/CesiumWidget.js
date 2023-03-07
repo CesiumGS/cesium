@@ -121,8 +121,8 @@ function configureCameraFrustum(widget) {
  * @alias CesiumWidget
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
- * @param {Object} [options] Object with the following properties:
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
+ * @param {object} [options] Object with the following properties:
  * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
  * @param {ImageryProvider | false} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added. Deprecated.
  * @param {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
@@ -131,25 +131,25 @@ function configureCameraFrustum(widget) {
  * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
- * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
- * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
+ * @param {boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+ * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
  * @param {Globe | false} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
- * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
- * @param {Boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
- * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
- * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+ * @param {boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+ * @param {boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
+ * @param {number} [options.targetFrameRate] The target frame rate when using the default render loop.
+ * @param {boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
  * @param {ContextOptions} [options.contextOptions] Context and WebGL creation properties passed to {@link Scene}.
- * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
+ * @param {Element|string} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
  *        to the bottom of the widget itself.
- * @param {Element|String} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
- * @param {Boolean} [options.shadows=false] Determines if shadows are cast by light sources.
+ * @param {Element|string} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
+ * @param {boolean} [options.shadows=false] Determines if shadows are cast by light sources.
  * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
  * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
- * @param {Boolean} [options.blurActiveElementOnCanvasFocus=true] If true, the active element will blur when the viewer's canvas is clicked. Setting this to false is useful for cases when the canvas is clicked only for retrieving position or an entity data without actually meaning to set the canvas to be the active element.
- * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
- * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
- * @param {Number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
+ * @param {boolean} [options.blurActiveElementOnCanvasFocus=true] If true, the active element will blur when the viewer's canvas is clicked. Setting this to false is useful for cases when the canvas is clicked only for retrieving position or an entity data without actually meaning to set the canvas to be the active element.
+ * @param {boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param {number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param {number} [options.msaaSamples=1] If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  *
@@ -346,7 +346,7 @@ function CesiumWidget(container, options) {
     if (defined(options.imageryProvider)) {
       deprecationWarning(
         "CesiumWidget options.imageryProvider",
-        "options.imageryProvider was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use options.baseLayer instead."
+        "options.imageryProvider was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use options.baseLayer instead."
       );
     }
 
@@ -566,7 +566,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * than the underlying requestAnimationFrame implementation will have no effect.
    * @memberof CesiumWidget.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   targetFrameRate: {
     get: function () {
@@ -596,7 +596,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * after the error.
    * @memberof CesiumWidget.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   useDefaultRenderLoop: {
     get: function () {
@@ -621,7 +621,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
    * @memberof CesiumWidget.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   resolutionScale: {
@@ -650,7 +650,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * this flag is true or false.
    * @memberof CesiumWidget.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   useBrowserRecommendedResolution: {
@@ -672,9 +672,9 @@ Object.defineProperties(CesiumWidget.prototype, {
  * when a render loop error occurs, if showRenderLoopErrors was not false when the
  * widget was constructed.
  *
- * @param {String} title The title to be displayed on the error panel.  This string is interpreted as text.
- * @param {String} [message] A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
- * @param {String} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
+ * @param {string} title The title to be displayed on the error panel.  This string is interpreted as text.
+ * @param {string} [message] A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
+ * @param {string} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
  */
 CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
   const element = this._element;
@@ -776,7 +776,7 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
 };
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 CesiumWidget.prototype.isDestroyed = function () {
   return false;

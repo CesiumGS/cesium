@@ -3,7 +3,7 @@ import Check from "../Core/Check.js";
 /**
  * An enum describing the built-in instance attribute semantics.
  *
- * @enum {String}
+ * @enum {string}
  *
  * @private
  */
@@ -11,7 +11,7 @@ const InstanceAttributeSemantic = {
   /**
    * Per-instance translation.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   TRANSLATION: "TRANSLATION",
@@ -19,7 +19,7 @@ const InstanceAttributeSemantic = {
   /**
    * Per-instance rotation.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   ROTATION: "ROTATION",
@@ -27,7 +27,7 @@ const InstanceAttributeSemantic = {
   /**
    * Per-instance scale.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   SCALE: "SCALE",
@@ -35,7 +35,7 @@ const InstanceAttributeSemantic = {
   /**
    * Per-instance feature ID.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   FEATURE_ID: "_FEATURE_ID",

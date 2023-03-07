@@ -74,13 +74,13 @@ const ImageryProviderAsyncMapping = {
 };
 
 /**
- * @typedef {Object} IonImageryProvider.ConstructorOptions
+ * @typedef {object} IonImageryProvider.ConstructorOptions
  *
  * Initialization options for the TileMapServiceImageryProvider constructor
  *
- * @property {Number} [assetId] An ion imagery asset ID. Deprecated.
- * @property {String} [accessToken=Ion.defaultAccessToken] The access token to use.
- * @property {String|Resource} [server=Ion.defaultServer] The resource to the Cesium ion API server.
+ * @property {number} [assetId] An ion imagery asset ID. Deprecated.
+ * @property {string} [accessToken=Ion.defaultAccessToken] The access token to use.
+ * @property {string|Resource} [server=Ion.defaultServer] The resource to the Cesium ion API server.
  */
 
 /**
@@ -123,7 +123,7 @@ function IonImageryProvider(options) {
   if (defined(assetId)) {
     deprecationWarning(
       "IonImageryProvider options.assetId",
-      "options.assetId was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use IonImageryProvider.fromAssetId instead."
+      "options.assetId was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
     );
 
     IonImageryProvider._initialize(this, assetId, options);
@@ -134,7 +134,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof IonImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -142,7 +142,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.ready",
-        "IonImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use IonImageryProvider.fromAssetId instead."
+        "IonImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
       );
       return this._ready;
     },
@@ -151,7 +151,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof IonImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -159,7 +159,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.readyPromise",
-        "IonImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use IonImageryProvider.fromAssetId instead."
+        "IonImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
       );
       return this._readyPromise;
     },
@@ -180,7 +180,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
   /**
    * Gets the width of each tile, in pixels.
    * @memberof IonImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -192,7 +192,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
   /**
    * Gets the height of each tile, in pixels.
    * @memberof IonImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -204,7 +204,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
   /**
    * Gets the maximum level-of-detail that can be requested.
    * @memberof IonImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -220,7 +220,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
    * provider with more than a few tiles at the minimum level will lead to
    * rendering problems.
    * @memberof IonImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -289,7 +289,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof IonImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -322,14 +322,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultAlpha",
-        "IonImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "IonImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultAlpha",
-        "IonImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "IonImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -346,14 +346,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultNightAlpha",
-        "IonImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "IonImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this.defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultNightAlpha",
-        "IonImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "IonImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this.defaultNightAlpha = value;
     },
@@ -370,14 +370,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultDayAlpha",
-        "IonImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "IonImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultDayAlpha",
-        "IonImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "IonImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -394,14 +394,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultBrightness",
-        "IonImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "IonImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultBrightness",
-        "IonImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "IonImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -418,14 +418,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultContrast",
-        "IonImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "IonImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultContrast",
-        "IonImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "IonImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -441,14 +441,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultHue",
-        "IonImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "IonImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultHue",
-        "IonImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "IonImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -465,14 +465,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultSaturation",
-        "IonImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "IonImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultSaturation",
-        "IonImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "IonImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -488,14 +488,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultGamma",
-        "IonImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "IonImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultGamma",
-        "IonImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "IonImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -511,14 +511,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultMinificationFilter",
-        "IonImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "IonImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultMinificationFilter",
-        "IonImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "IonImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -534,14 +534,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultMagnificationFilter",
-        "IonImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "IonImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultMagnificationFilter",
-        "IonImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "IonImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },
@@ -702,9 +702,9 @@ IonImageryProvider.fromAssetId = async function (assetId, options) {
  * Gets the credits to be displayed when a given tile is displayed.
  * @function
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
 IonImageryProvider.prototype.getTileCredits = function (x, y, level) {
@@ -720,11 +720,11 @@ IonImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * Requests the image for a given tile.
  * @function
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
 IonImageryProvider.prototype.requestImage = function (x, y, level, request) {
@@ -737,12 +737,12 @@ IonImageryProvider.prototype.requestImage = function (x, y, level, request) {
  *
  * @function
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
+ * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.

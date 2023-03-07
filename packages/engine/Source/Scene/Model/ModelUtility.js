@@ -21,8 +21,8 @@ function ModelUtility() {}
  * Create a function for reporting when a model fails to load
  *
  * @param {Model} model The model to report about
- * @param {String} type The type of object to report about
- * @param {String} path The URI of the model file
+ * @param {string} type The type of object to report about
+ * @param {string} path The URI of the model file
  * @returns {Function} An error function that throws an error for the failed model
  *
  * @private
@@ -70,7 +70,7 @@ ModelUtility.getNodeTransform = function (node) {
  *
  * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
  * @param {VertexAttributeSemantic|InstanceAttributeSemantic} semantic The semantic to search for
- * @param {Number} [setIndex] The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
+ * @param {number} [setIndex] The set index of the semantic. May be undefined for some semantics (POSITION, NORMAL, TRANSLATION, ROTATION, for example)
  * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
  *
  * @private
@@ -96,7 +96,7 @@ ModelUtility.getAttributeBySemantic = function (object, semantic, setIndex) {
  * as custom attributes do not have a semantic.
  *
  * @param {ModelComponents.Primitive|ModelComponents.Instances} object The primitive components or instances object
- * @param {String} name The name of the attribute as it appears in the model file.
+ * @param {string} name The name of the attribute as it appears in the model file.
  * @return {ModelComponents.Attribute} The selected attribute, or undefined if not found.
  *
  * @private
@@ -117,8 +117,8 @@ ModelUtility.getAttributeByName = function (object, name) {
 /**
  * Find a feature ID from an array with label or positionalLabel matching the
  * given label
- * @param {Array.<ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture>} featureIds
- * @param {String} label the label to search for
+ * @param {ModelComponents.FeatureIdAttribute[]|ModelComponents.FeatureIdImplicitRange[]|ModelComponents.FeatureIdTexture[]} featureIds
+ * @param {string} label the label to search for
  * @returns {ModelComponents.FeatureIdAttribute|ModelComponents.FeatureIdImplicitRange|ModelComponents.FeatureIdTexture} The feature ID set if found, otherwise <code>undefined</code>
  *
  * @private
@@ -215,7 +215,7 @@ const cartesianMinScratch = new Cartesian3();
  * @param {Cartesian3} [instancingTranslationMin] The component-wise minimum value of the instancing translation attribute.
  * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
  *
- * @returns {Object} An object containing the minimum and maximum position values.
+ * @returns {object} An object containing the minimum and maximum position values.
  *
  * @private
  */
@@ -324,9 +324,9 @@ ModelUtility.getCullFace = function (modelMatrix, primitiveType) {
  * // Returns "_1234"
  * ModelUtility.sanitizeGlslIdentifier("1234");
  *
- * @param {String} identifier The original identifier.
+ * @param {string} identifier The original identifier.
  *
- * @returns {String} The sanitized version of the identifier.
+ * @returns {string} The sanitized version of the identifier.
  */
 ModelUtility.sanitizeGlslIdentifier = function (identifier) {
   // Remove non-alphanumeric characters and replace with a single underscore.
@@ -371,7 +371,7 @@ ModelUtility.supportedExtensions = {
  * supported. If an unsupported extension is found, this throws
  * a {@link RuntimeError} with the extension name.
  *
- * @param {Array<String>} extensionsRequired The extensionsRequired array in the glTF.
+ * @param {string[]} extensionsRequired The extensionsRequired array in the glTF.
  */
 ModelUtility.checkSupportedExtensions = function (extensionsRequired) {
   const length = extensionsRequired.length;

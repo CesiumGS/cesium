@@ -14,7 +14,7 @@ import defined from "../Core/defined.js";
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata/Semantics|3D Metadata Semantic Reference} for the various bounding volumes and minimum/maximum heights.
  *
  * @param {TileMetadata} tileMetadata The metadata object for looking up values by semantic. In practice, this will typically be a {@link ImplicitMetadataView}
- * @return {Object} An object containing a <code>tile</code> property and a <code>content</code> property. These contain the bounding volume, and any minimum or maximum height.
+ * @return {object} An object containing a <code>tile</code> property and a <code>content</code> property. These contain the bounding volume, and any minimum or maximum height.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -47,9 +47,9 @@ function parseBoundingVolumeSemantics(tileMetadata) {
  * is the prefix. e.g. <code>TILE_BOUNDING_BOX</code> and
  * <code>CONTENT_BOUNDING_BOX</code> have the same memory layout.
  *
- * @param {String} prefix Either "TILE" or "CONTENT"
+ * @param {string} prefix Either "TILE" or "CONTENT"
  * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
- * @return {Object} An object representing the JSON description of the tile metadata
+ * @return {object} An object representing the JSON description of the tile metadata
  * @private
  */
 function parseBoundingVolume(prefix, tileMetadata) {
@@ -93,9 +93,9 @@ function parseBoundingVolume(prefix, tileMetadata) {
  * quadtree bounds for implicit tiling. This works for both
  * <code>TILE_MINIMUM_HEIGHT</code> and <code>CONTENT_MINIMUM_HEIGHT</code>
  *
- * @param {String} prefix Either "TILE" or "CONTENT"
+ * @param {string} prefix Either "TILE" or "CONTENT"
  * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
- * @return {Number} The minimum height
+ * @return {number} The minimum height
  * @private
  */
 function parseMinimumHeight(prefix, tileMetadata) {
@@ -108,9 +108,9 @@ function parseMinimumHeight(prefix, tileMetadata) {
  * quadtree bounds for implicit tiling. This works for both
  * <code>TILE_MAXIMUM_HEIGHT</code> and <code>CONTENT_MAXIMUM_HEIGHT</code>
  *
- * @param {String} prefix Either "TILE" or "CONTENT"
+ * @param {string} prefix Either "TILE" or "CONTENT"
  * @param {TileMetadata} tileMetadata The tileMetadata for looking up values
- * @return {Number} The maximum height
+ * @return {number} The maximum height
  * @private
  */
 function parseMaximumHeight(prefix, tileMetadata) {

@@ -12,7 +12,7 @@ uniform float stepSize;
 uniform vec2 step;
 #endif
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 //  Incremental Computation of the Gaussian:
 //  https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch40.html
@@ -33,15 +33,15 @@ void main()
     g.y = exp((-0.5 * delta * delta) / (sigma * sigma));
     g.z = g.y * g.y;
 
-    vec4 result = texture2D(colorTexture, st) * g.x;
+    vec4 result = texture(colorTexture, st) * g.x;
     for (int i = 1; i < SAMPLES; ++i)
     {
         g.xy *= g.yz;
 
         vec2 offset = float(i) * dir * step;
-        result += texture2D(colorTexture, st - offset) * g.x;
-        result += texture2D(colorTexture, st + offset) * g.x;
+        result += texture(colorTexture, st - offset) * g.x;
+        result += texture(colorTexture, st + offset) * g.x;
     }
 
-    gl_FragColor = result;
+    out_FragColor = result;
 }

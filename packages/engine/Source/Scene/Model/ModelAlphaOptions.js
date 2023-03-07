@@ -17,7 +17,7 @@ function ModelAlphaOptions() {
   /**
    * Determines the alpha threshold below which fragments are discarded
    *
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this.alphaCutoff = undefined;

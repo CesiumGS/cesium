@@ -79,7 +79,7 @@ Object.defineProperties(GlobeSurfaceTile.prototype, {
    * unloaded while it is needed for rendering, regardless of the value of this
    * property.
    * @memberof GlobeSurfaceTile.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   eligibleForUnloading: {
     get: function () {

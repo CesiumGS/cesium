@@ -10,7 +10,7 @@ const defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
 const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 
 /**
- * @typedef {Object} GridImageryProvider.ConstructorOptions
+ * @typedef {object} GridImageryProvider.ConstructorOptions
  *
  * Initialization options for the GridImageryProvider constructor
  *
@@ -18,14 +18,14 @@ const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @property {Number} [cells=8] The number of grids cells.
+ * @property {number} [cells=8] The number of grids cells.
  * @property {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
  * @property {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
- * @property {Number} [glowWidth=6] The width of lines used for rendering the line glow effect.
+ * @property {number} [glowWidth=6] The width of lines used for rendering the line glow effect.
  * @property {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
- * @property {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @property {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
- * @property {Number} [canvasSize=256] The size of the canvas used for rendering.
+ * @property {number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @property {number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @property {number} [canvasSize=256] The size of the canvas used for rendering.
  */
 
 /**
@@ -94,7 +94,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets the width of each tile, in pixels.
    * @memberof GridImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -106,7 +106,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets the height of each tile, in pixels.
    * @memberof GridImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -118,7 +118,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets the maximum level-of-detail that can be requested.
    * @memberof GridImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -130,7 +130,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets the minimum level-of-detail that can be requested.
    * @memberof GridImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -194,7 +194,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GridImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -202,7 +202,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.ready",
-        "GridImageryProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+        "GridImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
       );
       return true;
     },
@@ -211,7 +211,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof GridImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -219,7 +219,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.readyPromise",
-        "GridImageryProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+        "GridImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
       );
       return this._readyPromise;
     },
@@ -245,7 +245,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof GridImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -265,14 +265,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultAlpha",
-        "GridImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "GridImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultAlpha",
-        "GridImageryProvider.defaultAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.alpha instead."
+        "GridImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -289,14 +289,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultNightAlpha",
-        "GridImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "GridImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this.defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultNightAlpha",
-        "GridImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.nightAlpha instead."
+        "GridImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this.defaultNightAlpha = value;
     },
@@ -313,14 +313,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultDayAlpha",
-        "GridImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "GridImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultDayAlpha",
-        "GridImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.dayAlpha instead."
+        "GridImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -337,14 +337,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultBrightness",
-        "GridImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "GridImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultBrightness",
-        "GridImageryProvider.defaultBrightness was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.brightness instead."
+        "GridImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -361,14 +361,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultContrast",
-        "GridImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "GridImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultContrast",
-        "GridImageryProvider.defaultContrast was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.contrast instead."
+        "GridImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -384,14 +384,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultHue",
-        "GridImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "GridImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultHue",
-        "GridImageryProvider.defaultHue was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.hue instead."
+        "GridImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -408,14 +408,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultSaturation",
-        "GridImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "GridImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultSaturation",
-        "GridImageryProvider.defaultSaturation was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.saturation instead."
+        "GridImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -431,14 +431,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultGamma",
-        "GridImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "GridImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultGamma",
-        "GridImageryProvider.defaultGamma was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.gamma instead."
+        "GridImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -454,14 +454,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultMinificationFilter",
-        "GridImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "GridImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultMinificationFilter",
-        "GridImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.minificationFilter instead."
+        "GridImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -477,14 +477,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GridImageryProvider.defaultMagnificationFilter",
-        "GridImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "GridImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "GridImageryProvider.defaultMagnificationFilter",
-        "GridImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use ImageryLayer.magnificationFilter instead."
+        "GridImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },
@@ -554,9 +554,9 @@ GridImageryProvider.prototype._createGridCanvas = function () {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
  */
 GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
@@ -566,11 +566,11 @@ GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
 /**
  * Requests the image for a given tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<HTMLCanvasElement>} The resolved image as a Canvas DOM object.
+ * @returns {Promise<HTMLCanvasElement>} The resolved image as a Canvas DOM object.
  */
 GridImageryProvider.prototype.requestImage = function (x, y, level, request) {
   return Promise.resolve(this._canvas);
@@ -580,11 +580,11 @@ GridImageryProvider.prototype.requestImage = function (x, y, level, request) {
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
  * @return {undefined} Undefined since picking is not supported.
  */
 GridImageryProvider.prototype.pickFeatures = function (

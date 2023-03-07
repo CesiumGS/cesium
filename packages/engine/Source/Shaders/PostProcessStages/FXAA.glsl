@@ -1,4 +1,4 @@
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 uniform sampler2D colorTexture;
 
@@ -16,6 +16,6 @@ void main()
         fxaaQualitySubpix,
         fxaaQualityEdgeThreshold,
         fxaaQualityEdgeThresholdMin);
-    float alpha = texture2D(colorTexture, v_textureCoordinates).a;
-    gl_FragColor = vec4(color.rgb, alpha);
+    float alpha = texture(colorTexture, v_textureCoordinates).a;
+    out_FragColor = vec4(color.rgb, alpha);
 }

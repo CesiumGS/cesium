@@ -37,7 +37,7 @@ function AttributeLoadPlan(attribute) {
    * Whether the attribute will be loaded as a GPU buffer by the time
    * {@link PrimitiveLoadPlan#postProcess} is finished.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this.loadBuffer = false;
@@ -46,7 +46,7 @@ function AttributeLoadPlan(attribute) {
    * Whether the attribute will be loaded as a packed typed array by the time
    * {@link PrimitiveLoadPlan#postProcess} is finished.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this.loadTypedArray = false;
@@ -81,7 +81,7 @@ function IndicesLoadPlan(indices) {
    * Whether the indices will be loaded as a GPU buffer by the time
    * {@link PrimitiveLoadPlan#postProcess} is finished.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this.loadBuffer = false;
@@ -90,7 +90,7 @@ function IndicesLoadPlan(indices) {
    * Whether the indices will be loaded as a typed array copy of the GPU
    * buffer by the time {@link PrimitiveLoadPlan#postProcess} is finished.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this.loadTypedArray = false;
@@ -145,7 +145,7 @@ function PrimitiveLoadPlan(primitive) {
    * Set this true to indicate that the primitive has the
    * CESIUM_primitive_outline extension and needs to be post-processed
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @private
    */
   this.needsOutlines = false;
@@ -153,7 +153,7 @@ function PrimitiveLoadPlan(primitive) {
   /**
    * The outline edge indices from the CESIUM_primitive_outline extension
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @private
    */
   this.outlineIndices = undefined;

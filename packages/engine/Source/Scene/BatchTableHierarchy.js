@@ -12,8 +12,8 @@ import RuntimeError from "../Core/RuntimeError.js";
 /**
  * Object for handling the <code>3DTILES_batch_table_hierarchy</code> extension
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.extension The <code>3DTILES_batch_table_hierarchy</code> extension object.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.extension The <code>3DTILES_batch_table_hierarchy</code> extension object.
  * @param {Uint8Array} [options.binaryBody] The binary body of the batch table
  *
  * @alias BatchTableHierarchy
@@ -56,7 +56,7 @@ Object.defineProperties(BatchTableHierarchy.prototype, {
  * <code>3DTILES_batch_table_hierarchy</code> extension.
  *
  * @param {BatchTableHierarchy} hierarchy The hierarchy instance
- * @param {Object} hierarchyJson The JSON of the extension
+ * @param {object} hierarchyJson The JSON of the extension
  * @param {Uint8Array} [binaryBody] The binary body of the batch table for accessing binary properties
  * @private
  */
@@ -365,9 +365,9 @@ function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
 /**
  * Returns whether the feature has this property.
  *
- * @param {Number} batchId the batch ID of the feature
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether the feature has this property.
+ * @param {number} batchId the batch ID of the feature
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @returns {boolean} Whether the feature has this property.
  * @private
  */
 BatchTableHierarchy.prototype.hasProperty = function (batchId, propertyId) {
@@ -387,8 +387,8 @@ BatchTableHierarchy.prototype.hasProperty = function (batchId, propertyId) {
 /**
  * Returns whether any feature has this property.
  *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether any feature has this property.
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @returns {boolean} Whether any feature has this property.
  * @private
  */
 BatchTableHierarchy.prototype.propertyExists = function (propertyId) {
@@ -406,10 +406,10 @@ BatchTableHierarchy.prototype.propertyExists = function (propertyId) {
 /**
  * Returns an array of property IDs.
  *
- * @param {Number} batchId the batch ID of the feature
- * @param {Number} index The index of the entity.
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
+ * @param {number} batchId the batch ID of the feature
+ * @param {number} index The index of the entity.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The property IDs.
  * @private
  */
 BatchTableHierarchy.prototype.getPropertyIds = function (batchId, results) {
@@ -434,8 +434,8 @@ BatchTableHierarchy.prototype.getPropertyIds = function (batchId, results) {
 /**
  * Returns a copy of the value of the property with the given ID.
  *
- * @param {Number} batchId the batch ID of the feature
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {number} batchId the batch ID of the feature
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  */
@@ -467,10 +467,10 @@ function getBinaryProperty(binaryProperty, index) {
  * Sets the value of the property with the given ID. Only properties of the
  * instance may be set; parent properties may not be set.
  *
- * @param {Number} batchId The batchId of the feature
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {number} batchId The batchId of the feature
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  *
  * @exception {DeveloperError} when setting an inherited property
  * @private
@@ -520,9 +520,9 @@ function setBinaryProperty(binaryProperty, index, value) {
 /**
  * Check if a feature belongs to a class with the given name
  *
- * @param {Number} batchId The batch ID of the feature
- * @param {String} className The name of the class
- * @return {Boolean} <code>true</code> if the feature belongs to the class given by className, or <code>false</code> otherwise
+ * @param {number} batchId The batch ID of the feature
+ * @param {string} className The name of the class
+ * @return {boolean} <code>true</code> if the feature belongs to the class given by className, or <code>false</code> otherwise
  * @private
  */
 BatchTableHierarchy.prototype.isClass = function (batchId, className) {
@@ -544,8 +544,8 @@ BatchTableHierarchy.prototype.isClass = function (batchId, className) {
 /**
  * Get the name of the class a given feature belongs to
  *
- * @param {Number} batchId The batch ID of the feature
- * @return {String} The name of the class this feature belongs to
+ * @param {number} batchId The batch ID of the feature
+ * @return {string} The name of the class this feature belongs to
  */
 BatchTableHierarchy.prototype.getClassName = function (batchId) {
   const classId = this._classIds[batchId];

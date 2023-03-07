@@ -15,7 +15,7 @@
 /**
  * An object which contains a promise object, and functions to resolve or reject the promise.
  *
- * @typedef {Object} defer.deferred
+ * @typedef {object} defer.deferred
  * @property {defer.resolve} resolve Resolves the promise when called.
  * @property {defer.reject} reject Rejects the promise when called.
  * @property {Promise} promise Promise object.

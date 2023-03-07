@@ -15,17 +15,17 @@ import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 /**
- * @typedef {Object} TileMapServiceImageryProvider.ConstructorOptions
+ * @typedef {object} TileMapServiceImageryProvider.ConstructorOptions
  *
  * Initialization options for the TileMapServiceImageryProvider constructor
  *
- * @property {Resource|String|Promise<Resource>|Promise<String>} [url] Path to image tiles on server. Deprecated
- * @property {String} [fileExtension='png'] The file extension for images on the server.
- * @property {Credit|String} [credit=''] A credit for the data source, which is displayed on the canvas.
- * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * @property {Resource|string|Promise<Resource>|Promise<string>} [url] Path to image tiles on server. Deprecated
+ * @property {string} [fileExtension='png'] The file extension for images on the server.
+ * @property {Credit|string} [credit=''] A credit for the data source, which is displayed on the canvas.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  * @property {TilingScheme} [tilingScheme] The tiling scheme specifying how the ellipsoidal
  * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
@@ -33,9 +33,9 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @property {Number} [tileWidth=256] Pixel width of image tiles.
- * @property {Number} [tileHeight=256] Pixel height of image tiles.
- * @property {Boolean} [flipXY] Older versions of gdal2tiles.py flipped X and Y values in tilemapresource.xml.
+ * @property {number} [tileWidth=256] Pixel width of image tiles.
+ * @property {number} [tileHeight=256] Pixel height of image tiles.
+ * @property {boolean} [flipXY] Older versions of gdal2tiles.py flipped X and Y values in tilemapresource.xml.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] A policy for discarding tile images according to some criteria
  * Specifying this option will do the same, allowing for loading of these incorrect tilesets.
  */
@@ -81,7 +81,7 @@ function TileMapServiceImageryProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "TileMapServiceImageryProvider options.url",
-      "options.url was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use TileMapServiceImageryProvider.fromUrl instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use TileMapServiceImageryProvider.fromUrl instead."
     );
 
     this._metadataError = undefined;

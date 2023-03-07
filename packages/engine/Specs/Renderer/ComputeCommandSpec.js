@@ -58,7 +58,7 @@ describe(
 
     it("throws if no output texture is provided", function () {
       const computeCommand = new ComputeCommand({
-        fragmentShaderSource: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShaderSource: "void main() { out_FragColor = vec4(1.0); }",
       });
       scene.primitives.add(new CommandMockPrimitive(computeCommand));
 
@@ -69,8 +69,8 @@ describe(
 
     it("renderer resources are preserved or destroyed based on the persists flag", function () {
       const vertexShader =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fragmentShader = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fragmentShader = "void main() { out_FragColor = vec4(1.0); }";
       const shaderProgram = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vertexShader,
@@ -140,7 +140,7 @@ describe(
         pixelFormat: PixelFormat.RGBA,
       });
       const computeCommand = new ComputeCommand({
-        fragmentShaderSource: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShaderSource: "void main() { out_FragColor = vec4(1.0); }",
         outputTexture: outputTexture,
       });
 

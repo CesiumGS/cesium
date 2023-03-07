@@ -15,17 +15,17 @@ import TimeConstants from "../Core/TimeConstants.js";
  * @alias FrameRateMonitor
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Scene} options.scene The Scene instance for which to monitor performance.
- * @param {Number} [options.samplingWindow=5.0] The length of the sliding window over which to compute the average frame rate, in seconds.
- * @param {Number} [options.quietPeriod=2.0] The length of time to wait at startup and each time the page becomes visible (i.e. when the user
+ * @param {number} [options.samplingWindow=5.0] The length of the sliding window over which to compute the average frame rate, in seconds.
+ * @param {number} [options.quietPeriod=2.0] The length of time to wait at startup and each time the page becomes visible (i.e. when the user
  *        switches back to the tab) before starting to measure performance, in seconds.
- * @param {Number} [options.warmupPeriod=5.0] The length of the warmup period, in seconds.  During the warmup period, a separate
+ * @param {number} [options.warmupPeriod=5.0] The length of the warmup period, in seconds.  During the warmup period, a separate
  *        (usually lower) frame rate is required.
- * @param {Number} [options.minimumFrameRateDuringWarmup=4] The minimum frames-per-second that are required for acceptable performance during
+ * @param {number} [options.minimumFrameRateDuringWarmup=4] The minimum frames-per-second that are required for acceptable performance during
  *        the warmup period.  If the frame rate averages less than this during any samplingWindow during the warmupPeriod, the
  *        lowFrameRate event will be raised and the page will redirect to the redirectOnLowFrameRateUrl, if any.
- * @param {Number} [options.minimumFrameRateAfterWarmup=8] The minimum frames-per-second that are required for acceptable performance after
+ * @param {number} [options.minimumFrameRateAfterWarmup=8] The minimum frames-per-second that are required for acceptable performance after
  *        the end of the warmup period.  If the frame rate averages less than this during any samplingWindow after the warmupPeriod, the
  *        lowFrameRate event will be raised and the page will redirect to the redirectOnLowFrameRateUrl, if any.
  */
@@ -40,7 +40,7 @@ function FrameRateMonitor(options) {
 
   /**
    * Gets or sets the length of the sliding window over which to compute the average frame rate, in seconds.
-   * @type {Number}
+   * @type {number}
    */
   this.samplingWindow = defaultValue(
     options.samplingWindow,
@@ -50,7 +50,7 @@ function FrameRateMonitor(options) {
   /**
    * Gets or sets the length of time to wait at startup and each time the page becomes visible (i.e. when the user
    * switches back to the tab) before starting to measure performance, in seconds.
-   * @type {Number}
+   * @type {number}
    */
   this.quietPeriod = defaultValue(
     options.quietPeriod,
@@ -60,7 +60,7 @@ function FrameRateMonitor(options) {
   /**
    * Gets or sets the length of the warmup period, in seconds.  During the warmup period, a separate
    * (usually lower) frame rate is required.
-   * @type {Number}
+   * @type {number}
    */
   this.warmupPeriod = defaultValue(
     options.warmupPeriod,
@@ -71,7 +71,7 @@ function FrameRateMonitor(options) {
    * Gets or sets the minimum frames-per-second that are required for acceptable performance during
    * the warmup period.  If the frame rate averages less than this during any <code>samplingWindow</code> during the <code>warmupPeriod</code>, the
    * <code>lowFrameRate</code> event will be raised and the page will redirect to the <code>redirectOnLowFrameRateUrl</code>, if any.
-   * @type {Number}
+   * @type {number}
    */
   this.minimumFrameRateDuringWarmup = defaultValue(
     options.minimumFrameRateDuringWarmup,
@@ -82,7 +82,7 @@ function FrameRateMonitor(options) {
    * Gets or sets the minimum frames-per-second that are required for acceptable performance after
    * the end of the warmup period.  If the frame rate averages less than this during any <code>samplingWindow</code> after the <code>warmupPeriod</code>, the
    * <code>lowFrameRate</code> event will be raised and the page will redirect to the <code>redirectOnLowFrameRateUrl</code>, if any.
-   * @type {Number}
+   * @type {number}
    */
   this.minimumFrameRateAfterWarmup = defaultValue(
     options.minimumFrameRateAfterWarmup,
@@ -157,7 +157,7 @@ function FrameRateMonitor(options) {
  * {@link FrameRateMonitor} constructor.
  *
  * @memberof FrameRateMonitor
- * @type {Object}
+ * @type {object}
  */
 FrameRateMonitor.defaultSettings = {
   samplingWindow: 5.0,
@@ -235,7 +235,7 @@ Object.defineProperties(FrameRateMonitor.prototype, {
    * Gets the most recently computed average frames-per-second over the last <code>samplingWindow</code>.
    * This property may be undefined if the frame rate has not been computed.
    * @memberof FrameRateMonitor.prototype
-   * @type {Number}
+   * @type {number}
    */
   lastFramesPerSecond: {
     get: function () {
@@ -279,7 +279,7 @@ FrameRateMonitor.prototype.unpause = function () {
  *
  * @memberof FrameRateMonitor
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see FrameRateMonitor#destroy
  */

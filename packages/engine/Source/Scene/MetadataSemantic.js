@@ -11,7 +11,7 @@ const MetadataSemantic = {
   /**
    * A unique identifier, stored as a <code>STRING</code>.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -19,7 +19,7 @@ const MetadataSemantic = {
   /**
    * A name, stored as a <code>STRING</code>. This does not have to be unique.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -27,7 +27,7 @@ const MetadataSemantic = {
   /**
    * A description, stored as a <code>STRING</code>.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -35,7 +35,7 @@ const MetadataSemantic = {
   /**
    * The number of tiles in a tileset, stored as a <code>UINT64</code>.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -43,7 +43,7 @@ const MetadataSemantic = {
   /**
    * A bounding box for a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -51,7 +51,7 @@ const MetadataSemantic = {
   /**
    * A bounding region for a tile, stored as an array of 6 <code>FLOAT64</code> components. The components are <code>[west, south, east, north, minimumHeight, maximumHeight]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -59,7 +59,7 @@ const MetadataSemantic = {
   /**
    * A bounding sphere for a tile, stored as an array of 4 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -67,7 +67,7 @@ const MetadataSemantic = {
   /**
    * The minimum height of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -75,7 +75,7 @@ const MetadataSemantic = {
   /**
    * The maximum height of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to tighten bounding regions implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -85,7 +85,7 @@ const MetadataSemantic = {
    *
    * @see {@link https://cesium.com/blog/2013/04/25/horizon-culling/|Horizon Culling}
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -93,7 +93,7 @@ const MetadataSemantic = {
   /**
    * The geometric error for a tile, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>. This semantic is used to override the geometric error implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -101,7 +101,7 @@ const MetadataSemantic = {
   /**
    * A bounding box for the content of a tile, stored as an array of 12 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are the same format as for <code>boundingVolume.box</code> in 3D Tiles 1.0. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -109,7 +109,7 @@ const MetadataSemantic = {
   /**
    * A bounding region for the content of a tile, stored as an array of 6 <code>FLOAT64</code> components. The components are <code>[west, south, east, north, minimumHeight, maximumHeight]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -117,7 +117,7 @@ const MetadataSemantic = {
   /**
    * A bounding sphere for the content of a tile, stored as an array of 4 <code>FLOAT32</code> or <code>FLOAT64</code> components. The components are <code>[centerX, centerY, centerZ, radius]</code>. This semantic is used to provide a tighter bounding volume than the one implicitly calculated in implicit tiling.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -125,7 +125,7 @@ const MetadataSemantic = {
   /**
    * The minimum height of the content of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -133,7 +133,7 @@ const MetadataSemantic = {
   /**
    * The maximum height of the content of a tile above (or below) the WGS84 ellipsoid, stored as a <code>FLOAT32</code> or a <code>FLOAT64</code>
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */
@@ -143,7 +143,7 @@ const MetadataSemantic = {
    *
    * @see {@link https://cesium.com/blog/2013/04/25/horizon-culling/|Horizon Culling}
    *
-   * @type {String}
+   * @type {string}
    * @constant
    * @private
    */

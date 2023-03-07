@@ -28,7 +28,7 @@ const AttributeCompression = {};
  *
  * @param {Cartesian3} vector The normalized vector to be compressed into 2 component 'oct' encoding.
  * @param {Cartesian2} result The 2 component oct-encoded unit length vector.
- * @param {Number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
+ * @param {number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
  * @returns {Cartesian2} The 2 component oct-encoded unit length vector.
  *
  * @exception {DeveloperError} vector must be normalized.
@@ -106,9 +106,9 @@ AttributeCompression.octEncodeToCartesian4 = function (vector, result) {
 /**
  * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component vector.
  *
- * @param {Number} x The x component of the oct-encoded unit length vector.
- * @param {Number} y The y component of the oct-encoded unit length vector.
- * @param {Number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
+ * @param {number} x The x component of the oct-encoded unit length vector.
+ * @param {number} y The y component of the oct-encoded unit length vector.
+ * @param {number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
  * @param {Cartesian3} result The decoded and normalized vector
  * @returns {Cartesian3} The decoded and normalized vector.
  *
@@ -142,8 +142,8 @@ AttributeCompression.octDecodeInRange = function (x, y, rangeMax, result) {
 /**
  * Decodes a unit-length vector in 2 byte 'oct' encoding to a normalized 3-component vector.
  *
- * @param {Number} x The x component of the oct-encoded unit length vector.
- * @param {Number} y The y component of the oct-encoded unit length vector.
+ * @param {number} x The x component of the oct-encoded unit length vector.
+ * @param {number} y The y component of the oct-encoded unit length vector.
  * @param {Cartesian3} result The decoded and normalized vector.
  * @returns {Cartesian3} The decoded and normalized vector.
  *
@@ -202,7 +202,7 @@ AttributeCompression.octDecodeFromCartesian4 = function (encoded, result) {
  * Packs an oct encoded vector into a single floating-point number.
  *
  * @param {Cartesian2} encoded The oct encoded vector.
- * @returns {Number} The oct encoded vector packed into a single float.
+ * @returns {number} The oct encoded vector packed into a single float.
  *
  */
 AttributeCompression.octPackFloat = function (encoded) {
@@ -219,7 +219,7 @@ const scratchEncodeCart2 = new Cartesian2();
  * stores those values in a single float-point number.
  *
  * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
- * @returns {Number} The 2 byte oct-encoded unit length vector.
+ * @returns {number} The 2 byte oct-encoded unit length vector.
  *
  * @exception {DeveloperError} vector must be normalized.
  */
@@ -231,7 +231,7 @@ AttributeCompression.octEncodeFloat = function (vector) {
 /**
  * Decodes a unit-length vector in 'oct' encoding packed in a floating-point number to a normalized 3-component vector.
  *
- * @param {Number} value The oct-encoded unit length vector stored as a single floating-point number.
+ * @param {number} value The oct-encoded unit length vector stored as a single floating-point number.
  * @param {Cartesian3} result The decoded and normalized vector
  * @returns {Cartesian3} The decoded and normalized vector.
  *
@@ -309,7 +309,7 @@ AttributeCompression.octUnpack = function (packed, v1, v2, v3) {
  * Pack texture coordinates into a single float. The texture coordinates will only preserve 12 bits of precision.
  *
  * @param {Cartesian2} textureCoordinates The texture coordinates to compress.  Both coordinates must be in the range 0.0-1.0.
- * @returns {Number} The packed texture coordinates.
+ * @returns {number} The packed texture coordinates.
  *
  */
 AttributeCompression.compressTextureCoordinates = function (
@@ -328,7 +328,7 @@ AttributeCompression.compressTextureCoordinates = function (
 /**
  * Decompresses texture coordinates that were packed into a single float.
  *
- * @param {Number} compressed The compressed texture coordinates.
+ * @param {number} compressed The compressed texture coordinates.
  * @param {Cartesian2} result The decompressed texture coordinates.
  * @returns {Cartesian2} The modified result parameter.
  *
@@ -414,7 +414,7 @@ AttributeCompression.zigZagDeltaDecode = function (
  * @param {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array} typedArray The typed array for the quantized data.
  * @param {ComponentDatatype} componentDatatype The component datatype of the quantized data.
  * @param {AttributeType} type The attribute type of the quantized data.
- * @param {Number} count The number of attributes referenced in the dequantized array.
+ * @param {number} count The number of attributes referenced in the dequantized array.
  *
  * @returns {Float32Array} The dequantized array.
  */
