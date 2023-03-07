@@ -62,13 +62,13 @@ function VoxelEllipsoidShape() {
   this._rectangle = new Rectangle();
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._minimumHeight = VoxelEllipsoidShape.DefaultMinBounds.z;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._maximumHeight = VoxelEllipsoidShape.DefaultMaxBounds.z;
@@ -90,7 +90,7 @@ function VoxelEllipsoidShape() {
   this._rotation = new Matrix3();
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderUniforms = {
@@ -108,7 +108,7 @@ function VoxelEllipsoidShape() {
   };
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderDefines = {
@@ -147,7 +147,7 @@ function VoxelEllipsoidShape() {
 
   /**
    * The maximum number of intersections against the shape for any ray direction.
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.shaderMaximumIntersectionsLength = 0; // not known until update
@@ -169,7 +169,7 @@ const scratchRenderRectangle = new Rectangle();
  * @param {Cartesian3} maxBounds The maximum bounds.
  * @param {Cartesian3} [clipMinBounds=VoxelEllipsoidShape.DefaultMinBounds] The minimum clip bounds.
  * @param {Cartesian3} [clipMaxBounds=VoxelEllipsoidShape.DefaultMaxBounds] The maximum clip bounds.
- * @returns {Boolean} Whether the shape is visible.
+ * @returns {boolean} Whether the shape is visible.
  */
 VoxelEllipsoidShape.prototype.update = function (
   modelMatrix,
@@ -792,10 +792,10 @@ const scratchRectangle = new Rectangle();
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
  *
- * @param {Number} tileLevel The tile's level.
- * @param {Number} tileX The tile's x coordinate.
- * @param {Number} tileY The tile's y coordinate.
- * @param {Number} tileZ The tile's z coordinate.
+ * @param {number} tileLevel The tile's level.
+ * @param {number} tileX The tile's x coordinate.
+ * @param {number} tileY The tile's y coordinate.
+ * @param {number} tileZ The tile's z coordinate.
  * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified tile
  * @returns {OrientedBoundingBox} The oriented bounding box.
  */
@@ -859,7 +859,7 @@ VoxelEllipsoidShape.prototype.computeOrientedBoundingBoxForTile = function (
  * The update function must be called before calling this function.
  *
  * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
- * @returns {Number} The step size.
+ * @returns {number} The step size.
  */
 VoxelEllipsoidShape.prototype.computeApproximateStepSize = function (
   dimensions
@@ -885,8 +885,8 @@ VoxelEllipsoidShape.prototype.computeApproximateStepSize = function (
  * @function
  *
  * @param {Rectangle} rectangle The rectangle.
- * @param {Number} minHeight The minimumZ.
- * @param {Number} maxHeight The maximumZ.
+ * @param {number} minHeight The minimumZ.
+ * @param {number} maxHeight The maximumZ.
  * @param {Ellipsoid} ellipsoid The ellipsoid.
  * @param {Cartesian3} translation The translation applied to the shape
  * @param {Matrix3} rotation The rotation applied to the shape

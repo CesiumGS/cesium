@@ -81,7 +81,7 @@ Object.defineProperties(DataSourceClock.prototype, {
    * Gets or sets the desired clock multiplier.
    * See {@link Clock#multiplier}.
    * @memberof DataSourceClock.prototype
-   * @type {Number}
+   * @type {number}
    */
   multiplier: createRawPropertyDescriptor("multiplier"),
 });
@@ -109,7 +109,7 @@ DataSourceClock.prototype.clone = function (result) {
  * Returns true if this DataSourceClock is equivalent to the other
  *
  * @param {DataSourceClock} other The other DataSourceClock to compare to.
- * @returns {Boolean} <code>true</code> if the DataSourceClocks are equal; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if the DataSourceClocks are equal; otherwise, <code>false</code>.
  */
 DataSourceClock.prototype.equals = function (other) {
   return (

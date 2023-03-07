@@ -14,7 +14,7 @@ import Property from "./Property.js";
  * @constructor
  *
  * @param {PositionProperty} [position] The position property used to compute the velocity.
- * @param {Boolean} [normalize=true] Whether to normalize the computed velocity vector.
+ * @param {boolean} [normalize=true] Whether to normalize the computed velocity vector.
  *
  * @example
  * //Create an entity with a billboard rotated to match its velocity.
@@ -42,7 +42,7 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
    * Gets a value indicating if this property is constant.
    * @memberof VelocityVectorProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -99,7 +99,7 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
    * will be normalized or not.
    * @memberof VelocityVectorProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   normalize: {
     get: function () {
@@ -204,7 +204,7 @@ VelocityVectorProperty.prototype._getValue = function (
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 VelocityVectorProperty.prototype.equals = function (other) {
   return (

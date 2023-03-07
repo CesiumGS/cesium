@@ -13,7 +13,7 @@ import createCommand from "../createCommand.js";
  * @alias BaseLayerPickerViewModel
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Globe} options.globe The Globe to use.
  * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
  * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
@@ -60,7 +60,7 @@ function BaseLayerPickerViewModel(options) {
 
   /**
    * Gets or sets whether the imagery selection drop-down is currently visible.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.dropDownVisible = false;
@@ -135,7 +135,7 @@ function BaseLayerPickerViewModel(options) {
 
   /**
    * Gets the button tooltip.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.buttonTooltip = undefined;
   knockout.defineProperty(this, "buttonTooltip", function () {
@@ -159,7 +159,7 @@ function BaseLayerPickerViewModel(options) {
 
   /**
    * Gets the button background image.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.buttonImageUrl = undefined;
   knockout.defineProperty(this, "buttonImageUrl", function () {

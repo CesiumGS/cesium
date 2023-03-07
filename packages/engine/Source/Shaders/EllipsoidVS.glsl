@@ -1,8 +1,8 @@
-attribute vec3 position;
+in vec3 position;
 
 uniform vec3 u_radii;
 
-varying vec3 v_positionEC;
+out vec3 v_positionEC;
 
 void main()
 {

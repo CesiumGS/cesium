@@ -68,7 +68,7 @@ Object.defineProperties(VoxelShape.prototype, {
   },
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   shaderUniforms: {
@@ -76,7 +76,7 @@ Object.defineProperties(VoxelShape.prototype, {
   },
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   shaderDefines: {
@@ -85,7 +85,7 @@ Object.defineProperties(VoxelShape.prototype, {
 
   /**
    * The maximum number of intersections against the shape for any ray direction.
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   shaderMaximumIntersectionsLength: {
@@ -99,7 +99,7 @@ Object.defineProperties(VoxelShape.prototype, {
  * @param {Matrix4} modelMatrix The model matrix.
  * @param {Cartesian3} minBounds The minimum bounds.
  * @param {Cartesian3} maxBounds The maximum bounds.
- * @returns {Boolean} Whether the shape is visible.
+ * @returns {boolean} Whether the shape is visible.
  */
 VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
 
@@ -107,10 +107,10 @@ VoxelShape.prototype.update = DeveloperError.throwInstantiationError;
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
  *
- * @param {Number} tileLevel The tile's level.
- * @param {Number} tileX The tile's x coordinate.
- * @param {Number} tileY The tile's y coordinate.
- * @param {Number} tileZ The tile's z coordinate.
+ * @param {number} tileLevel The tile's level.
+ * @param {number} tileX The tile's x coordinate.
+ * @param {number} tileY The tile's y coordinate.
+ * @param {number} tileZ The tile's z coordinate.
  * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified tile.
  * @returns {OrientedBoundingBox} The oriented bounding box.
  */
@@ -122,7 +122,7 @@ VoxelShape.prototype.computeOrientedBoundingBoxForTile =
  * The update function must be called before calling this function.
  *
  * @param {Cartesian3} voxelDimensions The voxel grid dimensions for a tile.
- * @returns {Number} The step size.
+ * @returns {number} The step size.
  */
 VoxelShape.prototype.computeApproximateStepSize =
   DeveloperError.throwInstantiationError;

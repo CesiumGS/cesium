@@ -12,8 +12,8 @@
 		}
 	},
     "components": {
-        "diffuse" : "textureCube(mycubemap, normalize(vec3(1.0))).rgb /* not an interesting reflection */",
-        "specular" : "texture2D(myothertexture2D, materialInput.st).r",
-        "emission" : "texture2D(mytexture2D, materialInput.st).rgb"
+        "diffuse" : "czm_textureCube(mycubemap, normalize(vec3(1.0))).rgb /* not an interesting reflection */",
+        "specular" : "texture(myothertexture2D, materialInput.st).r",
+        "emission" : "texture(mytexture2D, materialInput.st).rgb"
     }
 }

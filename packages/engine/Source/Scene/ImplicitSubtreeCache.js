@@ -6,8 +6,8 @@ import DoubleEndedPriorityQueue from "../Core/DoubleEndedPriorityQueue.js";
  * @alias ImplicitSubtreeCache
  * @constructor
  *
- * @param {Object} [options] Object with the following properties
- * @param {Number} [options.maximumSubtreeCount=0] The total number of subtrees this cache can store. If adding a new subtree would exceed this limit, the lowest priority subtrees will be removed until there is room, unless the subtree that is going to be removed is the parent of the new subtree, in which case it will not be removed and the new subtree will still be added, exceeding the memory limit.
+ * @param {object} [options] Object with the following properties
+ * @param {number} [options.maximumSubtreeCount=0] The total number of subtrees this cache can store. If adding a new subtree would exceed this limit, the lowest priority subtrees will be removed until there is room, unless the subtree that is going to be removed is the parent of the new subtree, in which case it will not be removed and the new subtree will still be added, exceeding the memory limit.
  *
  * @private
  */
@@ -15,14 +15,14 @@ function ImplicitSubtreeCache(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._maximumSubtreeCount = defaultValue(options.maximumSubtreeCount, 0);
 
   /**
    * A counter that goes up whenever a subtree is added. Used to sort subtrees by recency.
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._subtreeRequestCounter = 0;
@@ -96,7 +96,7 @@ ImplicitSubtreeCache.prototype.find = function (subtreeCoord) {
 /**
  * @param {ImplicitSubtreeCacheNode} a
  * @param {ImplicitSubtreeCacheNode} b
- * @returns {Number}
+ * @returns {number}
  */
 ImplicitSubtreeCache.comparator = function (a, b) {
   const aCoord = a.subtree.implicitCoordinates;
@@ -115,7 +115,7 @@ ImplicitSubtreeCache.comparator = function (a, b) {
  * @constructor
  *
  * @param {ImplicitSubtree} subtree
- * @param {Number} stamp
+ * @param {number} stamp
  *
  * @private
  */

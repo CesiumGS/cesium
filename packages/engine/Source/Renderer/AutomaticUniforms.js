@@ -151,7 +151,7 @@ const AutomaticUniforms = {
    *
    * // Get the depth at the current fragment
    * vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
-   * float depth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));
+   * float depth = czm_unpackDepth(texture(czm_globeDepthTexture, coords));
    */
   czm_globeDepthTexture: new AutomaticUniform({
     size: 1,
@@ -1400,7 +1400,7 @@ const AutomaticUniforms = {
    * // Example: For a given roughness and NdotV value, find the material's BRDF information in the red and green channels
    * float roughness = 0.5;
    * float NdotV = dot(normal, view);
-   * vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;
+   * vec2 brdfLut = texture(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;
    */
   czm_brdfLut: new AutomaticUniform({
     size: 1,
@@ -1419,7 +1419,7 @@ const AutomaticUniforms = {
    *
    * // Example: Create a perfect reflection of the environment map on a  model
    * float reflected = reflect(view, normal);
-   * vec4 reflectedColor = textureCube(czm_environmentMap, reflected);
+   * vec4 reflectedColor = texture(czm_environmentMap, reflected);
    */
   czm_environmentMap: new AutomaticUniform({
     size: 1,

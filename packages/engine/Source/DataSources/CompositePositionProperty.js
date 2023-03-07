@@ -30,7 +30,7 @@ Object.defineProperties(CompositePositionProperty.prototype, {
    * constant if getValue always returns the same result for the current definition.
    * @memberof CompositePositionProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -129,7 +129,7 @@ CompositePositionProperty.prototype.getValueInReferenceFrame = function (
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 CompositePositionProperty.prototype.equals = function (other) {
   return (

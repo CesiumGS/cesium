@@ -97,7 +97,7 @@ DeviceOrientationCameraController.prototype.update = function () {
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 DeviceOrientationCameraController.prototype.isDestroyed = function () {
   return false;

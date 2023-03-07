@@ -14,10 +14,10 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer. Mutually exclusive with options.typedArray.
- * @param {String} [options.cacheKey] The cache key of the resource.
+ * @param {string} [options.cacheKey] The cache key of the resource.
  *
  * @exception {DeveloperError} One of options.typedArray and options.resource must be defined.
  *
@@ -55,7 +55,7 @@ Object.defineProperties(BufferLoader.prototype, {
    *
    * @memberof BufferLoader.prototype
    *
-   * @type {Promise.<BufferLoader>|undefined}
+   * @type {Promise<BufferLoader>|undefined}
    * @readonly
    */
   promise: {
@@ -68,7 +68,7 @@ Object.defineProperties(BufferLoader.prototype, {
    *
    * @memberof BufferLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   cacheKey: {
@@ -93,7 +93,7 @@ Object.defineProperties(BufferLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<BufferLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<BufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 BufferLoader.prototype.load = function () {

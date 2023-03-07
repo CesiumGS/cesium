@@ -32,10 +32,10 @@ function updateCopyCommands(pickDepth, context, depthTexture) {
   if (!defined(pickDepth._copyDepthCommand)) {
     const fs =
       "uniform highp sampler2D u_texture;\n" +
-      "varying vec2 v_textureCoordinates;\n" +
+      "in vec2 v_textureCoordinates;\n" +
       "void main()\n" +
       "{\n" +
-      "    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n" +
+      "    out_FragColor = czm_packDepth(texture(u_texture, v_textureCoordinates).r);\n" +
       "}\n";
     pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
       renderState: RenderState.fromCache(),

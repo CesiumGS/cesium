@@ -56,43 +56,43 @@ function VoxelCylinderShape() {
   this.shapeTransform = new Matrix4();
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._minimumRadius = VoxelCylinderShape.DefaultMinBounds.x;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._maximumRadius = VoxelCylinderShape.DefaultMaxBounds.x;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._minimumHeight = VoxelCylinderShape.DefaultMinBounds.y;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._maximumHeight = VoxelCylinderShape.DefaultMaxBounds.y;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._minimumAngle = VoxelCylinderShape.DefaultMinBounds.z;
 
   /**
-   * @type {Number}
+   * @type {number}
    * @private
    */
   this._maximumAngle = VoxelCylinderShape.DefaultMaxBounds.z;
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderUniforms = {
@@ -108,7 +108,7 @@ function VoxelCylinderShape() {
   };
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderDefines = {
@@ -140,7 +140,7 @@ function VoxelCylinderShape() {
 
   /**
    * The maximum number of intersections against the shape for any ray direction.
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.shaderMaximumIntersectionsLength = 0; // not known until update
@@ -167,7 +167,7 @@ const transformUvToLocal = Matrix4.fromRotationTranslation(
  * @param {Cartesian3} maxBounds The maximum bounds.
  * @param {Cartesian3} [clipMinBounds=VoxelCylinderShape.DefaultMinBounds] The minimum clip bounds.
  * @param {Cartesian3} [clipMaxBounds=VoxelCylinderShape.DefaultMaxBounds] The maximum clip bounds.
- * @returns {Boolean} Whether the shape is visible.
+ * @returns {boolean} Whether the shape is visible.
  */
 VoxelCylinderShape.prototype.update = function (
   modelMatrix,
@@ -571,10 +571,10 @@ VoxelCylinderShape.prototype.update = function (
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
  *
- * @param {Number} tileLevel The tile's level.
- * @param {Number} tileX The tile's x coordinate.
- * @param {Number} tileY The tile's y coordinate.
- * @param {Number} tileZ The tile's z coordinate.
+ * @param {number} tileLevel The tile's level.
+ * @param {number} tileX The tile's x coordinate.
+ * @param {number} tileY The tile's y coordinate.
+ * @param {number} tileZ The tile's z coordinate.
  * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified tile
  * @returns {OrientedBoundingBox} The oriented bounding box.
  */
@@ -655,7 +655,7 @@ const scratchScaleRatio = new Cartesian3();
  * The update function must be called before calling this function.
  *
  * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
- * @returns {Number} The step size.
+ * @returns {number} The step size.
  */
 VoxelCylinderShape.prototype.computeApproximateStepSize = function (
   dimensions
@@ -788,12 +788,12 @@ function computeLooseOrientedBoundingBox(matrix, result) {
  *
  * @function
  *
- * @param {Number} radiusStart The radiusStart.
- * @param {Number} radiusEnd The radiusEnd.
- * @param {Number} heightStart The heightStart.
- * @param {Number} heightEnd The heightEnd.
- * @param {Number} angleStart The angleStart.
- * @param {Number} angleEnd The angleEnd.
+ * @param {number} radiusStart The radiusStart.
+ * @param {number} radiusEnd The radiusEnd.
+ * @param {number} heightStart The heightStart.
+ * @param {number} heightEnd The heightEnd.
+ * @param {number} angleStart The angleStart.
+ * @param {number} angleEnd The angleEnd.
  * @param {Matrix4} matrix The matrix to transform the points.
  * @param {OrientedBoundingBox} result The object onto which to store the result.
  * @returns {OrientedBoundingBox} The oriented bounding box that contains this subregion.

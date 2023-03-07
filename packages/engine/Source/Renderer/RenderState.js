@@ -372,7 +372,7 @@ let renderStateCache = {};
  * state for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
  * use the defaults shown in the example below.
  *
- * @param {Object} [renderState] The states defining the render state as shown in the example below.
+ * @param {object} [renderState] The states defining the render state as shown in the example below.
  *
  * @exception {RuntimeError} renderState.lineWidth is out of range.
  * @exception {DeveloperError} Invalid renderState.frontFace.

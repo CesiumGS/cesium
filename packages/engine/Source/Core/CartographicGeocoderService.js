@@ -13,7 +13,7 @@ function CartographicGeocoderService() {}
 /**
  * @function
  *
- * @param {String} query The query to be sent to the geocoder service
+ * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
  */
 CartographicGeocoderService.prototype.geocode = function (query) {

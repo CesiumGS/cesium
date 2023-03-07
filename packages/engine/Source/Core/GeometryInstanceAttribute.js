@@ -8,11 +8,11 @@ import DeveloperError from "./DeveloperError.js";
  * @alias GeometryInstanceAttribute
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {ComponentDatatype} options.componentDatatype The datatype of each component in the attribute, e.g., individual elements in values.
- * @param {Number} options.componentsPerAttribute A number between 1 and 4 that defines the number of components in an attributes.
- * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
- * @param {Number[]} options.value The value for the attribute.
+ * @param {number} options.componentsPerAttribute A number between 1 and 4 that defines the number of components in an attributes.
+ * @param {boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
+ * @param {number[]} options.value The value for the attribute.
  *
  * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
  *
@@ -77,7 +77,7 @@ function GeometryInstanceAttribute(options) {
    * For example, a position attribute with x, y, and z components would have 3 as
    * shown in the code example.
    *
-   * @type Number
+   * @type {number}
    *
    * @default undefined
    *
@@ -99,7 +99,7 @@ function GeometryInstanceAttribute(options) {
    * This is commonly used when storing colors using {@link ComponentDatatype.UNSIGNED_BYTE}.
    * </p>
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default false
    *
@@ -121,7 +121,7 @@ function GeometryInstanceAttribute(options) {
    * every three elements in <code>values</code> defines one attributes since
    * <code>componentsPerAttribute</code> is 3.
    *
-   * @type {Number[]}
+   * @type {number[]}
    *
    * @default undefined
    *

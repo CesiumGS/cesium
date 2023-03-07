@@ -40,8 +40,8 @@ Object.defineProperties(MetadataEntity.prototype, {
 /**
  * Returns whether the entity has this property.
  *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether the entity has this property.
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @returns {boolean} Whether the entity has this property.
  * @private
  */
 MetadataEntity.prototype.hasProperty = function (propertyId) {
@@ -51,8 +51,8 @@ MetadataEntity.prototype.hasProperty = function (propertyId) {
 /**
  * Returns whether the entity has a property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {Boolean} Whether the entity has a property with the given semantic.
+ * @param {string} semantic The case-sensitive semantic of the property.
+ * @returns {boolean} Whether the entity has a property with the given semantic.
  * @private
  */
 MetadataEntity.prototype.hasPropertyBySemantic = function (semantic) {
@@ -62,8 +62,8 @@ MetadataEntity.prototype.hasPropertyBySemantic = function (semantic) {
 /**
  * Returns an array of property IDs.
  *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The property IDs.
  * @private
  */
 MetadataEntity.prototype.getPropertyIds = function (results) {
@@ -76,7 +76,7 @@ MetadataEntity.prototype.getPropertyIds = function (results) {
  * If the property is normalized the normalized value is returned.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  * @private
  */
@@ -90,9 +90,9 @@ MetadataEntity.prototype.getProperty = function (propertyId) {
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 MetadataEntity.prototype.setProperty = function (propertyId, value) {
@@ -102,7 +102,7 @@ MetadataEntity.prototype.setProperty = function (propertyId, value) {
 /**
  * Returns a copy of the value of the property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  * @private
  */
@@ -113,9 +113,9 @@ MetadataEntity.prototype.getPropertyBySemantic = function (semantic) {
 /**
  * Sets the value of the property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
@@ -125,10 +125,10 @@ MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
 /**
  * Returns whether the entity has this property.
  *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @param {Object} properties The dictionary containing properties.
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
- * @returns {Boolean} Whether the entity has this property.
+ * @returns {boolean} Whether the entity has this property.
  *
  * @private
  */
@@ -163,10 +163,10 @@ MetadataEntity.hasProperty = function (
 /**
  * Returns whether the entity has a property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @param {Object} properties The dictionary containing properties.
+ * @param {string} semantic The case-sensitive semantic of the property.
+ * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
- * @returns {Boolean} Whether the entity has a property with the given semantic.
+ * @returns {boolean} Whether the entity has a property with the given semantic.
  *
  * @private
  */
@@ -193,10 +193,10 @@ MetadataEntity.hasPropertyBySemantic = function (
 /**
  * Returns an array of property IDs.
  *
- * @param {Object} properties The dictionary containing properties.
+ * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The property IDs.
  *
  * @private
  */
@@ -246,8 +246,8 @@ MetadataEntity.getPropertyIds = function (
  * If the property is normalized the normalized value is returned.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @param {Object} properties The dictionary containing properties.
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
@@ -301,11 +301,11 @@ MetadataEntity.getProperty = function (
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @param {Object} properties The dictionary containing properties.
+ * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  *
  * @private
  */
@@ -351,8 +351,8 @@ MetadataEntity.setProperty = function (
 /**
  * Returns a copy of the value of the property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @param {Object} properties The dictionary containing properties.
+ * @param {string} semantic The case-sensitive semantic of the property.
+ * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
  * @returns {*} The value of the property or <code>undefined</code> if the entity does not have this property.
  *
@@ -384,11 +384,11 @@ MetadataEntity.getPropertyBySemantic = function (
 /**
  * Sets the value of the property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @param {Object} properties The dictionary containing properties.
+ * @param {object} properties The dictionary containing properties.
  * @param {MetadataClass} classDefinition The class.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 MetadataEntity.setPropertyBySemantic = function (

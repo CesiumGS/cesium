@@ -132,7 +132,7 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_targetPosition_0;",
+          "in vec3 a_targetPosition_0;",
         ]);
 
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
@@ -231,12 +231,12 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_targetPosition_0;",
-          "attribute vec3 a_targetPosition_1;",
-          "attribute vec3 a_targetNormal_0;",
-          "attribute vec3 a_targetNormal_1;",
-          "attribute vec3 a_targetTangent_0;",
-          "attribute vec3 a_targetTangent_1;",
+          "in vec3 a_targetPosition_0;",
+          "in vec3 a_targetPosition_1;",
+          "in vec3 a_targetNormal_0;",
+          "in vec3 a_targetNormal_1;",
+          "in vec3 a_targetTangent_0;",
+          "in vec3 a_targetTangent_1;",
         ]);
 
         ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [

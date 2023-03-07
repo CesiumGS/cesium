@@ -38,7 +38,7 @@ Object.defineProperties(ModelNode.prototype, {
    *
    * @memberof ModelNode.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -52,7 +52,7 @@ Object.defineProperties(ModelNode.prototype, {
    *
    * @memberof ModelNode.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   id: {
@@ -65,7 +65,7 @@ Object.defineProperties(ModelNode.prototype, {
    * Determines if this node and its children will be shown.
    *
    * @memberof ModelNode.prototype
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */

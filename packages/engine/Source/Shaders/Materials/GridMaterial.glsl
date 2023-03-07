@@ -20,8 +20,9 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     scaledHeight = abs(scaledHeight - floor(scaledHeight + 0.5));
 
     float value;
-#ifdef GL_OES_standard_derivatives
+
     // Fuzz Factor - Controls blurriness of lines
+#if (__VERSION__ == 300 || defined(GL_OES_standard_derivatives))
     const float fuzz = 1.2;
     vec2 thickness = (lineThickness * czm_pixelRatio) - 1.0;
 
@@ -33,7 +34,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
         smoothstep(dF.s * thickness.s, dF.s * (fuzz + thickness.s), scaledWidth),
         smoothstep(dF.t * thickness.t, dF.t * (fuzz + thickness.t), scaledHeight));
 #else
-    // Fuzz Factor - Controls blurriness of lines
+    // If no derivatives available (IE 10?), revert to view-dependent fuzz
     const float fuzz = 0.05;
 
     vec2 range = 0.5 - (lineThickness * 0.05);

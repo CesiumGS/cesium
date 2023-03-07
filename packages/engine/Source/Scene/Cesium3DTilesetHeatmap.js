@@ -15,7 +15,7 @@ function Cesium3DTilesetHeatmap(tilePropertyName) {
    * The tile variable to track for heatmap colorization.
    * Tile's will be colorized relative to the other visible tile's values for this variable.
    *
-   * @type {String}
+   * @type {string}
    */
   this.tilePropertyName = tilePropertyName;
 
@@ -50,9 +50,9 @@ function getHeatmapValue(tileValue, tilePropertyName) {
 /**
  * Sets the reference minimum and maximum for the variable name. Converted to numbers before they are stored.
  *
- * @param {Object} minimum The minimum reference value.
- * @param {Object} maximum The maximum reference value.
- * @param {String} tilePropertyName The tile variable that will use these reference values when it is colorized.
+ * @param {object} minimum The minimum reference value.
+ * @param {object} maximum The maximum reference value.
+ * @param {string} tilePropertyName The tile variable that will use these reference values when it is colorized.
  */
 Cesium3DTilesetHeatmap.prototype.setReferenceMinimumMaximum = function (
   minimum,

@@ -184,8 +184,8 @@
           // Inteference patterns made by two plane waves crossing each
           // other at an angle. The color is based on the height.
           const vertexShader = `
-            attribute vec3 a_position;
-            varying vec3 v_position;
+            in vec3 a_position;
+            out vec3 v_position;
             uniform float u_time;
             void main()
             {
@@ -200,7 +200,7 @@
             `;
 
           const fragmentShader = `
-            varying vec3 v_position;
+            in vec3 v_position;
             uniform float u_time;
             uniform sampler2D u_texture;
             void main()
@@ -214,7 +214,7 @@
                 z *= 0.5;
                 // signed -> unsigned
                 z = 0.5 + 0.5 * z;
-                gl_FragColor = texture2D(u_texture, vec2(z, 0.5));
+                out_FragColor = texture(u_texture, vec2(z, 0.5));
             }
             `;
 

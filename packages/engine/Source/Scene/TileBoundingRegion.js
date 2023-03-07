@@ -23,12 +23,12 @@ import SceneMode from "./SceneMode.js";
  * @alias TileBoundingRegion
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Rectangle} options.rectangle The rectangle specifying the longitude and latitude range of the region.
- * @param {Number} [options.minimumHeight=0.0] The minimum height of the region.
- * @param {Number} [options.maximumHeight=0.0] The maximum height of the region.
+ * @param {number} [options.minimumHeight=0.0] The minimum height of the region.
+ * @param {number} [options.maximumHeight=0.0] The maximum height of the region.
  * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84] The ellipsoid.
- * @param {Boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingRegion#boundingVolume} and
+ * @param {boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingRegion#boundingVolume} and
  *                  {@link TileBoundingVolume#boundingSphere}. If false, these properties will be undefined.
  *
  * @private
@@ -116,7 +116,7 @@ Object.defineProperties(TileBoundingRegion.prototype, {
    *
    * @memberof TileBoundingRegion.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   boundingVolume: {
@@ -414,7 +414,7 @@ function distanceToCameraRegion(tileBB, frameState) {
  * Gets the distance from the camera to the closest point on the tile.  This is used for level of detail selection.
  *
  * @param {FrameState} frameState The state information of the current rendering frame.
- * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
+ * @returns {number} The distance from the camera to the closest point on the tile, in meters.
  */
 TileBoundingRegion.prototype.distanceToCamera = function (frameState) {
   //>>includeStart('debug', pragmas.debug);

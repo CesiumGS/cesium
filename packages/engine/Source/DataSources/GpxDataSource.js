@@ -765,14 +765,14 @@ function GpxDataSource() {
 /**
  * Creates a Promise to a new instance loaded with the provided GPX data.
  *
- * @param {String|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data.
- * @param {Object} [options] An object with the following properties:
- * @param {Boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
- * @param {String} [options.waypointImage] Image to use for waypoint billboards.
- * @param {String} [options.trackImage] Image to use for track billboards.
- * @param {String} [options.trackColor] Color to use for track lines.
- * @param {String} [options.routeColor] Color to use for route lines.
- * @returns {Promise.<GpxDataSource>} A promise that will resolve to a new GpxDataSource instance once the gpx is loaded.
+ * @param {string|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data.
+ * @param {object} [options] An object with the following properties:
+ * @param {boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
+ * @param {string} [options.waypointImage] Image to use for waypoint billboards.
+ * @param {string} [options.trackImage] Image to use for track billboards.
+ * @param {string} [options.trackColor] Color to use for track lines.
+ * @param {string} [options.routeColor] Color to use for route lines.
+ * @returns {Promise<GpxDataSource>} A promise that will resolve to a new GpxDataSource instance once the gpx is loaded.
  */
 GpxDataSource.load = function (data, options) {
   return new GpxDataSource().load(data, options);
@@ -783,7 +783,7 @@ Object.defineProperties(GpxDataSource.prototype, {
    * Gets a human-readable name for this instance.
    * This will be automatically be set to the GPX document name on load.
    * @memberof GpxDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   name: {
     get: function () {
@@ -793,7 +793,7 @@ Object.defineProperties(GpxDataSource.prototype, {
   /**
    * Gets the version of the GPX Schema in use.
    * @memberof GpxDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   version: {
     get: function () {
@@ -803,7 +803,7 @@ Object.defineProperties(GpxDataSource.prototype, {
   /**
    * Gets the creator of the GPX document.
    * @memberof GpxDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   creator: {
     get: function () {
@@ -813,7 +813,7 @@ Object.defineProperties(GpxDataSource.prototype, {
   /**
    * Gets an object containing metadata about the GPX file.
    * @memberof GpxDataSource.prototype
-   * @type {Object}
+   * @type {object}
    */
   metadata: {
     get: function () {
@@ -845,7 +845,7 @@ Object.defineProperties(GpxDataSource.prototype, {
   /**
    * Gets a value indicating if the data source is currently loading data.
    * @memberof GpxDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isLoading: {
     get: function () {
@@ -885,7 +885,7 @@ Object.defineProperties(GpxDataSource.prototype, {
   /**
    * Gets whether or not this data source should be displayed.
    * @memberof GpxDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -924,7 +924,7 @@ Object.defineProperties(GpxDataSource.prototype, {
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
  *
  * @param {JulianDate} time The simulation time.
- * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
 GpxDataSource.prototype.update = function (time) {
   return true;
@@ -933,14 +933,14 @@ GpxDataSource.prototype.update = function (time) {
 /**
  * Asynchronously loads the provided GPX data, replacing any existing data.
  *
- * @param {String|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data or a parsed GPX document.
- * @param {Object} [options] An object with the following properties:
- * @param {Boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
- * @param {String} [options.waypointImage] Image to use for waypoint billboards.
- * @param {String} [options.trackImage] Image to use for track billboards.
- * @param {String} [options.trackColor] Color to use for track lines.
- * @param {String} [options.routeColor] Color to use for route lines.
- * @returns {Promise.<GpxDataSource>} A promise that will resolve to this instances once the GPX is loaded.
+ * @param {string|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data or a parsed GPX document.
+ * @param {object} [options] An object with the following properties:
+ * @param {boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
+ * @param {string} [options.waypointImage] Image to use for waypoint billboards.
+ * @param {string} [options.trackImage] Image to use for track billboards.
+ * @param {string} [options.trackColor] Color to use for track lines.
+ * @param {string} [options.routeColor] Color to use for route lines.
+ * @returns {Promise<GpxDataSource>} A promise that will resolve to this instances once the GPX is loaded.
  */
 GpxDataSource.prototype.load = function (data, options) {
   if (!defined(data)) {

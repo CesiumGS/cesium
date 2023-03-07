@@ -49,11 +49,11 @@ const WALL_INITIAL_MAX_HEIGHT = 1000.0;
  * @alias GroundPolylineGeometry
  * @constructor
  *
- * @param {Object} options Options with the following properties:
+ * @param {object} options Options with the following properties:
  * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
- * @param {Number} [options.width=1.0] The screen space width in pixels.
- * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
- * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
+ * @param {number} [options.width=1.0] The screen space width in pixels.
+ * @param {number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
+ * @param {boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
  * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
  *
  * @exception {DeveloperError} At least two positions are required.
@@ -92,7 +92,7 @@ function GroundPolylineGeometry(options) {
 
   /**
    * The screen space width in pixels.
-   * @type {Number}
+   * @type {number}
    */
   this.width = defaultValue(options.width, 1.0); // Doesn't get packed, not necessary for computing geometry.
 
@@ -101,7 +101,7 @@ function GroundPolylineGeometry(options) {
   /**
    * The distance interval used for interpolating options.points. Zero indicates no interpolation.
    * Default of 9999.0 allows centimeter accuracy with 32 bit floating point.
-   * @type {Boolean}
+   * @type {boolean}
    * @default 9999.0
    */
   this.granularity = defaultValue(options.granularity, 9999.0);
@@ -109,7 +109,7 @@ function GroundPolylineGeometry(options) {
   /**
    * Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
    * If the geometry has two positions this parameter will be ignored.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.loop = defaultValue(options.loop, false);
@@ -135,7 +135,7 @@ Object.defineProperties(GroundPolylineGeometry.prototype, {
   /**
    * The number of elements used to pack the object into an array.
    * @memberof GroundPolylineGeometry.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -285,10 +285,10 @@ function getPosition(ellipsoid, cartographic, height, result) {
  * Stores the provided instance into the provided array.
  *
  * @param {PolygonGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 GroundPolylineGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -325,8 +325,8 @@ GroundPolylineGeometry.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {PolygonGeometry} [result] The object into which to store the result.
  */
 GroundPolylineGeometry.unpack = function (array, startingIndex, result) {

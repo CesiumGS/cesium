@@ -37,8 +37,8 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  * @augments ResourceLoader
  * @private
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.geoJson The GeoJson object.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.geoJson The GeoJson object.
  */
 function GeoJsonLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -64,7 +64,7 @@ Object.defineProperties(GeoJsonLoader.prototype, {
    *
    * @memberof GeoJsonLoader.prototype
    *
-   * @type {Promise.<GeoJsonLoader>|Undefined}
+   * @type {Promise<GeoJsonLoader>|Undefined}
    * @readonly
    * @private
    */
@@ -78,7 +78,7 @@ Object.defineProperties(GeoJsonLoader.prototype, {
    *
    * @memberof GeoJsonLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -105,7 +105,7 @@ Object.defineProperties(GeoJsonLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GeoJsonLoader.prototype.load = function () {

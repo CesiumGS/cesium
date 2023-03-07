@@ -232,7 +232,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GlobeSurfaceTileProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   ready: {
     get: function () {
@@ -563,8 +563,8 @@ GlobeSurfaceTileProvider.prototype.cancelReprojections = function () {
  * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
  * called before {@link GlobeSurfaceTileProvider#ready} returns true.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error in meters.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error in meters.
  */
 GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function (
   level
@@ -995,7 +995,7 @@ const tileDirectionScratch = new Cartesian3();
  * Determines the priority for loading this tile. Lower priority values load sooner.
  * @param {QuadtreeTile} tile The tile.
  * @param {FrameState} frameState The frame state.
- * @returns {Number} The load priority value.
+ * @returns {number} The load priority value.
  */
 GlobeSurfaceTileProvider.prototype.computeTileLoadPriority = function (
   tile,
@@ -1144,7 +1144,7 @@ function computeOccludeePoint(
  * @param {QuadtreeTile} tile The tile instance.
  * @param {FrameState} frameState The state information of the current rendering frame.
  *
- * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
+ * @returns {number} The distance from the camera to the closest point on the tile, in meters.
  */
 GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function (
   tile,
@@ -1359,7 +1359,7 @@ function updateTileBoundingRegion(tile, tileProvider, frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see GlobeSurfaceTileProvider#destroy
  */

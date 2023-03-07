@@ -26,15 +26,15 @@ describe(
       "uniform float maxLod;" +
       "void main() {" +
       "   vec3 color = czm_sampleOctahedralProjection(projectedMap, textureSize, direction, lod, maxLod);" +
-      "   gl_FragColor = vec4(color, 1.0);" +
+      "   out_FragColor = vec4(color, 1.0);" +
       "}";
 
     const fsCubeMap =
       "uniform samplerCube cubeMap;" +
       "uniform vec3 direction;" +
       "void main() {" +
-      "   vec4 rgba = textureCube(cubeMap, direction);" +
-      "   gl_FragColor = vec4(rgba.rgb, 1.0);" +
+      "   vec4 rgba = czm_textureCube(cubeMap, direction);" +
+      "   out_FragColor = vec4(rgba.rgb, 1.0);" +
       "}";
 
     beforeAll(function () {
@@ -208,7 +208,7 @@ describe(
         });
     });
 
-    it("rejects when environment map fails to load.", function () {
+    it("raises error event when environment map fails to load.", function () {
       if (!OctahedralProjectedCubeMap.isSupported(context)) {
         return;
       }
@@ -217,15 +217,12 @@ describe(
       const frameState = createFrameState(context);
       let error;
 
-      projection.readyPromise
-        .then(function () {
-          fail("Should not resolve.");
-        })
-        .catch(function (e) {
-          error = e;
-          expect(error).toBeDefined();
-          expect(projection.ready).toEqual(false);
-        });
+      const removeListener = projection.errorEvent.addEventListener((e) => {
+        error = e;
+        expect(error).toBeDefined();
+        expect(projection.ready).toEqual(false);
+        removeListener();
+      });
 
       return pollToPromise(function () {
         projection.update(frameState);

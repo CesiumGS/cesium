@@ -85,5 +85,5 @@ void main()
     silhouetteStage(color);
     #endif
 
-    gl_FragColor = color;
+    out_FragColor = color;
 }

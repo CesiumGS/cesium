@@ -213,6 +213,15 @@ describe("DataSources/Entity", function () {
     expect(entity.availability).toBe(interval);
   });
 
+  it("merge does not overwrite _children", function () {
+    const entity = new Entity();
+
+    entity.merge({
+      children: true,
+    });
+    expect(entity._children).toEqual([]);
+  });
+
   it("merge works with custom properties.", function () {
     const propertyName = "customProperty";
     const value = "fizzbuzz";

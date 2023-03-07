@@ -22,10 +22,10 @@ import VerticalOrigin from "./VerticalOrigin.js";
  * @alias Vector3DTilePoints
  * @constructor
  *
- * @param {Object} options An object with following properties:
+ * @param {object} options An object with following properties:
  * @param {Uint16Array} options.positions The positions of the polygons.
- * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
- * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+ * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
+ * @param {number} options.maximumHeight The maximum height of the terrain covered by the tile.
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
  * @param {Uint16Array} options.batchIds The batch ids for each polygon.
@@ -66,7 +66,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    *
    * @memberof Vector3DTilePoints.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   pointsLength: {
@@ -80,7 +80,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    *
    * @memberof Vector3DTilePoints.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   texturesByteLength: {
@@ -227,7 +227,7 @@ Vector3DTilePoints.prototype.createFeatures = function (content, features) {
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (batch table color * color).
  *
- * @param {Boolean} enabled Whether to enable debug coloring.
+ * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
 Vector3DTilePoints.prototype.applyDebugSettings = function (enabled, color) {
@@ -500,7 +500,7 @@ Vector3DTilePoints.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePoints.prototype.isDestroyed = function () {
   return false;

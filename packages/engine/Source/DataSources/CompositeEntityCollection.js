@@ -157,7 +157,7 @@ Object.defineProperties(CompositeEntityCollection.prototype, {
    * Gets a globally unique identifier for this collection.
    * @memberof CompositeEntityCollection.prototype
    * @readonly
-   * @type {String}
+   * @type {string}
    */
   id: {
     get: function () {
@@ -193,7 +193,7 @@ Object.defineProperties(CompositeEntityCollection.prototype, {
  * Adds a collection to the composite.
  *
  * @param {EntityCollection} collection the collection to add.
- * @param {Number} [index] the index to add the collection at.  If omitted, the collection will
+ * @param {number} [index] the index to add the collection at.  If omitted, the collection will
  *                         added on top of all existing collections.
  *
  * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
@@ -232,7 +232,7 @@ CompositeEntityCollection.prototype.addCollection = function (
  * Removes a collection from this composite, if present.
  *
  * @param {EntityCollection} collection The collection to remove.
- * @returns {Boolean} true if the collection was in the composite and was removed,
+ * @returns {boolean} true if the collection was in the composite and was removed,
  *                    false if the collection was not in the composite.
  */
 CompositeEntityCollection.prototype.removeCollection = function (collection) {
@@ -257,7 +257,7 @@ CompositeEntityCollection.prototype.removeAllCollections = function () {
  * Checks to see if the composite contains a given collection.
  *
  * @param {EntityCollection} collection the collection to check for.
- * @returns {Boolean} true if the composite contains the collection, false otherwise.
+ * @returns {boolean} true if the composite contains the collection, false otherwise.
  */
 CompositeEntityCollection.prototype.containsCollection = function (collection) {
   return this._collections.indexOf(collection) !== -1;
@@ -267,7 +267,7 @@ CompositeEntityCollection.prototype.containsCollection = function (collection) {
  * Returns true if the provided entity is in this collection, false otherwise.
  *
  * @param {Entity} entity The entity.
- * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
+ * @returns {boolean} true if the provided entity is in this collection, false otherwise.
  */
 CompositeEntityCollection.prototype.contains = function (entity) {
   return this._composite.contains(entity);
@@ -277,7 +277,7 @@ CompositeEntityCollection.prototype.contains = function (entity) {
  * Determines the index of a given collection in the composite.
  *
  * @param {EntityCollection} collection The collection to find the index of.
- * @returns {Number} The index of the collection in the composite, or -1 if the collection does not exist in the composite.
+ * @returns {number} The index of the collection in the composite, or -1 if the collection does not exist in the composite.
  */
 CompositeEntityCollection.prototype.indexOfCollection = function (collection) {
   return this._collections.indexOf(collection);
@@ -286,7 +286,7 @@ CompositeEntityCollection.prototype.indexOfCollection = function (collection) {
 /**
  * Gets a collection by index from the composite.
  *
- * @param {Number} index the index to retrieve.
+ * @param {number} index the index to retrieve.
  */
 CompositeEntityCollection.prototype.getCollection = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -462,7 +462,7 @@ CompositeEntityCollection.prototype.computeAvailability = function () {
 /**
  * Gets an entity with the specified id.
  *
- * @param {String} id The id of the entity to retrieve.
+ * @param {string} id The id of the entity to retrieve.
  * @returns {Entity|undefined} The entity with the provided id or undefined if the id did not exist in the collection.
  */
 CompositeEntityCollection.prototype.getById = function (id) {

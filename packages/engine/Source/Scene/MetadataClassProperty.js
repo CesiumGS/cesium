@@ -18,27 +18,27 @@ import MetadataComponentType from "./MetadataComponentType.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata|3D Metadata Specification} for 3D Tiles
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.id The ID of the property.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.id The ID of the property.
  * @param {MetadataType} options.type The type of the property such as SCALAR, VEC2, VEC3.
  * @param {MetadataComponentType} [options.componentType] The component type of the property. This includes integer (e.g. INT8 or UINT16), and floating point (FLOAT32 and FLOAT64) values.
  * @param {MetadataEnum} [options.enumType] The enum type of the property. Only defined when type is ENUM.
- * @param {Boolean} [options.isArray=false] True if a property is an array (either fixed length or variable length), false otherwise.
- * @param {Boolean} [options.isVariableLengthArray=false] True if a property is a variable length array, false otherwise.
- * @param {Number} [options.arrayLength] The number of array elements. Only defined for fixed length arrays.
- * @param {Boolean} [options.normalized=false] Whether the property is normalized.
- * @param {Number|Number[]|Number[][]} [options.min] A number or an array of numbers storing the minimum allowable value of this property. Only defined when type is a numeric type.
- * @param {Number|Number[]|Number[][]} [options.max] A number or an array of numbers storing the maximum allowable value of this property. Only defined when type is a numeric type.
- * @param {Number|Number[]|Number[][]} [options.offset] The offset to be added to property values as part of the value transform.
- * @param {Number|Number[]|Number[][]} [options.scale] The scale to be multiplied to property values as part of the value transform.
- * @param {Boolean|Number|String|Array} [options.noData] The no-data sentinel value that represents null values.
- * @param {Boolean|Number|String|Array} [options.default] A default value to use when an entity's property value is not defined.
- * @param {Boolean} [options.required=false] Whether the property is required.
- * @param {String} [options.name] The name of the property.
- * @param {String} [options.description] The description of the property.
- * @param {String} [options.semantic] An identifier that describes how this property should be interpreted.
+ * @param {boolean} [options.isArray=false] True if a property is an array (either fixed length or variable length), false otherwise.
+ * @param {boolean} [options.isVariableLengthArray=false] True if a property is a variable length array, false otherwise.
+ * @param {number} [options.arrayLength] The number of array elements. Only defined for fixed length arrays.
+ * @param {boolean} [options.normalized=false] Whether the property is normalized.
+ * @param {number|number[]|number[][]} [options.min] A number or an array of numbers storing the minimum allowable value of this property. Only defined when type is a numeric type.
+ * @param {number|number[]|number[][]} [options.max] A number or an array of numbers storing the maximum allowable value of this property. Only defined when type is a numeric type.
+ * @param {number|number[]|number[][]} [options.offset] The offset to be added to property values as part of the value transform.
+ * @param {number|number[]|number[][]} [options.scale] The scale to be multiplied to property values as part of the value transform.
+ * @param {boolean|number|string|Array} [options.noData] The no-data sentinel value that represents null values.
+ * @param {boolean|number|string|Array} [options.default] A default value to use when an entity's property value is not defined.
+ * @param {boolean} [options.required=false] Whether the property is required.
+ * @param {string} [options.name] The name of the property.
+ * @param {string} [options.description] The description of the property.
+ * @param {string} [options.semantic] An identifier that describes how this property should be interpreted.
  * @param {*} [options.extras] Extra user-defined properties.
- * @param {Object} [options.extensions] An object containing extensions.
+ * @param {object} [options.extensions] An object containing extensions.
  *
  * @alias MetadataClassProperty
  * @constructor
@@ -125,10 +125,10 @@ function MetadataClassProperty(options) {
 /**
  * Creates a {@link MetadataClassProperty} from either 3D Tiles 1.1, 3DTILES_metadata, EXT_structural_metadata, or EXT_feature_metadata.
  *
- * @param {Object} options Object with the following properties:
- * @param {String} options.id The ID of the property.
- * @param {Object} options.property The property JSON object.
- * @param {Object.<String, MetadataEnum>} [options.enums] A dictionary of enums.
+ * @param {object} options Object with the following properties:
+ * @param {string} options.id The ID of the property.
+ * @param {object} options.property The property JSON object.
+ * @param {Object<string, MetadataEnum>} [options.enums] A dictionary of enums.
  *
  * @returns {MetadataClassProperty} The newly created metadata class property.
  *
@@ -197,7 +197,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * The ID of the property.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   id: {
@@ -210,7 +210,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * The name of the property.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -223,7 +223,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * The description of the property.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   description: {
@@ -293,7 +293,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * false otherwise.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isArray: {
@@ -306,7 +306,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * True if a property is a variable length array, false otherwise.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isVariableLengthArray: {
@@ -320,7 +320,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * arrays.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   arrayLength: {
@@ -333,7 +333,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * Whether the property is normalized.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   normalized: {
@@ -346,7 +346,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * A number or an array of numbers storing the maximum allowable value of this property. Only defined when type is a numeric type.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Number[]|Number[][]}
+   * @type {number|number[]|number[][]}
    * @readonly
    */
   max: {
@@ -359,7 +359,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * A number or an array of numbers storing the minimum allowable value of this property. Only defined when type is a numeric type.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Number[]|Number[][]}
+   * @type {number|number[]|number[][]}
    * @readonly
    */
   min: {
@@ -372,7 +372,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * The no-data sentinel value that represents null values
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean|Number|String|Array}
+   * @type {boolean|number|string|Array}
    * @readonly
    */
   noData: {
@@ -385,7 +385,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * A default value to use when an entity's property value is not defined.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean|Number|String|Array}
+   * @type {boolean|number|string|Array}
    * @readonly
    */
   default: {
@@ -398,7 +398,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * Whether the property is required.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   required: {
@@ -411,7 +411,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * An identifier that describes how this property should be interpreted.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   semantic: {
@@ -425,7 +425,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * undefined, they default to identity so this property is set false
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @private
    */
@@ -439,7 +439,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * The offset to be added to property values as part of the value transform.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Number[]|Number[][]}
+   * @type {number|number[]|number[][]}
    * @readonly
    */
   offset: {
@@ -452,7 +452,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * The scale to be multiplied to property values as part of the value transform.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number|Number[]|Number[][]}
+   * @type {number|number[]|number[][]}
    * @readonly
    */
   scale: {
@@ -478,7 +478,7 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * An object containing extensions.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   extensions: {
@@ -865,7 +865,7 @@ function arrayEquals(left, right) {
  * other sizes) are passed through unaltered.
  *
  * @param {*} value the original, normalized values.
- * @param {Boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
+ * @param {boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
  * @returns {*} The appropriate vector or matrix type if the value is a vector or matrix type, respectively. If the property is an array of vectors or matrices, an array of the appropriate vector or matrix type is returned. Otherwise, the value is returned unaltered.
  * @private
  */
@@ -904,7 +904,7 @@ MetadataClassProperty.prototype.unpackVectorAndMatrixTypes = function (
  * All other values (including arrays of other sizes) are passed through unaltered.
  *
  * @param {*} value The value of this property
- * @param {Boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
+ * @param {boolean} [enableNestedArrays=false] If true, arrays of vectors are represented as nested arrays. This is used for JSON encoding but not binary encoding
  * @returns {*} An array of the appropriate length if the property is a vector or matrix type. Otherwise, the value is returned unaltered.
  * @private
  */
@@ -939,7 +939,7 @@ MetadataClassProperty.prototype.packVectorAndMatrixTypes = function (
  * Validates whether the given value conforms to the property.
  *
  * @param {*} value The value.
- * @returns {String|undefined} An error message if the value does not conform to the property, otherwise undefined.
+ * @returns {string|undefined} An error message if the value does not conform to the property, otherwise undefined.
  * @private
  */
 MetadataClassProperty.prototype.validate = function (value) {

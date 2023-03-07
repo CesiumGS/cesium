@@ -9,8 +9,8 @@ import defaultValue from "../Core/defaultValue.js";
  *
  * @param {MetadataTable} options.metadataTable The metadata table.
  * @param {MetadataClass} options.class The class that the metadata conforms to.
- * @param {Number} options.entityId The ID of the entity the metadata belongs to.
- * @param {Object} options.propertyTableJson The JSON that contains the property table of the entity.
+ * @param {number} options.entityId The ID of the entity the metadata belongs to.
+ * @param {object} options.propertyTableJson The JSON that contains the property table of the entity.
  *
  * @alias ImplicitMetadataView
  * @constructor
@@ -59,7 +59,7 @@ Object.defineProperties(ImplicitMetadataView.prototype, {
    * Extra user-defined properties.
    *
    * @memberof ImplicitMetadataView.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   extras: {
@@ -72,7 +72,7 @@ Object.defineProperties(ImplicitMetadataView.prototype, {
    * An object containing extensions.
    *
    * @memberof ImplicitMetadataView.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   extensions: {
@@ -85,8 +85,8 @@ Object.defineProperties(ImplicitMetadataView.prototype, {
 /**
  * Returns whether the metadata contains this property.
  *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether the tile has this property.
+ * @param {string} propertyId The case-sensitive ID of the property.
+ * @returns {boolean} Whether the tile has this property.
  * @private
  */
 ImplicitMetadataView.prototype.hasProperty = function (propertyId) {
@@ -96,8 +96,8 @@ ImplicitMetadataView.prototype.hasProperty = function (propertyId) {
 /**
  * Returns whether the metadata contains a property with the given semantic.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {Boolean} Whether the tile has a property with the given semantic.
+ * @param {string} semantic The case-sensitive semantic of the property.
+ * @returns {boolean} Whether the tile has a property with the given semantic.
  * @private
  */
 ImplicitMetadataView.prototype.hasPropertyBySemantic = function (semantic) {
@@ -107,8 +107,8 @@ ImplicitMetadataView.prototype.hasPropertyBySemantic = function (semantic) {
 /**
  * Returns an array of property IDs in the metadata table.
  *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The property IDs.
  * @private
  */
 ImplicitMetadataView.prototype.getPropertyIds = function (results) {
@@ -121,7 +121,7 @@ ImplicitMetadataView.prototype.getPropertyIds = function (results) {
  * If the property is normalized the normalized value is returned.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this property.
  * @private
  */
@@ -135,9 +135,9 @@ ImplicitMetadataView.prototype.getProperty = function (propertyId) {
  * If the property is normalized a normalized value must be provided to this function.
  * </p>
  *
- * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {string} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 ImplicitMetadataView.prototype.setProperty = function (propertyId, value) {
@@ -147,7 +147,7 @@ ImplicitMetadataView.prototype.setProperty = function (propertyId, value) {
 /**
  * Returns a copy of the value of the property with the given semantic in the metadata table.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the tile does not have this semantic.
  * @private
  */
@@ -158,9 +158,9 @@ ImplicitMetadataView.prototype.getPropertyBySemantic = function (semantic) {
 /**
  * Sets the value of the property with the given semantic in the metadata table.
  *
- * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {string} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
- * @returns {Boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if the property was set, <code>false</code> otherwise.
  * @private
  */
 

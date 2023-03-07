@@ -30,10 +30,10 @@ const updateFunctions = {
  * Applies changes made to the glTF spec between revisions so that the core library
  * only has to handle the latest version.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @param {Object} [options] Options for updating the glTF.
- * @param {String} [options.targetVersion] The glTF will be upgraded until it hits the specified version.
- * @returns {Object} The updated glTF asset.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @param {object} [options] Options for updating the glTF.
+ * @param {string} [options.targetVersion] The glTF will be upgraded until it hits the specified version.
+ * @returns {object} The updated glTF asset.
  *
  * @private
  */

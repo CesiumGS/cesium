@@ -73,8 +73,8 @@ TerrainCache.prototype.tidy = function () {
  * Initialization options for GoogleEarthEnterpriseTerrainProvider constructor
  *
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {Resource|String} [url] The url of the Google Earth Enterprise server hosting the imagery. Deprecated.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Resource|string} [url] The url of the Google Earth Enterprise server hosting the imagery. Deprecated.
  * @property {GoogleEarthEnterpriseMetadata} [metadata] A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider. Deprecated.
  */
 
@@ -204,7 +204,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   /**
    * Gets the name of the Google Earth Enterprise server url hosting the imagery.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -254,7 +254,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -271,7 +271,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -303,7 +303,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
    * indicates which areas of the globe are water rather than land, so they can be rendered
    * as a reflective surface with animated waves.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasWaterMask: {
@@ -315,7 +315,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
    * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasVertexNormals: {
@@ -399,11 +399,11 @@ function computeChildMask(quadKey, info, metadata) {
  * Requests the geometry for a given tile.   The result must include terrain data and
  * may optionally include a water mask and an indication of which child tiles are available.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  */
@@ -592,8 +592,8 @@ GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function (
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
  */
 GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   level
@@ -604,10 +604,10 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getLevelMaximumGeometricError = f
 /**
  * Determines whether data for a tile is available to be loaded.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
   x,
@@ -661,9 +661,9 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
 /**
  * Makes sure we load availability data for a tile
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined}
  */
 GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability = function (

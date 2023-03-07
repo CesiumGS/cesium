@@ -16,13 +16,13 @@ import Matrix4 from "./Matrix4.js";
  * @alias OrthographicOffCenterFrustum
  * @constructor
  *
- * @param {Object} [options] An object with the following properties:
- * @param {Number} [options.left] The left clipping plane distance.
- * @param {Number} [options.right] The right clipping plane distance.
- * @param {Number} [options.top] The top clipping plane distance.
- * @param {Number} [options.bottom] The bottom clipping plane distance.
- * @param {Number} [options.near=1.0] The near clipping plane distance.
- * @param {Number} [options.far=500000000.0] The far clipping plane distance.
+ * @param {object} [options] An object with the following properties:
+ * @param {number} [options.left] The left clipping plane distance.
+ * @param {number} [options.right] The right clipping plane distance.
+ * @param {number} [options.top] The top clipping plane distance.
+ * @param {number} [options.bottom] The bottom clipping plane distance.
+ * @param {number} [options.near=1.0] The near clipping plane distance.
+ * @param {number} [options.far=500000000.0] The far clipping plane distance.
  *
  * @example
  * const maxRadii = ellipsoid.maximumRadius;
@@ -40,7 +40,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The left clipping plane.
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   this.left = options.left;
@@ -48,7 +48,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The right clipping plane.
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   this.right = options.right;
@@ -56,7 +56,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The top clipping plane.
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   this.top = options.top;
@@ -64,7 +64,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The bottom clipping plane.
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   this.bottom = options.bottom;
@@ -72,7 +72,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The distance of the near plane.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.near = defaultValue(options.near, 1.0);
@@ -80,7 +80,7 @@ function OrthographicOffCenterFrustum(options) {
 
   /**
    * The distance of the far plane.
-   * @type {Number}
+   * @type {number}
    * @default 500000000.0;
    */
   this.far = defaultValue(options.far, 500000000.0);
@@ -293,10 +293,10 @@ OrthographicOffCenterFrustum.prototype.computeCullingVolume = function (
 /**
  * Returns the pixel's width and height in meters.
  *
- * @param {Number} drawingBufferWidth The width of the drawing buffer.
- * @param {Number} drawingBufferHeight The height of the drawing buffer.
- * @param {Number} distance The distance to the near plane in meters.
- * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
+ * @param {number} drawingBufferWidth The width of the drawing buffer.
+ * @param {number} drawingBufferHeight The height of the drawing buffer.
+ * @param {number} distance The distance to the near plane in meters.
+ * @param {number} pixelRatio The scaling factor from pixel space to coordinate space.
  * @param {Cartesian2} result The object onto which to store the result.
  * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
  *
@@ -388,7 +388,7 @@ OrthographicOffCenterFrustum.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {OrthographicOffCenterFrustum} [other] The right hand side OrthographicOffCenterFrustum.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 OrthographicOffCenterFrustum.prototype.equals = function (other) {
   return (
@@ -409,9 +409,9 @@ OrthographicOffCenterFrustum.prototype.equals = function (other) {
  * <code>false</code> otherwise.
  *
  * @param {OrthographicOffCenterFrustum} other The right hand side OrthographicOffCenterFrustum.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
- * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
- * @returns {Boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
+ * @param {number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+ * @returns {boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
  */
 OrthographicOffCenterFrustum.prototype.equalsEpsilon = function (
   other,

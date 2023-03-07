@@ -6,7 +6,7 @@
  * @constructor
  * @extends {Proxy}
  *
- * @param {String} proxy The proxy URL that will be used to requests all resources.
+ * @param {string} proxy The proxy URL that will be used to requests all resources.
  */
 function DefaultProxy(proxy) {
   this.proxy = proxy;
@@ -15,8 +15,8 @@ function DefaultProxy(proxy) {
 /**
  * Get the final URL to use to request a given resource.
  *
- * @param {String} resource The resource to request.
- * @returns {String} proxied resource
+ * @param {string} resource The resource to request.
+ * @returns {string} proxied resource
  */
 DefaultProxy.prototype.getURL = function (resource) {
   const prefix = this.proxy.indexOf("?") === -1 ? "?" : "";

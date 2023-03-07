@@ -13,7 +13,7 @@ import ModelType from "./ModelType.js";
  * Manages the {@link ModelFeature}s in a {@link Model}.
  * Extracts the properties from a {@link PropertyTable}.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {Model} options.model The model that owns this feature table.
  * @param {PropertyTable} options.propertyTable The property table from the model used to initialize the model.
  *
@@ -68,7 +68,7 @@ Object.defineProperties(ModelFeatureTable.prototype, {
    *
    * @memberof ModelFeatureTable.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -85,7 +85,7 @@ Object.defineProperties(ModelFeatureTable.prototype, {
    *
    * @memberof ModelFeatureTable.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -105,7 +105,7 @@ Object.defineProperties(ModelFeatureTable.prototype, {
    *
    * @memberof ModelFeatureTable.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @private
@@ -288,7 +288,7 @@ ModelFeatureTable.prototype.applyStyle = function (style) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see ModelFeatureTable#destroy
  * @private

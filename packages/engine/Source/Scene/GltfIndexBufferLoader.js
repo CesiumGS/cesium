@@ -21,17 +21,17 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
- * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
+ * @param {object} options.gltf The glTF JSON.
+ * @param {number} options.accessorId The accessor ID corresponding to the index buffer.
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Object} [options.draco] The Draco extension object.
- * @param {String} [options.cacheKey] The cache key of the resource.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.loadBuffer=false] Load the index buffer as a GPU index buffer.
- * @param {Boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
+ * @param {object} [options.draco] The Draco extension object.
+ * @param {string} [options.cacheKey] The cache key of the resource.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.loadBuffer=false] Load the index buffer as a GPU index buffer.
+ * @param {boolean} [options.loadTypedArray=false] Load the index buffer as a typed array.
  * @private
  */
 function GltfIndexBufferLoader(options) {
@@ -93,7 +93,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    *
    * @memberof GltfIndexBufferLoader.prototype
    *
-   * @type {Promise.<GltfIndexBufferLoader>|undefined}
+   * @type {Promise<GltfIndexBufferLoader>|undefined}
    * @readonly
    * @private
    */
@@ -107,7 +107,7 @@ Object.defineProperties(GltfIndexBufferLoader.prototype, {
    *
    * @memberof GltfIndexBufferLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -165,7 +165,7 @@ const scratchIndexBufferJob = new CreateIndexBufferJob();
 
 /**
  * Loads the resource.
- * @returns {Promise.<GltfIndexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GltfIndexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfIndexBufferLoader.prototype.load = function () {

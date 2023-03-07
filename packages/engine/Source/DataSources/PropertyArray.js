@@ -26,7 +26,7 @@ Object.defineProperties(PropertyArray.prototype, {
    * is considered constant if all property items in the array are constant.
    * @memberof PropertyArray.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -131,7 +131,7 @@ PropertyArray.prototype.setValue = function (value) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 PropertyArray.prototype.equals = function (other) {
   return (

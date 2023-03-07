@@ -31,12 +31,12 @@ const defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
  * @alias GeometryUpdater
  * @constructor
  *
- * @param {Object} options An object with the following properties:
+ * @param {object} options An object with the following properties:
  * @param {Entity} options.entity The entity containing the geometry to be visualized.
  * @param {Scene} options.scene The scene where visualization is taking place.
- * @param {Object} options.geometryOptions Options for the geometry
- * @param {String} options.geometryPropertyName The geometry property name
- * @param {String[]} options.observedPropertyNames The entity properties this geometry cares about
+ * @param {object} options.geometryOptions Options for the geometry
+ * @param {string} options.geometryPropertyName The geometry property name
+ * @param {string[]} options.observedPropertyNames The entity properties this geometry cares about
  */
 function GeometryUpdater(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -79,7 +79,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
   /**
    * Gets the unique ID associated with this updater
    * @memberof GeometryUpdater.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   id: {
@@ -103,7 +103,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets a value indicating if the geometry has a fill component.
    * @memberof GeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   fillEnabled: {
@@ -115,7 +115,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets a value indicating if fill visibility varies with simulation time.
    * @memberof GeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasConstantFill: {
@@ -144,7 +144,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets a value indicating if the geometry has an outline component.
    * @memberof GeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   outlineEnabled: {
@@ -156,7 +156,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets a value indicating if the geometry has an outline component.
    * @memberof GeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasConstantOutline: {
@@ -186,7 +186,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * This value is only valid if isDynamic is false.
    * @memberof GeometryUpdater.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   outlineWidth: {
@@ -237,7 +237,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * returned by GeometryUpdater#createDynamicUpdater.
    * @memberof GeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isDynamic: {
@@ -250,7 +250,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * This property is only valid for static geometry.
    * @memberof GeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isClosed: {
@@ -262,7 +262,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * Gets a value indicating if the geometry should be drawn on terrain.
    * @memberof EllipseGeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   onTerrain: {
@@ -275,7 +275,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
    * of this updater change.
    * @memberof GeometryUpdater.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   geometryChanged: {
@@ -289,7 +289,7 @@ Object.defineProperties(GeometryUpdater.prototype, {
  * Checks if the geometry is outlined at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve visibility.
- * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
+ * @returns {boolean} true if geometry is outlined at the provided time, false otherwise.
  */
 GeometryUpdater.prototype.isOutlineVisible = function (time) {
   const entity = this._entity;
@@ -305,7 +305,7 @@ GeometryUpdater.prototype.isOutlineVisible = function (time) {
  * Checks if the geometry is filled at the provided time.
  *
  * @param {JulianDate} time The time for which to retrieve visibility.
- * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
+ * @returns {boolean} true if geometry is filled at the provided time, false otherwise.
  */
 GeometryUpdater.prototype.isFilled = function (time) {
   const entity = this._entity;
@@ -344,7 +344,7 @@ GeometryUpdater.prototype.createOutlineGeometryInstance =
 /**
  * Returns true if this object was destroyed; otherwise, false.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 GeometryUpdater.prototype.isDestroyed = function () {
   return false;
@@ -360,7 +360,7 @@ GeometryUpdater.prototype.destroy = function () {
 };
 /**
  * @param {Entity} entity
- * @param {Object} geometry
+ * @param {object} geometry
  * @private
  */
 GeometryUpdater.prototype._isHidden = function (entity, geometry) {
@@ -372,7 +372,7 @@ GeometryUpdater.prototype._isHidden = function (entity, geometry) {
 
 /**
  * @param {Entity} entity
- * @param {Object} geometry
+ * @param {object} geometry
  * @private
  */
 GeometryUpdater.prototype._isOnTerrain = function (entity, geometry) {
@@ -389,14 +389,14 @@ GeometryUpdater.prototype._getIsClosed = function (options) {
 
 /**
  * @param {Entity} entity
- * @param {Object} geometry
+ * @param {object} geometry
  * @private
  */
 GeometryUpdater.prototype._isDynamic = DeveloperError.throwInstantiationError;
 
 /**
  * @param {Entity} entity
- * @param {Object} geometry
+ * @param {object} geometry
  * @private
  */
 GeometryUpdater.prototype._setStaticOptions =
@@ -404,7 +404,7 @@ GeometryUpdater.prototype._setStaticOptions =
 
 /**
  * @param {Entity} entity
- * @param {String} propertyName
+ * @param {string} propertyName
  * @param {*} newValue
  * @param {*} oldValue
  * @private

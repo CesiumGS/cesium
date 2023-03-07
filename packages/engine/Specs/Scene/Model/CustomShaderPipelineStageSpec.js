@@ -152,8 +152,8 @@ describe("Scene/Model/CustomShaderPipelineStage", function () {
     CustomShaderPipelineStage.process(renderResources, primitive);
 
     ShaderBuilderTester.expectHasVaryings(shaderBuilder, [
-      "varying float v_distanceFromCenter;",
-      "varying mat2 v_computedMatrix;",
+      "float v_distanceFromCenter;",
+      "mat2 v_computedMatrix;",
     ]);
   });
 

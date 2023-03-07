@@ -93,7 +93,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * </p>
    *
    * @memberof DrawCommand.prototype
-   * @type {Object}
+   * @type {object}
    * @default undefined
    *
    * @see DrawCommand#debugShowBoundingVolume
@@ -137,7 +137,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * If the command was already culled, set this to <code>false</code> for a performance improvement.
    *
    * @memberof DrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   cull: {
@@ -157,7 +157,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * {@link DrawCommand#cull} must also be <code>true</code> in order for the command to be culled.
    *
    * @memberof DrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   occlude: {
@@ -236,7 +236,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * The number of vertices to draw in the vertex array.
    *
    * @memberof DrawCommand.prototype
-   * @type {Number}
+   * @type {number}
    * @default undefined
    */
   count: {
@@ -255,7 +255,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * The offset to start drawing in the vertex array.
    *
    * @memberof DrawCommand.prototype
-   * @type {Number}
+   * @type {number}
    * @default 0
    */
   offset: {
@@ -274,7 +274,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * The number of instances to draw.
    *
    * @memberof DrawCommand.prototype
-   * @type {Number}
+   * @type {number}
    * @default 0
    */
   instanceCount: {
@@ -312,7 +312,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * Whether this command should cast shadows when shadowing is enabled.
    *
    * @memberof DrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   castShadows: {
@@ -331,7 +331,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * Whether this command should receive shadows when shadowing is enabled.
    *
    * @memberof DrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   receiveShadows: {
@@ -351,7 +351,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * and return values to set those uniforms.
    *
    * @memberof DrawCommand.prototype
-   * @type {Object}
+   * @type {object}
    * @default undefined
    */
   uniformMap: {
@@ -428,7 +428,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * to the eye containing the bounding volume. Defaults to <code>false</code>.
    *
    * @memberof DrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   executeInClosestFrustum: {
@@ -450,7 +450,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * with {@link Scene#debugCommandFilter}.
    *
    * @memberof DrawCommand.prototype
-   * @type {Object}
+   * @type {object}
    * @default undefined
    *
    * @see Scene#debugCommandFilter
@@ -474,7 +474,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * </p>
    *
    * @memberof DrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    *
    * @see DrawCommand#boundingVolume
@@ -511,7 +511,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * during the pick pass.
    *
    * @memberof DrawCommand.prototype
-   * @type {String}
+   * @type {string}
    * @default undefined
    */
   pickId: {
@@ -529,7 +529,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * Whether this command should be executed in the pick pass only.
    *
    * @memberof DrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   pickOnly: {
@@ -547,7 +547,7 @@ Object.defineProperties(DrawCommand.prototype, {
    * Whether this command should be derived to draw depth for classification of translucent primitives.
    *
    * @memberof DrawCommand.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   depthForTranslucentClassification: {

@@ -357,19 +357,19 @@ describe(
 
       // Validate via rendering
       const vs =
-        "attribute float bytes; " +
-        "attribute float shorts; " +
-        "attribute float floats; " +
-        "varying vec4 fsColor; " +
+        "in float bytes; " +
+        "in float shorts; " +
+        "in float floats; " +
+        "out vec4 fsColor; " +
         "void main() { " +
         "  gl_PointSize = 1.0; " +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0); " +
         "  fsColor = vec4((bytes == 0.0) && (shorts == 1.0) && (floats == 2.0)); " +
         "}";
       const fs =
-        "varying vec4 fsColor; " +
+        "in vec4 fsColor; " +
         "void main() { " +
-        "  gl_FragColor = fsColor; " +
+        "  out_FragColor = fsColor; " +
         "}";
 
       sp = ShaderProgram.fromCache({
@@ -423,18 +423,18 @@ describe(
 
       // Validate via rendering
       const vs =
-        "attribute vec3 position; " +
-        "attribute vec4 color; " +
-        "varying vec4 fsColor; " +
+        "in vec3 position; " +
+        "in vec4 color; " +
+        "out vec4 fsColor; " +
         "void main() { " +
         "  gl_PointSize = 1.0; " +
         "  gl_Position = vec4(position, 1.0); " +
         "  fsColor = color; " +
         "}";
       const fs =
-        "varying vec4 fsColor; " +
+        "in vec4 fsColor; " +
         "void main() { " +
-        "  gl_FragColor = fsColor; " +
+        "  out_FragColor = fsColor; " +
         "}";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -509,20 +509,20 @@ describe(
 
       // Validate via rendering
       const vs =
-        "attribute vec2 unsignedByteAttribute; " +
-        "attribute float unsignedShortAttribute; " +
-        "attribute float byteAttribute; " +
-        "attribute float shortAttribute; " +
-        "varying vec4 fsColor; " +
+        "in vec2 unsignedByteAttribute; " +
+        "in float unsignedShortAttribute; " +
+        "in float byteAttribute; " +
+        "in float shortAttribute; " +
+        "out vec4 fsColor; " +
         "void main() { " +
         "  gl_PointSize = 1.0; " +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0); " +
         "  fsColor = vec4((unsignedByteAttribute.x == 1.0) && (unsignedByteAttribute.y == 2.0) && (unsignedShortAttribute == 3.0) && (byteAttribute == 4.0) && (shortAttribute == 5.0)); " +
         "}";
       const fs =
-        "varying vec4 fsColor; " +
+        "in vec4 fsColor; " +
         "void main() { " +
-        "  gl_FragColor = fsColor; " +
+        "  out_FragColor = fsColor; " +
         "}";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -585,11 +585,11 @@ describe(
 
       // Validate via rendering
       const vs =
-        "attribute vec3 position; " +
-        "attribute vec3 color; " +
-        "attribute vec3 normal; " +
-        "attribute float temperature; " +
-        "varying vec4 fsColor; " +
+        "in vec3 position; " +
+        "in vec3 color; " +
+        "in vec3 normal; " +
+        "in float temperature; " +
+        "out vec4 fsColor; " +
         "void main() { " +
         "  gl_PointSize = 1.0; " +
         "  gl_Position = vec4(position, 1.0); " +
@@ -601,9 +601,9 @@ describe(
         "  }" +
         "}";
       const fs =
-        "varying vec4 fsColor; " +
+        "in vec4 fsColor; " +
         "void main() { " +
-        "  gl_FragColor = fsColor; " +
+        "  out_FragColor = fsColor; " +
         "}";
       sp = ShaderProgram.fromCache({
         context: context,
@@ -626,11 +626,11 @@ describe(
       expect(context).toReadPixels([255, 0, 0, 255]);
 
       const vs2 =
-        "attribute vec3 position; " +
-        "attribute vec3 color; " +
-        "attribute vec3 normal; " +
-        "attribute float temperature; " +
-        "varying vec4 fsColor; " +
+        "in vec3 position; " +
+        "in vec3 color; " +
+        "in vec3 normal; " +
+        "in float temperature; " +
+        "out vec4 fsColor; " +
         "void main() { " +
         "  gl_PointSize = 1.0; " +
         "  gl_Position = vec4(position, 1.0); " +

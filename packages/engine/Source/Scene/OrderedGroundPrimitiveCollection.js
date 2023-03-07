@@ -23,7 +23,7 @@ Object.defineProperties(OrderedGroundPrimitiveCollection.prototype, {
    *
    * @memberof OrderedGroundPrimitiveCollection.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -37,7 +37,7 @@ Object.defineProperties(OrderedGroundPrimitiveCollection.prototype, {
  * Adds a primitive to the collection.
  *
  * @param {GroundPrimitive} primitive The primitive to add.
- * @param {Number} [zIndex = 0] The index of the primitive
+ * @param {number} [zIndex = 0] The index of the primitive
  * @returns {GroundPrimitive} The primitive added to the collection.
  */
 OrderedGroundPrimitiveCollection.prototype.add = function (primitive, zIndex) {
@@ -72,7 +72,7 @@ OrderedGroundPrimitiveCollection.prototype.add = function (primitive, zIndex) {
 /**
  * Adjusts the z-index
  * @param {GroundPrimitive} primitive
- * @param {Number} zIndex
+ * @param {number} zIndex
  */
 OrderedGroundPrimitiveCollection.prototype.set = function (primitive, zIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -93,9 +93,9 @@ OrderedGroundPrimitiveCollection.prototype.set = function (primitive, zIndex) {
 /**
  * Removes a primitive from the collection.
  *
- * @param {Object} primitive The primitive to remove.
- * @param {Boolean} [doNotDestroy = false]
- * @returns {Boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
+ * @param {object} primitive The primitive to remove.
+ * @param {boolean} [doNotDestroy = false]
+ * @returns {boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
  */
 OrderedGroundPrimitiveCollection.prototype.remove = function (
   primitive,
@@ -153,8 +153,8 @@ OrderedGroundPrimitiveCollection.prototype.removeAll = function () {
 /**
  * Determines if this collection contains a primitive.
  *
- * @param {Object} primitive The primitive to check for.
- * @returns {Boolean} <code>true</code> if the primitive is in the collection; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
+ * @param {object} primitive The primitive to check for.
+ * @returns {boolean} <code>true</code> if the primitive is in the collection; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
  */
 OrderedGroundPrimitiveCollection.prototype.contains = function (primitive) {
   if (!defined(primitive)) {
@@ -184,7 +184,7 @@ OrderedGroundPrimitiveCollection.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see OrderedGroundPrimitiveCollection#destroy
  */

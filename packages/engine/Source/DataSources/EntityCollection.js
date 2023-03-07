@@ -128,7 +128,7 @@ Object.defineProperties(EntityCollection.prototype, {
    * Gets a globally unique identifier for this collection.
    * @memberof EntityCollection.prototype
    * @readonly
-   * @type {String}
+   * @type {string}
    */
   id: {
     get: function () {
@@ -152,7 +152,7 @@ Object.defineProperties(EntityCollection.prototype, {
    * displayed.  When true, each entity is only displayed if
    * its own show property is also true.
    * @memberof EntityCollection.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -305,7 +305,7 @@ EntityCollection.prototype.add = function (entity) {
  * Removes an entity from the collection.
  *
  * @param {Entity} entity The entity to be removed.
- * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
+ * @returns {boolean} true if the item was removed, false if it did not exist in the collection.
  */
 EntityCollection.prototype.remove = function (entity) {
   if (!defined(entity)) {
@@ -318,7 +318,7 @@ EntityCollection.prototype.remove = function (entity) {
  * Returns true if the provided entity is in this collection, false otherwise.
  *
  * @param {Entity} entity The entity.
- * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
+ * @returns {boolean} true if the provided entity is in this collection, false otherwise.
  */
 EntityCollection.prototype.contains = function (entity) {
   //>>includeStart('debug', pragmas.debug);
@@ -332,8 +332,8 @@ EntityCollection.prototype.contains = function (entity) {
 /**
  * Removes an entity with the provided id from the collection.
  *
- * @param {String} id The id of the entity to remove.
- * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
+ * @param {string} id The id of the entity to remove.
+ * @returns {boolean} true if the item was removed, false if no item with the provided id existed in the collection.
  */
 EntityCollection.prototype.removeById = function (id) {
   if (!defined(id)) {
@@ -395,7 +395,7 @@ EntityCollection.prototype.removeAll = function () {
 /**
  * Gets an entity with the specified id.
  *
- * @param {String} id The id of the entity to retrieve.
+ * @param {string} id The id of the entity to retrieve.
  * @returns {Entity|undefined} The entity with the provided id or undefined if the id did not exist in the collection.
  */
 EntityCollection.prototype.getById = function (id) {
@@ -411,7 +411,7 @@ EntityCollection.prototype.getById = function (id) {
 /**
  * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.
  *
- * @param {String} id The id of the entity to retrieve or create.
+ * @param {string} id The id of the entity to retrieve or create.
  * @returns {Entity} The new or existing object.
  */
 EntityCollection.prototype.getOrCreateEntity = function (id) {

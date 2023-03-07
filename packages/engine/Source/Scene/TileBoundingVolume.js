@@ -18,7 +18,7 @@ function TileBoundingVolume() {}
 /**
  * The underlying bounding volume.
  *
- * @type {Object}
+ * @type {object}
  * @readonly
  */
 TileBoundingVolume.prototype.boundingVolume = undefined;
@@ -35,7 +35,7 @@ TileBoundingVolume.prototype.boundingSphere = undefined;
  * Calculates the distance between the tile and the camera.
  *
  * @param {FrameState} frameState The frame state.
- * @return {Number} The distance between the tile and the camera, in meters.
+ * @return {number} The distance between the tile and the camera, in meters.
  *                  Returns 0.0 if the camera is inside the tile.
  */
 TileBoundingVolume.prototype.distanceToCamera = function (frameState) {

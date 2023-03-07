@@ -17,8 +17,8 @@
  * @returns {vec3} The position translated to be relative to the camera's position.
  *
  * @example
- * attribute vec3 positionHigh;
- * attribute vec3 positionLow;
+ * in vec3 positionHigh;
+ * in vec3 positionLow;
  *
  * void main()
  * {

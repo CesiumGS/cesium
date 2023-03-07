@@ -12,7 +12,7 @@ const defaultAngle = CesiumMath.toRadians(30.0);
  * @alias ConeEmitter
  * @constructor
  *
- * @param {Number} [angle=Cesium.Math.toRadians(30.0)] The angle of the cone in radians.
+ * @param {number} [angle=Cesium.Math.toRadians(30.0)] The angle of the cone in radians.
  */
 function ConeEmitter(angle) {
   this._angle = defaultValue(angle, defaultAngle);
@@ -22,7 +22,7 @@ Object.defineProperties(ConeEmitter.prototype, {
   /**
    * The angle of the cone in radians.
    * @memberof CircleEmitter.prototype
-   * @type {Number}
+   * @type {number}
    * @default Cesium.Math.toRadians(30.0)
    */
   angle: {

@@ -239,16 +239,16 @@ describe(
 
     it("renders with a one-component constant value", function () {
       const vs =
-        "attribute float firefoxWorkaround;" +
-        "attribute float attr;" +
-        "varying vec4 v_color;" +
+        "in float firefoxWorkaround;" +
+        "in float attr;" +
+        "out vec4 v_color;" +
         "void main() { " +
         "  v_color = vec4(attr == 0.5) + vec4(firefoxWorkaround);" +
         "  gl_PointSize = 1.0;" +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
       const fs =
-        "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
+        "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
       let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -292,16 +292,16 @@ describe(
 
     it("renders with a two-component constant value", function () {
       const vs =
-        "attribute float firefoxWorkaround;" +
-        "attribute vec2 attr;" +
-        "varying vec4 v_color;" +
+        "in float firefoxWorkaround;" +
+        "in vec2 attr;" +
+        "out vec4 v_color;" +
         "void main() { " +
         "  v_color = vec4(attr == vec2(0.25, 0.75)) + vec4(firefoxWorkaround);" +
         "  gl_PointSize = 1.0;" +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
       const fs =
-        "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
+        "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
       let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -345,16 +345,16 @@ describe(
 
     it("renders with a three-component constant value", function () {
       const vs =
-        "attribute float firefoxWorkaround;" +
-        "attribute vec3 attr;" +
-        "varying vec4 v_color;" +
+        "in float firefoxWorkaround;" +
+        "in vec3 attr;" +
+        "out vec4 v_color;" +
         "void main() { " +
         "  v_color = vec4(attr == vec3(0.25, 0.5, 0.75)) + vec4(firefoxWorkaround);" +
         "  gl_PointSize = 1.0;" +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
       const fs =
-        "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
+        "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
       let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -398,16 +398,16 @@ describe(
 
     it("renders with a four-component constant value", function () {
       const vs =
-        "attribute float firefoxWorkaround;" +
-        "attribute vec4 attr;" +
-        "varying vec4 v_color;" +
+        "in float firefoxWorkaround;" +
+        "in vec4 attr;" +
+        "out vec4 v_color;" +
         "void main() { " +
         "  v_color = vec4(attr == vec4(0.2, 0.4, 0.6, 0.8)) + vec4(firefoxWorkaround);" +
         "  gl_PointSize = 1.0;" +
         "  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);" +
         "}";
       const fs =
-        "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
+        "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
       let sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -451,9 +451,9 @@ describe(
 
     it("renders two vertex arrays with constant values", function () {
       const vs =
-        "attribute float firefoxWorkaround;" +
-        "attribute vec4 attr;" +
-        "varying vec4 v_color;" +
+        "in float firefoxWorkaround;" +
+        "in vec4 attr;" +
+        "out vec4 v_color;" +
         "void main() { " +
         "  v_color = attr + vec4(firefoxWorkaround);" +
         "  gl_PointSize = 1.0;" +
@@ -461,7 +461,7 @@ describe(
         "}";
 
       const fs =
-        "varying vec4 v_color;" + "void main() { gl_FragColor = v_color; }";
+        "in vec4 v_color;" + "void main() { out_FragColor = v_color; }";
 
       let sp = ShaderProgram.fromCache({
         context: context,
@@ -871,12 +871,15 @@ describe(
     });
 
     it("throws when instanceDivisor is greater than zero and instancing is disabled", function () {
+      const contextWithoutInstancing = createContext({
+        requestWebgl1: true,
+      });
+
       // disable extension
-      const instancedArrays = context._instancedArrays;
-      context._instancedArrays = undefined;
+      contextWithoutInstancing._instancedArrays = undefined;
 
       const buffer = Buffer.createVertexBuffer({
-        context: context,
+        context: contextWithoutInstancing,
         sizeInBytes: 3,
         usage: BufferUsage.STATIC_DRAW,
       });
@@ -897,11 +900,12 @@ describe(
 
       expect(function () {
         return new VertexArray({
-          context: context,
+          context: contextWithoutInstancing,
           attributes: attributes,
         });
       }).toThrowDeveloperError();
-      context._instancedArrays = instancedArrays;
+
+      contextWithoutInstancing.destroyForSpecs();
     });
   },
   "WebGL"

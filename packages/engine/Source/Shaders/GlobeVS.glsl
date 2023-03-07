@@ -1,13 +1,13 @@
 #ifdef QUANTIZATION_BITS12
-attribute vec4 compressed0;
-attribute float compressed1;
+in vec4 compressed0;
+in float compressed1;
 #else
-attribute vec4 position3DAndHeight;
-attribute vec4 textureCoordAndEncodedNormals;
+in vec4 position3DAndHeight;
+in vec4 textureCoordAndEncodedNormals;
 #endif
 
 #ifdef GEODETIC_SURFACE_NORMALS
-attribute vec3 geodeticSurfaceNormal;
+in vec3 geodeticSurfaceNormal;
 #endif
 
 #ifdef EXAGGERATION
@@ -23,27 +23,27 @@ uniform vec4 u_tileRectangle;
 uniform vec2 u_southAndNorthLatitude;
 uniform vec2 u_southMercatorYAndOneOverHeight;
 
-varying vec3 v_positionMC;
-varying vec3 v_positionEC;
+out vec3 v_positionMC;
+out vec3 v_positionEC;
 
-varying vec3 v_textureCoordinates;
-varying vec3 v_normalMC;
-varying vec3 v_normalEC;
+out vec3 v_textureCoordinates;
+out vec3 v_normalMC;
+out vec3 v_normalEC;
 
 #ifdef APPLY_MATERIAL
-varying float v_slope;
-varying float v_aspect;
-varying float v_height;
+out float v_slope;
+out float v_aspect;
+out float v_height;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
-varying float v_distance;
+out float v_distance;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
-varying vec3 v_atmosphereRayleighColor;
-varying vec3 v_atmosphereMieColor;
-varying float v_atmosphereOpacity;
+out vec3 v_atmosphereRayleighColor;
+out vec3 v_atmosphereMieColor;
+out float v_atmosphereOpacity;
 #endif
 
 // These functions are generated at runtime.

@@ -13,21 +13,21 @@ import defined from "./defined.js";
  * @constructor
  * @extends Error
  *
- * @param {String} [message] The error message for this exception.
+ * @param {string} [message] The error message for this exception.
  *
  * @see DeveloperError
  */
 function RuntimeError(message) {
   /**
    * 'RuntimeError' indicating that this exception was thrown due to a runtime error.
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = "RuntimeError";
 
   /**
    * The explanation for why this exception was thrown.
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.message = message;
@@ -42,7 +42,7 @@ function RuntimeError(message) {
 
   /**
    * The stack trace of this exception, if available.
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.stack = stack;

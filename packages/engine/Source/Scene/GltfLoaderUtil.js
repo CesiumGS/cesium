@@ -25,12 +25,12 @@ const GltfLoaderUtil = {};
  * WebP images the WebP image ID is returned.
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.textureId The texture ID.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {number} options.textureId The texture ID.
  * @param {SupportedImageFormats} options.supportedImageFormats The supported image formats.
  *
- * @returns {Number} The image ID.
+ * @returns {number} The image ID.
  * @private
  */
 GltfLoaderUtil.getImageIdFromTexture = function (options) {
@@ -63,10 +63,10 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
 /**
  * Create a sampler for a texture.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON.
- * @param {Object} options.textureInfo The texture info object.
- * @param {Boolean} [options.compressedTextureNoMipmap=false] True when the texture is compressed and does not have an embedded mipmap.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.gltf The glTF JSON.
+ * @param {object} options.textureInfo The texture info object.
+ * @param {boolean} [options.compressedTextureNoMipmap=false] True when the texture is compressed and does not have an embedded mipmap.
  *
  * @returns {Sampler} The sampler.
  * @private
@@ -137,9 +137,9 @@ const defaultScale = new Cartesian2(1.0, 1.0);
 /**
  * Create a model texture reader.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.textureInfo The texture info JSON.
- * @param {String} [options.channels] The texture channels to read from.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.textureInfo The texture info JSON.
+ * @param {string} [options.channels] The texture channels to read from.
  * @param {Texture} [options.texture] The texture object.
  *
  * @returns {ModelComponents.TextureReader} The texture reader for this model.

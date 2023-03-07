@@ -7,7 +7,7 @@ import defined from "./defined.js";
  * @function
  *
  * @param {*} object The item to find in the array.
- * @returns {String} A string containing the formatted error.
+ * @returns {string} A string containing the formatted error.
  */
 function formatError(object) {
   let result;

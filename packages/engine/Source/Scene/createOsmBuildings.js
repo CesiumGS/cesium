@@ -13,7 +13,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  *
  * @function
  *
- * @param {Object} [options] Construction options. Any options allowed by the {@link Cesium3DTileset} constructor
+ * @param {object} [options] Construction options. Any options allowed by the {@link Cesium3DTileset} constructor
  *        may be specified here. In addition to those, the following properties are supported:
  * @param {Color} [options.defaultColor=Color.WHITE] The default color to use for buildings
  *        that do not have a color. This parameter is ignored if <code>options.style</code> is specified.
@@ -21,8 +21,8 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  *        specified, a default style is used which gives each building or building part a
  *        color inferred from its OpenStreetMap <code>tags</code>. If no color can be inferred,
  *        <code>options.defaultColor</code> is used.
- * @param {Boolean} [options.enableShowOutline=true] If true, enable rendering outlines. This can be set to false to avoid the additional processing of geometry at load time.
- * @param {Boolean} [options.showOutline=true] Whether to show outlines around buildings. When true,
+ * @param {boolean} [options.enableShowOutline=true] If true, enable rendering outlines. This can be set to false to avoid the additional processing of geometry at load time.
+ * @param {boolean} [options.showOutline=true] Whether to show outlines around buildings. When true,
  *        outlines are displayed. When false, outlines are not displayed.
  * @returns {Cesium3DTileset}
  *

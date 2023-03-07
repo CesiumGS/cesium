@@ -1,21 +1,21 @@
-attribute vec3 position3DHigh;
-attribute vec3 position3DLow;
-attribute vec3 position2DHigh;
-attribute vec3 position2DLow;
-attribute vec3 prevPosition3DHigh;
-attribute vec3 prevPosition3DLow;
-attribute vec3 prevPosition2DHigh;
-attribute vec3 prevPosition2DLow;
-attribute vec3 nextPosition3DHigh;
-attribute vec3 nextPosition3DLow;
-attribute vec3 nextPosition2DHigh;
-attribute vec3 nextPosition2DLow;
-attribute vec4 texCoordExpandAndBatchIndex;
+in vec3 position3DHigh;
+in vec3 position3DLow;
+in vec3 position2DHigh;
+in vec3 position2DLow;
+in vec3 prevPosition3DHigh;
+in vec3 prevPosition3DLow;
+in vec3 prevPosition2DHigh;
+in vec3 prevPosition2DLow;
+in vec3 nextPosition3DHigh;
+in vec3 nextPosition3DLow;
+in vec3 nextPosition2DHigh;
+in vec3 nextPosition2DLow;
+in vec4 texCoordExpandAndBatchIndex;
 
-varying vec2  v_st;
-varying float v_width;
-varying vec4 v_pickColor;
-varying float v_polylineAngle;
+out vec2  v_st;
+out float v_width;
+out vec4 v_pickColor;
+out float v_polylineAngle;
 
 void main()
 {
