@@ -4,9 +4,25 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Added `ArcGISTiledElevationTerrainProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling.
+
 ##### Fixes :wrench:
 
 - Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `TerrainProvider.ready` and `TerrainProvider.readyPromise` were deprecated in Cesium 1.104. They will be removed in 1.107.
+- `ArcGISTiledElevationTerrainProvider `constructor parameter `options.url`, `ArcGISTiledElevationTerrainProvider.ready`, and `ArcGISTiledElevationTerrainProvider.readyPromise` were deprecated in Cesium 1.104. They will be removed in 1.107. Use `ArcGISTiledElevationTerrainProvider.fromUrl` instead.
+- `CesiumTerrainProvider` constructor parameter `options.url`, `CesiumTerrainProvider.ready`, and `CesiumTerrainProvider.readyPromise` were deprecated in Cesium 1.104. They will be removed in 1.107. Use `CesiumTerrainProvider.fromUrl` instead.
+- `CustomHeightmapTerrainProvider.ready`, and `CustomHeightmapTerrainProvider.readyPromise` were deprecated in Cesium 1.104. They will be removed in 1.107.
+- `EllipsoidTerrainProvider.ready`, and `EllipsoidTerrainProvider.readyPromise` were deprecated in Cesium 1.104. They will be removed in 1.107.
+- `GoogleEarthEnterpriseMetadata` constructor parameter `options.url` and `GoogleEarthEnterpriseMetadata.readyPromise` were deprecated in Cesium 1.104. They will be removed in 1.107. Use `GoogleEarthEnterpriseMetadata.fromUrl` instead.
+- `GoogleEarthEnterpriseTerrainProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseTerrainProvider.ready`, and `GoogleEarthEnterpriseTerrainProvider.readyPromise` were deprecated in Cesium 1.104. They will be removed in 1.107. Use `GoogleEarthEnterpriseTerrainProvider.fromMetadata` instead.
+- `VRTheWorldTerrainProvider` constructor parameter `options.url`, `VRTheWorldTerrainProvider.ready`, and `VRTheWorldTerrainProvider.readyPromise` were deprecated in Cesium 1.104. They will be removed in 1.107. Use `VRTheWorldTerrainProvider.fromUrl` instead.
+- `createWorldTerrain` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use createWorldTerrainAsync instead.
 
 ### 1.103 - 2023-03-01
 
@@ -63,22 +79,6 @@
 - Fixed a crash in terrain sampling if any points have an undefined position due to being outside the rectangle. [#10931](https://github.com/CesiumGS/cesium/pull/10931)
 - Fixed a bug where scale was not being applied to the top-level tileset geometric error. [#11047](https://github.com/CesiumGS/cesium/pull/11047)
 - Updating Bing Maps top page hyperlink to Bing Maps ToU hyperlink [#11049](https://github.com/CesiumGS/cesium/pull/11049)
-
-##### Additions :tada:
-
-- Added `ArcGISTiledElevationTerrainProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling.
-
-##### Deprecated :hourglass_flowing_sand:
-
-- `TerrainProvider.ready` and `TerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104.
-- `ArcGISTiledElevationTerrainProvider `constructor parameter `options.url`, `ArcGISTiledElevationTerrainProvider.ready`, and `ArcGISTiledElevationTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `ArcGISTiledElevationTerrainProvider.fromUrl` instead.
-- `CesiumTerrainProvider` constructor parameter `options.url`, `CesiumTerrainProvider.ready`, and `CesiumTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `CesiumTerrainProvider.fromUrl` instead.
-- `CustomHeightmapTerrainProvider.ready`, and `CustomHeightmapTerrainProvider.readyPromise` were deprecated in Cesium 1.102.
-- `EllipsoidTerrainProvider.ready`, and `EllipsoidTerrainProvider.readyPromise` were deprecated in Cesium 1.102.
-- `GoogleEarthEnterpriseMetadata` constructor parameter `options.url` and `GoogleEarthEnterpriseMetadata.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseMetadata.fromUrl` instead.
-- `GoogleEarthEnterpriseTerrainProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseTerrainProvider.ready`, and `GoogleEarthEnterpriseTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `GoogleEarthEnterpriseTerrainProvider.fromMetadata` instead.
-- `VRTheWorldTerrainProvider` constructor parameter `options.url`, `VRTheWorldTerrainProvider.ready`, and `VRTheWorldTerrainProvider.readyPromise` were deprecated in Cesium 1.102. They will be removed in 1.104. Use `VRTheWorldTerrainProvider.fromUrl` instead.
-- `createWorldTerrain` was deprecated in CesiumJS 1.102. It will be removed in 1.104. Use createWorldTerrainAsync instead.
 
 ### 1.101 - 2023-01-02
 

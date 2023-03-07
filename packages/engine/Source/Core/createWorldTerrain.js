@@ -34,7 +34,7 @@ import IonResource from "./IonResource.js";
 function createWorldTerrain(options) {
   deprecationWarning(
     "createWorldTerrain",
-    "createWorldTerrain was deprecated in CesiumJS 1.102.  It will be removed in 1.104.  Use createWorldTerrainAsync instead."
+    "createWorldTerrain was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createWorldTerrainAsync instead."
   );
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
