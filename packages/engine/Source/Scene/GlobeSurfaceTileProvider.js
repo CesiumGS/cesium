@@ -2135,7 +2135,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const hasVertexNormals =
     defined(tileProvider.terrainProvider) &&
     // ready is deprecated; This is here for backwards compatibility
-    tileProvider.terrainP &&
+    tileProvider.terrainProvider._ready &&
     tileProvider.terrainProvider.hasVertexNormals;
   const enableFog =
     frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;
