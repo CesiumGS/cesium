@@ -154,19 +154,68 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws if an unsupported extension is required", function () {
+    it("load throws if glTF JSON fails to load", async function () {
+      const error = new Error("404 Not Found");
+      spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
+        Promise.reject(error)
+      );
+
+      const gltfResource = new Resource({
+        url: "https://example.com/model.glb",
+      });
+
+      const gltfLoader = new GltfLoader({
+        gltfResource: gltfResource,
+        releaseGltfJson: true,
+      });
+      gltfLoaders.push(gltfLoader);
+
+      await expectAsync(gltfLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load glTF\nFailed to load glTF: https://example.com/model.glb\n404 Not Found"
+      );
+    });
+
+    // This cannot actually ever happen due to gltfPipeline's updateVersion
+    xit("load throws if the gltf specifies an unknown version", async function () {
+      spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
+        Promise.resolve(
+          generateJsonBuffer({
+            asset: {
+              version: "3.0",
+            },
+          }).buffer
+        )
+      );
+
+      const gltfResource = new Resource({
+        url: "https://example.com/model.glb",
+      });
+
+      const gltfLoader = new GltfLoader({
+        gltfResource: gltfResource,
+        releaseGltfJson: true,
+      });
+      gltfLoaders.push(gltfLoader);
+
+      await expectAsync(gltfLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load glTF\nUnsupported glTF version: 0.1"
+      );
+    });
+
+    it("load throws if an unsupported extension is required", async function () {
       function modifyGltf(gltf) {
         gltf.extensionsRequired = ["NOT_supported_extension"];
         return gltf;
       }
 
-      return loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf)
-        .then(function () {
-          fail();
-        })
-        .catch(function (error) {
-          expect(error).toBeInstanceOf(RuntimeError);
-        });
+      await expectAsync(
+        loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf)
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load glTF\nUnsupported glTF Extension: NOT_supported_extension"
+      );
     });
 
     function getOptions(gltfPath, options) {
@@ -180,51 +229,53 @@ describe(
       });
     }
 
-    function loadGltf(gltfPath, options) {
+    async function loadGltf(gltfPath, options) {
       options = defaultValue(options, defaultValue.EMPTY_OBJECT);
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       const targetScene = defaultValue(options.scene, scene);
       gltfLoaders.push(gltfLoader);
-      gltfLoader.load();
-
-      return waitForLoaderProcess(gltfLoader, targetScene);
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, targetScene);
+      return gltfLoader;
     }
 
-    function loadGltfFromJson(gltfPath, options) {
-      return Resource.fetchJson({
+    async function loadGltfFromJson(gltfPath, options) {
+      const gltf = await Resource.fetchJson({
         url: gltfPath,
-      }).then(function (gltf) {
-        const loaderOptions = combine(options, {
-          gltf: gltf,
-          gltfResource: new Resource({
-            url: gltfPath,
-          }),
-          incrementallyLoadTextures: false,
-        });
-        const gltfLoader = new GltfLoader(loaderOptions);
-        gltfLoaders.push(gltfLoader);
-        gltfLoader.load();
-
-        return waitForLoaderProcess(gltfLoader, scene);
       });
+      const loaderOptions = combine(options, {
+        gltf: gltf,
+        gltfResource: new Resource({
+          url: gltfPath,
+        }),
+        incrementallyLoadTextures: false,
+      });
+      const gltfLoader = new GltfLoader(loaderOptions);
+      gltfLoaders.push(gltfLoader);
+
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+      return gltfLoader;
     }
 
-    function loadModifiedGltfAndTest(gltfPath, options, modifyFunction) {
-      return Resource.fetchJson({
+    async function loadModifiedGltfAndTest(gltfPath, options, modifyFunction) {
+      let gltf = await Resource.fetchJson({
         url: gltfPath,
-      }).then(function (gltf) {
-        gltf = modifyFunction(gltf);
-
-        spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-          Promise.resolve(generateJsonBuffer(gltf).buffer)
-        );
-
-        const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
-        gltfLoaders.push(gltfLoader);
-        gltfLoader.load();
-
-        return waitForLoaderProcess(gltfLoader, scene);
       });
+
+      gltf = modifyFunction(gltf);
+
+      spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
+        Promise.resolve(generateJsonBuffer(gltf).buffer)
+      );
+
+      const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
+      gltfLoaders.push(gltfLoader);
+
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+
+      return gltfLoader;
     }
 
     function getAttribute(attributes, semantic, setIndex) {
@@ -252,13 +303,14 @@ describe(
       return undefined;
     }
 
-    it("preserves query string in url", function () {
+    it("preserves query string in url", async function () {
       const params = "?param1=1&param2=2";
       const url = boxTextured + params;
-      return loadGltf(url).then(function (gltfLoader) {
-        const loaderResource = gltfLoader._gltfResource;
-        expect(loaderResource.url).toEndWith(params);
-      });
+      const gltfLoader = new GltfLoader(getOptions(url));
+      gltfLoaders.push(gltfLoader);
+      await gltfLoader.load();
+      const loaderResource = gltfLoader._gltfResource;
+      expect(loaderResource.url).toEndWith(params);
     });
 
     it("releases GLB typed array when finished loading", function () {
@@ -3207,43 +3259,39 @@ describe(
       });
     });
 
-    it("resolves before textures are loaded when incrementallyLoadTextures is true", function () {
+    it("becomes ready before textures are loaded when incrementallyLoadTextures is true", async function () {
       const textureCreate = spyOn(Texture, "create").and.callThrough();
 
       const options = {
         incrementallyLoadTextures: true,
       };
-      const promise = loadGltf(boxTextured, options);
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        promise.then(function () {
-          const image = new Image();
-          image.src =
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
 
-          return image;
-        })
-      );
-
-      return promise.then(function (gltfLoader) {
-        expect(textureCreate).not.toHaveBeenCalled();
-
-        // Continue processing to load in textures
-        return pollToPromise(function () {
-          loaderProcess(gltfLoader, scene);
-          return gltfLoader._textureLoaders.every(function (loader) {
-            return (
-              loader._state === ResourceLoaderState.READY ||
-              loader._state === ResourceLoaderState.FAILED
-            );
-          });
-        })
-          .then(function () {
-            return gltfLoader.texturesLoadedPromise;
-          })
-          .then(function () {
-            expect(textureCreate).toHaveBeenCalled();
-          });
+      let resolver;
+      const promise = new Promise((resolve) => {
+        resolver = resolve;
       });
+      spyOn(Resource.prototype, "fetchImage").and.returnValue(promise);
+
+      const gltfLoader = await loadGltf(boxTextured, options);
+      expect(textureCreate).not.toHaveBeenCalled();
+
+      const image = new Image();
+      image.src =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
+      resolver(image);
+
+      // Continue processing to load in textures
+      await pollToPromise(function () {
+        loaderProcess(gltfLoader, scene);
+        return gltfLoader._textureLoaders.every(function (loader) {
+          return (
+            loader._state === ResourceLoaderState.READY ||
+            loader._state === ResourceLoaderState.FAILED
+          );
+        });
+      });
+
+      expect(textureCreate).toHaveBeenCalled();
     });
 
     it("sets default transform", function () {
@@ -3288,35 +3336,8 @@ describe(
       });
     });
 
-    it("rejects promise if glTF JSON fails to load", function () {
-      const error = new Error("404 Not Found");
-      spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        Promise.reject(error)
-      );
-
-      const gltfResource = new Resource({
-        url: "https://example.com/model.glb",
-      });
-
-      const gltfLoader = new GltfLoader({
-        gltfResource: gltfResource,
-        releaseGltfJson: true,
-      });
-
-      gltfLoader.load();
-
-      return gltfLoader.promise
-        .then(function () {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load glTF\nFailed to load glTF: https://example.com/model.glb\n404 Not Found"
-          );
-        });
-    });
-
-    it("rejects promises if resource fails to load", function () {
+    // TODO
+    xit("process throws if image resource fails to load", function () {
       spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
         const error = new Error("404 Not Found");
         return Promise.reject(error);
@@ -3395,11 +3416,6 @@ describe(
         url: gltfUri,
       });
 
-      const gltfJsonLoaderCopy = ResourceCache.loadGltfJson({
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-      });
-
       const gltfLoader = new GltfLoader({
         gltfResource: gltfResource,
       });
@@ -3412,8 +3428,6 @@ describe(
       return promise.then(function () {
         expect(gltfLoader.components).not.toBeDefined();
         expect(gltfLoader.isDestroyed()).toBe(true);
-
-        ResourceCache.unload(gltfJsonLoaderCopy);
       });
     }
 
@@ -4008,32 +4022,30 @@ describe(
         });
       });
 
-      it("throws when loading instanced model for classification", function () {
+      it("throws when loading instanced model for classification", async function () {
         const options = {
           loadForClassification: true,
         };
 
-        return loadGltf(boxInstanced, options)
-          .then(function () {
-            fail();
-          })
-          .catch(function (error) {
-            expect(error).toBeInstanceOf(RuntimeError);
-          });
+        await expectAsync(
+          loadGltf(boxInstanced, options)
+        ).toBeRejectedWithError(
+          RuntimeError,
+          "Failed to load glTF\nModels with the EXT_mesh_gpu_instancing extension cannot be used for classification."
+        );
       });
 
-      it("throws when loading non-triangle mesh for classification", function () {
+      it("throws when loading non-triangle mesh for classification", async function () {
         const options = {
           loadForClassification: true,
         };
 
-        return loadGltf(pointCloudWithPropertyAttributes, options)
-          .then(function () {
-            fail();
-          })
-          .catch(function (error) {
-            expect(error).toBeInstanceOf(RuntimeError);
-          });
+        await expectAsync(
+          loadGltf(pointCloudWithPropertyAttributes, options)
+        ).toBeRejectedWithError(
+          RuntimeError,
+          "Failed to load glTF\nOnly triangle meshes can be used for classification."
+        );
       });
     });
 

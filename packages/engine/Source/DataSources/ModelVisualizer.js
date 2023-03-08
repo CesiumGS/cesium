@@ -102,45 +102,72 @@ ModelVisualizer.prototype.update = function (time) {
     }
 
     if (!show) {
-      if (defined(modelData)) {
+      if (defined(modelData) && modelData.modelPrimitive) {
         modelData.modelPrimitive.show = false;
       }
       continue;
     }
 
-    let model = defined(modelData) ? modelData.modelPrimitive : undefined;
-    if (!defined(model) || resource.url !== modelData.url) {
-      if (defined(model)) {
-        primitives.removeAndDestroy(model);
+    if (!defined(modelData) || resource.url !== modelData.url) {
+      if (defined(modelData?.modelPrimitive)) {
+        primitives.removeAndDestroy(modelData.modelPrimitive);
         delete modelHash[entity.id];
       }
 
-      model = Model.fromGltf({
-        url: resource,
-        incrementallyLoadTextures: Property.getValueOrDefault(
-          modelGraphics._incrementallyLoadTextures,
-          time,
-          defaultIncrementallyLoadTextures
-        ),
-        scene: this._scene,
-      });
-      model.id = entity;
-      primitives.add(model);
-
       modelData = {
-        modelPrimitive: model,
+        modelPrimitive: undefined,
         url: resource.url,
         animationsRunning: false,
         nodeTransformationsScratch: {},
         articulationsScratch: {},
-        loadFail: false,
+        loadFailed: false,
         awaitingSampleTerrain: false,
         clampedBoundingSphere: undefined,
         sampleTerrainFailed: false,
       };
       modelHash[entity.id] = modelData;
 
-      checkModelLoad(model, entity, modelHash);
+      (async () => {
+        try {
+          const model = await Model.fromGltfAsync({
+            url: resource,
+            incrementallyLoadTextures: Property.getValueOrDefault(
+              modelGraphics._incrementallyLoadTextures,
+              time,
+              defaultIncrementallyLoadTextures
+            ),
+            scene: this._scene,
+          });
+          model.id = entity;
+          primitives.add(model);
+          modelHash[entity.id].modelPrimitive = model;
+          model.errorEvent.addEventListener((error) => {
+            if (!defined(modelHash[entity.id])) {
+              return;
+            }
+
+            console.error(error);
+
+            // Texture failures when incrementallyLoadTextures
+            // will not affect the ability to compute the bounding sphere
+            if (error.name !== "TextureError") {
+              modelHash[entity.id].loadFailed = true;
+            }
+          });
+        } catch (error) {
+          if (!defined(modelHash[entity.id])) {
+            return;
+          }
+
+          console.error(error);
+          modelHash[entity.id].loadFailed = true;
+        }
+      })();
+    }
+
+    const model = modelData.modelPrimitive;
+    if (!defined(model)) {
+      continue;
     }
 
     model.show = true;
@@ -365,7 +392,11 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   //>>includeEnd('debug');
 
   const modelData = this._modelHash[entity.id];
-  if (!defined(modelData) || modelData.loadFail) {
+  if (!defined(modelData)) {
+    return BoundingSphereState.PENDING;
+  }
+
+  if (modelData.loadFailed) {
     return BoundingSphereState.FAILED;
   }
 
@@ -539,10 +570,4 @@ function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
   }
 }
 
-function checkModelLoad(model, entity, modelHash) {
-  model.readyPromise.catch(function (error) {
-    console.error(error);
-    modelHash[entity.id].loadFail = true;
-  });
-}
 export default ModelVisualizer;

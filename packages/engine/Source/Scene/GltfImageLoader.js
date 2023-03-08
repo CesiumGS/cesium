@@ -69,20 +69,6 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GltfImageLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof GltfImageLoader.prototype
-   *
-   * @type {Promise.<GltfImageLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
-  /**
    * The cache key of the resource.
    *
    * @memberof GltfImageLoader.prototype
@@ -132,6 +118,10 @@ Object.defineProperties(GltfImageLoader.prototype, {
  * @private
  */
 GltfImageLoader.prototype.load = function () {
+  if (defined(this._promise)) {
+    return this._promise;
+  }
+
   if (defined(this._bufferViewId)) {
     this._promise = loadFromBufferView(this);
     return this._promise;
@@ -158,78 +148,78 @@ function getImageAndMipLevels(image) {
   };
 }
 
-function loadFromBufferView(imageLoader) {
-  const resourceCache = imageLoader._resourceCache;
-  const bufferViewLoader = resourceCache.loadBufferView({
-    gltf: imageLoader._gltf,
-    bufferViewId: imageLoader._bufferViewId,
-    gltfResource: imageLoader._gltfResource,
-    baseResource: imageLoader._baseResource,
-  });
-
-  imageLoader._bufferViewLoader = bufferViewLoader;
+async function loadFromBufferView(imageLoader) {
   imageLoader._state = ResourceLoaderState.LOADING;
-
-  return bufferViewLoader.promise
-    .then(function () {
-      if (imageLoader.isDestroyed()) {
-        return;
-      }
-
-      const typedArray = bufferViewLoader.typedArray;
-      return loadImageFromBufferTypedArray(typedArray).then(function (image) {
-        if (imageLoader.isDestroyed()) {
-          return;
-        }
-
-        const imageAndMipLevels = getImageAndMipLevels(image);
-
-        // Unload everything except the image
-        imageLoader.unload();
-
-        imageLoader._image = imageAndMipLevels.image;
-        imageLoader._mipLevels = imageAndMipLevels.mipLevels;
-        imageLoader._state = ResourceLoaderState.READY;
-        return imageLoader;
-      });
-    })
-    .catch(function (error) {
-      if (imageLoader.isDestroyed()) {
-        return;
-      }
-      return handleError(imageLoader, error, "Failed to load embedded image");
+  const resourceCache = imageLoader._resourceCache;
+  try {
+    const bufferViewLoader = resourceCache.getBufferViewLoader({
+      gltf: imageLoader._gltf,
+      bufferViewId: imageLoader._bufferViewId,
+      gltfResource: imageLoader._gltfResource,
+      baseResource: imageLoader._baseResource,
     });
+    imageLoader._bufferViewLoader = bufferViewLoader;
+    await bufferViewLoader.load();
+
+    if (imageLoader.isDestroyed()) {
+      return;
+    }
+
+    const typedArray = bufferViewLoader.typedArray;
+    const image = await loadImageFromBufferTypedArray(typedArray);
+    if (imageLoader.isDestroyed()) {
+      return;
+    }
+
+    const imageAndMipLevels = getImageAndMipLevels(image);
+
+    // Unload everything except the image
+    imageLoader.unload();
+
+    imageLoader._image = imageAndMipLevels.image;
+    imageLoader._mipLevels = imageAndMipLevels.mipLevels;
+    imageLoader._state = ResourceLoaderState.READY;
+
+    return imageLoader;
+  } catch (error) {
+    if (imageLoader.isDestroyed()) {
+      return;
+    }
+
+    return handleError(imageLoader, error, "Failed to load embedded image");
+  }
 }
 
-function loadFromUri(imageLoader) {
+async function loadFromUri(imageLoader) {
+  imageLoader._state = ResourceLoaderState.LOADING;
   const baseResource = imageLoader._baseResource;
   const uri = imageLoader._uri;
   const resource = baseResource.getDerivedResource({
     url: uri,
   });
-  imageLoader._state = ResourceLoaderState.LOADING;
-  return loadImageFromUri(resource)
-    .then(function (image) {
-      if (imageLoader.isDestroyed()) {
-        return;
-      }
 
-      const imageAndMipLevels = getImageAndMipLevels(image);
+  try {
+    const image = await loadImageFromUri(resource);
+    if (imageLoader.isDestroyed()) {
+      return;
+    }
 
-      // Unload everything except the image
-      imageLoader.unload();
+    const imageAndMipLevels = getImageAndMipLevels(image);
 
-      imageLoader._image = imageAndMipLevels.image;
-      imageLoader._mipLevels = imageAndMipLevels.mipLevels;
-      imageLoader._state = ResourceLoaderState.READY;
-      return imageLoader;
-    })
-    .catch(function (error) {
-      if (imageLoader.isDestroyed()) {
-        return;
-      }
-      return handleError(imageLoader, error, `Failed to load image: ${uri}`);
-    });
+    // Unload everything except the image
+    imageLoader.unload();
+
+    imageLoader._image = imageAndMipLevels.image;
+    imageLoader._mipLevels = imageAndMipLevels.mipLevels;
+    imageLoader._state = ResourceLoaderState.READY;
+
+    return imageLoader;
+  } catch (error) {
+    if (imageLoader.isDestroyed()) {
+      return;
+    }
+    return handleError(imageLoader, error, `Failed to load image: ${uri}`);
+  }
 }
 
 function handleError(imageLoader, error, errorMessage) {
@@ -269,7 +259,7 @@ function getMimeTypeFromTypedArray(typedArray) {
   throw new RuntimeError("Image format is not recognized");
 }
 
-function loadImageFromBufferTypedArray(typedArray) {
+async function loadImageFromBufferTypedArray(typedArray) {
   const mimeType = getMimeTypeFromTypedArray(typedArray);
   if (mimeType === "image/ktx2") {
     // Need to make a copy of the embedded KTX2 buffer otherwise the underlying

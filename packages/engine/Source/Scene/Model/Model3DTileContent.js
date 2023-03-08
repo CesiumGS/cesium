@@ -276,6 +276,7 @@ Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
 
   modelOptions.classificationType = classificationType;
 
+  // This should be removed when readyPromise is deprecated across 3D Tiles functions
   const model = Model.fromGltf(modelOptions);
   content._model = model;
   // Include the animation setup in the ready promise to avoid an uncaught exception
@@ -319,13 +320,8 @@ Model3DTileContent.fromB3dm = function (
 
   const model = Model.fromB3dm(modelOptions);
   content._model = model;
-  // Include the animation setup in the ready promise to avoid an uncaught exception
-  content._readyPromise = model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
-    });
-    return model;
-  });
+  // This should be removed when readyPromise is deprecated across 3D Tiles functions
+  content._readyPromise = model._readyPromise;
 
   return content;
 };
@@ -354,13 +350,8 @@ Model3DTileContent.fromI3dm = function (
 
   const model = Model.fromI3dm(modelOptions);
   content._model = model;
-  // Include the animation setup in the ready promise to avoid an uncaught exception
-  content._readyPromise = model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
-    });
-    return model;
-  });
+  // This should be removed when readyPromise is deprecated across 3D Tiles functions
+  content._readyPromise = model._readyPromise;
 
   return content;
 };
@@ -388,7 +379,8 @@ Model3DTileContent.fromPnts = function (
   );
   const model = Model.fromPnts(modelOptions);
   content._model = model;
-  content._readyPromise = model.readyPromise;
+  // This should be removed when readyPromise is deprecated across 3D Tiles functions
+  content._readyPromise = model._readyPromise;
 
   return content;
 };
@@ -409,7 +401,8 @@ Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
   );
   const model = Model.fromGeoJson(modelOptions);
   content._model = model;
-  content._readyPromise = model.readyPromise;
+  // This should be removed when readyPromise is deprecated across 3D Tiles functions
+  content._readyPromise = model._readyPromise;
 
   return content;
 };

@@ -87,7 +87,6 @@ function GltfBufferViewLoader(options) {
   this._typedArray = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = undefined;
-  this._process = function (loader, frameState) {};
 }
 
 if (defined(Object.create)) {
@@ -96,20 +95,6 @@ if (defined(Object.create)) {
 }
 
 Object.defineProperties(GltfBufferViewLoader.prototype, {
-  /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof GltfBufferViewLoader.prototype
-   *
-   * @type {Promise.<GltfBufferViewLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
   /**
    * The cache key of the resource.
    *
@@ -145,77 +130,61 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
  * @returns {Promise.<GltfBufferViewLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
-GltfBufferViewLoader.prototype.load = function () {
-  const bufferLoader = getBufferLoader(this);
-  this._bufferLoader = bufferLoader;
-  this._state = ResourceLoaderState.LOADING;
+GltfBufferViewLoader.prototype.load = async function () {
+  if (defined(this._promise)) {
+    return this._promise;
+  }
 
-  const that = this;
-  const bufferViewPromise = new Promise(function (resolve) {
-    that._process = function (loader, frameState) {
-      if (!loader._hasMeshopt) {
+  this._promise = (async () => {
+    this._state = ResourceLoaderState.LOADING;
+    try {
+      const bufferLoader = getBufferLoader(this);
+      this._bufferLoader = bufferLoader;
+      await bufferLoader.load();
+
+      if (this.isDestroyed()) {
         return;
       }
 
-      if (!defined(loader._typedArray)) {
-        return;
-      }
-
-      if (loader._state !== ResourceLoaderState.PROCESSING) {
-        return;
-      }
-
-      const count = loader._meshoptCount;
-      const byteStride = loader._meshoptByteStride;
-      const result = new Uint8Array(count * byteStride);
-      MeshoptDecoder.decodeGltfBuffer(
-        result,
-        count,
-        byteStride,
-        loader._typedArray,
-        loader._meshoptMode,
-        loader._meshoptFilter
-      );
-
-      loader._typedArray = result;
-      loader._state = ResourceLoaderState.READY;
-      resolve(loader);
-    };
-  });
-
-  this._promise = bufferLoader.promise
-    .then(function () {
-      if (that.isDestroyed()) {
-        return;
-      }
       const bufferTypedArray = bufferLoader.typedArray;
       const bufferViewTypedArray = new Uint8Array(
         bufferTypedArray.buffer,
-        bufferTypedArray.byteOffset + that._byteOffset,
-        that._byteLength
+        bufferTypedArray.byteOffset + this._byteOffset,
+        this._byteLength
       );
 
       // Unload the buffer
-      that.unload();
+      this.unload();
 
-      that._typedArray = bufferViewTypedArray;
-      if (that._hasMeshopt) {
-        that._state = ResourceLoaderState.PROCESSING;
-        return bufferViewPromise;
+      this._typedArray = bufferViewTypedArray;
+      if (this._hasMeshopt) {
+        const count = this._meshoptCount;
+        const byteStride = this._meshoptByteStride;
+        const result = new Uint8Array(count * byteStride);
+        MeshoptDecoder.decodeGltfBuffer(
+          result,
+          count,
+          byteStride,
+          this._typedArray,
+          this._meshoptMode,
+          this._meshoptFilter
+        );
+        this._typedArray = result;
       }
 
-      that._state = ResourceLoaderState.READY;
-      return that;
-    })
-    .catch(function (error) {
-      if (that.isDestroyed()) {
+      this._state = ResourceLoaderState.READY;
+      return this;
+    } catch (error) {
+      if (this.isDestroyed()) {
         return;
       }
-      that.unload();
-      that._state = ResourceLoaderState.FAILED;
+
+      this.unload();
+      this._state = ResourceLoaderState.FAILED;
       const errorMessage = "Failed to load buffer view";
-      return Promise.reject(that.getError(errorMessage, error));
-    });
+      throw this.getError(errorMessage, error);
+    }
+  })();
 
   return this._promise;
 };
@@ -228,29 +197,15 @@ function getBufferLoader(bufferViewLoader) {
     const resource = baseResource.getDerivedResource({
       url: buffer.uri,
     });
-    return resourceCache.loadExternalBuffer({
+    return resourceCache.getExternalBufferLoader({
       resource: resource,
     });
   }
-  return resourceCache.loadEmbeddedBuffer({
+  return resourceCache.getEmbeddedBufferLoader({
     parentResource: bufferViewLoader._gltfResource,
     bufferId: bufferViewLoader._bufferId,
   });
 }
-
-/**
- * Processes the resources. For a BufferView that does not have the EXT_meshopt_compression extension, there
- * is no processing that needs to happen, so this function returns immediately.
- *
- * @param {FrameState} frameState The frame state.
- */
-GltfBufferViewLoader.prototype.process = function (frameState) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("frameState", frameState);
-  //>>includeEnd('debug');
-
-  return this._process(this, frameState);
-};
 
 /**
  * Unloads the resource.

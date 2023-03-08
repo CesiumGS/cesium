@@ -3,6 +3,7 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
+  defined,
   DistanceDisplayCondition,
   HeightReference,
   JulianDate,
@@ -58,25 +59,25 @@ describe(
       scene.destroyForSpecs();
     });
 
-    it("constructor throws if no scene is passed.", function () {
+    it("constructor throws if no scene is passed", function () {
       expect(function () {
         return new ModelVisualizer(undefined, entityCollection);
       }).toThrowDeveloperError();
     });
 
-    it("constructor throws if no entityCollection is passed.", function () {
+    it("constructor throws if no entityCollection is passed", function () {
       expect(function () {
         return new ModelVisualizer(scene, undefined);
       }).toThrowDeveloperError();
     });
 
-    it("update throws if no time specified.", function () {
+    it("update throws if no time specified", function () {
       expect(function () {
         visualizer.update();
       }).toThrowDeveloperError();
     });
 
-    it("isDestroy returns false until destroyed.", function () {
+    it("isDestroy returns false until destroyed", function () {
       expect(visualizer.isDestroyed()).toEqual(false);
       visualizer.destroy();
       expect(visualizer.isDestroyed()).toEqual(true);
@@ -90,7 +91,7 @@ describe(
       visualizer = undefined;
     });
 
-    it("object with no model does not create one.", function () {
+    it("object with no model does not create one", function () {
       const testObject = entityCollection.getOrCreateEntity("test");
       testObject.position = new ConstantProperty(
         new Cartesian3(1234, 5678, 9101112)
@@ -99,7 +100,7 @@ describe(
       expect(scene.primitives.length).toEqual(0);
     });
 
-    it("object with no position does not create a model.", function () {
+    it("object with no position does not create a model", function () {
       const testObject = entityCollection.getOrCreateEntity("test");
       const model = (testObject.model = new ModelGraphics());
       model.uri = new ConstantProperty(boxUrl);
@@ -108,7 +109,7 @@ describe(
       expect(scene.primitives.length).toEqual(0);
     });
 
-    it("A ModelGraphics causes a primitive to be created and updated.", function () {
+    it("creates and updates a primitive from ModelGraphics", async function () {
       const time = JulianDate.now();
 
       const model = new ModelGraphics();
@@ -153,10 +154,14 @@ describe(
 
       visualizer.update(time);
 
-      expect(scene.primitives.length).toEqual(1);
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
 
-      const primitive = scene.primitives.get(0);
       visualizer.update(time);
+
       expect(primitive.show).toEqual(true);
       expect(primitive.scale).toEqual(2);
       expect(primitive.minimumPixelSize).toEqual(24.0);
@@ -187,35 +192,36 @@ describe(
       expect(primitive.imageBasedLighting.imageBasedLightingFactor).toEqual(
         new Cartesian2(0.5, 0.5)
       );
+
       expect(primitive.lightColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
 
       // wait till the model is loaded before we can check node transformations
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.render();
         return primitive.ready;
-      }).then(function () {
-        visualizer.update(time);
-
-        const node = primitive.getNode("Root");
-        expect(node).toBeDefined();
-
-        const transformationMatrix = Matrix4.fromTranslationQuaternionRotationScale(
-          translation,
-          rotation,
-          scale
-        );
-
-        Matrix4.multiplyTransformation(
-          node.originalMatrix,
-          transformationMatrix,
-          transformationMatrix
-        );
-
-        expect(node.matrix).toEqual(transformationMatrix);
       });
+
+      visualizer.update(time);
+
+      const node = primitive.getNode("Root");
+      expect(node).toBeDefined();
+
+      const transformationMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+        translation,
+        rotation,
+        scale
+      );
+
+      Matrix4.multiplyTransformation(
+        node.originalMatrix,
+        transformationMatrix,
+        transformationMatrix
+      );
+
+      expect(node.matrix).toEqual(transformationMatrix);
     });
 
-    it("can apply model articulations", function () {
+    it("can apply model articulations", async function () {
       const time = JulianDate.now();
 
       const model = new ModelGraphics();
@@ -243,43 +249,44 @@ describe(
 
       visualizer.update(time);
 
-      expect(scene.primitives.length).toEqual(1);
-
-      const primitive = scene.primitives.get(0);
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
 
       // wait till the model is loaded before we can check articulations
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.render();
         return primitive.ready;
-      }).then(function () {
-        visualizer.update(time);
-
-        const node = primitive.getNode("Root");
-
-        const expected = [
-          0.7147690483240505,
-          -0.04340611926232735,
-          -0.0749741046529782,
-          0,
-          -0.06188330295778636,
-          0.05906797312763484,
-          -0.6241645867602773,
-          0,
-          0.03752515582279579,
-          0.5366347296529127,
-          0.04706410108373541,
-          0,
-          1,
-          3,
-          -2,
-          1,
-        ];
-
-        expect(node.matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
       });
+      visualizer.update(time);
+
+      const node = primitive.getNode("Root");
+
+      const expected = [
+        0.7147690483240505,
+        -0.04340611926232735,
+        -0.0749741046529782,
+        0,
+        -0.06188330295778636,
+        0.05906797312763484,
+        -0.6241645867602773,
+        0,
+        0.03752515582279579,
+        0.5366347296529127,
+        0.04706410108373541,
+        0,
+        1,
+        3,
+        -2,
+        1,
+      ];
+
+      expect(node.matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
     });
 
-    it("A ModelGraphics with a Resource causes a primitive to be created.", function () {
+    it("creates a primitive from ModelGraphics with a Resource", async function () {
       const time = JulianDate.now();
 
       const model = new ModelGraphics();
@@ -298,23 +305,25 @@ describe(
 
       visualizer.update(time);
 
-      expect(scene.primitives.length).toEqual(1);
-
-      const primitive = scene.primitives.get(0);
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
 
       // wait till the model is loaded before we can check node transformations
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.render();
         return primitive.ready;
-      }).then(function () {
-        visualizer.update(time);
-
-        const node = primitive.getNode("Root");
-        expect(node).toBeDefined();
       });
+
+      visualizer.update(time);
+
+      const node = primitive.getNode("Root");
+      expect(node).toBeDefined();
     });
 
-    it("removing removes primitives.", function () {
+    it("removes primitives on Entity removal", async function () {
       const model = new ModelGraphics();
       model.uri = new ConstantProperty(boxUrl);
 
@@ -326,14 +335,19 @@ describe(
       testObject.model = model;
       visualizer.update(time);
 
-      expect(scene.primitives.length).toEqual(1);
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
+
       visualizer.update(time);
       entityCollection.removeAll();
       visualizer.update(time);
       expect(scene.primitives.length).toEqual(0);
     });
 
-    it("Visualizer sets id property.", function () {
+    it("sets id property", async function () {
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
       const model = new ModelGraphics();
@@ -345,11 +359,16 @@ describe(
       model.uri = new ConstantProperty(boxUrl);
       visualizer.update(time);
 
-      const modelPrimitive = scene.primitives.get(0);
-      expect(modelPrimitive.id).toEqual(testObject);
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
+
+      expect(primitive.id).toEqual(testObject);
     });
 
-    it("Computes bounding sphere.", function () {
+    it("computes bounding sphere", async function () {
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
       const model = new ModelGraphics();
@@ -361,26 +380,30 @@ describe(
       model.uri = new ConstantProperty(boxUrl);
       visualizer.update(time);
 
-      const modelPrimitive = scene.primitives.get(0);
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
+
       const result = new BoundingSphere();
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.render();
         state = visualizer.getBoundingSphere(testObject, result);
         return state !== BoundingSphereState.PENDING;
-      }).then(function () {
-        expect(state).toBe(BoundingSphereState.DONE);
-        const expected = BoundingSphere.clone(
-          modelPrimitive.boundingSphere,
-          new BoundingSphere()
-        );
-        expect(result).toEqual(expected);
       });
+      expect(state).toBe(BoundingSphereState.DONE);
+      const expected = BoundingSphere.clone(
+        primitive.boundingSphere,
+        new BoundingSphere()
+      );
+      expect(result).toEqual(expected);
     });
 
-    it("Computes bounding sphere with height reference clamp to ground", function () {
+    it("computes bounding sphere with height reference clamp to ground", function () {
       // Setup a position for the model.
       const position = Cartesian3.fromDegrees(149.515332, -34.984799);
       const positionCartographic = Cartographic.fromCartesian(position);
@@ -455,7 +478,7 @@ describe(
         });
     });
 
-    it("Computes bounding sphere with height reference clamp to ground on terrain provider without availability", function () {
+    it("computes bounding sphere with height reference clamp to ground on terrain provider without availability", function () {
       // Setup a position for the model.
       const longitude = CesiumMath.toRadians(149.515332);
       const latitude = CesiumMath.toRadians(-34.984799);
@@ -507,7 +530,7 @@ describe(
       });
     });
 
-    it("Computes bounding sphere with height reference relative to ground", function () {
+    it("computes bounding sphere with height reference relative to ground", function () {
       // Setup a position for the model.
       const heightOffset = 1000.0;
       const position = Cartesian3.fromDegrees(
@@ -588,7 +611,7 @@ describe(
         });
     });
 
-    it("Computes bounding sphere with height reference relative to ground on terrain provider without availability", function () {
+    it("computes bounding sphere with height reference relative to ground on terrain provider without availability", function () {
       // Setup a position for the model.
       const longitude = CesiumMath.toRadians(149.515332);
       const latitude = CesiumMath.toRadians(-34.984799);
@@ -638,7 +661,7 @@ describe(
       });
     });
 
-    it("Fails bounding sphere for entity without billboard.", function () {
+    it("fails bounding sphere for entity without ModelGraphics", function () {
       const testObject = entityCollection.getOrCreateEntity("test");
       visualizer.update(JulianDate.now());
       const result = new BoundingSphere();
@@ -646,7 +669,7 @@ describe(
       expect(state).toBe(BoundingSphereState.FAILED);
     });
 
-    it("Fails bounding sphere when model fails to load.", function () {
+    it("fails bounding sphere when model fails to load", function () {
       const time = JulianDate.now();
       const testObject = entityCollection.getOrCreateEntity("test");
       const model = new ModelGraphics();
@@ -670,7 +693,7 @@ describe(
       });
     });
 
-    it("Fails bounding sphere when sampleTerrainMostDetailed fails.", function () {
+    it("fails bounding sphere when sampleTerrainMostDetailed fails", function () {
       // Setup a position for the model.
       const heightOffset = 1000.0;
       const position = Cartesian3.fromDegrees(
@@ -727,14 +750,14 @@ describe(
       });
     });
 
-    it("Compute bounding sphere throws without entity.", function () {
+    it("compute bounding sphere throws without entity", function () {
       const result = new BoundingSphere();
       expect(function () {
         visualizer.getBoundingSphere(undefined, result);
       }).toThrowDeveloperError();
     });
 
-    it("Compute bounding sphere throws without result.", function () {
+    it("compute bounding sphere throws without result", function () {
       const testObject = entityCollection.getOrCreateEntity("test");
       expect(function () {
         visualizer.getBoundingSphere(testObject, undefined);

@@ -1210,12 +1210,12 @@ describe(
       expect(clippingPlanes.isDestroyed()).toBe(true);
     });
 
-    it("throws a DeveloperError when given a ClippingPlaneCollection attached to a Model", function () {
+    it("throws a DeveloperError when given a ClippingPlaneCollection attached to a Model", async function () {
       const clippingPlanes = new ClippingPlaneCollection({
         planes: [new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)],
       });
       const model = scene.primitives.add(
-        Model.fromGltf({
+        await Model.fromGltf({
           url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf",
         })
       );

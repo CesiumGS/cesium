@@ -92,9 +92,11 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
+    // This should be replace with fromGltfAsync when readyPromise is deprecated across 3D Tiles functions
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
+    // This should be replace with fromGltfAsync when readyPromise is deprecated across 3D Tiles functions
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
   },
   geoJson: function (tileset, tile, resource, json) {

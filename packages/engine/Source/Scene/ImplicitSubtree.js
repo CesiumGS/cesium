@@ -714,12 +714,12 @@ function requestExternalBuffer(subtree, bufferHeader) {
     url: bufferHeader.uri,
   });
 
-  const bufferLoader = ResourceCache.loadExternalBuffer({
+  const bufferLoader = ResourceCache.getExternalBufferLoader({
     resource: bufferResource,
   });
   subtree._bufferLoader = bufferLoader;
 
-  return bufferLoader.promise.then(function (bufferLoader) {
+  return bufferLoader.load().then(function (bufferLoader) {
     return bufferLoader.typedArray;
   });
 }

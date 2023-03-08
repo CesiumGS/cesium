@@ -174,7 +174,7 @@ ModelAnimationCollection.prototype.add = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!model.ready) {
     throw new DeveloperError(
-      "Animations are not loaded.  Wait for Model.readyPromise to resolve."
+      "Animations are not loaded.  Wait for Model.ready to be true."
     );
   }
   //>>includeEnd('debug');
@@ -258,7 +258,7 @@ ModelAnimationCollection.prototype.addAll = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!model.ready) {
     throw new DeveloperError(
-      "Animations are not loaded.  Wait for Model.readyPromise to resolve."
+      "Animations are not loaded.  Wait for Model.ready to be true."
     );
   }
 

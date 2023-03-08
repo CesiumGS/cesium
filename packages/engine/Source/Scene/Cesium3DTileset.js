@@ -2151,11 +2151,11 @@ function processMetadataExtension(tileset, tilesetJson) {
     const resource = tileset._resource.getDerivedResource({
       url: metadataJson.schemaUri,
     });
-    schemaLoader = ResourceCache.loadSchema({
+    schemaLoader = ResourceCache.getSchemaLoader({
       resource: resource,
     });
   } else if (defined(metadataJson.schema)) {
-    schemaLoader = ResourceCache.loadSchema({
+    schemaLoader = ResourceCache.getSchemaLoader({
       schema: metadataJson.schema,
     });
   } else {
@@ -2164,7 +2164,7 @@ function processMetadataExtension(tileset, tilesetJson) {
 
   tileset._schemaLoader = schemaLoader;
 
-  return schemaLoader.promise.then(function (schemaLoader) {
+  return schemaLoader.load().then(function (schemaLoader) {
     tileset._metadataExtension = new Cesium3DTilesetMetadata({
       schema: schemaLoader.schema,
       metadataJson: metadataJson,

@@ -106,7 +106,8 @@ function Cesium3DTilesVoxelProvider(options) {
       .then(function (tileset) {
         tilesetJson = tileset;
         validate(tilesetJson);
-        return getMetadataSchemaLoader(tilesetJson, resource).promise;
+        const schemaLoader = getMetadataSchemaLoader(tilesetJson, resource);
+        return schemaLoader.load();
       })
       .then(function (schemaLoader) {
         const root = tilesetJson.root;
@@ -306,9 +307,9 @@ function getCylinderShape(cylinder, tileTransform) {
 function getMetadataSchemaLoader(tilesetJson, resource) {
   const { schemaUri, schema } = tilesetJson;
   if (!defined(schemaUri)) {
-    return ResourceCache.loadSchema({ schema });
+    return ResourceCache.getSchemaLoader({ schema });
   }
-  return ResourceCache.loadSchema({
+  return ResourceCache.getSchemaLoader({
     resource: resource.getDerivedResource({
       url: schemaUri,
     }),

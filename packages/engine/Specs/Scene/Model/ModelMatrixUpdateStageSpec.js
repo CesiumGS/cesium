@@ -10,7 +10,7 @@ import {
   Quaternion,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
-import loadAndZoomToModel from "./loadAndZoomToModel.js";
+import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe(
   "Scene/Model/ModelMatrixUpdateStage",
@@ -118,7 +118,7 @@ describe(
     }
 
     it("updates leaf nodes using node transform setter", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },
@@ -196,7 +196,7 @@ describe(
     }
 
     it("updates nodes with children using node transform setter", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },
@@ -258,7 +258,7 @@ describe(
     });
 
     it("updates with new model matrix", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },
@@ -305,7 +305,7 @@ describe(
     });
 
     it("updates with new model matrix and model scale", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },
@@ -360,7 +360,7 @@ describe(
     });
 
     it("updates render state cull face when scale is negative", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: simpleSkin,
         },

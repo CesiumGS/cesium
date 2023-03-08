@@ -242,9 +242,8 @@ function GltfLoader(options) {
   this._state = GltfLoaderState.NOT_LOADED;
   this._textureState = GltfLoaderState.NOT_LOADED;
   this._promise = undefined;
-  this._texturesLoadedPromise = undefined;
-  this._process = function (loader, frameState) {};
-  this._processTextures = function (loader, frameState) {};
+  this._processError = undefined;
+  this._textureErrors = [];
 
   // Information about whether to load primitives as typed arrays or buffers,
   // and whether post-processing is needed after loading (e.g. for
@@ -255,9 +254,12 @@ function GltfLoader(options) {
   this._loaderPromises = [];
   this._textureLoaders = [];
   this._texturesPromises = [];
+  this._textureCallbacks = {};
   this._bufferViewLoaders = [];
   this._geometryLoaders = [];
+  this._geometryCallbacks = [];
   this._structuralMetadataLoader = undefined;
+  this._loadResourcesPromise = undefined;
 
   // In some cases where geometry post-processing is needed (like generating
   // outlines) new attributes are added that may have GPU resources attached.
@@ -274,20 +276,6 @@ if (defined(Object.create)) {
 }
 
 Object.defineProperties(GltfLoader.prototype, {
-  /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof GltfLoader.prototype
-   *
-   * @type {Promise.<GltfLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
   /**
    * The cache key of the resource.
    *
@@ -316,190 +304,180 @@ Object.defineProperties(GltfLoader.prototype, {
       return this._components;
     },
   },
-
   /**
-   * A promise that resolves when all textures are loaded.
-   * When <code>incrementallyLoadTextures</code> is true this may resolve after
-   * <code>promise</code> resolves.
+   * The loaded glTF json.
    *
    * @memberof GltfLoader.prototype
    *
-   * @type {Promise<void>}
+   * @type {object}
    * @readonly
    * @private
    */
-  texturesLoadedPromise: {
+  gltfJson: {
     get: function () {
-      return this._texturesLoadedPromise;
+      if (defined(this._gltfJsonLoader)) {
+        return this._gltfJsonLoader.gltf;
+      }
+      return this._gltfJson;
+    },
+  },
+  /**
+   * true if textures are loaded separately from the other glTF resources.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  incrementallyLoadTextures: {
+    get: function () {
+      return this._incrementallyLoadTextures;
     },
   },
 });
 
 /**
- * Loads the resource.
- * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
+ * Loads the gltf object
  */
-GltfLoader.prototype.load = function () {
-  const gltfJsonLoader = ResourceCache.loadGltfJson({
-    gltfResource: this._gltfResource,
-    baseResource: this._baseResource,
-    typedArray: this._typedArray,
-    gltfJson: this._gltfJson,
-  });
+async function loadGltfJson(loader) {
+  loader._state = GltfLoaderState.LOADING;
+  loader._textureState = GltfLoaderState.LOADING;
 
-  this._gltfJsonLoader = gltfJsonLoader;
-  this._state = GltfLoaderState.LOADING;
-  this._textureState = GltfLoaderState.LOADING;
+  try {
+    const gltfJsonLoader = ResourceCache.getGltfJsonLoader({
+      gltfResource: loader._gltfResource,
+      baseResource: loader._baseResource,
+      typedArray: loader._typedArray,
+      gltfJson: loader._gltfJson,
+    });
+    loader._gltfJsonLoader = gltfJsonLoader;
+    await gltfJsonLoader.load();
 
-  const that = this;
-  let textureProcessPromise;
-  const processPromise = new Promise(function (resolve, reject) {
-    textureProcessPromise = new Promise(function (
-      resolveTextures,
-      rejectTextures
+    if (
+      loader.isDestroyed() ||
+      loader.isUnloaded() ||
+      gltfJsonLoader.isDestroyed()
     ) {
-      that._process = function (loader, frameState) {
-        if (!FeatureDetection.supportsWebP.initialized) {
-          FeatureDetection.supportsWebP.initialize();
-          return;
-        }
-
-        if (loader._state === GltfLoaderState.LOADED) {
-          loader._state = GltfLoaderState.PROCESSING;
-
-          const supportedImageFormats = new SupportedImageFormats({
-            webp: FeatureDetection.supportsWebP(),
-            basis: frameState.context.supportsBasis,
-          });
-
-          let gltf;
-          if (defined(loader._gltfJsonLoader)) {
-            gltf = loader._gltfJsonLoader.gltf;
-          } else {
-            gltf = loader._gltfJson;
-          }
-
-          // Parse the glTF which populates the loaders arrays. The promise will
-          // resolve once all the loaders are ready (i.e. all external resources
-          // have been fetched and all GPU resources have been created). Loaders that
-          // create GPU resources need to be processed every frame until they become
-          // ready since the JobScheduler is not able to execute all jobs in a single
-          // frame. Also note that it's fine to call process before a loader is ready
-          // to process; nothing will happen.
-          parse(
-            loader,
-            gltf,
-            supportedImageFormats,
-            frameState,
-            reject,
-            rejectTextures
-          );
-
-          if (defined(loader._gltfJsonLoader) && loader._releaseGltfJson) {
-            // Check that the glTF JSON loader is still defined before trying to unload it.
-            // It may be undefined if the ready promise rejects immediately (which can happen in unit tests)
-            ResourceCache.unload(loader._gltfJsonLoader);
-            loader._gltfJsonLoader = undefined;
-          }
-        }
-
-        if (loader._state === GltfLoaderState.PROCESSING) {
-          processLoaders(loader, frameState);
-        }
-
-        if (loader._state === GltfLoaderState.POST_PROCESSING) {
-          postProcessGeometry(loader, frameState.context);
-          loader._state = GltfLoaderState.PROCESSED;
-        }
-
-        if (loader._state === GltfLoaderState.PROCESSED) {
-          // The buffer views can be unloaded once the data is copied.
-          unloadBufferViews(loader);
-
-          // Similarly, if the glTF was loaded from a typed array, release the memory
-          loader._typedArray = undefined;
-
-          loader._state = GltfLoaderState.READY;
-          resolve(loader);
-        }
-      };
-
-      that._processTextures = function (loader, frameState) {
-        if (loader._textureState === GltfLoaderState.LOADED) {
-          loader._textureState = GltfLoaderState.PROCESSING;
-        }
-
-        if (loader._textureState === GltfLoaderState.PROCESSING) {
-          let i;
-          const textureLoaders = loader._textureLoaders;
-          const textureLoadersLength = textureLoaders.length;
-          for (i = 0; i < textureLoadersLength; ++i) {
-            textureLoaders[i].process(frameState);
-          }
-        }
-
-        if (loader._textureState === GltfLoaderState.PROCESSED) {
-          loader._textureState = GltfLoaderState.READY;
-          resolveTextures(loader);
-        }
-      };
-    });
-  });
-
-  this._promise = gltfJsonLoader.promise
-    .then(function () {
-      if (that.isDestroyed()) {
-        return;
-      }
-      that._state = GltfLoaderState.LOADED;
-      that._textureState = GltfLoaderState.LOADED;
-
-      return processPromise;
-    })
-    .catch(function (error) {
-      if (that.isDestroyed()) {
-        return;
-      }
-      that._state = GltfLoaderState.FAILED;
-      that._textureState = GltfLoaderState.FAILED;
-      return handleError(that, error);
-    });
-
-  this._texturesLoadedPromise = textureProcessPromise.catch(function (error) {
-    if (that.isDestroyed()) {
       return;
     }
 
-    that._textureState = GltfLoaderState.FAILED;
-    return handleError(that, error);
+    const gltf = gltfJsonLoader.gltf;
+    const version = gltf.asset.version;
+    if (version !== "1.0" && version !== "2.0") {
+      const url = loader._gltfResource.url;
+      throw new RuntimeError(
+        `Failed to load ${url}: \nUnsupported glTF version: ${version}`
+      );
+    }
+
+    const extensionsRequired = gltf.extensionsRequired;
+    if (defined(extensionsRequired)) {
+      ModelUtility.checkSupportedExtensions(extensionsRequired);
+
+      // Check for the KHR_mesh_quantization extension here, it will be used later
+      // in loadAttribute().
+      loader._hasKhrMeshQuantization = extensionsRequired.includes(
+        "KHR_mesh_quantization"
+      );
+    }
+
+    loader._state = GltfLoaderState.LOADED;
+    loader._textureState = GltfLoaderState.LOADED;
+
+    return loader;
+  } catch (error) {
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    loader._state = GltfLoaderState.FAILED;
+    loader._textureState = GltfLoaderState.FAILED;
+    handleError(loader, error);
+  }
+}
+
+async function loadResources(loader, frameState) {
+  if (!FeatureDetection.supportsWebP.initialized) {
+    await FeatureDetection.supportsWebP.initialize();
+  }
+
+  const supportedImageFormats = new SupportedImageFormats({
+    webp: FeatureDetection.supportsWebP(),
+    basis: frameState.context.supportsBasis,
   });
 
+  // Parse the glTF which populates the loaders arrays. Loading promises will be created, and will
+  // resolve once the loaders are ready (i.e. all external resources
+  // have been fetched and all GPU resources have been created). Loaders that
+  // create GPU resources need to be processed every frame until they become
+  // ready since the JobScheduler is not able to execute all jobs in a single
+  // frame. Any promise failures are collected, and will be handled synchronously in process(). Also note that it's fine to call process before a loader is ready
+  // to process or after it has failed; nothing will happen.
+  const gltf = loader.gltfJson;
+  parse(loader, gltf, supportedImageFormats, frameState);
+
+  // All resource loaders have been created, so we can begin processing
+  loader._state = GltfLoaderState.PROCESSING;
+  loader._textureState = GltfLoaderState.PROCESSING;
+
+  if (defined(loader._gltfJsonLoader) && loader._releaseGltfJson) {
+    // Check that the glTF JSON loader is still defined before trying to unload it.
+    // It can be unloaded if the glTF loader is destroyed.
+    ResourceCache.unload(loader._gltfJsonLoader);
+    loader._gltfJsonLoader = undefined;
+  }
+}
+
+/**
+ * Loads the resource.
+ * @returns {Promise.<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @exception {RuntimeError} Unsupported glTF version
+ * @exception {RuntimeError} Unsupported glTF Extension
+ * @private
+ */
+GltfLoader.prototype.load = async function () {
+  if (defined(this._promise)) {
+    return this._promise;
+  }
+
+  this._promise = loadGltfJson(this);
   return this._promise;
 };
 
 function handleError(gltfLoader, error) {
   gltfLoader.unload();
   const errorMessage = "Failed to load glTF";
-  error = gltfLoader.getError(errorMessage, error);
-  return Promise.reject(error);
+  throw gltfLoader.getError(errorMessage, error);
 }
 
 function processLoaders(loader, frameState) {
-  const bufferViewLoaders = loader._bufferViewLoaders;
-  const bufferViewLoadersLength = bufferViewLoaders.length;
-  for (let i = 0; i < bufferViewLoadersLength; ++i) {
-    bufferViewLoaders[i].process(frameState);
-  }
-
+  let i;
+  let ready = true;
   const geometryLoaders = loader._geometryLoaders;
   const geometryLoadersLength = geometryLoaders.length;
-  for (let i = 0; i < geometryLoadersLength; ++i) {
-    geometryLoaders[i].process(frameState);
+  for (i = 0; i < geometryLoadersLength; ++i) {
+    const geometryReady = geometryLoaders[i].process(frameState);
+    if (geometryReady && defined(loader._geometryCallbacks[i])) {
+      loader._geometryCallbacks[i]();
+      loader._geometryCallbacks[i] = undefined;
+    }
+    ready = ready && geometryReady;
   }
 
-  if (defined(loader._structuralMetadataLoader)) {
-    loader._structuralMetadataLoader.process(frameState);
+  const structuralMetadataLoader = loader._structuralMetadataLoader;
+  if (defined(structuralMetadataLoader)) {
+    const metadataReady = structuralMetadataLoader.process(frameState);
+    if (metadataReady) {
+      loader._components.structuralMetadata =
+        structuralMetadataLoader.structuralMetadata;
+    }
+    ready = ready && metadataReady;
+  }
+
+  if (ready) {
+    // Geometry requires further processing
+    loader._state = GltfLoaderState.POST_PROCESSING;
   }
 }
 
@@ -550,6 +528,73 @@ function gatherPostProcessBuffers(loader, primitiveLoadPlan) {
 }
 
 /**
+ * Process loaders other than textures
+ * @private
+ */
+GltfLoader.prototype._process = function (frameState) {
+  if (this._state === GltfLoaderState.READY) {
+    return true;
+  }
+
+  if (this._state === GltfLoaderState.PROCESSING) {
+    processLoaders(this, frameState);
+  }
+
+  if (this._state === GltfLoaderState.POST_PROCESSING) {
+    postProcessGeometry(this, frameState.context);
+    this._state = GltfLoaderState.PROCESSED;
+  }
+
+  if (this._state === GltfLoaderState.PROCESSED) {
+    // The buffer views can be unloaded once the data is copied.
+    unloadBufferViewLoaders(this);
+
+    // Similarly, if the glTF was loaded from a typed array, release the memory
+    this._typedArray = undefined;
+
+    this._state = GltfLoaderState.READY;
+    return true;
+  }
+
+  return false;
+};
+
+/**
+ * Process textures other than textures
+ * @private
+ */
+GltfLoader.prototype._processTextures = function (frameState) {
+  if (this._textureState === GltfLoaderState.READY) {
+    return true;
+  }
+
+  if (this._textureState !== GltfLoaderState.PROCESSING) {
+    return false;
+  }
+
+  let i;
+  let ready = true;
+  const textureLoaders = this._textureLoaders;
+  const textureLoadersLength = textureLoaders.length;
+  for (i = 0; i < textureLoadersLength; ++i) {
+    const textureReady = textureLoaders[i].process(frameState);
+    if (textureReady && defined(this._textureCallbacks[i])) {
+      this._textureCallbacks[i]();
+      this._textureCallbacks[i] = undefined;
+    }
+
+    ready = ready && textureReady;
+  }
+
+  if (!ready) {
+    return false;
+  }
+
+  this._textureState = GltfLoaderState.READY;
+  return true;
+};
+
+/**
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
@@ -560,12 +605,62 @@ GltfLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
-  this._process(this, frameState);
+  if (
+    this._state === GltfLoaderState.LOADED &&
+    !defined(this._loadResourcesPromise)
+  ) {
+    this._loadResourcesPromise = loadResources(this, frameState).catch(
+      (error) => {
+        this._processError = error;
+      }
+    );
+  }
+
+  if (defined(this._processError)) {
+    this._state = GltfLoaderState.FAILED;
+    const error = this._processError;
+    this._processError = undefined;
+    handleError(this, error);
+  }
+
+  // Pop the next error of the list in case there are multiple
+  const textureError = this._textureErrors.pop();
+  if (defined(textureError)) {
+    // There shouldn't be the need to completely unload in this case. Just throw the error.
+    const error = this.getError("Failed to load glTF texture", textureError);
+    error.name = "TextureError";
+    throw error;
+  }
+
+  let ready = false;
+  if (this._state === GltfLoaderState.FAILED) {
+    return ready;
+  }
+
+  try {
+    ready = this._process(frameState);
+  } catch (error) {
+    this._state = GltfLoaderState.FAILED;
+    handleError(this, error);
+  }
+
   // Since textures can be loaded independently and are handled through a separate promise, they are processed in their own function
-  this._processTextures(this, frameState);
+  let texturesReady = false;
+  try {
+    texturesReady = this._processTextures(frameState);
+  } catch (error) {
+    this._textureState = GltfLoaderState.FAILED;
+    handleError(this, error);
+  }
+
+  if (this._incrementallyLoadTextures) {
+    return ready;
+  }
+
+  return ready && texturesReady;
 };
 
-function loadVertexBuffer(
+function getVertexBufferLoader(
   loader,
   gltf,
   accessorId,
@@ -578,7 +673,7 @@ function loadVertexBuffer(
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
-  const vertexBufferLoader = ResourceCache.loadVertexBuffer({
+  const vertexBufferLoader = ResourceCache.getVertexBufferLoader({
     gltf: gltf,
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
@@ -592,12 +687,10 @@ function loadVertexBuffer(
     loadTypedArray: loadTypedArray,
   });
 
-  loader._geometryLoaders.push(vertexBufferLoader);
-
   return vertexBufferLoader;
 }
 
-function loadIndexBuffer(
+function getIndexBufferLoader(
   loader,
   gltf,
   accessorId,
@@ -606,7 +699,7 @@ function loadIndexBuffer(
   loadTypedArray,
   frameState
 ) {
-  const indexBufferLoader = ResourceCache.loadIndexBuffer({
+  const indexBufferLoader = ResourceCache.getIndexBufferLoader({
     gltf: gltf,
     accessorId: accessorId,
     gltfResource: loader._gltfResource,
@@ -618,13 +711,11 @@ function loadIndexBuffer(
     loadTypedArray: loadTypedArray,
   });
 
-  loader._geometryLoaders.push(indexBufferLoader);
-
   return indexBufferLoader;
 }
 
-function loadBufferView(loader, gltf, bufferViewId) {
-  const bufferViewLoader = ResourceCache.loadBufferView({
+function getBufferViewLoader(loader, gltf, bufferViewId) {
+  const bufferViewLoader = ResourceCache.getBufferViewLoader({
     gltf: gltf,
     bufferViewId: bufferViewId,
     gltfResource: loader._gltfResource,
@@ -727,11 +818,13 @@ function loadAccessor(loader, gltf, accessorId, useQuaternion) {
 
   const bufferViewId = accessor.bufferView;
   if (defined(bufferViewId)) {
-    const bufferViewLoader = loadBufferView(loader, gltf, bufferViewId);
-    const promise = bufferViewLoader.promise.then(function (bufferViewLoader) {
+    const bufferViewLoader = getBufferViewLoader(loader, gltf, bufferViewId);
+    const promise = (async () => {
+      await bufferViewLoader.load();
       if (loader.isDestroyed()) {
         return;
       }
+
       const bufferViewTypedArray = bufferViewLoader.typedArray;
       const typedArray = getPackedTypedArray(
         gltf,
@@ -741,7 +834,8 @@ function loadAccessor(loader, gltf, accessorId, useQuaternion) {
 
       useQuaternion = defaultValue(useQuaternion, false);
       loadAccessorValues(accessor, typedArray, values, useQuaternion);
-    });
+    })();
+
     loader._loaderPromises.push(promise);
 
     return values;
@@ -1062,7 +1156,7 @@ function loadAttribute(
     return attribute;
   }
 
-  const vertexBufferLoader = loadVertexBuffer(
+  const vertexBufferLoader = getVertexBufferLoader(
     loader,
     gltf,
     accessorId,
@@ -1072,13 +1166,15 @@ function loadAttribute(
     loadTypedArray,
     frameState
   );
-  const promise = vertexBufferLoader.promise.then(function (
-    vertexBufferLoader
-  ) {
-    if (loader.isDestroyed()) {
-      return;
-    }
 
+  const index = loader._geometryLoaders.length;
+  loader._geometryLoaders.push(vertexBufferLoader);
+  const promise = vertexBufferLoader.load();
+  loader._loaderPromises.push(promise);
+  // This can only execute once vertexBufferLoader.process() has run and returns true
+  // Save this finish callback by the loader index so it can be called
+  // in process().
+  loader._geometryCallbacks[index] = () => {
     if (
       defined(draco) &&
       defined(draco.attributes) &&
@@ -1100,9 +1196,7 @@ function loadAttribute(
         loadTypedArray
       );
     }
-  });
-
-  loader._loaderPromises.push(promise);
+  };
 
   return attribute;
 }
@@ -1276,7 +1370,7 @@ function loadIndices(
   const loadBuffer = needsPostProcessing ? false : outputBuffer;
   const loadTypedArray = needsPostProcessing ? true : outputTypedArray;
 
-  const indexBufferLoader = loadIndexBuffer(
+  const indexBufferLoader = getIndexBufferLoader(
     loader,
     gltf,
     accessorId,
@@ -1286,18 +1380,18 @@ function loadIndices(
     frameState
   );
 
-  const promise = indexBufferLoader.promise.then(function (indexBufferLoader) {
-    if (loader.isDestroyed()) {
-      return;
-    }
-
+  const index = loader._geometryLoaders.length;
+  loader._geometryLoaders.push(indexBufferLoader);
+  const promise = indexBufferLoader.load();
+  loader._loaderPromises.push(promise);
+  // This can only execute once indexBufferLoader.process() has run and returns true
+  // Save this finish callback by the loader index so it can be called
+  // in process().
+  loader._geometryCallbacks[index] = () => {
     indices.indexDatatype = indexBufferLoader.indexDatatype;
-
     indices.buffer = indexBufferLoader.buffer;
     indices.typedArray = indexBufferLoader.typedArray;
-  });
-
-  loader._loaderPromises.push(promise);
+  };
 
   const indicesPlan = new PrimitiveLoadPlan.IndicesLoadPlan(indices);
   indicesPlan.loadBuffer = outputBuffer;
@@ -1324,7 +1418,7 @@ function loadTexture(
     return undefined;
   }
 
-  const textureLoader = ResourceCache.loadTexture({
+  const textureLoader = ResourceCache.getTextureLoader({
     gltf: gltf,
     textureInfo: textureInfo,
     gltfResource: loader._gltfResource,
@@ -1334,23 +1428,37 @@ function loadTexture(
     asynchronous: loader._asynchronous,
   });
 
-  loader._textureLoaders.push(textureLoader);
-
   const textureReader = GltfLoaderUtil.createModelTextureReader({
     textureInfo: textureInfo,
   });
 
-  const promise = textureLoader.promise.then(function (textureLoader) {
-    if (loader.isUnloaded() || loader.isDestroyed()) {
+  const index = loader._textureLoaders.length;
+  loader._textureLoaders.push(textureLoader);
+  const promise = textureLoader.load().catch((error) => {
+    if (loader.isDestroyed()) {
       return;
     }
+
+    if (!loader._incrementallyLoadTextures) {
+      // If incrementallyLoadTextures is false, throw the error to ensure the loader state
+      // immediately is set to have failed
+      throw error;
+    }
+
+    // Otherwise, save the error so it can be thrown next
+    loader._textureState = GltfLoaderState.FAILED;
+    loader._textureErrors.push(error);
+  });
+  loader._texturesPromises.push(promise);
+  // This can only execute once textureLoader.process() has run and returns true
+  // Save this finish callback by the loader index so it can be called
+  // in process().
+  loader._textureCallbacks[index] = () => {
     textureReader.texture = textureLoader.texture;
     if (defined(samplerOverride)) {
       textureReader.texture.sampler = samplerOverride;
     }
-  });
-
-  loader._texturesPromises.push(promise);
+  };
 
   return textureReader;
 }
@@ -2246,7 +2354,7 @@ function loadSkins(loader, gltf, nodes) {
   return skins;
 }
 
-function loadStructuralMetadata(
+async function loadStructuralMetadata(
   loader,
   gltf,
   extension,
@@ -2264,11 +2372,8 @@ function loadStructuralMetadata(
     frameState: frameState,
     asynchronous: loader._asynchronous,
   });
-  structuralMetadataLoader.load();
-
   loader._structuralMetadataLoader = structuralMetadataLoader;
-
-  return structuralMetadataLoader;
+  return structuralMetadataLoader.load();
 }
 
 function loadAnimationSampler(loader, gltf, gltfSampler) {
@@ -2442,32 +2547,7 @@ function loadScene(gltf, nodes) {
 
 const scratchCenter = new Cartesian3();
 
-function parse(
-  loader,
-  gltf,
-  supportedImageFormats,
-  frameState,
-  rejectPromise,
-  rejectTexturesPromise
-) {
-  const version = gltf.asset.version;
-  if (version !== "1.0" && version !== "2.0") {
-    const url = loader._gltfResource.url;
-    throw new RuntimeError(
-      `Failed to load ${url}: \nUnsupported glTF version: ${version}`
-    );
-  }
-  const extensionsRequired = gltf.extensionsRequired;
-  if (defined(extensionsRequired)) {
-    ModelUtility.checkSupportedExtensions(extensionsRequired);
-
-    // Check for the KHR_mesh_quantization extension here, it will be used later
-    // in loadAttribute().
-    loader._hasKhrMeshQuantization = extensionsRequired.includes(
-      "KHR_mesh_quantization"
-    );
-  }
-
+function parse(loader, gltf, supportedImageFormats, frameState) {
   const extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
   const structuralMetadataExtension = extensions.EXT_structural_metadata;
   const featureMetadataExtensionLegacy = extensions.EXT_feature_metadata;
@@ -2535,7 +2615,7 @@ function parse(
     defined(structuralMetadataExtension) ||
     defined(featureMetadataExtensionLegacy)
   ) {
-    const structuralMetadataLoader = loadStructuralMetadata(
+    const promise = loadStructuralMetadata(
       loader,
       gltf,
       structuralMetadataExtension,
@@ -2543,46 +2623,24 @@ function parse(
       supportedImageFormats,
       frameState
     );
-    const promise = structuralMetadataLoader.promise.then(function (
-      structuralMetadataLoader
-    ) {
-      if (loader.isDestroyed()) {
-        return;
-      }
-      components.structuralMetadata =
-        structuralMetadataLoader.structuralMetadata;
-    });
     loader._loaderPromises.push(promise);
   }
 
-  // Gather promises and reject if any promises fail.
+  // Gather promises and handle any errors
   const readyPromises = [];
   readyPromises.push.apply(readyPromises, loader._loaderPromises);
 
+  // When incrementallyLoadTextures is true, the errors are caught and thrown individually
+  // since it doesn't affect the overall loader state
   if (!loader._incrementallyLoadTextures) {
     readyPromises.push.apply(readyPromises, loader._texturesPromises);
   }
 
-  Promise.all(readyPromises)
-    .then(function () {
-      if (loader.isDestroyed()) {
-        return;
-      }
-      loader._state = GltfLoaderState.POST_PROCESSING;
-    })
-    .catch(rejectPromise);
-
-  // Separate promise will resolve once textures are loaded.
-  Promise.all(loader._texturesPromises)
-    .then(function () {
-      if (loader.isDestroyed()) {
-        return;
-      }
-
-      // post processing only applies for geometry
-      loader._textureState = GltfLoaderState.PROCESSED;
-    })
-    .catch(rejectTexturesPromise);
+  Promise.all(readyPromises).catch((error) => {
+    // This error will be thrown synchronously during the next call
+    // to process()
+    loader._processError = error;
+  });
 }
 
 function unloadTextures(loader) {
@@ -2594,7 +2652,7 @@ function unloadTextures(loader) {
   loader._textureLoaders.length = 0;
 }
 
-function unloadBufferViews(loader) {
+function unloadBufferViewLoaders(loader) {
   const bufferViewLoaders = loader._bufferViewLoaders;
   const bufferViewLoadersLength = bufferViewLoaders.length;
   for (let i = 0; i < bufferViewLoadersLength; ++i) {
@@ -2644,13 +2702,13 @@ GltfLoader.prototype.isUnloaded = function () {
  * @private
  */
 GltfLoader.prototype.unload = function () {
-  if (defined(this._gltfJsonLoader)) {
+  if (defined(this._gltfJsonLoader) && !this._gltfJsonLoader.isDestroyed()) {
     ResourceCache.unload(this._gltfJsonLoader);
   }
   this._gltfJsonLoader = undefined;
 
   unloadTextures(this);
-  unloadBufferViews(this);
+  unloadBufferViewLoaders(this);
   unloadGeometry(this);
   unloadGeneratedAttributes(this);
   unloadStructuralMetadata(this);

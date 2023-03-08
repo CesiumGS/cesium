@@ -4,8 +4,9 @@ function loaderProcess(loader, scene) {
   // explicitly. This is only required for loaders that use the job scheduler
   // like GltfVertexBufferLoader, GltfIndexBufferLoader, and GltfTextureLoader
   scene.jobScheduler.resetBudgets();
-  loader.process(scene.frameState);
+  const ready = loader.process(scene.frameState);
   scene.jobScheduler.resetBudgets();
+  return ready;
 }
 
 export default loaderProcess;
