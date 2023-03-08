@@ -34,7 +34,7 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    *
    * @memberof GlobeTranslucency.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    *
    * @see GlobeTranslucency#frontFaceAlpha
@@ -61,7 +61,7 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    *
    * @memberof GlobeTranslucency.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    *
    * @see GlobeTranslucency#enabled
@@ -141,7 +141,7 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    *
    * @memberof GlobeTranslucency.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    *
    * @see GlobeTranslucency#enabled

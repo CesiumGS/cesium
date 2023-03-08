@@ -280,7 +280,7 @@ function appendCss() {
  * The credit display is responsible for displaying credits on screen.
  *
  * @param {HTMLElement} container The HTML element where credits will be displayed
- * @param {String} [delimiter= ' • '] The string to separate text credits
+ * @param {string} [delimiter= ' • '] The string to separate text credits
  * @param {HTMLElement} [viewport=document.body] The HTML element that will contain the credits popup
  *
  * @alias CreditDisplay
@@ -550,7 +550,7 @@ CreditDisplay.prototype.destroy = function () {
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 CreditDisplay.prototype.isDestroyed = function () {
   return false;

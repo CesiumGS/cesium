@@ -9,14 +9,14 @@ import defined from "./defined.js";
  * @alias HeadingPitchRange
  * @constructor
  *
- * @param {Number} [heading=0.0] The heading angle in radians.
- * @param {Number} [pitch=0.0] The pitch angle in radians.
- * @param {Number} [range=0.0] The distance from the center in meters.
+ * @param {number} [heading=0.0] The heading angle in radians.
+ * @param {number} [pitch=0.0] The pitch angle in radians.
+ * @param {number} [range=0.0] The distance from the center in meters.
  */
 function HeadingPitchRange(heading, pitch, range) {
   /**
    * Heading is the rotation from the local north direction where a positive angle is increasing eastward.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.heading = defaultValue(heading, 0.0);
@@ -24,14 +24,14 @@ function HeadingPitchRange(heading, pitch, range) {
   /**
    * Pitch is the rotation from the local xy-plane. Positive pitch angles
    * are above the plane. Negative pitch angles are below the plane.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.pitch = defaultValue(pitch, 0.0);
 
   /**
    * Range is the distance from the center of the local frame.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.range = defaultValue(range, 0.0);

@@ -4,6 +4,7 @@ import {
   Rectangle,
   Request,
   Resource,
+  RuntimeError,
   Imagery,
   ImageryLayer,
   ImageryProvider,
@@ -64,24 +65,72 @@ describe("Scene/SingleTileImageryProvider", function () {
       });
   });
 
-  it("returns valid value for hasAlphaChannel", function () {
-    const provider = new SingleTileImageryProvider({
+  it("constructor throws without url", async function () {
+    expect(() => new SingleTileImageryProvider()).toThrowDeveloperError();
+  });
+
+  it("constructor throws without tile height and tile width", async function () {
+    expect(
+      () =>
+        new SingleTileImageryProvider({
+          url: "Data/Images/Red16x16.png",
+          tileWidth: 16,
+        })
+    ).toThrowDeveloperError();
+
+    expect(
+      () =>
+        new SingleTileImageryProvider({
+          url: "Data/Images/Red16x16.png",
+          tileHeight: 16,
+        })
+    ).toThrowDeveloperError();
+  });
+
+  it("fromUrl throws without url", async function () {
+    await expectAsync(
+      SingleTileImageryProvider.fromUrl()
+    ).toBeRejectedWithDeveloperError();
+  });
+
+  it("fromUrl resolves to created provider", async function () {
+    const provider = await SingleTileImageryProvider.fromUrl(
+      "Data/Images/Red16x16.png"
+    );
+    expect(provider).toBeInstanceOf(SingleTileImageryProvider);
+  });
+
+  it("fromUrl with Resource resolves to created provider", async function () {
+    const resource = new Resource({
       url: "Data/Images/Red16x16.png",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(typeof provider.hasAlphaChannel).toBe("boolean");
-    });
+    const provider = await SingleTileImageryProvider.fromUrl(resource);
+    expect(provider).toBeInstanceOf(SingleTileImageryProvider);
   });
 
-  it("properties are gettable", function () {
+  it("fromUrl throws on failed request", async function () {
+    await expectAsync(
+      SingleTileImageryProvider.fromUrl("invalid.image.url")
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "Failed to load image invalid.image.url"
+    );
+  });
+
+  it("returns valid value for hasAlphaChannel", async function () {
+    const provider = await SingleTileImageryProvider.fromUrl(
+      "Data/Images/Red16x16.png"
+    );
+
+    expect(typeof provider.hasAlphaChannel).toBe("boolean");
+  });
+
+  it("properties are gettable", async function () {
     const url = "Data/Images/Red16x16.png";
     const rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
     const credit = "hi";
-    const provider = new SingleTileImageryProvider({
-      url: url,
+    const provider = await SingleTileImageryProvider.fromUrl(url, {
       rectangle: rectangle,
       credit: credit,
     });
@@ -90,40 +139,52 @@ describe("Scene/SingleTileImageryProvider", function () {
     expect(provider.rectangle).toEqual(rectangle);
     expect(provider.hasAlphaChannel).toEqual(true);
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-      expect(provider.tilingScheme.rectangle).toEqual(rectangle);
-      expect(provider.tileWidth).toEqual(16);
-      expect(provider.tileHeight).toEqual(16);
-      expect(provider.maximumLevel).toEqual(0);
-      expect(provider.tileDiscardPolicy).toBeUndefined();
-    });
+    expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+    expect(provider.tilingScheme.rectangle).toEqual(rectangle);
+    expect(provider.tileWidth).toEqual(16);
+    expect(provider.tileHeight).toEqual(16);
+    expect(provider.maximumLevel).toEqual(0);
+    expect(provider.tileDiscardPolicy).toBeUndefined();
   });
 
-  it("url is required", function () {
-    function constructWithoutUrl() {
-      return new SingleTileImageryProvider({});
-    }
-    expect(constructWithoutUrl).toThrowDeveloperError();
-  });
-
-  it("can use a custom ellipsoid", function () {
+  it("can use a custom ellipsoid", async function () {
     const ellipsoid = new Ellipsoid(1, 2, 3);
-    const provider = new SingleTileImageryProvider({
-      url: "Data/Images/Red16x16.png",
-      ellipsoid: ellipsoid,
-    });
+    const provider = await SingleTileImageryProvider.fromUrl(
+      "Data/Images/Red16x16.png",
+      {
+        ellipsoid: ellipsoid,
+      }
+    );
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
-    });
+    expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
   });
 
-  it("requests the single image immediately upon construction", function () {
+  it("requests the single image immediately upon construction", async function () {
+    const imageUrl = "Data/Images/Red16x16.png";
+
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      const url = request.url;
+      expect(url).toEqual(imageUrl);
+      Resource._DefaultImplementations.createImage(
+        request,
+        crossOrigin,
+        deferred
+      );
+    });
+
+    const provider = await SingleTileImageryProvider.fromUrl(imageUrl);
+
+    expect(Resource._Implementations.createImage).toHaveBeenCalled();
+
+    const image = await Promise.resolve(provider.requestImage(0, 0, 0));
+    expect(image).toBeImageOrImageBitmap();
+  });
+
+  it("lazy loads image when constructed with tile height and tile width", async function () {
     const imageUrl = "Data/Images/Red16x16.png";
 
     spyOn(Resource._Implementations, "createImage").and.callFake(function (
@@ -142,42 +203,32 @@ describe("Scene/SingleTileImageryProvider", function () {
 
     const provider = new SingleTileImageryProvider({
       url: imageUrl,
+      tileHeight: 16,
+      tileWidth: 16,
     });
 
+    expect(Resource._Implementations.createImage).not.toHaveBeenCalled();
+
+    const image = await Promise.resolve(provider.requestImage(0, 0, 0));
+    expect(image).toBeImageOrImageBitmap();
     expect(Resource._Implementations.createImage).toHaveBeenCalled();
-
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      return Promise.resolve(provider.requestImage(0, 0, 0)).then(function (
-        image
-      ) {
-        expect(image).toBeImageOrImageBitmap();
-      });
-    });
   });
 
-  it("turns the supplied credit into a logo", function () {
-    const provider = new SingleTileImageryProvider({
-      url: "Data/Images/Red16x16.png",
-    });
+  it("turns the supplied credit into a logo", async function () {
+    const provider = await SingleTileImageryProvider.fromUrl(
+      "Data/Images/Red16x16.png"
+    );
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.credit).toBeUndefined();
+    expect(provider.credit).toBeUndefined();
 
-      const providerWithCredit = new SingleTileImageryProvider({
-        url: "Data/Images/Red16x16.png",
+    const providerWithCredit = await SingleTileImageryProvider.fromUrl(
+      "Data/Images/Red16x16.png",
+      {
         credit: "Thanks to our awesome made up source of this imagery!",
-      });
+      }
+    );
 
-      return pollToPromise(function () {
-        return providerWithCredit.ready;
-      }).then(function () {
-        expect(providerWithCredit.credit).toBeDefined();
-      });
-    });
+    expect(providerWithCredit.credit).toBeDefined();
   });
 
   it("raises error event when image cannot be loaded", function () {

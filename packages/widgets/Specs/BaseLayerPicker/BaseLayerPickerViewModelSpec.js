@@ -1,14 +1,17 @@
 import {
   EllipsoidTerrainProvider,
+  Event,
   ImageryLayerCollection,
 } from "@cesium/engine";
 
 import { BaseLayerPickerViewModel, ProviderViewModel } from "../../index.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   function MockGlobe() {
     this.imageryLayers = new ImageryLayerCollection();
     this.terrainProvider = new EllipsoidTerrainProvider();
+    this.terrainProviderChanged = new Event();
   }
   MockGlobe.prototype.isDestroyed = () => false;
 
@@ -204,7 +207,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     expect(viewModel.buttonImageUrl).toEqual(testProviderViewModel.iconUrl);
   });
 
-  it("selectedImagery actually sets base layer", function () {
+  it("selectedImagery actually sets base layer", async function () {
     const imageryViewModels = [testProviderViewModel];
     const globe = new MockGlobe();
     const imageryLayers = globe.imageryLayers;
@@ -217,11 +220,14 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
 
     viewModel.selectedImagery = testProviderViewModel;
     expect(imageryLayers.length).toEqual(1);
+    await pollToPromise(() => imageryLayers.get(0).ready);
     expect(imageryLayers.get(0).imageryProvider).toBe(testProvider);
 
     viewModel.selectedImagery = testProviderViewModel2;
     expect(imageryLayers.length).toEqual(2);
+    await pollToPromise(() => imageryLayers.get(0).ready);
     expect(imageryLayers.get(0).imageryProvider).toBe(testProvider);
+    await pollToPromise(() => imageryLayers.get(1).ready);
     expect(imageryLayers.get(1).imageryProvider).toBe(testProvider2);
   });
 
@@ -257,7 +263,24 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     expect(globe.terrainProvider).toBe(testProvider);
   });
 
-  it("settings selectedImagery only removes layers added by view model", function () {
+  it("selectedTerrain cancels update if terrainProvider is set externally", async function () {
+    const terrainProviderViewModels = [
+      testProviderViewModel,
+      testProviderViewModelAsync,
+    ];
+    const globe = new MockGlobe();
+    const viewModel = new BaseLayerPickerViewModel({
+      globe: globe,
+      terrainProviderViewModels: terrainProviderViewModels,
+    });
+
+    viewModel.selectedTerrain = testProviderViewModelAsync;
+    globe.terrainProviderChanged.raiseEvent();
+    await testProviderViewModelAsync.creationCommand();
+    expect(globe.terrainProvider).not.toBe(testProvider);
+  });
+
+  it("settings selectedImagery only removes layers added by view model", async function () {
     const imageryViewModels = [testProviderViewModel];
     const globe = new MockGlobe();
     const imageryLayers = globe.imageryLayers;
@@ -270,7 +293,9 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
 
     viewModel.selectedImagery = testProviderViewModel2;
     expect(imageryLayers.length).toEqual(2);
+    await pollToPromise(() => imageryLayers.get(0).ready);
     expect(imageryLayers.get(0).imageryProvider).toBe(testProvider);
+    await pollToPromise(() => imageryLayers.get(1).ready);
     expect(imageryLayers.get(1).imageryProvider).toBe(testProvider2);
 
     imageryLayers.addImageryProvider(testProvider3, 1);
@@ -279,6 +304,7 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     viewModel.selectedImagery = undefined;
 
     expect(imageryLayers.length).toEqual(1);
+    await pollToPromise(() => imageryLayers.get(0).ready);
     expect(imageryLayers.get(0).imageryProvider).toBe(testProvider3);
   });
 

@@ -16,8 +16,8 @@ let _servers = {};
 /**
  * Adds a trusted server to the registry
  *
- * @param {String} host The host to be added.
- * @param {Number} port The port used to access the host.
+ * @param {string} host The host to be added.
+ * @param {number} port The port used to access the host.
  *
  * @example
  * // Add a trusted server
@@ -42,8 +42,8 @@ TrustedServers.add = function (host, port) {
 /**
  * Removes a trusted server from the registry
  *
- * @param {String} host The host to be removed.
- * @param {Number} port The port used to access the host.
+ * @param {string} host The host to be removed.
+ * @param {number} port The port used to access the host.
  *
  * @example
  * // Remove a trusted server
@@ -103,7 +103,7 @@ function getAuthority(url) {
 /**
  * Tests whether a server is trusted or not. The server must have been added with the port if it is included in the url.
  *
- * @param {String} url The url to be tested against the trusted list
+ * @param {string} url The url to be tested against the trusted list
  *
  * @returns {boolean} Returns true if url is trusted, false otherwise.
  *

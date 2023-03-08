@@ -14,7 +14,7 @@ import TerrainProvider from "./TerrainProvider.js";
  * @alias EllipsoidTerrainProvider
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
  * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
  * is used.
@@ -90,7 +90,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof EllipsoidTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @deprecated
    */
@@ -98,7 +98,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "EllipsoidTerrainProvider.ready",
-        "EllipsoidTerrainProvider.ready was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+        "EllipsoidTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
       );
       return true;
     },
@@ -107,7 +107,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof EllipsoidTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    * @deprecated
    */
@@ -115,7 +115,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "EllipsoidTerrainProvider.readyPromise",
-        "EllipsoidTerrainProvider.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104."
+        "EllipsoidTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
       );
       return this._readyPromise;
     },
@@ -126,7 +126,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
    * indicates which areas of the globe are water rather than land, so they can be rendered
    * as a reflective surface with animated waves.
    * @memberof EllipsoidTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasWaterMask: {
@@ -138,7 +138,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
    * @memberof EllipsoidTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasVertexNormals: {
@@ -165,12 +165,12 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
  * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  */
@@ -194,8 +194,8 @@ EllipsoidTerrainProvider.prototype.requestTileGeometry = function (
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
  */
 EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   level
@@ -206,10 +206,10 @@ EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = function (
 /**
  * Determines whether data for a tile is available to be loaded.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
   x,
@@ -222,9 +222,9 @@ EllipsoidTerrainProvider.prototype.getTileDataAvailable = function (
 /**
  * Makes sure we load availability data for a tile
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @returns {undefined} This provider does not support loading availability.
  */
 EllipsoidTerrainProvider.prototype.loadTileDataAvailability = function (

@@ -48,8 +48,8 @@
 //       #define FxaaTexTop(t, p) texture2DLod(t, p, 0.0)
 //       #define FxaaTexOff(t, p, o, r) texture2DLod(t, p + (o * r), 0.0)
 //           with
-//       #define FxaaTexTop(t, p) texture2D(t, p)
-//       #define FxaaTexOff(t, p, o, r) texture2D(t, p + (o * r))
+//       #define FxaaTexTop(t, p) texture(t, p)
+//       #define FxaaTexOff(t, p, o, r) texture(t, p + (o * r))
 // * FXAA_QUALITY_PRESET is prepended in the javascript code. We may want to expose that setting in the future.
 // * The following parameters to FxaaPixelShader are unused and can be removed:
 //       fxaaConsolePosPos
@@ -269,8 +269,8 @@
 #define FxaaTex sampler2D
 
 #define FxaaSat(x) clamp(x, 0.0, 1.0)
-#define FxaaTexTop(t, p) texture2D(t, p)
-#define FxaaTexOff(t, p, o, r) texture2D(t, p + (o * r))
+#define FxaaTexTop(t, p) texture(t, p)
+#define FxaaTexOff(t, p, o, r) texture(t, p + (o * r))
 
 FxaaFloat FxaaLuma(FxaaFloat4 rgba) { return rgba.y; }
 

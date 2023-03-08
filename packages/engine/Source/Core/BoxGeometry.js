@@ -20,7 +20,7 @@ const diffScratch = new Cartesian3();
  * @alias BoxGeometry
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
  * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -70,7 +70,7 @@ function BoxGeometry(options) {
 /**
  * Creates a cube centered at the origin given its dimensions.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
  * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
  * @returns {BoxGeometry}
@@ -141,7 +141,7 @@ BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 BoxGeometry.packedLength =
   2 * Cartesian3.packedLength + VertexFormat.packedLength + 1;
@@ -150,10 +150,10 @@ BoxGeometry.packedLength =
  * Stores the provided instance into the provided array.
  *
  * @param {BoxGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 BoxGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -194,8 +194,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {BoxGeometry} [result] The object into which to store the result.
  * @returns {BoxGeometry} The modified result parameter or a new BoxGeometry instance if one was not provided.
  */

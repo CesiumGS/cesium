@@ -1,6 +1,6 @@
 /**
  * The state of a {@link QuadtreeTile} in the tile load pipeline.
- * @enum {Number}
+ * @enum {number}
  * @private
  */
 const QuadtreeTileLoadState = {

@@ -4,7 +4,6 @@ if (window.CESIUM_BASE_URL === undefined) {
 
 import {
   Cartesian3,
-  createWorldTerrainAsync,
   defined,
   formatError,
   Math as CesiumMath,
@@ -12,8 +11,10 @@ import {
   queryToObject,
   CzmlDataSource,
   GeoJsonDataSource,
+  ImageryLayer,
   KmlDataSource,
   GpxDataSource,
+  Terrain,
   TileMapServiceImageryProvider,
   Viewer,
   viewerCesiumInspectorMixin,
@@ -42,29 +43,29 @@ async function main() {
      */
   const endUserOptions = queryToObject(window.location.search.substring(1));
 
-  let imageryProvider;
+  let baseLayer;
   if (defined(endUserOptions.tmsImageryUrl)) {
-    imageryProvider = new TileMapServiceImageryProvider({
-      url: endUserOptions.tmsImageryUrl,
-    });
+    baseLayer = ImageryLayer.fromProviderAsync(
+      TileMapServiceImageryProvider.fromUrl(endUserOptions.tmsImageryUrl)
+    );
   }
 
   const loadingIndicator = document.getElementById("loadingIndicator");
+  const hasBaseLayerPicker = !defined(baseLayer);
+
+  const terrain = Terrain.fromWorldTerrain({
+    requestWaterMask: true,
+    requestVertexNormals: true,
+  });
+
   let viewer;
   try {
-    const hasBaseLayerPicker = !defined(imageryProvider);
-
-    const terrainProvider = await createWorldTerrainAsync({
-      requestWaterMask: true,
-      requestVertexNormals: true,
-    });
-
     viewer = new Viewer("cesiumContainer", {
-      imageryProvider: imageryProvider,
+      baseLayer: baseLayer,
       baseLayerPicker: hasBaseLayerPicker,
       scene3DOnly: endUserOptions.scene3DOnly,
       requestRenderMode: true,
-      terrainProvider: terrainProvider,
+      terrain: terrain,
     });
 
     if (hasBaseLayerPicker) {

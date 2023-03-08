@@ -93,14 +93,15 @@ let implementation;
  * Given a relative URL under the Cesium base URL, returns an absolute URL.
  * @function
  *
- * @param {String} relativeUrl The relative path.
- * @returns {String} The absolutely URL representation of the provided path.
+ * @param {string} relativeUrl The relative path.
+ * @returns {string} The absolutely URL representation of the provided path.
  *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer", {
- *   imageryProvider: new Cesium.TileMapServiceImageryProvider({
- *   url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
- *   }),
+ *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+ *     Cesium.TileMapServiceImageryProvider.fromUrl(
+ *       Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+ *     )),
  *   baseLayerPicker: false,
  * });
  */
@@ -132,7 +133,7 @@ buildModuleUrl._clearBaseResource = function () {
 
 /**
  * Sets the base URL for resolving modules.
- * @param {String} value The new base URL.
+ * @param {string} value The new base URL.
  */
 buildModuleUrl.setBaseUrl = function (value) {
   baseResource = Resource.DEFAULT.getDerivedResource({
@@ -144,7 +145,7 @@ buildModuleUrl.setBaseUrl = function (value) {
  * Gets the base URL for resolving modules.
  *
  * @function
- * @returns {String} The configured base URL
+ * @returns {string} The configured base URL
  */
 buildModuleUrl.getCesiumBaseUrl = getCesiumBaseUrl;
 

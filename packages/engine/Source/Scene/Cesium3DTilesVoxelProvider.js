@@ -33,8 +33,8 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @constructor
  * @augments VoxelProvider
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL to a tileset JSON file.
+ * @param {object} options Object with the following properties:
+ * @param {Resource|string|Promise<Resource>|Promise<string>} options.url The URL to a tileset JSON file.
  *
  * @see VoxelProvider
  * @see VoxelPrimitive

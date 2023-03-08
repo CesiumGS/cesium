@@ -8,20 +8,20 @@ uniform sampler2D u_atlas;
 uniform vec4 u_highlightColor;
 #endif
 
-varying vec2 v_textureCoordinates;
-varying vec4 v_pickColor;
-varying vec4 v_color;
+in vec2 v_textureCoordinates;
+in vec4 v_pickColor;
+in vec4 v_color;
 
 #ifdef SDF
-varying vec4 v_outlineColor;
-varying float v_outlineWidth;
+in vec4 v_outlineColor;
+in float v_outlineWidth;
 #endif
 
 #ifdef FRAGMENT_DEPTH_CHECK
-varying vec4 v_textureCoordinateBounds;                  // the min and max x and y values for the texture coordinates
-varying vec4 v_originTextureCoordinateAndTranslate;      // texture coordinate at the origin, billboard translate (used for label glyphs)
-varying vec4 v_compressed;                               // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
-varying mat2 v_rotationMatrix;
+in vec4 v_textureCoordinateBounds;                  // the min and max x and y values for the texture coordinates
+in vec4 v_originTextureCoordinateAndTranslate;      // texture coordinate at the origin, billboard translate (used for label glyphs)
+in vec4 v_compressed;                               // x: eyeDepth, y: applyTranslate & enableDepthCheck, z: dimensions, w: imageSize
+in mat2 v_rotationMatrix;
 
 const float SHIFT_LEFT12 = 4096.0;
 const float SHIFT_LEFT1 = 2.0;
@@ -45,7 +45,7 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST, bool applyTranslate, ve
     }
 
     vec2 st = ((lookupVector - translation + labelOffset) + gl_FragCoord.xy) / czm_viewport.zw;
-    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, st));
+    float logDepthOrDepth = czm_unpackDepth(texture(czm_globeDepthTexture, st));
 
     if (logDepthOrDepth == 0.0)
     {
@@ -63,7 +63,7 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST, bool applyTranslate, ve
 // Get the distance from the edge of a glyph at a given position sampling an SDF texture.
 float getDistance(vec2 position)
 {
-    return texture2D(u_atlas, position).r;
+    return texture(u_atlas, position).r;
 }
 
 // Samples the sdf texture at the given position and produces a color based on the fill color and the outline.
@@ -90,7 +90,7 @@ vec4 getSDFColor(vec2 position, float outlineWidth, vec4 outlineColor, float smo
 
 void main()
 {
-    vec4 color = texture2D(u_atlas, v_textureCoordinates);
+    vec4 color = texture(u_atlas, v_textureCoordinates);
 
 #ifdef SDF
     float outlineWidth = v_outlineWidth;
@@ -99,7 +99,7 @@ void main()
     // Get the current distance
     float distance = getDistance(v_textureCoordinates);
 
-#ifdef GL_OES_standard_derivatives
+#if (__VERSION__ == 300 || defined(GL_OES_standard_derivatives))
     float smoothing = fwidth(distance);
     // Get an offset that is approximately half the distance to the neighbor pixels
     // 0.354 is approximately half of 1/sqrt(2)
@@ -117,7 +117,7 @@ void main()
     // Equally weight the center sample and the 4 neighboring samples
     color = (center + color1 + color2 + color3 + color4)/5.0;
 #else
-    // Just do a single sample
+    // If no derivatives available (IE 10?), just do a single sample
     float smoothing = 1.0/32.0;
     color = getSDFColor(v_textureCoordinates, outlineWidth, outlineColor, smoothing);
 #endif
@@ -153,7 +153,7 @@ void main()
 #ifdef VECTOR_TILE
     color *= u_highlightColor;
 #endif
-    gl_FragColor = color;
+    out_FragColor = color;
 
 #ifdef LOG_DEPTH
     czm_writeLogDepth();

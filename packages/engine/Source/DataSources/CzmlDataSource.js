@@ -4824,7 +4824,7 @@ function DocumentPacket() {
 }
 
 /**
- * @typedef {Object} CzmlDataSource.LoadOptions
+ * @typedef {object} CzmlDataSource.LoadOptions
  *
  * Initialization options for the <code>load</code> method.
  *
@@ -4837,7 +4837,7 @@ function DocumentPacket() {
  * @alias CzmlDataSource
  * @constructor
  *
- * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
+ * @param {string} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
  */
@@ -4859,10 +4859,10 @@ function CzmlDataSource(name) {
 /**
  * Creates a Promise to a new instance loaded with the provided CZML data.
  *
- * @param {Resource|String|Object} czml A url or CZML object to be processed.
+ * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
+ * @returns {Promise<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
  */
 CzmlDataSource.load = function (czml, options) {
   return new CzmlDataSource().load(czml, options);
@@ -4872,7 +4872,7 @@ Object.defineProperties(CzmlDataSource.prototype, {
   /**
    * Gets a human-readable name for this instance.
    * @memberof CzmlDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   name: {
     get: function () {
@@ -4904,7 +4904,7 @@ Object.defineProperties(CzmlDataSource.prototype, {
   /**
    * Gets a value indicating if the data source is currently loading data.
    * @memberof CzmlDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isLoading: {
     get: function () {
@@ -4944,7 +4944,7 @@ Object.defineProperties(CzmlDataSource.prototype, {
   /**
    * Gets whether or not this data source should be displayed.
    * @memberof CzmlDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -4993,7 +4993,7 @@ Object.defineProperties(CzmlDataSource.prototype, {
  * collection based on the provided CZML packet.
  *
  * @param {Entity} entity
- * @param {Object} packet
+ * @param {object} packet
  * @param {EntityCollection} entityCollection
  * @param {string} sourceUri
  */
@@ -5001,7 +5001,7 @@ Object.defineProperties(CzmlDataSource.prototype, {
 /**
  * Gets the array of CZML processing functions.
  * @memberof CzmlDataSource
- * @type {Array.<CzmlDataSource.UpdaterFunction>}
+ * @type {CzmlDataSource.UpdaterFunction[]}
  */
 CzmlDataSource.updaters = [
   processBillboard, //
@@ -5032,10 +5032,10 @@ CzmlDataSource.updaters = [
 /**
  * Processes the provided url or CZML object without clearing any existing data.
  *
- * @param {Resource|String|Object} czml A url or CZML object to be processed.
+ * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
+ * @returns {Promise<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
  */
 CzmlDataSource.prototype.process = function (czml, options) {
   return load(this, czml, options, false);
@@ -5044,10 +5044,10 @@ CzmlDataSource.prototype.process = function (czml, options) {
 /**
  * Loads the provided url or CZML object, replacing any existing data.
  *
- * @param {Resource|String|Object} czml A url or CZML object to be processed.
+ * @param {Resource|string|object} czml A url or CZML object to be processed.
  * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
+ * @returns {Promise<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
  */
 CzmlDataSource.prototype.load = function (czml, options) {
   return load(this, czml, options, true);
@@ -5060,7 +5060,7 @@ CzmlDataSource.prototype.load = function (czml, options) {
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
  *
  * @param {JulianDate} time The simulation time.
- * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
 CzmlDataSource.prototype.update = function (time) {
   return true;
@@ -5072,11 +5072,11 @@ CzmlDataSource.prototype.update = function (time) {
  * @function
  *
  * @param {Function} type The constructor function for the property being processed.
- * @param {Object} object The object on which the property will be added or updated.
- * @param {String} propertyName The name of the property on the object.
- * @param {Object} packetData The CZML packet being processed.
+ * @param {object} object The object on which the property will be added or updated.
+ * @param {string} propertyName The name of the property on the object.
+ * @param {object} packetData The CZML packet being processed.
  * @param {TimeInterval} interval A constraining interval for which the data is valid.
- * @param {String} sourceUri The originating uri of the data being processed.
+ * @param {string} sourceUri The originating uri of the data being processed.
  * @param {EntityCollection} entityCollection The collection being processsed.
  */
 CzmlDataSource.processPacketData = processPacketData;
@@ -5086,11 +5086,11 @@ CzmlDataSource.processPacketData = processPacketData;
  * which creates or updates a {@link PositionProperty} from a CZML packet.
  * @function
  *
- * @param {Object} object The object on which the property will be added or updated.
- * @param {String} propertyName The name of the property on the object.
- * @param {Object} packetData The CZML packet being processed.
+ * @param {object} object The object on which the property will be added or updated.
+ * @param {string} propertyName The name of the property on the object.
+ * @param {object} packetData The CZML packet being processed.
  * @param {TimeInterval} interval A constraining interval for which the data is valid.
- * @param {String} sourceUri The originating uri of the data being processed.
+ * @param {string} sourceUri The originating uri of the data being processed.
  * @param {EntityCollection} entityCollection The collection being processsed.
  */
 CzmlDataSource.processPositionPacketData = processPositionPacketData;
@@ -5100,11 +5100,11 @@ CzmlDataSource.processPositionPacketData = processPositionPacketData;
  * which creates or updates a {@link MaterialProperty} from a CZML packet.
  * @function
  *
- * @param {Object} object The object on which the property will be added or updated.
- * @param {String} propertyName The name of the property on the object.
- * @param {Object} packetData The CZML packet being processed.
+ * @param {object} object The object on which the property will be added or updated.
+ * @param {string} propertyName The name of the property on the object.
+ * @param {object} packetData The CZML packet being processed.
  * @param {TimeInterval} interval A constraining interval for which the data is valid.
- * @param {String} sourceUri The originating uri of the data being processed.
+ * @param {string} sourceUri The originating uri of the data being processed.
  * @param {EntityCollection} entityCollection The collection being processsed.
  */
 CzmlDataSource.processMaterialPacketData = processMaterialPacketData;

@@ -1,10 +1,12 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
+import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
@@ -49,12 +51,12 @@ const pickFeaturesTags = combine(tags, {
 });
 
 /**
- * @typedef {Object} UrlTemplateImageryProvider.ConstructorOptions
+ * @typedef {object} UrlTemplateImageryProvider.ConstructorOptions
  *
  * Initialization options for the UrlTemplateImageryProvider constructor
  *
- * @property {Promise.<Object>|Object} [options] Object with the following properties:
- * @property {Resource|String} url  The URL template to use to request tiles.  It has the following keywords:
+ * @property {Promise<object>|object} [options] Object with the following properties:
+ * @property {Resource|string} url  The URL template to use to request tiles.  It has the following keywords:
  * <ul>
  *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
  *     <li><code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
@@ -74,7 +76,7 @@ const pickFeaturesTags = combine(tags, {
  *     <li><code>{width}</code>: The width of each tile in pixels.</li>
  *     <li><code>{height}</code>: The height of each tile in pixels.</li>
  * </ul>
- * @property {Resource|String} [pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
+ * @property {Resource|string} [pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
  *                 {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
  *                 features picked.  The URL template supports all of the keywords supported by the <code>url</code>
  *                 parameter, plus the following:
@@ -89,7 +91,7 @@ const pickFeaturesTags = combine(tags, {
  *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
  *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
  * </ul>
- * @property {Object} [urlSchemeZeroPadding] Gets the URL scheme zero padding for each tile coordinate. The format is '000' where
+ * @property {object} [urlSchemeZeroPadding] Gets the URL scheme zero padding for each tile coordinate. The format is '000' where
  * each coordinate will be padded on the left with zeros to match the width of the passed string of zeros. e.g. Setting:
  * urlSchemeZeroPadding : { '{x}' : '0000'}
  * will cause an 'x' value of 12 to return the string '0012' for {x} in the generated URL.
@@ -102,14 +104,14 @@ const pickFeaturesTags = combine(tags, {
  *  <li> <code>{reverseY}</code>: The zero padding for the tile reverseY coordinate in the tiling scheme.</li>
  *  <li> <code>{reverseZ}</code>: The zero padding for the reverseZ coordinate of the tile in the tiling scheme.</li>
  * </ul>
- * @property {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+ * @property {string|string[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
- * @property {Credit|String} [credit=''] A credit for the data source, which is displayed on the canvas.
- * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * @property {Credit|string} [credit=''] A credit for the data source, which is displayed on the canvas.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
  * @property {TilingScheme} [tilingScheme=WebMercatorTilingScheme] The tiling scheme specifying how the ellipsoidal
  * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
@@ -117,9 +119,9 @@ const pickFeaturesTags = combine(tags, {
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @property {Number} [tileWidth=256] Pixel width of image tiles.
- * @property {Number} [tileHeight=256] Pixel height of image tiles.
- * @property {Boolean} [hasAlphaChannel=true] true if the images provided by this imagery provider
+ * @property {number} [tileWidth=256] Pixel width of image tiles.
+ * @property {number} [tileHeight=256] Pixel height of image tiles.
+ * @property {boolean} [hasAlphaChannel=true] true if the images provided by this imagery provider
  *                  include an alpha channel; otherwise, false.  If this property is false, an alpha channel, if
  *                  present, will be ignored.  If this property is true, any images without an alpha channel will
  *                  be treated as if their alpha is 1.0 everywhere.  When this property is false, memory usage
@@ -127,13 +129,14 @@ const pickFeaturesTags = combine(tags, {
  * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats] The formats in which to get feature information at a
  *                                 specific location when {@link UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
  *                                 parameter is not specified, feature picking is disabled.
- * @property {Boolean} [enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+ * @property {boolean} [enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
  *        request the <code>pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
  *        {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
  *        features) without communicating with the server.  Set this property to false if you know your data
  *        source does not support picking features or if you don't want this provider's features to be pickable. Note
  *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
  *        property.
+ * @property {TileDiscardPolicy} [tileDiscardPolicy] A policy for discarding tile images according to some criteria
  * @property {Object} [customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
  */
 
@@ -149,7 +152,6 @@ const pickFeaturesTags = combine(tags, {
  * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
  * const tms = new Cesium.UrlTemplateImageryProvider({
  *     url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII') + '/{z}/{x}/{reverseY}.jpg',
- *     credit : '© Analytical Graphics, Inc.',
  *     tilingScheme : new Cesium.GeographicTilingScheme(),
  *     maximumLevel : 5
  * });
@@ -188,118 +190,83 @@ const pickFeaturesTags = combine(tags, {
  * @see WebMapTileServiceImageryProvider
  */
 function UrlTemplateImageryProvider(options) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options)) {
-    throw new DeveloperError("options is required.");
-  }
-  if (!defined(options.then) && !defined(options.url)) {
-    throw new DeveloperError("options is required.");
-  }
-  //>>includeEnd('debug');
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   this._errorEvent = new Event();
 
-  this._resource = undefined;
-  this._urlSchemeZeroPadding = undefined;
-  this._pickFeaturesResource = undefined;
-  this._tileWidth = undefined;
-  this._tileHeight = undefined;
-  this._maximumLevel = undefined;
-  this._minimumLevel = undefined;
-  this._tilingScheme = undefined;
-  this._rectangle = undefined;
-  this._tileDiscardPolicy = undefined;
-  this._credit = undefined;
-  this._hasAlphaChannel = undefined;
-  this._readyPromise = undefined;
-  this._tags = undefined;
-  this._pickFeaturesTags = undefined;
+  if (defined(options.then)) {
+    this._reinitialize(options);
+    return;
+  }
 
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultAlpha = undefined;
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.url", options.url);
+  //>>includeEnd('debug');
 
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultNightAlpha = undefined;
+  const resource = Resource.createIfNeeded(options.url);
+  const pickFeaturesResource = Resource.createIfNeeded(options.pickFeaturesUrl);
 
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultDayAlpha = undefined;
+  this._resource = resource;
+  this._urlSchemeZeroPadding = options.urlSchemeZeroPadding;
+  this._getFeatureInfoFormats = options.getFeatureInfoFormats;
+  this._pickFeaturesResource = pickFeaturesResource;
 
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultBrightness = undefined;
+  let subdomains = options.subdomains;
+  if (Array.isArray(subdomains)) {
+    subdomains = subdomains.slice();
+  } else if (defined(subdomains) && subdomains.length > 0) {
+    subdomains = subdomains.split("");
+  } else {
+    subdomains = ["a", "b", "c"];
+  }
+  this._subdomains = subdomains;
 
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultContrast = undefined;
+  this._tileWidth = defaultValue(options.tileWidth, 256);
+  this._tileHeight = defaultValue(options.tileHeight, 256);
+  this._minimumLevel = defaultValue(options.minimumLevel, 0);
+  this._maximumLevel = options.maximumLevel;
+  this._tilingScheme = defaultValue(
+    options.tilingScheme,
+    new WebMercatorTilingScheme({ ellipsoid: options.ellipsoid })
+  );
 
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultHue = undefined;
+  this._rectangle = defaultValue(
+    options.rectangle,
+    this._tilingScheme.rectangle
+  );
+  this._rectangle = Rectangle.intersection(
+    this._rectangle,
+    this._tilingScheme.rectangle
+  );
 
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultSaturation = undefined;
+  this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultGamma = undefined;
+  let credit = options.credit;
+  if (typeof credit === "string") {
+    credit = new Credit(credit);
+  }
+  this._credit = credit;
+  this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
 
-  /**
-   * The default texture minification filter to apply to this provider.
-   *
-   * @type {TextureMinificationFilter}
-   * @default undefined
-   */
-  this.defaultMinificationFilter = undefined;
+  const customTags = options.customTags;
+  const allTags = combine(tags, customTags);
+  const allPickFeaturesTags = combine(pickFeaturesTags, customTags);
+  this._tags = allTags;
+  this._pickFeaturesTags = allPickFeaturesTags;
 
-  /**
-   * The default texture magnification filter to apply to this provider.
-   *
-   * @type {TextureMagnificationFilter}
-   * @default undefined
-   */
-  this.defaultMagnificationFilter = undefined;
+  this._readyPromise = Promise.resolve(true);
+  this._ready = true;
+
+  this._defaultAlpha = undefined;
+  this._defaultNightAlpha = undefined;
+  this._defaultDayAlpha = undefined;
+  this._defaultBrightness = undefined;
+  this._defaultContrast = undefined;
+  this._defaultHue = undefined;
+  this._defaultSaturation = undefined;
+  this._defaultGamma = undefined;
+  this._defaultMinificationFilter = undefined;
+  this._defaultMagnificationFilter = undefined;
 
   /**
    * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
@@ -307,12 +274,10 @@ function UrlTemplateImageryProvider(options) {
    * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
    * features) without communicating with the server.  Set this property to false if you know your data
    * source does not support picking features or if you don't want this provider's features to be pickable.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
-  this.enablePickFeatures = true;
-
-  this.reinitialize(options);
+  this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
 }
 
 Object.defineProperties(UrlTemplateImageryProvider.prototype, {
@@ -338,7 +303,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    *  <li> <code>{height}</code>: The height of each tile in pixels.</li>
    * </ul>
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -362,7 +327,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    *  <li> <code>{reverseZ}</code>: The zero padding for the reverseZ coordinate of the tile in the tiling scheme.</li>
    * </ul>
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Object}
+   * @type {object}
    * @readonly
    */
   urlSchemeZeroPadding: {
@@ -388,7 +353,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
    * </ul>
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   pickFeaturesUrl: {
@@ -411,92 +376,59 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @default 256
    */
   tileWidth: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "tileWidth must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._tileWidth;
     },
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @default 256
    */
   tileHeight: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "tileHeight must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._tileHeight;
     },
   },
 
   /**
    * Gets the maximum level-of-detail that can be requested, or undefined if there is no limit.
-   * This function should not be called before {@link UrlTemplateImageryProvider#ready} returns true.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    * @default undefined
    */
   maximumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "maximumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._maximumLevel;
     },
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @default 0
    */
   minimumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "minimumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._minimumLevel;
     },
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof UrlTemplateImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -504,20 +436,12 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._tilingScheme;
     },
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof UrlTemplateImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -525,13 +449,6 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    */
   rectangle: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "rectangle must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._rectangle;
     },
   },
@@ -539,8 +456,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof UrlTemplateImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -548,13 +464,6 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    */
   tileDiscardPolicy: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "tileDiscardPolicy must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._tileDiscardPolicy;
     },
   },
@@ -576,30 +485,40 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
-      return defined(this._resource);
+      deprecationWarning(
+        "UrlTemplateImageryProvider.ready",
+        "UrlTemplateImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+      );
+      return this._ready && defined(this._resource);
     },
   },
 
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.readyPromise",
+        "UrlTemplateImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof UrlTemplateImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -607,13 +526,6 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    */
   credit: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "credit must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._credit;
     },
   },
@@ -623,23 +535,251 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    * include an alpha channel.  If this property is false, an alpha channel, if present, will
    * be ignored.  If this property is true, any images without an alpha channel will be treated
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
-   * and texture upload time are reduced.  This function should
-   * not be called before {@link ImageryProvider#ready} returns true.
+   * and texture upload time are reduced.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @default true
    */
   hasAlphaChannel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "hasAlphaChannel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._hasAlphaChannel;
+    },
+  },
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultAlpha: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultAlpha",
+        "UrlTemplateImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      return this._defaultAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultAlpha",
+        "UrlTemplateImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      this._defaultAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultNightAlpha: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultNightAlpha",
+        "UrlTemplateImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      return this._defaultNightAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultNightAlpha",
+        "UrlTemplateImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      this._defaultNightAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultDayAlpha: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultDayAlpha",
+        "UrlTemplateImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      return this._defaultDayAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultDayAlpha",
+        "UrlTemplateImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      this._defaultDayAlpha = value;
+    },
+  },
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultBrightness: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultBrightness",
+        "UrlTemplateImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      return this._defaultBrightness;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultBrightness",
+        "UrlTemplateImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      this._defaultBrightness = value;
+    },
+  },
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultContrast: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultContrast",
+        "UrlTemplateImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      return this._defaultContrast;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultContrast",
+        "UrlTemplateImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      this._defaultContrast = value;
+    },
+  },
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultHue: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultHue",
+        "UrlTemplateImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      return this._defaultHue;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultHue",
+        "UrlTemplateImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      this._defaultHue = value;
+    },
+  },
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultSaturation: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultSaturation",
+        "UrlTemplateImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      return this._defaultSaturation;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultSaturation",
+        "UrlTemplateImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      this._defaultSaturation = value;
+    },
+  },
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultGamma: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultGamma",
+        "UrlTemplateImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      return this._defaultGamma;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultGamma",
+        "UrlTemplateImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      this._defaultGamma = value;
+    },
+  },
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {TextureMinificationFilter}
+   * @deprecated
+   */
+  defaultMinificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultMinificationFilter",
+        "UrlTemplateImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      return this._defaultMinificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultMinificationFilter",
+        "UrlTemplateImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      this._defaultMinificationFilter = value;
+    },
+  },
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   * @memberof UrlTemplateImageryProvider.prototype
+   * @type {TextureMagnificationFilter}
+   * @deprecated
+   */
+  defaultMagnificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultMagnificationFilter",
+        "UrlTemplateImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      return this._defaultMagnificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "UrlTemplateImageryProvider.defaultMagnificationFilter",
+        "UrlTemplateImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      this._defaultMagnificationFilter = value;
     },
   },
 });
@@ -647,11 +787,25 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
 /**
  * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
  * recommended because existing tiles provided by the imagery provider will not be updated.
+ * @deprecated
  *
- * @param {Promise.<Object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
+ * @param {Promise<object>|object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
  */
 UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
+  deprecationWarning(
+    "UrlTemplateImageryProvider.reinitialize",
+    "UrlTemplateImageryProvider.reinitialize was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+  );
+
+  return this._reinitialize(options);
+};
+
+/**
+ * @private
+ */
+UrlTemplateImageryProvider.prototype._reinitialize = function (options) {
   const that = this;
+
   that._readyPromise = Promise.resolve(options).then(function (properties) {
     //>>includeStart('debug', pragmas.debug);
     if (!defined(properties)) {
@@ -718,6 +872,7 @@ UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
     that._tags = allTags;
     that._pickFeaturesResource = pickFeaturesResource;
     that._pickFeaturesTags = allPickFeaturesTags;
+    that._ready = true;
 
     return true;
   });
@@ -726,33 +881,21 @@ UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 UrlTemplateImageryProvider.prototype.getTileCredits = function (x, y, level) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this.ready) {
-    throw new DeveloperError(
-      "getTileCredits must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
   return undefined;
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link UrlTemplateImageryProvider#ready} returns true.
- *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  */
 UrlTemplateImageryProvider.prototype.requestImage = function (
@@ -761,13 +904,6 @@ UrlTemplateImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this.ready) {
-    throw new DeveloperError(
-      "requestImage must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
   return ImageryProvider.loadImage(
     this,
     buildImageResource(this, x, y, level, request)
@@ -776,14 +912,14 @@ UrlTemplateImageryProvider.prototype.requestImage = function (
 
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
- * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
+ * a tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
+ * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.
@@ -795,14 +931,6 @@ UrlTemplateImageryProvider.prototype.pickFeatures = function (
   longitude,
   latitude
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this.ready) {
-    throw new DeveloperError(
-      "pickFeatures must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   if (
     !this.enablePickFeatures ||
     !defined(this._pickFeaturesResource) ||

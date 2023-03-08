@@ -410,7 +410,7 @@ describe(
             "czm_material czm_getMaterial(czm_materialInput materialInput)\n" +
             "{\n" +
             "    czm_material material = czm_getDefaultMaterial(materialInput);\n" +
-            "    material.diffuse = textureCube(cubeMap, vec3(1.0)).xyz;\n" +
+            "    material.diffuse = czm_textureCube(cubeMap, vec3(1.0)).xyz;\n" +
             "    return material;\n" +
             "}\n",
         },
@@ -437,7 +437,7 @@ describe(
             "czm_material czm_getMaterial(czm_materialInput materialInput)\r\n" +
             "{\r\n" +
             "    czm_material material = czm_getDefaultMaterial(materialInput);\r\n" +
-            "    material.diffuse = textureCube(cubeMap, vec3(1.0)).xyz;\r\n" +
+            "    material.diffuse = czm_textureCube(cubeMap, vec3(1.0)).xyz;\r\n" +
             "    return material;\r\n" +
             "}",
         },

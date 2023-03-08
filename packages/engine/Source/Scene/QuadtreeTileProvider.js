@@ -19,7 +19,7 @@ function QuadtreeTileProvider() {
  * @memberof QuadtreeTileProvider
  *
  * @param {TilingScheme} tilingScheme The tiling scheme for which to compute the geometric error.
- * @returns {Number} The maximum geometric error at level zero, in meters.
+ * @returns {number} The maximum geometric error at level zero, in meters.
  */
 QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError = function (
   tilingScheme
@@ -45,15 +45,15 @@ Object.defineProperties(QuadtreeTileProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof QuadtreeTileProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
+   * @deprecated
    */
   ready: {
     get: DeveloperError.throwInstantiationError,
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This property should
-   * not be accessed before {@link QuadtreeTileProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof QuadtreeTileProvider.prototype
    * @type {TilingScheme}
    */
@@ -112,24 +112,22 @@ QuadtreeTileProvider.prototype.endUpdate =
   DeveloperError.throwInstantiationError;
 
 /**
- * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
- * called before {@link QuadtreeTileProvider#ready} returns true.
+ * Gets the maximum geometric error allowed in a tile at a given level, in meters.
  *
  * @see QuadtreeTileProvider#computeDefaultLevelZeroMaximumGeometricError
  *
  * @memberof QuadtreeTileProvider
  * @function
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error in meters.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error in meters.
  */
 QuadtreeTileProvider.prototype.getLevelMaximumGeometricError =
   DeveloperError.throwInstantiationError;
 
 /**
  * Loads, or continues loading, a given tile.  This function will continue to be called
- * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
- * not be called before {@link QuadtreeTileProvider#ready} returns true.
+ * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.
  *
  * @memberof QuadtreeTileProvider
  * @function
@@ -137,8 +135,6 @@ QuadtreeTileProvider.prototype.getLevelMaximumGeometricError =
  * @param {Context} context The rendering context.
  * @param {FrameState} frameState The frame state.
  * @param {QuadtreeTile} tile The tile to load.
- *
- * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
  */
 QuadtreeTileProvider.prototype.loadTile =
   DeveloperError.throwInstantiationError;
@@ -184,7 +180,7 @@ QuadtreeTileProvider.prototype.showTileThisFrame =
  * @param {QuadtreeTile} tile The tile instance.
  * @param {FrameState} frameState The state information of the current rendering frame.
  *
- * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
+ * @returns {number} The distance from the camera to the closest point on the tile, in meters.
  */
 QuadtreeTileProvider.prototype.computeDistanceToTile =
   DeveloperError.throwInstantiationError;
@@ -197,7 +193,7 @@ QuadtreeTileProvider.prototype.computeDistanceToTile =
  *
  * @memberof QuadtreeTileProvider
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see QuadtreeTileProvider#destroy
  */

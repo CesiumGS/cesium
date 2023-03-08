@@ -38,21 +38,21 @@ const FeatureIdAttribute = ModelComponents.FeatureIdAttribute;
  * @augments ResourceLoader
  * @private
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Resource} options.b3dmResource The {@link Resource} containing the b3dm.
  * @param {ArrayBuffer} options.arrayBuffer The array buffer of the b3dm contents.
- * @param {Number} [options.byteOffset] The byte offset to the beginning of the b3dm contents in the array buffer.
+ * @param {number} [options.byteOffset] The byte offset to the beginning of the b3dm contents in the array buffer.
  * @param {Resource} [options.baseResource] The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
+ * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the glTF is loaded.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.X] The forward-axis of the glTF model.
- * @param {Boolean} [options.loadAttributesAsTypedArray=false] If <code>true</code>, load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
- * @param {Boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
- * @param {Boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
- * @param {Boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
- * @param {Boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
+ * @param {boolean} [options.loadAttributesAsTypedArray=false] If <code>true</code>, load all attributes as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
+ * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+ * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as a typed array. This is useful for creating wireframe indices in WebGL1.
+ * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
+ * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
  * */
 function B3dmLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -133,7 +133,7 @@ Object.defineProperties(B3dmLoader.prototype, {
    *
    * @memberof B3dmLoader.prototype
    *
-   * @type {Promise.<B3dmLoader>|undefined}
+   * @type {Promise<B3dmLoader>|undefined}
    * @readonly
    * @private
    */
@@ -164,7 +164,7 @@ Object.defineProperties(B3dmLoader.prototype, {
    *
    * @memberof B3dmLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -192,7 +192,7 @@ Object.defineProperties(B3dmLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<B3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<B3dmLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 B3dmLoader.prototype.load = function () {

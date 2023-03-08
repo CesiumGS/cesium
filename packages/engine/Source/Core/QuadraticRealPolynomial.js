@@ -11,10 +11,10 @@ const QuadraticRealPolynomial = {};
 /**
  * Provides the discriminant of the quadratic equation from the supplied coefficients.
  *
- * @param {Number} a The coefficient of the 2nd order monomial.
- * @param {Number} b The coefficient of the 1st order monomial.
- * @param {Number} c The coefficient of the 0th order monomial.
- * @returns {Number} The value of the discriminant.
+ * @param {number} a The coefficient of the 2nd order monomial.
+ * @param {number} b The coefficient of the 1st order monomial.
+ * @param {number} c The coefficient of the 0th order monomial.
+ * @returns {number} The value of the discriminant.
  */
 QuadraticRealPolynomial.computeDiscriminant = function (a, b, c) {
   //>>includeStart('debug', pragmas.debug);
@@ -48,10 +48,10 @@ function addWithCancellationCheck(left, right, tolerance) {
 /**
  * Provides the real valued roots of the quadratic polynomial with the provided coefficients.
  *
- * @param {Number} a The coefficient of the 2nd order monomial.
- * @param {Number} b The coefficient of the 1st order monomial.
- * @param {Number} c The coefficient of the 0th order monomial.
- * @returns {Number[]} The real valued roots.
+ * @param {number} a The coefficient of the 2nd order monomial.
+ * @param {number} b The coefficient of the 1st order monomial.
+ * @param {number} c The coefficient of the 0th order monomial.
+ * @returns {number[]} The real valued roots.
  */
 QuadraticRealPolynomial.computeRealRoots = function (a, b, c) {
   //>>includeStart('debug', pragmas.debug);

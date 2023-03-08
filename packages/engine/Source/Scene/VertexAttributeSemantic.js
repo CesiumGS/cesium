@@ -5,7 +5,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 /**
  * An enum describing the built-in vertex attribute semantics.
  *
- * @enum {String}
+ * @enum {string}
  *
  * @private
  */
@@ -13,7 +13,7 @@ const VertexAttributeSemantic = {
   /**
    * Per-vertex position.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   POSITION: "POSITION",
@@ -21,7 +21,7 @@ const VertexAttributeSemantic = {
   /**
    * Per-vertex normal.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   NORMAL: "NORMAL",
@@ -29,7 +29,7 @@ const VertexAttributeSemantic = {
   /**
    * Per-vertex tangent.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   TANGENT: "TANGENT",
@@ -37,7 +37,7 @@ const VertexAttributeSemantic = {
   /**
    * Per-vertex texture coordinates.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   TEXCOORD: "TEXCOORD",
@@ -45,7 +45,7 @@ const VertexAttributeSemantic = {
   /**
    * Per-vertex color.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   COLOR: "COLOR",
@@ -53,7 +53,7 @@ const VertexAttributeSemantic = {
   /**
    * Per-vertex joint IDs for skinning.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   JOINTS: "JOINTS",
@@ -61,7 +61,7 @@ const VertexAttributeSemantic = {
   /**
    * Per-vertex joint weights for skinning.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   WEIGHTS: "WEIGHTS",
@@ -69,7 +69,7 @@ const VertexAttributeSemantic = {
   /**
    * Per-vertex feature ID.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   FEATURE_ID: "_FEATURE_ID",
@@ -105,7 +105,7 @@ function semanticToVariableName(semantic) {
  *
  * @param {VertexAttributeSemantic} semantic The semantic.
  *
- * @returns {Boolean} Whether the semantic can have a set index.
+ * @returns {boolean} Whether the semantic can have a set index.
  *
  * @private
  */
@@ -135,7 +135,7 @@ VertexAttributeSemantic.hasSetIndex = function (semantic) {
 /**
  * Gets the vertex attribute semantic matching the glTF semantic.
  *
- * @param {String} gltfSemantic The glTF semantic.
+ * @param {string} gltfSemantic The glTF semantic.
  *
  * @returns {VertexAttributeSemantic|undefined} The vertex attribute semantic, or undefined if there is no match.
  *
@@ -180,7 +180,7 @@ VertexAttributeSemantic.fromGltfSemantic = function (gltfSemantic) {
 /**
  * Gets the vertex attribute semantic matching the pnts semantic.
  *
- * @param {String} pntsSemantic The pnts semantic.
+ * @param {string} pntsSemantic The pnts semantic.
  *
  * @returns {VertexAttributeSemantic|undefined} The vertex attribute semantic, or undefined if there is no match.
  *
@@ -217,7 +217,7 @@ VertexAttributeSemantic.fromPntsSemantic = function (pntsSemantic) {
  *
  * @param {VertexAttributeSemantic} semantic The semantic.
  *
- * @returns {String} The shader type.
+ * @returns {string} The shader type.
  *
  * @private
  */
@@ -252,9 +252,9 @@ VertexAttributeSemantic.getGlslType = function (semantic) {
  * Gets the variable name for the given semantic and set index.
  *
  * @param {VertexAttributeSemantic} semantic The semantic.
- * @param {Number} [setIndex] The set index.
+ * @param {number} [setIndex] The set index.
  *
- * @returns {String} The variable name.
+ * @returns {string} The variable name.
  *
  * @private
  */

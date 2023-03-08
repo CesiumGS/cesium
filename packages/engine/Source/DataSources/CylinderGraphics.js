@@ -6,7 +6,7 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} CylinderGraphics.ConstructorOptions
+ * @typedef {object} CylinderGraphics.ConstructorOptions
  *
  * Initialization options for the CylinderGraphics constructor
  *

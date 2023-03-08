@@ -52,7 +52,7 @@ Object.defineProperties(PerformanceDisplay.prototype, {
    * The display should indicate the FPS is being throttled.
    * @memberof PerformanceDisplay.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   throttled: {
     get: function () {
@@ -78,7 +78,7 @@ Object.defineProperties(PerformanceDisplay.prototype, {
  * Update the display.  This function should only be called once per frame, because
  * each call records a frame in the internal buffer and redraws the display.
  *
- * @param {Boolean} [renderedThisFrame=true] If provided, the FPS count will only update and display if true.
+ * @param {boolean} [renderedThisFrame=true] If provided, the FPS count will only update and display if true.
  */
 PerformanceDisplay.prototype.update = function (renderedThisFrame) {
   const time = getTimestamp();

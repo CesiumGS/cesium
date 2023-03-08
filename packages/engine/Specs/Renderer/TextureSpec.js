@@ -33,10 +33,10 @@ describe(
 
     const fs =
       "uniform sampler2D u_texture;" +
-      "void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
+      "void main() { out_FragColor = texture(u_texture, vec2(0.0)); }";
     const fsLuminanceAlpha =
       "uniform sampler2D u_texture;" +
-      "void main() { gl_FragColor = vec4(texture2D(u_texture, vec2(0.0)).ra, 0.0, 1.0); }";
+      "void main() { out_FragColor = vec4(texture(u_texture, vec2(0.0)).ra, 0.0, 1.0); }";
     let texture;
     const uniformMap = {
       u_texture: function () {
@@ -333,7 +333,7 @@ describe(
 
       const fs =
         "uniform sampler2D u_texture;" +
-        "void main() { gl_FragColor = texture2D(u_texture, vec2(0.5, 0.0)); }";
+        "void main() { out_FragColor = texture(u_texture, vec2(0.5, 0.0)); }";
 
       if (!context.textureFloatLinear) {
         expect({
@@ -417,7 +417,7 @@ describe(
 
       const fs =
         "uniform sampler2D u_texture;" +
-        "void main() { gl_FragColor = texture2D(u_texture, vec2(0.5, 0.0)); }";
+        "void main() { out_FragColor = texture(u_texture, vec2(0.5, 0.0)); }";
 
       if (!context.textureHalfFloatLinear) {
         expect({
@@ -527,7 +527,7 @@ describe(
       fragmentShaderSource += "uniform sampler2D u_texture;";
       fragmentShaderSource += "uniform mediump vec2 u_txCoords;";
       fragmentShaderSource +=
-        "void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }";
+        "void main() { out_FragColor = texture(u_texture, u_txCoords); }";
 
       let txCoords;
       const um = {
@@ -688,7 +688,7 @@ describe(
       fragmentShaderSource += "uniform sampler2D u_texture;";
       fragmentShaderSource += "uniform mediump vec2 u_txCoords;";
       fragmentShaderSource +=
-        "void main() { gl_FragColor = texture2D(u_texture, u_txCoords); }";
+        "void main() { out_FragColor = texture(u_texture, u_txCoords); }";
 
       let txCoords;
       const um = {
@@ -1468,28 +1468,42 @@ describe(
       }
     });
 
-    it("throws when generating mipmaps with a non-power of two width", function () {
-      texture = new Texture({
-        context: context,
-        width: 3,
-        height: 2,
+    describe("WebGL1", function () {
+      let webgl1Context;
+
+      beforeAll(() => {
+        webgl1Context = createContext({
+          requestWebgl1: true,
+        });
       });
 
-      expect(function () {
-        texture.generateMipmap();
-      }).toThrowDeveloperError();
-    });
-
-    it("throws when generating mipmaps with a non-power of two height", function () {
-      texture = new Texture({
-        context: context,
-        width: 2,
-        height: 3,
+      afterAll(() => {
+        webgl1Context.destroyForSpecs();
       });
 
-      expect(function () {
-        texture.generateMipmap();
-      }).toThrowDeveloperError();
+      it("throws when generating mipmaps with a non-power of two width", function () {
+        texture = new Texture({
+          context: webgl1Context,
+          width: 3,
+          height: 2,
+        });
+
+        expect(function () {
+          texture.generateMipmap();
+        }).toThrowDeveloperError();
+      });
+
+      it("throws when generating mipmaps with a non-power of two height", function () {
+        texture = new Texture({
+          context: webgl1Context,
+          width: 2,
+          height: 3,
+        });
+
+        expect(function () {
+          texture.generateMipmap();
+        }).toThrowDeveloperError();
+      });
     });
 
     it("throws when generating mipmaps with an invalid hint", function () {

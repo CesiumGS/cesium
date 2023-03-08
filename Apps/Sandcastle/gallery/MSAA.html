@@ -29,22 +29,12 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          contextOptions: {
-            requestWebgl1: false,
-          },
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
-
-        (async () => {
-          try {
-            viewer.terrainProvider = await Cesium.createWorldTerrainAsync();
-          } catch (error) {
-            console.log(error);
-          }
-        })();
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
           "2022-08-01T00:00:00Z"
@@ -183,11 +173,14 @@
         Sandcastle.addToolbarMenu(options);
         Sandcastle.addToolbarMenu(samplingOptions);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

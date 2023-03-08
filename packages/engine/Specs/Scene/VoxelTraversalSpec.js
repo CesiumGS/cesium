@@ -22,7 +22,7 @@ function turnCameraAround(scene) {
 describe(
   "Scene/VoxelTraversal",
   function () {
-    const keyframeCount = 1;
+    const keyframeCount = 3;
     const textureMemory = 500;
 
     let scene;
@@ -30,6 +30,7 @@ describe(
     let camera;
     let primitive;
     let traversal;
+
     beforeEach(function () {
       scene = createScene();
       provider = new Cesium3DTilesVoxelProvider({
@@ -162,7 +163,6 @@ describe(
       const tileInQueueWhenLookingAtRoot = tilesInMegatextureCount === 1;
       expect(tileInQueueWhenLookingAtRoot).toBe(true);
 
-      traversal.megatexture.remove(0);
       turnCameraAround(scene);
       traversal.update(
         scene.frameState,

@@ -1,8 +1,8 @@
-varying vec4 v_color;
-varying vec4 v_outlineColor;
-varying float v_innerPercent;
-varying float v_pixelDistance;
-varying vec4 v_pickColor;
+in vec4 v_color;
+in vec4 v_outlineColor;
+in float v_innerPercent;
+in float v_pixelDistance;
+in vec4 v_pickColor;
 
 void main()
 {
@@ -38,6 +38,6 @@ void main()
 #endif
 #endif
 
-    gl_FragColor = czm_gammaCorrect(color);
+    out_FragColor = czm_gammaCorrect(color);
     czm_writeLogDepth();
 }

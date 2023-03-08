@@ -14,9 +14,9 @@ import createCommand from "../createCommand.js";
  * @alias PerformanceWatchdogViewModel
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Scene} options.scene The Scene instance for which to monitor performance.
- * @param {String} [options.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
+ * @param {string} [options.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
  *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
  *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
  */
@@ -31,7 +31,7 @@ function PerformanceWatchdogViewModel(options) {
 
   /**
    * Gets or sets the message to display when a low frame rate is detected.  This string will be interpreted as HTML.
-   * @type {String}
+   * @type {string}
    */
   this.lowFrameRateMessage = defaultValue(
     options.lowFrameRateMessage,
@@ -41,13 +41,13 @@ function PerformanceWatchdogViewModel(options) {
   /**
    * Gets or sets a value indicating whether the low frame rate message has previously been dismissed by the user.  If it has
    * been dismissed, the message will not be redisplayed, no matter the frame rate.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.lowFrameRateMessageDismissed = false;
 
   /**
    * Gets or sets a value indicating whether the low frame rate message is currently being displayed.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.showingLowFrameRateMessage = false;
 

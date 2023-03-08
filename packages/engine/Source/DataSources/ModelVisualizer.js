@@ -68,7 +68,7 @@ function ModelVisualizer(scene, entityCollection) {
  * Entity counterpart at the given time.
  *
  * @param {JulianDate} time The time to update to.
- * @returns {Boolean} This function always returns true.
+ * @returns {boolean} This function always returns true.
  */
 ModelVisualizer.prototype.update = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -342,7 +342,7 @@ ModelVisualizer.prototype.update = function (time) {
 /**
  * Returns true if this object was destroyed; otherwise, false.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 ModelVisualizer.prototype.isDestroyed = function () {
   return false;
@@ -417,7 +417,8 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   if (hasHeightReference) {
     // We cannot query the availability of the terrain provider till its ready, so the
     // bounding sphere state will remain pending till the terrain provider is ready.
-    if (!terrainProvider.ready) {
+    // ready is deprecated. This is here for backwards compatibility
+    if (!terrainProvider._ready) {
       return BoundingSphereState.PENDING;
     }
 

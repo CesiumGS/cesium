@@ -14,21 +14,21 @@ import defined from "./defined.js";
  * @constructor
  * @extends Error
  *
- * @param {String} [message] The error message for this exception.
+ * @param {string} [message] The error message for this exception.
  *
  * @see RuntimeError
  */
 function DeveloperError(message) {
   /**
    * 'DeveloperError' indicating that this exception was thrown due to a developer error.
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = "DeveloperError";
 
   /**
    * The explanation for why this exception was thrown.
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.message = message;
@@ -43,7 +43,7 @@ function DeveloperError(message) {
 
   /**
    * The stack trace of this exception, if available.
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.stack = stack;

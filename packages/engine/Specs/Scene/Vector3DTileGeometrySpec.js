@@ -30,15 +30,15 @@ describe(
   "Scene/Vector3DTileGeometry",
   function () {
     createGeometrySpecs({});
-    const c = createContext({ requestWebgl1: false });
+    const c = createContext({});
     // Don't repeat WebGL 1 tests when WebGL 2 is not supported
     if (c.webgl2) {
-      createGeometrySpecs({ requestWebgl1: false });
+      createGeometrySpecs({});
     }
     c.destroyForSpecs();
 
     function createGeometrySpecs(contextOptions) {
-      const webglMessage = contextOptions.requestWebgl1 ? "" : ": WebGL 2";
+      const webglMessage = contextOptions.requestWebgl1 ? "" : "WebGL 2";
 
       let scene;
       let rectangle;

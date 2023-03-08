@@ -6,7 +6,7 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} CorridorGraphics.ConstructorOptions
+ * @typedef {object} CorridorGraphics.ConstructorOptions
  *
  * Initialization options for the CorridorGraphics constructor
  *

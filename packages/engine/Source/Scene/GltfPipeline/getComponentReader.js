@@ -3,7 +3,7 @@ import ComponentDatatype from "../../Core/ComponentDatatype.js";
 /**
  * Returns a function to read and convert data from a DataView into an array.
  *
- * @param {Number} componentType Type to convert the data to.
+ * @param {number} componentType Type to convert the data to.
  * @returns {ComponentReader} Function that reads and converts data.
  *
  * @private
@@ -136,10 +136,10 @@ function getComponentReader(componentType) {
  * @callback ComponentReader
  *
  * @param {DataView} dataView The data view to read from.
- * @param {Number} byteOffset The byte offset applied when reading from the data view.
- * @param {Number} numberOfComponents The number of components to read.
- * @param {Number} componentTypeByteLength The byte length of each component.
- * @param {Number} result An array storing the components that are read.
+ * @param {number} byteOffset The byte offset applied when reading from the data view.
+ * @param {number} numberOfComponents The number of components to read.
+ * @param {number} componentTypeByteLength The byte length of each component.
+ * @param {number} result An array storing the components that are read.
  *
  * @private
  */

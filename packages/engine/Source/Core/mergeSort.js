@@ -99,7 +99,7 @@ function mergeSort(array, comparator, userDefinedObject) {
  * @param {*} a An item in the array.
  * @param {*} b An item in the array.
  * @param {*} [userDefinedObject] An object that was passed to {@link mergeSort}.
- * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+ * @returns {number} Returns a negative value if <code>a</code> is less than <code>b</code>,
  *          a positive value if <code>a</code> is greater than <code>b</code>, or
  *          0 if <code>a</code> is equal to <code>b</code>.
  *

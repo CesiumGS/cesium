@@ -7,9 +7,9 @@ float getHeight(int idx, float invTexSize)
 {
     vec2 uv = vec2((float(idx) + 0.5) * invTexSize, 0.5);
 #ifdef OES_texture_float
-    return texture2D(heights, uv).x;
+    return texture(heights, uv).x;
 #else
-    return czm_unpackFloat(texture2D(heights, uv));
+    return czm_unpackFloat(texture(heights, uv));
 #endif
 }
 
@@ -58,7 +58,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
     float lerper = heightBelow == heightAbove ? 1.0 : (height - heightBelow) / (heightAbove - heightBelow);
     vec2 colorUv = vec2(invTexSize * (float(idxBelow) + 0.5 + lerper), 0.5);
-    vec4 color = texture2D(colors, colorUv);
+    vec4 color = texture(colors, colorUv);
 
     // undo preumultiplied alpha
     if (color.a > 0.0) 

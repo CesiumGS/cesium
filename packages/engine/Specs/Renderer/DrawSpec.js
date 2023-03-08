@@ -40,7 +40,7 @@ describe(
     });
 
     it("draws a white point", function () {
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       expect({
         context: context,
         fragmentShader: fs,
@@ -52,8 +52,8 @@ describe(
       const context = createContext();
 
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -106,16 +106,16 @@ describe(
 
     it("draws a red point with two vertex buffers", function () {
       const vs =
-        "attribute vec4 position;" +
-        "attribute mediump float intensity;" +
-        "varying mediump float fs_intensity;" +
+        "in vec4 position;" +
+        "in mediump float intensity;" +
+        "out mediump float fs_intensity;" +
         "void main() {" +
         "  gl_PointSize = 1.0; " +
         "  gl_Position = position;" +
         "  fs_intensity = intensity;" +
         "}";
       const fs =
-        "varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }";
+        "in mediump float fs_intensity; void main() { out_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -164,16 +164,16 @@ describe(
 
     it("draws a red point with one interleaved vertex buffers", function () {
       const vs =
-        "attribute vec4 position;" +
-        "attribute mediump float intensity;" +
-        "varying mediump float fs_intensity;" +
+        "in vec4 position;" +
+        "in mediump float intensity;" +
+        "out mediump float fs_intensity;" +
         "void main() {" +
         "  gl_PointSize = 1.0; " +
         "  gl_Position = position;" +
         "  fs_intensity = intensity;" +
         "}";
       const fs =
-        "varying mediump float fs_intensity; void main() { gl_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }";
+        "in mediump float fs_intensity; void main() { out_FragColor = vec4(fs_intensity, 0.0, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -225,8 +225,8 @@ describe(
 
     it("draws with scissor test", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -288,8 +288,8 @@ describe(
 
     it("draws with color mask", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -361,8 +361,8 @@ describe(
       });
 
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(0.5); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(0.5); }";
       const sp = ShaderProgram.fromCache({
         context: cxt,
         vertexShaderSource: vs,
@@ -435,8 +435,8 @@ describe(
       });
 
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0, 1.0, 1.0, 0.5); }";
       const sp = ShaderProgram.fromCache({
         context: cxt,
         vertexShaderSource: vs,
@@ -503,8 +503,8 @@ describe(
 
     it("draws with blend color", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -565,9 +565,8 @@ describe(
     });
 
     it("draws with culling", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -645,9 +644,8 @@ describe(
     });
 
     it("draws with front face winding order", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -727,9 +725,8 @@ describe(
     });
 
     it("draws with the depth test", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -808,9 +805,9 @@ describe(
 
     it("draws with depth range", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
       const fs =
-        "void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }";
+        "void main() { out_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -854,9 +851,8 @@ describe(
     });
 
     it("draws with line width", function () {
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -912,8 +908,8 @@ describe(
 
     it("draws with polygon offset", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -964,8 +960,8 @@ describe(
       }
 
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1028,8 +1024,8 @@ describe(
       }
 
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1133,9 +1129,8 @@ describe(
         return;
       }
 
-      const vs =
-        "attribute vec4 position; void main() { gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+      const vs = "in vec4 position; void main() { gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1237,8 +1232,8 @@ describe(
 
     it("draws with an offset and count", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1290,16 +1285,15 @@ describe(
 
     it("draws two instances of a point with different per-instance colors", function () {
       const vs =
-        "attribute vec4 position;" +
-        "attribute vec4 color;" +
-        "varying vec4 v_color;" +
+        "in vec4 position;" +
+        "in vec4 color;" +
+        "out vec4 v_color;" +
         "void main() {" +
         "  gl_PointSize = 1.0; " +
         "  gl_Position = position;" +
         "  v_color = color;" +
         "}";
-      const fs =
-        "varying vec4 v_color; void main() { gl_FragColor = v_color; }";
+      const fs = "in vec4 v_color; void main() { out_FragColor = v_color; }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1369,8 +1363,8 @@ describe(
 
     it("fails to draw (missing primitiveType)", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1386,8 +1380,8 @@ describe(
 
     it("fails to draw (primitiveType)", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1404,8 +1398,8 @@ describe(
 
     it("fails to draw (missing vertexArray)", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1422,8 +1416,8 @@ describe(
 
     it("fails to draw (negative offset)", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1445,8 +1439,8 @@ describe(
 
     it("throws if instanceCount is less than one", function () {
       const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+      const fs = "void main() { out_FragColor = vec4(1.0); }";
       sp = ShaderProgram.fromCache({
         context: context,
         vertexShaderSource: vs,
@@ -1483,49 +1477,66 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws when instanceCount is greater than one and instancing is disabled", function () {
-      // disable extension
-      const instancedArrays = context._instancedArrays;
-      context._instancedArrays = undefined;
+    describe("WebGL1", function () {
+      let webgl1Context;
 
-      const vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
-      const fs = "void main() { gl_FragColor = vec4(1.0); }";
-      sp = ShaderProgram.fromCache({
-        context: context,
-        vertexShaderSource: vs,
-        fragmentShaderSource: fs,
-        attributeLocations: {
-          position: 0,
-        },
+      beforeAll(() => {
+        webgl1Context = createContext({
+          requestWebgl1: true,
+        });
       });
 
-      va = new VertexArray({
-        context: context,
-        attributes: [
-          {
-            index: 0,
-            vertexBuffer: Buffer.createVertexBuffer({
-              context: context,
-              typedArray: new Float32Array([0, 0, 0, 1]),
-              usage: BufferUsage.STATIC_DRAW,
-            }),
-            componentsPerAttribute: 4,
+      afterAll(() => {
+        webgl1Context.destroyForSpecs();
+      });
+
+      it("throws when instanceCount is greater than one and instancing is disabled", function () {
+        const webgl1Context = createContext({
+          requestWebgl1: true,
+        });
+        // disable extension
+        const instancedArrays = webgl1Context._instancedArrays;
+        webgl1Context._instancedArrays = undefined;
+
+        const vs =
+          "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        const fs = "void main() { out_FragColor = vec4(1.0); }";
+        sp = ShaderProgram.fromCache({
+          context: webgl1Context,
+          vertexShaderSource: vs,
+          fragmentShaderSource: fs,
+          attributeLocations: {
+            position: 0,
           },
-        ],
-      });
+        });
 
-      const command = new DrawCommand({
-        primitiveType: PrimitiveType.POINTS,
-        shaderProgram: sp,
-        vertexArray: va,
-        instanceCount: 2,
-      });
+        va = new VertexArray({
+          context: webgl1Context,
+          attributes: [
+            {
+              index: 0,
+              vertexBuffer: Buffer.createVertexBuffer({
+                context: webgl1Context,
+                typedArray: new Float32Array([0, 0, 0, 1]),
+                usage: BufferUsage.STATIC_DRAW,
+              }),
+              componentsPerAttribute: 4,
+            },
+          ],
+        });
 
-      expect(function () {
-        command.execute(context);
-      }).toThrowDeveloperError();
-      context._instancedArrays = instancedArrays;
+        const command = new DrawCommand({
+          primitiveType: PrimitiveType.POINTS,
+          shaderProgram: sp,
+          vertexArray: va,
+          instanceCount: 2,
+        });
+
+        expect(function () {
+          command.execute(webgl1Context);
+        }).toThrowDeveloperError();
+        context._instancedArrays = instancedArrays;
+      });
     });
   },
   "WebGL"

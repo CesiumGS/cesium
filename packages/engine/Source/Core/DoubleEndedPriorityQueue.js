@@ -10,9 +10,9 @@ import defined from "./defined.js";
  * @constructor
  * @private
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {DoubleEndedPriorityQueue.ComparatorCallback} options.comparator The comparator to use for the queue. If comparator(a, b) is less than 0, a is lower priority than b.
- * @param {Number} [options.maximumLength] The maximum length of the queue. If an element is inserted when the queue is at full capacity, the minimum element is removed. By default, the size of the queue is unlimited.
+ * @param {number} [options.maximumLength] The maximum length of the queue. If an element is inserted when the queue is at full capacity, the minimum element is removed. By default, the size of the queue is unlimited.
  */
 function DoubleEndedPriorityQueue(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -41,7 +41,7 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
    *
    * @memberof DoubleEndedPriorityQueue.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -58,7 +58,7 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
    *
    * @memberof DoubleEndedPriorityQueue.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   maximumLength: {
@@ -400,6 +400,6 @@ function pushDown(that, index) {
  * @callback DoubleEndedPriorityQueue.ComparatorCallback
  * @param {*} a An element in the queue.
  * @param {*} b An element in the queue.
- * @returns {Number} If the result of the comparison is less than 0, a is lower priority than b.
+ * @returns {number} If the result of the comparison is less than 0, a is lower priority than b.
  */
 export default DoubleEndedPriorityQueue;

@@ -940,6 +940,7 @@ function Foo() {
 - Remove all use of the deprecated API inside Cesium except for unit tests that specifically test the deprecated API.
 - Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/CesiumGS/cesium/blob/main/CHANGES.md). Include what Cesium version it will be removed in.
 - Create an [issue](https://github.com/CesiumGS/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
+- Upon removal of the API, add a mention of it in the `Breaking Changes` section of [`CHANGES.md`](https://github.com/CesiumGS/cesium/blob/main/CHANGES.md).
 
 ## Third-Party Libraries
 
@@ -994,10 +995,11 @@ fullscreenSubscription.dispose();
 - Files for vertex shaders have a `VS` suffix; fragment shaders have an `FS` suffix. For example: `BillboardCollectionVS.glsl` and `BillboardCollectionFS.glsl`.
 - Generally, identifiers, such as functions and variables, use `camelCase`.
 - Cesium built-in identifiers start with `czm_`, for example, [`czm_material`](https://github.com/CesiumGS/cesium/blob/main/Source/Shaders/Builtin/Structs/material.glsl). Files have the same name without the `czm_` prefix, e.g., `material.glsl`.
+- Use `czm_textureCube` when sampling a cube map instead of `texture`. This is to preserve backwards compatibility with WebGL 1.
 - Varyings start with `v_`, e.g.,
 
 ```javascript
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 ```
 
 - Uniforms start with `u_`, e.g.,

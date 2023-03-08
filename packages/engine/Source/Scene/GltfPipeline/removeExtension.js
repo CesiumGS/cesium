@@ -5,8 +5,8 @@ import defined from "../../Core/defined.js";
 /**
  * Removes an extension from gltf.extensions, gltf.extensionsUsed, gltf.extensionsRequired, and any other objects in the glTF if it is present.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @param {String} extension The extension to remove.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @param {string} extension The extension to remove.
  *
  * @returns {*} The extension data removed from gltf.extensions.
  */

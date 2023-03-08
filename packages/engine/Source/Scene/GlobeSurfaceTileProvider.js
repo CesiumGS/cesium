@@ -232,22 +232,25 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof GlobeSurfaceTileProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
+   * @deprecated
    */
   ready: {
     get: function () {
       return (
-        // ready is deprecated; This is here for backwards compatibility
+        defined(this._terrainProvider) &&
+        // TerrainProvider.ready is deprecated; This is here for backwards compatibility
         this._terrainProvider._ready &&
         (this._imageryLayers.length === 0 ||
-          this._imageryLayers.get(0).imageryProvider.ready)
+          // ImageryProvider.ready is deprecated; This is here for backwards compatibility
+          (this._imageryLayers.get(0).ready &&
+            this._imageryLayers.get(0).imageryProvider._ready))
       );
     },
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This property should
-   * not be accessed before {@link GlobeSurfaceTileProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof GlobeSurfaceTileProvider.prototype
    * @type {TilingScheme}
    */
@@ -294,12 +297,6 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
       if (this._terrainProvider === terrainProvider) {
         return;
       }
-
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(terrainProvider)) {
-        throw new DeveloperError("terrainProvider is required.");
-      }
-      //>>includeEnd('debug');
 
       this._terrainProvider = terrainProvider;
 
@@ -350,6 +347,7 @@ GlobeSurfaceTileProvider.prototype.update = function (frameState) {
 function updateCredits(surface, frameState) {
   const creditDisplay = frameState.creditDisplay;
   if (
+    defined(surface._terrainProvider) &&
     // ready is deprecated; This is here for backwards compatibility
     surface._terrainProvider._ready &&
     defined(surface._terrainProvider.credit)
@@ -359,9 +357,14 @@ function updateCredits(surface, frameState) {
 
   const imageryLayers = surface._imageryLayers;
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
-    const imageryProvider = imageryLayers.get(i).imageryProvider;
-    if (imageryProvider.ready && defined(imageryProvider.credit)) {
-      creditDisplay.addCredit(imageryProvider.credit);
+    const layer = imageryLayers.get(i);
+    // ImageryProvider.ready is deprecated; This is here for backwards compatibility
+    if (
+      layer.ready &&
+      layer.imageryProvider._ready &&
+      defined(layer.imageryProvider.credit)
+    ) {
+      creditDisplay.addCredit(layer.imageryProvider.credit);
     }
   }
 }
@@ -564,27 +567,27 @@ GlobeSurfaceTileProvider.prototype.cancelReprojections = function () {
 };
 
 /**
- * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
- * called before {@link GlobeSurfaceTileProvider#ready} returns true.
+ * Gets the maximum geometric error allowed in a tile at a given level, in meters.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error in meters.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error in meters.
  */
 GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function (
   level
 ) {
+  if (!defined(this._terrainProvider)) {
+    return 0;
+  }
+
   return this._terrainProvider.getLevelMaximumGeometricError(level);
 };
 
 /**
  * Loads, or continues loading, a given tile.  This function will continue to be called
- * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
- * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
+ * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.
  *
  * @param {FrameState} frameState The frame state.
  * @param {QuadtreeTile} tile The tile to load.
- *
- * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
  */
 GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
   // We don't want to load imagery until we're certain that the terrain tiles are actually visible.
@@ -995,7 +998,7 @@ const tileDirectionScratch = new Cartesian3();
  * Determines the priority for loading this tile. Lower priority values load sooner.
  * @param {QuadtreeTile} tile The tile.
  * @param {FrameState} frameState The frame state.
- * @returns {Number} The load priority value.
+ * @returns {number} The load priority value.
  */
 GlobeSurfaceTileProvider.prototype.computeTileLoadPriority = function (
   tile,
@@ -1144,7 +1147,7 @@ function computeOccludeePoint(
  * @param {QuadtreeTile} tile The tile instance.
  * @param {FrameState} frameState The state information of the current rendering frame.
  *
- * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
+ * @returns {number} The distance from the camera to the closest point on the tile, in meters.
  */
 GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function (
   tile,
@@ -1359,7 +1362,7 @@ function updateTileBoundingRegion(tile, tileProvider, frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see GlobeSurfaceTileProvider#destroy
  */
@@ -1442,9 +1445,8 @@ GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
     const terrainProvider = this._terrainProvider;
 
     const that = this;
-    const imageryProvider = layer.imageryProvider;
     const tileImageryUpdatedEvent = this._imageryLayersUpdatedEvent;
-    imageryProvider._reload = function () {
+    const reloadFunction = function () {
       // Clear the layer's cache
       layer._imageryCache = {};
 
@@ -1505,6 +1507,11 @@ GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
         }
       });
     };
+
+    if (layer.ready) {
+      const imageryProvider = layer.imageryProvider;
+      imageryProvider._reload = reloadFunction;
+    }
 
     // create TileImageries for this layer for all previously loaded tiles
     this._quadtree.forEachLoadedTile(function (tile) {
@@ -2126,6 +2133,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const oceanNormalMap = tileProvider.oceanNormalMap;
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
   const hasVertexNormals =
+    defined(tileProvider.terrainProvider) &&
     // ready is deprecated; This is here for backwards compatibility
     tileProvider.terrainProvider._ready &&
     tileProvider.terrainProvider.hasVertexNormals;

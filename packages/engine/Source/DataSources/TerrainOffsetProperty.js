@@ -84,7 +84,7 @@ Object.defineProperties(TerrainOffsetProperty.prototype, {
    * Gets a value indicating if this property is constant.
    * @memberof TerrainOffsetProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {

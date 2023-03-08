@@ -30,7 +30,7 @@ function EventHelper() {
  *
  * @param {Event} event The event to attach to.
  * @param {Function} listener The function to be executed when the event is raised.
- * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
+ * @param {object} [scope] An optional object scope to serve as the <code>this</code>
  *        pointer in which the listener function will execute.
  * @returns {EventHelper.RemoveCallback} A function that will remove this event listener when invoked.
  *

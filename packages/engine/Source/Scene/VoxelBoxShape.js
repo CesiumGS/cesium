@@ -72,31 +72,28 @@ function VoxelBoxShape() {
   );
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderUniforms = {
-    boxUvToRenderBoundsTransform: new Matrix4(),
-    boxUvToRenderBoundsScale: new Cartesian3(),
-    boxUvToRenderBoundsTranslate: new Cartesian3(),
+    renderMinBounds: new Cartesian3(),
+    renderMaxBounds: new Cartesian3(),
     boxUvToShapeUvScale: new Cartesian3(),
     boxUvToShapeUvTranslate: new Cartesian3(),
   };
 
   /**
-   * @type {Object.<string, any>}
+   * @type {Object<string, any>}
    * @readonly
    */
   this.shaderDefines = {
     BOX_INTERSECTION_INDEX: undefined,
-    BOX_HAS_RENDER_BOUNDS: undefined,
     BOX_HAS_SHAPE_BOUNDS: undefined,
-    BOX_IS_2D: undefined,
   };
 
   /**
    * The maximum number of intersections against the shape for any ray direction.
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   this.shaderMaximumIntersectionsLength = 0; // not known until update
@@ -105,34 +102,14 @@ function VoxelBoxShape() {
 const scratchCenter = new Cartesian3();
 const scratchScale = new Cartesian3();
 const scratchRotation = new Matrix3();
-const scratchTransformLocalToBounds = new Matrix4();
-const scratchBoundsTranslation = new Cartesian3();
-const scratchBoundsScale = new Cartesian3();
-const scratchBoundsScaleMatrix = new Matrix3();
 const scratchClipMinBounds = new Cartesian3();
 const scratchClipMaxBounds = new Cartesian3();
 const scratchRenderMinBounds = new Cartesian3();
 const scratchRenderMaxBounds = new Cartesian3();
 
-const transformUvToLocal = Matrix4.fromRotationTranslation(
-  Matrix3.fromUniformScale(2.0, new Matrix3()),
-  new Cartesian3(-1.0, -1.0, -1.0),
-  new Matrix4()
-);
-
-const transformXYZToZYX = Matrix4.fromRotation(
-  Matrix3.fromColumnMajorArray(
-    [0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0],
-    new Matrix3()
-  ),
-  new Matrix4()
-);
-
-const transformXYZToXZY = Matrix4.fromRotation(
-  Matrix3.fromColumnMajorArray(
-    [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0],
-    new Matrix3()
-  ),
+const transformLocalToUv = Matrix4.fromRotationTranslation(
+  Matrix3.fromUniformScale(0.5, new Matrix3()),
+  new Cartesian3(0.5, 0.5, 0.5),
   new Matrix4()
 );
 
@@ -144,7 +121,7 @@ const transformXYZToXZY = Matrix4.fromRotation(
  * @param {Cartesian3} maxBounds The maximum bounds.
  * @param {Cartesian3} [clipMinBounds=VoxelBoxShape.DefaultMinBounds] The minimum clip bounds.
  * @param {Cartesian3} [clipMaxBounds=VoxelBoxShape.DefaultMaxBounds] The maximum clip bounds.
- * @returns {Boolean} Whether the shape is visible.
+ * @returns {boolean} Whether the shape is visible.
  */
 VoxelBoxShape.prototype.update = function (
   modelMatrix,
@@ -253,8 +230,7 @@ VoxelBoxShape.prototype.update = function (
     this.boundingSphere
   );
 
-  const shaderUniforms = this.shaderUniforms;
-  const shaderDefines = this.shaderDefines;
+  const { shaderUniforms, shaderDefines } = this;
 
   // To keep things simple, clear the defines every time
   for (const key in shaderDefines) {
@@ -263,21 +239,9 @@ VoxelBoxShape.prototype.update = function (
     }
   }
 
-  const hasRenderBounds =
-    renderMinBounds.x !== defaultMinBounds.x ||
-    renderMaxBounds.x !== defaultMaxBounds.x ||
-    renderMinBounds.y !== defaultMinBounds.y ||
-    renderMaxBounds.y !== defaultMaxBounds.y ||
-    renderMinBounds.z !== defaultMinBounds.z ||
-    renderMaxBounds.z !== defaultMaxBounds.z;
-
   const hasShapeBounds =
-    minBounds.x !== defaultMinBounds.x ||
-    maxBounds.x !== defaultMaxBounds.x ||
-    minBounds.y !== defaultMinBounds.y ||
-    maxBounds.y !== defaultMaxBounds.y ||
-    minBounds.z !== defaultMinBounds.z ||
-    maxBounds.z !== defaultMaxBounds.z;
+    !Cartesian3.equals(minBounds, defaultMinBounds) ||
+    !Cartesian3.equals(maxBounds, defaultMaxBounds);
 
   // Keep track of how many intersections there are going to be.
   let intersectionCount = 0;
@@ -285,71 +249,16 @@ VoxelBoxShape.prototype.update = function (
   shaderDefines["BOX_INTERSECTION_INDEX"] = intersectionCount;
   intersectionCount += 1;
 
-  if (hasRenderBounds) {
-    shaderDefines["BOX_HAS_RENDER_BOUNDS"] = true;
-
-    const min = renderMinBounds;
-    const max = renderMaxBounds;
-
-    // inverse(scale)
-    // inverse(maxBoundsUv - minBoundsUv)
-    // inverse((maxBounds * 0.5 + 0.5) - (minBounds * 0.5 + 0.5))
-    // inverse(0.5 * (maxBounds - minBounds))
-    // 2.0 / (maxBounds - minBounds) // with divide by zero protection
-    const scaleLocalToBounds = Cartesian3.fromElements(
-      2.0 / (min.x === max.x ? 1.0 : max.x - min.x),
-      2.0 / (min.y === max.y ? 1.0 : max.y - min.y),
-      2.0 / (min.z === max.z ? 1.0 : max.z - min.z),
-      scratchBoundsScale
-    );
-
-    // -inverse(scale) * translation // affine inverse
-    // -inverse(scale) * 0.5 * (minBounds + maxBounds)
-    const translateLocalToBounds = Cartesian3.fromElements(
-      -scaleLocalToBounds.x * 0.5 * (min.x + max.x),
-      -scaleLocalToBounds.y * 0.5 * (min.y + max.y),
-      -scaleLocalToBounds.z * 0.5 * (min.z + max.z),
-      scratchBoundsTranslation
-    );
-
-    let transformLocalToBounds = Matrix4.fromRotationTranslation(
-      Matrix3.fromScale(scaleLocalToBounds, scratchBoundsScaleMatrix),
-      translateLocalToBounds,
-      scratchTransformLocalToBounds
-    );
-
-    if (min.x === max.x || min.y === max.y || min.z === max.z) {
-      shaderDefines["BOX_IS_2D"] = true;
-
-      let transformAxisConversion;
-      if (min.x === max.x) {
-        transformAxisConversion = transformXYZToZYX;
-      } else if (min.y === max.y) {
-        transformAxisConversion = transformXYZToXZY;
-      } else if (min.z === max.z) {
-        transformAxisConversion = Matrix4.IDENTITY;
-      }
-      transformLocalToBounds = Matrix4.multiplyTransformation(
-        transformAxisConversion,
-        transformLocalToBounds,
-        transformLocalToBounds
-      );
-    }
-
-    shaderUniforms.boxUvToRenderBoundsTransform = Matrix4.multiplyTransformation(
-      transformLocalToBounds,
-      transformUvToLocal,
-      shaderUniforms.boxUvToRenderBoundsTransform
-    );
-    shaderUniforms.boxUvToRenderBoundsScale = Matrix4.getScale(
-      shaderUniforms.boxUvToRenderBoundsTransform,
-      shaderUniforms.boxUvToRenderBoundsScale
-    );
-    shaderUniforms.boxUvToRenderBoundsTranslate = Matrix4.getTranslation(
-      shaderUniforms.boxUvToRenderBoundsTransform,
-      shaderUniforms.boxUvToRenderBoundsTranslate
-    );
-  }
+  shaderUniforms.renderMinBounds = Matrix4.multiplyByPoint(
+    transformLocalToUv,
+    renderMinBounds,
+    shaderUniforms.renderMinBounds
+  );
+  shaderUniforms.renderMaxBounds = Matrix4.multiplyByPoint(
+    transformLocalToUv,
+    renderMaxBounds,
+    shaderUniforms.renderMaxBounds
+  );
 
   if (hasShapeBounds) {
     shaderDefines["BOX_HAS_SHAPE_BOUNDS"] = true;
@@ -394,10 +303,10 @@ const scratchTileMaxBounds = new Cartesian3();
  * Computes an oriented bounding box for a specified tile.
  * The update function must be called before calling this function.
  *
- * @param {Number} tileLevel The tile's level.
- * @param {Number} tileX The tile's x coordinate.
- * @param {Number} tileY The tile's y coordinate.
- * @param {Number} tileZ The tile's z coordinate.
+ * @param {number} tileLevel The tile's level.
+ * @param {number} tileX The tile's x coordinate.
+ * @param {number} tileY The tile's y coordinate.
+ * @param {number} tileZ The tile's z coordinate.
  * @param {OrientedBoundingBox} result The oriented bounding box that will be set to enclose the specified tile
  * @returns {OrientedBoundingBox} The oriented bounding box.
  */
@@ -447,7 +356,7 @@ VoxelBoxShape.prototype.computeOrientedBoundingBoxForTile = function (
  * The update function must be called before calling this function.
  *
  * @param {Cartesian3} dimensions The voxel grid dimensions for a tile.
- * @returns {Number} The step size.
+ * @returns {number} The step size.
  */
 VoxelBoxShape.prototype.computeApproximateStepSize = function (dimensions) {
   //>>includeStart('debug', pragmas.debug);

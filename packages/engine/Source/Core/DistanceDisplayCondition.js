@@ -8,8 +8,8 @@ import DeveloperError from "./DeveloperError.js";
  * @alias DistanceDisplayCondition
  * @constructor
  *
- * @param {Number} [near=0.0] The smallest distance in the interval where the object is visible.
- * @param {Number} [far=Number.MAX_VALUE] The largest distance in the interval where the object is visible.
+ * @param {number} [near=0.0] The smallest distance in the interval where the object is visible.
+ * @param {number} [far=Number.MAX_VALUE] The largest distance in the interval where the object is visible.
  *
  * @example
  * // Make a billboard that is only visible when the distance to the camera is between 10 and 20 meters.
@@ -27,7 +27,7 @@ Object.defineProperties(DistanceDisplayCondition.prototype, {
   /**
    * The smallest distance in the interval where the object is visible.
    * @memberof DistanceDisplayCondition.prototype
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   near: {
@@ -41,7 +41,7 @@ Object.defineProperties(DistanceDisplayCondition.prototype, {
   /**
    * The largest distance in the interval where the object is visible.
    * @memberof DistanceDisplayCondition.prototype
-   * @type {Number}
+   * @type {number}
    * @default Number.MAX_VALUE
    */
   far: {
@@ -56,7 +56,7 @@ Object.defineProperties(DistanceDisplayCondition.prototype, {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 DistanceDisplayCondition.packedLength = 2;
 
@@ -64,10 +64,10 @@ DistanceDisplayCondition.packedLength = 2;
  * Stores the provided instance into the provided array.
  *
  * @param {DistanceDisplayCondition} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 DistanceDisplayCondition.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -90,8 +90,8 @@ DistanceDisplayCondition.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {DistanceDisplayCondition} [result] The object into which to store the result.
  * @returns {DistanceDisplayCondition} The modified result parameter or a new DistanceDisplayCondition instance if one was not provided.
  */
@@ -117,7 +117,7 @@ DistanceDisplayCondition.unpack = function (array, startingIndex, result) {
  *
  * @param {DistanceDisplayCondition} left A distance display condition.
  * @param {DistanceDisplayCondition} right Another distance display condition.
- * @return {Boolean} Whether the two distance display conditions are equal.
+ * @return {boolean} Whether the two distance display conditions are equal.
  */
 DistanceDisplayCondition.equals = function (left, right) {
   return (
@@ -164,7 +164,7 @@ DistanceDisplayCondition.prototype.clone = function (result) {
  * Determines if this distance display condition is equal to another.
  *
  * @param {DistanceDisplayCondition} other Another distance display condition.
- * @return {Boolean} Whether this distance display condition is equal to the other.
+ * @return {boolean} Whether this distance display condition is equal to the other.
  */
 DistanceDisplayCondition.prototype.equals = function (other) {
   return DistanceDisplayCondition.equals(this, other);

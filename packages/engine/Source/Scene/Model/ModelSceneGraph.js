@@ -28,7 +28,7 @@ import PrimitiveRenderResources from "./PrimitiveRenderResources.js";
 /**
  * An in memory representation of the scene graph for a {@link Model}
  *
- * @param {Object} options An object containing the following options
+ * @param {object} options An object containing the following options
  * @param {Model} options.model The model this scene graph belongs to
  * @param {ModelComponents} options.modelComponents The model components describing the model
  *
@@ -99,7 +99,7 @@ function ModelSceneGraph(options) {
   /**
    * The indices of the root nodes in the runtime nodes array.
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @readonly
    *
    * @private
@@ -111,7 +111,7 @@ function ModelSceneGraph(options) {
    * to the nodes that will be manipulated by their skin, as opposed to the nodes
    * acting as joints for the skin.
    *
-   * @type {Number[]}
+   * @type {number[]}
    * @readonly
    *
    * @private
@@ -375,7 +375,7 @@ function computeModelMatrix2D(sceneGraph, frameState) {
  * @param {ModelSceneGraph} sceneGraph The scene graph
  * @param {ModelComponents.Node} node The current node
  * @param {Matrix4} transformToRoot The transforms of this node's ancestors.
- * @returns {Number} The index of this node in the runtimeNodes array.
+ * @returns {number} The index of this node in the runtimeNodes array.
  *
  * @private
  */
@@ -713,7 +713,7 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
  * @callback traverseSceneGraphCallback
  *
  * @param {ModelRuntimePrimitive} runtimePrimitive The runtime primitive for the current step of the traversal
- * @param {Object} [options] A dictionary of additional options to be passed to the callback, or undefined if the callback does not need any additional information.
+ * @param {object} [options] A dictionary of additional options to be passed to the callback, or undefined if the callback does not need any additional information.
  *
  * @private
  */
@@ -725,9 +725,9 @@ ModelSceneGraph.prototype.updateJointMatrices = function () {
  *
  * @param {ModelSceneGraph} sceneGraph The scene graph.
  * @param {ModelRuntimeNode} runtimeNode The current runtime node.
- * @param {Boolean} visibleNodesOnly Whether to only traverse nodes that are visible.
+ * @param {boolean} visibleNodesOnly Whether to only traverse nodes that are visible.
  * @param {traverseSceneGraphCallback} callback The callback to perform on the runtime primitives of the node.
- * @param {Object} [callbackOptions] A dictionary of additional options to be passed to the callback, if needed.
+ * @param {object} [callbackOptions] A dictionary of additional options to be passed to the callback, if needed.
  *
  * @private
  */
@@ -790,7 +790,7 @@ const scratchBackFaceCullingOptions = {
 /**
  * Traverses through all draw commands and changes the back-face culling setting.
  *
- * @param {Boolean} backFaceCulling The new value for the back-face culling setting.
+ * @param {boolean} backFaceCulling The new value for the back-face culling setting.
  *
  * @private
  */
@@ -841,7 +841,7 @@ const scratchShowBoundingVolumeOptions = {
 /**
  * Traverses through all draw commands and changes whether to show the debug bounding volume.
  *
- * @param {Boolean} debugShowBoundingVolume The new value for showing the debug bounding volume.
+ * @param {boolean} debugShowBoundingVolume The new value for showing the debug bounding volume.
  *
  * @private
  */
@@ -926,8 +926,8 @@ function pushPrimitiveDrawCommands(runtimePrimitive, options) {
 /**
  * Sets the current value of an articulation stage.
  *
- * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
- * @param {Number} value The numeric value of this stage of the articulation.
+ * @param {string} articulationStageKey The name of the articulation, a space, and the name of the stage.
+ * @param {number} value The numeric value of this stage of the articulation.
  *
  * @private
  */

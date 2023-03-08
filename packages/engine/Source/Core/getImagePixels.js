@@ -9,8 +9,8 @@ const context2DsByWidthAndHeight = {};
  * @function getImagePixels
  *
  * @param {HTMLImageElement|ImageBitmap} image The image to extract pixels from.
- * @param {Number} width The width of the image. If not defined, then image.width is assigned.
- * @param {Number} height The height of the image. If not defined, then image.height is assigned.
+ * @param {number} width The width of the image. If not defined, then image.width is assigned.
+ * @param {number} height The height of the image. If not defined, then image.height is assigned.
  * @returns {ImageData} The pixels of the image.
  */
 function getImagePixels(image, width, height) {
@@ -32,7 +32,8 @@ function getImagePixels(image, width, height) {
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
-    context2d = canvas.getContext("2d");
+    // Since we re-use contexts, use the willReadFrequently option – See https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+    context2d = canvas.getContext("2d", { willReadFrequently: true });
     context2d.globalCompositeOperation = "copy";
     context2DsByHeight[height] = context2d;
   }

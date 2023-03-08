@@ -43,7 +43,7 @@ function Cesium3DTilePassState(options) {
   /**
    * A read-only property that indicates whether the pass is ready, i.e. all tiles needed by the pass are loaded.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @default false
    */

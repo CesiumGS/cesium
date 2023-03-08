@@ -7,8 +7,8 @@ const dataUriRegex = /^data:/i;
  *
  * @function isDataUri
  *
- * @param {String} uri The uri to test.
- * @returns {Boolean} true when the uri is a data uri; otherwise, false.
+ * @param {string} uri The uri to test.
+ * @returns {boolean} true when the uri is a data uri; otherwise, false.
  *
  * @private
  */

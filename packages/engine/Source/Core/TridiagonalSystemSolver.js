@@ -13,9 +13,9 @@ const TridiagonalSystemSolver = {};
 /**
  * Solves a tridiagonal system of linear equations.
  *
- * @param {Number[]} diagonal An array with length <code>n</code> that contains the diagonal of the coefficient matrix.
- * @param {Number[]} lower An array with length <code>n - 1</code> that contains the lower diagonal of the coefficient matrix.
- * @param {Number[]} upper An array with length <code>n - 1</code> that contains the upper diagonal of the coefficient matrix.
+ * @param {number[]} diagonal An array with length <code>n</code> that contains the diagonal of the coefficient matrix.
+ * @param {number[]} lower An array with length <code>n - 1</code> that contains the lower diagonal of the coefficient matrix.
+ * @param {number[]} upper An array with length <code>n - 1</code> that contains the upper diagonal of the coefficient matrix.
  * @param {Cartesian3[]} right An array of Cartesians with length <code>n</code> that is the right side of the system of equations.
  *
  * @exception {DeveloperError} diagonal and right must have the same lengths.

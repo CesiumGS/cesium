@@ -24,7 +24,7 @@ Object.defineProperties(Light.prototype, {
   /**
    * The intensity controls the strength of the light. <code>intensity</code> has a minimum value of 0.0 and no maximum value.
    * @memberof Light.prototype
-   * @type {Number}
+   * @type {number}
    */
   intensity: {
     get: DeveloperError.throwInstantiationError,

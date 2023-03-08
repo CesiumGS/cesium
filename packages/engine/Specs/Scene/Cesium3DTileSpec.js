@@ -123,6 +123,7 @@ describe(
       debugShowViewerRequestVolume: true,
       modelMatrix: Matrix4.IDENTITY,
       _geometricError: 2,
+      _scaledGeometricError: 2,
       _heatmap: new Cesium3DTilesetHeatmap(),
     };
 
@@ -671,6 +672,28 @@ describe(
       const foveatedDeferralPenalty = 10000000.0;
       expect(tile2._priority).toBeGreaterThanOrEqual(foveatedDeferralPenalty);
       tile2._priorityDeferred = false;
+    });
+
+    it("tile transform scales geometric error", function () {
+      const header = clone(tileWithContentBoundingSphere, true);
+      header.transform = Matrix4.pack(
+        Matrix4.fromUniformScale(2.0),
+        new Array(16)
+      );
+
+      const mockTilesetScaled = clone(mockTileset, true);
+
+      const tile = new Cesium3DTile(
+        mockTilesetScaled,
+        "/some_url",
+        header,
+        undefined
+      );
+
+      expect(tile._geometricError).toBe(1);
+      expect(tile.geometricError).toBe(2);
+      expect(mockTilesetScaled._geometricError).toBe(2);
+      expect(mockTilesetScaled._scaledGeometricError).toBe(4);
     });
   },
   "WebGL"

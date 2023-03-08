@@ -411,15 +411,15 @@ function createLayeredEntries(layers) {
 /**
  * @typedef createElevationBandMaterialEntry
  *
- * @property {Number} height The height.
+ * @property {number} height The height.
  * @property {Color} color The color at this height.
  */
 /**
  * @typedef createElevationBandMaterialBand
  *
  * @property {createElevationBandMaterialEntry[]} entries A list of elevation entries. They will automatically be sorted from lowest to highest. If there is only one entry and <code>extendsDownards</code> and <code>extendUpwards</code> are both <code>false</code>, they will both be set to <code>true</code>.
- * @property {Boolean} [extendDownwards=false] If <code>true</code>, the band's minimum elevation color will extend infinitely downwards.
- * @property {Boolean} [extendUpwards=false] If <code>true</code>, the band's maximum elevation color will extend infinitely upwards.
+ * @property {boolean} [extendDownwards=false] If <code>true</code>, the band's minimum elevation color will extend infinitely downwards.
+ * @property {boolean} [extendUpwards=false] If <code>true</code>, the band's maximum elevation color will extend infinitely upwards.
  */
 
 /**
@@ -430,7 +430,7 @@ function createLayeredEntries(layers) {
  *
  * @function createElevationBandMaterial
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene where the visualization is taking place.
  * @param {createElevationBandMaterialBand[]} options.layers A list of bands ordered from lowest to highest precedence.
  * @returns {Material} A new {@link Material} instance.
@@ -462,9 +462,7 @@ function createLayeredEntries(layers) {
  * });
  */
 function createElevationBandMaterial(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  const scene = options.scene;
-  const layers = options.layers;
+  const { scene, layers } = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.scene", scene);
@@ -472,36 +470,34 @@ function createElevationBandMaterial(options) {
   Check.typeOf.number.greaterThan("options.layers.length", layers.length, 0);
   //>>includeEnd('debug');
 
+  const { context } = scene;
   const entries = createLayeredEntries(layers);
   const entriesLength = entries.length;
-  let i;
 
   let heightTexBuffer;
   let heightTexDatatype;
   let heightTexFormat;
 
-  const isPackedHeight = !createElevationBandMaterial._useFloatTexture(
-    scene.context
-  );
+  const isPackedHeight = !createElevationBandMaterial._useFloatTexture(context);
   if (isPackedHeight) {
     heightTexDatatype = PixelDatatype.UNSIGNED_BYTE;
     heightTexFormat = PixelFormat.RGBA;
     heightTexBuffer = new Uint8Array(entriesLength * 4);
-    for (i = 0; i < entriesLength; i++) {
+    for (let i = 0; i < entriesLength; i++) {
       Cartesian4.packFloat(entries[i].height, scratchPackedFloat);
       Cartesian4.pack(scratchPackedFloat, heightTexBuffer, i * 4);
     }
   } else {
     heightTexDatatype = PixelDatatype.FLOAT;
-    heightTexFormat = PixelFormat.LUMINANCE;
+    heightTexFormat = context.webgl2 ? PixelFormat.RED : PixelFormat.LUMINANCE;
     heightTexBuffer = new Float32Array(entriesLength);
-    for (i = 0; i < entriesLength; i++) {
+    for (let i = 0; i < entriesLength; i++) {
       heightTexBuffer[i] = entries[i].height;
     }
   }
 
   const heightsTex = Texture.create({
-    context: scene.context,
+    context: context,
     pixelFormat: heightTexFormat,
     pixelDatatype: heightTexDatatype,
     source: {
@@ -518,7 +514,7 @@ function createElevationBandMaterial(options) {
   });
 
   const colorsArray = new Uint8Array(entriesLength * 4);
-  for (i = 0; i < entriesLength; i++) {
+  for (let i = 0; i < entriesLength; i++) {
     const color = entries[i].color;
     color.toBytes(scratchColorBytes);
     colorsArray[i * 4 + 0] = scratchColorBytes[0];
@@ -528,7 +524,7 @@ function createElevationBandMaterial(options) {
   }
 
   const colorsTex = Texture.create({
-    context: scene.context,
+    context: context,
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
     source: {
@@ -544,18 +540,17 @@ function createElevationBandMaterial(options) {
     }),
   });
 
-  const material = Material.fromType("ElevationBand", {
+  return Material.fromType("ElevationBand", {
     heights: heightsTex,
     colors: colorsTex,
   });
-  return material;
 }
 
 /**
  * Function for checking if the context will allow floating point textures for heights.
  *
  * @param {Context} context The {@link Context}.
- * @returns {Boolean} <code>true</code> if floating point textures can be used for heights.
+ * @returns {boolean} <code>true</code> if floating point textures can be used for heights.
  * @private
  */
 createElevationBandMaterial._useFloatTexture = function (context) {

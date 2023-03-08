@@ -47,7 +47,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
    * Gets a value indicating if this property is constant.
    * @memberof VelocityOrientationProperty.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   isConstant: {
@@ -137,7 +137,7 @@ VelocityOrientationProperty.prototype.getValue = function (time, result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {Property} [other] The other property.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 VelocityOrientationProperty.prototype.equals = function (other) {
   return (

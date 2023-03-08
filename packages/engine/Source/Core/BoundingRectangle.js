@@ -12,10 +12,10 @@ import Rectangle from "./Rectangle.js";
  * @alias BoundingRectangle
  * @constructor
  *
- * @param {Number} [x=0.0] The x coordinate of the rectangle.
- * @param {Number} [y=0.0] The y coordinate of the rectangle.
- * @param {Number} [width=0.0] The width of the rectangle.
- * @param {Number} [height=0.0] The height of the rectangle.
+ * @param {number} [x=0.0] The x coordinate of the rectangle.
+ * @param {number} [y=0.0] The y coordinate of the rectangle.
+ * @param {number} [width=0.0] The width of the rectangle.
+ * @param {number} [height=0.0] The height of the rectangle.
  *
  * @see BoundingSphere
  * @see Packable
@@ -23,28 +23,28 @@ import Rectangle from "./Rectangle.js";
 function BoundingRectangle(x, y, width, height) {
   /**
    * The x coordinate of the rectangle.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.x = defaultValue(x, 0.0);
 
   /**
    * The y coordinate of the rectangle.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.y = defaultValue(y, 0.0);
 
   /**
    * The width of the rectangle.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.width = defaultValue(width, 0.0);
 
   /**
    * The height of the rectangle.
-   * @type {Number}
+   * @type {number}
    * @default 0.0
    */
   this.height = defaultValue(height, 0.0);
@@ -52,7 +52,7 @@ function BoundingRectangle(x, y, width, height) {
 
 /**
  * The number of elements used to pack the object into an array.
- * @type {Number}
+ * @type {number}
  */
 BoundingRectangle.packedLength = 4;
 
@@ -60,10 +60,10 @@ BoundingRectangle.packedLength = 4;
  * Stores the provided instance into the provided array.
  *
  * @param {BoundingRectangle} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 BoundingRectangle.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -84,8 +84,8 @@ BoundingRectangle.pack = function (value, array, startingIndex) {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {BoundingRectangle} [result] The object into which to store the result.
  * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
  */
@@ -160,7 +160,7 @@ const fromRectangleUpperRight = new Cartographic();
  * Computes a bounding rectangle from a rectangle.
  *
  * @param {Rectangle} rectangle The valid rectangle used to create a bounding rectangle.
- * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
+ * @param {object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
  * @param {BoundingRectangle} [result] The object onto which to store the result.
  * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
  */
@@ -326,7 +326,7 @@ BoundingRectangle.intersect = function (left, right) {
  *
  * @param {BoundingRectangle} [left] The first BoundingRectangle.
  * @param {BoundingRectangle} [right] The second BoundingRectangle.
- * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
  */
 BoundingRectangle.equals = function (left, right) {
   return (
@@ -365,7 +365,7 @@ BoundingRectangle.prototype.intersect = function (right) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {BoundingRectangle} [right] The right hand side BoundingRectangle.
- * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 BoundingRectangle.prototype.equals = function (right) {
   return BoundingRectangle.equals(this, right);

@@ -25,11 +25,11 @@ import oneTimeWarning from "../Core/oneTimeWarning.js";
  * See the {@link https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_structural_metadata|EXT_structural_metadata Extension} for glTF.
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Number} options.count The number of features in the batch table.
- * @param {Object} options.batchTable The batch table JSON
+ * @param {object} options Object with the following properties:
+ * @param {number} options.count The number of features in the batch table.
+ * @param {object} options.batchTable The batch table JSON
  * @param {Uint8Array} [options.binaryBody] The batch table binary body
- * @param {Boolean} [options.parseAsPropertyAttributes=false] If true, binary properties are parsed as property attributes instead of a property table. This is used for .pnts models for GPU styling.
+ * @param {boolean} [options.parseAsPropertyAttributes=false] If true, binary properties are parsed as property attributes instead of a property table. This is used for .pnts models for GPU styling.
  * @param {ModelComponents.Attribute[]} [options.customAttributeOutput] Pass in an empty array here and this method will populate it with a list of custom attributes that will store the values of the property attributes. The attributes will be created with typed arrays, the caller is responsible for uploading them to the GPU. This option is required when options.parseAsPropertyAttributes is true.
  * @return {StructuralMetadata} A transcoded structural metadata object
  *
@@ -149,8 +149,8 @@ function parseBatchTable(options) {
  * Divide the batch table's properties into binary, JSON and hierarchy
  * extension as each is handled separately
  *
- * @param {Object} batchTable The batch table JSON
- * @returns {Object} The batch table divided into binary, JSON and hierarchy portions. Extras and extensions are also divided out for ease of processing.
+ * @param {object} batchTable The batch table JSON
+ * @returns {object} The batch table divided into binary, JSON and hierarchy portions. Extras and extensions are also divided out for ease of processing.
  *
  * @private
  */
@@ -208,11 +208,11 @@ function partitionProperties(batchTable) {
  * Transcode the binary properties of the batch table to be compatible with
  * <code>EXT_structural_metadata</code>
  *
- * @param {Number} featureCount The number of features in the batch table
- * @param {String} className The name of the metadata class to be created.
- * @param {Object.<String, Object>} binaryProperties A dictionary of property ID to property definition
+ * @param {number} featureCount The number of features in the batch table
+ * @param {string} className The name of the metadata class to be created.
+ * @param {Object<string, Object>} binaryProperties A dictionary of property ID to property definition
  * @param {Uint8Array} [binaryBody] The binary body of the batch table
- * @return {Object} Transcoded data needed for constructing a {@link StructuralMetadata} object.
+ * @return {object} Transcoded data needed for constructing a {@link StructuralMetadata} object.
  *
  * @private
  */
@@ -405,8 +405,8 @@ function transcodeBinaryPropertiesAsPropertyAttributes(
  * Given a property definition from the batch table, compute the equivalent
  * <code>EXT_structural_metadata</code> type definition
  *
- * @param {Object} property The batch table property definition
- * @return {Object} The corresponding structural metadata property definition
+ * @param {object} property The batch table property definition
+ * @return {object} The corresponding structural metadata property definition
  * @private
  */
 function transcodePropertyType(property) {
@@ -422,8 +422,8 @@ function transcodePropertyType(property) {
  * Convert the component type of a batch table property to the corresponding
  * type used with structural metadata
  *
- * @property {String} componentType the batch table's component type
- * @return {String} The corresponding structural metadata data type
+ * @property {string} componentType the batch table's component type
+ * @return {string} The corresponding structural metadata data type
  *
  * @private
  */

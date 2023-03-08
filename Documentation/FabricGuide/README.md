@@ -235,7 +235,7 @@ A slightly more complicated example adds a specular component so that the materi
 }
 ```
 
-The `components` property contains sub-properties that define the appearance of the material. The value of each sub-property is a GLSL code snippet, hence the `vec3(0.5)` above, which creates a 3D vector with each component set to `0.5`. These have access to all GLSL functions like `mix`, `cos`, `texture2D`, etc. There are five sub-properties.
+The `components` property contains sub-properties that define the appearance of the material. The value of each sub-property is a GLSL code snippet, hence the `vec3(0.5)` above, which creates a 3D vector with each component set to `0.5`. These have access to all GLSL functions like `mix`, `cos`, `texture`, etc. There are five sub-properties.
 
 | Name        | Default       | Description                                                                                                                                                                                                              |
 | :---------- | :------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -358,7 +358,7 @@ We can implement our own `DiffuseMap` material by using an image uniform:
     image : 'czm_defaultImage'
   },
   components : {
-    diffuse : 'texture2D(image, materialInput.st).rgb'
+    diffuse : 'texture(image, materialInput.st).rgb'
   }
 }
 ```

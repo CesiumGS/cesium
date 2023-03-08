@@ -1,12 +1,12 @@
-attribute vec4 position;
+in vec4 position;
 
-varying vec3 v_outerPositionWC;
+out vec3 v_outerPositionWC;
 
 #ifndef PER_FRAGMENT_ATMOSPHERE
-varying vec3 v_mieColor;
-varying vec3 v_rayleighColor;
-varying float v_opacity;
-varying float v_translucent;
+out vec3 v_mieColor;
+out vec3 v_rayleighColor;
+out float v_opacity;
+out float v_translucent;
 #endif
 
 void main(void)

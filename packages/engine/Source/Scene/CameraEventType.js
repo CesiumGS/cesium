@@ -1,13 +1,13 @@
 /**
  * Enumerates the available input for interacting with the camera.
  *
- * @enum {Number}
+ * @enum {number}
  */
 const CameraEventType = {
   /**
    * A left mouse button press followed by moving the mouse and releasing the button.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   LEFT_DRAG: 0,
@@ -15,7 +15,7 @@ const CameraEventType = {
   /**
    *  A right mouse button press followed by moving the mouse and releasing the button.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   RIGHT_DRAG: 1,
@@ -23,7 +23,7 @@ const CameraEventType = {
   /**
    *  A middle mouse button press followed by moving the mouse and releasing the button.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MIDDLE_DRAG: 2,
@@ -31,7 +31,7 @@ const CameraEventType = {
   /**
    * Scrolling the middle mouse button.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   WHEEL: 3,
@@ -39,7 +39,7 @@ const CameraEventType = {
   /**
    * A two-finger touch on a touch surface.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   PINCH: 4,

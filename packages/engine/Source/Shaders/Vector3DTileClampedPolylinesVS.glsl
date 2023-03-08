@@ -1,19 +1,19 @@
-attribute vec3 startEllipsoidNormal;
-attribute vec3 endEllipsoidNormal;
-attribute vec4 startPositionAndHeight;
-attribute vec4 endPositionAndHeight;
-attribute vec4 startFaceNormalAndVertexCorner;
-attribute vec4 endFaceNormalAndHalfWidth;
-attribute float a_batchId;
+in vec3 startEllipsoidNormal;
+in vec3 endEllipsoidNormal;
+in vec4 startPositionAndHeight;
+in vec4 endPositionAndHeight;
+in vec4 startFaceNormalAndVertexCorner;
+in vec4 endFaceNormalAndHalfWidth;
+in float a_batchId;
 
 uniform mat4 u_modifiedModelView;
 uniform vec2 u_minimumMaximumVectorHeights;
 
-varying vec4 v_startPlaneEC;
-varying vec4 v_endPlaneEC;
-varying vec4 v_rightPlaneEC;
-varying float v_halfWidth;
-varying vec3 v_volumeUpEC;
+out vec4 v_startPlaneEC;
+out vec4 v_endPlaneEC;
+out vec4 v_rightPlaneEC;
+out float v_halfWidth;
+out vec3 v_volumeUpEC;
 
 void main()
 {

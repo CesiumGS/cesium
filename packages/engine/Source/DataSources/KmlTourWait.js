@@ -5,7 +5,7 @@ import defined from "../Core/defined.js";
  * @alias KmlTourWait
  * @constructor
  *
- * @param {Number} duration entry duration
+ * @param {number} duration entry duration
  *
  * @see KmlTour
  * @see KmlTourFlyTo
@@ -46,7 +46,7 @@ KmlTourWait.prototype.stop = function () {
  * A function which will be called when playback ends.
  *
  * @callback KmlTourWait.DoneCallback
- * @param {Boolean} terminated true if {@link KmlTourWait#stop} was
+ * @param {boolean} terminated true if {@link KmlTourWait#stop} was
  * called before entry done playback.
  */
 export default KmlTourWait;

@@ -16,7 +16,7 @@ import Expression from "./Expression.js";
  * @alias Cesium3DTileStyle
  * @constructor
  *
- * @param {Object} [style] An object defining a style.
+ * @param {object} [style] An object defining a style.
  *
  * @example
  * tileset.style = new Cesium.Cesium3DTileStyle({
@@ -166,7 +166,7 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
    *
    * @memberof Cesium3DTileStyle.prototype
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    *
    * @default {}
@@ -1313,9 +1313,9 @@ Object.defineProperties(Cesium3DTileStyle.prototype, {
 /**
  * Asynchronously creates a Cesium3DTileStyle from a url.
  *
- * @param {Resource|String} url The url of the style to be loaded.
+ * @param {Resource|string} url The url of the style to be loaded.
  *
- * @returns {Promise.<Cesium3DTileStyle>} A promise which resolves to the created style
+ * @returns {Promise<Cesium3DTileStyle>} A promise which resolves to the created style
  *
  * @private
  */
@@ -1335,11 +1335,11 @@ Cesium3DTileStyle.fromUrl = function (url) {
 /**
  * Gets the color shader function for this style.
  *
- * @param {String} functionSignature Signature of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
- * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+ * @param {string} functionSignature Signature of the generated function.
+ * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
+ * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
- * @returns {String} The shader function.
+ * @returns {string} The shader function.
  *
  * @private
  */
@@ -1373,11 +1373,11 @@ Cesium3DTileStyle.prototype.getColorShaderFunction = function (
 /**
  * Gets the show shader function for this style.
  *
- * @param {String} functionSignature Signature of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
- * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+ * @param {string} functionSignature Signature of the generated function.
+ * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
+ * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
- * @returns {String} The shader function.
+ * @returns {string} The shader function.
  *
  * @private
  */
@@ -1409,11 +1409,11 @@ Cesium3DTileStyle.prototype.getShowShaderFunction = function (
 /**
  * Gets the pointSize shader function for this style.
  *
- * @param {String} functionSignature Signature of the generated function.
- * @param {Object} variableSubstitutionMap Maps variable names to shader variable names.
- * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+ * @param {string} functionSignature Signature of the generated function.
+ * @param {object} variableSubstitutionMap Maps variable names to shader variable names.
+ * @param {object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
- * @returns {String} The shader function.
+ * @returns {string} The shader function.
  *
  * @private
  */
@@ -1445,7 +1445,7 @@ Cesium3DTileStyle.prototype.getPointSizeShaderFunction = function (
 /**
  * Gets the variables used by the style.
  *
- * @returns {String[]} The variables used by the style.
+ * @returns {string[]} The variables used by the style.
  *
  * @private
  */

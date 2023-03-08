@@ -8,7 +8,7 @@ import ShaderSource from "../Renderer/ShaderSource.js";
  */
 function DerivedCommand() {}
 
-const fragDepthRegex = /\bgl_FragDepthEXT\b/;
+const fragDepthRegex = /\bgl_FragDepth\b/;
 const discardRegex = /\bdiscard\b/;
 
 function getDepthOnlyShaderProgram(context, shaderProgram) {
@@ -44,18 +44,18 @@ function getDepthOnlyShaderProgram(context, shaderProgram) {
     let source;
     if (!writesDepthOrDiscards && !usesLogDepth) {
       source =
-        "void main() \n" + "{ \n" + "    gl_FragColor = vec4(1.0); \n" + "} \n";
+        "void main() \n" +
+        "{ \n" +
+        "    out_FragColor = vec4(1.0); \n" +
+        "} \n";
       fs = new ShaderSource({
         sources: [source],
       });
     } else if (!writesDepthOrDiscards && usesLogDepth) {
       source =
-        "#ifdef GL_EXT_frag_depth \n" +
-        "#extension GL_EXT_frag_depth : enable \n" +
-        "#endif \n\n" +
         "void main() \n" +
         "{ \n" +
-        "    gl_FragColor = vec4(1.0); \n" +
+        "    out_FragColor = vec4(1.0); \n" +
         "    czm_writeLogDepth(); \n" +
         "} \n";
       fs = new ShaderSource({
@@ -145,7 +145,6 @@ DerivedCommand.createDepthOnlyDerivedCommand = function (
 
 const writeLogDepthRegex = /\s+czm_writeLogDepth\(/;
 const vertexlogDepthRegex = /\s+czm_vertexLogDepth\(/;
-const extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
 
 function getLogDepthShaderProgram(context, shaderProgram) {
   const disableLogDepthWrite =
@@ -210,20 +209,7 @@ function getLogDepthShaderProgram(context, shaderProgram) {
       writesLogDepth = true;
     }
 
-    let addExtension = true;
-    for (i = 0; i < length; ++i) {
-      if (extensionRegex.test(sources[i])) {
-        addExtension = false;
-      }
-    }
-
     let logSource = "";
-    if (addExtension) {
-      logSource +=
-        "#ifdef GL_EXT_frag_depth \n" +
-        "#extension GL_EXT_frag_depth : enable \n" +
-        "#endif \n\n";
-    }
 
     if (!writesLogDepth) {
       for (i = 0; i < length; i++) {
@@ -297,10 +283,10 @@ function getPickShaderProgram(context, shaderProgram, pickId) {
         "void main() \n" +
         "{ \n" +
         "    czm_non_pick_main(); \n" +
-        "    if (gl_FragColor.a == 0.0) { \n" +
+        "    if (out_FragColor.a == 0.0) { \n" +
         "        discard; \n" +
         "    } \n" +
-        "    gl_FragColor = "
+        "    out_FragColor = "
       }${pickId}; \n` + `} \n`;
     const newSources = new Array(length + 1);
     for (let i = 0; i < length; ++i) {

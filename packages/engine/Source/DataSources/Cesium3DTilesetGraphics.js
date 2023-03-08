@@ -5,7 +5,7 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} Cesium3DTilesetGraphics.ConstructorOptions
+ * @typedef {object} Cesium3DTilesetGraphics.ConstructorOptions
  *
  * Initialization options for the Cesium3DTilesetGraphics constructor
  *

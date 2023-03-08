@@ -37,7 +37,7 @@ function ModelAnimation(model, animation, options) {
    * This is slightly more efficient that not removing it, but if, for example,
    * time is reversed, the animation is not played again.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.removeOnStop = defaultValue(options.removeOnStop, false);
@@ -149,7 +149,7 @@ Object.defineProperties(ModelAnimation.prototype, {
    *
    * @memberof ModelAnimation.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   name: {
@@ -196,7 +196,7 @@ Object.defineProperties(ModelAnimation.prototype, {
    *
    * @memberof ModelAnimation.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -213,7 +213,7 @@ Object.defineProperties(ModelAnimation.prototype, {
    *
    * @memberof ModelAnimation.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @private
@@ -246,7 +246,7 @@ Object.defineProperties(ModelAnimation.prototype, {
    *
    * @memberof ModelAnimation.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @default undefined
@@ -284,7 +284,7 @@ Object.defineProperties(ModelAnimation.prototype, {
    *
    * @memberof ModelAnimation.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @default 1.0
@@ -300,7 +300,7 @@ Object.defineProperties(ModelAnimation.prototype, {
    *
    * @memberof ModelAnimation.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -387,7 +387,7 @@ function initialize(runtimeAnimation) {
 /**
  * Evaluate all animation channels to advance this animation.
  *
- * @param {Number} time The local animation time.
+ * @param {number} time The local animation time.
  *
  * @private
  */
@@ -403,9 +403,9 @@ ModelAnimation.prototype.animate = function (time) {
  * A function used to compute the local animation time for a ModelAnimation.
  * @callback ModelAnimation.AnimationTimeCallback
  *
- * @param {Number} duration The animation's original duration in seconds.
- * @param {Number} seconds The seconds since the animation started, in scene time.
- * @returns {Number} Returns the local animation time.
+ * @param {number} duration The animation's original duration in seconds.
+ * @param {number} seconds The seconds since the animation started, in scene time.
+ * @returns {number} Returns the local animation time.
  *
  * @example
  * // Use real time for model animation (assuming animateWhilePaused was set to true)

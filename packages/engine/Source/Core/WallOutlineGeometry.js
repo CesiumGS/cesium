@@ -23,12 +23,12 @@ const scratchCartesian3Position2 = new Cartesian3();
  * @alias WallOutlineGeometry
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
- * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
- * @param {Number[]} [options.maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
+ * @param {number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+ * @param {number[]} [options.maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
  *        wall at <code>positions</code>. If undefined, the height of each position in used.
- * @param {Number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
+ * @param {number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
  *
@@ -104,7 +104,7 @@ function WallOutlineGeometry(options) {
 
   /**
    * The number of elements used to pack the object into an array.
-   * @type {Number}
+   * @type {number}
    */
   this.packedLength = numComponents + Ellipsoid.packedLength + 1;
 }
@@ -113,10 +113,10 @@ function WallOutlineGeometry(options) {
  * Stores the provided instance into the provided array.
  *
  * @param {WallOutlineGeometry} value The value to pack.
- * @param {Number[]} array The array to pack into.
- * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+ * @param {number[]} array The array to pack into.
+ * @param {number} [startingIndex=0] The index into the array at which to start packing the elements.
  *
- * @returns {Number[]} The array that was packed into
+ * @returns {number[]} The array that was packed into
  */
 WallOutlineGeometry.pack = function (value, array, startingIndex) {
   //>>includeStart('debug', pragmas.debug);
@@ -180,8 +180,8 @@ const scratchOptions = {
 /**
  * Retrieves an instance from a packed array.
  *
- * @param {Number[]} array The packed array.
- * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+ * @param {number[]} array The packed array.
+ * @param {number} [startingIndex=0] The starting index of the element to be unpacked.
  * @param {WallOutlineGeometry} [result] The object into which to store the result.
  * @returns {WallOutlineGeometry} The modified result parameter or a new WallOutlineGeometry instance if one was not provided.
  */
@@ -249,11 +249,11 @@ WallOutlineGeometry.unpack = function (array, startingIndex, result) {
  * A description of a walloutline. A wall is defined by a series of points,
  * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
- * @param {Number} [options.maximumHeight] A constant that defines the maximum height of the
+ * @param {number} [options.maximumHeight] A constant that defines the maximum height of the
  *        wall at <code>positions</code>. If undefined, the height of each position in used.
- * @param {Number} [options.minimumHeight] A constant that defines the minimum height of the
+ * @param {number} [options.minimumHeight] A constant that defines the minimum height of the
  *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
  * @returns {WallOutlineGeometry}

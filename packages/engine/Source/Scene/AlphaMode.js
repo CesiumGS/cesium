@@ -1,14 +1,14 @@
 /**
  * The alpha rendering mode of the material.
  *
- * @enum {String}
+ * @enum {string}
  * @private
  */
 const AlphaMode = {
   /**
    * The alpha value is ignored and the rendered output is fully opaque.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   OPAQUE: "OPAQUE",
@@ -16,7 +16,7 @@ const AlphaMode = {
   /**
    * The rendered output is either fully opaque or fully transparent depending on the alpha value and the specified alpha cutoff value.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   MASK: "MASK",
@@ -24,7 +24,7 @@ const AlphaMode = {
   /**
    * The rendered output is composited onto the destination with alpha blending.
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   BLEND: "BLEND",

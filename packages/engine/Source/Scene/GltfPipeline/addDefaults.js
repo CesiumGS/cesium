@@ -8,8 +8,8 @@ import WebGLConstants from "../../Core/WebGLConstants.js";
 /**
  * Adds default glTF values if they don't exist.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @returns {Object} The modified glTF.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @returns {object} The modified glTF.
  *
  * @private
  */

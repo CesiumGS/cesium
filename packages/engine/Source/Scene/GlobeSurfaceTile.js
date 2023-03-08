@@ -79,7 +79,7 @@ Object.defineProperties(GlobeSurfaceTile.prototype, {
    * unloaded while it is needed for rendering, regardless of the value of this
    * property.
    * @memberof GlobeSurfaceTile.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   eligibleForUnloading: {
     get: function () {
@@ -345,7 +345,8 @@ GlobeSurfaceTile.prototype.processImagery = function (
 
     if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
       const imageryLayer = tileImagery.loadingImagery.imageryLayer;
-      if (imageryLayer.imageryProvider.ready) {
+      // ImageryProvider.ready is deprecated. This is here for backwards compatibility
+      if (imageryLayer.ready && imageryLayer.imageryProvider._ready) {
         // Remove the placeholder and add the actual skeletons (if any)
         // at the same position.  Then continue the loop at the same index.
         tileImagery.freeResources();

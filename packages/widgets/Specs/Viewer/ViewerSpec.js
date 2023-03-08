@@ -12,6 +12,7 @@ import {
   HeadingPitchRange,
   JulianDate,
   Matrix4,
+  Rectangle,
   TimeIntervalCollection,
   WebMercatorProjection,
   ConstantPositionProperty,
@@ -23,6 +24,7 @@ import {
   Camera,
   CameraFlightPath,
   Cesium3DTileset,
+  ImageryLayer,
   ImageryLayerCollection,
   Cesium3DTilesVoxelProvider,
   SceneMode,
@@ -53,9 +55,19 @@ import pollToPromise from "../../../../Specs/pollToPromise.js";
 describe(
   "Widgets/Viewer/Viewer",
   function () {
+    const readyPromise = Promise.resolve(true);
     const testProvider = {
       isReady: function () {
         return false;
+      },
+      _ready: true,
+      ready: true,
+      _readyPromise: readyPromise,
+      readyPromise: readyPromise,
+      tilingScheme: {
+        tileXYToRectangle: function () {
+          return new Rectangle();
+        },
       },
     };
 
@@ -508,10 +520,11 @@ describe(
       expect(viewer.scene.mapProjection).toEqual(mapProjection);
     });
 
-    it("can set selectedImageryProviderViewModel", function () {
+    it("can set selectedImageryProviderViewModel", async function () {
       viewer = createViewer(container, {
         selectedImageryProviderViewModel: testProviderViewModel,
       });
+      await pollToPromise(() => viewer.scene.imageryLayers.get(0).ready);
       expect(viewer.scene.imageryLayers.length).toEqual(1);
       expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
         testProvider
@@ -532,12 +545,13 @@ describe(
       );
     });
 
-    it("can set imageryProviderViewModels", function () {
+    it("can set imageryProviderViewModels", async function () {
       const models = [testProviderViewModel];
 
       viewer = createViewer(container, {
         imageryProviderViewModels: models,
       });
+      await pollToPromise(() => viewer.scene.imageryLayers.get(0).ready);
       expect(viewer.scene.imageryLayers.length).toEqual(1);
       expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
         testProvider
@@ -551,6 +565,25 @@ describe(
       expect(
         viewer.baseLayerPicker.viewModel.imageryProviderViewModels[0]
       ).toEqual(models[0]);
+    });
+
+    it("can set baseLayer when BaseLayerPicker is disabled", function () {
+      viewer = createViewer(container, {
+        baseLayerPicker: false,
+        baseLayer: new ImageryLayer(testProvider),
+      });
+      expect(viewer.scene.imageryLayers.length).toEqual(1);
+      expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
+        testProvider
+      );
+    });
+
+    it("can set baseLayer to false when BaseLayerPicker is disabled", function () {
+      viewer = createViewer(container, {
+        baseLayerPicker: false,
+        baseLayer: false,
+      });
+      expect(viewer.scene.imageryLayers.length).toEqual(0);
     });
 
     it("can disable render loop", function () {

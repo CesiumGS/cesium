@@ -2,8 +2,10 @@ import { ShaderSource } from "../../index.js";
 
 describe("Renderer/ShaderSource", function () {
   const mockContext = {
-    webgl2: false,
+    webgl2: true,
   };
+
+  const fragColorDeclarationRegex = /layout\s*\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g;
 
   it("combines #defines", function () {
     const source = new ShaderSource({
@@ -40,22 +42,22 @@ describe("Renderer/ShaderSource", function () {
 
   it("creates a pick shader with a uniform", function () {
     const source = new ShaderSource({
-      sources: ["void main() { gl_FragColor = vec4(1.0); }"],
+      sources: ["void main() { out_FragColor = vec4(1.0); }"],
       pickColorQualifier: "uniform",
     });
     const shaderText = source.createCombinedVertexShader(mockContext);
     expect(shaderText).toContain("uniform vec4 czm_pickColor;");
-    expect(shaderText).toContain("gl_FragColor = czm_pickColor;");
+    expect(shaderText).toContain("out_FragColor = czm_pickColor;");
   });
 
   it("creates a pick shader with a varying", function () {
     const source = new ShaderSource({
-      sources: ["void main() { gl_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "varying",
+      sources: ["void main() { out_FragColor = vec4(1.0); }"],
+      pickColorQualifier: "in",
     });
     const shaderText = source.createCombinedVertexShader(mockContext);
-    expect(shaderText).toContain("varying vec4 czm_pickColor;");
-    expect(shaderText).toContain("gl_FragColor = czm_pickColor;");
+    expect(shaderText).toContain("in vec4 czm_pickColor;");
+    expect(shaderText).toContain("out_FragColor = czm_pickColor;");
   });
 
   it("throws with invalid qualifier", function () {
@@ -68,7 +70,7 @@ describe("Renderer/ShaderSource", function () {
 
   it("combines #version to shader", function () {
     const source = new ShaderSource({
-      sources: ["#version 300 es\nvoid main() {gl_FragColor = vec4(1.0); }"],
+      sources: ["#version 300 es\nvoid main() {out_FragColor = vec4(1.0); }"],
     });
     const shaderText = source.createCombinedVertexShader(mockContext);
     expect(shaderText).toStartWith("#version 300 es\n");
@@ -77,8 +79,8 @@ describe("Renderer/ShaderSource", function () {
   it("clones", function () {
     const source = new ShaderSource({
       defines: ["A"],
-      sources: ["void main() { gl_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "varying",
+      sources: ["void main() { out_FragColor = vec4(1.0); }"],
+      pickColorQualifier: "in",
       includeBuiltIns: false,
     });
     const clone = source.clone();
@@ -100,13 +102,13 @@ describe("Renderer/ShaderSource", function () {
   it("creates cache key", function () {
     const source = new ShaderSource({
       defines: ["A", "B", "C"],
-      sources: ["void main() { gl_FragColor = vec4(1.0); }"],
-      pickColorQualifier: "varying",
+      sources: ["void main() { out_FragColor = vec4(1.0); }"],
+      pickColorQualifier: "in",
       includeBuiltIns: false,
     });
 
     expect(source.getCacheKey()).toBe(
-      "A,B,C:varying:false:void main() { gl_FragColor = vec4(1.0); }"
+      "A,B,C:in:false:void main() { out_FragColor = vec4(1.0); }"
     );
   });
 
@@ -125,12 +127,40 @@ describe("Renderer/ShaderSource", function () {
     const source = new ShaderSource({
       sources: [
         "vec4 getColor() { return vec4(1.0, 0.0, 0.0, 1.0); }",
-        "void main() { gl_fragColor = getColor(); }",
+        "void main() { out_FragColor = getColor(); }",
       ],
     });
 
     expect(source.getCacheKey()).toBe(
-      ":undefined:true:vec4 getColor() { return vec4(1.0, 0.0, 0.0, 1.0); }\nvoid main() { gl_fragColor = getColor(); }"
+      ":undefined:true:vec4 getColor() { return vec4(1.0, 0.0, 0.0, 1.0); }\nvoid main() { out_FragColor = getColor(); }"
     );
+  });
+
+  it("adds layout declaration for out_FragColor if it does not already exist", function () {
+    const source = new ShaderSource({
+      defines: ["A"],
+      sources: ["void main() { out_FragColor = vec4(1.0); }"],
+      pickColorQualifier: "in",
+      includeBuiltIns: false,
+    });
+    const shaderText = source.createCombinedFragmentShader(mockContext);
+    const fragColorDeclarations =
+      shaderText.match(fragColorDeclarationRegex) || [];
+    expect(fragColorDeclarations.length).toEqual(1);
+  });
+
+  it("does not layout declaration for out_FragColor if it already exists", function () {
+    const source = new ShaderSource({
+      defines: ["A"],
+      sources: [
+        "layout (location = 0) out vec4 out_FragColor; void main() { out_FragColor = vec4(1.0); }",
+      ],
+      pickColorQualifier: "in",
+      includeBuiltIns: false,
+    });
+    const shaderText = source.createCombinedFragmentShader(mockContext);
+    const fragColorDeclarations =
+      shaderText.match(fragColorDeclarationRegex) || [];
+    expect(fragColorDeclarations.length).toEqual(1);
   });
 });

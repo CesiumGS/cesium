@@ -13,15 +13,15 @@ import TimeStandard from "./TimeStandard.js";
  * @alias Iau2006XysData
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Resource|String} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
+ * @param {object} [options] Object with the following properties:
+ * @param {Resource|string} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
  *                 `{0}` will be replaced with the file index.
- * @param {Number} [options.interpolationOrder=9] The order of interpolation to perform on the XYS data.
- * @param {Number} [options.sampleZeroJulianEphemerisDate=2442396.5] The Julian ephemeris date (JED) of the
+ * @param {number} [options.interpolationOrder=9] The order of interpolation to perform on the XYS data.
+ * @param {number} [options.sampleZeroJulianEphemerisDate=2442396.5] The Julian ephemeris date (JED) of the
  *                 first XYS sample.
- * @param {Number} [options.stepSizeDays=1.0] The step size, in days, between successive XYS samples.
- * @param {Number} [options.samplesPerXysFile=1000] The number of samples in each XYS file.
- * @param {Number} [options.totalSamples=27426] The total number of samples in all XYS files.
+ * @param {number} [options.stepSizeDays=1.0] The step size, in days, between successive XYS samples.
+ * @param {number} [options.samplesPerXysFile=1000] The number of samples in each XYS file.
+ * @param {number} [options.totalSamples=27426] The total number of samples in all XYS files.
  *
  * @private
  */
@@ -85,13 +85,13 @@ function getDaysSinceEpoch(xys, dayTT, secondTT) {
 /**
  * Preloads XYS data for a specified date range.
  *
- * @param {Number} startDayTT The Julian day number of the beginning of the interval to preload, expressed in
+ * @param {number} startDayTT The Julian day number of the beginning of the interval to preload, expressed in
  *                 the Terrestrial Time (TT) time standard.
- * @param {Number} startSecondTT The seconds past noon of the beginning of the interval to preload, expressed in
+ * @param {number} startSecondTT The seconds past noon of the beginning of the interval to preload, expressed in
  *                 the Terrestrial Time (TT) time standard.
- * @param {Number} stopDayTT The Julian day number of the end of the interval to preload, expressed in
+ * @param {number} stopDayTT The Julian day number of the end of the interval to preload, expressed in
  *                 the Terrestrial Time (TT) time standard.
- * @param {Number} stopSecondTT The seconds past noon of the end of the interval to preload, expressed in
+ * @param {number} stopSecondTT The seconds past noon of the end of the interval to preload, expressed in
  *                 the Terrestrial Time (TT) time standard.
  * @returns {Promise<void>} A promise that, when resolved, indicates that the requested interval has been
  *                    preloaded.
@@ -138,9 +138,9 @@ Iau2006XysData.prototype.preload = function (
  * Computes the XYS values for a given date by interpolating.  If the required data is not yet downloaded,
  * this method will return undefined.
  *
- * @param {Number} dayTT The Julian day number for which to compute the XYS value, expressed in
+ * @param {number} dayTT The Julian day number for which to compute the XYS value, expressed in
  *                 the Terrestrial Time (TT) time standard.
- * @param {Number} secondTT The seconds past noon of the date for which to compute the XYS value, expressed in
+ * @param {number} secondTT The seconds past noon of the date for which to compute the XYS value, expressed in
  *                 the Terrestrial Time (TT) time standard.
  * @param {Iau2006XysSample} [result] The instance to which to copy the interpolated result.  If this parameter
  *                           is undefined, a new instance is allocated and returned.

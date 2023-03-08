@@ -19,9 +19,9 @@ import { Math as CesiumMath } from "../../index.js";
 describe("Scene/ShadowVolumeAppearance", function () {
   // using ShadowVolumeAppearanceVS directly fails on Travis with the --release test
   const testVs =
-    "attribute vec3 position3DHigh;\n" +
-    "attribute vec3 position3DLow;\n" +
-    "attribute float batchId;\n" +
+    "in vec3 position3DHigh;\n" +
+    "in vec3 position3DLow;\n" +
+    "in float batchId;\n" +
     "void main() {\n" +
     "    vec4 position = czm_computePosition();\n" +
     "    gl_Position = czm_depthClamp(czm_modelViewProjectionRelativeToEye * position);\n" +

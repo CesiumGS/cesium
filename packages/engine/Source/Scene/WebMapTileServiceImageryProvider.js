@@ -2,6 +2,7 @@ import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -17,28 +18,28 @@ const defaultParameters = Object.freeze({
 });
 
 /**
- * @typedef {Object} WebMapTileServiceImageryProvider.ConstructorOptions
+ * @typedef {object} WebMapTileServiceImageryProvider.ConstructorOptions
  *
  * Initialization options for the WebMapTileServiceImageryProvider constructor
  *
- * @property {Resource|String} url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
- * @property {String} [format='image/jpeg'] The MIME type for images to retrieve from the server.
- * @property {String} layer The layer name for WMTS requests.
- * @property {String} style The style name for WMTS requests.
- * @property {String} tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
+ * @property {Resource|string} url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
+ * @property {string} [format='image/jpeg'] The MIME type for images to retrieve from the server.
+ * @property {string} layer The layer name for WMTS requests.
+ * @property {string} style The style name for WMTS requests.
+ * @property {string} tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
  * @property {Array} [tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
  * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
  * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
- * @property {Object} [dimensions] A object containing static dimensions and their values.
- * @property {Number} [tileWidth=256] The tile width in pixels.
- * @property {Number} [tileHeight=256] The tile height in pixels.
+ * @property {object} [dimensions] A object containing static dimensions and their values.
+ * @property {number} [tileWidth=256] The tile width in pixels.
+ * @property {number} [tileHeight=256] The tile height in pixels.
  * @property {TilingScheme} [tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
- * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {string|string[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
  */
@@ -136,91 +137,16 @@ function WebMapTileServiceImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultNightAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultDayAlpha = undefined;
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultBrightness = undefined;
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultContrast = undefined;
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultHue = undefined;
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultSaturation = undefined;
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   *
-   * @type {Number|undefined}
-   * @default undefined
-   */
-  this.defaultGamma = undefined;
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   *
-   * @type {TextureMinificationFilter}
-   * @default undefined
-   */
-  this.defaultMinificationFilter = undefined;
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   *
-   * @type {TextureMagnificationFilter}
-   * @default undefined
-   */
-  this.defaultMagnificationFilter = undefined;
+  this._defaultAlpha = undefined;
+  this._defaultNightAlpha = undefined;
+  this._defaultDayAlpha = undefined;
+  this._defaultBrightness = undefined;
+  this._defaultContrast = undefined;
+  this._defaultHue = undefined;
+  this._defaultSaturation = undefined;
+  this._defaultGamma = undefined;
+  this._defaultMinificationFilter = undefined;
+  this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(options.url);
 
@@ -287,6 +213,7 @@ function WebMapTileServiceImageryProvider(options) {
   }
 
   this._readyPromise = Promise.resolve(true);
+  this._ready = true;
 
   // Check the number of tiles at the minimum level.  If it's more than four,
   // throw an exception, because starting at the higher minimum
@@ -390,7 +317,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets the URL of the service hosting the imagery.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -412,10 +339,9 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileWidth: {
@@ -425,10 +351,9 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   tileHeight: {
@@ -438,10 +363,9 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number|undefined}
+   * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -451,10 +375,9 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   minimumLevel: {
@@ -464,8 +387,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -477,8 +399,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -492,8 +413,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -521,7 +441,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets the mime type of images returned by this imagery provider.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   format: {
@@ -533,28 +453,40 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
-    value: true,
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.ready",
+        "WebMapTileServiceImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+      );
+      return true;
+    },
   },
 
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Promise.<Boolean>}
+   * @type {Promise<boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.readyPromise",
+        "WebMapTileServiceImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof WebMapTileServiceImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -572,7 +504,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
    * and texture upload time are reduced.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasAlphaChannel: {
@@ -611,7 +543,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets or sets an object that contains static dimensions and their values.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Object}
+   * @type {object}
    */
   dimensions: {
     get: function () {
@@ -626,17 +558,251 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
       }
     },
   },
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultAlpha: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultAlpha",
+        "WebMapTileServiceImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      return this._defaultAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultAlpha",
+        "WebMapTileServiceImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      this._defaultAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultNightAlpha: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultNightAlpha",
+        "WebMapTileServiceImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      return this._defaultNightAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultNightAlpha",
+        "WebMapTileServiceImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      this._defaultNightAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultDayAlpha: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultDayAlpha",
+        "WebMapTileServiceImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      return this._defaultDayAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultDayAlpha",
+        "WebMapTileServiceImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      this._defaultDayAlpha = value;
+    },
+  },
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultBrightness: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultBrightness",
+        "WebMapTileServiceImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      return this._defaultBrightness;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultBrightness",
+        "WebMapTileServiceImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      this._defaultBrightness = value;
+    },
+  },
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultContrast: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultContrast",
+        "WebMapTileServiceImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      return this._defaultContrast;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultContrast",
+        "WebMapTileServiceImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      this._defaultContrast = value;
+    },
+  },
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultHue: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultHue",
+        "WebMapTileServiceImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      return this._defaultHue;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultHue",
+        "WebMapTileServiceImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      this._defaultHue = value;
+    },
+  },
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultSaturation: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultSaturation",
+        "WebMapTileServiceImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      return this._defaultSaturation;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultSaturation",
+        "WebMapTileServiceImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      this._defaultSaturation = value;
+    },
+  },
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultGamma: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultGamma",
+        "WebMapTileServiceImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      return this._defaultGamma;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultGamma",
+        "WebMapTileServiceImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      this._defaultGamma = value;
+    },
+  },
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {TextureMinificationFilter}
+   * @deprecated
+   */
+  defaultMinificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultMinificationFilter",
+        "WebMapTileServiceImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      return this._defaultMinificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultMinificationFilter",
+        "WebMapTileServiceImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      this._defaultMinificationFilter = value;
+    },
+  },
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   * @memberof WebMapTileServiceImageryProvider.prototype
+   * @type {TextureMagnificationFilter}
+   * @deprecated
+   */
+  defaultMagnificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultMagnificationFilter",
+        "WebMapTileServiceImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      return this._defaultMagnificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "WebMapTileServiceImageryProvider.defaultMagnificationFilter",
+        "WebMapTileServiceImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      this._defaultMagnificationFilter = value;
+    },
+  },
 });
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level;
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
   x,
@@ -647,17 +813,14 @@ WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 WebMapTileServiceImageryProvider.prototype.requestImage = function (
   x,
@@ -692,11 +855,11 @@ WebMapTileServiceImageryProvider.prototype.requestImage = function (
  * Picking features is not currently supported by this imagery provider, so this function simply returns
  * undefined.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
- * @param {Number} longitude The longitude at which to pick features.
- * @param {Number} latitude  The latitude at which to pick features.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
+ * @param {number} longitude The longitude at which to pick features.
+ * @param {number} latitude  The latitude at which to pick features.
  * @return {undefined} Undefined since picking is not supported.
  */
 WebMapTileServiceImageryProvider.prototype.pickFeatures = function (

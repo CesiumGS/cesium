@@ -6,8 +6,8 @@ import DeveloperError from "./DeveloperError.js";
  * Given a URI, returns the extension of the URI.
  * @function getExtensionFromUri
  *
- * @param {String} uri The Uri.
- * @returns {String} The extension of the Uri.
+ * @param {string} uri The Uri.
+ * @returns {string} The extension of the Uri.
  *
  * @example
  * //extension will be "czml";

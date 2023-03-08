@@ -7,7 +7,7 @@ import defaultValue from "../Core/defaultValue.js";
  * <code>content.group.metadata</code> much like tile metadata is accessed as
  * <code>tile.metadata</code>.
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {GroupMetadata} options.metadata The metadata associated with this group.
  *
  * @alias Cesium3DContentGroup

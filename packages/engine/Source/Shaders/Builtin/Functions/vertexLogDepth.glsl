@@ -1,8 +1,8 @@
 #ifdef LOG_DEPTH
 // 1.0 at the near plane, increasing linearly from there.
-varying float v_depthFromNearPlusOne;
+out float v_depthFromNearPlusOne;
 #ifdef SHADOW_MAP
-varying vec3 v_logPositionEC;
+out vec3 v_logPositionEC;
 #endif
 #endif
 

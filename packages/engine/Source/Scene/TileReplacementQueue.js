@@ -27,7 +27,7 @@ TileReplacementQueue.prototype.markStartOfRenderFrame = function () {
  * tiles.  Tiles that were used last frame will not be unloaded, even if that puts the number
  * of tiles above the specified maximum.
  *
- * @param {Number} maximumTiles The maximum number of tiles in the queue.
+ * @param {number} maximumTiles The maximum number of tiles in the queue.
  */
 TileReplacementQueue.prototype.trimTiles = function (maximumTiles) {
   let tileToTrim = this.tail;

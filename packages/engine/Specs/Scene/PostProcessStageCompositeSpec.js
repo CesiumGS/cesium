@@ -29,7 +29,7 @@ describe(
     it("constructs", function () {
       const stage = new PostProcessStage({
         fragmentShader:
-          "uniform vec4 color; void main() { gl_FragColor = color; }",
+          "uniform vec4 color; void main() { out_FragColor = color; }",
         uniforms: { color: Color.clone(Color.RED) },
       });
       const uniforms = {
@@ -63,11 +63,11 @@ describe(
 
     it("default constructs", function () {
       const stage1 = new PostProcessStage({
-        fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
       });
       const stage2 = new PostProcessStage({
         fragmentShader:
-          "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
+          "void main() { out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
       });
       const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
@@ -91,11 +91,11 @@ describe(
 
     it("gets stages", function () {
       const stage1 = new PostProcessStage({
-        fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
       });
       const stage2 = new PostProcessStage({
         fragmentShader:
-          "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
+          "void main() { out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
       });
       const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
@@ -106,11 +106,11 @@ describe(
 
     it("throws when get index is invalid", function () {
       const stage1 = new PostProcessStage({
-        fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
       });
       const stage2 = new PostProcessStage({
         fragmentShader:
-          "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
+          "void main() { out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
       });
       const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
@@ -125,15 +125,15 @@ describe(
 
     it("renders with inputPreviousStageTexture is true", function () {
       const stage1 = new PostProcessStage({
-        fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
       });
       const stage2 = new PostProcessStage({
         fragmentShader:
           "uniform sampler2D colorTexture;\n" +
-          "varying vec2 v_textureCoordinates;\n" +
+          "in vec2 v_textureCoordinates;\n" +
           "void main() {\n" +
-          "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
-          "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
+          "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
+          "    out_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
           "}",
       });
       const composite = new PostProcessStageComposite({
@@ -148,15 +148,15 @@ describe(
 
     it("renders with inputPreviousStageTexture is false", function () {
       const stage1 = new PostProcessStage({
-        fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
       });
       const stage2 = new PostProcessStage({
         fragmentShader:
           "uniform sampler2D colorTexture;\n" +
-          "varying vec2 v_textureCoordinates;\n" +
+          "in vec2 v_textureCoordinates;\n" +
           "void main() {\n" +
-          "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
-          "    gl_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
+          "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
+          "    out_FragColor = vec4(color.r, 0.0, 1.0, 1.0);\n" +
           "}",
       });
       const composite = new PostProcessStageComposite({
@@ -171,7 +171,11 @@ describe(
     });
 
     it("does not run a stage that requires depth textures when depth textures are not supported", function () {
-      const s = createScene();
+      const s = createScene({
+        contextOptions: {
+          requestWebgl1: true,
+        },
+      });
       s.context._depthTexture = false;
 
       if (defined(s._view.globeDepth)) {
@@ -188,7 +192,7 @@ describe(
       const bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
       s.postProcessStages.add(
         new PostProcessStage({
-          fragmentShader: `void main() { gl_FragColor = vec4(vec3(${
+          fragmentShader: `void main() { out_FragColor = vec4(vec3(${
             bgColor / 255
           }), 1.0); }`,
         })
@@ -200,7 +204,7 @@ describe(
           stages: [
             new PostProcessStage({
               fragmentShader:
-                "uniform sampler2D depthTexture; void main() { gl_FragColor = vec4(1.0); }",
+                "uniform sampler2D depthTexture; void main() { out_FragColor = vec4(1.0); }",
             }),
           ],
         })
@@ -222,11 +226,11 @@ describe(
 
     it("destroys", function () {
       const stage1 = new PostProcessStage({
-        fragmentShader: "void main() { gl_FragColor = vec4(1.0); }",
+        fragmentShader: "void main() { out_FragColor = vec4(1.0); }",
       });
       const stage2 = new PostProcessStage({
         fragmentShader:
-          "void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
+          "void main() { out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }",
       });
       const composite = new PostProcessStageComposite({
         stages: [stage1, stage2],
