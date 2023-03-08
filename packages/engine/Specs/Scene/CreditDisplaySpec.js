@@ -57,51 +57,55 @@ describe("Scene/CreditDisplay", function () {
     runTests();
   });
 
+  it("credit display throws with no container", function () {
+    expect(function () {
+      return new CreditDisplay();
+    }).toThrowDeveloperError();
+  });
+
+  it("credits have unique ids", function () {
+    const credit1 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
+    const credit2 = new Credit('<a href="http://cesiumjs.org/">credit2</a>');
+    expect(credit1.id).not.toEqual(credit2.id);
+
+    const credit3 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
+    expect(credit1.id).toEqual(credit3.id);
+  });
+
+  it("credit clone works", function () {
+    const credit1 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
+    const credit2 = Credit.clone(credit1);
+    expect(credit1).toEqual(credit2);
+    const credit3 = Credit.clone(undefined);
+    expect(credit3).toBeUndefined();
+  });
+
   function runTests() {
     // For the sake of the tests, we remove the logo
     // credit at the beginning of every frame
     function beginFrame(creditDisplay) {
       creditDisplay.beginFrame();
     }
-    it("credit display throws with no container", function () {
-      expect(function () {
-        return new CreditDisplay();
-      }).toThrowDeveloperError();
-    });
+
     it("credit display addCredit throws when credit is undefined", function () {
       expect(function () {
         creditDisplay = new CreditDisplay(container);
         creditDisplay.addCredit();
       }).toThrowDeveloperError();
     });
+
     it("credit display addDefaultCredit throws when credit is undefined", function () {
       expect(function () {
         creditDisplay = new CreditDisplay(container);
         creditDisplay.addDefaultCredit();
       }).toThrowDeveloperError();
     });
+
     it("credit display removeDefaultCredit throws when credit is undefined", function () {
       expect(function () {
         creditDisplay = new CreditDisplay(container);
         creditDisplay.removeDefaultCredit();
       }).toThrowDeveloperError();
-    });
-
-    it("credits have unique ids", function () {
-      const credit1 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
-      const credit2 = new Credit('<a href="http://cesiumjs.org/">credit2</a>');
-      expect(credit1.id).not.toEqual(credit2.id);
-
-      const credit3 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
-      expect(credit1.id).toEqual(credit3.id);
-    });
-
-    it("credit clone works", function () {
-      const credit1 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
-      const credit2 = Credit.clone(credit1);
-      expect(credit1).toEqual(credit2);
-      const credit3 = Credit.clone(undefined);
-      expect(credit3).toBeUndefined();
     });
 
     it("credit display displays a credit", function () {
