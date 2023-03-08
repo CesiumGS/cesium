@@ -2444,8 +2444,7 @@ function supportsSkipLevelOfDetail(frameState) {
  * @private
  */
 Model.prototype.hasSkipLevelOfDetail = function (frameState) {
-  const is3DTiles = ModelType.is3DTiles(this.type);
-  if (!is3DTiles) {
+  if (!ModelType.is3DTiles(this.type)) {
     return false;
   }
 

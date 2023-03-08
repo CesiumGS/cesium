@@ -2713,18 +2713,15 @@ function updateTiles(tileset, frameState, passOptions) {
   tileset._styleEngine.applyStyle(tileset);
   tileset._styleApplied = true;
 
-  const isRender = passOptions.isRender;
-  const { statistics, tileVisible } = tileset;
-  const commandList = frameState.commandList;
+  const { commandList, context } = frameState;
   const numberOfInitialCommands = commandList.length;
   const selectedTiles = tileset._selectedTiles;
-  const selectedLength = selectedTiles.length;
 
   const bivariateVisibilityTest =
     tileset._skipLevelOfDetail &&
     tileset._hasMixedContent &&
-    frameState.context.stencilBuffer &&
-    selectedLength > 0;
+    context.stencilBuffer &&
+    selectedTiles.length > 0;
 
   tileset._backfaceCommands.length = 0;
 
@@ -2741,8 +2738,11 @@ function updateTiles(tileset, frameState, passOptions) {
     commandList.push(tileset._stencilClearCommand);
   }
 
+  const { statistics, tileVisible } = tileset;
+  const isRender = passOptions.isRender;
   const lengthBeforeUpdate = commandList.length;
-  for (let i = 0; i < selectedLength; ++i) {
+
+  for (let i = 0; i < selectedTiles.length; ++i) {
     const tile = selectedTiles[i];
     // Raise the tileVisible event before update in case the tileVisible event
     // handler makes changes that update needs to apply to WebGL resources
@@ -3019,8 +3019,6 @@ function update(tileset, frameState, passStatistics, passOptions) {
   const statistics = tileset._statistics;
   statistics.clear();
 
-  const isRender = passOptions.isRender;
-
   // Resets the visibility check for each pass
   ++tileset._updatedVisibilityFrame;
 
@@ -3042,7 +3040,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
   // Update pass statistics
   Cesium3DTilesetStatistics.clone(statistics, passStatistics);
 
-  if (isRender) {
+  if (passOptions.isRender) {
     const credits = tileset._credits;
     if (defined(credits) && statistics.selected !== 0) {
       for (let i = 0; i < credits.length; ++i) {

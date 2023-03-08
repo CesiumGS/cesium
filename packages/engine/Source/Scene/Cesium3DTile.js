@@ -1796,19 +1796,15 @@ Cesium3DTile.prototype.createBoundingVolume = function (
     );
   }
 
-  if (defined(boundingVolumeHeader.box)) {
-    return createBox(boundingVolumeHeader.box, transform, result);
+  const { box, region, sphere } = boundingVolumeHeader;
+  if (defined(box)) {
+    return createBox(box, transform, result);
   }
-  if (defined(boundingVolumeHeader.region)) {
-    return createRegion(
-      boundingVolumeHeader.region,
-      transform,
-      this._initialTransform,
-      result
-    );
+  if (defined(region)) {
+    return createRegion(region, transform, this._initialTransform, result);
   }
-  if (defined(boundingVolumeHeader.sphere)) {
-    return createSphere(boundingVolumeHeader.sphere, transform, result);
+  if (defined(sphere)) {
+    return createSphere(sphere, transform, result);
   }
   throw new RuntimeError(
     "boundingVolume must contain a sphere, region, or box"
@@ -2043,18 +2039,18 @@ function updateClippingPlanes(tile, tileset) {
  * @param {object} passOptions
  */
 Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
-  const commandStart = frameState.commandList.length;
+  const { commandList } = frameState;
+  const commandStart = commandList.length;
 
   updateClippingPlanes(this, tileset);
   applyDebugSettings(this, tileset, frameState, passOptions);
   updateContent(this, tileset, frameState);
 
-  const commandEnd = frameState.commandList.length;
-  const commandsLength = commandEnd - commandStart;
-  this._commandsLength = commandsLength;
+  const commandEnd = commandList.length;
+  this._commandsLength = commandEnd - commandStart;
 
-  for (let i = 0; i < commandsLength; ++i) {
-    const command = frameState.commandList[commandStart + i];
+  for (let i = commandStart; i < commandEnd; ++i) {
+    const command = commandList[i];
     const translucent = command.pass === Pass.TRANSLUCENT;
     command.depthForTranslucentClassification = translucent;
   }
