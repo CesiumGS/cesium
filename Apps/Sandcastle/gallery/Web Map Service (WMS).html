@@ -38,8 +38,7 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
 
         // Add a WMS imagery layer
-        const imageryLayers = viewer.imageryLayers;
-        imageryLayers.addImageryProvider(
+        const layer = new Cesium.ImageryLayer(
           new Cesium.WebMapServiceImageryProvider({
             url:
               "https://nationalmap.gov.au/proxy/http://geoserver.nationalmap.nicta.com.au/geotopo_250k/ows",
@@ -50,6 +49,7 @@
             },
           })
         );
+        viewer.imageryLayers.add(layer);
 
         // Start off looking at Australia.
         viewer.camera.setView({

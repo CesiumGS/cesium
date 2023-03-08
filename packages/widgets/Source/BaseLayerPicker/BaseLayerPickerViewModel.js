@@ -3,6 +3,7 @@ import {
   defined,
   DeveloperError,
   EllipsoidTerrainProvider,
+  ImageryLayer,
   Terrain,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
@@ -177,7 +178,7 @@ function BaseLayerPickerViewModel(options) {
   this.selectedImagery = undefined;
   const selectedImageryViewModel = knockout.observable();
 
-  this._currentImageryProviders = [];
+  this._currentImageryLayers = [];
   knockout.defineProperty(this, "selectedImagery", {
     get: function () {
       return selectedImageryViewModel();
@@ -189,15 +190,15 @@ function BaseLayerPickerViewModel(options) {
       }
 
       let i;
-      const currentImageryProviders = this._currentImageryProviders;
-      const currentImageryProvidersLength = currentImageryProviders.length;
+      const currentImageryLayers = this._currentImageryLayers;
+      const currentImageryLayersLength = currentImageryLayers.length;
       const imageryLayers = this._globe.imageryLayers;
       let hadExistingBaseLayer = false;
-      for (i = 0; i < currentImageryProvidersLength; i++) {
+      for (i = 0; i < currentImageryLayersLength; i++) {
         const layersLength = imageryLayers.length;
         for (let x = 0; x < layersLength; x++) {
           const layer = imageryLayers.get(x);
-          if (layer.imageryProvider === currentImageryProviders[i]) {
+          if (layer === currentImageryLayers[i]) {
             imageryLayers.remove(layer);
             hadExistingBaseLayer = true;
             break;
@@ -209,21 +210,26 @@ function BaseLayerPickerViewModel(options) {
         const newProviders = value.creationCommand();
         if (Array.isArray(newProviders)) {
           const newProvidersLength = newProviders.length;
+          this._currentImageryLayers = [];
           for (i = newProvidersLength - 1; i >= 0; i--) {
-            imageryLayers.addImageryProvider(newProviders[i], 0);
+            const layer = ImageryLayer.fromProviderAsync(newProviders[i]);
+            imageryLayers.add(layer, 0);
+            this._currentImageryLayers.push(layer);
           }
-          this._currentImageryProviders = newProviders.slice(0);
         } else {
-          this._currentImageryProviders = [newProviders];
+          this._currentImageryLayers = [];
+          const layer = ImageryLayer.fromProviderAsync(newProviders);
+          layer.name = value.name;
           if (hadExistingBaseLayer) {
-            imageryLayers.addImageryProvider(newProviders, 0);
+            imageryLayers.add(layer, 0);
           } else {
             const baseLayer = imageryLayers.get(0);
             if (defined(baseLayer)) {
               imageryLayers.remove(baseLayer);
             }
-            imageryLayers.addImageryProvider(newProviders, 0);
+            imageryLayers.add(layer, 0);
           }
+          this._currentImageryLayers.push(layer);
         }
       }
       selectedImageryViewModel(value);

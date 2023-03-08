@@ -381,11 +381,7 @@ function parseMetadataFailure(terrainProviderBuilder, error, provider) {
     return requestLayerJson(terrainProviderBuilder, provider);
   }
 
-  const runtimeError = new RuntimeError(error);
-
-  // preserve the original stack as that's where the error originated
-  runtimeError.stack = error.stack;
-  throw runtimeError;
+  throw new RuntimeError(message);
 }
 
 async function metadataSuccess(terrainProviderBuilder, data, provider) {

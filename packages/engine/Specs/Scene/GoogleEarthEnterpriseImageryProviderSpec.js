@@ -16,6 +16,7 @@ import {
   Request,
   RequestScheduler,
   Resource,
+  RuntimeError,
 } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -26,13 +27,12 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
   });
 
   let supportsImageBitmapOptions;
-  beforeAll(function () {
+  beforeAll(async function () {
     decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
     // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
     // We run it here to avoid interfering with the tests.
-    return Resource.supportsImageBitmapOptions().then(function (result) {
-      supportsImageBitmapOptions = result;
-    });
+    const result = Resource.supportsImageBitmapOptions();
+    supportsImageBitmapOptions = result;
   });
 
   afterAll(function () {
@@ -51,14 +51,6 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     expect(GoogleEarthEnterpriseImageryProvider).toConformToInterface(
       ImageryProvider
     );
-  });
-
-  it("constructor throws when url is not specified", function () {
-    function constructWithoutServer() {
-      return new GoogleEarthEnterpriseImageryProvider({});
-    }
-
-    expect(constructWithoutServer).toThrowDeveloperError();
   });
 
   function installMockGetQuadTreePacket() {
@@ -230,56 +222,84 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       });
   });
 
-  it("returns false for hasAlphaChannel", function () {
+  it("fromMetadata throws without metadata", function () {
+    expect(() =>
+      GoogleEarthEnterpriseImageryProvider.fromMetadata()
+    ).toThrowDeveloperError("");
+  });
+
+  it("fromMetadata throws if there isn't imagery", async function () {
+    installMockGetQuadTreePacket();
+
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl({
+      url: "made/up/url",
+    });
+
+    metadata.imageryPresent = false;
+
+    expect(() =>
+      GoogleEarthEnterpriseImageryProvider.fromMetadata(metadata)
+    ).toThrowError(
+      RuntimeError,
+      "The server made/up/url/ doesn't have imagery"
+    );
+  });
+
+  it("fromMetadata resolves to created provider", async function () {
     installMockGetQuadTreePacket();
     const url = "http://fake.fake.invalid";
 
-    imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-      url: url,
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
+    imageryProvider = GoogleEarthEnterpriseImageryProvider.fromMetadata(
+      metadata
+    );
 
-    return pollToPromise(function () {
-      return imageryProvider.ready;
-    }).then(function () {
-      expect(typeof imageryProvider.hasAlphaChannel).toBe("boolean");
-      expect(imageryProvider.hasAlphaChannel).toBe(false);
-    });
+    expect(imageryProvider).toBeInstanceOf(
+      GoogleEarthEnterpriseImageryProvider
+    );
   });
 
-  it("can provide a root tile", function () {
+  it("returns false for hasAlphaChannel", async function () {
+    installMockGetQuadTreePacket();
+    const url = "http://fake.fake.invalid";
+
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
+    imageryProvider = GoogleEarthEnterpriseImageryProvider.fromMetadata(
+      metadata
+    );
+
+    expect(typeof imageryProvider.hasAlphaChannel).toBe("boolean");
+    expect(imageryProvider.hasAlphaChannel).toBe(false);
+  });
+
+  it("can provide a root tile", async function () {
     installMockGetQuadTreePacket();
     const url = "http://fake.fake.invalid/";
 
-    imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-      url: url,
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
+    imageryProvider = GoogleEarthEnterpriseImageryProvider.fromMetadata(
+      metadata
+    );
 
     expect(imageryProvider.url).toEqual(url);
 
-    return pollToPromise(function () {
-      return imageryProvider.ready;
-    }).then(function () {
-      expect(imageryProvider.tileWidth).toEqual(256);
-      expect(imageryProvider.tileHeight).toEqual(256);
-      expect(imageryProvider.maximumLevel).toEqual(23);
-      expect(imageryProvider.tilingScheme).toBeInstanceOf(
-        GeographicTilingScheme
-      );
-      // Defaults to custom tile policy
-      expect(imageryProvider.tileDiscardPolicy).not.toBeInstanceOf(
-        DiscardMissingTileImagePolicy
-      );
-      expect(imageryProvider.rectangle).toEqual(
-        new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI)
-      );
-      expect(imageryProvider.credit).toBeUndefined();
+    expect(imageryProvider.tileWidth).toEqual(256);
+    expect(imageryProvider.tileHeight).toEqual(256);
+    expect(imageryProvider.maximumLevel).toEqual(23);
+    expect(imageryProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+    // Defaults to custom tile policy
+    expect(imageryProvider.tileDiscardPolicy).not.toBeInstanceOf(
+      DiscardMissingTileImagePolicy
+    );
+    expect(imageryProvider.rectangle).toEqual(
+      new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI)
+    );
+    expect(imageryProvider.credit).toBeUndefined();
 
-      installFakeImageRequest("http://fake.fake.invalid/flatfile?f1-03-i.1");
+    installFakeImageRequest("http://fake.fake.invalid/flatfile?f1-03-i.1");
 
-      return imageryProvider.requestImage(0, 0, 0).then(function (image) {
-        expect(image).toBeImageOrImageBitmap();
-      });
-    });
+    const image = await imageryProvider.requestImage(0, 0, 0);
+    expect(image).toBeImageOrImageBitmap();
   });
 
   it("raises error on invalid url", function () {
@@ -307,14 +327,14 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       });
   });
 
-  it("raises error event when image cannot be loaded", function () {
+  it("raises error event when image cannot be loaded", async function () {
     installMockGetQuadTreePacket();
     const url = "http://foo.bar.invalid";
 
-    imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-      url: url,
-    });
-
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(url);
+    imageryProvider = GoogleEarthEnterpriseImageryProvider.fromMetadata(
+      metadata
+    );
     const layer = new ImageryLayer(imageryProvider);
 
     let tries = 0;
@@ -356,21 +376,17 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return imageryProvider.ready;
-    }).then(function () {
-      const imagery = new Imagery(layer, 0, 0, 0);
-      imagery.addReference();
-      layer._requestImagery(imagery);
-      RequestScheduler.update();
+    const imagery = new Imagery(layer, 0, 0, 0);
+    imagery.addReference();
+    layer._requestImagery(imagery);
+    RequestScheduler.update();
 
-      return pollToPromise(function () {
-        return imagery.state === ImageryState.RECEIVED;
-      }).then(function () {
-        expect(imagery.image).toBeImageOrImageBitmap();
-        expect(tries).toEqual(2);
-        imagery.releaseReference();
-      });
+    return pollToPromise(function () {
+      return imagery.state === ImageryState.RECEIVED;
+    }).then(function () {
+      expect(imagery.image).toBeImageOrImageBitmap();
+      expect(tries).toEqual(2);
+      imagery.releaseReference();
     });
   });
 });

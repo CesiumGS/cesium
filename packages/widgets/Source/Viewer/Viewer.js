@@ -13,6 +13,7 @@ import {
   DataSourceDisplay,
   defaultValue,
   defined,
+  deprecationWarning,
   destroyObject,
   DeveloperError,
   Entity,
@@ -313,9 +314,10 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
- * @property {ImageryProvider} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false.
+ * @property {ImageryProvider|false} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false. Deprecated.
+ * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
- * @param {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
+ * @property {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
  * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @property {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
@@ -355,7 +357,7 @@ function enableVRUI(viewer, enabled) {
  * @param {Viewer.ConstructorOptions} [options] Object describing initialization options
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
- * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.imageryProvider instead.
+ * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.baseLayer instead.
  * @exception {DeveloperError} options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.terrainProvider instead.
  *
  * @see Animation
@@ -380,9 +382,9 @@ function enableVRUI(viewer, enabled) {
  *     // Hide the base layer picker
  *     baseLayerPicker: false,
  *     // Use OpenStreetMaps
- *     imageryProvider: new Cesium.OpenStreetMapImageryProvider({
+ *     baseLayer: new Cesium.ImageryLayer(OpenStreetMapImageryProvider({
  *       url: "https://a.tile.openstreetmap.org/"
- *     }),
+ *     })),
  *     skyBox: new Cesium.SkyBox({
  *       sources: {
  *         positiveX: "stars/TychoSkymapII.t3_08192x04096_80_px.jpg",
@@ -431,7 +433,7 @@ function Viewer(container, options) {
   ) {
     throw new DeveloperError(
       "options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
-Either specify options.imageryProvider instead or set options.baseLayerPicker to true."
+Either specify options.baseLayer instead or set options.baseLayerPicker to true."
     );
   }
 
@@ -484,8 +486,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   // Cesium widget
   const cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
-    imageryProvider:
-      createBaseLayerPicker || defined(options.imageryProvider)
+    baseLayer:
+      createBaseLayerPicker ||
+      defined(options.baseLayer) ||
+      defined(options.imageryProvider)
         ? false
         : undefined,
     clock: clock,
@@ -678,12 +682,26 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   // These need to be set after the BaseLayerPicker is created in order to take effect
   if (defined(options.imageryProvider) && options.imageryProvider !== false) {
+    deprecationWarning(
+      "Viewer options.imageryProvider",
+      "options.imageryProvider was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use options.baseLayer instead."
+    );
+
     if (createBaseLayerPicker) {
       baseLayerPicker.viewModel.selectedImagery = undefined;
     }
     scene.imageryLayers.removeAll();
     scene.imageryLayers.addImageryProvider(options.imageryProvider);
   }
+
+  if (defined(options.baseLayer) && options.baseLayer !== false) {
+    if (createBaseLayerPicker) {
+      baseLayerPicker.viewModel.selectedImagery = undefined;
+    }
+    scene.imageryLayers.removeAll();
+    scene.imageryLayers.add(options.baseLayer);
+  }
+
   if (defined(options.terrainProvider)) {
     if (createBaseLayerPicker) {
       baseLayerPicker.viewModel.selectedTerrain = undefined;

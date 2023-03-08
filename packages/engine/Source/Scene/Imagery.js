@@ -34,7 +34,12 @@ function Imagery(imageryLayer, x, y, level, rectangle) {
   this.credits = undefined;
   this.referenceCount = 0;
 
-  if (!defined(rectangle) && imageryLayer.imageryProvider.ready) {
+  // imageryProvider._ready is deprecated; This is here for backward compatibility
+  if (
+    !defined(rectangle) &&
+    imageryLayer.ready &&
+    imageryLayer.imageryProvider._ready
+  ) {
     const tilingScheme = imageryLayer.imageryProvider.tilingScheme;
     rectangle = tilingScheme.tileXYToRectangle(x, y, level);
   }

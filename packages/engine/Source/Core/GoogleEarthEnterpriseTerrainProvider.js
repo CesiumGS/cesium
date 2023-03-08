@@ -146,16 +146,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
           const e = new RuntimeError(
             `The server ${metadata.url} doesn't have terrain`
           );
-          metadataError = TileProviderError.reportError(
-            metadataError,
-            that,
-            that._errorEvent,
-            e.message,
-            undefined,
-            undefined,
-            undefined,
-            e
-          );
+
           return Promise.reject(e);
         }
 

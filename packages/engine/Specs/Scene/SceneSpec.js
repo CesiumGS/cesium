@@ -1507,14 +1507,12 @@ describe(
 
       expect(scene.terrainProvider).toBe(globe.terrainProvider);
       scene.globe = undefined;
-
       const newProvider = await CesiumTerrainProvider.fromUrl(
         "//newTerrain/tiles"
       );
       expect(function () {
         scene.terrainProvider = newProvider;
       }).not.toThrow();
-
       scene.destroyForSpecs();
       Resource._Implementations.loadWithXhr =
         Resource._DefaultImplementations.loadWithXhr;

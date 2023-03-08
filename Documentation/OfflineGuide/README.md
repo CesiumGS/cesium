@@ -20,9 +20,11 @@ This example shows how to configure CesiumJS to avoid use of online data sources
 
 ```javascript
 const viewer = new Cesium.Viewer("cesiumContainer", {
-  imageryProvider: new Cesium.TileMapServiceImageryProvider({
-    url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-  }),
+  baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+    Cesium.TileMapServiceImageryProvider.fromUrl(
+      Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
+    )
+  ),
   baseLayerPicker: false,
   geocoder: false,
 });

@@ -64,17 +64,19 @@
         const layers = viewer.imageryLayers;
         layers.removeAll();
 
-        const layerLinear = layers.addImageryProvider(
-          new Cesium.TileMapServiceImageryProvider({
-            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-          })
+        const layerLinear = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.TileMapServiceImageryProvider.fromUrl(
+            Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
+          )
         );
+        layers.add(layerLinear);
 
-        const layerNearest = layers.addImageryProvider(
-          new Cesium.TileMapServiceImageryProvider({
-            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-          })
+        const layerNearest = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.TileMapServiceImageryProvider.fromUrl(
+            Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
+          )
         );
+        layers.add(layerNearest);
 
         // Set the texture minification and magnification filters of layerNearest. Default is LINEAR.
         layerNearest.minificationFilter =
