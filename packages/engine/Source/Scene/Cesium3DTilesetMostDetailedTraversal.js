@@ -28,7 +28,7 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
   const root = tileset.root;
   root.updateVisibility(frameState);
 
-  if (!isVisible(root)) {
+  if (!root.isVisible) {
     return ready;
   }
 
@@ -55,7 +55,7 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
       touchTile(tileset, tile, frameState);
       selectDesiredTile(tileset, tile, frameState);
 
-      if (!hasEmptyContent(tile) && !tile.contentAvailable) {
+      if (tile.hasRenderableContent && !tile.contentAvailable) {
         ready = false;
       }
     }
@@ -68,18 +68,8 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
   return ready;
 };
 
-function isVisible(tile) {
-  return tile._visible && tile._inRequestVolume;
-}
-
-function hasEmptyContent(tile) {
-  return (
-    tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent
-  );
-}
-
 function hasUnloadedContent(tile) {
-  return !hasEmptyContent(tile) && tile.contentUnloaded;
+  return tile.hasRenderableContent && tile.contentUnloaded;
 }
 
 function canTraverse(tileset, tile) {
@@ -107,7 +97,7 @@ function updateAndPushChildren(tileset, tile, stack, frameState) {
   for (let i = 0; i < length; ++i) {
     const child = children[i];
     child.updateVisibility(frameState);
-    if (isVisible(child)) {
+    if (child.isVisible) {
       stack.push(child);
     }
   }

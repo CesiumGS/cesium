@@ -53,7 +53,7 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
   const root = tileset.root;
   updateTile(root, frameState);
 
-  if (!isVisible(root)) {
+  if (!root.isVisible) {
     return;
   }
 
@@ -91,15 +91,6 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
     requestedTiles[i].updatePriority();
   }
 };
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @returns {boolean} Whether the tile is within the current field of view
- */
-function isVisible(tile) {
-  return tile._visible && tile._inRequestVolume;
-}
 
 /**
  * The private ._skipLevelOfDetail flag on a Cesium3DTileset is updated in
@@ -159,7 +150,7 @@ function selectDescendants(root, frameState) {
     const children = tile.children;
     for (let i = 0; i < children.length; ++i) {
       const child = children[i];
-      if (isVisible(child)) {
+      if (child.isVisible) {
         if (child.contentAvailable) {
           updateTile(child, frameState);
           touchTile(child, frameState);
@@ -330,25 +321,6 @@ function loadTile(tile, frameState) {
 }
 
 /**
- * Wrap Cesium3DTile.prototype.updateVisibility to avoid repeated updates
- *
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- */
-function updateVisibility(tile, frameState) {
-  const updatedVisibilityFrame = tile.tileset._updatedVisibilityFrame;
-  if (tile._updatedVisibilityFrame === updatedVisibilityFrame) {
-    // Return early if visibility has already been checked during the traversal.
-    // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
-    return;
-  }
-
-  tile.updateVisibility(frameState);
-  tile._updatedVisibilityFrame = updatedVisibilityFrame;
-}
-
-/**
  * @private
  * @param {Cesium3DTile} tile
  * @param {FrameState} frameState
@@ -359,8 +331,8 @@ function anyChildrenVisible(tile, frameState) {
   const children = tile.children;
   for (let i = 0; i < children.length; ++i) {
     const child = children[i];
-    updateVisibility(child, frameState);
-    anyVisible = anyVisible || isVisible(child);
+    child.updateVisibility(frameState);
+    anyVisible = anyVisible || child.isVisible;
   }
   return anyVisible;
 }
@@ -395,9 +367,9 @@ function meetsScreenSpaceErrorEarly(tile, frameState) {
  * @param {FrameState} frameState
  */
 function updateTileVisibility(tile, frameState) {
-  updateVisibility(tile, frameState);
+  tile.updateVisibility(frameState);
 
-  if (!isVisible(tile)) {
+  if (!tile.isVisible) {
     return;
   }
 
@@ -487,19 +459,8 @@ function updateTileAncestorContentLinks(tile, frameState) {
  * @param {Cesium3DTile} tile
  * @returns {boolean}
  */
-function hasEmptyContent(tile) {
-  return (
-    tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent
-  );
-}
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @returns {boolean}
- */
 function hasUnloadedContent(tile) {
-  return !hasEmptyContent(tile) && tile.contentUnloaded;
+  return tile.hasRenderableContent && tile.contentUnloaded;
 }
 
 /**
@@ -560,7 +521,7 @@ function updateAndPushChildren(tile, stack, frameState) {
   // For traditional replacement refinement only refine if all children are loaded.
   // Empty tiles are exempt since it looks better if children stream in as they are loaded to fill the empty space.
   const checkRefines =
-    !skipLevelOfDetail(tileset) && replace && !hasEmptyContent(tile);
+    !skipLevelOfDetail(tileset) && replace && tile.hasRenderableContent;
   let refines = true;
 
   let anyChildrenVisible = false;
@@ -571,7 +532,7 @@ function updateAndPushChildren(tile, stack, frameState) {
 
   for (let i = 0; i < children.length; ++i) {
     const child = children[i];
-    if (isVisible(child)) {
+    if (child.isVisible) {
       stack.push(child);
       if (child._foveatedFactor < minimumPriority) {
         minIndex = i;
@@ -592,7 +553,7 @@ function updateAndPushChildren(tile, stack, frameState) {
       let childRefines;
       if (!child._inRequestVolume) {
         childRefines = false;
-      } else if (hasEmptyContent(child)) {
+      } else if (!child.hasRenderableContent) {
         childRefines = executeEmptyTraversal(child, frameState);
       } else {
         childRefines = child.contentAvailable;
@@ -716,7 +677,7 @@ function executeTraversal(root, baseScreenSpaceError, frameState) {
 
     const stoppedRefining = !tile._refines && parentRefines;
 
-    if (hasEmptyContent(tile)) {
+    if (!tile.hasRenderableContent) {
       // Add empty tile just to show its debug bounding volume
       // If the tile has tileset content load the external tileset
       // If the tile cannot refine further select its nearest loaded ancestor
@@ -776,10 +737,9 @@ function executeEmptyTraversal(root, frameState) {
     const children = tile.children;
     const childrenLength = children.length;
 
-    // Only traverse if the tile is empty - traversal stop at descendants with content
-    const emptyContent = hasEmptyContent(tile);
-    const traverse = emptyContent && canTraverse(tile);
-    const emptyLeaf = emptyContent && tile.children.length === 0;
+    // Only traverse if the tile is empty - traversal stops at descendants with content
+    const traverse = !tile.hasRenderableContent && canTraverse(tile);
+    const emptyLeaf = !tile.hasRenderableContent && tile.children.length === 0;
 
     // Traversal stops but the tile does not have content yet
     // There will be holes if the parent tries to refine to its children, so don't refine
@@ -789,7 +749,7 @@ function executeEmptyTraversal(root, frameState) {
     }
 
     updateTile(tile, frameState);
-    if (!isVisible(tile)) {
+    if (!tile.isVisible) {
       // Load tiles that aren't visible since they are still needed for the parent to refine
       loadTile(tile, frameState);
       touchTile(tile, frameState);
@@ -884,7 +844,7 @@ function traverseAndSelect(root, frameState) {
       const children = tile.children;
       for (let i = 0; i < children.length; ++i) {
         const child = children[i];
-        if (isVisible(child)) {
+        if (child.isVisible) {
           stack.push(child);
         }
       }

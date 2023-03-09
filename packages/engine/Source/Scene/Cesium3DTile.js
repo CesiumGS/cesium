@@ -579,6 +579,22 @@ Object.defineProperties(Cesium3DTile.prototype, {
   },
 
   /**
+   * Determines if the tile is visible within the current field of view
+   *
+   * @memberof Cesium3DTile.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   *
+   * @private
+   */
+  isVisible: {
+    get: function () {
+      return this._visible && this._inRequestVolume;
+    },
+  },
+
+  /**
    * Returns the <code>extras</code> property in the tileset JSON for this tile, which contains application specific metadata.
    * Returns <code>undefined</code> if <code>extras</code> does not exist.
    *
@@ -619,6 +635,27 @@ Object.defineProperties(Cesium3DTile.prototype, {
   },
 
   /**
+   * Determines if the tile's content is renderable. <code>false</code> if the
+   * tile has empty content or if it points to an external tileset or implicit content
+   *
+   * @memberof Cesium3DTile.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   *
+   * @private
+   */
+  hasRenderableContent: {
+    get: function () {
+      return (
+        !this.hasEmptyContent &&
+        !this.hasTilesetContent &&
+        !this.hasImplicitContent
+      );
+    },
+  },
+
+  /**
    * Determines if the tile has available content to render.  <code>true</code> if the tile's
    * content is ready or if it has expired content that renders while new content loads; otherwise,
    * <code>false</code>.
@@ -633,10 +670,7 @@ Object.defineProperties(Cesium3DTile.prototype, {
   contentAvailable: {
     get: function () {
       return (
-        (this.contentReady &&
-          !this.hasEmptyContent &&
-          !this.hasTilesetContent &&
-          !this.hasImplicitContent) ||
+        (this.contentReady && this.hasRenderableContent) ||
         (defined(this._expiredContent) && !this.contentFailed)
       );
     },
@@ -991,6 +1025,11 @@ function getPriorityReverseScreenSpaceError(tileset, tile) {
  */
 Cesium3DTile.prototype.updateVisibility = function (frameState) {
   const { parent, tileset } = this;
+  if (this._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
+    // The tile has already been updated for this frame
+    return;
+  }
+
   const parentTransform = defined(parent)
     ? parent.computedTransform
     : tileset.modelMatrix;
@@ -1021,6 +1060,8 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
     this
   );
   this.priorityDeferred = isPriorityDeferred(this, frameState);
+
+  this._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
 };
 
 /**
@@ -1416,11 +1457,7 @@ Cesium3DTile.prototype.cancelRequests = function () {
  * @private
  */
 Cesium3DTile.prototype.unloadContent = function () {
-  if (
-    this.hasEmptyContent ||
-    this.hasTilesetContent ||
-    this.hasImplicitContent
-  ) {
+  if (!this.hasRenderableContent) {
     return;
   }
 
@@ -1896,8 +1933,6 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
 
   const hasContentBoundingVolume =
     defined(tile._contentHeader) && defined(tile._contentHeader.boundingVolume);
-  const empty =
-    tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent;
 
   const showVolume =
     tileset.debugShowBoundingVolume ||
@@ -1906,7 +1941,7 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
     let color;
     if (!tile._finalResolution) {
       color = Color.YELLOW;
-    } else if (empty) {
+    } else if (!tile.hasRenderableContent) {
       color = Color.DARKGRAY;
     } else {
       color = Color.WHITE;
