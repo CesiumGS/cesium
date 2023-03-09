@@ -2449,7 +2449,7 @@ Model.prototype.hasSkipLevelOfDetail = function (frameState) {
   }
 
   const tileset = this._content.tileset;
-  return supportsSkipLevelOfDetail(frameState) && tileset.skipLevelOfDetail;
+  return supportsSkipLevelOfDetail(frameState) && tileset._skipLevelOfDetail;
 };
 
 /**

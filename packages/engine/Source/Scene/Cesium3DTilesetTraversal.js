@@ -64,7 +64,7 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
     return;
   }
 
-  const baseScreenSpaceError = !skipLevelOfDetail(tileset)
+  const baseScreenSpaceError = !tileset._skipLevelOfDetail
     ? tileset._maximumScreenSpaceError
     : tileset.immediatelyLoadDesiredLevelOfDetail
     ? Number.MAX_VALUE
@@ -72,7 +72,7 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
 
   executeTraversal(root, baseScreenSpaceError, frameState);
 
-  if (skipLevelOfDetail(tileset)) {
+  if (tileset._skipLevelOfDetail) {
     traverseAndSelect(root, frameState);
   }
 
@@ -91,19 +91,6 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
     requestedTiles[i].updatePriority();
   }
 };
-
-/**
- * The private ._skipLevelOfDetail flag on a Cesium3DTileset is updated in
- * Cesium3DTileset.prototype.prePassesUpdate to confirm if skipping is actually
- * possible and allowed, even when the public .skipLevelOfDetail flag is true
- *
- * @private
- * @param {Cesium3DTileset} tileset
- * @returns {boolean} Whether to do LOD skipping
- */
-function skipLevelOfDetail(tileset) {
-  return tileset._skipLevelOfDetail;
-}
 
 /**
  * Mark a tile as selected, and add it to the tileset's list of selected tiles
@@ -174,7 +161,7 @@ function selectDescendants(root, frameState) {
  * @param {FrameState} frameState
  */
 function selectDesiredTile(tile, frameState) {
-  if (!skipLevelOfDetail(tile.tileset)) {
+  if (!tile.tileset._skipLevelOfDetail) {
     if (tile.contentAvailable) {
       // The tile can be selected right away and does not require traverseAndSelect
       selectTile(tile, frameState);
@@ -521,7 +508,7 @@ function updateAndPushChildren(tile, stack, frameState) {
   // For traditional replacement refinement only refine if all children are loaded.
   // Empty tiles are exempt since it looks better if children stream in as they are loaded to fill the empty space.
   const checkRefines =
-    !skipLevelOfDetail(tileset) && replace && tile.hasRenderableContent;
+    !tileset._skipLevelOfDetail && replace && tile.hasRenderableContent;
   let refines = true;
 
   let anyChildrenVisible = false;
@@ -566,7 +553,7 @@ function updateAndPushChildren(tile, stack, frameState) {
     refines = false;
   }
 
-  if (minIndex !== -1 && !skipLevelOfDetail(tileset) && replace) {
+  if (minIndex !== -1 && !tileset.skipLevelOfDetail && replace) {
     // An ancestor will hold the _foveatedFactor and _distanceToCamera for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
     // Priority of all tiles that refer to the _foveatedFactor and _distanceToCamera stored in the common ancestor will be differentiated based on their _depth.
     const minPriorityChild = children[minIndex];
@@ -604,7 +591,7 @@ function updateAndPushChildren(tile, stack, frameState) {
  */
 function inBaseTraversal(tile, baseScreenSpaceError) {
   const { tileset } = tile;
-  if (!skipLevelOfDetail(tileset)) {
+  if (!tileset._skipLevelOfDetail) {
     return true;
   }
   if (tileset.immediatelyLoadDesiredLevelOfDetail) {

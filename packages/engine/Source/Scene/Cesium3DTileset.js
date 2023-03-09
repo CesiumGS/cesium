@@ -654,6 +654,15 @@ function Cesium3DTileset(options) {
    * @default false
    */
   this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
+
+  /**
+   * Whether this tileset is actually skipping levels of detail.
+   * The user option may have been disabled if all tiles are using additive refinement,
+   * or if some tiles have a content type for which rendering does not support skipping
+   *
+   * @private
+   * @type {boolean}
+   */
   this._skipLevelOfDetail = this.skipLevelOfDetail;
   this._disableSkipLevelOfDetail = false;
 
