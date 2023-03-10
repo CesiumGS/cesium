@@ -1,8 +1,7 @@
 import defined from "../Core/defined.js";
-import Intersect from "../Core/Intersect.js";
 import ManagedArray from "../Core/ManagedArray.js";
-import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
+import TraversalUtility from "./TraversalUtility.js";
 
 /**
  * @private
@@ -51,7 +50,7 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
   tileset._hasMixedContent = false;
 
   const root = tileset.root;
-  updateTile(root, frameState);
+  TraversalUtility.updateTile(root, frameState);
 
   if (!root.isVisible) {
     return;
@@ -93,32 +92,6 @@ Cesium3DTilesetTraversal.selectTiles = function (tileset, frameState) {
 };
 
 /**
- * Mark a tile as selected, and add it to the tileset's list of selected tiles
- *
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- */
-function selectTile(tile, frameState) {
-  if (tile.contentVisibility(frameState) === Intersect.OUTSIDE) {
-    return;
-  }
-
-  const { content, tileset } = tile;
-  if (content.featurePropertiesDirty) {
-    // A feature's property in this tile changed, the tile needs to be re-styled.
-    content.featurePropertiesDirty = false;
-    tile.lastStyleTime = 0; // Force applying the style to this tile
-    tileset._selectedTilesToStyle.push(tile);
-  } else if (tile._selectedFrame < frameState.frameNumber - 1) {
-    // Tile is newly selected; it is selected this frame, but was not selected last frame.
-    tileset._selectedTilesToStyle.push(tile);
-  }
-  tile._selectedFrame = frameState.frameNumber;
-  tileset._selectedTiles.push(tile);
-}
-
-/**
  * Mark descendant tiles for rendering, and update as needed
  *
  * @private
@@ -126,6 +99,7 @@ function selectTile(tile, frameState) {
  * @param {FrameState} frameState
  */
 function selectDescendants(root, frameState) {
+  const { updateTile, touchTile, selectTile } = TraversalUtility;
   const stack = descendantTraversal.stack;
   stack.push(root);
   while (stack.length > 0) {
@@ -164,7 +138,7 @@ function selectDesiredTile(tile, frameState) {
   if (!tile.tileset._skipLevelOfDetail) {
     if (tile.contentAvailable) {
       // The tile can be selected right away and does not require traverseAndSelect
-      selectTile(tile, frameState);
+      TraversalUtility.selectTile(tile, frameState);
     }
     return;
   }
@@ -181,233 +155,6 @@ function selectDesiredTile(tile, frameState) {
     // This happens often for immediatelyLoadDesiredLevelOfDetail where parent tiles are not necessarily loaded before zooming out.
     selectDescendants(tile, frameState);
   }
-}
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- */
-function visitTile(tile, frameState) {
-  ++tile.tileset._statistics.visited;
-  tile._visitedFrame = frameState.frameNumber;
-}
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- */
-function touchTile(tile, frameState) {
-  if (tile._touchedFrame === frameState.frameNumber) {
-    // Prevents another pass from touching the frame again
-    return;
-  }
-  tile.tileset._cache.touch(tile);
-  tile._touchedFrame = frameState.frameNumber;
-}
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- */
-function updateMinimumMaximumPriority(tile) {
-  const {
-    _maximumPriority: maximumPriority,
-    _minimumPriority: minimumPriority,
-  } = tile.tileset;
-  const priorityHolder = tile._priorityHolder;
-
-  maximumPriority.distance = Math.max(
-    priorityHolder._distanceToCamera,
-    maximumPriority.distance
-  );
-  minimumPriority.distance = Math.min(
-    priorityHolder._distanceToCamera,
-    minimumPriority.distance
-  );
-  maximumPriority.depth = Math.max(tile._depth, maximumPriority.depth);
-  minimumPriority.depth = Math.min(tile._depth, minimumPriority.depth);
-  maximumPriority.foveatedFactor = Math.max(
-    priorityHolder._foveatedFactor,
-    maximumPriority.foveatedFactor
-  );
-  minimumPriority.foveatedFactor = Math.min(
-    priorityHolder._foveatedFactor,
-    minimumPriority.foveatedFactor
-  );
-  maximumPriority.reverseScreenSpaceError = Math.max(
-    tile._priorityReverseScreenSpaceError,
-    maximumPriority.reverseScreenSpaceError
-  );
-  minimumPriority.reverseScreenSpaceError = Math.min(
-    tile._priorityReverseScreenSpaceError,
-    minimumPriority.reverseScreenSpaceError
-  );
-}
-
-/**
- * Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.
- *
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- * @returns {boolean}
- */
-function isOnScreenLongEnough(tile, frameState) {
-  const { tileset } = tile;
-  if (!tileset._cullRequestsWhileMoving) {
-    return true;
-  }
-
-  const {
-    positionWCDeltaMagnitude,
-    positionWCDeltaMagnitudeLastFrame,
-  } = frameState.camera;
-  const deltaMagnitude =
-    positionWCDeltaMagnitude !== 0.0
-      ? positionWCDeltaMagnitude
-      : positionWCDeltaMagnitudeLastFrame;
-
-  // How do n frames of this movement compare to the tile's physical size.
-  const diameter = Math.max(tile.boundingSphere.radius * 2.0, 1.0);
-  const movementRatio =
-    (tileset.cullRequestsWhileMovingMultiplier * deltaMagnitude) / diameter;
-
-  return movementRatio < 1.0;
-}
-
-/**
- * Add a tile to the list of requested tiles, if appropriate
- *
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- */
-function loadTile(tile, frameState) {
-  const { tileset } = tile;
-  if (
-    tile._requestedFrame === frameState.frameNumber ||
-    (!hasUnloadedContent(tile) && !tile.contentExpired)
-  ) {
-    return;
-  }
-
-  if (!isOnScreenLongEnough(tile, frameState)) {
-    return;
-  }
-
-  const cameraHasNotStoppedMovingLongEnough =
-    frameState.camera.timeSinceMoved < tileset.foveatedTimeDelay;
-  if (tile.priorityDeferred && cameraHasNotStoppedMovingLongEnough) {
-    return;
-  }
-
-  tile._requestedFrame = frameState.frameNumber;
-  tileset._requestedTiles.push(tile);
-}
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- * @returns {boolean}
- */
-function anyChildrenVisible(tile, frameState) {
-  let anyVisible = false;
-  const children = tile.children;
-  for (let i = 0; i < children.length; ++i) {
-    const child = children[i];
-    child.updateVisibility(frameState);
-    anyVisible = anyVisible || child.isVisible;
-  }
-  return anyVisible;
-}
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- * @returns {boolean}
- */
-function meetsScreenSpaceErrorEarly(tile, frameState) {
-  const { parent, tileset } = tile;
-  if (
-    !defined(parent) ||
-    parent.hasTilesetContent ||
-    parent.hasImplicitContent ||
-    parent.refine !== Cesium3DTileRefine.ADD
-  ) {
-    return false;
-  }
-
-  // Use parent's geometric error with child's box to see if the tile already meet the SSE
-  return (
-    tile.getScreenSpaceError(frameState, true) <=
-    tileset._maximumScreenSpaceError
-  );
-}
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- */
-function updateTileVisibility(tile, frameState) {
-  tile.updateVisibility(frameState);
-
-  if (!tile.isVisible) {
-    return;
-  }
-
-  const hasChildren = tile.children.length > 0;
-  if ((tile.hasTilesetContent || tile.hasImplicitContent) && hasChildren) {
-    // Use the root tile's visibility instead of this tile's visibility.
-    // The root tile may be culled by the children bounds optimization in which
-    // case this tile should also be culled.
-    const child = tile.children[0];
-    updateTileVisibility(child, frameState);
-    tile._visible = child._visible;
-    return;
-  }
-
-  if (meetsScreenSpaceErrorEarly(tile, frameState)) {
-    tile._visible = false;
-    return;
-  }
-
-  // Optimization - if none of the tile's children are visible then this tile isn't visible
-  const replace = tile.refine === Cesium3DTileRefine.REPLACE;
-  const useOptimization =
-    tile._optimChildrenWithinParent ===
-    Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-  if (replace && useOptimization && hasChildren) {
-    if (!anyChildrenVisible(tile, frameState)) {
-      ++tile.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-      tile._visible = false;
-      return;
-    }
-  }
-}
-
-/**
- * Reset some of the tile's flags and re-evaluate visibility and priority
- *
- * @private
- * @param {Cesium3DTile} tile
- * @param {FrameState} frameState
- */
-function updateTile(tile, frameState) {
-  updateTileVisibility(tile, frameState);
-  tile.updateExpiration();
-
-  tile._wasMinPriorityChild = false;
-  tile._priorityHolder = tile;
-  updateMinimumMaximumPriority(tile);
-
-  // SkipLOD
-  tile._shouldSelect = false;
-  tile._finalResolution = true;
 }
 
 /**
@@ -472,22 +219,6 @@ function reachedSkippingThreshold(tileset, tile) {
 }
 
 /**
- * Sort by farthest child first since this is going on a stack
- *
- * @private
- * @param {Cesium3DTile} a
- * @param {Cesium3DTile} b
- * @returns {number}
- */
-function sortChildrenByDistanceToCamera(a, b) {
-  if (b._distanceToCamera === 0 && a._distanceToCamera === 0) {
-    return b._centerZDepth - a._centerZDepth;
-  }
-
-  return b._distanceToCamera - a._distanceToCamera;
-}
-
-/**
  * @private
  * @param {Cesium3DTile} tile
  * @param {ManagedArray} stack
@@ -497,13 +228,14 @@ function sortChildrenByDistanceToCamera(a, b) {
 function updateAndPushChildren(tile, stack, frameState) {
   const replace = tile.refine === Cesium3DTileRefine.REPLACE;
   const { tileset, children } = tile;
+  const { updateTile, loadTile, touchTile } = TraversalUtility;
 
   for (let i = 0; i < children.length; ++i) {
     updateTile(children[i], frameState);
   }
 
   // Sort by distance to take advantage of early Z and reduce artifacts for skipLevelOfDetail
-  children.sort(sortChildrenByDistanceToCamera);
+  children.sort(TraversalUtility.sortChildrenByDistanceToCamera);
 
   // For traditional replacement refinement only refine if all children are loaded.
   // Empty tiles are exempt since it looks better if children stream in as they are loaded to fill the empty space.
@@ -609,26 +341,6 @@ function inBaseTraversal(tile, baseScreenSpaceError) {
 }
 
 /**
- * Determine if a tile can and should be traversed for children tiles that
- * would contribute to rendering the current view
- *
- * @private
- * @param {Cesium3DTile} tile
- * @returns {boolean}
- */
-function canTraverse(tile) {
-  if (tile.children.length === 0) {
-    return false;
-  }
-  if (tile.hasTilesetContent || tile.hasImplicitContent) {
-    // Traverse external tileset to visit its root tile
-    // Don't traverse if the subtree is expired because it will be destroyed
-    return !tile.contentExpired;
-  }
-  return tile._screenSpaceError > tile.tileset._maximumScreenSpaceError;
-}
-
-/**
  * Depth-first traversal that traverses all visible tiles and marks tiles for selection.
  * If skipLevelOfDetail is off then a tile does not refine until all children are loaded.
  * This is the traditional replacement refinement approach and is called the base traversal.
@@ -643,6 +355,7 @@ function canTraverse(tile) {
  */
 function executeTraversal(root, baseScreenSpaceError, frameState) {
   const { tileset } = root;
+  const { canTraverse, loadTile, visitTile, touchTile } = TraversalUtility;
   const stack = traversal.stack;
   stack.push(root);
 
@@ -710,6 +423,7 @@ function executeTraversal(root, baseScreenSpaceError, frameState) {
  * @returns {boolean}
  */
 function executeEmptyTraversal(root, frameState) {
+  const { canTraverse, updateTile, loadTile, touchTile } = TraversalUtility;
   let allDescendantsLoaded = true;
   const stack = emptyTraversal.stack;
   stack.push(root);
@@ -774,6 +488,7 @@ function executeEmptyTraversal(root, frameState) {
  * @param {FrameState} frameState
  */
 function traverseAndSelect(root, frameState) {
+  const { selectTile, canTraverse } = TraversalUtility;
   const { stack, ancestorStack } = selectionTraversal;
   let lastAncestor;
 
