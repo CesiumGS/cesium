@@ -173,7 +173,7 @@ function updateTileAncestorContentLinks(tile, frameState) {
     return;
   }
   const parentHasContent =
-    !hasUnloadedContent(parent) ||
+    !parent.hasUnloadedRenderableContent ||
     parent._requestedFrame === frameState.frameNumber;
 
   // ancestorWithContent is an ancestor that has content or has the potential to have
@@ -186,15 +186,6 @@ function updateTileAncestorContentLinks(tile, frameState) {
   tile._ancestorWithContentAvailable = parent.contentAvailable
     ? parent
     : parent._ancestorWithContentAvailable;
-}
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @returns {boolean}
- */
-function hasUnloadedContent(tile) {
-  return tile.hasRenderableContent && tile.contentUnloaded;
 }
 
 /**

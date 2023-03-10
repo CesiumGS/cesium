@@ -1,6 +1,7 @@
 import Intersect from "../Core/Intersect.js";
 import ManagedArray from "../Core/ManagedArray.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
+import TraversalUtility from "./TraversalUtility.js";
 
 /**
  * Traversal that loads all leaves that intersect the camera frustum.
@@ -32,8 +33,10 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
     return ready;
   }
 
+  const { touchTile, visitTile } = TraversalUtility;
+
   const stack = traversal.stack;
-  stack.push(tileset.root);
+  stack.push(root);
 
   while (stack.length > 0) {
     traversal.stackMaximumLength = Math.max(
@@ -44,23 +47,23 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
     const tile = stack.pop();
     const add = tile.refine === Cesium3DTileRefine.ADD;
     const replace = tile.refine === Cesium3DTileRefine.REPLACE;
-    const traverse = canTraverse(tileset, tile);
+    const traverse = canTraverse(tile);
 
     if (traverse) {
-      updateAndPushChildren(tileset, tile, stack, frameState);
+      updateAndPushChildren(tile, stack, frameState);
     }
 
     if (add || (replace && !traverse)) {
       loadTile(tileset, tile);
-      touchTile(tileset, tile, frameState);
-      selectDesiredTile(tileset, tile, frameState);
+      touchTile(tile, frameState);
+      selectDesiredTile(tile, frameState);
 
       if (tile.hasRenderableContent && !tile.contentAvailable) {
         ready = false;
       }
     }
 
-    visitTile(tileset);
+    visitTile(tile, frameState);
   }
 
   traversal.stack.trim(traversal.stackMaximumLength);
@@ -72,7 +75,7 @@ function hasUnloadedContent(tile) {
   return tile.hasRenderableContent && tile.contentUnloaded;
 }
 
-function canTraverse(tileset, tile) {
+function canTraverse(tile) {
   if (tile.children.length === 0) {
     return false;
   }
@@ -87,14 +90,13 @@ function canTraverse(tileset, tile) {
     return true;
   }
 
-  return true; // Keep traversing until a leave is hit
+  return true; // Keep traversing until a leaf is hit
 }
 
-function updateAndPushChildren(tileset, tile, stack, frameState) {
-  const children = tile.children;
-  const length = children.length;
+function updateAndPushChildren(tile, stack, frameState) {
+  const { children } = tile;
 
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < children.length; ++i) {
     const child = children[i];
     child.updateVisibility(frameState);
     if (child.isVisible) {
@@ -110,25 +112,13 @@ function loadTile(tileset, tile) {
   }
 }
 
-function touchTile(tileset, tile, frameState) {
-  if (tile._touchedFrame === frameState.frameNumber) {
-    // Prevents another pass from touching the frame again
-    return;
-  }
-  tileset._cache.touch(tile);
-  tile._touchedFrame = frameState.frameNumber;
-}
-
-function visitTile(tileset) {
-  ++tileset.statistics.visited;
-}
-
-function selectDesiredTile(tileset, tile, frameState) {
+function selectDesiredTile(tile, frameState) {
   if (
     tile.contentAvailable &&
     tile.contentVisibility(frameState) !== Intersect.OUTSIDE
   ) {
-    tileset._selectedTiles.push(tile);
+    tile.tileset._selectedTiles.push(tile);
   }
 }
+
 export default Cesium3DTilesetMostDetailedTraversal;

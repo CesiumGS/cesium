@@ -107,7 +107,7 @@ TraversalUtility.loadTile = function (tile, frameState) {
   const { tileset } = tile;
   if (
     tile._requestedFrame === frameState.frameNumber ||
-    (!hasUnloadedContent(tile) && !tile.contentExpired)
+    (!tile.hasUnloadedRenderableContent && !tile.contentExpired)
   ) {
     return;
   }
@@ -125,15 +125,6 @@ TraversalUtility.loadTile = function (tile, frameState) {
   tile._requestedFrame = frameState.frameNumber;
   tileset._requestedTiles.push(tile);
 };
-
-/**
- * @private
- * @param {Cesium3DTile} tile
- * @returns {boolean}
- */
-function hasUnloadedContent(tile) {
-  return tile.hasRenderableContent && tile.contentUnloaded;
-}
 
 /**
  * Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.

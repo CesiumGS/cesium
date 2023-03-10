@@ -711,6 +711,22 @@ Object.defineProperties(Cesium3DTile.prototype, {
   },
 
   /**
+   * Determines if the tile has renderable content which is unloaded
+   *
+   * @memberof Cesium3DTile.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   *
+   * @private
+   */
+  hasUnloadedRenderableContent: {
+    get: function () {
+      return this.hasRenderableContent && this.contentUnloaded;
+    },
+  },
+
+  /**
    * Determines if the tile's content is expired. <code>true</code> if tile's
    * content is expired; otherwise, <code>false</code>.
    *
