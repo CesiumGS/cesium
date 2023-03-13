@@ -346,3 +346,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Southjor](https://github.com/Southjor)
 - [Lakshmipriya](https://github.com/Lakshmi0710)
 - [Tengfei](https://github.com/i-tengfei)
+- [Rudolf Farkas](https://github.com/rudifa)
+- [Nick Noce](https://github.com/nnoce14)

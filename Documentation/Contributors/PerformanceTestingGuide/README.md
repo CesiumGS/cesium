@@ -167,17 +167,24 @@ tileset.initialTilesLoaded.addEventListener(() => {
 });
 ```
 
-### Caching vs throttling
+### Separating network time from code execution time
 
-Depending on the scenario you are trying to test for, you may want to enable
-caching of network requests or throttling network speed.
+Depending on the scenario you are trying to test for, you may want to distinguish between the time used for network requests and code execution.
 
-- If you want to simulate slow network connections, consider throttling the
-  connection. For example, in Chrome, see [these instructions](https://developer.chrome.com/docs/devtools/network/#throttle)
-- If you want to eliminate network latency and focus on measuring how long the
-  initialization code takes to run, enable caching. In Chrome, this option
-  can be done by _unchecking_ the `Disable Cache` option in the Network tab.
-  You will also need to enable caching on the server.
+#### Quantifying network request time
+
+For repeatability, you can throttle your connection speed to a fixed value, to eliminate network variations from time to time and from user to user. For example, in Chrome, see [these instructions](https://developer.chrome.com/docs/devtools/network/#throttle).
+
+The speed you throttle to can be adjusted based on your target user base. For example, for tests targeting US users, you can throttle to the [US median internet speed](https://www.speedtest.net/global-index/united-states). Note that these speeds will change over time, so you will want to report the exact throttling speed as part of your test results.
+
+Before throttling the connection, make sure to verify that your unthrottled network speed is at least as fast as the speed you are throttling to.
+
+#### Quantifying code execution time
+
+If you want to eliminate network latency and focus on measuring how long the
+initialization code takes to run, enable caching. In Chrome, this option
+can be done by _unchecking_ the `Disable Cache` option in the Network tab.
+You will also need to enable caching on the server.
 
 ![Uncheck disable cache](no-disable-cache.png)
 

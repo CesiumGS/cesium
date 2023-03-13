@@ -174,7 +174,7 @@ function addStyle(selector, styles) {
   return style;
 }
 
-function appendCss() {
+function appendCss(container) {
   let style = "";
   style += addStyle(".cesium-credit-lightbox-overlay", {
     display: "none",
@@ -270,10 +270,26 @@ function appendCss() {
     }
   );
 
-  const head = document.head;
+  function getShadowRoot(container) {
+    if (container.shadowRoot) {
+      return container.shadowRoot;
+    }
+    if (container.getRootNode) {
+      const root = container.getRootNode();
+      if (root instanceof ShadowRoot) {
+        return root;
+      }
+    }
+    return undefined;
+  }
+
+  const shadowRootOrDocumentHead = defaultValue(
+    getShadowRoot(container),
+    document.head
+  );
   const css = document.createElement("style");
   css.innerHTML = style;
-  head.insertBefore(css, head.firstChild);
+  shadowRootOrDocumentHead.appendChild(css);
 }
 
 /**
@@ -343,7 +359,7 @@ function CreditDisplay(container, delimiter, viewport) {
   expandLink.textContent = "Data attribution";
   container.appendChild(expandLink);
 
-  appendCss();
+  appendCss(container);
   const cesiumCredit = Credit.clone(CreditDisplay.cesiumCredit);
 
   this._delimiter = defaultValue(delimiter, " • ");
