@@ -48,7 +48,6 @@ import {
   createJsHintOptions,
   defaultESBuildOptions,
   bundleCombinedWorkers,
-  bundleCombinedSpecs,
 } from "./build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
@@ -470,12 +469,8 @@ export const websiteRelease = gulp.series(
 );
 
 export const buildRelease = gulp.series(
-  function () {
-    return buildEngine();
-  },
-  function () {
-    return buildWidgets();
-  },
+  buildEngine,
+  buildWidgets,
   // Generate Build/CesiumUnminified
   function () {
     return buildCesium({
@@ -543,6 +538,14 @@ async function pruneScriptsForZip(packageJsonPath) {
   // Set server tasks to use production flag
   scripts["start"] = "node server.js --production";
   scripts["start-public"] = "node server.js --public --production";
+  scripts["start-public"] = "node server.js --public --production";
+  scripts["test"] = "gulp test --production";
+  scripts["test-all"] = "gulp test --all --production";
+  scripts["test-webgl"] = "gulp test --include WebGL --production";
+  scripts["test-non-webgl"] = "gulp test --exclude WebGL --production";
+  scripts["test-webgl-validation"] = "gulp test --webglValidation --production";
+  scripts["test-webgl-stub"] = "gulp test --webglStub --production";
+  scripts["test-release"] = "gulp test --release --production";
 
   // Write to a temporary package.json file.
   const noPreparePackageJson = join(
@@ -1085,29 +1088,32 @@ async function deployCesiumRelease(bucketName, s3Client, errors) {
       `Cesium version ${release.tag} up to date. Skipping release deployment.`
     );
   } catch (error) {
-    // The current version is not uploaded
-    if (error.code === "NotFound") {
-      console.log("Updating cesium version...");
-      const data = await download(release.url);
-      // upload and unzip contents
-      const key = posix.join(releaseDir, release.tag, "cesium.zip");
-      await uploadObject(bucketName, s3Client, key, data, quiet);
-      const files = await decompress(data);
-      const limit = pLimit(5);
-      return Promise.all(
-        files.map((file) => {
-          return limit(() => {
-            if (file.path.startsWith("Apps")) {
-              // skip uploading apps and sandcastle
-              return;
-            }
+    if (error.$metadata) {
+      const { httpStatusCode } = error.$metadata;
+      // The current version is not uploaded
+      if (httpStatusCode === 404) {
+        console.log("Updating cesium version...");
+        const data = await download(release.url);
+        // upload and unzip contents
+        const key = posix.join(releaseDir, release.tag, "cesium.zip");
+        await uploadObject(bucketName, s3Client, key, data, quiet);
+        const files = await decompress(data);
+        const limit = pLimit(5);
+        return Promise.all(
+          files.map((file) => {
+            return limit(async () => {
+              if (file.path.startsWith("Apps")) {
+                // skip uploading apps and sandcastle
+                return;
+              }
 
-            // Upload to release directory
-            const key = posix.join(releaseDir, release.tag, file.path);
-            return uploadObject(bucketName, s3Client, key, file.data, quiet);
-          });
-        })
-      );
+              // Upload to release directory
+              const key = posix.join(releaseDir, release.tag, file.path);
+              return uploadObject(bucketName, s3Client, key, file.data, quiet);
+            });
+          })
+        );
+      }
     }
 
     // else, unexpected error
@@ -1183,6 +1189,10 @@ async function listAll(s3Client, bucketName, prefix, files, marker) {
   });
   const data = await s3Client.send(listObjectsCommand);
   const items = data.Contents;
+  if (!items) {
+    return;
+  }
+
   for (let i = 0; i < items.length; i++) {
     files.push(items[i].Key);
   }
@@ -1509,10 +1519,8 @@ export async function coverage() {
   });
 }
 
+// Cache contexts for successive calls to test
 export async function test() {
-  await createCombinedSpecList();
-  await bundleCombinedSpecs();
-
   const enableAllBrowsers = argv.all ? true : false;
   const includeCategory = argv.include ? argv.include : "";
   const excludeCategory = argv.exclude ? argv.exclude : "";
@@ -1525,10 +1533,18 @@ export async function test() {
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
   const includeName = argv.includeName ? argv.includeName : "";
+  const isProduction = argv.production;
 
   let workspace = argv.workspace;
   if (workspace) {
     workspace = workspace.replaceAll(`@${scope}/`, ``);
+  }
+
+  if (!isProduction) {
+    console.log("Building specs...");
+    await buildCesium({
+      iife: true,
+    });
   }
 
   let browsers = ["Chrome"];

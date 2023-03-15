@@ -13,7 +13,7 @@ import gulp from "gulp";
 import rimraf from "rimraf";
 import { rollup } from "rollup";
 import rollupPluginStripPragma from "rollup-plugin-strip-pragma";
-import { terser } from "rollup-plugin-terser";
+import terser from "@rollup/plugin-terser";
 import rollupCommonjs from "@rollup/plugin-commonjs";
 import rollupResolve from "@rollup/plugin-node-resolve";
 import streamToPromise from "stream-to-promise";
@@ -170,7 +170,6 @@ export async function bundleCesiumJs(options) {
   buildConfig.sourcemap = options.sourcemap;
   buildConfig.external = ["https", "http", "url", "zlib"];
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
-  buildConfig.incremental = options.incremental;
   buildConfig.write = options.write;
   buildConfig.banner = {
     js: combinedCopyrightHeader,
@@ -178,35 +177,44 @@ export async function bundleCesiumJs(options) {
   // print errors immediately, and collect warnings so we can filter out known ones
   buildConfig.logLevel = "info";
 
-  const bundles = {};
+  const contexts = {};
+  const incremental = options.incremental;
+  let build = esbuild.build;
+  if (incremental) {
+    build = esbuild.context;
+  }
 
   // Build ESM
-  const esmBundle = await esbuild.build({
+  const esm = await build({
     ...buildConfig,
     format: "esm",
     outfile: path.join(options.path, "index.js"),
   });
 
-  handleBuildWarnings(esmBundle);
-
-  bundles.esmBundle = esmBundle;
+  if (incremental) {
+    contexts.esm = esm;
+  } else {
+    handleBuildWarnings(esm);
+  }
 
   // Build IIFE
   if (options.iife) {
-    const iifeBundle = await esbuild.build({
+    const iife = await build({
       ...buildConfig,
       format: "iife",
       globalName: "Cesium",
       outfile: path.join(options.path, "Cesium.js"),
     });
 
-    handleBuildWarnings(iifeBundle);
-
-    bundles.iifeBundle = iifeBundle;
+    if (incremental) {
+      contexts.iife = iife;
+    } else {
+      handleBuildWarnings(iife);
+    }
   }
 
   if (options.node) {
-    const nodeBundle = await esbuild.build({
+    const node = await build({
       ...buildConfig,
       format: "cjs",
       platform: "node",
@@ -217,11 +225,14 @@ export async function bundleCesiumJs(options) {
       outfile: path.join(options.path, "index.cjs"),
     });
 
-    handleBuildWarnings(nodeBundle);
-    bundles.nodeBundle = nodeBundle;
+    if (incremental) {
+      contexts.node = node;
+    } else {
+      handleBuildWarnings(node);
+    }
   }
 
-  return bundles;
+  return contexts;
 }
 
 function filePathToModuleId(moduleId) {
@@ -813,7 +824,12 @@ export async function createJsHintOptions() {
 export function bundleCombinedSpecs(options) {
   options = options || {};
 
-  return esbuild.build({
+  let build = esbuild.build;
+  if (options.incremental) {
+    build = esbuild.context;
+  }
+
+  return build({
     entryPoints: [
       "Specs/spec-main.js",
       "Specs/SpecList.js",
@@ -826,7 +842,6 @@ export function bundleCombinedSpecs(options) {
     outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
     external: [`http`, `https`, `url`, `zlib`],
-    incremental: options.incremental,
     write: options.write,
   });
 }
@@ -837,7 +852,7 @@ export function bundleCombinedSpecs(options) {
  * @param {string} workspace The workspace to create the index.js for.
  * @returns
  */
-async function createIndexJs(workspace) {
+export async function createIndexJs(workspace) {
   let contents = "";
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
@@ -942,7 +957,6 @@ async function bundleSpecs(options) {
   const buildOptions = {
     bundle: true,
     format: "esm",
-    incremental: incremental,
     outdir: options.outdir,
     sourcemap: true,
     external: ["https", "http", "zlib", "url"],
@@ -950,14 +964,19 @@ async function bundleSpecs(options) {
     write: write,
   };
 
+  let build = esbuild.build;
+  if (incremental) {
+    build = esbuild.context;
+  }
+
   // When bundling specs for a workspace, the spec-main.js and karma-main.js
   // are bundled separately since they use a different outbase than the workspace's SpecList.js.
-  await esbuild.build({
+  await build({
     ...buildOptions,
     entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"],
   });
 
-  return await esbuild.build({
+  return build({
     ...buildOptions,
     entryPoints: [options.specListFile],
     outbase: options.outbase,
@@ -1011,8 +1030,6 @@ export const buildEngine = async (options) => {
     specListFile: specListFile,
     write: write,
   });
-
-  return;
 };
 
 /**
@@ -1026,7 +1043,6 @@ export const buildWidgets = async (options) => {
   options = options || {};
 
   const incremental = options.incremental ?? false;
-
   const write = options.write ?? true;
 
   // Generate Build folder to place build artifacts.
@@ -1118,7 +1134,7 @@ export async function buildCesium(options) {
   });
 
   // Generate bundles.
-  const bundles = await bundleCesiumJs({
+  const contexts = await bundleCesiumJs({
     minify: minify,
     iife: iife,
     incremental: incremental,
@@ -1141,7 +1157,7 @@ export async function buildCesium(options) {
   ]);
 
   // Generate Specs bundle.
-  const specsBundle = await bundleCombinedSpecs({
+  const specsContext = await bundleCombinedSpecs({
     incremental: incremental,
     write: write,
   });
@@ -1184,7 +1200,9 @@ export async function buildCesium(options) {
   await writeFile("Source/Widgets/lighter.css", lighterCssContents);
 
   return {
-    ...bundles,
-    specsBundle: specsBundle,
+    esm: contexts.esm,
+    iife: contexts.iife,
+    node: contexts.node,
+    specs: specsContext,
   };
 }
