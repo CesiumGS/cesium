@@ -63,6 +63,15 @@ function OrthographicFrustum(options) {
    */
   this.far = defaultValue(options.far, 500000000.0);
   this._far = this.far;
+
+  if (
+    defined(this.width) &&
+    defined(this.aspectRatio) &&
+    defined(this.near) &&
+    defined(this.far)
+  ) {
+    update(this);
+  }
 }
 
 /**

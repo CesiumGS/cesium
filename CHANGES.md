@@ -7,6 +7,7 @@
 ##### Fixes :wrench:
 
 - Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
+- Fixed issue when render `OrthographicFrustum` geometry by `DebugCameraPrimitive`. [#11159](https://github.com/CesiumGS/cesium/issues/11159)
 
 #### @cesium/widgets
 
