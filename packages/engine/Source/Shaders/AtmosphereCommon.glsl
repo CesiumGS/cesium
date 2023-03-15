@@ -9,10 +9,6 @@ uniform vec3 u_atmosphereMieCoefficient;
 
 const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in meters.
 
-// --- Modified: constants
-const int PRIMARY_STEPS = 4; // Number of times the ray from the camera to the world position (primary ray) is sampled.
-const int LIGHT_STEPS = 2; // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
-
 /**
  * This function computes the colors contributed by Rayliegh and Mie scattering on a given ray, as well as
  * the transmittance value for the ray.
@@ -65,15 +61,33 @@ void computeScattering(
     float w_stop_gt_lprl = max(0.0,min(1.0,(1.0 + x * ( 27.0 + x * x ) / ( 27.0 + 9.0 * x * x ))/2.0));
 
     // The ray should start from the first intersection with the outer atmopshere, or from the camera position, if it is inside the atmosphere.
+    float start_0 = primaryRayAtmosphereIntersect.start;
     primaryRayAtmosphereIntersect.start = max(primaryRayAtmosphereIntersect.start, 0.0);
     // The ray should end at the exit from the atmosphere or at the distance to the vertex, whichever is smaller.
     primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, lprl);
 
+
+    // Distinguish inside or outside atmosphere (outer space)
+    // Reasons: 
+    // (1) from outer space we have to use the original implementation to get an unmodified/acceptable rendering
+    // (2) within atmosphere we need a speedup
+    float x_o_a = start_0 - ATMOSPHERE_THICKNESS; // ATMOSPHERE_THICKNESS used as an ad-hoc constant, no precise meaning here, only the order of magnitude matters
+    float w_inside_atmosphere = 1.0 - max(0.0,min(1.0,(1.0 + x_o_a * ( 27.0 + x_o_a * x_o_a ) / ( 27.0 + 9.0 * x_o_a * x_o_a ))/2.0)); // similar to 1.0 - (1+tanh)/2
+    
+    // (1) Outside of the atmosphere: original (16.0,4.0) values for good rendering
+    // (2) Inside atmosphere: smaller (4.0,2.0) values for a speedup
+    int PRIMARY_STEPS = int(16.0 - w_inside_atmosphere * 12.0); // Number of times the ray from the camera to the world position (primary ray) is sampled.
+    int LIGHT_STEPS   = int(4.0 - w_inside_atmosphere * 2.0); // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
+
     // Setup for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
     float rayPositionLength = primaryRayAtmosphereIntersect.start;
-    // Sky vs horizon: constant step in one case, increasing step in the other case
-    float rayStepLengthIncrease = (1.0 - w_stop_gt_lprl)*(primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / (float(PRIMARY_STEPS*(PRIMARY_STEPS+1))/2.0);
-    float rayStepLength         = w_stop_gt_lprl * (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / max(7.0,float(PRIMARY_STEPS));
+    // (1) Outside of the atmosphere: original implementation
+    // (2) Inside atmosphere: variable rayStepLength to compensate the originally rough rendering of the smaller (4.0,2.0) values
+    //     Implementation: sky vs horizon: constant step in one case, increasing step in the other case
+    float rayStepLengthIncrease = w_inside_atmosphere * ((1.0 - w_stop_gt_lprl)*(primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / (float(PRIMARY_STEPS*(PRIMARY_STEPS+1))/2.0));
+    float rayStepLength         = max(1.0-w_inside_atmosphere, w_stop_gt_lprl) * (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / max(7.0*w_inside_atmosphere,float(PRIMARY_STEPS));
+
+
 
     vec3 rayleighAccumulation = vec3(0.0);
     vec3 mieAccumulation = vec3(0.0);
@@ -81,14 +95,9 @@ void computeScattering(
     vec2 heightScale = vec2(u_atmosphereRayleighScaleHeight, u_atmosphereMieScaleHeight);
 
     // Sample positions on the primary ray.
-
-    // Possible small optimization
-    vec3 samplePosition = primaryRay.origin + primaryRay.direction * (rayPositionLength);
-    vec3 primaryPositionDelta = primaryRay.direction * rayStepLength;
-
     for (int i = 0; i < PRIMARY_STEPS; i++) {
         // Calculate sample position along viewpoint ray.
-      samplePosition += primaryPositionDelta; // Possible small optimization
+        vec3 samplePosition = primaryRay.origin + primaryRay.direction * (rayPositionLength + rayStepLength);
         
         // Calculate height of sample position above ellipsoid.
         float sampleHeight = length(samplePosition) - atmosphereInnerRadius;
@@ -107,14 +116,10 @@ void computeScattering(
         vec2 lightOpticalDepth = vec2(0.0);
 
         // Sample positions along the light ray, to accumulate incidence of light on the latest sample segment.
-
-        // Possible small optimization
-        vec3 lightPosition = samplePosition + lightDirection * (lightStepLength * 0.5);
-        vec3 lightPositionDelta = lightDirection * lightStepLength;
         for (int j = 0; j < LIGHT_STEPS; j++) {
 
             // Calculate sample position along light ray.
-          lightPosition += lightPositionDelta; // Possible small optimization
+            vec3 lightPosition = samplePosition + lightDirection * (lightPositionLength + lightStepLength * 0.5);
 
             // Calculate height of the light sample position above ellipsoid.
             float lightHeight = length(lightPosition) - atmosphereInnerRadius;
