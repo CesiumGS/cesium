@@ -71,10 +71,8 @@ Cesium3DTilesetBaseTraversal.selectTiles = function (tileset, frameState) {
  */
 function selectDesiredTile(tile, frameState) {
   if (tile.contentAvailable) {
-    // The tile can be selected right away and does not require traverseAndSelect
     Cesium3DTilesetTraversal.selectTile(tile, frameState);
   }
-  return;
 }
 
 /**
