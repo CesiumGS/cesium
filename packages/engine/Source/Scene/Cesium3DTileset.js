@@ -52,6 +52,9 @@ import StencilConstants from "./StencilConstants.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
+import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedTraversal.js";
+import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
+import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
 
 /**
  * A {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles tileset},
@@ -3038,7 +3041,9 @@ function update(tileset, frameState, passStatistics, passOptions) {
   tileset._cullRequestsWhileMoving =
     tileset.cullRequestsWhileMoving && !tileset._modelMatrixChanged;
 
-  const ready = passOptions.traversal.selectTiles(tileset, frameState);
+  const ready = tileset
+    .getTraversal(passOptions)
+    .selectTiles(tileset, frameState);
 
   if (passOptions.requestTiles) {
     requestTiles(tileset);
@@ -3062,6 +3067,24 @@ function update(tileset, frameState, passStatistics, passOptions) {
 
   return ready;
 }
+
+/**
+ * @private
+ * @param {object} passOptions
+ * @returns {Cesium3DTilesetTraversal}
+ */
+Cesium3DTileset.prototype.getTraversal = function (passOptions) {
+  const { pass } = passOptions;
+  if (
+    pass === Cesium3DTilePass.MOST_DETAILED_PRELOAD ||
+    pass === Cesium3DTilePass.MOST_DETAILED_PICK
+  ) {
+    return Cesium3DTilesetMostDetailedTraversal;
+  }
+  return this._skipLevelOfDetail
+    ? Cesium3DTilesetSkipTraversal
+    : Cesium3DTilesetBaseTraversal;
+};
 
 /**
  * @private

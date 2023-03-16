@@ -1,7 +1,7 @@
 import Intersect from "../Core/Intersect.js";
 import ManagedArray from "../Core/ManagedArray.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
-import TraversalUtility from "./TraversalUtility.js";
+import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";
 
 /**
  * Traversal that loads all leaves that intersect the camera frustum.
@@ -33,7 +33,7 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
     return ready;
   }
 
-  const { touchTile, visitTile } = TraversalUtility;
+  const { touchTile, visitTile } = Cesium3DTilesetTraversal;
 
   const stack = traversal.stack;
   stack.push(root);
@@ -71,10 +71,6 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
   return ready;
 };
 
-function hasUnloadedContent(tile) {
-  return tile.hasRenderableContent && tile.contentUnloaded;
-}
-
 function canTraverse(tile) {
   if (tile.children.length === 0) {
     return false;
@@ -106,7 +102,7 @@ function updateAndPushChildren(tile, stack, frameState) {
 }
 
 function loadTile(tileset, tile) {
-  if (hasUnloadedContent(tile) || tile.contentExpired) {
+  if (tile.hasUnloadedRenderableContent || tile.contentExpired) {
     tile._priority = 0.0; // Highest priority
     tileset._requestedTiles.push(tile);
   }
