@@ -73,7 +73,7 @@ const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
 }));
 
 // Applying to a model directly
-const model = Cesium.Model.fromGltf({,
+const model = await Cesium.Model.fromGltfAsync({,
   url: "http://example.com/model.gltf",
   customShader: customShader
 });

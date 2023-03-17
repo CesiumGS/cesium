@@ -913,32 +913,32 @@
             });
         }
 
-        function createModel(url, origin) {
+        async function createModel(url, origin) {
           const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             origin,
             new Cesium.HeadingPitchRoll()
           );
 
-          const model = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: url,
-              modelMatrix: modelMatrix,
-            })
-          );
+          try {
+            const model = scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                modelMatrix: modelMatrix,
+              })
+            );
 
-          model.readyPromise
-            .then(function (model) {
+            model.readyEvent.addEventListener(() => {
               // Play and loop all animations at half-speed
               model.activeAnimations.addAll({
                 multiplier: 0.5,
                 loop: Cesium.ModelAnimationLoop.REPEAT,
               });
-            })
-            .catch(function (error) {
-              window.alert(error);
             });
 
-          return model;
+            return model;
+          } catch (error) {
+            window.alert(error);
+          }
         }
 
         function createBoxRTC(origin) {

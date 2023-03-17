@@ -302,16 +302,16 @@
           new Cesium.HeadingPitchRoll()
         );
 
-        const model = scene.primitives.add(
-          Cesium.Model.fromGltf({
-            url: modelUrl,
-            modelMatrix: modelMatrix,
-            minimumPixelSize: 128,
-          })
-        );
+        try {
+          const model = scene.primitives.add(
+            await Cesium.Model.fromGltfAsync({
+              url: modelUrl,
+              modelMatrix: modelMatrix,
+              minimumPixelSize: 128,
+            })
+          );
 
-        model.readyPromise
-          .then(function (model) {
+          model.readyEvent.addEventListener(() => {
             const camera = viewer.camera;
 
             // Zoom to model
@@ -363,10 +363,10 @@
                   new Cesium.Matrix4()
                 );
               });
-          })
-          .catch(function (error) {
-            window.alert(error);
           });
+        } catch (error) {
+          window.alert(error);
+        }
 
         //Sandcastle_End
       };
