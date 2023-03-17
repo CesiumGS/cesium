@@ -5,6 +5,7 @@ import {
   ContentMetadata,
   HeadingPitchRange,
   MetadataClass,
+  RuntimeError,
   GroupMetadata,
   ImplicitMetadataView,
 } from "../../index.js";
@@ -84,14 +85,19 @@ describe(
       });
     }
 
-    it("throws with invalid version", function () {
+    it("throws with invalid version", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
         version: 2,
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "cmpt");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Only Composite Tile version 1 is supported. Version 2 is not."
+      );
     });
 
-    it("throws with invalid inner tile content type", function () {
+    it("throws with invalid inner tile content type", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
         tiles: [
           Cesium3DTilesTester.generateInstancedTileBuffer({
@@ -99,16 +105,25 @@ describe(
           }),
         ],
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "cmpt");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Unknown tile content type, xxxx, inside Composite tile"
+      );
     });
 
-    it("resolves readyPromise", function () {
-      return Cesium3DTilesTester.resolvesReadyPromise(scene, compositeUrl);
+    it("becomes ready", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        compositeUrl
+      );
+      expect(tileset.root.contentReady).toBeTrue();
+      expect(tileset.root.content).toBeDefined();
     });
 
-    it("rejects readyPromise on error", function () {
+    it("throws with invalid tile content", async function () {
       // Try loading a composite tile with an instanced tile that has an invalid url.
-      // Expect promise to be rejected in Model, Model3DTileContent and Composite3DTileContent.
       const arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
         tiles: [
           Cesium3DTilesTester.generateInstancedTileBuffer({
@@ -117,10 +132,12 @@ describe(
           }),
         ],
       });
-      return Cesium3DTilesTester.rejectsReadyPromiseOnError(
-        scene,
-        arrayBuffer,
-        "cmpt"
+
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load i3dm\nFailed to load glTF\nFailed to load glTF: http://localhost:8080/Specs/invalid?compositeIndex=0"
       );
     });
 

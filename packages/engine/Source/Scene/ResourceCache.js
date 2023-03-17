@@ -532,19 +532,11 @@ function hasDracoCompression(draco, semantic) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {FrameState} options.frameState The frame state.
-<<<<<<< HEAD
- * @param {Object} [options.draco] The Draco extension object.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
- * @param {Boolean} [options.loadTypedArray=false] Load index buffer as a typed array.
- * @returns {GltfIndexBufferLoader} The cached index buffer loader.
-=======
  * @param {object} [options.draco] The Draco extension object.
  * @param {boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {boolean} [options.loadBuffer=false] Load index buffer as a GPU index buffer.
  * @param {boolean} [options.loadTypedArray=false] Load index buffer as a typed array.
- * @returns {GltfIndexBufferLoader} The index buffer loader.
->>>>>>> no-ready-promises
+ * @returns {GltfIndexBufferLoader} The cached index buffer loader.
  * @private
  */
 ResourceCache.getIndexBufferLoader = function (options) {

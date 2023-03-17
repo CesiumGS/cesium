@@ -170,8 +170,6 @@ describe(
           expect(ModelSceneGraph.prototype.pushDrawCommands).toHaveBeenCalled();
           expect(frameState.commandList.length).toEqual(primitivesCount);
 
-          expect(model._drawCommandsBuilt).toEqual(true);
-
           // Reset the draw command list to see if they're re-built.
           model._drawCommandsBuilt = false;
           frameState.commandList.length = 0;

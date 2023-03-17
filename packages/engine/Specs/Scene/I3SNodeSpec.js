@@ -1425,16 +1425,12 @@ describe("Scene/I3SNode", function () {
         spyOn(childNode.tile, "_hookedRequestContent").and.callFake(
           function () {
             childNode.tile._contentReadyToProcessPromise = Promise.resolve();
-            childNode.tile._contentReadyPromise = Promise.resolve();
           }
         );
 
         childNode.tile._contentResource = { _url: "mockOriginalContentUrl" };
         childNode.tile.requestContent();
-        return Promise.all([
-          childNode.tile._contentReadyToProcessPromise,
-          childNode.tile._contentReadyPromise,
-        ]);
+        return Promise.all([childNode.tile._contentReadyToProcessPromise]);
       })
       .then(function () {
         expect(childNode.tile._contentResource._url).toEqual("mockGlbUrl");

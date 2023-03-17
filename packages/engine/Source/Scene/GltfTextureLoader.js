@@ -369,7 +369,7 @@ GltfTextureLoader.prototype.unload = function () {
     this._texture.destroy();
   }
 
-  if (defined(this._imageLoader)) {
+  if (defined(this._imageLoader) && !this._imageLoader.isDestroyed()) {
     this._resourceCache.unload(this._imageLoader);
   }
 

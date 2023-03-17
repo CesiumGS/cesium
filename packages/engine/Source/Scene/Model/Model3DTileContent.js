@@ -14,6 +14,8 @@ import Model from "./Model.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
+ * This object is normally not instantiated directly, use {@link Model3DTileContent.fromGltf}, {@link Model3DTileContent.fromB3dm}, {@link Model3DTileContent.fromI3dm}, {@link Model3DTileContent.fromPnts}, or {@link Model3DTileContent.fromGeoJson}.
+ *
  * @alias Model3DTileContent
  * @constructor
  * @private
@@ -24,9 +26,9 @@ function Model3DTileContent(tileset, tile, resource) {
   this._resource = resource;
 
   this._model = undefined;
-  this._readyPromise = undefined;
   this._metadata = undefined;
   this._group = undefined;
+  this._ready = false;
 }
 
 Object.defineProperties(Model3DTileContent.prototype, {
@@ -83,9 +85,9 @@ Object.defineProperties(Model3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 
@@ -244,6 +246,15 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
   }
 
   model.update(frameState);
+
+  if (!this._ready && model.ready) {
+    // Animation can only be added once the model is ready
+    model.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
+    });
+
+    this._ready = true;
+  }
 };
 
 Model3DTileContent.prototype.isDestroyed = function () {
@@ -255,7 +266,7 @@ Model3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
+Model3DTileContent.fromGltf = async function (tileset, tile, resource, gltf) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
@@ -276,21 +287,13 @@ Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
 
   modelOptions.classificationType = classificationType;
 
-  // This should be removed when readyPromise is deprecated across 3D Tiles functions
-  const model = Model.fromGltf(modelOptions);
+  const model = await Model.fromGltfAsync(modelOptions);
   content._model = model;
-  // Include the animation setup in the ready promise to avoid an uncaught exception
-  content._readyPromise = model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
-    });
-    return model;
-  });
 
   return content;
 };
 
-Model3DTileContent.fromB3dm = function (
+Model3DTileContent.fromB3dm = async function (
   tileset,
   tile,
   resource,
@@ -318,15 +321,13 @@ Model3DTileContent.fromB3dm = function (
 
   modelOptions.classificationType = classificationType;
 
-  const model = Model.fromB3dm(modelOptions);
+  const model = await Model.fromB3dm(modelOptions);
   content._model = model;
-  // This should be removed when readyPromise is deprecated across 3D Tiles functions
-  content._readyPromise = model._readyPromise;
 
   return content;
 };
 
-Model3DTileContent.fromI3dm = function (
+Model3DTileContent.fromI3dm = async function (
   tileset,
   tile,
   resource,
@@ -348,15 +349,13 @@ Model3DTileContent.fromI3dm = function (
     additionalOptions
   );
 
-  const model = Model.fromI3dm(modelOptions);
+  const model = await Model.fromI3dm(modelOptions);
   content._model = model;
-  // This should be removed when readyPromise is deprecated across 3D Tiles functions
-  content._readyPromise = model._readyPromise;
 
   return content;
 };
 
-Model3DTileContent.fromPnts = function (
+Model3DTileContent.fromPnts = async function (
   tileset,
   tile,
   resource,
@@ -377,15 +376,18 @@ Model3DTileContent.fromPnts = function (
     content,
     additionalOptions
   );
-  const model = Model.fromPnts(modelOptions);
+  const model = await Model.fromPnts(modelOptions);
   content._model = model;
-  // This should be removed when readyPromise is deprecated across 3D Tiles functions
-  content._readyPromise = model._readyPromise;
 
   return content;
 };
 
-Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
+Model3DTileContent.fromGeoJson = async function (
+  tileset,
+  tile,
+  resource,
+  geoJson
+) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
@@ -399,10 +401,8 @@ Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
     content,
     additionalOptions
   );
-  const model = Model.fromGeoJson(modelOptions);
+  const model = await Model.fromGeoJson(modelOptions);
   content._model = model;
-  // This should be removed when readyPromise is deprecated across 3D Tiles functions
-  content._readyPromise = model._readyPromise;
 
   return content;
 };

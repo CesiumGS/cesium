@@ -281,7 +281,9 @@ GltfJsonLoader.prototype.unload = function () {
   const bufferLoaders = this._bufferLoaders;
   const bufferLoadersLength = bufferLoaders.length;
   for (let i = 0; i < bufferLoadersLength; ++i) {
-    this._resourceCache.unload(bufferLoaders[i]);
+    bufferLoaders[i] =
+      !bufferLoaders[i].isDestroyed() &&
+      this._resourceCache.unload(bufferLoaders[i]);
   }
   this._bufferLoaders.length = 0;
 

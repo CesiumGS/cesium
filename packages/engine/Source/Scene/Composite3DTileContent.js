@@ -17,14 +17,7 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @private
  */
-function Composite3DTileContent(
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-  byteOffset,
-  factory
-) {
+function Composite3DTileContent(tileset, tile, resource) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -32,8 +25,7 @@ function Composite3DTileContent(
 
   this._metadata = undefined;
   this._group = undefined;
-
-  this._readyPromise = initialize(this, arrayBuffer, byteOffset, factory);
+  this._ready = false;
 }
 
 Object.defineProperties(Composite3DTileContent.prototype, {
@@ -130,9 +122,9 @@ Object.defineProperties(Composite3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 
@@ -210,7 +202,14 @@ Object.defineProperties(Composite3DTileContent.prototype, {
 
 const sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-function initialize(content, arrayBuffer, byteOffset, factory) {
+Composite3DTileContent.fromTileType = async function (
+  tileset,
+  tile,
+  resource,
+  arrayBuffer,
+  byteOffset,
+  factory
+) {
   byteOffset = defaultValue(byteOffset, 0);
 
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -231,14 +230,13 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
   const tilesLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  const contentPromises = [];
+  const content = new Composite3DTileContent(tileset, tile, resource);
 
   // For caching purposes, models within the composite tile must be
   // distinguished. To do this, add a query parameter ?compositeIndex=i.
   // Since composite tiles may contain other composite tiles, check for an
   // existing prefix and separate them with underscores. e.g.
   // ?compositeIndex=0_1_1
-  const resource = content._resource;
   let prefix = resource.queryParameters.compositeIndex;
   if (defined(prefix)) {
     // We'll be adding another value at the end, so add an underscore.
@@ -265,15 +263,16 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
     });
 
     if (defined(contentFactory)) {
-      const innerContent = contentFactory(
-        content._tileset,
-        content._tile,
-        childResource,
-        arrayBuffer,
-        byteOffset
+      const innerContent = await Promise.resolve(
+        contentFactory(
+          content._tileset,
+          content._tile,
+          childResource,
+          arrayBuffer,
+          byteOffset
+        )
       );
       content._contents.push(innerContent);
-      contentPromises.push(innerContent.readyPromise);
     } else {
       throw new RuntimeError(
         `Unknown tile content type, ${tileType}, inside Composite tile`
@@ -283,10 +282,8 @@ function initialize(content, arrayBuffer, byteOffset, factory) {
     byteOffset += tileByteLength;
   }
 
-  return Promise.all(contentPromises).then(function () {
-    return content;
-  });
-}
+  return content;
+};
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
@@ -326,9 +323,13 @@ Composite3DTileContent.prototype.applyStyle = function (style) {
 Composite3DTileContent.prototype.update = function (tileset, frameState) {
   const contents = this._contents;
   const length = contents.length;
+  let ready = true;
   for (let i = 0; i < length; ++i) {
     contents[i].update(tileset, frameState);
+    ready = ready && contents[i].ready;
   }
+
+  this._ready = ready;
 };
 
 Composite3DTileContent.prototype.isDestroyed = function () {

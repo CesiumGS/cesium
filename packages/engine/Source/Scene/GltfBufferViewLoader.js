@@ -212,7 +212,7 @@ function getBufferLoader(bufferViewLoader) {
  * @private
  */
 GltfBufferViewLoader.prototype.unload = function () {
-  if (defined(this._bufferLoader)) {
+  if (defined(this._bufferLoader) && !this._bufferLoader.isDestroyed()) {
     this._resourceCache.unload(this._bufferLoader);
   }
 

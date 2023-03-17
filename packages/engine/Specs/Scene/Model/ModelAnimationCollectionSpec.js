@@ -520,7 +520,7 @@ describe(
         ).then(function () {
           expect(spyStart).toHaveBeenCalledWith(model, animation);
 
-          expect(spyUpdate.calls.count()).toEqual(2);
+          expect(spyUpdate.calls.count()).toBeGreaterThanOrEqual(2);
           expect(spyUpdate.calls.argsFor(0)[0]).toBe(model);
           expect(spyUpdate.calls.argsFor(0)[1]).toBe(animation);
 

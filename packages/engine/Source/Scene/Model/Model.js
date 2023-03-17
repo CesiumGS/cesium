@@ -534,7 +534,7 @@ function handleError(model, error) {
     return;
   }
 
-  console.error(error);
+  console.log(error);
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -680,6 +680,21 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * Returns true if textures are loaded separately from the other glTF resources.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  incrementallyLoadTextures: {
+    get: function () {
+      return defaultValue(this._loader.incrementallyLoadTextures, false);
+    },
+  },
+
+  /**
    * Gets an event that, if {@link Model.incrementallyLoadTextures} is true, is raised when the model textures are loaded and ready for rendering, i.e. when the external resources
    * have been downloaded and the WebGL resources are created. Event listeners
    * are passed an instance of the {@link Model}.
@@ -711,7 +726,7 @@ Object.defineProperties(Model.prototype, {
     get: function () {
       deprecationWarning(
         "Model.readyPromise",
-        "Model.readyPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use Model.fromGltfAsync and Model.readyEvent instead."
+        "Model.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in 1.107. Use Model.fromGltfAsync and Model.readyEvent instead."
       );
       return this._readyPromise;
     },
@@ -734,7 +749,7 @@ Object.defineProperties(Model.prototype, {
     get: function () {
       deprecationWarning(
         "Model.texturesLoadedPromise",
-        "Model.texturesLoadedPromise was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use Model.fromGltfAsync and Model.texturesReadyEvent instead."
+        "Model.texturesLoadedPromise was deprecated in CesiumJS 1.104.  It will be removed in 1.107. Use Model.fromGltfAsync and Model.texturesReadyEvent instead."
       );
       return this._texturesLoadedPromise;
     },
@@ -1925,8 +1940,11 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
-  if (this._loader.incrementallyLoadTextures && !this._texturesLoaded) {
-    // TODO: Check if textures are actually ready
+  if (
+    this._loader.incrementallyLoadTextures &&
+    !this._texturesLoaded &&
+    this._loader.texturesLoaded
+  ) {
     // Re-run the pipeline so texture memory statistics are re-computed
     this.resetDrawCommands();
 
@@ -2763,7 +2781,7 @@ Model.prototype.destroyModelResources = function () {
 Model.fromGltf = function (options) {
   deprecationWarning(
     "Model.fromGltf",
-    "Model.fromGltf was deprecated in CesiumJS 1.102.  It will be removed in 1.104. Use Model.fromGltfAsync instead."
+    "Model.fromGltf was deprecated in CesiumJS 1.104.  It will be removed in 1.107. Use Model.fromGltfAsync instead."
   );
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -2995,7 +3013,7 @@ Model.fromGltfAsync = async function (options) {
 /*
  * @private
  */
-Model.fromB3dm = function (options) {
+Model.fromB3dm = async function (options) {
   const loaderOptions = {
     b3dmResource: options.resource,
     arrayBuffer: options.arrayBuffer,
@@ -3013,15 +3031,22 @@ Model.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
-  const model = new Model(modelOptions);
-  return model;
+  try {
+    await loader.load();
+
+    const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
+    const model = new Model(modelOptions);
+    return model;
+  } catch (error) {
+    loader.destroy();
+    throw error;
+  }
 };
 
 /**
  * @private
  */
-Model.fromPnts = function (options) {
+Model.fromPnts = async function (options) {
   const loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
@@ -3029,15 +3054,21 @@ Model.fromPnts = function (options) {
   };
   const loader = new PntsLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(loader, ModelType.TILE_PNTS, options);
-  const model = new Model(modelOptions);
-  return model;
+  try {
+    await loader.load();
+    const modelOptions = makeModelOptions(loader, ModelType.TILE_PNTS, options);
+    const model = new Model(modelOptions);
+    return model;
+  } catch (error) {
+    loader.destroy();
+    throw error;
+  }
 };
 
 /*
  * @private
  */
-Model.fromI3dm = function (options) {
+Model.fromI3dm = async function (options) {
   const loaderOptions = {
     i3dmResource: options.resource,
     arrayBuffer: options.arrayBuffer,
@@ -3053,15 +3084,22 @@ Model.fromI3dm = function (options) {
   };
   const loader = new I3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(loader, ModelType.TILE_I3DM, options);
-  const model = new Model(modelOptions);
-  return model;
+  try {
+    await loader.load();
+
+    const modelOptions = makeModelOptions(loader, ModelType.TILE_I3DM, options);
+    const model = new Model(modelOptions);
+    return model;
+  } catch (error) {
+    loader.destroy();
+    throw error;
+  }
 };
 
 /*
  * @private
  */
-Model.fromGeoJson = function (options) {
+Model.fromGeoJson = async function (options) {
   const loaderOptions = {
     geoJson: options.geoJson,
   };

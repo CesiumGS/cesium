@@ -394,7 +394,10 @@ GltfIndexBufferLoader.prototype.unload = function () {
 
   const resourceCache = this._resourceCache;
 
-  if (defined(this._bufferViewLoader)) {
+  if (
+    defined(this._bufferViewLoader) &&
+    !this._bufferViewLoader.isDestroyed()
+  ) {
     resourceCache.unload(this._bufferViewLoader);
   }
 

@@ -26,6 +26,7 @@ import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
+ * This object is normally not instantiated directly, use {@link Implicit3DTileContent.fromSubtreeJson}.
  *
  * @alias Implicit3DTileContent
  * @constructor
@@ -42,20 +43,10 @@ import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function Implicit3DTileContent(
-  tileset,
-  tile,
-  resource,
-  json,
-  arrayBuffer,
-  byteOffset
-) {
+function Implicit3DTileContent(tileset, tile, resource) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("tile.implicitTileset", tile.implicitTileset);
   Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
-  if (defined(json) === defined(arrayBuffer)) {
-    throw new DeveloperError("One of json and arrayBuffer must be defined.");
-  }
   //>>includeEnd('debug');
 
   const implicitTileset = tile.implicitTileset;
@@ -81,7 +72,7 @@ function Implicit3DTileContent(
   );
   this._url = subtreeResource.getUrlComponent(true);
 
-  this._readyPromise = initialize(this, json, arrayBuffer, byteOffset);
+  this._ready = false;
 }
 
 Object.defineProperties(Implicit3DTileContent.prototype, {
@@ -127,9 +118,9 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 
@@ -188,33 +179,58 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
  * Initialize the implicit content by parsing the subtree resource and setting
  * up a promise chain to expand the immediate subtree.
  *
- * @param {Implicit3DTileContent} content The implicit content
+ * @param {Cesium3DTileset} tileset The tileset this content belongs to
+ * @param {Cesium3DTile} tile The tile this content belongs to.
+ * @param {Resource} resource The resource for the tileset
  * @param {object} [json] The JSON containing the subtree. Mutually exclusive with arrayBuffer.
  * @param {ArrayBuffer} [arrayBuffer] The ArrayBuffer containing a subtree binary. Mutually exclusive with json.
  * @param {number} [byteOffset=0] The byte offset into the arrayBuffer
+ * @return {Promise<Implicit3DTileContent>}
+ *
+ * @exception {DeveloperError} One of json and arrayBuffer must be defined.
+ *
  * @private
  */
-function initialize(content, json, arrayBuffer, byteOffset) {
+Implicit3DTileContent.fromSubtreeJson = async function (
+  tileset,
+  tile,
+  resource,
+  json,
+  arrayBuffer,
+  byteOffset
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("tile.implicitTileset", tile.implicitTileset);
+  Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
+  if (defined(json) === defined(arrayBuffer)) {
+    throw new DeveloperError("One of json and arrayBuffer must be defined.");
+  }
+  //>>includeEnd('debug');
+
   byteOffset = defaultValue(byteOffset, 0);
   let uint8Array;
   if (defined(arrayBuffer)) {
     uint8Array = new Uint8Array(arrayBuffer, byteOffset);
   }
 
-  const subtree = new ImplicitSubtree(
-    content._resource,
+  const implicitTileset = tile.implicitTileset;
+  const implicitCoordinates = tile.implicitCoordinates;
+
+  const subtree = await ImplicitSubtree.fromSubtreeJson(
+    resource,
     json,
     uint8Array,
-    content._implicitTileset,
-    content._implicitCoordinates
+    implicitTileset,
+    implicitCoordinates
   );
 
+  const content = new Implicit3DTileContent(tileset, tile, resource);
+
   content._implicitSubtree = subtree;
-  return subtree.readyPromise.then(function () {
-    expandSubtree(content, subtree);
-    return content;
-  });
-}
+  expandSubtree(content, subtree);
+  content._ready = true;
+  return content;
+};
 
 /**
  * Expand a single subtree placeholder tile. This transcodes the subtree into

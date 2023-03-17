@@ -68,37 +68,37 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    function loadI3dm(path) {
+    async function loadI3dm(path) {
       const resource = Resource.createIfNeeded(path);
 
-      return Resource.fetchArrayBuffer({
+      const arrayBuffer = await Resource.fetchArrayBuffer({
         url: path,
-      }).then(function (arrayBuffer) {
-        const loader = new I3dmLoader({
-          i3dmResource: resource,
-          arrayBuffer: arrayBuffer,
-        });
-        i3dmLoaders.push(loader);
-        loader.load();
-
-        return waitForLoaderProcess(loader, scene);
       });
+      const loader = new I3dmLoader({
+        i3dmResource: resource,
+        arrayBuffer: arrayBuffer,
+      });
+      i3dmLoaders.push(loader);
+      await loader.load();
+      await waitForLoaderProcess(loader, scene);
+      return loader;
     }
 
-    function expectLoadError(arrayBuffer) {
-      expect(function () {
-        const resource = Resource.createIfNeeded(
-          "http://example.com/content.i3dm"
-        );
-        const loader = new I3dmLoader({
-          i3dmResource: resource,
-          arrayBuffer: arrayBuffer,
-        });
-        i3dmLoaders.push(loader);
-        loader.load();
-
-        return waitForLoaderProcess(loader, scene);
-      }).toThrowError(RuntimeError);
+    async function expectLoadError(arrayBuffer) {
+      const resource = Resource.createIfNeeded(
+        "http://example.com/content.i3dm"
+      );
+      const loader = new I3dmLoader({
+        i3dmResource: resource,
+        arrayBuffer: arrayBuffer,
+      });
+      i3dmLoaders.push(loader);
+      await expectAsync(
+        (async () => {
+          await loader.load();
+          await waitForLoaderProcess(loader, scene);
+        })()
+      ).toBeRejectedWithError(RuntimeError);
     }
 
     function verifyInstances(loader, expectedSemantics, instancesLength) {
@@ -394,18 +394,18 @@ describe(
       });
     });
 
-    it("throws with invalid format", function () {
+    it("throws with invalid format", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
         gltfFormat: 2,
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("throws with invalid version", function () {
+    it("throws with invalid version", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
         version: 2,
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
   },
   "WebGL"

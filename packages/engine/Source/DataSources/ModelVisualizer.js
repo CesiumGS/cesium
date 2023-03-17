@@ -36,6 +36,9 @@ const modelMatrixScratch = new Matrix4();
 const nodeMatrixScratch = new Matrix4();
 
 const scratchColor = new Color();
+const scratchArray = new Array(4);
+const scratchCartesian = new Cartesian3();
+
 /**
  * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
  * @alias ModelVisualizer
@@ -121,6 +124,7 @@ ModelVisualizer.prototype.update = function (time) {
         nodeTransformationsScratch: {},
         articulationsScratch: {},
         loadFailed: false,
+        modelUpdated: false,
         awaitingSampleTerrain: false,
         clampedBoundingSphere: undefined,
         sampleTerrainFailed: false,
@@ -138,6 +142,11 @@ ModelVisualizer.prototype.update = function (time) {
             ),
             scene: this._scene,
           });
+
+          if (this.isDestroyed() || !defined(modelHash[entity.id])) {
+            return;
+          }
+
           model.id = entity;
           primitives.add(model);
           modelHash[entity.id].modelPrimitive = model;
@@ -146,20 +155,23 @@ ModelVisualizer.prototype.update = function (time) {
               return;
             }
 
-            console.error(error);
+            console.log(error);
 
             // Texture failures when incrementallyLoadTextures
             // will not affect the ability to compute the bounding sphere
-            if (error.name !== "TextureError") {
+            if (
+              error.name !== "TextureError" &&
+              model.incrementallyLoadTextures
+            ) {
               modelHash[entity.id].loadFailed = true;
             }
           });
         } catch (error) {
-          if (!defined(modelHash[entity.id])) {
+          if (this.isDestroyed() || !defined(modelHash[entity.id])) {
             return;
           }
 
-          console.error(error);
+          console.log(error);
           modelHash[entity.id].loadFailed = true;
         }
       })();
@@ -241,14 +253,26 @@ ModelVisualizer.prototype.update = function (time) {
       time,
       defaultImageBasedLightingFactor
     );
-    model.lightColor = Property.getValueOrUndefined(
+    let lightColor = Property.getValueOrUndefined(
       modelGraphics._lightColor,
       time
     );
+
+    // Convert from Color to Cartesian3
+    if (defined(lightColor)) {
+      Color.pack(lightColor, scratchArray, 0);
+      lightColor = Cartesian3.unpack(scratchArray, 0, scratchCartesian);
+    }
+
+    model.lightColor = lightColor;
     model.customShader = Property.getValueOrUndefined(
       modelGraphics._customShader,
       time
     );
+
+    // It's possible for getBoundingSphere to run before
+    // model becomes ready and these properties are updated
+    modelHash[entity.id].modelUpdated = true;
 
     if (model.ready) {
       const runAnimations = Property.getValueOrDefault(
@@ -393,7 +417,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
   const modelData = this._modelHash[entity.id];
   if (!defined(modelData)) {
-    return BoundingSphereState.PENDING;
+    return BoundingSphereState.FAILED;
   }
 
   if (modelData.loadFailed) {
@@ -402,12 +426,13 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
   const model = modelData.modelPrimitive;
   if (!defined(model) || !model.show) {
-    return BoundingSphereState.FAILED;
-  }
-
-  if (!model.ready) {
     return BoundingSphereState.PENDING;
   }
+
+  if (!model.ready || !modelData.modelUpdated) {
+    return BoundingSphereState.PENDING;
+  }
+
   const scene = this._scene;
   const globe = scene.globe;
   const ellipsoid = globe.ellipsoid;
@@ -473,6 +498,10 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
           scratchCartographic,
         ])
           .then((result) => {
+            if (this.isDestroyed()) {
+              return;
+            }
+
             this._modelHash[entity.id].awaitingSampleTerrain = false;
 
             const updatedCartographic = result[0];
@@ -495,6 +524,10 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
             );
           })
           .catch((e) => {
+            if (this.isDestroyed()) {
+              return;
+            }
+
             this._modelHash[entity.id].sampleTerrainFailed = true;
             this._modelHash[entity.id].awaitingSampleTerrain = false;
           });

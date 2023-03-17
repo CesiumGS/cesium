@@ -52,15 +52,15 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    function loadB3dmArrayBuffer(resource, arrayBuffer) {
+    async function loadB3dmArrayBuffer(resource, arrayBuffer) {
       const loader = new B3dmLoader({
         b3dmResource: resource,
         arrayBuffer: arrayBuffer,
       });
       b3dmLoaders.push(loader);
-      loader.load();
-
-      return waitForLoaderProcess(loader, scene);
+      await loader.load();
+      await waitForLoaderProcess(loader, scene);
+      return loader;
     }
 
     function loadB3dm(b3dmPath) {
@@ -73,11 +73,11 @@ describe(
       });
     }
 
-    function expectLoadError(arrayBuffer) {
+    async function expectLoadError(arrayBuffer) {
       const resource = new Resource("http://example.com/test.b3dm");
-      expect(function () {
-        return loadB3dmArrayBuffer(resource, arrayBuffer);
-      }).toThrowError(RuntimeError);
+      await expectAsync(
+        loadB3dmArrayBuffer(resource, arrayBuffer)
+      ).toBeRejectedWithError(RuntimeError);
     }
 
     it("releases array buffer when finished loading", function () {
@@ -154,17 +154,17 @@ describe(
       });
     });
 
-    it("throws with invalid version", function () {
+    it("throws with invalid version", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
         version: 2,
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("throws with empty gltf", function () {
+    it("throws with empty gltf", async function () {
       // Expect to throw DeveloperError in Model due to invalid gltf magic
       const arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
     it("destroys b3dm loader", function () {

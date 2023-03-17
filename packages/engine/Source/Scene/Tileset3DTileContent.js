@@ -13,7 +13,7 @@ import destroyObject from "../Core/destroyObject.js";
  *
  * @private
  */
-function Tileset3DTileContent(tileset, tile, resource, json) {
+function Tileset3DTileContent(tileset, tile, resource) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -23,7 +23,7 @@ function Tileset3DTileContent(tileset, tile, resource, json) {
   this._metadata = undefined;
   this._group = undefined;
 
-  this._readyPromise = initialize(this, json);
+  this._ready = false;
 }
 
 Object.defineProperties(Tileset3DTileContent.prototype, {
@@ -69,9 +69,9 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 
@@ -118,10 +118,20 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
   },
 });
 
-function initialize(content, json) {
+/**
+ *
+ * @param {Cesium3DTileset} tileset
+ * @param {Cesium3DTile} tile
+ * @param {Resource} resource
+ * @param {object} json
+ * @returns
+ */
+Tileset3DTileContent.fromJson = function (tileset, tile, resource, json) {
+  const content = new Tileset3DTileContent(tileset, tile, resource);
   content._tileset.loadTileset(content._resource, json, content._tile);
-  return Promise.resolve(content);
-}
+  content._ready = true;
+  return content;
+};
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>

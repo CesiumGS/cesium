@@ -2298,13 +2298,25 @@ function requestContent(tileset, tile) {
   }
 
   const { statistics } = tileset;
-  const { contentExpired } = tile;
-  const attemptedRequests = tile.requestContent();
+  const contentExpired = tile.contentExpired;
 
-  if (attemptedRequests > 0) {
-    statistics.numberOfAttemptedRequests += attemptedRequests;
+  const promise = tile.requestContent();
+  if (!defined(promise)) {
     return;
   }
+
+  promise
+    .then((content) => {
+      if (!defined(content) || tile.isDestroyed() || tileset.isDestroyed()) {
+        return;
+      }
+
+      tileset._processingQueue.push(tile);
+      ++statistics.numberOfTilesProcessing;
+    })
+    .catch((error) => {
+      handleTileFailure(error, tileset, tile);
+    });
 
   if (contentExpired) {
     if (tile.hasTilesetContent || tile.hasImplicitContent) {
@@ -2316,15 +2328,6 @@ function requestContent(tileset, tile) {
   }
 
   tileset._requestedTilesInFlight.push(tile);
-
-  tile.contentReadyToProcessPromise
-    .then(addToProcessingQueue(tileset, tile))
-    .catch(function (e) {
-      // Any error will propagate through contentReadyPromise and will be handled below
-    });
-  tile.contentReadyPromise
-    .then(handleTileSuccess(tileset, tile))
-    .catch(handleTileFailure(tileset, tile));
 }
 
 function sortRequestByPriority(a, b) {
@@ -2444,43 +2447,30 @@ function requestTiles(tileset) {
 
 /**
  * @private
+ * @param {Error} error
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
- * @returns {Function}
  */
-function addToProcessingQueue(tileset, tile) {
-  return function () {
-    tileset._processingQueue.push(tile);
+function handleTileFailure(error, tileset, tile) {
+  if (tileset.isDestroyed()) {
+    return;
+  }
 
-    ++tileset._statistics.numberOfTilesProcessing;
-  };
-}
+  let url;
+  if (!tile.isDestroyed()) {
+    url = tile._contentResource.url;
+  }
 
-/**
- * @private
- * @param {Cesium3DTileset} tileset
- * @param {Cesium3DTile} tile
- * @returns {Function}
- */
-function handleTileFailure(tileset, tile) {
-  return function (error) {
-    if (tile._contentState !== Cesium3DTileContentState.FAILED) {
-      // If the tile has not failed, the request has been rejected this frame, but will be retried. Do not bubble up the error.
-      return;
-    }
-
-    const url = tile._contentResource.url;
-    const message = defined(error.message) ? error.message : error.toString();
-    if (tileset.tileFailed.numberOfListeners > 0) {
-      tileset.tileFailed.raiseEvent({
-        url: url,
-        message: message,
-      });
-    } else {
-      console.log(`A 3D tile failed to load: ${url}`);
-      console.log(`Error: ${message}`);
-    }
-  };
+  const message = defined(error.message) ? error.message : error.toString();
+  if (tileset.tileFailed.numberOfListeners > 0) {
+    tileset.tileFailed.raiseEvent({
+      url: url,
+      message: message,
+    });
+  } else {
+    console.log(`A 3D tile failed to load: ${url}`);
+    console.log(`Error: ${message}`);
+  }
 }
 
 /**
@@ -2490,27 +2480,7 @@ function handleTileFailure(tileset, tile) {
  * @returns {Function}
  */
 function handleTileSuccess(tileset, tile) {
-  return function (content) {
-    --tileset._statistics.numberOfTilesProcessing;
-
-    if (!defined(content)) {
-      // A request was cancelled. Do not update successful statistics. The request will be retried.
-      return;
-    }
-
-    if (!tile.hasTilesetContent && !tile.hasImplicitContent) {
-      // RESEARCH_IDEA: ability to unload tiles (without content) for an
-      // external tileset when all the tiles are unloaded.
-      tileset._statistics.incrementLoadCounts(tile.content);
-      ++tileset._statistics.numberOfTilesWithContentReady;
-      ++tileset._statistics.numberOfLoadedTilesTotal;
-
-      // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
-      tileset._cache.add(tile);
-    }
-
-    tileset.tileLoad.raiseEvent(tile);
-  };
+  tileset.tileLoad.raiseEvent(tile);
 }
 
 /**
@@ -2523,7 +2493,10 @@ function filterProcessingQueue(tileset) {
   let removeCount = 0;
   for (let i = 0; i < tiles.length; ++i) {
     const tile = tiles[i];
-    if (tile._contentState !== Cesium3DTileContentState.PROCESSING) {
+    if (
+      tile.isDestroyed() ||
+      tile._contentState !== Cesium3DTileContentState.PROCESSING
+    ) {
       ++removeCount;
       continue;
     }
@@ -2543,8 +2516,21 @@ function filterProcessingQueue(tileset) {
 function processTiles(tileset, frameState) {
   filterProcessingQueue(tileset);
   const tiles = tileset._processingQueue;
+  const statistics = tileset._statistics;
+  let tile;
   for (let i = 0; i < tiles.length; ++i) {
-    tiles[i].process(tileset, frameState);
+    tile = tiles[i];
+    try {
+      tile.process(tileset, frameState);
+
+      if (tile.contentReady) {
+        --statistics.numberOfTilesProcessing;
+        handleTileSuccess(tileset, tile, tile.content);
+      }
+    } catch (error) {
+      --statistics.numberOfTilesProcessing;
+      handleTileFailure(error, tileset, tile);
+    }
   }
 }
 

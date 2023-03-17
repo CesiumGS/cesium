@@ -54,6 +54,7 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
   const contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
   this._requests = new Array(contentCount);
+  this._ready = false;
 
   this._innerContentResources = new Array(contentCount);
   this._serverKeys = new Array(contentCount);
@@ -70,9 +71,6 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
     this._innerContentResources[i] = contentResource;
     this._serverKeys[i] = serverKey;
   }
-
-  // undefined until the first time requests are scheduled
-  this._contentsFetchedPromise = undefined;
 }
 
 Object.defineProperties(Multiple3DTileContent.prototype, {
@@ -213,35 +211,13 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     },
   },
 
-  /**
-   * Part of the {@link Cesium3DTileContent} interface. This behaves
-   * differently for <code>Multiple3DTileContent</code>: it returns
-   * undefined if the inner contents have not yet been created. This
-   * is handled specially in {@link Cesium3DTile}.
-   *
-   * @memberof Multiple3DTileContent.prototype
-   *
-   * @type {Promise<Cesium3DTileContent>|undefined}
-   * @readonly
-   *
-   * @private
-   */
-  readyPromise: {
+  ready: {
     get: function () {
-      // The contents haven't been created yet, short-circuit. The tile
-      // will handle this as a special case
       if (!this._contentsCreated) {
-        return undefined;
+        return false;
       }
 
-      const readyPromises = this._contents.map(function (content) {
-        return content.readyPromise;
-      });
-
-      const that = this;
-      return Promise.all(readyPromises).then(function () {
-        return that;
-      });
+      return this._ready;
     },
   },
 
@@ -338,21 +314,6 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       });
     },
   },
-
-  /**
-   * A promise that resolves when all of the inner contents have been fetched.
-   * This promise is undefined until the first frame where all array buffer
-   * requests have been scheduled.
-   * @memberof Multiple3DTileContent.prototype
-   *
-   * @type {Promise}
-   * @private
-   */
-  contentsFetchedPromise: {
-    get: function () {
-      return this._contentsFetchedPromise;
-    },
-  },
 });
 
 function updatePendingRequests(multipleContents, deltaRequestCount) {
@@ -386,7 +347,7 @@ function cancelPendingRequests(multipleContents, originalContentState) {
  * requests are successfully scheduled.
  * </p>
  *
- * @return {number} The number of attempted requests that were unable to be scheduled.
+ * @return {Promise<void>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
  * @private
  */
 Multiple3DTileContent.prototype.requestInnerContents = function () {
@@ -395,26 +356,26 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
   // if we can schedule all the requests at once. If not, no requests are
   // scheduled
   if (!canScheduleAllRequests(this._serverKeys)) {
-    return this._serverKeys.length;
+    this.tileset.statistics.numberOfAttemptedRequests += this._serverKeys.length;
+    return;
   }
 
   const contentHeaders = this._innerContentHeaders;
   updatePendingRequests(this, contentHeaders.length);
 
+  const originalCancelCount = this._cancelCount;
   for (let i = 0; i < contentHeaders.length; i++) {
     // The cancel count is needed to avoid a race condition where a content
     // is canceled multiple times.
     this._arrayFetchPromises[i] = requestInnerContent(
       this,
       i,
-      this._cancelCount,
+      originalCancelCount,
       this._tile._contentState
     );
   }
 
-  this._contentsFetchedPromise = createInnerContents(this);
-
-  return 0;
+  return createInnerContents(this);
 };
 
 /**
@@ -476,28 +437,39 @@ function requestInnerContent(
 
   const promise = contentResource.fetchArrayBuffer();
   if (!defined(promise)) {
-    return Promise.resolve(undefined);
+    return;
   }
 
   return promise
     .then(function (arrayBuffer) {
-      // Short circuit if another inner content was canceled.
+      // Pending requests have already been canceled.
       if (originalCancelCount < multipleContents._cancelCount) {
-        return undefined;
+        return;
+      }
+
+      if (
+        contentResource.request.cancelled ||
+        contentResource.request.state === RequestState.CANCELLED
+      ) {
+        cancelPendingRequests(multipleContents, originalContentState);
+        return;
       }
 
       updatePendingRequests(multipleContents, -1);
       return arrayBuffer;
     })
     .catch(function (error) {
-      // Short circuit if another inner content was canceled.
+      // Pending requests have already been canceled.
       if (originalCancelCount < multipleContents._cancelCount) {
-        return undefined;
+        return;
       }
 
-      if (contentResource.request.state === RequestState.CANCELLED) {
+      if (
+        contentResource.request.cancelled ||
+        contentResource.request.state === RequestState.CANCELLED
+      ) {
         cancelPendingRequests(multipleContents, originalContentState);
-        return undefined;
+        return;
       }
 
       updatePendingRequests(multipleContents, -1);
@@ -505,42 +477,54 @@ function requestInnerContent(
     });
 }
 
-function createInnerContents(multipleContents) {
+async function createInnerContents(multipleContents) {
   const originalCancelCount = multipleContents._cancelCount;
-  return Promise.all(multipleContents._arrayFetchPromises).then(function (
-    arrayBuffers
-  ) {
-    // Short circuit if inner contents were canceled
-    if (originalCancelCount < multipleContents._cancelCount) {
-      return undefined;
+  const arrayBuffers = await Promise.all(multipleContents._arrayFetchPromises);
+  // Request have been cancelled
+  if (originalCancelCount < multipleContents._cancelCount) {
+    return;
+  }
+
+  const createPromise = async (arrayBuffer, i) => {
+    if (!defined(arrayBuffer)) {
+      // Content was not fetched. The error was handled in
+      // the fetch promise. Return undefined to indicate partial failure.
+      return;
     }
 
-    const contents = arrayBuffers.map(function (arrayBuffer, i) {
-      if (!defined(arrayBuffer)) {
-        // Content was not fetched. The error was handled in
-        // the fetch promise. Return undefined to indicate partial failure.
-        return undefined;
-      }
+    try {
+      const contents = await createInnerContent(
+        multipleContents,
+        arrayBuffer,
+        i
+      );
+      return contents;
+    } catch (error) {
+      handleInnerContentFailed(multipleContents, i, error);
+    }
+  };
 
-      return createInnerContent(multipleContents, arrayBuffer, i);
-    });
+  const promises = [];
+  for (let i = 0; i < arrayBuffers.length; ++i) {
+    const arrayBuffer = arrayBuffers[i];
+    promises.push(createPromise(arrayBuffer, i));
+  }
 
-    // Even if we had a partial success, mark that we finished creating
-    // contents
-    multipleContents._contentsCreated = true;
-    multipleContents._contents = contents.filter(defined);
-  });
+  // Even if we had a partial success, mark that we finished creating
+  // contents
+  const contents = await Promise.all(promises);
+  multipleContents._contentsCreated = true;
+  multipleContents._contents = contents.filter(defined);
+  return contents;
 }
 
-function createInnerContent(multipleContents, arrayBuffer, index) {
+async function createInnerContent(multipleContents, arrayBuffer, index) {
   const preprocessed = preprocess3DTileContent(arrayBuffer);
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
-    const error = new RuntimeError(
+    throw new RuntimeError(
       "External tilesets are disallowed inside multiple contents"
     );
-
-    return handleInnerContentFailed(multipleContents, index, error);
   }
 
   multipleContents._disableSkipLevelOfDetail =
@@ -555,16 +539,20 @@ function createInnerContent(multipleContents, arrayBuffer, index) {
   let content;
   const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (defined(preprocessed.binaryPayload)) {
-    content = contentFactory(
-      tileset,
-      tile,
-      resource,
-      preprocessed.binaryPayload.buffer,
-      0
+    content = await Promise.resolve(
+      contentFactory(
+        tileset,
+        tile,
+        resource,
+        preprocessed.binaryPayload.buffer,
+        0
+      )
     );
   } else {
     // JSON formats
-    content = contentFactory(tileset, tile, resource, preprocessed.jsonPayload);
+    content = await Promise.resolve(
+      contentFactory(tileset, tile, resource, preprocessed.jsonPayload)
+    );
   }
 
   const contentHeader = multipleContents._innerContentHeaders[index];
@@ -653,9 +641,13 @@ Multiple3DTileContent.prototype.applyStyle = function (style) {
 Multiple3DTileContent.prototype.update = function (tileset, frameState) {
   const contents = this._contents;
   const length = contents.length;
+  let ready = true;
   for (let i = 0; i < length; ++i) {
     contents[i].update(tileset, frameState);
+    ready = ready && contents[i].ready;
   }
+
+  this._ready = ready;
 };
 
 Multiple3DTileContent.prototype.isDestroyed = function () {

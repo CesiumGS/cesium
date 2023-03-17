@@ -260,6 +260,8 @@ function GltfLoader(options) {
   this._geometryCallbacks = [];
   this._structuralMetadataLoader = undefined;
   this._loadResourcesPromise = undefined;
+  this._resourcesLoaded = false;
+  this._texturesLoaded = false;
 
   // In some cases where geometry post-processing is needed (like generating
   // outlines) new attributes are added that may have GPU resources attached.
@@ -295,11 +297,7 @@ Object.defineProperties(GltfLoader.prototype, {
    *
    * @memberof GltfLoader.prototype
    *
-<<<<<<< HEAD
    * @type {ModelComponents.Components}
-=======
-   * @type {string}
->>>>>>> no-ready-promises
    * @readonly
    * @private
    */
@@ -326,7 +324,7 @@ Object.defineProperties(GltfLoader.prototype, {
     },
   },
   /**
-   * true if textures are loaded separately from the other glTF resources.
+   * Returns true if textures are loaded separately from the other glTF resources.
    *
    * @memberof GltfLoader.prototype
    *
@@ -339,16 +337,24 @@ Object.defineProperties(GltfLoader.prototype, {
       return this._incrementallyLoadTextures;
     },
   },
+  /**
+   * true if textures are loaded, useful when incrementallyLoadTextures is true
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  texturesLoaded: {
+    get: function () {
+      return this._texturesLoaded;
+    },
+  },
 });
 
 /**
-<<<<<<< HEAD
  * Loads the gltf object
-=======
- * Loads the resource.
- * @returns {Promise<GltfLoader>} A promise which resolves to the loader when the resource loading is completed.
- * @private
->>>>>>> no-ready-promises
  */
 async function loadGltfJson(loader) {
   loader._state = GltfLoaderState.LOADING;
@@ -425,7 +431,7 @@ async function loadResources(loader, frameState) {
   // frame. Any promise failures are collected, and will be handled synchronously in process(). Also note that it's fine to call process before a loader is ready
   // to process or after it has failed; nothing will happen.
   const gltf = loader.gltfJson;
-  parse(loader, gltf, supportedImageFormats, frameState);
+  const promise = parse(loader, gltf, supportedImageFormats, frameState);
 
   // All resource loaders have been created, so we can begin processing
   loader._state = GltfLoaderState.PROCESSING;
@@ -437,6 +443,8 @@ async function loadResources(loader, frameState) {
     ResourceCache.unload(loader._gltfJsonLoader);
     loader._gltfJsonLoader = undefined;
   }
+
+  return promise;
 }
 
 /**
@@ -550,12 +558,15 @@ GltfLoader.prototype._process = function (frameState) {
     processLoaders(this, frameState);
   }
 
-  if (this._state === GltfLoaderState.POST_PROCESSING) {
+  if (
+    this._resourcesLoaded &&
+    this._state === GltfLoaderState.POST_PROCESSING
+  ) {
     postProcessGeometry(this, frameState.context);
     this._state = GltfLoaderState.PROCESSED;
   }
 
-  if (this._state === GltfLoaderState.PROCESSED) {
+  if (this._resourcesLoaded && this._state === GltfLoaderState.PROCESSED) {
     // The buffer views can be unloaded once the data is copied.
     unloadBufferViewLoaders(this);
 
@@ -601,6 +612,7 @@ GltfLoader.prototype._processTextures = function (frameState) {
   }
 
   this._textureState = GltfLoaderState.READY;
+  this._texturesLoaded = true;
   return true;
 };
 
@@ -619,11 +631,13 @@ GltfLoader.prototype.process = function (frameState) {
     this._state === GltfLoaderState.LOADED &&
     !defined(this._loadResourcesPromise)
   ) {
-    this._loadResourcesPromise = loadResources(this, frameState).catch(
-      (error) => {
+    this._loadResourcesPromise = loadResources(this, frameState)
+      .then(() => {
+        this._resourcesLoaded = true;
+      })
+      .catch((error) => {
         this._processError = error;
-      }
-    );
+      });
   }
 
   if (defined(this._processError)) {
@@ -642,11 +656,11 @@ GltfLoader.prototype.process = function (frameState) {
     throw error;
   }
 
-  let ready = false;
   if (this._state === GltfLoaderState.FAILED) {
-    return ready;
+    return false;
   }
 
+  let ready = false;
   try {
     ready = this._process(frameState);
   } catch (error) {
@@ -2646,18 +2660,16 @@ function parse(loader, gltf, supportedImageFormats, frameState) {
     readyPromises.push.apply(readyPromises, loader._texturesPromises);
   }
 
-  Promise.all(readyPromises).catch((error) => {
-    // This error will be thrown synchronously during the next call
-    // to process()
-    loader._processError = error;
-  });
+  return Promise.all(readyPromises);
 }
 
 function unloadTextures(loader) {
   const textureLoaders = loader._textureLoaders;
   const textureLoadersLength = textureLoaders.length;
   for (let i = 0; i < textureLoadersLength; ++i) {
-    ResourceCache.unload(textureLoaders[i]);
+    textureLoaders[i] =
+      !textureLoaders[i].isDestroyed() &&
+      ResourceCache.unload(textureLoaders[i]);
   }
   loader._textureLoaders.length = 0;
 }
@@ -2666,7 +2678,9 @@ function unloadBufferViewLoaders(loader) {
   const bufferViewLoaders = loader._bufferViewLoaders;
   const bufferViewLoadersLength = bufferViewLoaders.length;
   for (let i = 0; i < bufferViewLoadersLength; ++i) {
-    ResourceCache.unload(bufferViewLoaders[i]);
+    bufferViewLoaders[i] =
+      !bufferViewLoaders[i].isDestroyed() &&
+      ResourceCache.unload(bufferViewLoaders[i]);
   }
   loader._bufferViewLoaders.length = 0;
 }
@@ -2675,7 +2689,9 @@ function unloadGeometry(loader) {
   const geometryLoaders = loader._geometryLoaders;
   const geometryLoadersLength = geometryLoaders.length;
   for (let i = 0; i < geometryLoadersLength; ++i) {
-    ResourceCache.unload(geometryLoaders[i]);
+    geometryLoaders[i] =
+      !geometryLoaders[i].isDestroyed() &&
+      ResourceCache.unload(geometryLoaders[i]);
   }
   loader._geometryLoaders.length = 0;
 }
@@ -2693,7 +2709,10 @@ function unloadGeneratedAttributes(loader) {
 }
 
 function unloadStructuralMetadata(loader) {
-  if (defined(loader._structuralMetadataLoader)) {
+  if (
+    defined(loader._structuralMetadataLoader) &&
+    !loader._structuralMetadataLoader.isDestroyed()
+  ) {
     loader._structuralMetadataLoader.destroy();
     loader._structuralMetadataLoader = undefined;
   }

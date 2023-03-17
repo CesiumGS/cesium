@@ -41,7 +41,7 @@ const Cesium3DTileContentFactory = {
   },
   cmpt: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     // Send in the factory in order to avoid a cyclical dependency
-    return new Composite3DTileContent(
+    return Composite3DTileContent.fromTileType(
       tileset,
       tile,
       resource,
@@ -51,7 +51,7 @@ const Cesium3DTileContentFactory = {
     );
   },
   externalTileset: function (tileset, tile, resource, json) {
-    return new Tileset3DTileContent(tileset, tile, resource, json);
+    return Tileset3DTileContent.fromJson(tileset, tile, resource, json);
   },
   geom: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     return new Geometry3DTileContent(
@@ -67,12 +67,13 @@ const Cesium3DTileContentFactory = {
       tileset,
       tile,
       resource,
+
       arrayBuffer,
       byteOffset
     );
   },
   subt: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    return new Implicit3DTileContent(
+    return Implicit3DTileContent.fromSubtreeJson(
       tileset,
       tile,
       resource,
@@ -82,7 +83,7 @@ const Cesium3DTileContentFactory = {
     );
   },
   subtreeJson: function (tileset, tile, resource, json) {
-    return new Implicit3DTileContent(tileset, tile, resource, json);
+    return Implicit3DTileContent.fromSubtreeJson(tileset, tile, resource, json);
   },
   glb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     const arrayBufferByteLength = arrayBuffer.byteLength;
@@ -92,11 +93,9 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
-    // This should be replace with fromGltfAsync when readyPromise is deprecated across 3D Tiles functions
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
-    // This should be replace with fromGltfAsync when readyPromise is deprecated across 3D Tiles functions
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
   },
   geoJson: function (tileset, tile, resource, json) {

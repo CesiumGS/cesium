@@ -3340,8 +3340,7 @@ describe(
       });
     });
 
-    // TODO
-    xit("process throws if image resource fails to load", function () {
+    it("process throws if image resource fails to load", async function () {
       spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
         const error = new Error("404 Not Found");
         return Promise.reject(error);
@@ -3368,31 +3367,18 @@ describe(
 
       const gltfLoader = new GltfLoader(getOptions(boxTextured, options));
       gltfLoaders.push(gltfLoader);
-      gltfLoader.load();
+      await gltfLoader.load();
 
-      return waitForLoaderProcess(gltfLoader, scene)
-        .then(function () {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found"
-          );
-        })
-        .then(function () {
-          return gltfLoader.texturesLoadedPromise;
-        })
-        .then(function () {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found"
-          );
-          expect(destroyVertexBufferLoader.calls.count()).toBe(2);
-          expect(destroyIndexBufferLoader.calls.count()).toBe(1);
-          expect(destroyTextureLoader.calls.count()).toBe(1);
-        });
+      await expectAsync(
+        waitForLoaderProcess(gltfLoader, scene)
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load glTF\nFailed to load texture\nFailed to load image: CesiumLogoFlat.png\n404 Not Found"
+      );
+
+      expect(destroyVertexBufferLoader.calls.count()).toBe(2);
+      expect(destroyIndexBufferLoader.calls.count()).toBe(1);
+      expect(destroyTextureLoader.calls.count()).toBe(1);
     });
 
     function resolveGltfJsonAfterDestroy(rejectPromise) {

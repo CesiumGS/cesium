@@ -1160,7 +1160,7 @@ describe(
         planes: [new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)],
       });
       const model = scene.primitives.add(
-        await Model.fromGltf({
+        await Model.fromGltfAsync({
           url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf",
         })
       );

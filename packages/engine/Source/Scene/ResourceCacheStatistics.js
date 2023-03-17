@@ -55,7 +55,6 @@ ResourceCacheStatistics.prototype.clear = function () {
  *   <li>If the geometry has a CPU copy of the GPU buffer, it will be added to the count</li>
  * </ul>
  * @param {GltfVertexBufferLoader|GltfIndexBufferLoader} loader The geometry buffer with resources to track
- * @returns {Promise} A promise that resolves once the count is updated.
  *
  * @private
  */
@@ -99,7 +98,7 @@ ResourceCacheStatistics.prototype.addGeometryLoader = function (loader) {
  *
  * @private
  */
-ResourceCacheStatistics.prototype.addTextureLoader = async function (loader) {
+ResourceCacheStatistics.prototype.addTextureLoader = function (loader) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("loader", loader);
   //>>includeEnd('debug');

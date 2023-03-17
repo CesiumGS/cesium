@@ -300,7 +300,10 @@ function loadImageFromUri(resource) {
  * @private
  */
 GltfImageLoader.prototype.unload = function () {
-  if (defined(this._bufferViewLoader)) {
+  if (
+    defined(this._bufferViewLoader) &&
+    !this._bufferViewLoader.isDestroyed()
+  ) {
     this._resourceCache.unload(this._bufferViewLoader);
   }
 

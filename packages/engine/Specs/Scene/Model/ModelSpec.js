@@ -345,16 +345,16 @@ describe(
 
       model.errorEvent.addEventListener((e) => {
         expect(e).toBeInstanceOf(RuntimeError);
-        expect(e.message).toContain(
-          `Failed to load model: ${boxTexturedGltfUrl}`
-        );
         expect(e.message).toContain("Failed to load texture");
+        expect(e.message).toContain(
+          "Failed to load image: non-existent-path.png"
+        );
         finished = true;
       });
 
       return pollToPromise(function () {
         scene.renderForSpecs();
-        return finished;
+        return model.ready && finished;
       });
     });
 

@@ -50,12 +50,12 @@ describe(
       });
     }
 
-    function loadGltf(gltfPath, options) {
+    async function loadGltf(gltfPath, options) {
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
-      gltfLoader.load();
-
-      return waitForLoaderProcess(gltfLoader, scene);
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+      return gltfLoader;
     }
 
     const simpleSkinUrl =
@@ -139,7 +139,6 @@ describe(
       return loadGltf(cesiumManUrl).then(function (gltfLoader) {
         const components = gltfLoader.components;
         const primitive = components.nodes[1].primitives[0];
-        console.log(components);
 
         SkinningPipelineStage.process(renderResources, primitive);
 

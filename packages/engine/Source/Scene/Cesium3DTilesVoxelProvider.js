@@ -381,15 +381,15 @@ function getVoxelPromise(implicitTileset, tileCoordinates) {
   });
 }
 
-function getSubtreePromise(provider, subtreeCoord) {
+async function getSubtreePromise(provider, subtreeCoord) {
   const implicitTileset = provider._implicitTileset;
   const subtreeCache = provider._subtreeCache;
 
   // First load the subtree to check if the tile is available.
   // If the subtree has been requested previously it might still be in the cache
-  const subtree = subtreeCache.find(subtreeCoord);
+  let subtree = subtreeCache.find(subtreeCoord);
   if (defined(subtree)) {
-    return subtree.readyPromise;
+    return subtree;
   }
 
   const subtreeRelative = implicitTileset.subtreeUriTemplate.getDerivedResource(
@@ -401,26 +401,25 @@ function getSubtreePromise(provider, subtreeCoord) {
     url: subtreeRelative.url,
   });
 
-  return subtreeResource.fetchArrayBuffer().then(function (arrayBuffer) {
-    // Check one more time if the subtree is in the cache.
-    // This could happen if there are two in-flight tile requests from the same
-    // subtree and one finishes before the other.
-    let subtree = subtreeCache.find(subtreeCoord);
-    if (defined(subtree)) {
-      return subtree.readyPromise;
-    }
+  const arrayBuffer = await subtreeResource.fetchArrayBuffer();
+  // Check one more time if the subtree is in the cache.
+  // This could happen if there are two in-flight tile requests from the same
+  // subtree and one finishes before the other.
+  subtree = subtreeCache.find(subtreeCoord);
+  if (defined(subtree)) {
+    return subtree;
+  }
 
-    const preprocessed = preprocess3DTileContent(arrayBuffer);
-    subtree = new ImplicitSubtree(
-      subtreeResource,
-      preprocessed.jsonPayload,
-      preprocessed.binaryPayload,
-      implicitTileset,
-      subtreeCoord
-    );
-    subtreeCache.addSubtree(subtree);
-    return subtree.readyPromise;
-  });
+  const preprocessed = preprocess3DTileContent(arrayBuffer);
+  subtree = await ImplicitSubtree.fromSubtreeJson(
+    subtreeResource,
+    preprocessed.jsonPayload,
+    preprocessed.binaryPayload,
+    implicitTileset,
+    subtreeCoord
+  );
+  subtreeCache.addSubtree(subtree);
+  return subtree;
 }
 
 /** @inheritdoc */

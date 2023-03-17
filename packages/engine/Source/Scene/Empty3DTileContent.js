@@ -64,9 +64,9 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
+  ready: {
     get: function () {
-      return undefined;
+      return true;
     },
   },
 
