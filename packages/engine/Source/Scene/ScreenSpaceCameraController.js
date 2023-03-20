@@ -245,7 +245,7 @@ function ScreenSpaceCameraController(scene) {
   this.minimumTrackBallHeight = 7500000.0;
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
-   * Enables or disables camera collision detection with terrain. When enabled, the camera's maximumZoomDistance and minimumZoomDistance become locked.
+   * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
    * @type {boolean}
    * @default true
    */
