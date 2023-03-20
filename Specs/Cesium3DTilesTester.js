@@ -102,27 +102,19 @@ Cesium3DTilesTester.waitForTilesLoaded = function (scene, tileset) {
   });
 };
 
-Cesium3DTilesTester.waitForReady = function (scene, tileset) {
-  return pollToPromise(function () {
-    scene.renderForSpecs();
-    return tileset.ready;
-  }).then(function () {
-    return tileset;
-  });
-};
-
-Cesium3DTilesTester.loadTileset = function (scene, url, options) {
+Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
   options = defaultValue(options, {});
-  options.url = url;
   options.cullRequestsWhileMoving = defaultValue(
     options.cullRequestsWhileMoving,
     false
   );
+
+  const tileset = await Cesium3DTileset.fromUrl(url, options);
+
   // Load all visible tiles
-  const tileset = scene.primitives.add(new Cesium3DTileset(options));
-  return tileset.readyPromise.then(function () {
-    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-  });
+  scene.primitives.add(tileset);
+  await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+  return tileset;
 };
 
 Cesium3DTilesTester.createContentForMockTile = async function (

@@ -2219,10 +2219,10 @@ describe(
       );
     });
 
-    it("destroys", function () {
-      const tileset = new Cesium3DTileset({
-        url: vectorTilePolygonsWithBatchTableTileset,
-      });
+    it("destroys", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        vectorTilePolygonsWithBatchTableTileset
+      );
       expect(tileset.isDestroyed()).toEqual(false);
       tileset.destroy();
       expect(tileset.isDestroyed()).toEqual(true);

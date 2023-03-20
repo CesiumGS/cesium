@@ -750,6 +750,16 @@ it("fromUrl throws if the SRS is not supported", async function () {
 });
 ```
 
+Since developer errors are removed for release builds, CesiumJS's `toBeRejectedWithDeveloperError` matcher is used to verify asynchronous Developer Errors. Here is an excerpt from [Cesium3DTilesetSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/Cesium3DTilesetSpec.js):
+
+```javascript
+it("fromUrl throws without url", async function () {
+  await expectAsync(Cesium3DTileset.fromUrl()).toBeRejectedWithDeveloperError(
+    "url is required, actual value was undefined"
+  );
+});
+```
+
 ### Mocks
 
 To isolate testing, mock objects can be used to simulate real objects. Here is an excerpt from [SceneSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/SceneSpec.js);

@@ -39,6 +39,7 @@ import {
   RequestScheduler,
   Resource,
   ResourceCache,
+  RuntimeError,
   Transforms,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -263,12 +264,6 @@ describe(
       return tileset._selectedTiles.indexOf(tile) > -1;
     }
 
-    it("throws with undefined url", function () {
-      expect(function () {
-        return new Cesium3DTileset();
-      }).toThrowDeveloperError();
-    });
-
     it("rejects readyPromise with invalid tileset JSON file", function () {
       spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
         url,
@@ -372,7 +367,7 @@ describe(
     it("rejects readyPromise with invalid tileset version", function () {
       const tilesetJson = {
         asset: {
-          version: 2.0,
+          version: "2.0",
         },
       };
 
@@ -392,7 +387,7 @@ describe(
     it("rejects readyPromise with unsupported extension", function () {
       const tilesetJson = {
         asset: {
-          version: 1.0,
+          version: "1.0",
         },
         extensionsUsed: ["unsupported_extension"],
         extensionsRequired: ["unsupported_extension"],
@@ -411,27 +406,68 @@ describe(
         });
     });
 
-    it("url and tilesetUrl set up correctly given tileset JSON filepath", function () {
-      const path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-      const tileset = new Cesium3DTileset({
-        url: path,
-      });
-      return Promise.resolve(tileset).then(function () {
-        expect(tileset.resource.url).toEqual(path);
-        return tileset.readyPromise;
-      });
+    it("fromUrl throws without url", async function () {
+      await expectAsync(
+        Cesium3DTileset.fromUrl()
+      ).toBeRejectedWithDeveloperError(
+        "url is required, actual value was undefined"
+      );
     });
 
-    it("url and tilesetUrl set up correctly given path with query string", function () {
+    it("fromUrl throws with unsupported version", async function () {
+      const tilesetJson = {
+        asset: {
+          version: "2.0",
+        },
+      };
+
+      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
+      await expectAsync(Cesium3DTileset.fromUrl(uri)).toBeRejectedWithError(
+        RuntimeError,
+        "The tileset must be 3D Tiles version 0.0, 1.0, or 1.1"
+      );
+    });
+
+    it("fromUrl throws with unsupported extension", async function () {
+      const tilesetJson = {
+        asset: {
+          version: "1.0",
+        },
+        extensionsUsed: ["unsupported_extension"],
+        extensionsRequired: ["unsupported_extension"],
+      };
+
+      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
+      await expectAsync(Cesium3DTileset.fromUrl(uri)).toBeRejectedWithError(
+        RuntimeError,
+        "Unsupported 3D Tiles Extension: unsupported_extension"
+      );
+    });
+
+    it("fromUrl throws with invalid tileset JSON file", async function () {
+      await expectAsync(Cesium3DTileset.fromUrl("invalid.json")).toBeRejected();
+    });
+
+    it("fromUrl resolves with file resource", async function () {
+      const resource = new Resource({
+        url: "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json",
+      });
+
+      const tileset = await Cesium3DTileset.fromUrl(resource);
+      expect(tileset).toBeInstanceOf(Cesium3DTileset);
+    });
+
+    it("url and tilesetUrl set up correctly given tileset JSON filepath", async function () {
+      const path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
+      const tileset = await Cesium3DTileset.fromUrl(path);
+      expect(tileset.resource.url).toEqual(path);
+    });
+
+    it("url and tilesetUrl set up correctly given path with query string", async function () {
       const path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
       const param = "?param1=1&param2=2";
-      const tileset = new Cesium3DTileset({
-        url: path + param,
-      });
-      return Promise.resolve(tileset).then(function () {
-        expect(tileset.resource.url).toEqual(path + param);
-        return tileset.readyPromise;
-      });
+      const tileset = await Cesium3DTileset.fromUrl(path + param);
+      expect(tileset.resource.url).toEqual(path + param);
     });
 
     it("resolves readyPromise", function () {
@@ -487,15 +523,9 @@ describe(
       });
     });
 
-    it("gets root tile", function () {
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      expect(function () {
-        return tileset.root;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise.then(function () {
-        expect(tileset.root).toBeDefined();
-      });
+    it("gets root tile", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(tileset.root).toBeDefined();
     });
 
     it("hasExtension returns true if the tileset JSON file uses the specified extension", function () {
@@ -551,53 +581,12 @@ describe(
       });
     });
 
-    it("throws when getting asset and tileset is not ready", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
-      expect(function () {
-        return tileset.asset;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise;
-    });
-
-    it("throws when getting extensions and tileset is not ready", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
-      expect(function () {
-        return tileset.extensions;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise;
-    });
-
-    it("throws when getting properties and tileset is not ready", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
-      expect(function () {
-        return tileset.properties;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise;
-    });
-
-    it("throws when getting extras and tileset is not ready", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
-      expect(function () {
-        return tileset.extras;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise;
-    });
-
     it("requests tile with invalid magic", async function () {
       const invalidMagicBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
         magic: [120, 120, 120, 120],
       });
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      await tileset.readyPromise;
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
 
       const failedSpy = jasmine.createSpy("listenerSpy");
       tileset.tileFailed.addEventListener(failedSpy);
@@ -624,9 +613,8 @@ describe(
 
     it("handles failed tile requests", async function () {
       viewRootOnly();
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      await tileset.readyPromise;
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
 
       const failedSpy = jasmine.createSpy("listenerSpy");
       tileset.tileFailed.addEventListener(failedSpy);
@@ -657,9 +645,8 @@ describe(
 
     it("handles failed tile processing", async function () {
       viewRootOnly();
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      await tileset.readyPromise;
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
 
       const failedSpy = jasmine.createSpy("listenerSpy");
       tileset.tileFailed.addEventListener(failedSpy);
@@ -867,34 +854,23 @@ describe(
       });
     });
 
-    it("verify statistics", function () {
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
-      // Verify initial values
+      // Verify initial values after root and children are requested
       const statistics = tileset._statistics;
       expect(statistics.visited).toEqual(0);
       expect(statistics.numberOfCommands).toEqual(0);
       expect(statistics.numberOfPendingRequests).toEqual(0);
       expect(statistics.numberOfTilesProcessing).toEqual(0);
 
-      return Cesium3DTilesTester.waitForReady(scene, tileset).then(function () {
-        // Check that root and children are requested
-        expect(statistics.visited).toEqual(5);
-        expect(statistics.numberOfCommands).toEqual(0);
-        expect(statistics.numberOfPendingRequests).toEqual(5);
-        expect(statistics.numberOfTilesProcessing).toEqual(0);
-
-        // Wait for all tiles to load and check that they are all visited and rendered
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-          function () {
-            expect(statistics.visited).toEqual(5);
-            expect(statistics.numberOfCommands).toEqual(5);
-            expect(statistics.numberOfPendingRequests).toEqual(0);
-            expect(statistics.numberOfTilesProcessing).toEqual(0);
-          }
-        );
-      });
+      scene.primitives.add(tileset);
+      // Wait for all tiles to load and check that they are all visited and rendered
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      expect(statistics.visited).toEqual(5);
+      expect(statistics.numberOfCommands).toEqual(5);
+      expect(statistics.numberOfPendingRequests).toEqual(0);
+      expect(statistics.numberOfTilesProcessing).toEqual(0);
     });
 
     function checkPointAndFeatureCounts(tileset, features, points, triangles) {
@@ -935,62 +911,74 @@ describe(
       );
     }
 
-    it("verify batched features statistics", function () {
-      options.url = withBatchTableUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify batched features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(withBatchTableUrl, options);
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 10, 0, 120);
     });
 
-    it("verify no batch table features statistics", function () {
-      options.url = noBatchIdsUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify no batch table features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(noBatchIdsUrl, options);
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 0, 0, 120);
     });
 
-    it("verify instanced features statistics", function () {
-      options.url = instancedRedMaterialUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify instanced features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        instancedRedMaterialUrl,
+        options
+      );
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 25, 0, 12);
     });
 
-    it("verify composite features statistics", function () {
-      options.url = compositeUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify composite features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(compositeUrl, options);
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 35, 0, 132);
     });
 
-    it("verify tileset of tilesets features statistics", function () {
-      options.url = tilesetOfTilesetsUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify tileset of tilesets features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        tilesetOfTilesetsUrl,
+        options
+      );
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 50, 0, 600);
     });
 
-    it("verify points statistics", function () {
+    it("verify points statistics", async function () {
       viewPointCloud();
 
-      options.url = pointCloudUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      const tileset = await Cesium3DTileset.fromUrl(pointCloudUrl, options);
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
     });
 
-    it("verify triangle statistics", function () {
-      options.url = tilesetEmptyRootUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify triangle statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        tilesetEmptyRootUrl,
+        options
+      );
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 40, 0, 480);
     });
 
-    it("verify batched points statistics", function () {
+    it("verify batched points statistics", async function () {
       viewPointCloud();
 
-      options.url = pointCloudBatchedUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      const tileset = await Cesium3DTileset.fromUrl(
+        pointCloudBatchedUrl,
+        options
+      );
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 8, 1000, 0);
     });
@@ -2443,41 +2431,31 @@ describe(
       });
     });
 
-    it("tilesLoaded", function () {
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("tilesLoaded", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
       expect(tileset.tilesLoaded).toBe(false);
-      return tileset.readyPromise.then(function () {
-        expect(tileset.tilesLoaded).toBe(false);
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-          function () {
-            expect(tileset.tilesLoaded).toBe(true);
-          }
-        );
-      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      expect(tileset.tilesLoaded).toBe(true);
     });
 
-    it("all tiles loaded event is raised", function () {
+    it("all tiles loaded event is raised", async function () {
       // Called first when only the root is visible and it becomes loaded, and then again when
       // the rest of the tileset is visible and all tiles are loaded.
       const spyUpdate1 = jasmine.createSpy("listener");
       const spyUpdate2 = jasmine.createSpy("listener");
       viewRootOnly();
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       tileset.allTilesLoaded.addEventListener(spyUpdate1);
       tileset.initialTilesLoaded.addEventListener(spyUpdate2);
-      return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-        function () {
-          viewAllTiles();
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              expect(spyUpdate1.calls.count()).toEqual(2);
-              expect(spyUpdate2.calls.count()).toEqual(1);
-            }
-          );
-        }
-      );
+      scene.primitives.add(tileset);
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      viewAllTiles();
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      expect(spyUpdate1.calls.count()).toEqual(2);
+      expect(spyUpdate2.calls.count()).toEqual(1);
     });
 
     it("tile visible event is raised", function () {
@@ -2613,9 +2591,8 @@ describe(
 
     it("destroys before tile finishes loading", async function () {
       viewRootOnly();
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      await tileset.readyPromise;
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
       const root = tileset.root;
       scene.renderForSpecs(); // Request root
       scene.primitives.remove(tileset);
@@ -3724,24 +3701,18 @@ describe(
       });
     });
 
-    it("maximumMemoryUsage throws when negative", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
+    it("maximumMemoryUsage throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       expect(function () {
         tileset.maximumMemoryUsage = -1;
       }).toThrowDeveloperError();
-      return tileset.readyPromise;
     });
 
-    it("maximumScreenSpaceError throws when negative", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
+    it("maximumScreenSpaceError throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       expect(function () {
         tileset.maximumScreenSpaceError = -1;
       }).toThrowDeveloperError();
-      return tileset.readyPromise;
     });
 
     it("propagates tile transform down the tree", function () {
@@ -3960,10 +3931,10 @@ describe(
       });
     });
 
-    it("does not add commands or stencil clear command with no selected tiles", function () {
-      options.url = tilesetUrl;
+    it("does not add commands or stencil clear command with no selected tiles", async function () {
       options.skipLevelOfDetail = true;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
       scene.renderForSpecs();
       const statistics = tileset._statistics;
       expect(tileset._selectedTiles.length).toEqual(0);
@@ -4655,28 +4626,20 @@ describe(
         );
       });
 
-      it("throws if frameState is undefined", function () {
-        const tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
+      it("throws if frameState is undefined", async function () {
+        const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
         expect(function () {
           tileset.updateForPass();
         }).toThrowDeveloperError();
-
-        return tileset.readyPromise;
       });
 
-      it("throws if tilesetPassState is undefined", function () {
-        const tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
+      it("throws if tilesetPassState is undefined", async function () {
+        const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
         expect(function () {
           tileset.updateForPass(scene.frameState);
         }).toThrowDeveloperError();
-
-        return tileset.readyPromise;
       });
     });
 
@@ -5585,12 +5548,8 @@ describe(
 
         viewNothing();
 
-        const tileset = scene.primitives.add(
-          new Cesium3DTileset({
-            url: multipleContentsUrl,
-          })
-        );
-        await tileset.readyPromise;
+        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
+        scene.primitives.add(tileset);
         viewAllTiles();
         scene.renderForSpecs();
 
@@ -5687,9 +5646,12 @@ describe(
         expect(statistics.numberOfTilesWithContentReady).toBe(1);
       });
 
-      it("verify multiple content statistics", function () {
-        options.url = multipleContentsUrl;
-        const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      it("verify multiple content statistics", async function () {
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsUrl,
+          options
+        );
+        scene.primitives.add(tileset);
 
         return checkPointAndFeatureCounts(tileset, 35, 0, 132);
       });
@@ -5763,11 +5725,8 @@ describe(
 
         viewNothing();
         let errorCount = 0;
-        const tileset = scene.primitives.add(
-          new Cesium3DTileset({
-            url: multipleContentsUrl,
-          })
-        );
+
+        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
         tileset.tileFailed.addEventListener(function (event) {
           errorCount++;
           expect(endsWith(event.url, ".json")).toBe(true);
@@ -5775,7 +5734,7 @@ describe(
             "External tilesets are disallowed inside multiple contents"
           );
         });
-        await tileset.readyPromise;
+        scene.primitives.add(tileset);
 
         spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
           const externalTileset = {
@@ -5985,9 +5944,12 @@ describe(
         expect(statistics.numberOfTilesWithContentReady).toBe(1);
       });
 
-      it("verify multiple content statistics (legacy)", function () {
-        options.url = multipleContentsLegacyUrl;
-        const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      it("verify multiple content statistics (legacy)", async function () {
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsLegacyUrl,
+          options
+        );
+        scene.primitives.add(tileset);
 
         return checkPointAndFeatureCounts(tileset, 35, 0, 132);
       });
