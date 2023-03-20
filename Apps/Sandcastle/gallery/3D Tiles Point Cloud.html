@@ -41,11 +41,6 @@
           terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(16421),
-        });
-        viewer.scene.primitives.add(tileset);
-
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
             4401744.644145314,
@@ -57,7 +52,14 @@
             -0.276607153839886,
             6.281110875400085
           ),
-        }); //Sandcastle_End
+        });
+
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(16421);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;

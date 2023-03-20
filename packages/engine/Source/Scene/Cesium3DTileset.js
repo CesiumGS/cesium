@@ -1969,9 +1969,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  *   console.error(`Error creating tileset: ${error}`);
  * }
  */
-Cesium3DTileset.fromIonAssetId = async function (url, options) {
-  const resource = await IonResource.fromAssetId(124624234);
-  return Cesium3DTileset.fromUrl(resource);
+Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
+  const resource = await IonResource.fromAssetId(assetId);
+  return Cesium3DTileset.fromUrl(resource, options);
 };
 
 /**

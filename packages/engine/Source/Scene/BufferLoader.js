@@ -57,6 +57,7 @@ Object.defineProperties(BufferLoader.prototype, {
    *
    * @type {string}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -70,6 +71,7 @@ Object.defineProperties(BufferLoader.prototype, {
    *
    * @type {Uint8Array}
    * @readonly
+   * @private
    */
   typedArray: {
     get: function () {

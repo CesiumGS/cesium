@@ -308,7 +308,7 @@ ResourceCache.getGltfJsonLoader = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} containing the glTF.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
- * @returns {GltfBufferViewLoader>} The cached buffer view loader.
+ * @returns {GltfBufferViewLoader} The cached buffer view loader.
  * @private
  */
 ResourceCache.getBufferViewLoader = function (options) {

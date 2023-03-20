@@ -46,12 +46,6 @@
           );
         }
 
-        const tileset = scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          })
-        );
-
         scene.camera.setView({
           destination: new Cesium.Cartesian3(
             1216411.0748779264,
@@ -65,6 +59,13 @@
           ),
           endTransform: Cesium.Matrix4.IDENTITY,
         });
+
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+          scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         Sandcastle.addToolbarButton("Sample heights", function () {
           sampleHeights();

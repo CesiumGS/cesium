@@ -89,6 +89,8 @@ const GltfLoaderState = {
    *
    * @type {number}
    * @constant
+   *
+   * @private
    */
   LOADED: 2,
   /**
@@ -97,6 +99,8 @@ const GltfLoaderState = {
    *
    * @type {number}
    * @constant
+   *
+   * @private
    */
   PROCESSING: 3,
   /**
@@ -109,6 +113,8 @@ const GltfLoaderState = {
    *
    * @type {number}
    * @constant
+   *
+   * @private
    */
   POST_PROCESSING: 4,
   /**
@@ -118,6 +124,8 @@ const GltfLoaderState = {
    *
    * @type {number}
    * @constant
+   *
+   * @private
    */
   PROCESSED: 5,
   /**
@@ -126,6 +134,8 @@ const GltfLoaderState = {
    *
    * @type {number}
    * @constant
+   *
+   * @private
    */
   READY: 6,
   /**
@@ -133,6 +143,8 @@ const GltfLoaderState = {
    *
    * @type {number}
    * @constant
+   *
+   * @private
    */
   FAILED: 7,
   /**
@@ -140,6 +152,8 @@ const GltfLoaderState = {
    *
    * @type {number}
    * @constant
+   *
+   * @private
    */
   UNLOADED: 8,
 };

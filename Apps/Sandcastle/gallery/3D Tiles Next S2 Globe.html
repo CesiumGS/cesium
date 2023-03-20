@@ -74,13 +74,16 @@
           easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
         });
 
-        // MAXAR OWT WFF 1.2 Base Globe
-        const tileset = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(691510),
+        let tileset;
+        try {
+          // MAXAR OWT WFF 1.2 Base Globe
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(691510, {
             maximumScreenSpaceError: 4,
-          })
-        );
+          });
+          scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // --- Style ---
 

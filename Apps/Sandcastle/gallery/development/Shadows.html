@@ -899,18 +899,18 @@
           }
         }
 
-        function createTileset(resource) {
-          resource
-            .then(function (url) {
-              viewer.scene.primitives.add(
-                new Cesium.Cesium3DTileset({
-                  url: url,
-                })
-              );
-            })
-            .catch(function (error) {
-              console.log(error);
-            });
+        async function createTileset(url) {
+          try {
+            const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+            const location = uiOptions.locations[viewModel.location];
+            if (location.tileset !== url) {
+              // Another option was loaded. Discard the result;
+              return;
+            }
+            viewer.scene.primitives.add(tileset);
+          } catch (error) {
+            console.log(`Error loading tileset: ${error}`);
+          }
         }
 
         async function createModel(url, origin) {

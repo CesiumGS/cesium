@@ -1,7 +1,6 @@
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import IonResource from "../Core/IonResource.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
@@ -59,10 +58,9 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * }
  */
 async function createOsmBuildingsAsync(options) {
-  const tileset = await Cesium3DTileset.fromUrl(
-    IonResource.fromAssetId(96188),
-    options
-  );
+  const tileset = await Cesium3DTileset.fromIonAssetId(96188, options);
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   let style = options.style;
 

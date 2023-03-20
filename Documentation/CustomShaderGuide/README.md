@@ -67,10 +67,11 @@ follows:
 const customShader = new Cesium.CustomShader(/* ... */);
 
 // Applying to all tiles in a tileset.
-const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-  url: "http://example.com/tileset.json",
-  customShader: customShader
-}));
+const tileset = await Cesium.Cesium3DTileset.fromUrl(
+  "http://example.com/tileset.json", {
+    customShader: customShader
+});
+viewer.scene.primitives.add(tileset);
 
 // Applying to a model directly
 const model = await Cesium.Model.fromGltfAsync({,

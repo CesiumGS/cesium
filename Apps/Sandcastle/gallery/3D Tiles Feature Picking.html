@@ -59,10 +59,12 @@
         });
 
         // Load the NYC buildings tileset
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(75343),
-        });
-        viewer.scene.primitives.add(tileset);
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // HTML overlay for showing feature name on mouseover
         const nameOverlay = document.createElement("div");

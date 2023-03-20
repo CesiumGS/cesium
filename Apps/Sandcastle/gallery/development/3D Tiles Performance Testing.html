@@ -64,8 +64,7 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
         const referenceMaximum = new Cesium.JulianDate();
         const heatmapTileProperty = "_foveatedFactor";
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(75343),
+        const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {
           debugHeatmapTilePropertyName: heatmapTileProperty,
         });
 
