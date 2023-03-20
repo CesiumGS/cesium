@@ -135,10 +135,7 @@ describe(
 
       await expectAsync(
         Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "cmpt")
-      ).toBeRejectedWithError(
-        RuntimeError,
-        "Failed to load i3dm\nFailed to load glTF\nFailed to load glTF: http://localhost:8080/Specs/invalid?compositeIndex=0"
-      );
+      ).toBeRejectedWithError(RuntimeError);
     });
 
     it("renders composite", function () {

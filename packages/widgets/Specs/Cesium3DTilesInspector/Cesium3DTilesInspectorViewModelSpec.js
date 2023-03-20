@@ -58,9 +58,7 @@ describe(
           scene,
           performanceContainer
         );
-        const tileset = await Cesium3DTileset.fromUrl({
-          url: tilesetUrl,
-        });
+        const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
         viewModel.tileset = tileset;
         expect(viewModel.properties.indexOf("id") !== -1).toBe(true);
         expect(viewModel.properties.indexOf("Longitude") !== -1).toBe(true);
