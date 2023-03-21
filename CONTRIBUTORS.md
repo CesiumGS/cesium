@@ -349,3 +349,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Rudolf Farkas](https://github.com/rudifa)
 - [Nick Noce](https://github.com/nnoce14)
 - [Jacob Van Dine](https://github.com/JacobVanDine)
+- [Michael Cabana](https://github.com/mikecabana)
