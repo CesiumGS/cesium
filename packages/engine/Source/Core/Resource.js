@@ -721,7 +721,7 @@ Resource.prototype.getDerivedResource = function (options) {
 /**
  * Called when a resource fails to load. This will call the retryCallback function if defined until retryAttempts is reached.
  *
- * @param {Error} [error] The error that was encountered.
+ * @param {RequestErrorEvent} [error] The error that was encountered.
  *
  * @returns {Promise<boolean>} A promise to a boolean, that if true will cause the resource request to be retried.
  *
@@ -2301,7 +2301,7 @@ Resource.DEFAULT = Object.freeze(
  * @callback Resource.RetryCallback
  *
  * @param {Resource} [resource] The resource that failed to load.
- * @param {Error} [error] The error that occurred during the loading of the resource.
+ * @param {RequestErrorEvent} [error] The error that occurred during the loading of the resource.
  * @returns {boolean|Promise<boolean>} If true or a promise that resolved to true, the resource will be retried. Otherwise the failure will be returned.
  */
 export default Resource;
