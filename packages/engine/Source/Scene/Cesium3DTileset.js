@@ -1957,11 +1957,14 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  *
  * @param {number} assetId The Cesium ion asset id.
  * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
+ * @returns {Promise<Cesium3DTileset>}
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
  *
+ * @see Cesium3DTileset#fromUrl
+ *
  * @example
- * //Load a Cesium3DTileset with asset ID of 124624234
+ * // Load a Cesium3DTileset with a Cesium ion asset ID of 124624234
  * try {
  *   const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(124624234);
  *   scene.primitives.add(tileset);
@@ -1980,8 +1983,11 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  *
  * @param {Resource|string} url The url to a tileset JSON file.
  * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
+ * @returns {Promise<Cesium3DTileset>}
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ *
+ * @see Cesium3DTileset#fromIonAssetId
  *
  * @example
  * try {
