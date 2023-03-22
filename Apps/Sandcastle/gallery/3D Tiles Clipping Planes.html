@@ -142,8 +142,9 @@
         }
 
         let tileset;
-        async function loadTileset(resource) {
+        async function loadTileset(resource, modelMatrix) {
           const currentExampleType = viewModel.currentExampleType;
+
           clippingPlanes = new Cesium.ClippingPlaneCollection({
             planes: [
               new Cesium.ClippingPlane(
@@ -159,9 +160,14 @@
             tileset = await Cesium.Cesium3DTileset.fromUrl(url, {
               clippingPlanes: clippingPlanes,
             });
+
             if (currentExampleType !== viewModel.currentExampleType) {
               // Another tileset was loaded, discard the current result
               return;
+            }
+
+            if (Cesium.defined(modelMatrix)) {
+              tileset.modelMatrix = modelMatrix;
             }
 
             viewer.scene.primitives.add(tileset);
@@ -308,12 +314,13 @@
             } else if (newValue === clipObjects[1]) {
               loadTileset(pointCloudUrl);
             } else if (newValue === clipObjects[2]) {
-              loadTileset(instancedUrl).then(() => {
-                // Position the instanced tileset above terrain
-                tileset.modelMatrix = new Cesium.Matrix4.fromTranslation(
+              // Position the instanced tileset above terrain
+              loadTileset(
+                instancedUrl,
+                Cesium.Matrix4.fromTranslation(
                   new Cesium.Cartesian3(15.0, -58.6, 50.825)
-                );
-              });
+                )
+              );
             } else {
               loadModel(modelUrl);
             }
