@@ -350,3 +350,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Nick Noce](https://github.com/nnoce14)
 - [L](https://github.com/L-hikari)
 - [Jacob Van Dine](https://github.com/JacobVanDine)
+- [Michael Cabana](https://github.com/mikecabana)

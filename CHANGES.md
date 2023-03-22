@@ -14,6 +14,7 @@
 ##### Fixes :wrench:
 
 - Fixed Cesium.Viewer instantiated inside my lit component: CreditDisplay is missing its styles [#10907](https://github.com/CesiumGS/cesium/issues/10907)
+- Fixed allowing `false` for `imageryProvider` in `Viewer.ConstructorOptions`. [#11179](https://github.com/CesiumGS/cesium/pull/11179)
 
 ### 1.103 - 2023-03-01
 
