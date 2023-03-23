@@ -470,6 +470,14 @@ describe(
       expect(tileset.resource.url).toEqual(path + param);
     });
 
+    it("fromIonAssetId throws without assetId", async function () {
+      await expectAsync(
+        Cesium3DTileset.fromIonAssetId()
+      ).toBeRejectedWithDeveloperError(
+        "assetId is required, actual value was undefined"
+      );
+    });
+
     it("resolves readyPromise", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset

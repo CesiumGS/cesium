@@ -1973,6 +1973,10 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  * }
  */
 Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("assetId", assetId);
+  //>>includeEnd('debug');
+
   const resource = await IonResource.fromAssetId(assetId);
   return Cesium3DTileset.fromUrl(resource, options);
 };
