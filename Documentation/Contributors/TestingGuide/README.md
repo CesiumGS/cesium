@@ -714,7 +714,7 @@ it("renders glTF model", async function () {
 });
 ```
 
-Given a model's url and other options, [`loadAndZoomToModelAsync`](https://github.com/CesiumGS/cesium/blob/main/paclages/engine/Specs/Scene/Model/loadAndZoomToModelAsync.js) loads a model, configures the camera, and returns a promise that resolves when a model is ready for rendering.
+Given a model's url and other options, [`loadAndZoomToModelAsync`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/Model/loadAndZoomToModelAsync.js) loads a model, configures the camera, and returns a promise that resolves when a model is ready for rendering.
 
 Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's [`pollToPromise`](https://github.com/CesiumGS/cesium/blob/main/Specs/pollToPromise.js) is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.ready` is `true` or the `timeout` is reached.
 
@@ -737,7 +737,7 @@ it("can create a billboard using a URL", async function () {
 
 Here a billboard is loaded using a url to image. Internally, `Billboard` makes an asynchronous request for the image and then sets its `ready` property to `true`. The function passed to `pollToPromise` just returns the value of `ready`; it does not need to render the scene to progressively complete the request like `Model`. Finally, the test verifies that the billboard is green.
 
-To test if a promises rejects, we use `expectAsync` and provide the expected error type and message. Here is an excerpt from [ArcGISTiledElevationTerrainProviderSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Core/ArcGISTiledElevationTerrainProviderSpec.js):
+To test if a promise rejects, we use `expectAsync` and provide the expected error type and message. Here is an excerpt from [ArcGISTiledElevationTerrainProviderSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Core/ArcGISTiledElevationTerrainProviderSpec.js):
 
 ```javascript
 it("fromUrl throws if the SRS is not supported", async function () {
