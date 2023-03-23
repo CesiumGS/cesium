@@ -145,9 +145,9 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
 
 /**
  * @typedef {object} CesiumBundles
- * @property {object} esmBundle The ESM bundle.
- * @property {object} iifeBundle The IIFE bundle, for use in browsers.
- * @property {object} nodeBundle The CommonJS bundle, for use in NodeJS.
+ * @property {object} esm The ESM bundle.
+ * @property {object} iife The IIFE bundle, for use in browsers.
+ * @property {object} node The CommonJS bundle, for use in NodeJS.
  */
 
 /**

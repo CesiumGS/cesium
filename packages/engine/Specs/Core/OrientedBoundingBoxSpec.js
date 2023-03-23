@@ -2780,6 +2780,18 @@ describe("Core/OrientedBoundingBox", function () {
     expect(box.equals(undefined)).toEqual(false);
   });
 
+  it("is a rotated/scaled 2x2x2 cube centered at the origin", function () {
+    const box = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.IDENTITY);
+
+    // All corners are 1 unit from the origin in each direction, so the cube is 2x2x2.
+    const corners = box.computeCorners();
+    for (const corner of corners) {
+      expect(Math.abs(corner.x)).toEqual(1.0);
+      expect(Math.abs(corner.y)).toEqual(1.0);
+      expect(Math.abs(corner.z)).toEqual(1.0);
+    }
+  });
+
   createPackableSpecs(
     OrientedBoundingBox,
     new OrientedBoundingBox(new Cartesian3(1.0, 2.0, 3.0), Matrix3.IDENTITY),

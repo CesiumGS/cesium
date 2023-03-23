@@ -7,6 +7,7 @@
 ##### Fixes :wrench:
 
 - Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
+- Fixed error type to be `RequestErrorEvent` in `Resource.retryCallback`. [#11177](https://github.com/CesiumGS/cesium/pull/11177)
 - Fixed issue when render `OrthographicFrustum` geometry by `DebugCameraPrimitive`. [#11159](https://github.com/CesiumGS/cesium/issues/11159)
 
 #### @cesium/widgets
@@ -14,6 +15,7 @@
 ##### Fixes :wrench:
 
 - Fixed Cesium.Viewer instantiated inside my lit component: CreditDisplay is missing its styles [#10907](https://github.com/CesiumGS/cesium/issues/10907)
+- Fixed allowing `false` for `imageryProvider` in `Viewer.ConstructorOptions`. [#11179](https://github.com/CesiumGS/cesium/pull/11179)
 
 ### 1.103 - 2023-03-01
 
