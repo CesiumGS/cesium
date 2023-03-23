@@ -340,7 +340,7 @@ function createPrimitive(geometries) {
           return;
         }
 
-        this._error = error;
+        geometries._error = error;
       });
   }
 }

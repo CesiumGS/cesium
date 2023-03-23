@@ -249,7 +249,6 @@ function createVertexArray(primitive, context) {
   primitive._batchedPositions = undefined;
   primitive._transferrableBatchIds = undefined;
   primitive._vertexBatchIds = undefined;
-  primitive._verticesPromise = undefined;
 }
 
 function createShaders(primitive, context) {

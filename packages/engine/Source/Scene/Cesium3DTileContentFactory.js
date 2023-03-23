@@ -67,7 +67,6 @@ const Cesium3DTileContentFactory = {
       tileset,
       tile,
       resource,
-
       arrayBuffer,
       byteOffset
     );

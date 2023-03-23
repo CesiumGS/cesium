@@ -52,7 +52,6 @@ function Vector3DTilePoints(options) {
   this._polylineCollection = new PolylineCollection();
   this._polylineCollection._useHighlightColor = true;
 
-  this._verticesPromise = undefined;
   this._packedBuffer = undefined;
 
   this._ready = false;

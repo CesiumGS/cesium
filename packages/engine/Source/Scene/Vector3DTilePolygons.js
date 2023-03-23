@@ -40,8 +40,7 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @private
  */
 function Vector3DTilePolygons(options) {
-  // All of the private properties will be released except _readyPromise
-  // and _primitive after the Vector3DTilePrimitive is created.
+  // All of the private properties will be released except _primitive after the Vector3DTilePrimitive is created.
   this._batchTable = options.batchTable;
 
   this._batchIds = options.batchIds;
@@ -377,7 +376,6 @@ function finishPrimitive(polygons) {
     polygons._boundingVolume = undefined;
     polygons._boundingVolumes = undefined;
     polygons._batchedIndices = undefined;
-    polygons._verticesPromise = undefined;
   }
 }
 
