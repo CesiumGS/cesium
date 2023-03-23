@@ -10,6 +10,14 @@ uniform vec3 u_atmosphereMieCoefficient;
 const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in meters.
 
 /**
+ * Rational approximation to tanh(x)
+*/
+float approximateTanh(float x) {
+    float x2 = x * x;
+    return max(-1.0, min(+1.0, x * (27.0 + x2) / (27.0 + 9.0 * x2)));
+}
+
+/**
  * This function computes the colors contributed by Rayliegh and Mie scattering on a given ray, as well as
  * the transmittance value for the ray.
  *
@@ -53,18 +61,17 @@ void computeScattering(
     //
     // For performance reasons, instead of a if/else branch
     // a soft choice is implemented through a weight 0.0 <= w_stop_gt_lprl <= 1.0
-    float lprl = length(primaryRayLength);
-    float x = 1e-7 * primaryRayAtmosphereIntersect.stop / lprl;
+    float x = 1e-7 * primaryRayAtmosphereIntersect.stop / length(primaryRayLength);
     // w_stop_gt_lprl: similar to (1+tanh)/2
     // Value close to 0.0: close to the horizon
     // Value close to 1.0: above in the sky
-    float w_stop_gt_lprl = max(0.0,min(1.0,(1.0 + x * ( 27.0 + x * x ) / ( 27.0 + 9.0 * x * x ))/2.0));
-
+    float w_stop_gt_lprl = 0.5 * (1.0 + approximateTanh(x));
+    
     // The ray should start from the first intersection with the outer atmopshere, or from the camera position, if it is inside the atmosphere.
     float start_0 = primaryRayAtmosphereIntersect.start;
     primaryRayAtmosphereIntersect.start = max(primaryRayAtmosphereIntersect.start, 0.0);
     // The ray should end at the exit from the atmosphere or at the distance to the vertex, whichever is smaller.
-    primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, lprl);
+    primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, length(primaryRayLength));
 
 
     // Distinguish inside or outside atmosphere (outer space)
@@ -72,7 +79,7 @@ void computeScattering(
     // (1) from outer space we have to use the original implementation to get an unmodified/acceptable rendering
     // (2) within atmosphere we need a speedup
     float x_o_a = start_0 - ATMOSPHERE_THICKNESS; // ATMOSPHERE_THICKNESS used as an ad-hoc constant, no precise meaning here, only the order of magnitude matters
-    float w_inside_atmosphere = 1.0 - max(0.0,min(1.0,(1.0 + x_o_a * ( 27.0 + x_o_a * x_o_a ) / ( 27.0 + 9.0 * x_o_a * x_o_a ))/2.0)); // similar to 1.0 - (1+tanh)/2
+    float w_inside_atmosphere = 1.0 - 0.5 * (1.0 + approximateTanh(x_o_a));
     
     // (1) Outside of the atmosphere: original (16.0,4.0) values for good rendering
     // (2) Inside atmosphere: smaller (4.0,2.0) values for a speedup
@@ -81,12 +88,11 @@ void computeScattering(
 
     // Setup for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
     float rayPositionLength = primaryRayAtmosphereIntersect.start;
-    // (1) Outside of the atmosphere: original implementation
+    // (1) Outside of the atmosphere: constant rayStepLength
     // (2) Inside atmosphere: variable rayStepLength to compensate the originally rough rendering of the smaller (4.0,2.0) values
     //     Implementation: sky vs horizon: constant step in one case, increasing step in the other case
     float rayStepLengthIncrease = w_inside_atmosphere * ((1.0 - w_stop_gt_lprl)*(primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / (float(PRIMARY_STEPS*(PRIMARY_STEPS+1))/2.0));
     float rayStepLength         = max(1.0-w_inside_atmosphere, w_stop_gt_lprl) * (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / max(7.0*w_inside_atmosphere,float(PRIMARY_STEPS));
-
 
 
     vec3 rayleighAccumulation = vec3(0.0);
