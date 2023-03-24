@@ -143,12 +143,12 @@ The user is responsible for assigning a value to this varying in
 const customShader = new Cesium.CustomShader({
   // Varying is declared here
   varyings: {
-    v_selectedColor: VaryingType.VEC3,
+    v_selectedColor: Cesium.VaryingType.VEC4,
   },
   // User assigns the varying in the vertex shader
   vertexShaderText: `
     void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
-        float positiveX = step(0.0, positionMC.x);
+        float positiveX = step(0.0, vsOutput.positionMC.x);
         v_selectedColor = mix(
             vsInput.attributes.color_0,
             vsInput.attributes.color_1,
@@ -159,7 +159,7 @@ const customShader = new Cesium.CustomShader({
   // User uses the varying in the fragment shader
   fragmentShaderText: `
     void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-        material.diffuse = v_selectedColor;
+        material.diffuse = v_selectedColor.rgb;
     }
   `,
 });
