@@ -1477,8 +1477,8 @@ function generateGeometryAttributes(
     const minHeight = minMaxHeights.minimumTerrainHeight;
     const maxHeight = minMaxHeights.maximumTerrainHeight;
 
-    sumHeights += minHeight;
-    sumHeights += maxHeight;
+    sumHeights += Math.abs(minHeight);
+    sumHeights += Math.abs(maxHeight);
 
     adjustHeights(
       startBottom,
