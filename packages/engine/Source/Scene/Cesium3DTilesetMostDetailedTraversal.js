@@ -33,7 +33,7 @@ Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
 ) {
   tileset._selectedTiles.length = 0;
   tileset._requestedTiles.length = 0;
-  tileset._hasMixedContent = false;
+  tileset.hasMixedContent = false;
 
   let ready = true;
 

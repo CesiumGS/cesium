@@ -1377,6 +1377,28 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * Whether the tileset is rendering different levels of detail in the same view.
+   * Only relevant if {@link Cesium3DTileset.isSkippingLevelOfDetail} is true.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {boolean}
+   * @private
+   */
+  hasMixedContent: {
+    get: function () {
+      return this._hasMixedContent;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool(value);
+      //>>includeEnd('debug');
+
+      this._hasMixedContent = value;
+    },
+  },
+
+  /**
    * Whether this tileset is actually skipping levels of detail.
    * The user option may have been disabled if all tiles are using additive refinement,
    * or if some tiles have a content type for which rendering does not support skipping

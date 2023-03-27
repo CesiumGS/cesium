@@ -532,7 +532,7 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
   if (this._needsSkipLevelOfDetailCommands) {
     const { tileset, tile } = this._model.content;
 
-    if (tileset._hasMixedContent) {
+    if (tileset.hasMixedContent) {
       if (!tile._finalResolution) {
         pushCommand(
           tileset._backfaceCommands,

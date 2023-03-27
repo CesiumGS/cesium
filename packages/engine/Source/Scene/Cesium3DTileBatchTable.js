@@ -897,7 +897,7 @@ Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
   const tileset = tile.tileset;
   const bivariateVisibilityTest =
     tileset.isSkippingLevelOfDetail &&
-    tileset._hasMixedContent &&
+    tileset.hasMixedContent &&
     frameState.context.stencilBuffer;
   const styleCommandsNeeded = getStyleCommandsNeeded(this);
 

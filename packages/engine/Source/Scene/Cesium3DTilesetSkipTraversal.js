@@ -50,7 +50,7 @@ Cesium3DTilesetSkipTraversal.selectTiles = function (tileset, frameState) {
   tileset._selectedTiles.length = 0;
   tileset._selectedTilesToStyle.length = 0;
   tileset._emptyTiles.length = 0;
-  tileset._hasMixedContent = false;
+  tileset.hasMixedContent = false;
 
   const root = tileset.root;
   Cesium3DTilesetTraversal.updateTile(root, frameState);
@@ -394,7 +394,7 @@ function traverseAndSelect(root, frameState) {
       } else {
         tile._selectionDepth = ancestorStack.length;
         if (tile._selectionDepth > 0) {
-          tile.tileset._hasMixedContent = true;
+          tile.tileset.hasMixedContent = true;
         }
         lastAncestor = tile;
         if (!traverse) {
