@@ -837,7 +837,7 @@ For `ENUM` type metadata, the statistics struct for that property should contain
 
 ## `czm_modelVertexOutput` struct
 
-This struct is built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelVertexOutput.glsl).
+This struct is built-in, see the [documentation comment](../../packages/engine/Source/Shaders/Builtin/Structs/modelVertexOutput.glsl).
 
 This struct contains the output of the custom vertex shader. This includes:
 
@@ -855,7 +855,7 @@ This struct contains the output of the custom vertex shader. This includes:
 
 ## `czm_modelMaterial` struct
 
-This struct is a built-in, see the [documentation comment](../../Source/Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but has slightly different fields as this one supports PBR lighting.
+This struct is a built-in, see the [documentation comment](../../packages/engine/Source/Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but has slightly different fields as this one supports PBR lighting.
 
 This struct serves as the basic input/output of the fragment shader pipeline stages. For example:
 
