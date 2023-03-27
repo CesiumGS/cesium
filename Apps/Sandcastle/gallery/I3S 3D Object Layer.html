@@ -50,38 +50,46 @@
           "San Francisco":
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/SanFrancisco_3DObjects_1_7/SceneServer/layers/0",
         };
-        // Initialize a terrain provider which provides geoid conversion between gravity related (typically I3S datasets) and ellipsoidal based
-        // height systems (Cesium World Terrain).
-        // If this is not specified, or the URL is invalid no geoid conversion will be applied.
-        // The source data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
-        const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
-          "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
-        );
-        // Create i3s and Cesium3DTileset options to pass optional parameters useful for debugging and visualizing
-        const cesium3dTilesetOptions = {
-          skipLevelOfDetail: false,
-          debugShowBoundingVolume: false,
-        };
-        const i3sOptions = {
-          url: tours["San Francisco"],
-          traceFetches: false, // for tracing I3S fetches
-          geoidTiledTerrainProvider: geoidService, // pass the geoid service
-          cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
-        };
 
-        // Create I3S data provider
-        const i3sProvider = new Cesium.I3SDataProvider(i3sOptions);
+        try {
+          // Initialize a terrain provider which provides geoid conversion between gravity related (typically I3S datasets) and ellipsoidal based
+          // height systems (Cesium World Terrain).
+          // If this is not specified, or the URL is invalid no geoid conversion will be applied.
+          // The source data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
+          const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
+          );
+          // Create i3s and Cesium3DTileset options to pass optional parameters useful for debugging and visualizing
+          const cesium3dTilesetOptions = {
+            skipLevelOfDetail: false,
+            debugShowBoundingVolume: false,
+          };
+          const i3sOptions = {
+            traceFetches: false, // for tracing I3S fetches
+            geoidTiledTerrainProvider: geoidService, // pass the geoid service
+            cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
+          };
 
-        // Add the i3s layer provider as a primitive data type
-        viewer.scene.primitives.add(i3sProvider);
+          // Create I3S data provider
+          const i3sProvider = await Cesium.I3SDataProvider.fromUrl(
+            tours["San Francisco"],
+            i3sOptions
+          );
 
-        // Center camera on I3S once it's loaded
-        await i3sProvider.readyPromise;
-        const center = Cesium.Rectangle.center(i3sProvider.extent);
-        center.height = 10000.0;
-        viewer.camera.setView({
-          destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
-        });
+          // Add the i3s layer provider as a primitive data type
+          viewer.scene.primitives.add(i3sProvider);
+
+          // Center camera on I3S once it's loaded
+          const center = Cesium.Rectangle.center(i3sProvider.extent);
+          center.height = 10000.0;
+          viewer.camera.setView({
+            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
+          });
+        } catch (error) {
+          console.log(
+            `There was an error creating the I3S Data Provider: ${error}`
+          );
+        }
 
         // An entity object which will hold info about the currently selected feature for infobox display
         const selectedEntity = new Cesium.Entity();

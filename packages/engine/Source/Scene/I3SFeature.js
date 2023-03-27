@@ -1,4 +1,5 @@
 import defined from "../Core/defined.js";
+import I3SDataProvider from "./I3SDataProvider.js";
 
 /**
  * This class implements an I3S Feature.
@@ -52,12 +53,12 @@ Object.defineProperties(I3SFeature.prototype, {
  * @returns {Promise} A promise that is resolved when the data of the I3S feature is loaded
  * @private
  */
-I3SFeature.prototype.load = function () {
-  const that = this;
-  return this._dataProvider._loadJson(this._resource).then(function (data) {
-    that._data = data;
-    return data;
-  });
+I3SFeature.prototype.load = async function () {
+  this._data = await I3SDataProvider.loadJson(
+    this._resource,
+    this._dataProvider._traceFetches
+  );
+  return this._data;
 };
 
 export default I3SFeature;

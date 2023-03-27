@@ -175,7 +175,7 @@ I3SLayer.prototype.load = async function () {
     );
   }
 
-  await this._dataProvider._geoidDataIsReadyPromise;
+  await this._dataProvider.loadGeoidData();
   await this._loadRootNode();
   await this._create3DTileset();
 

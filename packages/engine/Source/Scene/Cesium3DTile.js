@@ -1046,7 +1046,7 @@ function createPriorityFunction(tile) {
  * The request may not be made if the Cesium Request Scheduler can't prioritize it.
  * </p>
  *
- * @return {Promise<void>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
+ * @return {Promise<Cesium3DTileContent>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
  * @private
  */
 Cesium3DTile.prototype.requestContent = function () {

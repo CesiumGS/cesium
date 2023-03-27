@@ -107,7 +107,9 @@ describe("Scene/I3SLayer", function () {
     const mockI3SProvider = new I3SDataProvider({
       url: "mockProviderUrl?testQuery=test",
     });
-    mockI3SProvider._geoidDataIsReadyPromise = Promise.resolve();
+    spyOn(I3SDataProvider.prototype, "loadGeoidData").and.returnValue(
+      Promise.resolve()
+    );
     return mockI3SProvider;
   }
 

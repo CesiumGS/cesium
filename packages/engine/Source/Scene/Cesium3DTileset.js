@@ -58,6 +58,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  *
  * Initialization options for the Cesium3DTileset constructor
  *
+ * @property {Resource|string|Promise<Resource>|Promise<string>} [options.url] The url to a tileset JSON file. Deprecated.
  * @property {boolean} [options.show=true] Determines if the tileset will be shown.
  * @property {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
  * @property {Axis} [options.modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
@@ -119,11 +120,6 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  */
 
 /**
- * @typedef {Cesium3DTileset.ConstructorOptions} Cesium3DTileset.DeprecatedConstructorOptions
- * @property {Resource|string|Promise<Resource>|Promise<string>} options.url The url to a tileset JSON file. Deprecated.
- */
-
-/**
  * A {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification|3D Tiles tileset},
  * used for streaming massive heterogeneous 3D geospatial datasets.
  *
@@ -134,7 +130,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @alias Cesium3DTileset
  * @constructor
  *
- * @param {Cesium3DTileset.DeprecatedConstructorOptions} options An object describing initialization options
+ * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
  *

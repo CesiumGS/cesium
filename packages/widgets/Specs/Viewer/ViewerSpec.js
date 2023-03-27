@@ -1406,14 +1406,14 @@ describe(
       });
     });
 
-    function loadVoxelPrimitive(viewer) {
+    async function loadVoxelPrimitive(viewer) {
       const voxelPrimitive = new VoxelPrimitive({
-        provider: new Cesium3DTilesVoxelProvider({
-          url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-        }),
+        provider: await Cesium3DTilesVoxelProvider.fromUrl(
+          "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+        ),
       });
       viewer.scene.primitives.add(voxelPrimitive);
-      return voxelPrimitive.readyPromise;
+      return voxelPrimitive;
     }
 
     it("zoomTo zooms to VoxelPrimitive with default offset when offset not defined", function () {

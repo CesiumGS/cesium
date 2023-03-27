@@ -74,6 +74,11 @@ try {
     console.log(`Failed to load model. ${error}`);
   }
   ```
+- `I3SDataProvider` construction parameter `options.url`, `I3SDataProvider.ready`, and `I3SDataProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `I3SDataProvider.fromUrl` instead.
+- `TimeDynamicPointCloud.readyPromise` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `TimeDynamicPointCloud.frameFailed` to track any errors.
+- `VoxelProvider.ready` and `VoxelProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `Cesium3DTilesVoxelProvider` construction parameter `options.url`, `Cesium3DTilesVoxelProvider.ready`, and `Cesium3DTilesVoxelProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `Cesium3DTilesVoxelProvider.fromUrl` instead.
+- `Primitive.readyPromise`, `ClassificationPrimitive.readyPromise`, `GroundPrimitive.readyPromise`, and `GroundPolylinePrimitive.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Wait for `Primitive.ready`, `ClassificationPrimitive.ready`, `GroundPrimitive.ready`, or `GroundPolylinePrimitive.ready` to return true instead.
 
 #### @cesium/widgets
 
