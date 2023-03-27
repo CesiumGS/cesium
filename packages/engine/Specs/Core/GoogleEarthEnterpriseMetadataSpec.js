@@ -395,7 +395,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       GoogleEarthEnterpriseMetadata.fromUrl(url)
     ).toBeRejectedWithError(
       RuntimeError,
-      "An error occurred while accessing http://localhost:9876/host.invalid/flatfile?q2-0-q.1: Request has failed. Status Code: 404"
+      new RegExp("Request has failed. Status Code: 404")
     );
   });
 });

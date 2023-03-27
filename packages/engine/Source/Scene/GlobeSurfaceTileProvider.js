@@ -127,19 +127,19 @@ function GlobeSurfaceTileProvider(options) {
 
   this._errorEvent = new Event();
 
-  this._imageryLayers.layerAdded.addEventListener(
+  this._removeLayerAddedListener = this._imageryLayers.layerAdded.addEventListener(
     GlobeSurfaceTileProvider.prototype._onLayerAdded,
     this
   );
-  this._imageryLayers.layerRemoved.addEventListener(
+  this._removeLayerRemovedListener = this._imageryLayers.layerRemoved.addEventListener(
     GlobeSurfaceTileProvider.prototype._onLayerRemoved,
     this
   );
-  this._imageryLayers.layerMoved.addEventListener(
+  this._removeLayerMovedListener = this._imageryLayers.layerMoved.addEventListener(
     GlobeSurfaceTileProvider.prototype._onLayerMoved,
     this
   );
-  this._imageryLayers.layerShownOrHidden.addEventListener(
+  this._removeLayerShownListener = this._imageryLayers.layerShownOrHidden.addEventListener(
     GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden,
     this
   );
@@ -1389,6 +1389,14 @@ GlobeSurfaceTileProvider.prototype.isDestroyed = function () {
 GlobeSurfaceTileProvider.prototype.destroy = function () {
   this._tileProvider = this._tileProvider && this._tileProvider.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+  this._removeLayerAddedListener =
+    this._removeLayerAddedListener && this._removeLayerAddedListener();
+  this._removeLayerRemovedListener =
+    this._removeLayerRemovedListener && this._removeLayerRemovedListener();
+  this._removeLayerMovedListener =
+    this._removeLayerMovedListener && this._removeLayerMovedListener();
+  this._removeLayerShownListener =
+    this._removeLayerShownListener && this._removeLayerShownListener();
 
   return destroyObject(this);
 };
@@ -1441,6 +1449,10 @@ function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
 }
 
 GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
+  if (this.isDestroyed()) {
+    return;
+  }
+
   if (layer.show) {
     const terrainProvider = this._terrainProvider;
 
