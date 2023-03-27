@@ -1,22 +1,45 @@
 # Change Log
 
+### 1.104 - 2023-04-03
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
+- Fixed error type to be `RequestErrorEvent` in `Resource.retryCallback`. [#11177](https://github.com/CesiumGS/cesium/pull/11177)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed Cesium.Viewer instantiated inside my lit component: CreditDisplay is missing its styles [#10907](https://github.com/CesiumGS/cesium/issues/10907)
+- Fixed allowing `false` for `imageryProvider` in `Viewer.ConstructorOptions`. [#11179](https://github.com/CesiumGS/cesium/pull/11179)
+
 ### 1.103 - 2023-03-01
 
 #### @cesium/engine
 
-#### Major Announcements :loudspeaker:
-
 ##### Additions :tada:
 
 - Added smooth zoom with mouse wheel. [#11062](https://github.com/CesiumGS/cesium/pull/11062)
+- Enabled lighting on voxels with BOX shape. [#11076](https://github.com/CesiumGS/cesium/pull/11076)
 
 ##### Fixes :wrench:
 
+- Fixed browser warning for `willReadFrequently` option. [#11025](https://github.com/CesiumGS/cesium/issues/11025)
+- Replaced constructor types with primitive types in JSDoc and generated TypeScript definitions. [#11080](https://github.com/CesiumGS/cesium/pull/11080)
+- Adjusted render order of voxels and opaque entities. [#11120](https://github.com/CesiumGS/cesium/pull/11120)
+- Fixed artifacts on edges of voxels with BOX shape. [#11050](https://github.com/CesiumGS/cesium/pull/11050)
+- Fixed initial textures visibility for particle systems. [#11099](https://github.com/CesiumGS/cesium/pull/11099)
 - Fixed Primitive.getGeometryInstanceAttributes cache acquisition speed. [#11066](https://github.com/CesiumGS/cesium/issues/11066)
 - Fixed requestWebgl1 hint error in context. [#11082](https://github.com/CesiumGS/cesium/issues/11082)
-- Replace constructor types with primitive types in JSDoc. [#11080](https://github.com/CesiumGS/cesium/pull/11080)
-- Fixed browser warning for `willReadFrequently` option. [#11025](https://github.com/CesiumGS/cesium/issues/11025)
-- Fixed textures visibility for particle systems. [#11099](https://github.com/CesiumGS/cesium/pull/11099)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Replaced constructor types with primitive types in JSDoc and generated TypeScript definitions. [#11080](https://github.com/CesiumGS/cesium/pull/11080)
 
 ### 1.102 - 2023-02-01
 

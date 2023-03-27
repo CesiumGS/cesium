@@ -24,7 +24,7 @@ import Rectangle from "./Rectangle.js";
  *
  * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
  * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
- *                                          Equivalently, the transformation matrix, to rotate and scale a 1x1x1
+ *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
  *                                          cube centered at the origin.
  *
  *
@@ -46,7 +46,9 @@ function OrientedBoundingBox(center, halfAxes) {
    */
   this.center = Cartesian3.clone(defaultValue(center, Cartesian3.ZERO));
   /**
-   * The transformation matrix, to rotate the box to the right position.
+   * The three orthogonal half-axes of the bounding box. Equivalently, the
+   * transformation matrix, to rotate and scale a 2x2x2 cube centered at the
+   * origin.
    * @type {Matrix3}
    * @default {@link Matrix3.ZERO}
    */

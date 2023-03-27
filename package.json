@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.102.0",
+  "version": "1.103.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -51,8 +51,8 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "2.0.0",
-    "@cesium/widgets": "2.0.0"
+    "@cesium/engine": "2.1.0",
+    "@cesium/widgets": "2.1.0"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.276.0",
@@ -147,8 +147,8 @@
     "deploy-s3": "gulp deployS3",
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
-    "prettier": "prettier --write \"**/*\"",
-    "prettier-check": "prettier --check \"**/*\""
+    "prettier": "prettier --write --no-config \"**/*\"",
+    "prettier-check": "prettier --check --no-config \"**/*\""
   },
   "engines": {
     "node": ">=14.0.0"
@@ -156,11 +156,11 @@
   "lint-staged": {
     "*.{js,cjs,html}": [
       "eslint --cache --quiet",
-      "prettier --write"
+      "prettier --write --no-config"
     ],
     "*.md": [
       "markdownlint --ignore CHANGES.md --ignore \"./**/LICENSE.md\"",
-      "prettier --write"
+      "prettier --write --no-config"
     ]
   },
   "workspaces": [
