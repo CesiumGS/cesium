@@ -879,7 +879,7 @@ function isPriorityDeferred(tile, frameState) {
   // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster)
   // Or if the tile is a preload of any kind
   const replace = tile.refine === Cesium3DTileRefine.REPLACE;
-  const skipLevelOfDetail = tileset._skipLevelOfDetail;
+  const skipLevelOfDetail = tileset.isSkippingLevelOfDetail;
   if (
     (replace && !skipLevelOfDetail) ||
     !tileset.foveatedScreenSpaceError ||
@@ -1023,7 +1023,7 @@ function getPriorityReverseScreenSpaceError(tileset, tile) {
   const parent = tile.parent;
   const useParentScreenSpaceError =
     defined(parent) &&
-    (!tileset._skipLevelOfDetail ||
+    (!tileset.isSkippingLevelOfDetail ||
       tile._screenSpaceError === 0.0 ||
       parent.hasTilesetContent ||
       parent.hasImplicitContent);
@@ -2214,7 +2214,8 @@ Cesium3DTile.prototype.updatePriority = function () {
 
   // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
   const useDistance =
-    !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
+    !tileset.isSkippingLevelOfDetail &&
+    this.refine === Cesium3DTileRefine.REPLACE;
   const normalizedPreferredSorting = useDistance
     ? priorityNormalizeAndClamp(
         this._priorityHolder._distanceToCamera,

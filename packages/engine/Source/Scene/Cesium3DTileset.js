@@ -658,15 +658,6 @@ function Cesium3DTileset(options) {
    */
   this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
 
-  /**
-   * Whether this tileset is actually skipping levels of detail.
-   * The user option may have been disabled if all tiles are using additive refinement,
-   * or if some tiles have a content type for which rendering does not support skipping
-   *
-   * @private
-   * @type {boolean}
-   */
-  this._skipLevelOfDetail = this.skipLevelOfDetail;
   this._disableSkipLevelOfDetail = false;
 
   /**
@@ -1382,6 +1373,28 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._customShader = value;
+    },
+  },
+
+  /**
+   * Whether this tileset is actually skipping levels of detail.
+   * The user option may have been disabled if all tiles are using additive refinement,
+   * or if some tiles have a content type for which rendering does not support skipping
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {boolean}
+   * @private
+   * @readonly
+   */
+  isSkippingLevelOfDetail: {
+    get: function () {
+      return (
+        this.skipLevelOfDetail &&
+        !defined(this._classificationType) &&
+        !this._disableSkipLevelOfDetail &&
+        !this._allTilesAdditive
+      );
     },
   },
 
@@ -2393,12 +2406,6 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
     0.0
   );
 
-  this._skipLevelOfDetail =
-    this.skipLevelOfDetail &&
-    !defined(this._classificationType) &&
-    !this._disableSkipLevelOfDetail &&
-    !this._allTilesAdditive;
-
   if (this.dynamicScreenSpaceError) {
     updateDynamicScreenSpaceError(this, frameState);
   }
@@ -2730,7 +2737,7 @@ function updateTiles(tileset, frameState, passOptions) {
   const selectedTiles = tileset._selectedTiles;
 
   const bivariateVisibilityTest =
-    tileset._skipLevelOfDetail &&
+    tileset.isSkippingLevelOfDetail &&
     tileset._hasMixedContent &&
     context.stencilBuffer &&
     selectedTiles.length > 0;
@@ -3081,7 +3088,7 @@ Cesium3DTileset.prototype.getTraversal = function (passOptions) {
   ) {
     return Cesium3DTilesetMostDetailedTraversal;
   }
-  return this._skipLevelOfDetail
+  return this.isSkippingLevelOfDetail
     ? Cesium3DTilesetSkipTraversal
     : Cesium3DTilesetBaseTraversal;
 };
