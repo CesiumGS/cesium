@@ -513,7 +513,7 @@ I3SDataProvider._fetchJson = function (resource) {
  * @private
  *
  * @param {Resource} resource The JSON resource to request
- * @param {bool=false} trace Log the resource
+ * @param {boolean} [trace=false] Log the resource
  * @returns {Promise<object>} The fetched data
  */
 I3SDataProvider.loadJson = async function (resource, trace) {
