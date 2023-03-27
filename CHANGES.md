@@ -11,6 +11,7 @@
 ##### Fixes :wrench:
 
 - Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
+- Fixed error type to be `RequestErrorEvent` in `Resource.retryCallback`. [#11177](https://github.com/CesiumGS/cesium/pull/11177)
 - Fixed `SingleTileImageryProvider` fetching image when `show` is `false` by allowing lazy-loading for `SingleTileImageryProvider` if `tileWidth` and `tileHeight` are provided to the constructor. [#9529](https://github.com/CesiumGS/cesium/issues/9529)
 
 ##### Deprecated :hourglass_flowing_sand:
@@ -47,6 +48,11 @@
 - `createWorldTerrain` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use createWorldTerrainAsync instead.
 
 #### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed Cesium.Viewer instantiated inside my lit component: CreditDisplay is missing its styles [#10907](https://github.com/CesiumGS/cesium/issues/10907)
+- Fixed allowing `false` for `imageryProvider` in `Viewer.ConstructorOptions`. [#11179](https://github.com/CesiumGS/cesium/pull/11179)
 
 ##### Deprecated :hourglass_flowing_sand:
 

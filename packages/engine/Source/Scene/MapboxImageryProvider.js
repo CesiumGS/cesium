@@ -40,7 +40,7 @@ const defaultCredit = new Credit(
  * @example
  * // Mapbox tile provider
  * const mapbox = new Cesium.MapboxImageryProvider({
- *     mapId: 'mapbox.streets',
+ *     mapId: 'mapbox.mapbox-terrain-v2',
  *     accessToken: 'thisIsMyAccessToken'
  * });
  *
