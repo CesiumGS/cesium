@@ -25,7 +25,6 @@ import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
- * This object is normally not instantiated directly, use {@link Vector3DTileContent.fromTile}.
  *
  * @alias Vector3DTileContent
  * @constructor
@@ -298,6 +297,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
+    content._ready = true;
     return;
   }
 
@@ -622,8 +622,6 @@ function initialize(content, arrayBuffer, byteOffset) {
       batchTable: batchTable,
     });
   }
-
-  return;
 }
 
 function createFeatures(content) {
