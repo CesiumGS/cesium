@@ -36,11 +36,11 @@ This guide describes best practices for code reviewers.
 ## Changes to the Public CesiumJS API
 
 - If new identifiers were added to the public CesiumJS API:
-  - Verify there is new reference doc. See the [Documentation Guide](../CodingGuide/README.md).
+  - Verify there is new reference doc. See the [Documentation Guide](../DocumentationGuide/README.md).
   - Verify that [CHANGES.md](../../../CHANGES.md) was updated.
   - Does the change warrant a new Sandcastle example?
   - Does it warrant a blog post or tweet so users know what to look forward to in the next release?
-- Verify that deprecated and breaking changes to the public API were handled correctly. See the [Deprecation Guide](../DeprecationGuide/README.md).
+- Verify that deprecated and breaking changes to the public API were handled correctly. See the ["Deprecation and Breaking Changes" section in the Coding Guide](../CodingGuide/README.md#deprecation-and-breaking-changes).
 
 ## Testing
 

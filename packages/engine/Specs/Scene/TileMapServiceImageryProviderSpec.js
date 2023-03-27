@@ -252,7 +252,9 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       TileMapServiceImageryProvider.fromUrl("made/up/tms/server")
     ).toBeRejectedWithError(
       RuntimeError,
-      "http://localhost:9876/made/up/tms/server/tilemapresource.xml specifies an unsupported profile attribute, foobar."
+      new RegExp(
+        "made/up/tms/server/tilemapresource.xml specifies an unsupported profile attribute, foobar."
+      )
     );
   });
 
@@ -274,7 +276,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       TileMapServiceImageryProvider.fromUrl("made/up/tms/server")
     ).toBeRejectedWithError(
       RuntimeError,
-      "Unable to find expected tilesets or bbox attributes in http://localhost:9876/made/up/tms/server/tilemapresource.xml."
+      new RegExp("Unable to find expected tilesets or bbox attributes")
     );
   });
 

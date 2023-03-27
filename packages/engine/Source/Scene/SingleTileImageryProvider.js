@@ -102,7 +102,7 @@ function SingleTileImageryProvider(options) {
 
   deprecationWarning(
     "SingleTileImageryProvider options",
-    "options.tileHeight and options.tileWidth became required in CesiumJS 1.102. Omitting these properties will result in an error in 1.104. Provide options.tileHeight and options.tileWidth, or use SingleTileImageryProvider.fromUrl instead."
+    "options.tileHeight and options.tileWidth became required in CesiumJS 1.104. Omitting these properties will result in an error in 1.107. Provide options.tileHeight and options.tileWidth, or use SingleTileImageryProvider.fromUrl instead."
   );
 
   this._tileWidth = 0;

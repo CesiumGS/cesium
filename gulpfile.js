@@ -178,21 +178,22 @@ export const buildWatch = gulp.series(build, async function () {
     sourcemap: sourcemap,
     incremental: true,
   });
-  let esmResult = bundles.esmBundle;
-  let cjsResult = bundles.nodeBundle;
-  let iifeResult = bundles.iifeBundle;
-  let specResult = bundles.specsBundle;
+
+  const esm = bundles.esm;
+  const cjs = bundles.node;
+  const iife = bundles.iife;
+  const specs = bundles.specs;
 
   gulp.watch(shaderFiles, async () => {
     glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
-    esmResult = await esmResult.rebuild();
+    await esm.rebuild();
 
-    if (iifeResult) {
-      iifeResult = await iifeResult.rebuild();
+    if (iife) {
+      await iife.rebuild();
     }
 
-    if (cjsResult) {
-      cjsResult = await cjsResult.rebuild();
+    if (cjs) {
+      await cjs.rebuild();
     }
   });
 
@@ -204,14 +205,14 @@ export const buildWatch = gulp.series(build, async function () {
     ],
     async () => {
       createJsHintOptions();
-      esmResult = await esmResult.rebuild();
+      await esm.rebuild();
 
-      if (iifeResult) {
-        iifeResult = await iifeResult.rebuild();
+      if (iife) {
+        await iife.rebuild();
       }
 
-      if (cjsResult) {
-        cjsResult = await cjsResult.rebuild();
+      if (cjs) {
+        await cjs.rebuild();
       }
     }
   );
@@ -223,7 +224,7 @@ export const buildWatch = gulp.series(build, async function () {
     },
     async () => {
       createCombinedSpecList();
-      specResult = await specResult.rebuild();
+      await specs.rebuild();
     }
   );
 
@@ -233,7 +234,7 @@ export const buildWatch = gulp.series(build, async function () {
       events: ["change"],
     },
     async () => {
-      specResult = await specResult.rebuild();
+      await specs.rebuild();
     }
   );
 
@@ -248,17 +249,17 @@ export const buildWatch = gulp.series(build, async function () {
 
   process.on("SIGINT", () => {
     // Free up resources
-    esmResult.rebuild.dispose();
+    esm.dispose();
 
-    if (iifeResult) {
-      iifeResult.rebuild.dispose();
+    if (iife) {
+      iife.dispose();
     }
 
-    if (cjsResult) {
-      cjsResult.rebuild.dispose();
+    if (cjs) {
+      cjs.dispose();
     }
 
-    specResult.rebuild.dispose();
+    specs.dispose();
     process.exit(0);
   });
 });
