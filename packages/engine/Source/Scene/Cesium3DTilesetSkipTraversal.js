@@ -4,6 +4,12 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";
 
 /**
+ * Depth-first traversal that traverses all visible tiles and marks tiles for selection.
+ * Allows for skipping levels of the tree and rendering children and parent tiles simultaneously.
+ *
+ * @alias Cesium3DTilesetSkipTraversal
+ * @constructor
+ *
  * @private
  */
 function Cesium3DTilesetSkipTraversal() {}
@@ -28,6 +34,8 @@ const selectionTraversal = {
 const descendantSelectionDepth = 2;
 
 /**
+ * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
+ *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState

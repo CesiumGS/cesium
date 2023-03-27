@@ -10,6 +10,7 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
  *
  * @alias Cesium3DTilesetTraversal
  * @constructor
+ * @abstract
  *
  * @see Cesium3DTilesetBaseTraversal
  * @see Cesium3DTilesetSkipTraversal
@@ -20,6 +21,8 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 function Cesium3DTilesetTraversal() {}
 
 /**
+ * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
+ *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
@@ -283,10 +286,8 @@ function anyChildrenVisible(tile, frameState) {
  * @param {Cesium3DTile} tile
  */
 function updateMinimumMaximumPriority(tile) {
-  const {
-    _maximumPriority: maximumPriority,
-    _minimumPriority: minimumPriority,
-  } = tile.tileset;
+  const minimumPriority = tile.tileset._minimumPriority;
+  const maximumPriority = tile.tileset._maximumPriority;
   const priorityHolder = tile._priorityHolder;
 
   maximumPriority.distance = Math.max(

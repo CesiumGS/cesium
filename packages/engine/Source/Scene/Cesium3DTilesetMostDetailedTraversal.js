@@ -7,6 +7,9 @@ import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";
  * Traversal that loads all leaves that intersect the camera frustum.
  * Used to determine ray-tileset intersections during a pickFromRayMostDetailed call.
  *
+ * @alias Cesium3DTilesetMostDetailedTraversal
+ * @constructor
+ *
  * @private
  */
 function Cesium3DTilesetMostDetailedTraversal() {}
@@ -16,6 +19,14 @@ const traversal = {
   stackMaximumLength: 0,
 };
 
+/**
+ * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ * @returns {boolean} Whether the appropriate tile is ready for picking
+ */
 Cesium3DTilesetMostDetailedTraversal.selectTiles = function (
   tileset,
   frameState

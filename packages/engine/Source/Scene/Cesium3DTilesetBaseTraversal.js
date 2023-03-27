@@ -4,6 +4,13 @@ import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";
 
 /**
+ * Depth-first traversal that traverses all visible tiles and marks tiles for selection.
+ * A tile does not refine until all children are loaded.
+ * This is the traditional replacement refinement approach and is called the base traversal.
+ *
+ * @alias Cesium3DTilesetBaseTraversal
+ * @constructor
+ *
  * @private
  */
 function Cesium3DTilesetBaseTraversal() {}
@@ -19,6 +26,8 @@ const emptyTraversal = {
 };
 
 /**
+ * Traverses a {@link Cesium3DTileset} to determine which tiles to load and render.
+ *
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {FrameState} frameState
