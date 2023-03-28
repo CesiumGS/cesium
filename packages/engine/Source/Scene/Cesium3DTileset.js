@@ -1391,7 +1391,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.bool(value);
+      Check.typeOf.bool("value", value);
       //>>includeEnd('debug');
 
       this._hasMixedContent = value;
