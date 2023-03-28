@@ -58,11 +58,9 @@ void computeScattering(
 
     // To deal with smaller values of PRIMARY_STEPS (e.g. 4)
     // we implement a split strategy: sky or horizon.
-    //
     // For performance reasons, instead of a if/else branch
     // a soft choice is implemented through a weight 0.0 <= w_stop_gt_lprl <= 1.0
     float x = 1e-7 * primaryRayAtmosphereIntersect.stop / length(primaryRayLength);
-    // w_stop_gt_lprl: similar to (1+tanh)/2
     // Value close to 0.0: close to the horizon
     // Value close to 1.0: above in the sky
     float w_stop_gt_lprl = 0.5 * (1.0 + approximateTanh(x));
@@ -73,27 +71,21 @@ void computeScattering(
     // The ray should end at the exit from the atmosphere or at the distance to the vertex, whichever is smaller.
     primaryRayAtmosphereIntersect.stop = min(primaryRayAtmosphereIntersect.stop, length(primaryRayLength));
 
-
-    // Distinguish inside or outside atmosphere (outer space)
-    // Reasons: 
-    // (1) from outer space we have to use the original implementation to get an unmodified/acceptable rendering
-    // (2) within atmosphere we need a speedup
+    // For the number of ray steps, distinguish inside or outside atmosphere (outer space)
+    // (1) from outer space we have to use more ray steps to get a realistic rendering
+    // (2) within atmosphere we need fewer steps for faster rendering
     float x_o_a = start_0 - ATMOSPHERE_THICKNESS; // ATMOSPHERE_THICKNESS used as an ad-hoc constant, no precise meaning here, only the order of magnitude matters
     float w_inside_atmosphere = 1.0 - 0.5 * (1.0 + approximateTanh(x_o_a));
-    
-    // (1) Outside of the atmosphere: original (16.0,4.0) values for good rendering
-    // (2) Inside atmosphere: smaller (4.0,2.0) values for a speedup
     int PRIMARY_STEPS = int(16.0 - w_inside_atmosphere * 12.0); // Number of times the ray from the camera to the world position (primary ray) is sampled.
-    int LIGHT_STEPS   = int(4.0 - w_inside_atmosphere * 2.0); // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
+    int LIGHT_STEPS = int(4.0 - w_inside_atmosphere * 2.0); // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
 
     // Setup for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
     float rayPositionLength = primaryRayAtmosphereIntersect.start;
-    // (1) Outside of the atmosphere: constant rayStepLength
-    // (2) Inside atmosphere: variable rayStepLength to compensate the originally rough rendering of the smaller (4.0,2.0) values
-    //     Implementation: sky vs horizon: constant step in one case, increasing step in the other case
-    float rayStepLengthIncrease = w_inside_atmosphere * ((1.0 - w_stop_gt_lprl)*(primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / (float(PRIMARY_STEPS*(PRIMARY_STEPS+1))/2.0));
-    float rayStepLength         = max(1.0-w_inside_atmosphere, w_stop_gt_lprl) * (primaryRayAtmosphereIntersect.stop - primaryRayAtmosphereIntersect.start) / max(7.0*w_inside_atmosphere,float(PRIMARY_STEPS));
-
+    // (1) Outside the atmosphere: constant rayStepLength
+    // (2) Inside atmosphere: variable rayStepLength to compensate the rough rendering of the smaller number of ray steps
+    float totalRayLength = primaryRayAtmosphereIntersect.stop - rayPositionLength;
+    float rayStepLengthIncrease = w_inside_atmosphere * ((1.0 - w_stop_gt_lprl) * totalRayLength / (float(PRIMARY_STEPS * (PRIMARY_STEPS + 1)) / 2.0));
+    float rayStepLength = max(1.0 - w_inside_atmosphere, w_stop_gt_lprl) * totalRayLength / max(7.0 * w_inside_atmosphere, float(PRIMARY_STEPS));
 
     vec3 rayleighAccumulation = vec3(0.0);
     vec3 mieAccumulation = vec3(0.0);
@@ -104,7 +96,7 @@ void computeScattering(
     for (int i = 0; i < PRIMARY_STEPS; i++) {
         // Calculate sample position along viewpoint ray.
         vec3 samplePosition = primaryRay.origin + primaryRay.direction * (rayPositionLength + rayStepLength);
-        
+
         // Calculate height of sample position above ellipsoid.
         float sampleHeight = length(samplePosition) - atmosphereInnerRadius;
 
@@ -115,7 +107,7 @@ void computeScattering(
         // Generate ray from the sample position segment to the light source, up to the outer ring of the atmosphere.
         czm_ray lightRay = czm_ray(samplePosition, lightDirection);
         czm_raySegment lightRayAtmosphereIntersect = czm_raySphereIntersectionInterval(lightRay, origin, atmosphereOuterRadius);
-        
+
         float lightStepLength = lightRayAtmosphereIntersect.stop / float(LIGHT_STEPS);
         float lightPositionLength = 0.0;
 
@@ -145,9 +137,7 @@ void computeScattering(
         mieAccumulation += sampleDensity.y * attenuation;
 
         // Increment distance on primary ray.
-        
-        // --- Modified: increasing step length
-        rayPositionLength += (rayStepLength+=rayStepLengthIncrease);
+        rayPositionLength += (rayStepLength += rayStepLengthIncrease);
     }
 
     // Compute the scattering amount.
