@@ -1,6 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -52,6 +53,13 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
   this._group = undefined;
 
   this._ready = false;
+
+  // This is here for backwards compatibility and can be removed when readyPromise is removed.
+  this._resolveContent = undefined;
+  this._readyPromise = new Promise((resolve) => {
+    this._resolveContent = resolve;
+  });
+
   initialize(this, arrayBuffer, byteOffset);
 }
 
@@ -120,9 +128,38 @@ Object.defineProperties(Vector3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Vector3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
   ready: {
     get: function () {
       return this._ready;
+    },
+  },
+
+  /**
+   * Gets the promise that will be resolved when the tile's content is ready to render.
+   *
+   * @memberof Vector3DTileContent.prototype
+   *
+   * @type {Promise<Vector3DTileContent>}
+   * @readonly
+   * @deprecated
+   * @private
+   */
+  readyPromise: {
+    get: function () {
+      deprecationWarning(
+        "Vector3DTileContent.readyPromise",
+        "Vector3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Vector3DTileContent.ready to return true instead."
+      );
+      return this._readyPromise;
     },
   },
 
@@ -298,6 +335,7 @@ function initialize(content, arrayBuffer, byteOffset) {
 
   if (byteLength === 0) {
     content._ready = true;
+    content._resolveContent(content);
     return;
   }
 
@@ -714,6 +752,7 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
     }
     this._batchTable.update(tileset, frameState);
     this._ready = true;
+    this._resolveContent(this);
   }
 };
 

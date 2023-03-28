@@ -99,6 +99,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   trianglesLength: {
     get: function () {
@@ -113,6 +114,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   geometryByteLength: {
     get: function () {
@@ -125,6 +127,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    * @memberof Vector3DTilePolylines.prototype
    * @type {boolean}
    * @readonly
+   * @private
    */
   ready: {
     get: function () {

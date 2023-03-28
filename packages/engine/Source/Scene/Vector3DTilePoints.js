@@ -67,6 +67,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    *
    * @type {boolean}
    * @readonly
+   * @private
    */
   ready: {
     get: function () {
@@ -81,6 +82,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   pointsLength: {
     get: function () {
@@ -95,6 +97,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   texturesByteLength: {
     get: function () {

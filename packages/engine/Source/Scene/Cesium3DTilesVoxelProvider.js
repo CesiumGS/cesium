@@ -176,7 +176,14 @@ function Cesium3DTilesVoxelProvider(options) {
 }
 
 Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
-  /** @inheritdoc */
+  /**
+   * Gets the promise that will be resolved when the provider is ready for use.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {Promise<Cesium3DTilesVoxelProvider>}
+   * @readonly
+   * @deprecated
+   */
   readyPromise: {
     get: function () {
       deprecationWarning(
@@ -186,7 +193,15 @@ Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
       return this._readyPromise;
     },
   },
-  /** @inheritdoc */
+
+  /**
+   * Gets a value indicating whether or not the provider is ready for use.
+   *
+   * @memberof Cesium3DTilesVoxelProvider.prototype
+   * @type {boolean}
+   * @readonly
+   * @deprecated
+   */
   ready: {
     get: function () {
       deprecationWarning(

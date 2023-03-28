@@ -108,6 +108,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   trianglesLength: {
     get: function () {
@@ -125,6 +126,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   geometryByteLength: {
     get: function () {
@@ -140,6 +142,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
    * @memberof Vector3DTilePolygons.prototype
    * @type {boolean}
    * @readonly
+   * @private
    */
   ready: {
     get: function () {

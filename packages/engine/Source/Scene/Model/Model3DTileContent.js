@@ -2,6 +2,7 @@ import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
+import deprecationWarning from "../../Core/deprecationWarning.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
@@ -29,6 +30,9 @@ function Model3DTileContent(tileset, tile, resource) {
   this._metadata = undefined;
   this._group = undefined;
   this._ready = false;
+
+  this._resolveContent = undefined;
+  this._readyPromise = undefined;
 }
 
 Object.defineProperties(Model3DTileContent.prototype, {
@@ -85,9 +89,38 @@ Object.defineProperties(Model3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Model3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
   ready: {
     get: function () {
       return this._ready;
+    },
+  },
+
+  /**
+   * Gets the promise that will be resolved when the tile's content is ready to render.
+   *
+   * @memberof Model3DTileContent.prototype
+   *
+   * @type {Promise<Model3DTileContent>}
+   * @readonly
+   * @deprecated
+   * @private
+   */
+  readyPromise: {
+    get: function () {
+      deprecationWarning(
+        "Model3DTileContent.readyPromise",
+        "Model3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Model3DTileContent.ready to return true instead."
+      );
+      return this._readyPromise;
     },
   },
 
@@ -254,6 +287,7 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
     });
 
     this._ready = true;
+    this._resolveContent = this._resolveContent && this._resolveContent(this);
   }
 };
 
@@ -290,6 +324,11 @@ Model3DTileContent.fromGltf = async function (tileset, tile, resource, gltf) {
   const model = await Model.fromGltfAsync(modelOptions);
   content._model = model;
 
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
+  });
+
   return content;
 };
 
@@ -324,6 +363,11 @@ Model3DTileContent.fromB3dm = async function (
   const model = await Model.fromB3dm(modelOptions);
   content._model = model;
 
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
+  });
+
   return content;
 };
 
@@ -352,6 +396,11 @@ Model3DTileContent.fromI3dm = async function (
   const model = await Model.fromI3dm(modelOptions);
   content._model = model;
 
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
+  });
+
   return content;
 };
 
@@ -379,6 +428,11 @@ Model3DTileContent.fromPnts = async function (
   const model = await Model.fromPnts(modelOptions);
   content._model = model;
 
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
+  });
+
   return content;
 };
 
@@ -403,6 +457,11 @@ Model3DTileContent.fromGeoJson = async function (
   );
   const model = await Model.fromGeoJson(modelOptions);
   content._model = model;
+
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
+  });
 
   return content;
 };

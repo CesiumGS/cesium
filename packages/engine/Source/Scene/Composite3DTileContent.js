@@ -1,5 +1,6 @@
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import getMagic from "../Core/getMagic.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -30,6 +31,11 @@ function Composite3DTileContent(tileset, tile, resource, contents) {
   this._metadata = undefined;
   this._group = undefined;
   this._ready = false;
+
+  this._resolveContent = undefined;
+  this._readyPromise = new Promise((resolve) => {
+    this._resolveContent = resolve;
+  });
 }
 
 Object.defineProperties(Composite3DTileContent.prototype, {
@@ -126,9 +132,38 @@ Object.defineProperties(Composite3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Composite3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
   ready: {
     get: function () {
       return this._ready;
+    },
+  },
+
+  /**
+   * Gets the promise that will be resolved when the tile's content is ready to render.
+   *
+   * @memberof Composite3DTileContent.prototype
+   *
+   * @type {Promise<Composite3DTileContent>}
+   * @readonly
+   * @deprecated
+   * @private
+   */
+  readyPromise: {
+    get: function () {
+      deprecationWarning(
+        "Composite3DTileContent.readyPromise",
+        "Composite3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Composite3DTileContent.ready to return true instead."
+      );
+      return this._readyPromise;
     },
   },
 
@@ -333,7 +368,10 @@ Composite3DTileContent.prototype.update = function (tileset, frameState) {
     ready = ready && contents[i].ready;
   }
 
-  this._ready = ready;
+  if (!this._ready && ready) {
+    this._ready = true;
+    this._resolveContent(this);
+  }
 };
 
 Composite3DTileContent.prototype.isDestroyed = function () {

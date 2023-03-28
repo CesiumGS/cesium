@@ -1,4 +1,5 @@
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Request from "../Core/Request.js";
@@ -55,6 +56,11 @@ function Multiple3DTileContent(tileset, tile, tilesetResource, contentsJson) {
   this._arrayFetchPromises = new Array(contentCount);
   this._requests = new Array(contentCount);
   this._ready = false;
+
+  this._resolveContent = undefined;
+  this._readyPromise = new Promise((resolve) => {
+    this._resolveContent = resolve;
+  });
 
   this._innerContentResources = new Array(contentCount);
   this._serverKeys = new Array(contentCount);
@@ -211,6 +217,15 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
   ready: {
     get: function () {
       if (!this._contentsCreated) {
@@ -218,6 +233,26 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       }
 
       return this._ready;
+    },
+  },
+
+  /**
+   * Gets the promise that will be resolved when the tile's content is ready to render.
+   *
+   * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Promise<Multiple3DTileContent>}
+   * @readonly
+   * @deprecated
+   * @private
+   */
+  readyPromise: {
+    get: function () {
+      deprecationWarning(
+        "Multiple3DTileContent.readyPromise",
+        "Multiple3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Multiple3DTileContent.ready to return true instead."
+      );
+      return this._readyPromise;
     },
   },
 
@@ -636,7 +671,10 @@ Multiple3DTileContent.prototype.update = function (tileset, frameState) {
     ready = ready && contents[i].ready;
   }
 
-  this._ready = ready;
+  if (!this._ready && ready) {
+    this._ready = true;
+    this._resolveContent(this);
+  }
 };
 
 Multiple3DTileContent.prototype.isDestroyed = function () {
