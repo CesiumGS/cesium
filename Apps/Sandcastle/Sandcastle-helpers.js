@@ -12,7 +12,8 @@
       `};\n` +
       `if (typeof Cesium !== 'undefined') {\n` +
       `    window.startupCalled = true;\n` +
-      `     window.startup(Cesium).catch((error) => {\n` +
+      `    window.startup(Cesium).catch((error) => {\n` +
+      `      "use strict";\n` +
       `      console.error(error);\n` +
       `    });\n` +
       `}\n`
