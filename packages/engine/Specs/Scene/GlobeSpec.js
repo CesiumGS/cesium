@@ -227,11 +227,13 @@ describe(
         });
     });
 
-    it("terrainProviderChanged event fires", function () {
-      const terrainProvider = new CesiumTerrainProvider({
-        url: "made/up/url",
-        requestVertexNormals: true,
-      });
+    it("terrainProviderChanged event fires", async function () {
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
+          requestVertexNormals: true,
+        }
+      );
 
       const spyListener = jasmine.createSpy("listener");
       globe.terrainProviderChanged.addEventListener(spyListener);
@@ -241,7 +243,7 @@ describe(
       expect(spyListener).toHaveBeenCalledWith(terrainProvider);
     });
 
-    it("tilesLoaded return true when tile load queue is empty", function () {
+    it("tilesLoaded return true when tile load queue is empty", async function () {
       expect(globe.tilesLoaded).toBe(true);
 
       globe._surface._tileLoadQueueHigh.length = 2;
@@ -262,10 +264,12 @@ describe(
       globe._surface._tileLoadQueueLow.length = 0;
       expect(globe.tilesLoaded).toBe(true);
 
-      const terrainProvider = new CesiumTerrainProvider({
-        url: "made/up/url",
-        requestVertexNormals: true,
-      });
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
+          requestVertexNormals: true,
+        }
+      );
 
       globe.terrainProvider = terrainProvider;
       scene.render();
@@ -306,10 +310,12 @@ describe(
 
       returnVertexNormalTileJson();
 
-      const terrainProvider = new CesiumTerrainProvider({
-        url: "made/up/url",
-        requestVertexNormals: true,
-      });
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
+          requestVertexNormals: true,
+        }
+      );
 
       globe.terrainProvider = terrainProvider;
       scene.camera.setView({

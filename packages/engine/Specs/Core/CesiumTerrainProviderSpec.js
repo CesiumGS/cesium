@@ -152,6 +152,14 @@ describe("Core/CesiumTerrainProvider", function () {
     expect(CesiumTerrainProvider).toConformToInterface(TerrainProvider);
   });
 
+  it("fromIonAssetId throws without assetId", async function () {
+    await expectAsync(
+      CesiumTerrainProvider.fromIonAssetId()
+    ).toBeRejectedWithDeveloperError(
+      "assetId is required, actual value was undefined"
+    );
+  });
+
   it("fromUrl throws without url", async function () {
     await expectAsync(
       CesiumTerrainProvider.fromUrl()
