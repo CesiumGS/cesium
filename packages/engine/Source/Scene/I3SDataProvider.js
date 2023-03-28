@@ -67,12 +67,12 @@ import Rectangle from "../Core/Rectangle.js";
  *
  * Initialization options for the I3SDataProvider constructor
  *
- * @property {Resource|string} [options.url] The url of the I3S dataset. Deprecated.
- * @property {string} [options.name] The name of the I3S dataset.
- * @property {boolean} [options.show=true] Determines if the dataset will be shown.
- * @property {ArcGISTiledElevationTerrainProvider|Promise<ArcGISTiledElevationTerrainProvider>} [options.geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
- * @property {boolean} [options.traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
- * @property {Cesium3DTileset.ConstructorOptions} [options.cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
+ * @property {Resource|string} [url] The url of the I3S dataset. Deprecated.
+ * @property {string} [name] The name of the I3S dataset.
+ * @property {boolean} [show=true] Determines if the dataset will be shown.
+ * @property {ArcGISTiledElevationTerrainProvider|Promise<ArcGISTiledElevationTerrainProvider>} [geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
+ * @property {boolean} [traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
+ * @property {Cesium3DTileset.ConstructorOptions} [cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
  */
 
 /**
@@ -710,6 +710,30 @@ function getTiles(terrainProvider, extent) {
   });
 }
 
+async function loadGeoidData(provider) {
+  // Load tiles from arcgis
+  const geoidTerrainProvider = provider._geoidTiledTerrainProvider;
+
+  if (!defined(geoidTerrainProvider)) {
+    console.log(
+      "No Geoid Terrain service provided - no geoid conversion will be performed."
+    );
+    return;
+  }
+
+  try {
+    const heightMaps = await getCoveredTiles(
+      geoidTerrainProvider,
+      provider._extent
+    );
+    provider._geoidDataList = heightMaps;
+  } catch (error) {
+    console.log(
+      "Error retrieving Geoid Terrain tiles - no geoid conversion will be performed."
+    );
+  }
+}
+
 /**
  * @private
  */
@@ -717,29 +741,8 @@ I3SDataProvider.prototype.loadGeoidData = async function () {
   if (defined(this._geoidDataPromise)) {
     return this._geoidDataPromise;
   }
-  this._geoidDataPromise = (async () => {
-    // Load tiles from arcgis
-    const geoidTerrainProvider = this._geoidTiledTerrainProvider;
 
-    if (!defined(geoidTerrainProvider)) {
-      console.log(
-        "No Geoid Terrain service provided - no geoid conversion will be performed."
-      );
-      return;
-    }
-
-    try {
-      const heightMaps = await getCoveredTiles(
-        geoidTerrainProvider,
-        this._extent
-      );
-      this._geoidDataList = heightMaps;
-    } catch (error) {
-      console.log(
-        "Error retrieving Geoid Terrain tiles - no geoid conversion will be performed."
-      );
-    }
-  })();
+  this._geoidDataPromise = loadGeoidData(this);
   return this._geoidDataPromise;
 };
 

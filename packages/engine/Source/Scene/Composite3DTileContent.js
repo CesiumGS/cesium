@@ -17,11 +17,15 @@ import RuntimeError from "../Core/RuntimeError.js";
  *
  * @private
  */
-function Composite3DTileContent(tileset, tile, resource) {
+function Composite3DTileContent(tileset, tile, resource, contents) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
-  this._contents = [];
+
+  if (!defined(contents)) {
+    contents = [];
+  }
+  this._contents = contents;
 
   this._metadata = undefined;
   this._group = undefined;
@@ -230,8 +234,6 @@ Composite3DTileContent.fromTileType = async function (
   const tilesLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  const content = new Composite3DTileContent(tileset, tile, resource);
-
   // For caching purposes, models within the composite tile must be
   // distinguished. To do this, add a query parameter ?compositeIndex=i.
   // Since composite tiles may contain other composite tiles, check for an
@@ -246,6 +248,8 @@ Composite3DTileContent.fromTileType = async function (
     prefix = "";
   }
 
+  const promises = [];
+  promises.length = tilesLength;
   for (let i = 0; i < tilesLength; ++i) {
     const tileType = getMagic(uint8Array, byteOffset);
 
@@ -263,16 +267,9 @@ Composite3DTileContent.fromTileType = async function (
     });
 
     if (defined(contentFactory)) {
-      const innerContent = await Promise.resolve(
-        contentFactory(
-          content._tileset,
-          content._tile,
-          childResource,
-          arrayBuffer,
-          byteOffset
-        )
+      promises[i] = Promise.resolve(
+        contentFactory(tileset, tile, childResource, arrayBuffer, byteOffset)
       );
-      content._contents.push(innerContent);
     } else {
       throw new RuntimeError(
         `Unknown tile content type, ${tileType}, inside Composite tile`
@@ -282,6 +279,13 @@ Composite3DTileContent.fromTileType = async function (
     byteOffset += tileByteLength;
   }
 
+  const innerContents = await Promise.all(promises);
+  const content = new Composite3DTileContent(
+    tileset,
+    tile,
+    resource,
+    innerContents
+  );
   return content;
 };
 

@@ -1304,7 +1304,7 @@ describe(
       });
     });
 
-    function loadTimeDynamicPointCloud(viewer) {
+    async function loadTimeDynamicPointCloud(viewer) {
       const scene = viewer.scene;
       const clock = viewer.clock;
 
@@ -1338,12 +1338,12 @@ describe(
 
       scene.primitives.add(pointCloud);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.render();
         return defined(pointCloud.boundingSphere);
-      }).then(function () {
-        return pointCloud.readyPromise;
       });
+
+      return pointCloud;
     }
 
     it("zoomTo zooms to TimeDynamicPointCloud with default offset when offset not defined", function () {

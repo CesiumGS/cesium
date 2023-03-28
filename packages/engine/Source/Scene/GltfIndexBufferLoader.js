@@ -335,18 +335,19 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
     return false;
   }
 
-  const typedArray = this._typedArray;
-  const indexDatatype = this._indexDatatype;
+  let typedArray = this._typedArray;
+  let indexDatatype = this._indexDatatype;
 
   if (defined(this._dracoLoader)) {
     try {
       const ready = this._dracoLoader.process(frameState);
       if (ready) {
         const dracoLoader = this._dracoLoader;
-        const typedArray = dracoLoader.decodedData.indices.typedArray;
+        typedArray = dracoLoader.decodedData.indices.typedArray;
         this._typedArray = typedArray;
         // The index datatype may be a smaller datatype after draco decode
-        this._indexDatatype = ComponentDatatype.fromTypedArray(typedArray);
+        indexDatatype = ComponentDatatype.fromTypedArray(typedArray);
+        this._indexDatatype = indexDatatype;
       }
     } catch (error) {
       handleError(this, error);

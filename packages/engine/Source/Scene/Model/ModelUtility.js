@@ -369,13 +369,9 @@ ModelUtility.supportedExtensions = {
  * supported. If an unsupported extension is found, this throws
  * a {@link RuntimeError} with the extension name.
  *
-<<<<<<< HEAD
- * @param {Array<String>} extensionsRequired The extensionsRequired array in the glTF.
+ * @param {string[]} extensionsRequired The extensionsRequired array in the glTF.
  *
  * @exception {RuntimeError} Unsupported glTF Extension
-=======
- * @param {string[]} extensionsRequired The extensionsRequired array in the glTF.
->>>>>>> no-ready-promises
  */
 ModelUtility.checkSupportedExtensions = function (extensionsRequired) {
   const length = extensionsRequired.length;

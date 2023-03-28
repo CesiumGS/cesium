@@ -1105,7 +1105,7 @@ function requestMultipleContents(tile) {
 
   tile._contentState = Cesium3DTileContentState.LOADING;
   return promise
-    .then(async (content) => {
+    .then((content) => {
       if (tile.isDestroyed()) {
         // Tile is unloaded before the content can process
         return;
@@ -1128,6 +1128,81 @@ function requestMultipleContents(tile) {
       tile._contentState = Cesium3DTileContentState.FAILED;
       throw error;
     });
+}
+
+async function processArrayBuffer(
+  tile,
+  tileset,
+  request,
+  expired,
+  requestPromise
+) {
+  const previousState = tile._contentState;
+  tile._contentState = Cesium3DTileContentState.LOADING;
+  ++tileset.statistics.numberOfPendingRequests;
+
+  let arrayBuffer;
+  try {
+    arrayBuffer = await requestPromise;
+  } catch (error) {
+    --tileset.statistics.numberOfPendingRequests;
+    if (tile.isDestroyed()) {
+      // Tile is unloaded before the content can process
+      return;
+    }
+
+    if (request.cancelled || request.state === RequestState.CANCELLED) {
+      // Cancelled due to low priority - try again later.
+      tile._contentState = previousState;
+      ++tileset.statistics.numberOfAttemptedRequests;
+      return;
+    }
+
+    tile._contentState = Cesium3DTileContentState.FAILED;
+    throw error;
+  }
+
+  if (tile.isDestroyed()) {
+    --tileset.statistics.numberOfPendingRequests;
+    // Tile is unloaded before the content can process
+    return;
+  }
+
+  if (request.cancelled || request.state === RequestState.CANCELLED) {
+    // Cancelled due to low priority - try again later.
+    tile._contentState = previousState;
+    --tileset.statistics.numberOfPendingRequests;
+    ++tileset.statistics.numberOfAttemptedRequests;
+    return;
+  }
+
+  try {
+    const content = await makeContent(tile, arrayBuffer);
+    --tileset.statistics.numberOfPendingRequests;
+
+    if (tile.isDestroyed()) {
+      // Tile is unloaded before the content can process
+      return;
+    }
+
+    if (expired) {
+      tile.expireDate = undefined;
+    }
+
+    tile._content = content;
+    tile._contentState = Cesium3DTileContentState.PROCESSING;
+
+    return content;
+  } catch (error) {
+    --tileset.statistics.numberOfPendingRequests;
+    if (tile.isDestroyed()) {
+      // Tile is unloaded before the content can process
+      return;
+    }
+
+    tile._contentState = Cesium3DTileContentState.FAILED;
+    throw error;
+  }
 }
 
 /**
@@ -1164,74 +1239,7 @@ function requestSingleContent(tile) {
     return;
   }
 
-  const previousState = tile._contentState;
-  tile._contentState = Cesium3DTileContentState.LOADING;
-  ++tileset.statistics.numberOfPendingRequests;
-
-  return (async () => {
-    let arrayBuffer;
-    try {
-      arrayBuffer = await promise;
-    } catch (error) {
-      --tileset.statistics.numberOfPendingRequests;
-      if (tile.isDestroyed()) {
-        // Tile is unloaded before the content can process
-        return;
-      }
-
-      if (request.cancelled || request.state === RequestState.CANCELLED) {
-        // Cancelled due to low priority - try again later.
-        tile._contentState = previousState;
-        ++tileset.statistics.numberOfAttemptedRequests;
-        return;
-      }
-
-      tile._contentState = Cesium3DTileContentState.FAILED;
-      throw error;
-    }
-
-    if (tile.isDestroyed()) {
-      --tileset.statistics.numberOfPendingRequests;
-      // Tile is unloaded before the content can process
-      return;
-    }
-
-    if (request.cancelled || request.state === RequestState.CANCELLED) {
-      // Cancelled due to low priority - try again later.
-      tile._contentState = previousState;
-      --tileset.statistics.numberOfPendingRequests;
-      ++tileset.statistics.numberOfAttemptedRequests;
-      return;
-    }
-
-    try {
-      const content = await makeContent(tile, arrayBuffer);
-      --tileset.statistics.numberOfPendingRequests;
-
-      if (tile.isDestroyed()) {
-        // Tile is unloaded before the content can process
-        return;
-      }
-
-      if (expired) {
-        tile.expireDate = undefined;
-      }
-
-      tile._content = content;
-      tile._contentState = Cesium3DTileContentState.PROCESSING;
-
-      return content;
-    } catch (error) {
-      --tileset.statistics.numberOfPendingRequests;
-      if (tile.isDestroyed()) {
-        // Tile is unloaded before the content can process
-        return;
-      }
-
-      tile._contentState = Cesium3DTileContentState.FAILED;
-      throw error;
-    }
-  })();
+  return processArrayBuffer(tile, tileset, request, expired, promise);
 }
 
 /**

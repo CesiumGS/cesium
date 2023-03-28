@@ -161,7 +161,7 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Returns true when the tile's content is ready to render; otherwise false
+   * Gets the promise that will be resolved when the tile's content is ready to render.
    *
    * @memberof Cesium3DTileContent.prototype
    *

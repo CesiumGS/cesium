@@ -115,6 +115,34 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
   },
 });
 
+async function loadResources(loader) {
+  try {
+    const bufferViewsPromise = loadBufferViews(loader);
+    const texturesPromise = loadTextures(loader);
+    const schemaPromise = loadSchema(loader);
+
+    await Promise.all([bufferViewsPromise, texturesPromise, schemaPromise]);
+
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    loader._gltf = undefined; // No longer need to hold onto the glTF
+
+    loader._state = ResourceLoaderState.LOADED;
+    return loader;
+  } catch (error) {
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    loader.unload();
+    loader._state = ResourceLoaderState.FAILED;
+    const errorMessage = "Failed to load structural metadata";
+    throw loader.getError(errorMessage, error);
+  }
+}
+
 /**
  * Loads the resource.
  * @returns {Promise<GltfStructuralMetadataLoader>} A promise which resolves to the loader when the resource loading is completed.
@@ -126,33 +154,7 @@ GltfStructuralMetadataLoader.prototype.load = function () {
   }
 
   this._state = ResourceLoaderState.LOADING;
-  this._promise = (async () => {
-    try {
-      const bufferViewsPromise = loadBufferViews(this);
-      const texturesPromise = loadTextures(this);
-      const schemaPromise = loadSchema(this);
-
-      await Promise.all([bufferViewsPromise, texturesPromise, schemaPromise]);
-
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      this._gltf = undefined; // No longer need to hold onto the glTF
-
-      this._state = ResourceLoaderState.LOADED;
-      return this;
-    } catch (error) {
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      this.unload();
-      this._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load structural metadata";
-      throw this.getError(errorMessage, error);
-    }
-  })();
+  this._promise = loadResources(this);
   return this._promise;
 };
 

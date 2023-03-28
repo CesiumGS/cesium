@@ -485,32 +485,11 @@ async function createInnerContents(multipleContents) {
     return;
   }
 
-  const createPromise = async (arrayBuffer, i) => {
-    if (!defined(arrayBuffer)) {
-      // Content was not fetched. The error was handled in
-      // the fetch promise. Return undefined to indicate partial failure.
-      return;
-    }
+  const promises = arrayBuffers.map((arrayBuffer, i) =>
+    createInnerContent(multipleContents, arrayBuffer, i)
+  );
 
-    try {
-      const contents = await createInnerContent(
-        multipleContents,
-        arrayBuffer,
-        i
-      );
-      return contents;
-    } catch (error) {
-      handleInnerContentFailed(multipleContents, i, error);
-    }
-  };
-
-  const promises = [];
-  for (let i = 0; i < arrayBuffers.length; ++i) {
-    const arrayBuffer = arrayBuffers[i];
-    promises.push(createPromise(arrayBuffer, i));
-  }
-
-  // Even if we had a partial success, mark that we finished creating
+  // Even if we had a partial success (in which case the inner promise will be handled, but the content will nit be returned), mark that we finished creating
   // contents
   const contents = await Promise.all(promises);
   multipleContents._contentsCreated = true;
@@ -519,59 +498,69 @@ async function createInnerContents(multipleContents) {
 }
 
 async function createInnerContent(multipleContents, arrayBuffer, index) {
-  const preprocessed = preprocess3DTileContent(arrayBuffer);
-
-  if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
-    throw new RuntimeError(
-      "External tilesets are disallowed inside multiple contents"
-    );
+  if (!defined(arrayBuffer)) {
+    // Content was not fetched. The error was handled in
+    // the fetch promise. Return undefined to indicate partial failure.
+    return;
   }
 
-  multipleContents._disableSkipLevelOfDetail =
-    multipleContents._disableSkipLevelOfDetail ||
-    preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
-    preprocessed.contentType === Cesium3DTileContentType.VECTOR;
+  try {
+    const preprocessed = preprocess3DTileContent(arrayBuffer);
 
-  const tileset = multipleContents._tileset;
-  const resource = multipleContents._innerContentResources[index];
-  const tile = multipleContents._tile;
+    if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
+      throw new RuntimeError(
+        "External tilesets are disallowed inside multiple contents"
+      );
+    }
 
-  let content;
-  const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
-  if (defined(preprocessed.binaryPayload)) {
-    content = await Promise.resolve(
-      contentFactory(
-        tileset,
-        tile,
-        resource,
-        preprocessed.binaryPayload.buffer,
-        0
-      )
-    );
-  } else {
-    // JSON formats
-    content = await Promise.resolve(
-      contentFactory(tileset, tile, resource, preprocessed.jsonPayload)
-    );
+    multipleContents._disableSkipLevelOfDetail =
+      multipleContents._disableSkipLevelOfDetail ||
+      preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
+      preprocessed.contentType === Cesium3DTileContentType.VECTOR;
+
+    const tileset = multipleContents._tileset;
+    const resource = multipleContents._innerContentResources[index];
+    const tile = multipleContents._tile;
+
+    let content;
+    const contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
+    if (defined(preprocessed.binaryPayload)) {
+      content = await Promise.resolve(
+        contentFactory(
+          tileset,
+          tile,
+          resource,
+          preprocessed.binaryPayload.buffer,
+          0
+        )
+      );
+    } else {
+      // JSON formats
+      content = await Promise.resolve(
+        contentFactory(tileset, tile, resource, preprocessed.jsonPayload)
+      );
+    }
+
+    const contentHeader = multipleContents._innerContentHeaders[index];
+
+    if (tile.hasImplicitContentMetadata) {
+      const subtree = tile.implicitSubtree;
+      const coordinates = tile.implicitCoordinates;
+      content.metadata = subtree.getContentMetadataView(coordinates, index);
+    } else if (!tile.hasImplicitContent) {
+      content.metadata = findContentMetadata(tileset, contentHeader);
+    }
+
+    const groupMetadata = findGroupMetadata(tileset, contentHeader);
+    if (defined(groupMetadata)) {
+      content.group = new Cesium3DContentGroup({
+        metadata: groupMetadata,
+      });
+    }
+    return content;
+  } catch (error) {
+    handleInnerContentFailed(multipleContents, index, error);
   }
-
-  const contentHeader = multipleContents._innerContentHeaders[index];
-
-  if (tile.hasImplicitContentMetadata) {
-    const subtree = tile.implicitSubtree;
-    const coordinates = tile.implicitCoordinates;
-    content.metadata = subtree.getContentMetadataView(coordinates, index);
-  } else if (!tile.hasImplicitContent) {
-    content.metadata = findContentMetadata(tileset, contentHeader);
-  }
-
-  const groupMetadata = findGroupMetadata(tileset, contentHeader);
-  if (defined(groupMetadata)) {
-    content.group = new Cesium3DContentGroup({
-      metadata: groupMetadata,
-    });
-  }
-  return content;
 }
 
 function handleInnerContentFailed(multipleContents, index, error) {

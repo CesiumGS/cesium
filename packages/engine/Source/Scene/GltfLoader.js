@@ -268,7 +268,7 @@ function GltfLoader(options) {
   this._loaderPromises = [];
   this._textureLoaders = [];
   this._texturesPromises = [];
-  this._textureCallbacks = {};
+  this._textureCallbacks = [];
   this._bufferViewLoaders = [];
   this._geometryLoaders = [];
   this._geometryCallbacks = [];
@@ -849,6 +849,26 @@ function loadAccessorValues(accessor, typedArray, values, useQuaternion) {
   return values;
 }
 
+async function loadAccessorBufferView(
+  loader,
+  bufferViewLoader,
+  gltf,
+  accessor,
+  useQuaternion,
+  values
+) {
+  await bufferViewLoader.load();
+  if (loader.isDestroyed()) {
+    return;
+  }
+
+  const bufferViewTypedArray = bufferViewLoader.typedArray;
+  const typedArray = getPackedTypedArray(gltf, accessor, bufferViewTypedArray);
+
+  useQuaternion = defaultValue(useQuaternion, false);
+  loadAccessorValues(accessor, typedArray, values, useQuaternion);
+}
+
 function loadAccessor(loader, gltf, accessorId, useQuaternion) {
   const accessor = gltf.accessors[accessorId];
   const accessorCount = accessor.count;
@@ -857,23 +877,14 @@ function loadAccessor(loader, gltf, accessorId, useQuaternion) {
   const bufferViewId = accessor.bufferView;
   if (defined(bufferViewId)) {
     const bufferViewLoader = getBufferViewLoader(loader, gltf, bufferViewId);
-    const promise = (async () => {
-      await bufferViewLoader.load();
-      if (loader.isDestroyed()) {
-        return;
-      }
-
-      const bufferViewTypedArray = bufferViewLoader.typedArray;
-      const typedArray = getPackedTypedArray(
-        gltf,
-        accessor,
-        bufferViewTypedArray
-      );
-
-      useQuaternion = defaultValue(useQuaternion, false);
-      loadAccessorValues(accessor, typedArray, values, useQuaternion);
-    })();
-
+    const promise = loadAccessorBufferView(
+      loader,
+      bufferViewLoader,
+      gltf,
+      accessor,
+      useQuaternion,
+      values
+    );
     loader._loaderPromises.push(promise);
 
     return values;

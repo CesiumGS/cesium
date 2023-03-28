@@ -176,34 +176,6 @@ describe(
       );
     });
 
-    // This cannot actually ever happen due to gltfPipeline's updateVersion
-    xit("load throws if the gltf specifies an unknown version", async function () {
-      spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
-        Promise.resolve(
-          generateJsonBuffer({
-            asset: {
-              version: "3.0",
-            },
-          }).buffer
-        )
-      );
-
-      const gltfResource = new Resource({
-        url: "https://example.com/model.glb",
-      });
-
-      const gltfLoader = new GltfLoader({
-        gltfResource: gltfResource,
-        releaseGltfJson: true,
-      });
-      gltfLoaders.push(gltfLoader);
-
-      await expectAsync(gltfLoader.load()).toBeRejectedWithError(
-        RuntimeError,
-        "Failed to load glTF\nUnsupported glTF version: 0.1"
-      );
-    });
-
     it("load throws if an unsupported extension is required", async function () {
       function modifyGltf(gltf) {
         gltf.extensionsRequired = ["NOT_supported_extension"];

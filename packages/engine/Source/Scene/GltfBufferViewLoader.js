@@ -125,6 +125,56 @@ Object.defineProperties(GltfBufferViewLoader.prototype, {
   },
 });
 
+async function loadResources(loader) {
+  try {
+    const bufferLoader = getBufferLoader(loader);
+    loader._bufferLoader = bufferLoader;
+    await bufferLoader.load();
+
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    const bufferTypedArray = bufferLoader.typedArray;
+    const bufferViewTypedArray = new Uint8Array(
+      bufferTypedArray.buffer,
+      bufferTypedArray.byteOffset + loader._byteOffset,
+      loader._byteLength
+    );
+
+    // Unload the buffer
+    loader.unload();
+
+    loader._typedArray = bufferViewTypedArray;
+    if (loader._hasMeshopt) {
+      const count = loader._meshoptCount;
+      const byteStride = loader._meshoptByteStride;
+      const result = new Uint8Array(count * byteStride);
+      MeshoptDecoder.decodeGltfBuffer(
+        result,
+        count,
+        byteStride,
+        loader._typedArray,
+        loader._meshoptMode,
+        loader._meshoptFilter
+      );
+      loader._typedArray = result;
+    }
+
+    loader._state = ResourceLoaderState.READY;
+    return loader;
+  } catch (error) {
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    loader.unload();
+    loader._state = ResourceLoaderState.FAILED;
+    const errorMessage = "Failed to load buffer view";
+    throw loader.getError(errorMessage, error);
+  }
+}
+
 /**
  * Loads the resource.
  * @returns {Promise<GltfBufferViewLoader>} A promise which resolves to the loader when the resource loading is completed.
@@ -135,57 +185,8 @@ GltfBufferViewLoader.prototype.load = async function () {
     return this._promise;
   }
 
-  this._promise = (async () => {
-    this._state = ResourceLoaderState.LOADING;
-    try {
-      const bufferLoader = getBufferLoader(this);
-      this._bufferLoader = bufferLoader;
-      await bufferLoader.load();
-
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      const bufferTypedArray = bufferLoader.typedArray;
-      const bufferViewTypedArray = new Uint8Array(
-        bufferTypedArray.buffer,
-        bufferTypedArray.byteOffset + this._byteOffset,
-        this._byteLength
-      );
-
-      // Unload the buffer
-      this.unload();
-
-      this._typedArray = bufferViewTypedArray;
-      if (this._hasMeshopt) {
-        const count = this._meshoptCount;
-        const byteStride = this._meshoptByteStride;
-        const result = new Uint8Array(count * byteStride);
-        MeshoptDecoder.decodeGltfBuffer(
-          result,
-          count,
-          byteStride,
-          this._typedArray,
-          this._meshoptMode,
-          this._meshoptFilter
-        );
-        this._typedArray = result;
-      }
-
-      this._state = ResourceLoaderState.READY;
-      return this;
-    } catch (error) {
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      this.unload();
-      this._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load buffer view";
-      throw this.getError(errorMessage, error);
-    }
-  })();
-
+  this._state = ResourceLoaderState.LOADING;
+  this._promise = loadResources(this);
   return this._promise;
 };
 

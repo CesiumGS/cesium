@@ -118,6 +118,40 @@ Object.defineProperties(GltfTextureLoader.prototype, {
 
 const scratchTextureJob = new CreateTextureJob();
 
+async function loadResources(loader) {
+  const resourceCache = loader._resourceCache;
+  try {
+    const imageLoader = resourceCache.getImageLoader({
+      gltf: loader._gltf,
+      imageId: loader._imageId,
+      gltfResource: loader._gltfResource,
+      baseResource: loader._baseResource,
+    });
+    loader._imageLoader = imageLoader;
+    await imageLoader.load();
+
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    // Now wait for process() to run to finish loading
+    loader._image = imageLoader.image;
+    loader._mipLevels = imageLoader.mipLevels;
+    loader._state = ResourceLoaderState.LOADED;
+
+    return loader;
+  } catch (error) {
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    loader.unload();
+    loader._state = ResourceLoaderState.FAILED;
+    const errorMessage = "Failed to load texture";
+    throw loader.getError(errorMessage, error);
+  }
+}
+
 /**
  * Loads the resource.
  * @returns {Promise<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
@@ -129,40 +163,7 @@ GltfTextureLoader.prototype.load = async function () {
   }
 
   this._state = ResourceLoaderState.LOADING;
-  const resourceCache = this._resourceCache;
-  this._promise = (async () => {
-    try {
-      const imageLoader = resourceCache.getImageLoader({
-        gltf: this._gltf,
-        imageId: this._imageId,
-        gltfResource: this._gltfResource,
-        baseResource: this._baseResource,
-      });
-      this._imageLoader = imageLoader;
-      await imageLoader.load();
-
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      // Now wait for process() to run to finish loading
-      this._image = imageLoader.image;
-      this._mipLevels = imageLoader.mipLevels;
-      this._state = ResourceLoaderState.LOADED;
-
-      return this;
-    } catch (error) {
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      this.unload();
-      this._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load texture";
-      throw this.getError(errorMessage, error);
-    }
-  })();
-
+  this._promise = loadResources(this);
   return this._promise;
 };
 

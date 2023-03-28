@@ -93,6 +93,34 @@ Object.defineProperties(GltfDracoLoader.prototype, {
   },
 });
 
+async function loadResources(loader) {
+  const resourceCache = loader._resourceCache;
+  try {
+    const bufferViewLoader = resourceCache.getBufferViewLoader({
+      gltf: loader._gltf,
+      bufferViewId: loader._draco.bufferView,
+      gltfResource: loader._gltfResource,
+      baseResource: loader._baseResource,
+    });
+    loader._bufferViewLoader = bufferViewLoader;
+    await bufferViewLoader.load();
+
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    loader._bufferViewTypedArray = bufferViewLoader.typedArray;
+    loader._state = ResourceLoaderState.PROCESSING;
+    return loader;
+  } catch (error) {
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    handleError(loader, error);
+  }
+}
+
 /**
  * Loads the resource.
  * @returns {Promise<GltfDracoLoader>} A promise which resolves to the loader when the resource loading is completed.
@@ -104,34 +132,7 @@ GltfDracoLoader.prototype.load = async function () {
   }
 
   this._state = ResourceLoaderState.LOADING;
-  const resourceCache = this._resourceCache;
-  this._promise = (async () => {
-    try {
-      const bufferViewLoader = resourceCache.getBufferViewLoader({
-        gltf: this._gltf,
-        bufferViewId: this._draco.bufferView,
-        gltfResource: this._gltfResource,
-        baseResource: this._baseResource,
-      });
-      this._bufferViewLoader = bufferViewLoader;
-      await bufferViewLoader.load();
-
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      this._bufferViewTypedArray = bufferViewLoader.typedArray;
-      this._state = ResourceLoaderState.PROCESSING;
-      return this;
-    } catch (error) {
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      handleError(this, error);
-    }
-  })();
-
+  this._promise = loadResources(this);
   return this._promise;
 };
 
@@ -140,6 +141,32 @@ function handleError(dracoLoader, error) {
   dracoLoader._state = ResourceLoaderState.FAILED;
   const errorMessage = "Failed to load Draco";
   throw dracoLoader.getError(errorMessage, error);
+}
+
+async function processDecode(loader, decodePromise) {
+  try {
+    const results = await decodePromise;
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    // Unload everything except the decoded data
+    loader.unload();
+
+    loader._decodedData = {
+      indices: results.indexArray,
+      vertexAttributes: results.attributeData,
+    };
+    loader._state = ResourceLoaderState.READY;
+    return loader._baseResource;
+  } catch (error) {
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    // Capture this error so it can be thrown on the next `process` call
+    loader._dracoError = error;
+  }
 }
 
 /**
@@ -200,31 +227,7 @@ GltfDracoLoader.prototype.process = function (frameState) {
     return false;
   }
 
-  this._decodePromise = (async () => {
-    try {
-      const results = await decodePromise;
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      // Unload everything except the decoded data
-      this.unload();
-
-      this._decodedData = {
-        indices: results.indexArray,
-        vertexAttributes: results.attributeData,
-      };
-      this._state = ResourceLoaderState.READY;
-      return this._baseResource;
-    } catch (error) {
-      if (this.isDestroyed()) {
-        return;
-      }
-
-      // Capture this error so it can be thrown on the next `process` call
-      this._dracoError = error;
-    }
-  })();
+  this._decodePromise = processDecode(this, decodePromise);
 };
 
 /**

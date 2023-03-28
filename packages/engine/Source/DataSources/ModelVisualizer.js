@@ -66,6 +66,52 @@ function ModelVisualizer(scene, entityCollection) {
   this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
 }
 
+async function createModelPrimitive(
+  visualizer,
+  entity,
+  resource,
+  incrementallyLoadTextures
+) {
+  const primitives = visualizer._primitives;
+  const modelHash = visualizer._modelHash;
+
+  try {
+    const model = await Model.fromGltfAsync({
+      url: resource,
+      incrementallyLoadTextures: incrementallyLoadTextures,
+      scene: visualizer._scene,
+    });
+
+    if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
+      return;
+    }
+
+    model.id = entity;
+    primitives.add(model);
+    modelHash[entity.id].modelPrimitive = model;
+    model.errorEvent.addEventListener((error) => {
+      if (!defined(modelHash[entity.id])) {
+        return;
+      }
+
+      console.log(error);
+
+      // Texture failures when incrementallyLoadTextures
+      // will not affect the ability to compute the bounding sphere
+      if (error.name !== "TextureError" && model.incrementallyLoadTextures) {
+        modelHash[entity.id].loadFailed = true;
+      }
+    });
+  } catch (error) {
+    if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
+      return;
+    }
+
+    console.log(error);
+    modelHash[entity.id].loadFailed = true;
+  }
+}
+
 /**
  * Updates models created this visualizer to match their
  * Entity counterpart at the given time.
@@ -131,50 +177,13 @@ ModelVisualizer.prototype.update = function (time) {
       };
       modelHash[entity.id] = modelData;
 
-      (async () => {
-        try {
-          const model = await Model.fromGltfAsync({
-            url: resource,
-            incrementallyLoadTextures: Property.getValueOrDefault(
-              modelGraphics._incrementallyLoadTextures,
-              time,
-              defaultIncrementallyLoadTextures
-            ),
-            scene: this._scene,
-          });
+      const incrementallyLoadTextures = Property.getValueOrDefault(
+        modelGraphics._incrementallyLoadTextures,
+        time,
+        defaultIncrementallyLoadTextures
+      );
 
-          if (this.isDestroyed() || !defined(modelHash[entity.id])) {
-            return;
-          }
-
-          model.id = entity;
-          primitives.add(model);
-          modelHash[entity.id].modelPrimitive = model;
-          model.errorEvent.addEventListener((error) => {
-            if (!defined(modelHash[entity.id])) {
-              return;
-            }
-
-            console.log(error);
-
-            // Texture failures when incrementallyLoadTextures
-            // will not affect the ability to compute the bounding sphere
-            if (
-              error.name !== "TextureError" &&
-              model.incrementallyLoadTextures
-            ) {
-              modelHash[entity.id].loadFailed = true;
-            }
-          });
-        } catch (error) {
-          if (this.isDestroyed() || !defined(modelHash[entity.id])) {
-            return;
-          }
-
-          console.log(error);
-          modelHash[entity.id].loadFailed = true;
-        }
-      })();
+      createModelPrimitive(this, entity, resource, incrementallyLoadTextures);
     }
 
     const model = modelData.modelPrimitive;
