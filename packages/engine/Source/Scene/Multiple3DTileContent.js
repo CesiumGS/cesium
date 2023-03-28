@@ -524,7 +524,7 @@ async function createInnerContents(multipleContents) {
     createInnerContent(multipleContents, arrayBuffer, i)
   );
 
-  // Even if we had a partial success (in which case the inner promise will be handled, but the content will nit be returned), mark that we finished creating
+  // Even if we had a partial success (in which case the inner promise will be handled, but the content will not be returned), mark that we finished creating
   // contents
   const contents = await Promise.all(promises);
   multipleContents._contentsCreated = true;
