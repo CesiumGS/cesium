@@ -2233,7 +2233,8 @@ function updateZoomTarget(viewer) {
 
   // If zoomTarget was Cesium3DTileset
   if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
-    return target.readyPromise
+    // This is here for backwards compatibility and can be removed once Cesium3DTileset.readyPromise and VoxelPrimitive.readyPromise is removed.
+    return target._readyPromise
       .then(function () {
         const boundingSphere = target.boundingSphere;
         // If offset was originally undefined then give it base value instead of empty object
@@ -2276,7 +2277,8 @@ function updateZoomTarget(viewer) {
 
   // If zoomTarget was TimeDynamicPointCloud
   if (target instanceof TimeDynamicPointCloud) {
-    return target.readyPromise.then(function () {
+    // This is here for backwards compatibility and can be removed once TimeDynamicPointCloud.readyPromise is removed.
+    return target._readyPromise.then(function () {
       const boundingSphere = target.boundingSphere;
       // If offset was originally undefined then give it base value instead of empty object
       if (!defined(zoomOptions.offset)) {

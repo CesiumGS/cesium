@@ -48,24 +48,6 @@
 
         const scene = viewer.scene;
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(775877),
-        });
-
-        const translation = new Cesium.Cartesian3(
-          -1.398521324920626,
-          0.7823052871729486,
-          0.7015244410592609
-        );
-        tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
-
-        tileset.maximumScreenSpaceError = 8.0;
-        scene.pickTranslucentDepth = true;
-        scene.light.intensity = 7.0;
-
-        viewer.scene.primitives.add(tileset);
-        viewer.zoomTo(tileset);
-
         // Fly to a nice overview of the city.
         viewer.camera.flyTo({
           destination: new Cesium.Cartesian3(
@@ -79,6 +61,26 @@
             0.000006972977223185239
           ),
         });
+
+        let tileset;
+        try {
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(775877);
+
+          const translation = new Cesium.Cartesian3(
+            -1.398521324920626,
+            0.7823052871729486,
+            0.7015244410592609
+          );
+          tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+          tileset.maximumScreenSpaceError = 8.0;
+          scene.pickTranslucentDepth = true;
+          scene.light.intensity = 7.0;
+
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // Styles =============================================================================
 

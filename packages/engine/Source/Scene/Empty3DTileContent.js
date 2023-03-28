@@ -1,3 +1,4 @@
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
@@ -64,9 +65,38 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Empty3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
+    get: function () {
+      return true;
+    },
+  },
+
+  /**
+   * Gets the promise that will be resolved when the tile's content is ready to render.
+   *
+   * @memberof Empty3DTileContent.prototype
+   *
+   * @type {Promise<Empty3DTileContent>}
+   * @readonly
+   * @deprecated
+   * @private
+   */
   readyPromise: {
     get: function () {
-      return undefined;
+      deprecationWarning(
+        "Empty3DTileContent.readyPromise",
+        "Empty3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Empty3DTileContent.ready to return true instead."
+      );
+      return Promise.resolve(this);
     },
   },
 

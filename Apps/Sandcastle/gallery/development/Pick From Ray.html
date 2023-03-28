@@ -49,11 +49,10 @@
           drillPick = checked;
         });
 
-        const tileset = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
-          })
+        const tileset = await Cesium.Cesium3DTileset.fromUrl(
+          "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json"
         );
+        viewer.scene.primitives.add(tileset);
 
         tileset.style = new Cesium.Cesium3DTileStyle({
           defines: {

@@ -202,7 +202,7 @@ describe(
       expect(groundPolylinePrimitive.debugShowShadowVolume).toEqual(true);
     });
 
-    it("releases geometry instances when releaseGeometryInstances is true", function () {
+    it("releases geometry instances when releaseGeometryInstances is true", async function () {
       if (!GroundPolylinePrimitive.isSupported(scene)) {
         return;
       }
@@ -215,13 +215,16 @@ describe(
 
       expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(groundPolylinePrimitive);
-      scene.renderForSpecs();
-      return groundPolylinePrimitive.readyPromise.then(function () {
-        expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
+
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return groundPolylinePrimitive.ready;
       });
+
+      expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
     });
 
-    it("does not release geometry instances when releaseGeometryInstances is false", function () {
+    it("does not release geometry instances when releaseGeometryInstances is false", async function () {
       if (!GroundPolylinePrimitive.isSupported(scene)) {
         return;
       }
@@ -234,13 +237,15 @@ describe(
 
       expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(groundPolylinePrimitive);
-      scene.renderForSpecs();
-      return groundPolylinePrimitive.readyPromise.then(function () {
-        expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return groundPolylinePrimitive.ready;
       });
+
+      expect(groundPolylinePrimitive.geometryInstances).toBeDefined();
     });
 
-    it("adds afterRender promise to frame state", function () {
+    it("becomes ready", async function () {
       if (!GroundPolylinePrimitive.isSupported(scene)) {
         return;
       }
@@ -252,11 +257,12 @@ describe(
       });
 
       scene.groundPrimitives.add(groundPolylinePrimitive);
-      scene.renderForSpecs();
-
-      return groundPolylinePrimitive.readyPromise.then(function (param) {
-        expect(param.ready).toBe(true);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return groundPolylinePrimitive.ready;
       });
+
+      expect(groundPolylinePrimitive.ready).toBe(true);
     });
 
     it("does not render when geometryInstances is undefined", function () {
@@ -293,7 +299,7 @@ describe(
       expect(scene.frameState.commandList.length).toEqual(0);
     });
 
-    it("becomes ready when show is false", function () {
+    it("becomes ready when show is false", async function () {
       if (!GroundPolylinePrimitive.isSupported(scene)) {
         return;
       }
@@ -305,17 +311,12 @@ describe(
       );
       groundPolylinePrimitive.show = false;
 
-      let ready = false;
-      groundPolylinePrimitive.readyPromise.then(function () {
-        ready = true;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return groundPolylinePrimitive.ready;
       });
 
-      return pollToPromise(function () {
-        scene.renderForSpecs();
-        return ready;
-      }).then(function () {
-        expect(ready).toEqual(true);
-      });
+      expect(groundPolylinePrimitive.ready).toBeTrue();
     });
 
     it("does not render other than for the color or pick pass", function () {

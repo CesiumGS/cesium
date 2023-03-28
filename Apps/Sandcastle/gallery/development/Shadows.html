@@ -899,46 +899,46 @@
           }
         }
 
-        function createTileset(resource) {
-          resource
-            .then(function (url) {
-              viewer.scene.primitives.add(
-                new Cesium.Cesium3DTileset({
-                  url: url,
-                })
-              );
-            })
-            .catch(function (error) {
-              console.log(error);
-            });
+        async function createTileset(url) {
+          try {
+            const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+            const location = uiOptions.locations[viewModel.location];
+            if (location.tileset !== url) {
+              // Another option was loaded. Discard the result;
+              return;
+            }
+            viewer.scene.primitives.add(tileset);
+          } catch (error) {
+            console.log(`Error loading tileset: ${error}`);
+          }
         }
 
-        function createModel(url, origin) {
+        async function createModel(url, origin) {
           const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             origin,
             new Cesium.HeadingPitchRoll()
           );
 
-          const model = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: url,
-              modelMatrix: modelMatrix,
-            })
-          );
+          try {
+            const model = scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                modelMatrix: modelMatrix,
+              })
+            );
 
-          model.readyPromise
-            .then(function (model) {
+            model.readyEvent.addEventListener(() => {
               // Play and loop all animations at half-speed
               model.activeAnimations.addAll({
                 multiplier: 0.5,
                 loop: Cesium.ModelAnimationLoop.REPEAT,
               });
-            })
-            .catch(function (error) {
-              window.alert(error);
             });
 
-          return model;
+            return model;
+          } catch (error) {
+            window.alert(error);
+          }
         }
 
         function createBoxRTC(origin) {

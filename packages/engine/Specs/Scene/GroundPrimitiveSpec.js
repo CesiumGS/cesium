@@ -229,7 +229,7 @@ describe(
       expect(primitive.debugShowShadowVolume).toEqual(true);
     });
 
-    it("releases geometry instances when releaseGeometryInstances is true", function () {
+    it("releases geometry instances when releaseGeometryInstances is true", async function () {
       if (!GroundPrimitive.isSupported(scene)) {
         return;
       }
@@ -242,13 +242,15 @@ describe(
 
       expect(primitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(primitive);
-      scene.renderForSpecs();
-      return primitive.readyPromise.then(function () {
-        expect(primitive.geometryInstances).not.toBeDefined();
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
       });
+
+      expect(primitive.geometryInstances).not.toBeDefined();
     });
 
-    it("does not release geometry instances when releaseGeometryInstances is false", function () {
+    it("does not release geometry instances when releaseGeometryInstances is false", async function () {
       if (!GroundPrimitive.isSupported(scene)) {
         return;
       }
@@ -261,13 +263,15 @@ describe(
 
       expect(primitive.geometryInstances).toBeDefined();
       scene.groundPrimitives.add(primitive);
-      scene.renderForSpecs();
-      return primitive.readyPromise.then(function () {
-        expect(primitive.geometryInstances).toBeDefined();
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
       });
+
+      expect(primitive.geometryInstances).toBeDefined();
     });
 
-    it("adds afterRender promise to frame state", function () {
+    it("becomes ready", async function () {
       if (!GroundPrimitive.isSupported(scene)) {
         return;
       }
@@ -279,11 +283,12 @@ describe(
       });
 
       scene.groundPrimitives.add(primitive);
-      scene.renderForSpecs();
-
-      return primitive.readyPromise.then(function (param) {
-        expect(param.ready).toBe(true);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
       });
+
+      expect(primitive.ready).toBe(true);
     });
 
     it("does not render when geometryInstances is undefined", function () {
@@ -321,7 +326,7 @@ describe(
       expect(scene.frameState.commandList.length).toEqual(0);
     });
 
-    it("becomes ready when show is false", function () {
+    it("becomes ready when show is false", async function () {
       if (!GroundPrimitive.isSupported(scene)) {
         return;
       }
@@ -334,17 +339,12 @@ describe(
         })
       );
 
-      let ready = false;
-      primitive.readyPromise.then(function () {
-        ready = true;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
       });
 
-      return pollToPromise(function () {
-        scene.renderForSpecs();
-        return ready;
-      }).then(function () {
-        expect(ready).toEqual(true);
-      });
+      expect(primitive.ready).toBe(true);
     });
 
     it("does not render other than for the color or pick pass", function () {
@@ -1191,7 +1191,7 @@ describe(
       expect(scene).notToPick();
     });
 
-    it("internally invalid asynchronous geometry resolves promise and sets ready", function () {
+    it("internally invalid asynchronous geometry becomes ready", async function () {
       if (!GroundPrimitive.isSupported(scene)) {
         return;
       }
@@ -1210,18 +1210,15 @@ describe(
 
       scene.groundPrimitives.add(primitive);
 
-      return pollToPromise(function () {
+      await pollToPromise(() => {
         scene.renderForSpecs();
         return primitive.ready;
-      }).then(function () {
-        return primitive.readyPromise.then(function (arg) {
-          expect(arg).toBe(primitive);
-          expect(primitive.ready).toBe(true);
-        });
       });
+
+      expect(primitive.ready).toBe(true);
     });
 
-    it("internally invalid synchronous geometry resolves promise and sets ready", function () {
+    it("internally invalid synchronous geometry becomes ready", async function () {
       if (!GroundPrimitive.isSupported(scene)) {
         return;
       }
@@ -1241,15 +1238,12 @@ describe(
 
       scene.groundPrimitives.add(primitive);
 
-      return pollToPromise(function () {
+      await pollToPromise(() => {
         scene.renderForSpecs();
         return primitive.ready;
-      }).then(function () {
-        return primitive.readyPromise.then(function (arg) {
-          expect(arg).toBe(primitive);
-          expect(primitive.ready).toBe(true);
-        });
       });
+
+      expect(primitive.ready).toBe(true);
     });
 
     it("update throws when batched instance colors are different and materials on GroundPrimitives are not supported", function () {

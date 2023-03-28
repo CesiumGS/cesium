@@ -21,21 +21,6 @@ function ResourceLoader() {}
 
 Object.defineProperties(ResourceLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof ResourceLoader.prototype
-   *
-   * @type {Promise<ResourceLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    // eslint-disable-next-line getter-return
-    get: function () {
-      DeveloperError.throwInstantiationError();
-    },
-  },
-  /**
    * The cache key of the resource.
    *
    * @memberof ResourceLoader.prototype
@@ -71,9 +56,12 @@ ResourceLoader.prototype.unload = function () {};
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @returns {boolean} true once all resourced are ready.
  * @private
  */
-ResourceLoader.prototype.process = function (frameState) {};
+ResourceLoader.prototype.process = function (frameState) {
+  return false;
+};
 
 /**
  * Constructs a {@link RuntimeError} from an errorMessage and an error.
@@ -89,7 +77,7 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
   Check.typeOf.string("errorMessage", errorMessage);
   //>>includeEnd('debug');
 
-  if (defined(error)) {
+  if (defined(error) && defined(error.message)) {
     errorMessage += `\n${error.message}`;
   }
 

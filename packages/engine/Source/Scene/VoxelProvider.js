@@ -24,6 +24,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * @memberof VoxelProvider.prototype
    * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: DeveloperError.throwInstantiationError,
@@ -35,6 +36,7 @@ Object.defineProperties(VoxelProvider.prototype, {
    * @memberof VoxelProvider.prototype
    * @type {Promise<VoxelProvider>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: DeveloperError.throwInstantiationError,
@@ -247,8 +249,6 @@ Object.defineProperties(VoxelProvider.prototype, {
  * @param {number} [options.tileZ=0] The tile's Z coordinate.
  * @privateparam {number} [options.keyframe=0] The requested keyframe.
  * @returns {Promise<Array[]>|undefined} A promise to an array of typed arrays containing the requested voxel data or undefined if there was a problem loading the data.
- *
- * @exception {DeveloperError} The provider must be ready.
  */
 VoxelProvider.prototype.requestData = DeveloperError.throwInstantiationError;
 

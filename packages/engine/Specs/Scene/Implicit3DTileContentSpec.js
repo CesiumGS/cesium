@@ -19,6 +19,7 @@ import {
   Model3DTileContent,
   Multiple3DTileContent,
   Resource,
+  ResourceCache,
   TileBoundingSphere,
   TileBoundingS2Cell,
 } from "../../index.js";
@@ -149,6 +150,7 @@ describe(
 
     let mockPlaceholderTile;
     beforeEach(function () {
+      ResourceCache.clearForSpecs();
       mockTileset.statistics.numberOfTilesTotal = 0;
       mockPlaceholderTile = new Cesium3DTile(mockTileset, tilesetResource, {
         geometricError: 400,
@@ -167,30 +169,29 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
+      ResourceCache.clearForSpecs();
     });
 
-    it("loads subtree using JSON", function () {
-      const content = new Implicit3DTileContent(
+    it("loads subtree using JSON", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
         quadtreeJson
       );
-      return content.readyPromise.then(function () {
-        const expectedChildrenCounts = [4, 0, 0, 0, 0];
-        const tiles = [];
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
-        expect(expectedChildrenCounts.length).toEqual(tiles.length);
-        for (let i = 0; i < tiles.length; i++) {
-          expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
-        }
-        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
-      });
+      const expectedChildrenCounts = [4, 0, 0, 0, 0];
+      const tiles = [];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
+      expect(expectedChildrenCounts.length).toEqual(tiles.length);
+      for (let i = 0; i < tiles.length; i++) {
+        expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
+      }
+      expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
     });
 
-    it("expands subtree", function () {
-      const content = new Implicit3DTileContent(
+    it("expands subtree", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -198,21 +199,19 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        const expectedChildrenCounts = [2, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0];
-        const tiles = [];
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-        expect(expectedChildrenCounts.length).toEqual(tiles.length);
-        for (let i = 0; i < tiles.length; i++) {
-          expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
-        }
-        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
-      });
+      const expectedChildrenCounts = [2, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0];
+      const tiles = [];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+      expect(expectedChildrenCounts.length).toEqual(tiles.length);
+      for (let i = 0; i < tiles.length; i++) {
+        expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
+      }
+      expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
     });
 
-    it("sets tile coordinates on each tile", function () {
-      const content = new Implicit3DTileContent(
+    it("sets tile coordinates on each tile", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -220,38 +219,36 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        const expectedCoordinates = [
-          [0, 0, 0],
-          [1, 0, 0],
-          [2, 0, 0],
-          [2, 1, 0],
-          [2, 0, 1],
-          [2, 1, 1],
-          [1, 0, 1],
-          [2, 0, 2],
-          [2, 1, 2],
-          [2, 0, 3],
-          [2, 1, 3],
-        ];
-        const tiles = [];
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-        for (let i = 0; i < tiles.length; i++) {
-          const expected = expectedCoordinates[i];
-          const coordinates = new ImplicitTileCoordinates({
-            subdivisionScheme: implicitTileset.subdivisionScheme,
-            subtreeLevels: implicitTileset.subtreeLevels,
-            level: expected[0],
-            x: expected[1],
-            y: expected[2],
-          });
-          expect(tiles[i].implicitCoordinates).toEqual(coordinates);
-        }
-      });
+      const expectedCoordinates = [
+        [0, 0, 0],
+        [1, 0, 0],
+        [2, 0, 0],
+        [2, 1, 0],
+        [2, 0, 1],
+        [2, 1, 1],
+        [1, 0, 1],
+        [2, 0, 2],
+        [2, 1, 2],
+        [2, 0, 3],
+        [2, 1, 3],
+      ];
+      const tiles = [];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+      for (let i = 0; i < tiles.length; i++) {
+        const expected = expectedCoordinates[i];
+        const coordinates = new ImplicitTileCoordinates({
+          subdivisionScheme: implicitTileset.subdivisionScheme,
+          subtreeLevels: implicitTileset.subtreeLevels,
+          level: expected[0],
+          x: expected[1],
+          y: expected[2],
+        });
+        expect(tiles[i].implicitCoordinates).toEqual(coordinates);
+      }
     });
 
-    it("handles deeper subtrees correctly", function () {
+    it("handles deeper subtrees correctly", async function () {
       mockPlaceholderTile.implicitCoordinates = new ImplicitTileCoordinates({
         subdivisionScheme: implicitTileset.subdivisionScheme,
         subtreeLevels: implicitTileset.subtreeLevels,
@@ -259,7 +256,7 @@ describe(
         x: 2,
         y: 1,
       });
-      const content = new Implicit3DTileContent(
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -292,29 +289,27 @@ describe(
         childCoordinates.y
       );
 
-      return content.readyPromise.then(function () {
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        const childTile = subtreeRootTile.children[0];
-        expect(subtreeRootTile.implicitCoordinates).toEqual(parentCoordinates);
-        expect(childTile.implicitCoordinates).toEqual(childCoordinates);
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const childTile = subtreeRootTile.children[0];
+      expect(subtreeRootTile.implicitCoordinates).toEqual(parentCoordinates);
+      expect(childTile.implicitCoordinates).toEqual(childCoordinates);
 
-        expect(subtreeRootTile.refine).toEqual(refine);
-        expect(childTile.refine).toEqual(refine);
+      expect(subtreeRootTile.refine).toEqual(refine);
+      expect(childTile.refine).toEqual(refine);
 
-        expect(subtreeRootTile.geometricError).toEqual(parentGeometricError);
-        expect(childTile.geometricError).toEqual(childGeometricError);
+      expect(subtreeRootTile.geometricError).toEqual(parentGeometricError);
+      expect(childTile.geometricError).toEqual(childGeometricError);
 
-        expect(getBoundingBoxArray(subtreeRootTile)).toEqual(parentBox);
-        expect(getBoundingBoxArray(childTile)).toEqual(childBox);
+      expect(getBoundingBoxArray(subtreeRootTile)).toEqual(parentBox);
+      expect(getBoundingBoxArray(childTile)).toEqual(childBox);
 
-        const tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 2, 4, tiles);
-        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
-      });
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 2, 4, tiles);
+      expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
     });
 
-    it("puts the root tile inside the placeholder tile", function () {
-      const content = new Implicit3DTileContent(
+    it("puts the root tile inside the placeholder tile", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -322,13 +317,11 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        expect(mockPlaceholderTile.children.length).toEqual(1);
-      });
+      expect(mockPlaceholderTile.children.length).toEqual(1);
     });
 
-    it("preserves tile extras", function () {
-      const content = new Implicit3DTileContent(
+    it("preserves tile extras", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -336,13 +329,11 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        expect(mockPlaceholderTile.children[0].extras).toEqual(tileJson.extras);
-      });
+      expect(mockPlaceholderTile.children[0].extras).toEqual(tileJson.extras);
     });
 
-    it("stores a reference to the subtree in each transcoded tile", function () {
-      const content = new Implicit3DTileContent(
+    it("stores a reference to the subtree in each transcoded tile", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -350,23 +341,21 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
+      expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
 
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        const subtree = subtreeRootTile.implicitSubtree;
-        expect(subtree).toBeDefined();
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const subtree = subtreeRootTile.implicitSubtree;
+      expect(subtree).toBeDefined();
 
-        const tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
-        for (let i = 0; i < tiles.length; i++) {
-          expect(tiles[i].implicitSubtree).toBe(subtree);
-        }
-      });
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
+      for (let i = 0; i < tiles.length; i++) {
+        expect(tiles[i].implicitSubtree).toBe(subtree);
+      }
     });
 
-    it("does not store references to subtrees in placeholder tiles", function () {
-      const content = new Implicit3DTileContent(
+    it("does not store references to subtrees in placeholder tiles", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -374,21 +363,19 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
+      expect(mockPlaceholderTile.implicitSubtree).not.toBeDefined();
 
-        const subtreeRootTile = mockPlaceholderTile.children[0];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
 
-        const tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
-        for (let i = 0; i < tiles.length; i++) {
-          expect(tiles[i].implicitSubtree).not.toBeDefined();
-        }
-      });
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
+      for (let i = 0; i < tiles.length; i++) {
+        expect(tiles[i].implicitSubtree).not.toBeDefined();
+      }
     });
 
-    it("destroys", function () {
-      const content = new Implicit3DTileContent(
+    it("destroys", async function () {
+      const content = await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -396,19 +383,17 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        const subtree = content._implicitSubtree;
-        expect(content.isDestroyed()).toBe(false);
-        expect(subtree.isDestroyed()).toBe(false);
+      const subtree = content._implicitSubtree;
+      expect(content.isDestroyed()).toBe(false);
+      expect(subtree.isDestroyed()).toBe(false);
 
-        content.destroy();
-        expect(content.isDestroyed()).toBe(true);
-        expect(subtree.isDestroyed()).toBe(true);
-      });
+      content.destroy();
+      expect(content.isDestroyed()).toBe(true);
+      expect(subtree.isDestroyed()).toBe(true);
     });
 
-    it("returns default values for most Cesium3DTileContent properties", function () {
-      const content = new Implicit3DTileContent(
+    it("returns default values for most Cesium3DTileContent properties", async function () {
+      const content = await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -430,8 +415,8 @@ describe(
       expect(content.batchTable).not.toBeDefined();
     });
 
-    it("url returns the subtree url", function () {
-      const content = new Implicit3DTileContent(
+    it("url returns the subtree url", async function () {
+      const content = await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -442,8 +427,8 @@ describe(
       expect(content.url).toBe("https://example.com/0/0/0.subtree");
     });
 
-    it("templates content URIs for each tile with content", function () {
-      const content = new Implicit3DTileContent(
+    it("templates content URIs for each tile with content", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -451,41 +436,39 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        const expectedCoordinates = [
-          [0, 0, 0],
-          [1, 0, 0],
-          [1, 0, 1],
-        ];
-        const contentAvailability = [false, true, true];
-        const templateUri = implicitTileset.contentUriTemplates[0];
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        const tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
-        expect(expectedCoordinates.length).toEqual(tiles.length);
-        for (let i = 0; i < tiles.length; i++) {
-          const expected = expectedCoordinates[i];
-          const coordinates = new ImplicitTileCoordinates({
-            subdivisionScheme: implicitTileset.subdivisionScheme,
-            subtreeLevels: implicitTileset.subtreeLevels,
-            level: expected[0],
-            x: expected[1],
-            y: expected[2],
-          });
-          const expectedResource = templateUri.getDerivedResource({
-            templateValues: coordinates.getTemplateValues(),
-          });
-          if (contentAvailability[i]) {
-            expect(tiles[i]._contentResource.url).toEqual(expectedResource.url);
-          } else {
-            expect(tiles[i]._contentResource).not.toBeDefined();
-          }
+      const expectedCoordinates = [
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 0, 1],
+      ];
+      const contentAvailability = [false, true, true];
+      const templateUri = implicitTileset.contentUriTemplates[0];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
+      expect(expectedCoordinates.length).toEqual(tiles.length);
+      for (let i = 0; i < tiles.length; i++) {
+        const expected = expectedCoordinates[i];
+        const coordinates = new ImplicitTileCoordinates({
+          subdivisionScheme: implicitTileset.subdivisionScheme,
+          subtreeLevels: implicitTileset.subtreeLevels,
+          level: expected[0],
+          x: expected[1],
+          y: expected[2],
+        });
+        const expectedResource = templateUri.getDerivedResource({
+          templateValues: coordinates.getTemplateValues(),
+        });
+        if (contentAvailability[i]) {
+          expect(tiles[i]._contentResource.url).toEqual(expectedResource.url);
+        } else {
+          expect(tiles[i]._contentResource).not.toBeDefined();
         }
-      });
+      }
     });
 
-    it("constructs placeholder tiles for child subtrees", function () {
-      const content = new Implicit3DTileContent(
+    it("constructs placeholder tiles for child subtrees", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -493,51 +476,49 @@ describe(
         quadtreeBuffer,
         0
       );
-      return content.readyPromise.then(function () {
-        const expectedCoordinates = [
-          [2, 0, 0],
-          [2, 1, 0],
-          [2, 0, 1],
-          [2, 1, 1],
-          [2, 0, 2],
-          [2, 1, 2],
-          [2, 0, 3],
-          [2, 1, 3],
-        ];
-        const templateUri = implicitTileset.subtreeUriTemplate;
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        let tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
+      const expectedCoordinates = [
+        [2, 0, 0],
+        [2, 1, 0],
+        [2, 0, 1],
+        [2, 1, 1],
+        [2, 0, 2],
+        [2, 1, 2],
+        [2, 0, 3],
+        [2, 1, 3],
+      ];
+      const templateUri = implicitTileset.subtreeUriTemplate;
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      let tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
 
-        expect(expectedCoordinates.length).toEqual(tiles.length);
-        for (let i = 0; i < tiles.length; i++) {
-          const expected = expectedCoordinates[i];
-          const coordinates = new ImplicitTileCoordinates({
-            subdivisionScheme: implicitTileset.subdivisionScheme,
-            subtreeLevels: implicitTileset.subtreeLevels,
-            level: expected[0],
-            x: expected[1],
-            y: expected[2],
-          });
-          const expectedResource = templateUri.getDerivedResource({
-            templateValues: coordinates.getTemplateValues(),
-          });
-          const placeholderTile = tiles[i];
-          expect(placeholderTile._contentResource.url).toEqual(
-            expectedResource.url
-          );
-          expect(placeholderTile.implicitTileset).toBeDefined();
-          expect(placeholderTile.implicitCoordinates).toBeDefined();
-        }
+      expect(expectedCoordinates.length).toEqual(tiles.length);
+      for (let i = 0; i < tiles.length; i++) {
+        const expected = expectedCoordinates[i];
+        const coordinates = new ImplicitTileCoordinates({
+          subdivisionScheme: implicitTileset.subdivisionScheme,
+          subtreeLevels: implicitTileset.subtreeLevels,
+          level: expected[0],
+          x: expected[1],
+          y: expected[2],
+        });
+        const expectedResource = templateUri.getDerivedResource({
+          templateValues: coordinates.getTemplateValues(),
+        });
+        const placeholderTile = tiles[i];
+        expect(placeholderTile._contentResource.url).toEqual(
+          expectedResource.url
+        );
+        expect(placeholderTile.implicitTileset).toBeDefined();
+        expect(placeholderTile.implicitCoordinates).toBeDefined();
+      }
 
-        tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-        expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
-      });
+      tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+      expect(mockTileset.statistics.numberOfTilesTotal).toBe(tiles.length);
     });
 
-    it("propagates refine down the tree", function () {
-      const content = new Implicit3DTileContent(
+    it("propagates refine down the tree", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -549,18 +530,16 @@ describe(
         implicitTileset.refine === "ADD"
           ? Cesium3DTileRefine.ADD
           : Cesium3DTileRefine.REPLACE;
-      return content.readyPromise.then(function () {
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        const tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-        for (let i = 0; i < tiles.length; i++) {
-          expect(tiles[i].refine).toEqual(refine);
-        }
-      });
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+      for (let i = 0; i < tiles.length; i++) {
+        expect(tiles[i].refine).toEqual(refine);
+      }
     });
 
-    it("divides the geometricError by 2 for each level of the tree", function () {
-      const content = new Implicit3DTileContent(
+    it("divides the geometricError by 2 for each level of the tree", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
         mockTileset,
         mockPlaceholderTile,
         tilesetResource,
@@ -569,83 +548,77 @@ describe(
         0
       );
       const rootGeometricError = implicitTileset.geometricError;
-      return content.readyPromise.then(function () {
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        const tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-        for (let i = 0; i < tiles.length; i++) {
-          const level = tiles[i].implicitCoordinates.level;
-          expect(tiles[i].geometricError).toEqual(
-            rootGeometricError / Math.pow(2, level)
-          );
-        }
-      });
-    });
-
-    it("subdivides bounding volumes for each tile", function () {
-      const content = new Implicit3DTileContent(
-        mockTileset,
-        mockPlaceholderTile,
-        tilesetResource,
-        undefined,
-        quadtreeBuffer,
-        0
-      );
-      return content.readyPromise.then(function () {
-        const expectedCoordinates = [
-          [0, 0, 0],
-          [1, 0, 0],
-          [2, 0, 0],
-          [2, 1, 0],
-          [2, 0, 1],
-          [2, 1, 1],
-          [1, 0, 1],
-          [2, 0, 2],
-          [2, 1, 2],
-          [2, 0, 3],
-          [2, 1, 3],
-        ];
-        const rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
-
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        const tiles = [];
-        gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
-
-        expect(expectedCoordinates.length).toEqual(tiles.length);
-        for (let i = 0; i < tiles.length; i++) {
-          const coordinates = expectedCoordinates[i];
-
-          const boundingBox = tiles[i].boundingVolume.boundingVolume;
-          const childBox = new Array(12);
-          Cartesian3.pack(boundingBox.center, childBox);
-          Matrix3.pack(boundingBox.halfAxes, childBox, 3);
-
-          const expectedBounds = Implicit3DTileContent._deriveBoundingBox(
-            rootBoundingVolume,
-            coordinates[0],
-            coordinates[1],
-            coordinates[2]
-          );
-          expect(childBox).toEqual(expectedBounds);
-        }
-      });
-    });
-
-    it("propagates transform", function () {
-      const content = new Implicit3DTileContent(
-        mockTileset,
-        mockPlaceholderTile,
-        tilesetResource,
-        undefined,
-        quadtreeBuffer,
-        0
-      );
-      return content.readyPromise.then(function () {
-        const subtreeRootTile = mockPlaceholderTile.children[0];
-        expect(subtreeRootTile.computedTransform).toEqual(
-          mockPlaceholderTile.transform
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+      for (let i = 0; i < tiles.length; i++) {
+        const level = tiles[i].implicitCoordinates.level;
+        expect(tiles[i].geometricError).toEqual(
+          rootGeometricError / Math.pow(2, level)
         );
-      });
+      }
+    });
+
+    it("subdivides bounding volumes for each tile", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        undefined,
+        quadtreeBuffer,
+        0
+      );
+      const expectedCoordinates = [
+        [0, 0, 0],
+        [1, 0, 0],
+        [2, 0, 0],
+        [2, 1, 0],
+        [2, 0, 1],
+        [2, 1, 1],
+        [1, 0, 1],
+        [2, 0, 2],
+        [2, 1, 2],
+        [2, 0, 3],
+        [2, 1, 3],
+      ];
+      const rootBoundingVolume = [10, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
+
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      const tiles = [];
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
+
+      expect(expectedCoordinates.length).toEqual(tiles.length);
+      for (let i = 0; i < tiles.length; i++) {
+        const coordinates = expectedCoordinates[i];
+
+        const boundingBox = tiles[i].boundingVolume.boundingVolume;
+        const childBox = new Array(12);
+        Cartesian3.pack(boundingBox.center, childBox);
+        Matrix3.pack(boundingBox.halfAxes, childBox, 3);
+
+        const expectedBounds = Implicit3DTileContent._deriveBoundingBox(
+          rootBoundingVolume,
+          coordinates[0],
+          coordinates[1],
+          coordinates[2]
+        );
+        expect(childBox).toEqual(expectedBounds);
+      }
+    });
+
+    it("propagates transform", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        undefined,
+        quadtreeBuffer,
+        0
+      );
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      expect(subtreeRootTile.computedTransform).toEqual(
+        mockPlaceholderTile.transform
+      );
     });
 
     describe("_deriveBoundingVolumeS2", function () {

@@ -167,6 +167,7 @@
 
         // Clear scene and set default view.
         let handler;
+        let loadingTileset = false;
         function resetScene() {
           viewer.trackedEntity = undefined;
           viewer.dataSources.removeAll();
@@ -180,18 +181,26 @@
           viewModel.showTimeOptions = false;
           viewModel.timeChangeEnabled = false;
           viewModel.maximumRenderTimeChange = 0;
+          loadingTileset = false;
         }
 
         // Load a tileset and set the view.
         // No need to call scene.requestRender()
-        function loadTilesetScenario() {
+        async function loadTilesetScenario() {
           resetScene();
 
-          tileset = new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          });
-          viewer.scene.primitives.add(tileset);
-          viewer.zoomTo(tileset);
+          loadingTileset = true;
+          try {
+            tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+            if (!loadingTileset) {
+              // Scenario was changed. Discard result.
+              return;
+            }
+            viewer.scene.primitives.add(tileset);
+            viewer.zoomTo(tileset);
+          } catch (error) {
+            console.log(`Error loading tileset: ${error}`);
+          }
         }
 
         // Load an animated model and set the view.

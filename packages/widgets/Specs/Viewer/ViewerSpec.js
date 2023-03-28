@@ -1240,99 +1240,71 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("zoomTo returns false if Cesium3DTileset fails to load", function () {
-      viewer = createViewer(container);
-      const tileset = new Cesium3DTileset({
-        url: "foo/bar",
-      });
-
-      return tileset.readyPromise
-        .catch(function (e) {
-          expect(e.toString()).toEqual("Request has failed. Status Code: 404");
-        })
-        .then(function () {
-          return viewer.zoomTo(tileset);
-        })
-        .then((result) => {
-          expect(result).toBe(false);
-        });
-    });
-
-    it("zoomTo zooms to Cesium3DTileset with default offset when offset not defined", function () {
+    it("zoomTo zooms to Cesium3DTileset with default offset when offset not defined", async function () {
       viewer = createViewer(container);
 
       const path =
         "./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-      const tileset = new Cesium3DTileset({
-        url: path,
+      const tileset = await Cesium3DTileset.fromUrl(path);
+
+      const expectedBoundingSphere = tileset.boundingSphere;
+      const expectedOffset = new HeadingPitchRange(
+        0.0,
+        -0.5,
+        expectedBoundingSphere.radius
+      );
+
+      let wasCompleted = false;
+      spyOn(viewer.camera, "viewBoundingSphere").and.callFake(function (
+        boundingSphere,
+        offset
+      ) {
+        expect(boundingSphere).toEqual(expectedBoundingSphere);
+        expect(offset).toEqual(expectedOffset);
+        wasCompleted = true;
       });
+      const promise = viewer.zoomTo(tileset);
 
-      // load the tileset then check tests
-      return tileset.readyPromise.then(function () {
-        const expectedBoundingSphere = tileset.boundingSphere;
-        const expectedOffset = new HeadingPitchRange(
-          0.0,
-          -0.5,
-          expectedBoundingSphere.radius
-        );
+      viewer._postRender();
 
-        let wasCompleted = false;
-        spyOn(viewer.camera, "viewBoundingSphere").and.callFake(function (
-          boundingSphere,
-          offset
-        ) {
-          expect(boundingSphere).toEqual(expectedBoundingSphere);
-          expect(offset).toEqual(expectedOffset);
-          wasCompleted = true;
-        });
-        const promise = viewer.zoomTo(tileset);
-
-        viewer._postRender();
-
-        return promise.then(function () {
-          expect(wasCompleted).toEqual(true);
-        });
+      return promise.then(function () {
+        expect(wasCompleted).toEqual(true);
       });
     });
 
-    it("zoomTo zooms to Cesium3DTileset with offset", function () {
+    it("zoomTo zooms to Cesium3DTileset with offset", async function () {
       viewer = createViewer(container);
 
       const path =
         "./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-      const tileset = new Cesium3DTileset({
-        url: path,
+      const tileset = await Cesium3DTileset.fromUrl(path);
+
+      const expectedBoundingSphere = tileset.boundingSphere;
+      const expectedOffset = new HeadingPitchRange(
+        0.4,
+        1.2,
+        4.0 * expectedBoundingSphere.radius
+      );
+
+      const promise = viewer.zoomTo(tileset, expectedOffset);
+      let wasCompleted = false;
+      spyOn(viewer.camera, "viewBoundingSphere").and.callFake(function (
+        boundingSphere,
+        offset
+      ) {
+        expect(boundingSphere).toEqual(expectedBoundingSphere);
+        expect(offset).toEqual(expectedOffset);
+        wasCompleted = true;
       });
 
-      // load the tileset then check tests
-      return tileset.readyPromise.then(function () {
-        const expectedBoundingSphere = tileset.boundingSphere;
-        const expectedOffset = new HeadingPitchRange(
-          0.4,
-          1.2,
-          4.0 * expectedBoundingSphere.radius
-        );
+      viewer._postRender();
 
-        const promise = viewer.zoomTo(tileset, expectedOffset);
-        let wasCompleted = false;
-        spyOn(viewer.camera, "viewBoundingSphere").and.callFake(function (
-          boundingSphere,
-          offset
-        ) {
-          expect(boundingSphere).toEqual(expectedBoundingSphere);
-          expect(offset).toEqual(expectedOffset);
-          wasCompleted = true;
-        });
-
-        viewer._postRender();
-
-        return promise.then(function () {
-          expect(wasCompleted).toEqual(true);
-        });
+      return promise.then(function () {
+        expect(wasCompleted).toEqual(true);
       });
     });
 
-    function loadTimeDynamicPointCloud(viewer) {
+    async function loadTimeDynamicPointCloud(viewer) {
       const scene = viewer.scene;
       const clock = viewer.clock;
 
@@ -1366,12 +1338,12 @@ describe(
 
       scene.primitives.add(pointCloud);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.render();
         return defined(pointCloud.boundingSphere);
-      }).then(function () {
-        return pointCloud.readyPromise;
       });
+
+      return pointCloud;
     }
 
     it("zoomTo zooms to TimeDynamicPointCloud with default offset when offset not defined", function () {
@@ -1434,14 +1406,14 @@ describe(
       });
     });
 
-    function loadVoxelPrimitive(viewer) {
+    async function loadVoxelPrimitive(viewer) {
       const voxelPrimitive = new VoxelPrimitive({
-        provider: new Cesium3DTilesVoxelProvider({
-          url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-        }),
+        provider: await Cesium3DTilesVoxelProvider.fromUrl(
+          "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+        ),
       });
       viewer.scene.primitives.add(voxelPrimitive);
-      return voxelPrimitive.readyPromise;
+      return voxelPrimitive;
     }
 
     it("zoomTo zooms to VoxelPrimitive with default offset when offset not defined", function () {
@@ -1587,110 +1559,95 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("flyTo flies to Cesium3DTileset with default offset when options not defined", function () {
+    it("flyTo flies to Cesium3DTileset with default offset when options not defined", async function () {
       viewer = createViewer(container);
 
       const path =
         "./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-      const tileset = new Cesium3DTileset({
-        url: path,
+      const tileset = await Cesium3DTileset.fromUrl(path);
+
+      const promise = viewer.flyTo(tileset);
+      let wasCompleted = false;
+
+      spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+        target,
+        options
+      ) {
+        expect(options.offset).toBeDefined();
+        expect(options.duration).toBeUndefined();
+        expect(options.maximumHeight).toBeUndefined();
+        wasCompleted = true;
+        options.complete();
       });
 
-      // load tileset to test
-      return tileset.readyPromise.then(function () {
-        const promise = viewer.flyTo(tileset);
-        let wasCompleted = false;
+      viewer._postRender();
 
-        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.offset).toBeDefined();
-          expect(options.duration).toBeUndefined();
-          expect(options.maximumHeight).toBeUndefined();
-          wasCompleted = true;
-          options.complete();
-        });
-
-        viewer._postRender();
-
-        return promise.then(function () {
-          expect(wasCompleted).toEqual(true);
-        });
+      return promise.then(function () {
+        expect(wasCompleted).toEqual(true);
       });
     });
 
-    it("flyTo flies to Cesium3DTileset with default offset when offset not defined", function () {
+    it("flyTo flies to Cesium3DTileset with default offset when offset not defined", async function () {
       viewer = createViewer(container);
 
       const path =
         "./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-      const tileset = new Cesium3DTileset({
-        url: path,
-      });
+      const tileset = await Cesium3DTileset.fromUrl(path);
 
       const options = {};
 
-      // load tileset to test
-      return tileset.readyPromise.then(function () {
-        const promise = viewer.flyTo(tileset, options);
-        let wasCompleted = false;
+      const promise = viewer.flyTo(tileset, options);
+      let wasCompleted = false;
 
-        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.offset).toBeDefined();
-          expect(options.duration).toBeUndefined();
-          expect(options.maximumHeight).toBeUndefined();
-          wasCompleted = true;
-          options.complete();
-        });
+      spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+        target,
+        options
+      ) {
+        expect(options.offset).toBeDefined();
+        expect(options.duration).toBeUndefined();
+        expect(options.maximumHeight).toBeUndefined();
+        wasCompleted = true;
+        options.complete();
+      });
 
-        viewer._postRender();
+      viewer._postRender();
 
-        return promise.then(function () {
-          expect(wasCompleted).toEqual(true);
-        });
+      return promise.then(function () {
+        expect(wasCompleted).toEqual(true);
       });
     });
 
-    it("flyTo flies to Cesium3DTileset when options are defined", function () {
+    it("flyTo flies to Cesium3DTileset when options are defined", async function () {
       viewer = createViewer(container);
 
       const path =
         "./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-      const tileset = new Cesium3DTileset({
-        url: path,
+      const tileset = await Cesium3DTileset.fromUrl(path);
+
+      const offsetVal = new HeadingPitchRange(3.0, 0.2, 2.3);
+      const options = {
+        offset: offsetVal,
+        duration: 3.0,
+        maximumHeight: 5.0,
+      };
+
+      const promise = viewer.flyTo(tileset, options);
+      let wasCompleted = false;
+
+      spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
+        target,
+        options
+      ) {
+        expect(options.duration).toBeDefined();
+        expect(options.maximumHeight).toBeDefined();
+        wasCompleted = true;
+        options.complete();
       });
 
-      // load tileset to test
-      return tileset.readyPromise.then(function () {
-        const offsetVal = new HeadingPitchRange(3.0, 0.2, 2.3);
-        const options = {
-          offset: offsetVal,
-          duration: 3.0,
-          maximumHeight: 5.0,
-        };
+      viewer._postRender();
 
-        const promise = viewer.flyTo(tileset, options);
-        let wasCompleted = false;
-
-        spyOn(viewer.camera, "flyToBoundingSphere").and.callFake(function (
-          target,
-          options
-        ) {
-          expect(options.duration).toBeDefined();
-          expect(options.maximumHeight).toBeDefined();
-          wasCompleted = true;
-          options.complete();
-        });
-
-        viewer._postRender();
-
-        return promise.then(function () {
-          expect(wasCompleted).toEqual(true);
-        });
+      return promise.then(function () {
+        expect(wasCompleted).toEqual(true);
       });
     });
 

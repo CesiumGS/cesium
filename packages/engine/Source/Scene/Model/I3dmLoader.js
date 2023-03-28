@@ -116,9 +116,6 @@ function I3dmLoader(options) {
   this._promise = undefined;
 
   this._gltfLoader = undefined;
-  this._gltfLoaderPromise = undefined;
-  this._process = function (loader, frameState) {};
-  this._postProcess = function (loader, frameState) {};
 
   // Instanced attributes are initially parsed as typed arrays, but if they
   // do not need to be further processed (e.g. turned into transform matrices),
@@ -140,34 +137,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(I3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
+   * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
-   * @memberof I3dmLoader.prototype
+   * @memberof  I3dmLoader.prototype
    *
-   * @type {Promise<I3dmLoader>|undefined}
+   * @type {boolean}
    * @readonly
    * @private
    */
-  promise: {
+  texturesLoaded: {
     get: function () {
-      return this._promise;
-    },
-  },
-
-  /**
-   * A promise that resolves when all textures are loaded.
-   * When <code>incrementallyLoadTextures</code> is true this may resolve after
-   * <code>promise</code> resolves.
-   *
-   * @memberof I3dmLoader.prototype
-   *
-   * @type {Promise}
-   * @readonly
-   * @private
-   */
-  texturesLoadedPromise: {
-    get: function () {
-      return this._gltfLoader.texturesLoadedPromise;
+      return this._gltfLoader?.texturesLoaded;
     },
   },
   /**
@@ -208,6 +188,10 @@ Object.defineProperties(I3dmLoader.prototype, {
  * @private
  */
 I3dmLoader.prototype.load = function () {
+  if (defined(this._promise)) {
+    return this._promise;
+  }
+
   // Parse the i3dm into its various sections.
   const i3dm = I3dmParser.parse(this._arrayBuffer, this._byteOffset);
 
@@ -282,53 +266,21 @@ I3dmLoader.prototype.load = function () {
   this._gltfLoader = gltfLoader;
   this._state = I3dmLoaderState.LOADING;
 
-  gltfLoader.load();
-
-  const that = this;
-  const processPromise = new Promise(function (resolve) {
-    that._process = function (loader, frameState) {
-      loader._gltfLoader.process(frameState);
-    };
-
-    that._postProcess = function (loader, frameState) {
-      const gltfLoader = loader._gltfLoader;
-      const components = gltfLoader.components;
-
-      // Combine the RTC_CENTER transform from the i3dm and the CESIUM_RTC
-      // transform from the glTF. In practice CESIUM_RTC is not set for
-      // instanced models but multiply the transforms just in case.
-      components.transform = Matrix4.multiplyTransformation(
-        loader._transform,
-        components.transform,
-        components.transform
-      );
-
-      createInstances(loader, components, frameState);
-      createStructuralMetadata(loader, components);
-      loader._components = components;
-
-      // Now that we have the parsed components, we can release the array buffer
-      loader._arrayBuffer = undefined;
-
-      loader._state = I3dmLoaderState.READY;
-      resolve(loader);
-    };
-  });
-
-  this._promise = gltfLoader.promise
-    .then(function () {
-      if (that.isDestroyed()) {
+  this._promise = gltfLoader
+    .load()
+    .then(() => {
+      if (this.isDestroyed()) {
         return;
       }
-      that._state = I3dmLoaderState.POST_PROCESSING;
 
-      return processPromise;
+      this._state = I3dmLoaderState.PROCESSING;
+      return this;
     })
-    .catch(function (error) {
-      if (that.isDestroyed()) {
+    .catch((error) => {
+      if (this.isDestroyed()) {
         return;
       }
-      return handleError(that, error);
+      throw handleError(this, error);
     });
 
   return this._promise;
@@ -338,8 +290,7 @@ function handleError(i3dmLoader, error) {
   i3dmLoader.unload();
   i3dmLoader._state = I3dmLoaderState.FAILED;
   const errorMessage = "Failed to load i3dm";
-  error = i3dmLoader.getError(errorMessage, error);
-  return Promise.reject(error);
+  return i3dmLoader.getError(errorMessage, error);
 }
 
 I3dmLoader.prototype.process = function (frameState) {
@@ -347,17 +298,40 @@ I3dmLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
-  if (this._state === I3dmLoaderState.LOADING) {
-    this._state = I3dmLoaderState.PROCESSING;
+  if (this._state === I3dmLoaderState.READY) {
+    return true;
   }
 
+  const gltfLoader = this._gltfLoader;
+  let ready = false;
   if (this._state === I3dmLoaderState.PROCESSING) {
-    this._process(this, frameState);
+    ready = gltfLoader.process(frameState);
   }
 
-  if (this._state === I3dmLoaderState.POST_PROCESSING) {
-    this._postProcess(this, frameState);
+  if (!ready) {
+    return false;
   }
+
+  const components = gltfLoader.components;
+
+  // Combine the RTC_CENTER transform from the i3dm and the CESIUM_RTC
+  // transform from the glTF. In practice CESIUM_RTC is not set for
+  // instanced models but multiply the transforms just in case.
+  components.transform = Matrix4.multiplyTransformation(
+    this._transform,
+    components.transform,
+    components.transform
+  );
+
+  createInstances(this, components, frameState);
+  createStructuralMetadata(this, components);
+  this._components = components;
+
+  // Now that we have the parsed components, we can release the array buffer
+  this._arrayBuffer = undefined;
+
+  this._state = I3dmLoaderState.READY;
+  return true;
 };
 
 function createStructuralMetadata(loader, components) {
@@ -895,7 +869,7 @@ I3dmLoader.prototype.isUnloaded = function () {
 };
 
 I3dmLoader.prototype.unload = function () {
-  if (defined(this._gltfLoader)) {
+  if (defined(this._gltfLoader) && !this._gltfLoader.isDestroyed()) {
     this._gltfLoader.unload();
   }
 

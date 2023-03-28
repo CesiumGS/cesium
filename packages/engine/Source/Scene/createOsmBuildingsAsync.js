@@ -1,9 +1,6 @@
 import Color from "../Core/Color.js";
-import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import IonResource from "../Core/IonResource.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
@@ -25,41 +22,45 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * @param {boolean} [options.enableShowOutline=true] If true, enable rendering outlines. This can be set to false to avoid the additional processing of geometry at load time.
  * @param {boolean} [options.showOutline=true] Whether to show outlines around buildings. When true,
  *        outlines are displayed. When false, outlines are not displayed.
- * @returns {Cesium3DTileset}
+ * @returns {Promise<Cesium3DTileset>}
  *
  * @see Ion
  *
  * @example
  * // Create Cesium OSM Buildings with default styling
- * const viewer = new Cesium.Viewer('cesiumContainer');
- * viewer.scene.primitives.add(Cesium.createOsmBuildings());
+ * const viewer = new Cesium.Viewer("cesiumContainer");
+ * try {
+ *   const tileset = await Cesium.createOsmBuildingsAsync();
+ *   viewer.scene.primitives.add(tileset));
+ * } catch (error) {
+ *   console.log(`Error creating tileset: ${error}`);
+ * }
  *
  * @example
  * // Create Cesium OSM Buildings with a custom style highlighting
  * // schools and hospitals.
- * viewer.scene.primitives.add(Cesium.createOsmBuildings({
- *   style: new Cesium.Cesium3DTileStyle({
- *     color: {
- *       conditions: [
- *         ["${feature['building']} === 'hospital'", "color('#0000FF')"],
- *         ["${feature['building']} === 'school'", "color('#00FF00')"],
- *         [true, "color('#ffffff')"]
- *       ]
- *     }
- *   })
- * }));
+ * const viewer = new Cesium.Viewer("cesiumContainer");
+ * try {
+ *   const tileset = await Cesium.createOsmBuildingsAsync({
+ *     style: new Cesium.Cesium3DTileStyle({
+ *       color: {
+ *         conditions: [
+ *           ["${feature['building']} === 'hospital'", "color('#0000FF')"],
+ *           ["${feature['building']} === 'school'", "color('#00FF00')"],
+ *           [true, "color('#ffffff')"]
+ *         ]
+ *       }
+ *     })
+ *   });
+ *   viewer.scene.primitives.add(tileset));
+ * } catch (error) {
+ *   console.log(`Error creating tileset: ${error}`);
+ * }
  */
-function createOsmBuildings(options) {
-  deprecationWarning(
-    "createOsmBuildings",
-    "createOsmBuildings was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createOsmBuildingsAsync instead."
-  );
+async function createOsmBuildingsAsync(options) {
+  const tileset = await Cesium3DTileset.fromIonAssetId(96188, options);
 
-  options = combine(options, {
-    url: IonResource.fromAssetId(96188),
-  });
-
-  const tileset = new Cesium3DTileset(options);
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   let style = options.style;
 
@@ -78,4 +79,4 @@ function createOsmBuildings(options) {
   return tileset;
 }
 
-export default createOsmBuildings;
+export default createOsmBuildingsAsync;

@@ -13,7 +13,7 @@ import {
   ResourceCache,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
-import loadAndZoomToModel from "./loadAndZoomToModel.js";
+import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe(
   "Scene/Model/ModelSceneGraph",
@@ -45,7 +45,7 @@ describe(
     });
 
     it("creates runtime nodes and runtime primitives from a model", function () {
-      return loadAndZoomToModel({ gltf: vertexColorGltfUrl }, scene).then(
+      return loadAndZoomToModelAsync({ gltf: vertexColorGltfUrl }, scene).then(
         function (model) {
           const sceneGraph = model._sceneGraph;
           const components = sceneGraph._components;
@@ -68,7 +68,7 @@ describe(
         },
       });
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: buildingsMetadata,
         },
@@ -95,7 +95,7 @@ describe(
           conditions: [["${height} > 1", "color('red', 0.1)"]],
         },
       });
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: buildingsMetadata,
         },
@@ -126,7 +126,7 @@ describe(
         },
       });
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: buildingsMetadata,
         },
@@ -151,54 +151,56 @@ describe(
     it("builds draw commands for each primitive", function () {
       spyOn(ModelSceneGraph.prototype, "buildDrawCommands").and.callThrough();
       spyOn(ModelSceneGraph.prototype, "pushDrawCommands").and.callThrough();
-      return loadAndZoomToModel({ gltf: parentGltfUrl }, scene).then(function (
-        model
-      ) {
-        const sceneGraph = model._sceneGraph;
-        const runtimeNodes = sceneGraph._runtimeNodes;
+      return loadAndZoomToModelAsync({ gltf: parentGltfUrl }, scene).then(
+        function (model) {
+          const sceneGraph = model._sceneGraph;
+          const runtimeNodes = sceneGraph._runtimeNodes;
 
-        let primitivesCount = 0;
-        for (let i = 0; i < runtimeNodes.length; i++) {
-          primitivesCount += runtimeNodes[i].runtimePrimitives.length;
+          let primitivesCount = 0;
+          for (let i = 0; i < runtimeNodes.length; i++) {
+            primitivesCount += runtimeNodes[i].runtimePrimitives.length;
+          }
+
+          const frameState = scene.frameState;
+          frameState.commandList.length = 0;
+          scene.renderForSpecs();
+          expect(
+            ModelSceneGraph.prototype.buildDrawCommands
+          ).toHaveBeenCalled();
+          expect(ModelSceneGraph.prototype.pushDrawCommands).toHaveBeenCalled();
+          expect(frameState.commandList.length).toEqual(primitivesCount);
+
+          // Reset the draw command list to see if they're re-built.
+          model._drawCommandsBuilt = false;
+          frameState.commandList.length = 0;
+          scene.renderForSpecs();
+          expect(
+            ModelSceneGraph.prototype.buildDrawCommands
+          ).toHaveBeenCalled();
+          expect(ModelSceneGraph.prototype.pushDrawCommands).toHaveBeenCalled();
+          expect(frameState.commandList.length).toEqual(primitivesCount);
         }
-
-        const frameState = scene.frameState;
-        frameState.commandList.length = 0;
-        scene.renderForSpecs();
-        expect(ModelSceneGraph.prototype.buildDrawCommands).toHaveBeenCalled();
-        expect(ModelSceneGraph.prototype.pushDrawCommands).toHaveBeenCalled();
-        expect(frameState.commandList.length).toEqual(primitivesCount);
-
-        expect(model._drawCommandsBuilt).toEqual(true);
-
-        // Reset the draw command list to see if they're re-built.
-        model._drawCommandsBuilt = false;
-        frameState.commandList.length = 0;
-        scene.renderForSpecs();
-        expect(ModelSceneGraph.prototype.buildDrawCommands).toHaveBeenCalled();
-        expect(ModelSceneGraph.prototype.pushDrawCommands).toHaveBeenCalled();
-        expect(frameState.commandList.length).toEqual(primitivesCount);
-      });
+      );
     });
 
     it("stores runtime nodes correctly", function () {
-      return loadAndZoomToModel({ gltf: parentGltfUrl }, scene).then(function (
-        model
-      ) {
-        const sceneGraph = model._sceneGraph;
-        const components = sceneGraph._components;
-        const runtimeNodes = sceneGraph._runtimeNodes;
+      return loadAndZoomToModelAsync({ gltf: parentGltfUrl }, scene).then(
+        function (model) {
+          const sceneGraph = model._sceneGraph;
+          const components = sceneGraph._components;
+          const runtimeNodes = sceneGraph._runtimeNodes;
 
-        expect(runtimeNodes[0].node).toEqual(components.nodes[0]);
-        expect(runtimeNodes[1].node).toEqual(components.nodes[1]);
+          expect(runtimeNodes[0].node).toEqual(components.nodes[0]);
+          expect(runtimeNodes[1].node).toEqual(components.nodes[1]);
 
-        const rootNodes = sceneGraph._rootNodes;
-        expect(rootNodes[0]).toEqual(0);
-      });
+          const rootNodes = sceneGraph._rootNodes;
+          expect(rootNodes[0]).toEqual(0);
+        }
+      );
     });
 
     it("propagates node transforms correctly", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: parentGltfUrl,
           upAxis: Axis.Z,
@@ -227,7 +229,7 @@ describe(
     });
 
     it("creates runtime skin from model", function () {
-      return loadAndZoomToModel({ gltf: simpleSkinGltfUrl }, scene).then(
+      return loadAndZoomToModelAsync({ gltf: simpleSkinGltfUrl }, scene).then(
         function (model) {
           const sceneGraph = model._sceneGraph;
           const components = sceneGraph._components;
@@ -258,7 +260,7 @@ describe(
     });
 
     it("creates articulation from model", function () {
-      return loadAndZoomToModel({ gltf: boxArticulationsUrl }, scene).then(
+      return loadAndZoomToModelAsync({ gltf: boxArticulationsUrl }, scene).then(
         function (model) {
           const sceneGraph = model._sceneGraph;
           const components = sceneGraph._components;
@@ -281,7 +283,7 @@ describe(
     });
 
     it("applies articulations", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxArticulationsUrl,
         },
@@ -326,7 +328,7 @@ describe(
 
     it("adds ModelColorPipelineStage when color is set on the model", function () {
       spyOn(ModelColorPipelineStage, "process");
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           color: Color.RED,
           gltf: parentGltfUrl,
@@ -339,7 +341,7 @@ describe(
 
     it("adds CustomShaderPipelineStage when customShader is set on the model", function () {
       spyOn(CustomShaderPipelineStage, "process");
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: buildingsMetadata,
         },
@@ -352,7 +354,7 @@ describe(
     });
 
     it("pushDrawCommands ignores hidden nodes", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: duckUrl,
         },

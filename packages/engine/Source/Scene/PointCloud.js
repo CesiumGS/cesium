@@ -156,9 +156,8 @@ function PointCloud(options) {
   );
   this._splittingEnabled = false;
 
-  this._resolveReadyPromise = undefined;
-  this._rejectReadyPromise = undefined;
-  this._readyPromise = initialize(this, options);
+  this._error = undefined;
+  initialize(this, options);
 }
 
 Object.defineProperties(PointCloud.prototype, {
@@ -177,12 +176,6 @@ Object.defineProperties(PointCloud.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 
@@ -283,14 +276,6 @@ function initialize(pointCloud, options) {
   }
 
   pointCloud._pointsLength = parsedContent.pointsLength;
-
-  return new Promise(function (resolve, reject) {
-    pointCloud._resolveReadyPromise = function () {
-      pointCloud._ready = true;
-      resolve(pointCloud);
-    };
-    pointCloud._rejectReadyPromise = reject;
-  });
 }
 
 const scratchMin = new Cartesian3();
@@ -1280,7 +1265,7 @@ function decodeDraco(pointCloud, context) {
         })
         .catch(function (error) {
           pointCloud._decodingState = DecodingState.FAILED;
-          pointCloud._rejectReadyPromise(error);
+          pointCloud._error = error;
         });
     }
   }
@@ -1292,6 +1277,13 @@ const scratchScale = new Cartesian3();
 
 PointCloud.prototype.update = function (frameState) {
   const context = frameState.context;
+
+  if (defined(this._error)) {
+    const error = this._error;
+    this._error = undefined;
+    throw error;
+  }
+
   const decoding = decodeDraco(this, context);
   if (decoding) {
     return;
@@ -1309,7 +1301,7 @@ PointCloud.prototype.update = function (frameState) {
     createResources(this, frameState);
     modelMatrixDirty = true;
     shadersDirty = true;
-    this._resolveReadyPromise();
+    this._ready = true;
     this._parsedContent = undefined; // Unload
   }
 

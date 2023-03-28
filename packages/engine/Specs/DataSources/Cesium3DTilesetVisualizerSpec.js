@@ -6,6 +6,7 @@ import {
   Matrix4,
   Resource,
   BoundingSphereState,
+  Cesium3DTileset,
   ConstantPositionProperty,
   ConstantProperty,
   EntityCollection,
@@ -35,22 +36,10 @@ describe(
       scene.destroyForSpecs();
     });
 
-    function allPrimitivesReady() {
-      const promises = [];
-      for (let i = 0; i < scene.primitives.length; ++i) {
-        promises.push(scene.primitives.get(i).readyPromise);
-      }
-      return Promise.all(promises).catch(function (e) {
-        // 404 errors
-      });
-    }
-
     afterEach(function () {
-      return allPrimitivesReady().then(function () {
-        if (defined(visualizer)) {
-          visualizer = visualizer.destroy();
-        }
-      });
+      if (defined(visualizer)) {
+        visualizer = visualizer.destroy();
+      }
     });
 
     it("constructor throws if no scene is passed.", function () {
@@ -85,7 +74,7 @@ describe(
       visualizer = undefined;
     });
 
-    it("object with no model does not create one.", function () {
+    it("object with no tileset does not create one.", function () {
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
@@ -97,7 +86,7 @@ describe(
       expect(scene.primitives.length).toEqual(0);
     });
 
-    it("object with no position does not set modelMatrix.", function () {
+    it("object with no position does not set modelMatrix.", async function () {
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
@@ -107,11 +96,15 @@ describe(
 
       visualizer.update(JulianDate.now());
 
+      await pollToPromise(function () {
+        return defined(scene.primitives.get(0));
+      });
+
       const tilesetPrimitive = scene.primitives.get(0);
       expect(tilesetPrimitive.modelMatrix).toEqual(Matrix4.IDENTITY);
     });
 
-    it("A Cesium3DTilesetGraphics causes a primitive to be created and updated.", function () {
+    it("A Cesium3DTilesetGraphics causes a primitive to be created and updated.", async function () {
       const time = JulianDate.now();
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
@@ -129,7 +122,12 @@ describe(
 
       visualizer.update(time);
 
+      await pollToPromise(function () {
+        return defined(scene.primitives.get(0));
+      });
+
       expect(scene.primitives.length).toEqual(1);
+      expect(scene.primitives.get(0)).toBeInstanceOf(Cesium3DTileset);
 
       const primitive = scene.primitives.get(0);
       visualizer.update(time);
@@ -137,7 +135,7 @@ describe(
       expect(primitive.maximumScreenSpaceError).toEqual(24.0);
     });
 
-    it("A Cesium3DTilesetGraphics with a Resource causes a primitive to be created.", function () {
+    it("A Cesium3DTilesetGraphics with a Resource causes a primitive to be created.", async function () {
       const time = JulianDate.now();
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
@@ -158,33 +156,39 @@ describe(
 
       visualizer.update(time);
 
-      expect(scene.primitives.length).toEqual(1);
-    });
-
-    it("removing removes primitives.", function () {
-      const entityCollection = new EntityCollection();
-      visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
-
-      const tileset = new Cesium3DTilesetGraphics();
-      tileset.uri = new ConstantProperty(tilesetUrl);
-
-      const time = JulianDate.now();
-      const testObject = entityCollection.getOrCreateEntity("test");
-      testObject.position = new ConstantProperty(
-        new Cartesian3(5678, 1234, 1101112)
-      );
-      testObject.tileset = tileset;
-      visualizer.update(time);
-      return allPrimitivesReady().then(function () {
-        expect(scene.primitives.length).toEqual(1);
-        visualizer.update(time);
-        entityCollection.removeAll();
-        visualizer.update(time);
-        expect(scene.primitives.length).toEqual(0);
+      await pollToPromise(function () {
+        return defined(scene.primitives.get(0));
       });
+
+      expect(scene.primitives.length).toEqual(1);
+      expect(scene.primitives.get(0)).toBeInstanceOf(Cesium3DTileset);
     });
 
-    it("Visualizer sets id property.", function () {
+    it("removing removes primitives.", async function () {
+      const entityCollection = new EntityCollection();
+      visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
+
+      const tileset = new Cesium3DTilesetGraphics();
+      tileset.uri = new ConstantProperty(tilesetUrl);
+
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.position = new ConstantProperty(
+        new Cartesian3(5678, 1234, 1101112)
+      );
+      testObject.tileset = tileset;
+      visualizer.update(time);
+      await pollToPromise(function () {
+        return defined(scene.primitives.get(0));
+      });
+      expect(scene.primitives.length).toEqual(1);
+      visualizer.update(time);
+      entityCollection.removeAll();
+      visualizer.update(time);
+      expect(scene.primitives.length).toEqual(0);
+    });
+
+    it("Visualizer sets id property.", async function () {
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
@@ -198,12 +202,16 @@ describe(
       );
       tileset.uri = new ConstantProperty(tilesetUrl);
       visualizer.update(time);
+
+      await pollToPromise(function () {
+        return defined(scene.primitives.get(0));
+      });
 
       const tilesetPrimitive = scene.primitives.get(0);
       expect(tilesetPrimitive.id).toEqual(testObject);
     });
 
-    it("Computes bounding sphere.", function () {
+    it("Computes bounding sphere.", async function () {
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
@@ -218,19 +226,18 @@ describe(
       tileset.uri = new ConstantProperty(tilesetUrl);
       visualizer.update(time);
 
-      const tilesetPrimitive = scene.primitives.get(0);
       const result = new BoundingSphere();
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
 
-      return pollToPromise(function () {
-        scene.render();
+      await pollToPromise(function () {
         state = visualizer.getBoundingSphere(testObject, result);
         return state !== BoundingSphereState.PENDING;
-      }).then(function () {
-        expect(state).toBe(BoundingSphereState.DONE);
-        expect(result).toEqual(tilesetPrimitive.boundingSphere);
       });
+
+      const tilesetPrimitive = scene.primitives.get(0);
+      expect(state).toBe(BoundingSphereState.DONE);
+      expect(result).toEqual(tilesetPrimitive.boundingSphere);
     });
 
     it("Fails bounding sphere for entity without tileset.", function () {
@@ -243,7 +250,7 @@ describe(
       expect(state).toBe(BoundingSphereState.FAILED);
     });
 
-    it("Fails bounding sphere when model fails to load.", function () {
+    it("Fails bounding sphere when tileset fails to load.", async function () {
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
 
@@ -261,14 +268,14 @@ describe(
       const result = new BoundingSphere();
       let state = visualizer.getBoundingSphere(testObject, result);
       expect(state).toBe(BoundingSphereState.PENDING);
-      return allPrimitivesReady()
-        .catch(function (e) {
-          // 404 error
-        })
-        .finally(function () {
-          state = visualizer.getBoundingSphere(testObject, result);
-          expect(state).toBe(BoundingSphereState.FAILED);
-        });
+
+      await pollToPromise(function () {
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      });
+
+      state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.FAILED);
     });
 
     it("Compute bounding sphere throws without entity.", function () {

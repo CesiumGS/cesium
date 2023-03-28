@@ -11,58 +11,20 @@ import MetadataTable from "./MetadataTable.js";
  * @constructor
  *
  * @param {Resource} resource The resource for this voxel content. This is used for fetching external buffers as needed.
- * @param {object} [json] Voxel JSON contents. Mutually exclusive with binary.
- * @param {Uint8Array} [binary] Voxel binary contents. Mutually exclusive with json.
- * @param {MetadataSchema} metadataSchema The metadata schema used by property tables in the voxel content
- *
- * @exception {DeveloperError} One of json and binary must be defined.
  *
  * @private
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function VoxelContent(resource, json, binary, metadataSchema) {
+function VoxelContent(resource) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("resource", resource);
-  if (defined(json) === defined(binary)) {
-    throw new DeveloperError("One of json and binary must be defined.");
-  }
   //>>includeEnd('debug');
 
   this._resource = resource;
   this._metadataTable = undefined;
-
-  let chunks;
-  if (defined(json)) {
-    chunks = {
-      json: json,
-      binary: undefined,
-    };
-  } else {
-    chunks = parseVoxelChunks(binary);
-  }
-
-  this._readyPromise = initialize(
-    this,
-    chunks.json,
-    chunks.binary,
-    metadataSchema
-  );
 }
 
 Object.defineProperties(VoxelContent.prototype, {
-  /**
-   * A promise that resolves once all buffers are loaded.
-   *
-   * @type {Promise}
-   * @readonly
-   * @private
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
-    },
-  },
-
   /**
    * The {@link MetadataTable} storing voxel property values.
    *
@@ -77,38 +39,74 @@ Object.defineProperties(VoxelContent.prototype, {
   },
 });
 
-function initialize(content, json, binary, metadataSchema) {
-  return requestBuffers(content, json, binary).then(function (buffersU8) {
-    const bufferViewsU8 = {};
-    const bufferViewsLength = json.bufferViews.length;
-    for (let i = 0; i < bufferViewsLength; ++i) {
-      const bufferViewJson = json.bufferViews[i];
-      const start = bufferViewJson.byteOffset;
-      const end = start + bufferViewJson.byteLength;
-      const buffer = buffersU8[bufferViewJson.buffer];
-      const bufferView = buffer.subarray(start, end);
-      bufferViewsU8[i] = bufferView;
-    }
+/**
+ * Creates an object representing voxel content for a {@link Cesium3DTilesVoxelProvider}.
+ *
+ * @param {Resource} resource The resource for this voxel content. This is used for fetching external buffers as needed.
+ * @param {object} [json] Voxel JSON contents. Mutually exclusive with binary.
+ * @param {Uint8Array} [binary] Voxel binary contents. Mutually exclusive with json.
+ * @param {MetadataSchema} metadataSchema The metadata schema used by property tables in the voxel content
+ * @returns {Promise<VoxelContent>}
+ *
+ * @exception {DeveloperError} One of json and binary must be defined.
+ */
+VoxelContent.fromJson = async function (
+  resource,
+  json,
+  binary,
+  metadataSchema
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("resource", resource);
+  if (defined(json) === defined(binary)) {
+    throw new DeveloperError("One of json and binary must be defined.");
+  }
+  //>>includeEnd('debug');
 
-    const propertyTableIndex = json.voxelTable;
-    const propertyTableJson = json.propertyTables[propertyTableIndex];
-    content._metadataTable = new MetadataTable({
-      count: propertyTableJson.count,
-      properties: propertyTableJson.properties,
-      class: metadataSchema.classes[propertyTableJson.class],
-      bufferViews: bufferViewsU8,
-    });
-    return content;
+  let chunks;
+  if (defined(json)) {
+    chunks = {
+      json: json,
+      binary: undefined,
+    };
+  } else {
+    chunks = parseVoxelChunks(binary);
+  }
+
+  const buffersU8 = await requestBuffers(resource, chunks.json, chunks.binary);
+  const bufferViewsU8 = {};
+  const bufferViewsLength = chunks.json.bufferViews.length;
+  for (let i = 0; i < bufferViewsLength; ++i) {
+    const bufferViewJson = chunks.json.bufferViews[i];
+    const start = bufferViewJson.byteOffset;
+    const end = start + bufferViewJson.byteLength;
+    const buffer = buffersU8[bufferViewJson.buffer];
+    const bufferView = buffer.subarray(start, end);
+    bufferViewsU8[i] = bufferView;
+  }
+
+  const propertyTableIndex = chunks.json.voxelTable;
+  const propertyTableJson = chunks.json.propertyTables[propertyTableIndex];
+
+  const content = new VoxelContent(resource);
+
+  content._metadataTable = new MetadataTable({
+    count: propertyTableJson.count,
+    properties: propertyTableJson.properties,
+    class: metadataSchema.classes[propertyTableJson.class],
+    bufferViews: bufferViewsU8,
   });
-}
 
-function requestBuffers(content, json, binary) {
+  return content;
+};
+
+function requestBuffers(resource, json, binary) {
   const buffersLength = json.buffers.length;
   const bufferPromises = new Array(buffersLength);
   for (let i = 0; i < buffersLength; i++) {
     const buffer = json.buffers[i];
     if (defined(buffer.uri)) {
-      const baseResource = content._resource;
+      const baseResource = resource;
       const bufferResource = baseResource.getDerivedResource({
         url: buffer.uri,
       });

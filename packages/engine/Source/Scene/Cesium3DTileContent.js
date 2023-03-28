@@ -146,12 +146,28 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Cesium3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   */
+  ready: {
+    // eslint-disable-next-line getter-return
+    get: function () {
+      DeveloperError.throwInstantiationError();
+    },
+  },
+
+  /**
    * Gets the promise that will be resolved when the tile's content is ready to render.
    *
    * @memberof Cesium3DTileContent.prototype
    *
    * @type {Promise<Cesium3DTileContent>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     // eslint-disable-next-line getter-return

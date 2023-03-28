@@ -71,8 +71,8 @@ function Vector3DTileGeometry(options) {
   this._packedBuffer = undefined;
 
   this._ready = false;
-  this._update = function (geometries, frameState) {};
-  this._readyPromise = initialize(this);
+  this._promise = undefined;
+  this._error = undefined;
 
   this._verticesPromise = undefined;
 
@@ -108,6 +108,7 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   trianglesLength: {
     get: function () {
@@ -125,6 +126,7 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   geometryByteLength: {
     get: function () {
@@ -136,14 +138,15 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
   },
 
   /**
-   * Gets a promise that resolves when the primitive is ready to render.
+   * Return true when the primitive is ready to render.
    * @memberof Vector3DTileGeometry.prototype
-   * @type {Promise<void>}
+   * @type {boolean}
    * @readonly
+   * @private
    */
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 });
@@ -308,31 +311,45 @@ function createPrimitive(geometries) {
       return;
     }
 
-    return verticesPromise.then(function (result) {
-      const packedBuffer = new Float64Array(result.packedBuffer);
-      const indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
+    return verticesPromise
+      .then(function (result) {
+        if (geometries.isDestroyed()) {
+          return;
+        }
 
-      if (indicesBytesPerElement === 2) {
-        geometries._indices = new Uint16Array(result.indices);
-      } else {
-        geometries._indices = new Uint32Array(result.indices);
-      }
+        const packedBuffer = new Float64Array(result.packedBuffer);
+        const indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
 
-      geometries._indexOffsets = new Uint32Array(result.indexOffsets);
-      geometries._indexCounts = new Uint32Array(result.indexCounts);
+        if (indicesBytesPerElement === 2) {
+          geometries._indices = new Uint16Array(result.indices);
+        } else {
+          geometries._indices = new Uint32Array(result.indices);
+        }
 
-      geometries._positions = new Float32Array(result.positions);
-      geometries._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
+        geometries._indexOffsets = new Uint32Array(result.indexOffsets);
+        geometries._indexCounts = new Uint32Array(result.indexCounts);
 
-      geometries._batchIds = new Uint16Array(result.batchIds);
+        geometries._positions = new Float32Array(result.positions);
+        geometries._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
 
-      geometries._ready = true;
-    });
+        geometries._batchIds = new Uint16Array(result.batchIds);
+
+        finishPrimitive(geometries);
+
+        geometries._ready = true;
+      })
+      .catch((error) => {
+        if (geometries.isDestroyed()) {
+          return;
+        }
+
+        geometries._error = error;
+      });
   }
 }
 
 function finishPrimitive(geometries) {
-  if (geometries._ready && !defined(geometries._primitive)) {
+  if (!defined(geometries._primitive)) {
     geometries._primitive = new Vector3DTilePrimitive({
       batchTable: geometries._batchTable,
       positions: geometries._positions,
@@ -421,42 +438,30 @@ Vector3DTileGeometry.prototype.updateCommands = function (batchId, color) {
   this._primitive.updateCommands(batchId, color);
 };
 
-function initialize(geometries) {
-  return new Promise(function (resolve, reject) {
-    geometries._update = function (geometries, frameState) {
-      const promise = createPrimitive(geometries);
-
-      if (geometries._ready) {
-        geometries._primitive.debugWireframe = geometries.debugWireframe;
-        geometries._primitive.forceRebatch = geometries.forceRebatch;
-        geometries._primitive.classificationType =
-          geometries.classificationType;
-        geometries._primitive.update(frameState);
-      }
-
-      if (!defined(promise)) {
-        return;
-      }
-
-      promise
-        .then(function () {
-          finishPrimitive(geometries);
-          resolve(geometries);
-        })
-        .catch(function (e) {
-          reject(e);
-        });
-    };
-  });
-}
-
 /**
  * Updates the batches and queues the commands for rendering.
  *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTileGeometry.prototype.update = function (frameState) {
-  this._update(this, frameState);
+  if (!this._ready) {
+    if (!defined(this._promise)) {
+      this._promise = createPrimitive(this);
+    }
+
+    if (defined(this._error)) {
+      const error = this._error;
+      this._error = undefined;
+      throw error;
+    }
+
+    return;
+  }
+
+  this._primitive.debugWireframe = this.debugWireframe;
+  this._primitive.forceRebatch = this.forceRebatch;
+  this._primitive.classificationType = this.classificationType;
+  this._primitive.update(frameState);
 };
 
 /**

@@ -393,26 +393,32 @@
           },
         ];
 
-        function selectModel(url, customShader) {
+        async function selectModel(url, customShader) {
           viewer.scene.primitives.removeAll();
-          const model = viewer.scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: url,
-              customShader: customShader,
-              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
-                position,
-                hpr,
-                Cesium.Ellipsoid.WGS84,
-                fixedFrameTransform
-              ),
-            })
-          );
+          try {
+            const model = viewer.scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                customShader: customShader,
+                modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                  position,
+                  hpr,
+                  Cesium.Ellipsoid.WGS84,
+                  fixedFrameTransform
+                ),
+              })
+            );
 
-          model.readyPromise.then(function (model) {
-            viewer.camera.flyToBoundingSphere(model.boundingSphere, {
-              duration: 0.5,
+            const removeListener = model.readyEvent.addEventListener(() => {
+              viewer.camera.flyToBoundingSphere(model.boundingSphere, {
+                duration: 0.5,
+              });
+
+              removeListener();
             });
-          });
+          } catch (error) {
+            console.log(`Error loading model: ${error}`);
+          }
         }
         Sandcastle.addToolbarMenu(demos);
 
