@@ -40,8 +40,8 @@
         try {
           // High resolution terrain of Pennsylvania curated by Pennsylvania Spatial Data Access (PASDA)
           // http://www.pasda.psu.edu/
-          viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
-            Cesium.IonResource.fromAssetId(3957)
+          viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromIonAssetId(
+            3957
           );
         } catch (error) {
           window.alert(`Failed to load terrain. ${error}`);

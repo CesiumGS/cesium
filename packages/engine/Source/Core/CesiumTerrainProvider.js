@@ -12,6 +12,7 @@ import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
 import getJsonFromTypedArray from "./getJsonFromTypedArray.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import IndexDatatype from "./IndexDatatype.js";
+import IonResource from "./IonResource.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import QuantizedMeshTerrainData from "./QuantizedMeshTerrainData.js";
 import Request from "./Request.js";
@@ -444,7 +445,7 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
 
 /**
  * <div class="notice">
- * To construct a CesiumTerrainProvider, call {@link CesiumTerrainProvider.fromUrl}. Do not call the constructor directly.
+ * To construct a CesiumTerrainProvider, call {@link CesiumTerrainProvider.fromIonAssetId} or {@link CesiumTerrainProvider.fromUrl}. Do not call the constructor directly.
  * </div>
  *
  * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
@@ -463,9 +464,8 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  * // Create Arctic DEM terrain with normals.
  * try {
  *   const viewer = new Cesium.Viewer("cesiumContainer", {
- *     terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl(
- *       Cesium.IonResource.fromAssetId(3956), {
- *         requestVertexNormals: true
+ *     terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(3956, {
+ *       requestVertexNormals: true
  *     })
  *   });
  * } catch (error) {
@@ -474,6 +474,7 @@ async function requestLayerJson(terrainProviderBuilder, provider) {
  *
  * @see createWorldTerrain
  * @see CesiumTerrainProvider.fromUrl
+ * @see CesiumTerrainProvider.fromIonAssetId
  * @see TerrainProvider
  */
 function CesiumTerrainProvider(options) {
@@ -534,7 +535,7 @@ function CesiumTerrainProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "CesiumTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromUrl instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
     );
     this._readyPromise = CesiumTerrainProvider._initializeReadyPromise(
       options,
@@ -1061,7 +1062,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "CesiumTerrainProvider.ready",
-        "CesiumTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromUrl instead."
+        "CesiumTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -1078,7 +1079,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "CesiumTerrainProvider.readyPromise",
-        "CesiumTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromUrl instead."
+        "CesiumTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
       );
       return this._readyPromise;
     },
@@ -1194,6 +1195,45 @@ CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   level
 ) {
   return this._levelZeroMaximumGeometricError / (1 << level);
+};
+
+/**
+ * Creates a {@link TerrainProvider} from a Cesium ion asset ID that accesses terrain data in a Cesium terrain format
+ * Terrain formats can be one of the following:
+ * <ul>
+ * <li> {@link https://github.com/AnalyticalGraphicsInc/quantized-mesh Quantized Mesh} </li>
+ * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
+ * </ul>
+ *
+ * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the Cesium terrain server.
+ * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
+ * @returns {Promise<CesiumTerrainProvider>}
+ *
+ * @example
+ * // Create Arctic DEM terrain with normals.
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(3956, {
+ *         requestVertexNormals: true
+ *     })
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
+ *
+ * @exception {RuntimeError} layer.json does not specify a format
+ * @exception {RuntimeError} layer.json specifies an unknown format
+ * @exception {RuntimeError} layer.json specifies an unsupported quantized-mesh version
+ * @exception {RuntimeError} layer.json does not specify a tiles property, or specifies an empty array
+ * @exception {RuntimeError} layer.json does not specify any tile URL templates
+ */
+CesiumTerrainProvider.fromIonAssetId = async function (assetId, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("assetId", assetId);
+  //>>includeEnd('debug');
+
+  const resource = await IonResource.fromAssetId(assetId);
+  return CesiumTerrainProvider.fromUrl(resource, options);
 };
 
 /**
