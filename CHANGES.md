@@ -8,6 +8,7 @@
 
 - Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
 - Fixed error type to be `RequestErrorEvent` in `Resource.retryCallback`. [#11177](https://github.com/CesiumGS/cesium/pull/11177)
+- Fixed ion URL in `RequestScheduler` throttling overrides. [#11193](https://github.com/CesiumGS/cesium/pull/11193)
 
 #### @cesium/widgets
 
