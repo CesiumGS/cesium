@@ -1147,7 +1147,7 @@ describe("Scene/I3SNode", function () {
         return Promise.resolve(nodeWithContent);
       }
 
-      return Promise.reject();
+      return Promise.reject("invalid i3s node");
     });
 
     return nodeWithMesh
@@ -1210,7 +1210,7 @@ describe("Scene/I3SNode", function () {
         return Promise.resolve(nodeWithContent);
       }
 
-      return Promise.reject();
+      return Promise.reject("invalid i3s node");
     });
 
     await nodeWithMesh.load();

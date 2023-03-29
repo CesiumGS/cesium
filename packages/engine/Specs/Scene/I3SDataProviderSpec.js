@@ -483,7 +483,7 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider._extent.north).toEqual(CesiumMath.toRadians(3));
   });
 
-  it("loads i3s provider", function () {
+  it("loads i3s provider", async function () {
     spyOn(I3SDataProvider, "_fetchJson").and.callFake(function (resource) {
       if (resource.url.endsWith("mockProviderUrl/layers/0/mockRootNodeUrl/")) {
         return Promise.resolve(mockRootNodeData);
@@ -491,36 +491,33 @@ describe("Scene/I3SDataProvider", function () {
         return Promise.resolve(mockProviderData);
       }
 
-      return Promise.reject();
+      return Promise.reject("invalid i3s request");
     });
 
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
       geoidTiledTerrainProvider: mockGeoidProvider,
     });
 
-    return testProvider.readyPromise.then(function () {
-      expect(testProvider.ready).toBe(true);
+    expect(testProvider.ready).toBe(true);
 
-      // Layers have been populated and root node is loaded
-      expect(testProvider.layers.length).toEqual(1);
-      expect(testProvider.layers[0].rootNode.tile).toBeDefined();
-      expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
-        testProvider.layers[0].rootNode
-      );
+    // Layers have been populated and root node is loaded
+    expect(testProvider.layers.length).toEqual(1);
+    expect(testProvider.layers[0].rootNode.tile).toBeDefined();
+    expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
+      testProvider.layers[0].rootNode
+    );
 
-      // Expect geoid data to have been loaded
-      expect(testProvider._geoidDataList.length).toEqual(1);
-      expect(testProvider._geoidDataList[0].height).toEqual(2);
-      expect(testProvider._geoidDataList[0].width).toEqual(2);
-      expect(testProvider._geoidDataList[0].buffer).toEqual(
-        new Float32Array([4, 5, 6, 7])
-      );
-    });
+    // Expect geoid data to have been loaded
+    expect(testProvider._geoidDataList.length).toEqual(1);
+    expect(testProvider._geoidDataList[0].height).toEqual(2);
+    expect(testProvider._geoidDataList[0].width).toEqual(2);
+    expect(testProvider._geoidDataList[0].buffer).toEqual(
+      new Float32Array([4, 5, 6, 7])
+    );
   });
 
-  it("loads i3s provider from single layer url", function () {
+  it("loads i3s provider from single layer url", async function () {
     spyOn(I3SDataProvider, "_fetchJson").and.callFake(function (resource) {
       if (resource.url.endsWith("mockProviderUrl/layers/0/mockRootNodeUrl/")) {
         return Promise.resolve(mockRootNodeData);
@@ -528,32 +525,32 @@ describe("Scene/I3SDataProvider", function () {
         return Promise.resolve(mockLayerData);
       }
 
-      return Promise.reject();
+      return Promise.reject("invalid i3s request");
     });
 
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl/layers/0/",
-      name: "testProvider",
-      geoidTiledTerrainProvider: mockGeoidProvider,
-    });
+    const testProvider = await I3SDataProvider.fromUrl(
+      "mockProviderUrl/layers/0/",
+      {
+        name: "testProvider",
+        geoidTiledTerrainProvider: mockGeoidProvider,
+      }
+    );
 
-    return testProvider.readyPromise.then(function () {
-      expect(testProvider.ready).toBe(true);
+    expect(testProvider.ready).toBe(true);
 
-      // Layers have been populated and root node is loaded
-      expect(testProvider.layers.length).toEqual(1);
-      expect(testProvider.layers[0].rootNode.tile).toBeDefined();
-      expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
-        testProvider.layers[0].rootNode
-      );
+    // Layers have been populated and root node is loaded
+    expect(testProvider.layers.length).toEqual(1);
+    expect(testProvider.layers[0].rootNode.tile).toBeDefined();
+    expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
+      testProvider.layers[0].rootNode
+    );
 
-      // Expect geoid data to have been loaded
-      expect(testProvider._geoidDataList.length).toEqual(1);
-      expect(testProvider._geoidDataList[0].height).toEqual(2);
-      expect(testProvider._geoidDataList[0].width).toEqual(2);
-      expect(testProvider._geoidDataList[0].buffer).toEqual(
-        new Float32Array([4, 5, 6, 7])
-      );
-    });
+    // Expect geoid data to have been loaded
+    expect(testProvider._geoidDataList.length).toEqual(1);
+    expect(testProvider._geoidDataList[0].height).toEqual(2);
+    expect(testProvider._geoidDataList[0].width).toEqual(2);
+    expect(testProvider._geoidDataList[0].buffer).toEqual(
+      new Float32Array([4, 5, 6, 7])
+    );
   });
 });

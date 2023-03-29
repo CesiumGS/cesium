@@ -694,7 +694,7 @@ describe(
         ModelVisualizer,
         "_sampleTerrainMostDetailed"
       ).and.callFake(() => {
-        return Promise.reject();
+        return Promise.reject(404);
       });
 
       // Initialize the Entity and the ModelGraphics.

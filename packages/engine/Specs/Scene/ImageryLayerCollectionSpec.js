@@ -746,7 +746,7 @@ describe(
             if (level !== 1 || (x === 0 && y === 0)) {
               return ImageryProvider.loadImage(this, "Data/Images/Blue.png");
             }
-            return Promise.reject();
+            return Promise.reject("invalid tile");
           },
         };
 
