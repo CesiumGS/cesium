@@ -93,7 +93,13 @@ void computeScattering(
     vec2 heightScale = vec2(u_atmosphereRayleighScaleHeight, u_atmosphereMieScaleHeight);
 
     // Sample positions on the primary ray.
-    for (int i = 0; i < PRIMARY_STEPS; i++) {
+    for (int i = 0; i < 999999999; ++i) {
+
+        // The loop should be: for (int i = 0; i < PRIMARY_STEPS; ++i) {...} but WebGL1 cannot
+        // loop with non-constant condition, so it has to break early instead
+        if (i >= PRIMARY_STEPS)
+            break;
+
         // Calculate sample position along viewpoint ray.
         vec3 samplePosition = primaryRay.origin + primaryRay.direction * (rayPositionLength + rayStepLength);
 
@@ -114,7 +120,12 @@ void computeScattering(
         vec2 lightOpticalDepth = vec2(0.0);
 
         // Sample positions along the light ray, to accumulate incidence of light on the latest sample segment.
-        for (int j = 0; j < LIGHT_STEPS; j++) {
+        for (int j = 0; j < 999999999; ++j) {
+
+            // The loop should be: for (int j = 0; i < LIGHT_STEPS; ++j) {...} but WebGL1 cannot
+            // loop with non-constant condition, so it has to break early instead
+            if (j >= LIGHT_STEPS)
+                break;
 
             // Calculate sample position along light ray.
             vec3 lightPosition = samplePosition + lightDirection * (lightPositionLength + lightStepLength * 0.5);
