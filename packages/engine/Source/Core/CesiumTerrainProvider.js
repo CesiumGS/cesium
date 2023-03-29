@@ -1205,7 +1205,7 @@ CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function (
  * <li> {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/heightmap-1.0 Height Map} </li>
  * </ul>
  *
- * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the Cesium terrain server.
+ * @param {number} assetId The Cesium ion asset id.
  * @param {CesiumTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  * @returns {Promise<CesiumTerrainProvider>}
  *
