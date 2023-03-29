@@ -2230,7 +2230,8 @@ async function buildCesiumViewer() {
     ".png": "text",
   };
   config.format = "iife";
-  config.inject = ["Apps/CesiumViewer/index.js"];
+  // Configure Cesium base path to use built
+  config.define = { CESIUM_BASE_URL: `"."` };
   config.external = ["https", "http", "url", "zlib"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
@@ -2247,7 +2248,7 @@ async function buildCesiumViewer() {
       ".gif": "text",
       ".png": "text",
     },
-    outdir: cesiumViewerOutputDirectory,
+    outdir: join(cesiumViewerOutputDirectory, "Widgets"),
     outbase: "packages/widgets/Source/",
   });
 
