@@ -1,4 +1,5 @@
 import defaultValue from "../Core/defaultValue.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import IonImageryProvider from "./IonImageryProvider.js";
 import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
 
@@ -10,17 +11,18 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  * @param {object} [options] Object with the following properties:
  * @param {IonWorldImageryStyle} [options.style=IonWorldImageryStyle] The style of base imagery, only AERIAL, AERIAL_WITH_LABELS, and ROAD are currently supported.
  * @returns {IonImageryProvider}
+ * @deprecated
  *
  * @see Ion
  *
  * @example
- * // Create Cesium World Terrain with default settings
+ * // Create Cesium World Imagery with default settings
  * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery();
  * });
  *
  * @example
- * // Create Cesium World Terrain with water and normals.
+ * // Create Cesium World Imagery with a different style
  * const viewer = new Cesium.Viewer('cesiumContainer', {
  *     imageryProvider : Cesium.createWorldImagery({
  *         style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS
@@ -29,10 +31,17 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  *
  */
 function createWorldImagery(options) {
+  deprecationWarning(
+    "createWorldImagery",
+    "createWorldImagery was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createWorldImageryAsync instead."
+  );
+
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const style = defaultValue(options.style, IonWorldImageryStyle.AERIAL);
-  return new IonImageryProvider({
-    assetId: style,
-  });
+  const provider = new IonImageryProvider();
+
+  // This is here for backwards compatibility
+  IonImageryProvider._initialize(provider, style, options);
+  return provider;
 }
 export default createWorldImagery;

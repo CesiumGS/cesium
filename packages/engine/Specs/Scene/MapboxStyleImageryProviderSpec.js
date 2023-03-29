@@ -234,9 +234,7 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       styleId: "test-id",
       maximumLevel: 5,
     });
-    return provider.readyPromise.then(function () {
-      expect(provider.maximumLevel).toEqual(5);
-    });
+    expect(provider.maximumLevel).toEqual(5);
   });
 
   it("uses minimumLevel passed to constructor", function () {
@@ -246,9 +244,7 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       styleId: "test-id",
       minimumLevel: 1,
     });
-    return provider.readyPromise.then(function () {
-      expect(provider.minimumLevel).toEqual(1);
-    });
+    expect(provider.minimumLevel).toEqual(1);
   });
 
   it("when no credit is supplied, the provider adds a default credit", function () {
@@ -257,9 +253,7 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       url: "made/up/mapbox/server/",
       styleId: "test-id",
     });
-    return provider.readyPromise.then(function () {
-      expect(provider.credit).toBe(MapboxStyleImageryProvider._defaultCredit);
-    });
+    expect(provider.credit).toBe(MapboxStyleImageryProvider._defaultCredit);
   });
 
   it("turns the supplied credit into a logo", function () {
@@ -270,9 +264,7 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       styleId: "test-id",
       credit: creditText,
     });
-    return providerWithCredit.readyPromise.then(function () {
-      expect(providerWithCredit.credit.html).toEqual(creditText);
-    });
+    expect(providerWithCredit.credit.html).toEqual(creditText);
   });
 
   it("raises error event when image cannot be loaded", function () {

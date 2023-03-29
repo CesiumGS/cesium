@@ -12,14 +12,12 @@ describe("Scene/buildVoxelDrawCommands", function () {
   let scene;
   let provider;
 
-  beforeAll(function () {
+  beforeAll(async function () {
     scene = createScene();
 
-    provider = new Cesium3DTilesVoxelProvider({
-      url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-    });
-
-    return provider._readyPromise;
+    provider = await Cesium3DTilesVoxelProvider.fromUrl(
+      "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+    );
   });
 
   afterAll(function () {

@@ -2,6 +2,7 @@ import Color from "../Core/Color.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import IonResource from "../Core/IonResource.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
@@ -49,6 +50,11 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * }));
  */
 function createOsmBuildings(options) {
+  deprecationWarning(
+    "createOsmBuildings",
+    "createOsmBuildings was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createOsmBuildingsAsync instead."
+  );
+
   options = combine(options, {
     url: IonResource.fromAssetId(96188),
   });

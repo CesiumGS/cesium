@@ -29,7 +29,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -78,7 +78,7 @@
           );
         }
 
-        function addPointAndModel() {
+        async function addPointAndModel() {
           Sandcastle.declare(addPointAndModel);
 
           const position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
@@ -94,16 +94,22 @@
             ),
           });
 
-          scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
-              modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(position),
-              distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
-                0.0,
-                250.5
-              ),
-            })
-          );
+          try {
+            scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: "../../SampleData/models/GroundVehicle/GroundVehicle.glb",
+                modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(
+                  position
+                ),
+                distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
+                  0.0,
+                  250.5
+                ),
+              })
+            );
+          } catch (error) {
+            window.alert(error);
+          }
         }
 
         Sandcastle.addToolbarMenu([
@@ -129,11 +135,14 @@
         };
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

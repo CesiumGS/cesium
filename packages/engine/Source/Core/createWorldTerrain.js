@@ -1,5 +1,6 @@
 import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
 import defaultValue from "./defaultValue.js";
+import deprecationWarning from "./deprecationWarning.js";
 import IonResource from "./IonResource.js";
 
 /**
@@ -31,12 +32,29 @@ import IonResource from "./IonResource.js";
  *
  */
 function createWorldTerrain(options) {
+  deprecationWarning(
+    "createWorldTerrain",
+    "createWorldTerrain was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createWorldTerrainAsync instead."
+  );
+
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  return new CesiumTerrainProvider({
-    url: IonResource.fromAssetId(1),
+  const provider = new CesiumTerrainProvider({
     requestVertexNormals: defaultValue(options.requestVertexNormals, false),
     requestWaterMask: defaultValue(options.requestWaterMask, false),
   });
+
+  // This is here in order to avoid throwing a second deprecation error
+  // by using the deprecated url parameter in the constructor above
+  provider._readyPromise = CesiumTerrainProvider._initializeReadyPromise(
+    {
+      url: IonResource.fromAssetId(1),
+      requestVertexNormals: defaultValue(options.requestVertexNormals, false),
+      requestWaterMask: defaultValue(options.requestWaterMask, false),
+    },
+    provider
+  );
+
+  return provider;
 }
 export default createWorldTerrain;

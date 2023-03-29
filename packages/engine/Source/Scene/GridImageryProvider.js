@@ -1,6 +1,7 @@
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 
@@ -39,91 +40,16 @@ const defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 function GridImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultNightAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultDayAlpha = undefined;
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultBrightness = undefined;
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultContrast = undefined;
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultHue = undefined;
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultSaturation = undefined;
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultGamma = undefined;
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   *
-   * @type {TextureMinificationFilter}
-   * @default undefined
-   */
-  this.defaultMinificationFilter = undefined;
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   *
-   * @type {TextureMagnificationFilter}
-   * @default undefined
-   */
-  this.defaultMagnificationFilter = undefined;
+  this._defaultAlpha = undefined;
+  this._defaultNightAlpha = undefined;
+  this._defaultDayAlpha = undefined;
+  this._defaultBrightness = undefined;
+  this._defaultContrast = undefined;
+  this._defaultHue = undefined;
+  this._defaultSaturation = undefined;
+  this._defaultGamma = undefined;
+  this._defaultMinificationFilter = undefined;
+  this._defaultMagnificationFilter = undefined;
 
   this._tilingScheme = defined(options.tilingScheme)
     ? options.tilingScheme
@@ -148,6 +74,7 @@ function GridImageryProvider(options) {
   // We only need a single canvas since all tiles will be the same
   this._canvas = this._createGridCanvas();
 
+  this._ready = true;
   this._readyPromise = Promise.resolve(true);
 }
 
@@ -165,8 +92,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof GridImageryProvider.prototype
    * @type {number}
    * @readonly
@@ -178,8 +104,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof GridImageryProvider.prototype
    * @type {number}
    * @readonly
@@ -191,8 +116,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof GridImageryProvider.prototype
    * @type {number|undefined}
    * @readonly
@@ -204,8 +128,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof GridImageryProvider.prototype
    * @type {number}
    * @readonly
@@ -217,8 +140,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof GridImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -230,8 +152,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof GridImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -245,8 +166,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link GridImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof GridImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -276,9 +196,14 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * @memberof GridImageryProvider.prototype
    * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "GridImageryProvider.ready",
+        "GridImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+      );
       return true;
     },
   },
@@ -288,16 +213,21 @@ Object.defineProperties(GridImageryProvider.prototype, {
    * @memberof GridImageryProvider.prototype
    * @type {Promise<boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "GridImageryProvider.readyPromise",
+        "GridImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link GridImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof GridImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -321,6 +251,242 @@ Object.defineProperties(GridImageryProvider.prototype, {
   hasAlphaChannel: {
     get: function () {
       return true;
+    },
+  },
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof GridImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultAlpha: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultAlpha",
+        "GridImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      return this._defaultAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultAlpha",
+        "GridImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      this._defaultAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof GridImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultNightAlpha: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultNightAlpha",
+        "GridImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      return this.defaultNightAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultNightAlpha",
+        "GridImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      this.defaultNightAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof GridImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultDayAlpha: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultDayAlpha",
+        "GridImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      return this._defaultDayAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultDayAlpha",
+        "GridImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      this._defaultDayAlpha = value;
+    },
+  },
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   * @memberof GridImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultBrightness: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultBrightness",
+        "GridImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      return this._defaultBrightness;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultBrightness",
+        "GridImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      this._defaultBrightness = value;
+    },
+  },
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   * @memberof GridImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultContrast: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultContrast",
+        "GridImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      return this._defaultContrast;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultContrast",
+        "GridImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      this._defaultContrast = value;
+    },
+  },
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   * @memberof GridImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultHue: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultHue",
+        "GridImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      return this._defaultHue;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultHue",
+        "GridImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      this._defaultHue = value;
+    },
+  },
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   * @memberof GridImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultSaturation: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultSaturation",
+        "GridImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      return this._defaultSaturation;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultSaturation",
+        "GridImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      this._defaultSaturation = value;
+    },
+  },
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   * @memberof GridImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultGamma: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultGamma",
+        "GridImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      return this._defaultGamma;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultGamma",
+        "GridImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      this._defaultGamma = value;
+    },
+  },
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   * @memberof GridImageryProvider.prototype
+   * @type {TextureMinificationFilter}
+   * @deprecated
+   */
+  defaultMinificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultMinificationFilter",
+        "GridImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      return this._defaultMinificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultMinificationFilter",
+        "GridImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      this._defaultMinificationFilter = value;
+    },
+  },
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   * @memberof GridImageryProvider.prototype
+   * @type {TextureMagnificationFilter}
+   * @deprecated
+   */
+  defaultMagnificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "GridImageryProvider.defaultMagnificationFilter",
+        "GridImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      return this._defaultMagnificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GridImageryProvider.defaultMagnificationFilter",
+        "GridImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      this._defaultMagnificationFilter = value;
     },
   },
 });
@@ -392,16 +558,13 @@ GridImageryProvider.prototype._createGridCanvas = function () {
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 GridImageryProvider.prototype.getTileCredits = function (x, y, level) {
   return undefined;
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link GridImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.

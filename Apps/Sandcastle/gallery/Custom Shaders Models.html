@@ -39,7 +39,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -393,26 +393,32 @@
           },
         ];
 
-        function selectModel(url, customShader) {
+        async function selectModel(url, customShader) {
           viewer.scene.primitives.removeAll();
-          const model = viewer.scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: url,
-              customShader: customShader,
-              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
-                position,
-                hpr,
-                Cesium.Ellipsoid.WGS84,
-                fixedFrameTransform
-              ),
-            })
-          );
+          try {
+            const model = viewer.scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                customShader: customShader,
+                modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                  position,
+                  hpr,
+                  Cesium.Ellipsoid.WGS84,
+                  fixedFrameTransform
+                ),
+              })
+            );
 
-          model.readyPromise.then(function (model) {
-            viewer.camera.flyToBoundingSphere(model.boundingSphere, {
-              duration: 0.5,
+            const removeListener = model.readyEvent.addEventListener(() => {
+              viewer.camera.flyToBoundingSphere(model.boundingSphere, {
+                duration: 0.5,
+              });
+
+              removeListener();
             });
-          });
+          } catch (error) {
+            console.log(`Error loading model: ${error}`);
+          }
         }
         Sandcastle.addToolbarMenu(demos);
 
@@ -476,11 +482,14 @@
         }, Cesium.ScreenSpaceEventType.LEFT_UP);
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

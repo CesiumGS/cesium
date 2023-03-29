@@ -1,6 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -50,6 +51,14 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
    */
   this.featurePropertiesDirty = false;
   this._group = undefined;
+
+  this._ready = false;
+
+  // This is here for backwards compatibility and can be removed when readyPromise is removed.
+  this._resolveContent = undefined;
+  this._readyPromise = new Promise((resolve) => {
+    this._resolveContent = resolve;
+  });
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -119,24 +128,38 @@ Object.defineProperties(Vector3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Vector3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
+    get: function () {
+      return this._ready;
+    },
+  },
+
+  /**
+   * Gets the promise that will be resolved when the tile's content is ready to render.
+   *
+   * @memberof Vector3DTileContent.prototype
+   *
+   * @type {Promise<Vector3DTileContent>}
+   * @readonly
+   * @deprecated
+   * @private
+   */
   readyPromise: {
     get: function () {
-      const pointsPromise = defined(this._points)
-        ? this._points.readyPromise
-        : undefined;
-      const polygonPromise = defined(this._polygons)
-        ? this._polygons.readyPromise
-        : undefined;
-      const polylinePromise = defined(this._polylines)
-        ? this._polylines.readyPromise
-        : undefined;
-
-      const that = this;
-      return Promise.all([pointsPromise, polygonPromise, polylinePromise]).then(
-        function () {
-          return that;
-        }
+      deprecationWarning(
+        "Vector3DTileContent.readyPromise",
+        "Vector3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Vector3DTileContent.ready to return true instead."
       );
+      return this._readyPromise;
     },
   },
 
@@ -245,7 +268,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
   if (atLeastOneDefined && atLeastOneUndefined) {
     throw new RuntimeError(
-      "If one group of batch ids is defined, then all batch ids must be defined."
+      "If one group of batch ids is defined, then all batch ids must be defined"
     );
   }
 
@@ -311,7 +334,9 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
-    return Promise.resolve(content);
+    content._ready = true;
+    content._resolveContent(content);
+    return;
   }
 
   const featureTableJSONByteLength = view.getUint32(byteOffset, true);
@@ -635,8 +660,6 @@ function initialize(content, arrayBuffer, byteOffset) {
       batchTable: batchTable,
     });
   }
-
-  return Promise.resolve(content);
 }
 
 function createFeatures(content) {
@@ -713,21 +736,23 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
     this._polygons.classificationType = this._tileset.classificationType;
     this._polygons.debugWireframe = this._tileset.debugWireframe;
     this._polygons.update(frameState);
-    ready = ready && this._polygons._ready;
+    ready = ready && this._polygons.ready;
   }
   if (defined(this._polylines)) {
     this._polylines.update(frameState);
-    ready = ready && this._polylines._ready;
+    ready = ready && this._polylines.ready;
   }
   if (defined(this._points)) {
     this._points.update(frameState);
-    ready = ready && this._points._ready;
+    ready = ready && this._points.ready;
   }
   if (defined(this._batchTable) && ready) {
     if (!defined(this._features)) {
       createFeatures(this);
     }
     this._batchTable.update(tileset, frameState);
+    this._ready = true;
+    this._resolveContent(this);
   }
 };
 

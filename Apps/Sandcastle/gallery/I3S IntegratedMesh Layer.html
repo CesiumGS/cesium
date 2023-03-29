@@ -35,63 +35,72 @@
     </div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: new Cesium.createWorldTerrain({}),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
           animation: false,
           timeline: false,
         });
         // Suppress terrain data to avoid clashing with IntegratedMesh layer geometry
         viewer.scene.globe.depthTestAgainstTerrain = false;
+
         // More datasets to tour can be added here..
         // The url passed to I3SDataProvider supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a SceneServer.
         const tours = {
           Frankfurt:
             "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0",
         };
-        // Initialize a terrain provider which provides geoid conversion between gravity related (typically I3S datasets) and ellipsoidal based
-        // height systems (Cesium World Terrain).
-        // If this is not specified, or the URL is invalid no geoid conversion will be applied.
-        // The source data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
-        const geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
-          url:
-            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
-        });
+        try {
+          // Initialize a terrain provider which provides geoid conversion between gravity related (typically I3S datasets) and ellipsoidal based
+          // height systems (Cesium World Terrain).
+          // If this is not specified, or the URL is invalid no geoid conversion will be applied.
+          // The source data used in this transcoding service was compiled from https://earth-info.nga.mil/#tab_wgs84-data and is based on EGM2008 Gravity Model
+          const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+            "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
+          );
 
-        // Create i3s and Cesium3DTileset options to pass optional parameters useful for debugging and visualizing
-        const cesium3dTilesetOptions = {
-          skipLevelOfDetail: false,
-          debugShowBoundingVolume: false,
-        };
-        const i3sOptions = {
-          url: tours.Frankfurt,
-          traceFetches: false, // for tracing I3S fetches
-          geoidTiledTerrainProvider: geoidService, // pass the geoid service
-          cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
-        };
+          // Create i3s and Cesium3DTileset options to pass optional parameters useful for debugging and visualizing
+          const cesium3dTilesetOptions = {
+            skipLevelOfDetail: false,
+            debugShowBoundingVolume: false,
+          };
+          const i3sOptions = {
+            traceFetches: false, // for tracing I3S fetches
+            geoidTiledTerrainProvider: geoidService, // pass the geoid service
+            cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
+          };
 
-        // Create I3S data provider
-        const i3sProvider = new Cesium.I3SDataProvider(i3sOptions);
+          // Create I3S data provider
+          const i3sProvider = await Cesium.I3SDataProvider.fromUrl(
+            tours.Frankfurt,
+            i3sOptions
+          );
 
-        // Center camera on I3S once it's loaded
-        i3sProvider.readyPromise.then(function () {
+          // Add the i3s layer provider as a primitive data type
+          viewer.scene.primitives.add(i3sProvider);
+
+          // Center camera on I3S once it's loaded
           const center = Cesium.Rectangle.center(i3sProvider.extent);
           center.height = 10000.0;
           viewer.camera.setView({
             destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
           });
-        });
-
-        // Add the i3s layer provider as a primitive data type
-        viewer.scene.primitives.add(i3sProvider);
-        //Sandcastle_End
-        if (typeof Cesium !== "undefined") {
-          window.startupCalled = true;
-          window.startup(Cesium);
-        }
+        } catch (error) {
+          console.log(
+            `There was an error creating the I3S Data Provider: ${error}`
+          );
+        } //Sandcastle_End
       };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
     </script>
   </body>
 </html>

@@ -5,6 +5,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
@@ -213,6 +214,7 @@ function GroundPrimitive(options) {
   this._ready = false;
 
   const groundPrimitive = this;
+  // This is here for backwards compatibility. This promise wrapper can be removed once readyPromise is removed.
   this._readyPromise = new Promise((resolve, reject) => {
     groundPrimitive._completeLoad = () => {
       if (this._ready) {
@@ -388,9 +390,14 @@ Object.defineProperties(GroundPrimitive.prototype, {
    * @memberof GroundPrimitive.prototype
    * @type {Promise<GroundPrimitive>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "GroundPrimitive.readyPromise",
+        "GroundPrimitive.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for GroundPrimitive.ready to return true instead."
+      );
       return this._readyPromise;
     },
   },
@@ -934,7 +941,7 @@ GroundPrimitive.prototype.update = function (frameState) {
   this._primitive.update(frameState);
 
   frameState.afterRender.push(() => {
-    if (defined(this._primitive) && this._primitive.ready) {
+    if (!this._ready && defined(this._primitive) && this._primitive.ready) {
       this._completeLoad();
     }
   });

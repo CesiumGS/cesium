@@ -665,7 +665,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -792,11 +792,11 @@
 
         Cesium.knockout
           .getObservable(viewModel, "enableTerrain")
-          .subscribe(function (newValue) {
+          .subscribe(async function (newValue) {
             if (newValue) {
-              globe.terrainProvider = Cesium.createWorldTerrain();
+              scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
             } else {
-              globe.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+              scene.terrainProvider = new Cesium.EllipsoidTerrainProvider();
             }
           });
         Cesium.knockout
@@ -1025,11 +1025,14 @@
         };
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>
