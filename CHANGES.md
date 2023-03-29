@@ -6,13 +6,14 @@
 
 ##### Additions :tada:
 
-- Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `CesiumTerrainProvider.fromIonAssetId`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `ImageryLayer.fromProviderAsync`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `Terrain`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling.
+- Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `CesiumTerrainProvider.fromIonAssetId`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `ImageryLayer.fromProviderAsync`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `Terrain`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling. [#11059](https://github.com/CesiumGS/cesium/pull/11059)
 
 ##### Fixes :wrench:
 
 - Fixed issue where passing `children` in the Entity constructor options will override children. [#11101](https://github.com/CesiumGS/cesium/issues/11101)
 - Fixed error type to be `RequestErrorEvent` in `Resource.retryCallback`. [#11177](https://github.com/CesiumGS/cesium/pull/11177)
 - Fixed `SingleTileImageryProvider` fetching image when `show` is `false` by allowing lazy-loading for `SingleTileImageryProvider` if `tileWidth` and `tileHeight` are provided to the constructor. [#9529](https://github.com/CesiumGS/cesium/issues/9529)
+- Fixed various race conditions from async operations. [#10909](https://github.com/CesiumGS/cesium/issues/10909)
 
 ##### Deprecated :hourglass_flowing_sand:
 
