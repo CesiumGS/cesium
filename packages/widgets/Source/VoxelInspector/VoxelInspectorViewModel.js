@@ -720,7 +720,8 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
         this._voxelPrimitive = voxelPrimitive;
 
         const that = this;
-        that._voxelPrimitive.readyPromise.then(function () {
+        // This is here for backwards compatibility. This can be done immediately once readyPromise is removed.
+        that._voxelPrimitive._readyPromise.then(function () {
           that._customShaderCompilationRemoveCallback = that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
             function (error) {
               const shaderString =

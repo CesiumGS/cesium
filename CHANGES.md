@@ -2,11 +2,24 @@
 
 ### 1.104 - 2023-04-03
 
+#### Major Announcements :loudspeaker:
+
+- Starting with CesiumJS 1.104 The `readyPromise` pattern has been deprecated across the API. It will be removed in CesiumJS 1.107. This has been done to facilitate better asynchronous flow and error handling. For example:
+
+```js
+try {
+  const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+  viewer.scene.primitives.add(tileset);
+} catch (error) {
+  console.log(`Failed to load tileset: ${error}`);
+}
+```
+
 #### @cesium/engine
 
 ##### Additions :tada:
 
-- Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `CesiumTerrainProvider.fromIonAssetId`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `ImageryLayer.fromProviderAsync`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `Terrain`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, and `createWorldTerrainAsync` for better async flow and error handling. [#11059](https://github.com/CesiumGS/cesium/pull/11059)
+- Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `CesiumTerrainProvider.fromIonAssetId`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `ImageryLayer.fromProviderAsync`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `Terrain`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, `createWorldTerrainAsync`, `Cesium3DTileset.fromUrl`, `Cesium3DTileset.fromIonAssetId`, `createOsmBuildingsAsync`, `Model.fromGltfAsync`, `Model.readyEvent`, `Model.errorEvent`,`Model.texturesReadyEvent`, `I3SDataProvider.fromUrl`, and `Cesium3DTilesVoxelProvider.fromUrl` for better async flow and error handling. [#11059](https://github.com/CesiumGS/cesium/pull/11059)
 
 ##### Fixes :wrench:
 
@@ -46,7 +59,28 @@
 - `GoogleEarthEnterpriseMetadata` constructor parameter `options.url` and `GoogleEarthEnterpriseMetadata.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `GoogleEarthEnterpriseMetadata.fromUrl` instead.
 - `GoogleEarthEnterpriseTerrainProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseTerrainProvider.ready`, and `GoogleEarthEnterpriseTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `GoogleEarthEnterpriseTerrainProvider.fromMetadata` instead.
 - `VRTheWorldTerrainProvider` constructor parameter `options.url`, `VRTheWorldTerrainProvider.ready`, and `VRTheWorldTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `VRTheWorldTerrainProvider.fromUrl` instead.
-- `createWorldTerrain` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use createWorldTerrainAsync instead.
+- `createWorldTerrain` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `createWorldTerrainAsync` instead.
+- `Cesium3DTileset` constructor parameter `options.url`, `Cesium3DTileset.ready`, and `Cesium3DTileset.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `Cesium3DTileset.fromUrl` instead.
+- `createOsmBuildings` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `createOsmBuildingsAsync` instead.
+- `Model.fromGltf`, `Model.readyPromise`, and `Model.texturesLoadedPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `Model.fromGltfAsync`, `Model.readyEvent`, `Model.errorEvent`, and `Model.texturesReadyEvent` instead. For example:
+  ```js
+  try {
+    const model = await Cesium.Model.fromGltfAsync({
+      url: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+    });
+    viewer.scene.primitives.add(model);
+    model.readyEvent.addEventListener(() => {
+      // model is ready for rendering
+    });
+  } catch (error) {
+    console.log(`Failed to load model. ${error}`);
+  }
+  ```
+- `I3SDataProvider` construction parameter `options.url`, `I3SDataProvider.ready`, and `I3SDataProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `I3SDataProvider.fromUrl` instead.
+- `TimeDynamicPointCloud.readyPromise` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `TimeDynamicPointCloud.frameFailed` to track any errors.
+- `VoxelProvider.ready` and `VoxelProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
+- `Cesium3DTilesVoxelProvider` construction parameter `options.url`, `Cesium3DTilesVoxelProvider.ready`, and `Cesium3DTilesVoxelProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `Cesium3DTilesVoxelProvider.fromUrl` instead.
+- `Primitive.readyPromise`, `ClassificationPrimitive.readyPromise`, `GroundPrimitive.readyPromise`, and `GroundPolylinePrimitive.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Wait for `Primitive.ready`, `ClassificationPrimitive.ready`, `GroundPrimitive.ready`, or `GroundPolylinePrimitive.ready` to return true instead.
 
 #### @cesium/widgets
 

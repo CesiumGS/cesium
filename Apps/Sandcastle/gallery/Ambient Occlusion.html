@@ -129,18 +129,6 @@
           );
         }
 
-        // Power Plant design model provided by Bentley Systems
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(1240402),
-        });
-        tileset.readyPromise
-          .then(function (tileset) {
-            viewer.scene.primitives.add(tileset);
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
-
         const viewModel = {
           show: true,
           ambientOcclusionOnly: false,
@@ -202,7 +190,13 @@
           new Cesium.Cartesian3()
         );
 
-        //Sandcastle_End
+        try {
+          // Power Plant design model provided by Bentley Systems
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1240402);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;

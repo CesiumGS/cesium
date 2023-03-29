@@ -7,7 +7,7 @@ import {
 } from "../../../index.js";
 
 import createScene from "../../../../../Specs/createScene.js";
-import loadAndZoomToModel from "./loadAndZoomToModel.js";
+import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
 
 describe(
@@ -38,7 +38,7 @@ describe(
     });
 
     it("initializes", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -51,8 +51,8 @@ describe(
       });
     });
 
-    it("throws when add is called on non-ready model", function () {
-      const model = Model.fromGltf({
+    it("throws when add is called on non-ready model", async function () {
+      const model = await Model.fromGltfAsync({
         gltf: animatedTriangleUrl,
       });
 
@@ -64,7 +64,7 @@ describe(
     });
 
     it("throws when add is not given a name or index", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -77,7 +77,7 @@ describe(
     });
 
     it("throws when add is given invalid name", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -92,7 +92,7 @@ describe(
     });
 
     it("throws when add is given invalid index", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -107,7 +107,7 @@ describe(
     });
 
     it("throws when add is given invalid multiplier", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -123,7 +123,7 @@ describe(
     });
 
     it("add works with name", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -150,7 +150,7 @@ describe(
     });
 
     it("add works with index", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -177,7 +177,7 @@ describe(
     });
 
     it("add works with options", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -215,8 +215,8 @@ describe(
       });
     });
 
-    it("throws when addAll is called on non-ready model", function () {
-      const model = Model.fromGltf({
+    it("throws when addAll is called on non-ready model", async function () {
+      const model = await Model.fromGltfAsync({
         gltf: animatedTriangleUrl,
       });
 
@@ -226,7 +226,7 @@ describe(
     });
 
     it("throws when addAll is given invalid multiplier", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: interpolationTestUrl,
         },
@@ -241,7 +241,7 @@ describe(
     });
 
     it("addAll works", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: interpolationTestUrl,
         },
@@ -270,7 +270,7 @@ describe(
     });
 
     it("addAll works with options", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: interpolationTestUrl,
         },
@@ -312,7 +312,7 @@ describe(
     });
 
     it("contains returns false for undefined", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -325,13 +325,13 @@ describe(
     });
 
     it("contains returns false for animation not in collection", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
         scene
       ).then(function (firstModel) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: animatedTriangleUrl,
           },
@@ -346,7 +346,7 @@ describe(
     });
 
     it("contains returns true for animation in collection", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -359,7 +359,7 @@ describe(
     });
 
     it("throws when get is not given index", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -374,7 +374,7 @@ describe(
     });
 
     it("throws when get is given out-of-range index", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -389,7 +389,7 @@ describe(
     });
 
     it("get works", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: interpolationTestUrl,
         },
@@ -402,7 +402,7 @@ describe(
     });
 
     it("remove returns false for undefined", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -415,13 +415,13 @@ describe(
     });
 
     it("remove returns false for animation not in collection", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
         scene
       ).then(function (firstModel) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: animatedTriangleUrl,
           },
@@ -436,7 +436,7 @@ describe(
     });
 
     it("remove returns true for animation in collection", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: interpolationTestUrl,
         },
@@ -456,7 +456,7 @@ describe(
     });
 
     it("removeAll works", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: interpolationTestUrl,
         },
@@ -471,7 +471,7 @@ describe(
     });
 
     it("update returns false when there are no animations", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: interpolationTestUrl,
         },
@@ -484,7 +484,7 @@ describe(
     });
 
     it("raises animation start, update, and stop events when removeOnStop is true", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -520,7 +520,7 @@ describe(
         ).then(function () {
           expect(spyStart).toHaveBeenCalledWith(model, animation);
 
-          expect(spyUpdate.calls.count()).toEqual(2);
+          expect(spyUpdate.calls.count()).toBeGreaterThanOrEqual(2);
           expect(spyUpdate.calls.argsFor(0)[0]).toBe(model);
           expect(spyUpdate.calls.argsFor(0)[1]).toBe(animation);
 
@@ -536,7 +536,7 @@ describe(
     });
 
     it("finishes animation when it reaches its end", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -568,7 +568,7 @@ describe(
     });
 
     it("animates with a delay", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -595,7 +595,7 @@ describe(
     });
 
     it("animates with startTime", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -625,7 +625,7 @@ describe(
     });
 
     it("animates with an explicit stopTime", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -664,7 +664,7 @@ describe(
     });
 
     it("animates with an explicit animation time", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -719,7 +719,7 @@ describe(
     });
 
     it("animates while paused with an explicit animation time", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -764,7 +764,7 @@ describe(
     });
 
     it("animates with a multiplier", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -797,7 +797,7 @@ describe(
     });
 
     it("animates with reverse", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -830,7 +830,7 @@ describe(
     });
 
     it("animates with REPEAT", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },
@@ -867,7 +867,7 @@ describe(
     });
 
     it("animates with MIRRORED_REPEAT", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
         },

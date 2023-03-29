@@ -678,9 +678,18 @@ Make external requests that assume the tests are being used with an Internet con
 
 (For an introduction to promises, see [JavaScript Promises - There and back again](http://www.html5rocks.com/en/tutorials/es6/promises/)).
 
-For asynchronous testing, Jasmine's `it` function uses a `done` callback. For better integration with CesiumJS's asynchronous patterns, CesiumJS replaces `it` with a function that can return promises.
+Jasmine also has support for running specs that require testing asynchronous operations. The functions that you pass to `beforeAll`, `afterAll`, `beforeEach`, `afterEach`, and `it` can be declared `async`. These functions can also return promises. There are also cases where asynchronous functions that explicitly return promises should be tested. See the [Asynchronous Work tutorial](https://jasmine.github.io/tutorials/async) for more information.
 
-Here is a simplified example of a test from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/Model/ModelSpec.js):
+Here is a simplified example of `beforeAll` from [sampleTerrainSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Core/sampleTerrainSpec.js):
+
+```javascript
+let worldTerrain;
+beforeAll(async function () {
+  worldTerrain = await createWorldTerrainAsync();
+});
+```
+
+Here is a simplified example of a test from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/Model/ModelSpec.js):
 
 ```javascript
 const modelUrl = "./Data/Models/glTF-2.0/Box/glTF/Box.gltf";
@@ -694,59 +703,60 @@ afterAll(function () {
   scene.destroyForSpecs();
 });
 
-it("renders glTF model", function () {
-  return loadAndZoomToModel({ gltf: modelUrl }, scene).then(function (model) {
-    expect(scene).toRenderAndCall(function (rgba) {
-      expect(rgba[0]).toBeGreaterThan(0);
-      expect(rgba[1]).toBeGreaterThan(0);
-      expect(rgba[2]).toBeGreaterThan(0);
-      expect(rgba[3]).toBe(255);
-    });
+it("renders glTF model", async function () {
+  const model = await loadAndZoomToModelAsync({ gltf: modelUrl }, scene);
+  expect(scene).toRenderAndCall(function (rgba) {
+    expect(rgba[0]).toBeGreaterThan(0);
+    expect(rgba[1]).toBeGreaterThan(0);
+    expect(rgba[2]).toBeGreaterThan(0);
+    expect(rgba[3]).toBe(255);
   });
 });
 ```
 
-Given a model's url and other options, [`loadAndZoomToModel`](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/Model/loadAndZoomToModel.js) loads a model, configures the camera, and returns a promise that resolves when a model's `readyPromise` resolves.
+Given a model's url and other options, [`loadAndZoomToModelAsync`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/Model/loadAndZoomToModelAsync.js) loads a model, configures the camera, and returns a promise that resolves when a model is ready for rendering.
 
-Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's [`pollToPromise`](https://github.com/CesiumGS/cesium/blob/main/Specs/pollToPromise.js) is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.readyPromise` resolves or the `timeout` is reached. `loadAndZoomToModel` uses `pollToPromise` to wait until the model is finished loading.
+Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's [`pollToPromise`](https://github.com/CesiumGS/cesium/blob/main/Specs/pollToPromise.js) is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.ready` is `true` or the `timeout` is reached.
 
-`pollToPromise` is also used in many places where a test needs to wait for an asynchronous event before testing its expectations. Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/BillboardCollectionSpec.js):
+`pollToPromise` is also used in many places where a test needs to wait for an asynchronous event before testing its expectations. Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/BillboardCollectionSpec.js):
 
 ```javascript
-it("can create a billboard using a URL", function () {
+it("can create a billboard using a URL", async function () {
   const b = billboards.add({
     image: "./Data/Images/Green.png",
   });
   expect(b.ready).toEqual(false);
 
-  return pollToPromise(function () {
+  await pollToPromise(function () {
     return b.ready;
-  }).then(function () {
-    expect(scene).toRender([0, 255, 0, 255]);
   });
+
+  expect(scene).toRender([0, 255, 0, 255]);
 });
 ```
 
-Here a billboard is loaded using a url to image. Internally, `Billboard` makes an asynchronous request for the image and then sets its `ready` property to `true`. The function passed to `pollToPromise` just returns the value of `ready`; it does not need to render the scene to progressively complete the request like `Model`. Finally, the resolve function (passed to `then`) verifies that the billboard is green.
+Here a billboard is loaded using a url to image. Internally, `Billboard` makes an asynchronous request for the image and then sets its `ready` property to `true`. The function passed to `pollToPromise` just returns the value of `ready`; it does not need to render the scene to progressively complete the request like `Model`. Finally, the test verifies that the billboard is green.
 
-To test if a promises rejects, we call `fail` in the resolve function and put the expectation in the reject function. Here is an excerpt from [ArcGisMapServerImageryProviderSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/ArcGisMapServerImageryProviderSpec.js):
+To test if a promise rejects, we use `expectAsync` and provide the expected error type and message. Here is an excerpt from [ArcGISTiledElevationTerrainProviderSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Core/ArcGISTiledElevationTerrainProviderSpec.js):
 
 ```javascript
-it("rejects readyPromise on error", function () {
-  const baseUrl = "//tiledArcGisMapServer.invalid";
+it("fromUrl throws if the SRS is not supported", async function () {
+  const baseUrl = "made/up/url";
+  metadata.spatialReference.latestWkid = 1234;
 
-  const provider = new ArcGisMapServerImageryProvider({
-    url: baseUrl,
-  });
+  await expectAsync(
+    ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+  ).toBeRejectedWithError(RuntimeError, "Invalid spatial reference");
+});
+```
 
-  return provider.readyPromise
-    .then(function () {
-      fail("should not resolve");
-    })
-    .catch(function (e) {
-      expect(e.message).toContain(baseUrl);
-      expect(provider.ready).toBe(false);
-    });
+Since developer errors are removed for release builds, CesiumJS's `toBeRejectedWithDeveloperError` matcher is used to verify asynchronous Developer Errors. Here is an excerpt from [Cesium3DTilesetSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/Cesium3DTilesetSpec.js):
+
+```javascript
+it("fromUrl throws without url", async function () {
+  await expectAsync(Cesium3DTileset.fromUrl()).toBeRejectedWithDeveloperError(
+    "url is required, actual value was undefined"
+  );
 });
 ```
 

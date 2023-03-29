@@ -44,21 +44,25 @@
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(75343),
-          customShader: new Cesium.CustomShader({
-            lightingModel: Cesium.LightingModel.UNLIT,
-            fragmentShaderText: `
-              // Color tiles by distance to the camera
-              void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
-              {
-                  material.diffuse = vec3(0.0, 0.0, 1.0);
-                  material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
-              }
-              `,
-          }),
-        });
-        viewer.scene.primitives.add(tileset);
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {
+            customShader: new Cesium.CustomShader({
+              lightingModel: Cesium.LightingModel.UNLIT,
+              fragmentShaderText: `
+                // Color tiles by distance to the camera
+                void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+                {
+                    material.diffuse = vec3(0.0, 0.0, 1.0);
+                    material.diffuse.g = -fsInput.attributes.positionEC.z / 1.0e4;
+                }
+                `,
+            }),
+          });
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
+
         const initialPosition = Cesium.Cartesian3.fromDegrees(
           -74.01881302800248,
           40.69114333714821,

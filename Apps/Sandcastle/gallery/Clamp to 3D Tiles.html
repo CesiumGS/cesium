@@ -51,12 +51,6 @@
           positionProperty = entity.position;
         });
 
-        const tileset = scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          })
-        );
-
         viewer.camera.setView({
           destination: new Cesium.Cartesian3(
             1216403.8845586285,
@@ -71,10 +65,17 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        if (scene.clampToHeightSupported) {
-          tileset.initialTilesLoaded.addEventListener(start);
-        } else {
-          window.alert("This browser does not support clampToHeight.");
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+          viewer.scene.primitives.add(tileset);
+
+          if (scene.clampToHeightSupported) {
+            tileset.initialTilesLoaded.addEventListener(start);
+          } else {
+            window.alert("This browser does not support clampToHeight.");
+          }
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
         }
 
         function start() {

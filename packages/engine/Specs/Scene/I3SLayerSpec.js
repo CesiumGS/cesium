@@ -1,4 +1,9 @@
-import { I3SLayer, I3SDataProvider, Math as CesiumMath } from "../../index.js";
+import {
+  I3SLayer,
+  I3SDataProvider,
+  Math as CesiumMath,
+  RuntimeError,
+} from "../../index.js";
 
 describe("Scene/I3SLayer", function () {
   const rootNodePageEntry = {
@@ -102,7 +107,9 @@ describe("Scene/I3SLayer", function () {
     const mockI3SProvider = new I3SDataProvider({
       url: "mockProviderUrl?testQuery=test",
     });
-    mockI3SProvider._geoidDataIsReadyPromise = Promise.resolve();
+    spyOn(I3SDataProvider.prototype, "loadGeoidData").and.returnValue(
+      Promise.resolve()
+    );
     return mockI3SProvider;
   }
 
@@ -284,7 +291,7 @@ describe("Scene/I3SLayer", function () {
     });
   });
 
-  it("creates 3d tileset", function () {
+  it("creates 3d tileset", async function () {
     const mockI3SProvider = createMockI3SProvider();
     const testLayer = new I3SLayer(mockI3SProvider, layerData);
     testLayer._nodePages = [
@@ -293,21 +300,15 @@ describe("Scene/I3SLayer", function () {
     ];
     testLayer._nodePageFetches = [Promise.resolve()];
 
-    return testLayer
-      ._loadRootNode()
-      .then(function () {
-        testLayer._create3DTileset();
-        expect(testLayer.tileset).toBeDefined();
+    await testLayer._loadRootNode();
+    await testLayer._create3DTileset();
 
-        return testLayer.tileset.readyPromise;
-      })
-      .then(function () {
-        expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
-        expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
-      });
+    expect(testLayer.tileset).toBeDefined();
+    expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
+    expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
   });
 
-  it("creates 3d tileset with options", function () {
+  it("creates 3d tileset with options", async function () {
     const cesium3dTilesetOptions = {
       debugShowBoundingVolume: true,
       maximumScreenSpaceError: 8,
@@ -326,23 +327,17 @@ describe("Scene/I3SLayer", function () {
     ];
     testLayer._nodePageFetches = [Promise.resolve()];
 
-    return testLayer
-      ._loadRootNode()
-      .then(function () {
-        testLayer._create3DTileset();
-        expect(testLayer.tileset).toBeDefined();
-        expect(testLayer.tileset.debugShowBoundingVolume).toEqual(true);
-        expect(testLayer.tileset.maximumScreenSpaceError).toEqual(8);
+    await testLayer._loadRootNode();
+    await testLayer._create3DTileset();
+    expect(testLayer.tileset).toBeDefined();
+    expect(testLayer.tileset.debugShowBoundingVolume).toEqual(true);
+    expect(testLayer.tileset.maximumScreenSpaceError).toEqual(8);
 
-        return testLayer._tileset.readyPromise;
-      })
-      .then(function () {
-        expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
-        expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
-      });
+    expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
+    expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
   });
 
-  it("loads i3s layer", function () {
+  it("loads i3s layer", async function () {
     const mockI3SProvider = createMockI3SProvider();
     const testLayer = new I3SLayer(mockI3SProvider, layerData);
     testLayer._nodePages = [
@@ -351,15 +346,14 @@ describe("Scene/I3SLayer", function () {
     ];
     testLayer._nodePageFetches = [Promise.resolve()];
 
-    return testLayer.load().then(function () {
-      expect(testLayer.tileset).toBeDefined();
-      expect(testLayer._rootNode).toBeDefined();
-      expect(testLayer._rootNode._tile).toBe(testLayer.tileset._root);
-      expect(testLayer._rootNode).toBe(testLayer.tileset._root.i3sNode);
-    });
+    await testLayer.load();
+    expect(testLayer.tileset).toBeDefined();
+    expect(testLayer._rootNode).toBeDefined();
+    expect(testLayer._rootNode._tile).toBe(testLayer.tileset._root);
+    expect(testLayer._rootNode).toBe(testLayer.tileset._root.i3sNode);
   });
 
-  it("load i3s layer rejects unsupported spatial reference", function () {
+  it("load i3s layer rejects unsupported spatial reference", async function () {
     const invalidLayerData = {
       nodePages: {
         lodSelectionMetricType: "maxScreenThresholdSQ",
@@ -381,19 +375,9 @@ describe("Scene/I3SLayer", function () {
     ];
     testLayer._nodePageFetches = [Promise.resolve()];
 
-    spyOn(console, "log");
-
-    return testLayer
-      .load()
-      .then(function () {
-        fail(
-          "Promise should not be resolved for unsupported spatial reference"
-        );
-      })
-      .catch(function () {
-        expect(console.log).toHaveBeenCalledWith(
-          `Unsupported spatial reference: ${invalidLayerData.spatialReference.wkid}`
-        );
-      });
+    await expectAsync(testLayer.load()).toBeRejectedWithError(
+      RuntimeError,
+      `Unsupported spatial reference: ${invalidLayerData.spatialReference.wkid}`
+    );
   });
 });

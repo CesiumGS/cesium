@@ -6,9 +6,11 @@ import Credit from "../../Core/Credit.js";
 import Color from "../../Core/Color.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
+import deprecationWarning from "../../Core/deprecationWarning.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
+import Event from "../../Core/Event.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Resource from "../../Core/Resource.js";
@@ -39,7 +41,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
 
 /**
  * <div class="notice">
- * To construct a Model, call {@link Model.fromGltf}. Do not call the constructor directly.
+ * To construct a Model, call {@link Model.fromGltfAsync}. Do not call the constructor directly.
  * </div>
  * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
  * <p>
@@ -155,7 +157,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
  
  *
- * @see Model.fromGltf
+ * @see Model.fromGltfAsync
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
  */
@@ -455,9 +457,65 @@ function Model(options) {
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
-  this._completeLoad = function (model, frameState) {};
   this._texturesLoadedPromise = undefined;
-  this._readyPromise = initialize(this);
+
+  this._completeLoad = undefined;
+  this._rejectLoad = undefined;
+  this._completeTexturesLoad = undefined;
+  this._rejectTexturesLoad = undefined;
+
+  // This is for backward compatibility. When readyPromise is removed, this block can be too
+  if (!defined(this._loader._promise)) {
+    this._readyPromise = new Promise((resolve, reject) => {
+      this._completeLoad = () => {
+        resolve(this);
+        return false;
+      };
+      this._rejectLoad = (error) => {
+        reject(error);
+        return false;
+      };
+    });
+
+    // Transcoded .pnts models do not have textures
+    if (this._loader instanceof PntsLoader) {
+      this._texturesLoadedPromise = Promise.resolve(this);
+    } else {
+      this._texturesLoadedPromise = new Promise((resolve, reject) => {
+        this._completeTexturesLoad = () => {
+          resolve(this);
+          return false;
+        };
+        this._rejectTexturesLoad = (error) => {
+          reject(error);
+          return false;
+        };
+      });
+    }
+
+    this._loader.load().catch((error) => {
+      // If the model is destroyed before the promise resolves, then
+      // the loader will have been destroyed as well. Return early.
+      if (
+        this.isDestroyed() ||
+        !defined(this._loader) ||
+        this._loader.isDestroyed()
+      ) {
+        return;
+      }
+
+      this._rejectLoad = this._rejectLoad(
+        ModelUtility.getError("model", this._resource, error)
+      );
+    });
+  } else {
+    this._readyPromise = Promise.resolve(this);
+    this._texturesLoadedPromise = Promise.resolve(this);
+  }
+
+  this._errorEvent = new Event();
+  this._readyEvent = new Event();
+  this._texturesReadyEvent = new Event();
 
   this._sceneGraph = undefined;
   this._nodesByName = {}; // Stores the nodes by their names in the glTF.
@@ -468,6 +526,15 @@ function Model(options) {
    * @private
    */
   this.pickObject = options.pickObject;
+}
+
+function handleError(model, error) {
+  if (model._errorEvent.numberOfListeners > 0) {
+    model._errorEvent.raiseEvent(error);
+    return;
+  }
+
+  console.log(error);
 }
 
 function createModelFeatureTables(model, structuralMetadata) {
@@ -561,101 +628,10 @@ function isColorAlphaDirty(currentColor, previousColor) {
   );
 }
 
-function initialize(model) {
-  const loader = model._loader;
-  const resource = model._resource;
-
-  loader.load();
-
-  const loaderPromise = loader.promise.then(function (loader) {
-    // If the model is destroyed before the promise resolves, then
-    // the loader will have been destroyed as well. Return early.
-    if (!defined(loader)) {
-      return;
-    }
-
-    const components = loader.components;
-    if (!defined(components)) {
-      if (loader.isUnloaded()) {
-        return;
-      }
-
-      throw new RuntimeError("Failed to load model.");
-    }
-
-    const structuralMetadata = components.structuralMetadata;
-
-    if (
-      defined(structuralMetadata) &&
-      structuralMetadata.propertyTableCount > 0
-    ) {
-      createModelFeatureTables(model, structuralMetadata);
-    }
-
-    const sceneGraph = new ModelSceneGraph({
-      model: model,
-      modelComponents: components,
-    });
-
-    model._sceneGraph = sceneGraph;
-    model._gltfCredits = sceneGraph.components.asset.credits;
-
-    const resourceCredits = model._resource.credits;
-    if (defined(resourceCredits)) {
-      const length = resourceCredits.length;
-      for (let i = 0; i < length; i++) {
-        model._resourceCredits.push(resourceCredits[i]);
-      }
-    }
-
-    model._resourcesLoaded = true;
-  });
-
-  // Transcoded .pnts models do not have textures
-  const texturesLoadedPromise = defaultValue(
-    loader.texturesLoadedPromise,
-    Promise.resolve()
-  );
-  model._texturesLoadedPromise = texturesLoadedPromise
-    .then(function () {
-      // If the model was destroyed while loading textures, return.
-      if (!defined(model) || model.isDestroyed()) {
-        return;
-      }
-
-      model._texturesLoaded = true;
-
-      // Re-run the pipeline so texture memory statistics are re-computed
-      if (loader._incrementallyLoadTextures) {
-        model.resetDrawCommands();
-      }
-    })
-    .catch(ModelUtility.getFailedLoadFunction(model, "model", resource));
-
-  const promise = new Promise(function (resolve, reject) {
-    model._completeLoad = function (model, frameState) {
-      // Set the model as ready after the first frame render since the user might set up events subscribed to
-      // the post render event, and the model may not be ready for those past the first frame.
-      frameState.afterRender.push(function () {
-        model._ready = true;
-        resolve(model);
-        return true;
-      });
-    };
-  });
-
-  return loaderPromise
-    .then(function () {
-      return promise;
-    })
-    .catch(ModelUtility.getFailedLoadFunction(model, "model", resource));
-}
-
 Object.defineProperties(Model.prototype, {
   /**
    * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
-   * and shader files were downloaded and the WebGL resources were created.  This is set to
-   * <code>true</code> right before {@link Model#readyPromise} is resolved.
+   * and shader files were downloaded and the WebGL resources were created.
    *
    * @memberof Model.prototype
    *
@@ -671,6 +647,69 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * Gets an event that is raised when the model encounters an asynchronous rendering error.  By subscribing
+   * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+   * are passed an instance of {@link ModelError}.
+   * @memberof Model.prototype
+   * @type {Event}
+   * @readonly
+   */
+  errorEvent: {
+    get: function () {
+      return this._errorEvent;
+    },
+  },
+
+  /**
+   * Gets an event that is raised when the model is loaded and ready for rendering, i.e. when the external resources
+   * have been downloaded and the WebGL resources are created. Event listeners
+   * are passed an instance of the {@link Model}.
+   *
+   * <p>
+   * If {@link Model.incrementallyLoadTextures} is true, this event will be raised before all textures are loaded and ready for rendering. Subscribe to {@link Model.texturesReadyEvent} to be notified when the textures are ready.
+   * </p>
+   *
+   * @memberof Model.prototype
+   * @type {Event}
+   * @readonly
+   */
+  readyEvent: {
+    get: function () {
+      return this._readyEvent;
+    },
+  },
+
+  /**
+   * Returns true if textures are loaded separately from the other glTF resources.
+   *
+   * @memberof GltfLoader.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  incrementallyLoadTextures: {
+    get: function () {
+      return defaultValue(this._loader.incrementallyLoadTextures, false);
+    },
+  },
+
+  /**
+   * Gets an event that, if {@link Model.incrementallyLoadTextures} is true, is raised when the model textures are loaded and ready for rendering, i.e. when the external resources
+   * have been downloaded and the WebGL resources are created. Event listeners
+   * are passed an instance of the {@link Model}.
+   *
+   * @memberof Model.prototype
+   * @type {Event}
+   * @readonly
+   */
+  texturesReadyEvent: {
+    get: function () {
+      return this._texturesReadyEvent;
+    },
+  },
+
+  /**
    * Gets the promise that will be resolved when this model is ready to render, i.e. when the external resources
    * have been downloaded and the WebGL resources are created.
    * <p>
@@ -681,9 +720,14 @@ Object.defineProperties(Model.prototype, {
    *
    * @type {Promise<Model>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "Model.readyPromise",
+        "Model.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in 1.107. Use Model.fromGltfAsync and Model.readyEvent instead."
+      );
       return this._readyPromise;
     },
   },
@@ -697,11 +741,16 @@ Object.defineProperties(Model.prototype, {
    *
    * @type {Promise<void>}
    * @readonly
+   * @deprecated
    *
    * @private
    */
   texturesLoadedPromise: {
     get: function () {
+      deprecationWarning(
+        "Model.texturesLoadedPromise",
+        "Model.texturesLoadedPromise was deprecated in CesiumJS 1.104.  It will be removed in 1.107. Use Model.fromGltfAsync and Model.texturesReadyEvent instead."
+      );
       return this._texturesLoadedPromise;
     },
   },
@@ -1155,7 +1204,7 @@ Object.defineProperties(Model.prototype, {
       //>>includeStart('debug', pragmas.debug);
       if (!this._ready) {
         throw new DeveloperError(
-          "The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true."
+          "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
         );
       }
       //>>includeEnd('debug');
@@ -1223,7 +1272,7 @@ Object.defineProperties(Model.prototype, {
       ) {
         oneTimeWarning(
           "model-debug-wireframe-ignored",
-          "enableDebugWireframe must be set to true in Model.fromGltf, otherwise debugWireframe will be ignored."
+          "enableDebugWireframe must be set to true in Model.fromGltfAsync, otherwise debugWireframe will be ignored."
         );
       }
     },
@@ -1664,7 +1713,7 @@ Object.defineProperties(Model.prototype, {
  * @param {string} name The name of the node in the glTF.
  * @returns {ModelNode} The node, or <code>undefined</code> if no node with the <code>name</code> exists.
  *
- * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+ * @exception {DeveloperError} The model is not loaded.  Use Model.readyEvent or wait for Model.ready to be true.
  *
  * @example
  * // Apply non-uniform scale to node "Hand"
@@ -1675,7 +1724,7 @@ Model.prototype.getNode = function (name) {
   //>>includeStart('debug', pragmas.debug);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
     );
   }
   Check.typeOf.string("name", name);
@@ -1692,7 +1741,7 @@ Model.prototype.getNode = function (name) {
  * @param {string} articulationStageKey The name of the articulation, a space, and the name of the stage.
  * @param {number} value The numeric value of this stage of the articulation.
  *
- * @exception {DeveloperError} The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true.
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  *
  * @see Model#applyArticulations
  *
@@ -1705,7 +1754,7 @@ Model.prototype.setArticulationStage = function (articulationStageKey, value) {
   Check.typeOf.number("value", value);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
     );
   }
   //>>includeEnd('debug');
@@ -1718,13 +1767,13 @@ Model.prototype.setArticulationStage = function (articulationStageKey, value) {
  * participates in any articulation. Note that this will overwrite any node
  * transformations on participating nodes.
  *
- * @exception {DeveloperError} The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true.
+ * @exception {DeveloperError} The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true.
  */
 Model.prototype.applyArticulations = function () {
   //>>includeStart('debug', pragmas.debug);
   if (!this._ready) {
     throw new DeveloperError(
-      "The model is not loaded. Use Model.readyPromise or wait for Model.ready to be true."
+      "The model is not loaded. Use Model.readyEvent or wait for Model.ready to be true."
     );
   }
   //>>includeEnd('debug');
@@ -1764,10 +1813,40 @@ const scratchClippingPlanesMatrix = new Matrix4();
  * @exception {RuntimeError} Failed to load external reference.
  */
 Model.prototype.update = function (frameState) {
-  // Keep processing the model every frame until the main resources
-  // (buffer views) and textures (which may be loaded asynchronously)
-  // are processed.
-  processLoader(this, frameState);
+  let finishedProcessing = false;
+  try {
+    // Keep processing the model every frame until the main resources
+    // (buffer views) and textures (which may be loaded asynchronously)
+    // are processed.
+    finishedProcessing = processLoader(this, frameState);
+  } catch (error) {
+    if (!this._loader.incrementallyLoadTextures) {
+      const runtimeError = ModelUtility.getError(
+        "model",
+        this._resource,
+        error
+      );
+      handleError(this, runtimeError);
+
+      this._rejectLoad = this._rejectLoad && this._rejectLoad(runtimeError);
+      this._rejectTexturesLoad =
+        this._rejectTexturesLoad && this._rejectTexturesLoad(runtimeError);
+    } else if (error.name === "TextureError") {
+      handleError(this, error);
+
+      this._rejectTexturesLoad =
+        this._rejectTexturesLoad && this._rejectTexturesLoad(error);
+    } else {
+      const runtimeError = ModelUtility.getError(
+        "model",
+        this._resource,
+        error
+      );
+      handleError(this, runtimeError);
+
+      this._rejectLoad = this._rejectLoad && this._rejectLoad(runtimeError);
+    }
+  }
 
   // A custom shader may have to load texture uniforms.
   updateCustomShader(this, frameState);
@@ -1775,6 +1854,41 @@ Model.prototype.update = function (frameState) {
   // The image-based lighting may have to load texture uniforms
   // for specular maps.
   updateImageBasedLighting(this, frameState);
+
+  if (!this._resourcesLoaded && finishedProcessing) {
+    this._resourcesLoaded = true;
+
+    const components = this._loader.components;
+    if (!defined(components)) {
+      if (this._loader.isUnloaded()) {
+        return;
+      }
+
+      const error = ModelUtility.getError(
+        "model",
+        this._resource,
+        new RuntimeError("Failed to load model.")
+      );
+      handleError(error);
+      this._rejectLoad = this._rejectLoad && this._rejectLoad(error);
+    }
+
+    const structuralMetadata = components.structuralMetadata;
+    if (
+      defined(structuralMetadata) &&
+      structuralMetadata.propertyTableCount > 0
+    ) {
+      createModelFeatureTables(this, structuralMetadata);
+    }
+
+    const sceneGraph = new ModelSceneGraph({
+      model: this,
+      modelComponents: components,
+    });
+
+    this._sceneGraph = sceneGraph;
+    this._gltfCredits = sceneGraph.components.asset.credits;
+  }
 
   // Short-circuit if the model resources aren't ready or the scene
   // is currently morphing.
@@ -1806,12 +1920,38 @@ Model.prototype.update = function (frameState) {
   // This check occurs after the bounding sphere has been updated so that
   // zooming to the bounding sphere can account for any modifications
   // from the clamp-to-ground setting.
-  const model = this;
-  if (!model._ready) {
-    model._completeLoad(model, frameState);
+  if (!this._ready) {
+    // Set the model as ready after the first frame render since the user might set up events subscribed to
+    // the post render event, and the model may not be ready for those past the first frame.
+    frameState.afterRender.push(() => {
+      this._ready = true;
+      this._readyEvent.raiseEvent(this);
+      // This is here for backwards compatibility and can be removed when readyPromise is removed.
+      this._completeLoad = this._completeLoad && this._completeLoad();
+      if (!this._loader.incrementallyLoadTextures) {
+        this._texturesLoaded = true;
+        this._texturesReadyEvent.raiseEvent(this);
+        this._completeTexturesLoad =
+          this._completeTexturesLoad && this._completeTexturesLoad();
+      }
+    });
 
     // Don't render until the next frame after the ready promise is resolved
     return;
+  }
+
+  if (
+    this._loader.incrementallyLoadTextures &&
+    !this._texturesLoaded &&
+    this._loader.texturesLoaded
+  ) {
+    // Re-run the pipeline so texture memory statistics are re-computed
+    this.resetDrawCommands();
+
+    this._texturesLoaded = true;
+    this._texturesReadyEvent.raiseEvent(this);
+    this._completeTexturesLoad =
+      this._completeTexturesLoad && this._completeTexturesLoad();
   }
 
   updatePickIds(this);
@@ -1825,8 +1965,12 @@ Model.prototype.update = function (frameState) {
 
 function processLoader(model, frameState) {
   if (!model._resourcesLoaded || !model._texturesLoaded) {
-    model._loader.process(frameState);
+    // Ensures frames continue to render in requestRender mode while resources are processing
+    frameState.afterRender.push(() => true);
+    return model._loader.process(frameState);
   }
+
+  return true;
 }
 
 function updateCustomShader(model, frameState) {
@@ -2635,6 +2779,11 @@ Model.prototype.destroyModelResources = function () {
  * @returns {Model} The newly created model.
  */
 Model.fromGltf = function (options) {
+  deprecationWarning(
+    "Model.fromGltf",
+    "Model.fromGltf was deprecated in CesiumJS 1.104.  It will be removed in 1.107. Use Model.fromGltfAsync instead."
+  );
+
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
@@ -2688,10 +2837,183 @@ Model.fromGltf = function (options) {
   return model;
 };
 
+/**
+ * <p>
+ * Asynchronously creates a model from a glTF asset. This function returns a promise that resolves when the model is ready to render, i.e., when the external binary, image,
+ * and shader files are downloaded and the WebGL resources are created.
+ * </p>
+ * <p>
+ * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {String|Resource} options.url The url to the .gltf or .glb file.
+ * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+ * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+ * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
+ * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+ * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+ * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+ * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
+ * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
+ * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
+ * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+ * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+ * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
+ * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
+ * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
+ * @param {Cesium3DTileContent} [options.content] The tile content this model belongs to. This property will be undefined if model is not loaded as part of a tileset.
+ * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
+ * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+ * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+ * @param {Color} [options.color] A color that blends with the model's rendered color.
+ * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
+ * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
+ * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
+ * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
+ * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
+ * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
+ *
+ * @returns {Promise<Model>} A promise that resolves to the created model when it is ready to render.
+ *
+ * @exception {RuntimeError} The model failed to load.
+ *
+ * @example
+ * // Load a model and add it to the scene
+ * try {
+ *  const model = await Cesium.Model.fromGltfAsync({
+ *    url: "../../SampleData/models/CesiumMan/Cesium_Man.glb"
+ *  });
+ *  viewer.scene.primitives.add(model);
+ * } catch (error) {
+ *  console.log(`Failed to load model. ${error}`);
+ * }
+ *
+ * @example
+ * // Position a model with modelMatrix and display it with a minimum size of 128 pixels
+ * const position = Cesium.Cartesian3.fromDegrees(
+ *   -123.0744619,
+ *   44.0503706,
+ *   5000.0
+ * );
+ * const headingPositionRoll = new Cesium.HeadingPitchRoll();
+ * const fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+ *   "north",
+ *   "west"
+ * );
+ * try {
+ *  const model = await Cesium.Model.fromGltfAsync({
+ *    url: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+ *    modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+ *      position,
+ *      headingPositionRoll,
+ *      Cesium.Ellipsoid.WGS84,
+ *      fixedFrameTransform
+ *    ),
+ *    minimumPixelSize: 128,
+ *  });
+ *  viewer.scene.primitives.add(model);
+ * } catch (error) {
+ *  console.log(`Failed to load model. ${error}`);
+ * }
+ */
+Model.fromGltfAsync = async function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(options.url) && !defined(options.gltf)) {
+    throw new DeveloperError("options.url is required.");
+  }
+  //>>includeEnd('debug');
+
+  // options.gltf is used internally for 3D Tiles. It can be a Resource, a URL
+  // to a glTF/glb file, a binary glTF buffer, or a JSON object containing the
+  // glTF contents.
+  const gltf = defaultValue(options.url, options.gltf);
+
+  const loaderOptions = {
+    releaseGltfJson: options.releaseGltfJson,
+    asynchronous: options.asynchronous,
+    incrementallyLoadTextures: options.incrementallyLoadTextures,
+    upAxis: options.upAxis,
+    forwardAxis: options.forwardAxis,
+    loadAttributesFor2D: options.projectTo2D,
+    loadIndicesForWireframe: options.enableDebugWireframe,
+    loadPrimitiveOutline: options.enableShowOutline,
+    loadForClassification: defined(options.classificationType),
+  };
+
+  const basePath = defaultValue(options.basePath, "");
+  const baseResource = Resource.createIfNeeded(basePath);
+
+  if (defined(gltf.asset)) {
+    loaderOptions.gltfJson = gltf;
+    loaderOptions.baseResource = baseResource;
+    loaderOptions.gltfResource = baseResource;
+  } else if (gltf instanceof Uint8Array) {
+    loaderOptions.typedArray = gltf;
+    loaderOptions.baseResource = baseResource;
+    loaderOptions.gltfResource = baseResource;
+  } else {
+    loaderOptions.gltfResource = Resource.createIfNeeded(gltf);
+  }
+
+  const loader = new GltfLoader(loaderOptions);
+
+  const is3DTiles = defined(options.content);
+  const type = is3DTiles ? ModelType.TILE_GLTF : ModelType.GLTF;
+
+  const resource = loaderOptions.gltfResource;
+
+  const modelOptions = makeModelOptions(loader, type, options);
+  modelOptions.resource = resource;
+
+  try {
+    // This load the gltf JSON and ensures the gltf is valid
+    // Further resource loading is handled synchronously in loader.process(), and requires
+    // hooking into model's update() as the frameState is needed
+    await loader.load();
+
+    const model = new Model(modelOptions);
+
+    const resourceCredits = model._resource.credits;
+    if (defined(resourceCredits)) {
+      const length = resourceCredits.length;
+      for (let i = 0; i < length; i++) {
+        model._resourceCredits.push(resourceCredits[i]);
+      }
+    }
+
+    return model;
+  } catch (error) {
+    loader.destroy();
+    throw ModelUtility.getError("model", resource, error);
+  }
+};
+
 /*
  * @private
  */
-Model.fromB3dm = function (options) {
+Model.fromB3dm = async function (options) {
   const loaderOptions = {
     b3dmResource: options.resource,
     arrayBuffer: options.arrayBuffer,
@@ -2709,15 +3031,22 @@ Model.fromB3dm = function (options) {
 
   const loader = new B3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
-  const model = new Model(modelOptions);
-  return model;
+  try {
+    await loader.load();
+
+    const modelOptions = makeModelOptions(loader, ModelType.TILE_B3DM, options);
+    const model = new Model(modelOptions);
+    return model;
+  } catch (error) {
+    loader.destroy();
+    throw error;
+  }
 };
 
 /**
  * @private
  */
-Model.fromPnts = function (options) {
+Model.fromPnts = async function (options) {
   const loaderOptions = {
     arrayBuffer: options.arrayBuffer,
     byteOffset: options.byteOffset,
@@ -2725,15 +3054,21 @@ Model.fromPnts = function (options) {
   };
   const loader = new PntsLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(loader, ModelType.TILE_PNTS, options);
-  const model = new Model(modelOptions);
-  return model;
+  try {
+    await loader.load();
+    const modelOptions = makeModelOptions(loader, ModelType.TILE_PNTS, options);
+    const model = new Model(modelOptions);
+    return model;
+  } catch (error) {
+    loader.destroy();
+    throw error;
+  }
 };
 
 /*
  * @private
  */
-Model.fromI3dm = function (options) {
+Model.fromI3dm = async function (options) {
   const loaderOptions = {
     i3dmResource: options.resource,
     arrayBuffer: options.arrayBuffer,
@@ -2749,15 +3084,22 @@ Model.fromI3dm = function (options) {
   };
   const loader = new I3dmLoader(loaderOptions);
 
-  const modelOptions = makeModelOptions(loader, ModelType.TILE_I3DM, options);
-  const model = new Model(modelOptions);
-  return model;
+  try {
+    await loader.load();
+
+    const modelOptions = makeModelOptions(loader, ModelType.TILE_I3DM, options);
+    const model = new Model(modelOptions);
+    return model;
+  } catch (error) {
+    loader.destroy();
+    throw error;
+  }
 };
 
 /*
  * @private
  */
-Model.fromGeoJson = function (options) {
+Model.fromGeoJson = async function (options) {
   const loaderOptions = {
     geoJson: options.geoJson,
   };

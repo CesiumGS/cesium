@@ -61,7 +61,7 @@
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
         // Add Cesium OSM buildings to the scene as our example 3D Tileset.
-        const osmBuildingsTileset = Cesium.createOsmBuildings();
+        const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
         viewer.scene.primitives.add(osmBuildingsTileset);
 
         // Set the initial camera to look at Seattle

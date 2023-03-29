@@ -87,10 +87,8 @@ function Vector3DTilePolylines(options) {
   this._geometryByteLength = 0;
 
   this._ready = false;
-  this._update = function (polylines, frameState) {};
-  this._readyPromise = initialize(this);
-
-  this._verticesPromise = undefined;
+  this._promise = undefined;
+  this._error = undefined;
 }
 
 Object.defineProperties(Vector3DTilePolylines.prototype, {
@@ -101,6 +99,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   trianglesLength: {
     get: function () {
@@ -115,6 +114,7 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   geometryByteLength: {
     get: function () {
@@ -123,14 +123,15 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
   },
 
   /**
-   * Gets a promise that resolves when the primitive is ready to render.
+   * Returns true when the primitive is ready to render.
    * @memberof Vector3DTilePolylines.prototype
-   * @type {Promise<void>}
+   * @type {boolean}
    * @readonly
+   * @private
    */
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 });
@@ -181,51 +182,55 @@ function createVertexArray(polylines, context) {
     return;
   }
 
-  if (!defined(polylines._verticesPromise)) {
-    let positions = polylines._positions;
-    let widths = polylines._widths;
-    let counts = polylines._counts;
-    let batchIds = polylines._transferrableBatchIds;
+  let positions = polylines._positions;
+  let widths = polylines._widths;
+  let counts = polylines._counts;
+  let batchIds = polylines._transferrableBatchIds;
 
-    let packedBuffer = polylines._packedBuffer;
+  let packedBuffer = polylines._packedBuffer;
 
-    if (!defined(packedBuffer)) {
-      // Copy because they may be the views on the same buffer.
-      positions = polylines._positions = positions.slice();
-      widths = polylines._widths = widths.slice();
-      counts = polylines._counts = counts.slice();
+  if (!defined(packedBuffer)) {
+    // Copy because they may be the views on the same buffer.
+    positions = polylines._positions = positions.slice();
+    widths = polylines._widths = widths.slice();
+    counts = polylines._counts = counts.slice();
 
-      batchIds = polylines._transferrableBatchIds = polylines._batchIds.slice();
+    batchIds = polylines._transferrableBatchIds = polylines._batchIds.slice();
 
-      packedBuffer = polylines._packedBuffer = packBuffer(polylines);
-    }
+    packedBuffer = polylines._packedBuffer = packBuffer(polylines);
+  }
 
-    const transferrableObjects = [
-      positions.buffer,
-      widths.buffer,
-      counts.buffer,
-      batchIds.buffer,
-      packedBuffer.buffer,
-    ];
-    const parameters = {
-      positions: positions.buffer,
-      widths: widths.buffer,
-      counts: counts.buffer,
-      batchIds: batchIds.buffer,
-      packedBuffer: packedBuffer.buffer,
-      keepDecodedPositions: polylines._keepDecodedPositions,
-    };
+  const transferrableObjects = [
+    positions.buffer,
+    widths.buffer,
+    counts.buffer,
+    batchIds.buffer,
+    packedBuffer.buffer,
+  ];
+  const parameters = {
+    positions: positions.buffer,
+    widths: widths.buffer,
+    counts: counts.buffer,
+    batchIds: batchIds.buffer,
+    packedBuffer: packedBuffer.buffer,
+    keepDecodedPositions: polylines._keepDecodedPositions,
+  };
 
-    const verticesPromise = (polylines._verticesPromise = createVerticesTaskProcessor.scheduleTask(
-      parameters,
-      transferrableObjects
-    ));
-    if (!defined(verticesPromise)) {
-      // Postponed
-      return;
-    }
+  const verticesPromise = createVerticesTaskProcessor.scheduleTask(
+    parameters,
+    transferrableObjects
+  );
+  if (!defined(verticesPromise)) {
+    // Postponed
+    return;
+  }
 
-    return verticesPromise.then(function (result) {
+  return verticesPromise
+    .then(function (result) {
+      if (polylines.isDestroyed()) {
+        return;
+      }
+
       if (polylines._keepDecodedPositions) {
         polylines._decodedPositions = new Float64Array(result.decodedPositions);
         polylines._decodedPositionOffsets = new Uint32Array(
@@ -245,13 +250,22 @@ function createVertexArray(polylines, context) {
           ? new Uint16Array(result.indices)
           : new Uint32Array(result.indices);
 
+      finishVertexArray(polylines, context);
+
       polylines._ready = true;
+    })
+    .catch((error) => {
+      if (polylines.isDestroyed()) {
+        return;
+      }
+
+      // Throw the error next frame
+      polylines._error = error;
     });
-  }
 }
 
 function finishVertexArray(polylines, context) {
-  if (polylines._ready && !defined(polylines._va)) {
+  if (!defined(polylines._va)) {
     const curPositions = polylines._currentPositions;
     const prevPositions = polylines._previousPositions;
     const nextPositions = polylines._nextPositions;
@@ -603,45 +617,35 @@ Vector3DTilePolylines.prototype.applyStyle = function (style, features) {
   }
 };
 
-function initialize(polylines) {
-  return new Promise(function (resolve, reject) {
-    polylines._update = function (polylines, frameState) {
-      const context = frameState.context;
-      const promise = createVertexArray(polylines, context);
-      createUniformMap(polylines, context);
-      createShaders(polylines, context);
-      createRenderStates(polylines);
-
-      if (polylines._ready) {
-        const passes = frameState.passes;
-        if (passes.render || passes.pick) {
-          queueCommands(polylines, frameState);
-        }
-      }
-
-      if (!defined(promise)) {
-        return;
-      }
-
-      promise
-        .then(function () {
-          finishVertexArray(polylines, context);
-          resolve();
-        })
-        .catch(function (e) {
-          reject(e);
-        });
-    };
-  });
-}
-
 /**
  * Updates the batches and queues the commands for rendering.
  *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTilePolylines.prototype.update = function (frameState) {
-  this._update(this, frameState);
+  const context = frameState.context;
+  if (!this._ready) {
+    if (!defined(this._promise)) {
+      this._promise = createVertexArray(this, context);
+    }
+
+    if (defined(this._error)) {
+      const error = this._error;
+      this._error = undefined;
+      throw error;
+    }
+
+    return;
+  }
+
+  createUniformMap(this, context);
+  createShaders(this, context);
+  createRenderStates(this);
+
+  const passes = frameState.passes;
+  if (passes.render || passes.pick) {
+    queueCommands(this, frameState);
+  }
 };
 
 /**

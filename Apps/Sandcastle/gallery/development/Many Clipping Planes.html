@@ -217,17 +217,20 @@
         }
 
         let tileset;
+        let currentUrl;
         async function loadTileset(url, height) {
+          currentUrl = url;
           createClippingPlanes();
-          tileset = viewer.scene.primitives.add(
-            new Cesium.Cesium3DTileset({
-              url: url,
-              clippingPlanes: modelEntityClippingPlanes,
-              enableDebugWireframe: true,
-            })
-          );
+          tileset = await Cesium.Cesium3DTileset.fromUrl(url, {
+            clippingPlanes: modelEntityClippingPlanes,
+            enableDebugWireframe: true,
+          });
+          if (currentUrl !== url) {
+            // Another scenario has been loaded. Discard the result.
+            return;
+          }
+          viewer.scene.primitives.add(tileset);
 
-          await tileset.readyPromise;
           const boundingSphere = tileset.boundingSphere;
 
           const cartographic = Cesium.Cartographic.fromCartesian(
