@@ -2574,10 +2574,6 @@ Model.prototype.hasSilhouette = function (frameState) {
   );
 };
 
-function supportsSkipLevelOfDetail(frameState) {
-  return frameState.context.stencilBuffer;
-}
-
 /**
  * Gets whether or not the model is part of a tileset that uses the
  * skipLevelOfDetail optimization. This accounts for whether skipLevelOfDetail
@@ -2588,13 +2584,13 @@ function supportsSkipLevelOfDetail(frameState) {
  * @private
  */
 Model.prototype.hasSkipLevelOfDetail = function (frameState) {
-  const is3DTiles = ModelType.is3DTiles(this.type);
-  if (!is3DTiles) {
+  if (!ModelType.is3DTiles(this.type)) {
     return false;
   }
 
+  const supportsSkipLevelOfDetail = frameState.context.stencilBuffer;
   const tileset = this._content.tileset;
-  return supportsSkipLevelOfDetail(frameState) && tileset.skipLevelOfDetail;
+  return supportsSkipLevelOfDetail && tileset.isSkippingLevelOfDetail;
 };
 
 /**

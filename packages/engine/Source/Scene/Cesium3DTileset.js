@@ -52,6 +52,9 @@ import StencilConstants from "./StencilConstants.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
+import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedTraversal.js";
+import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
+import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
 
 /**
  * @typedef {Object} Cesium3DTileset.ConstructorOptions
@@ -668,7 +671,7 @@ function Cesium3DTileset(options) {
    * @default false
    */
   this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
-  this._skipLevelOfDetail = this.skipLevelOfDetail;
+
   this._disableSkipLevelOfDetail = false;
 
   /**
@@ -1371,6 +1374,50 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._customShader = value;
+    },
+  },
+
+  /**
+   * Whether the tileset is rendering different levels of detail in the same view.
+   * Only relevant if {@link Cesium3DTileset.isSkippingLevelOfDetail} is true.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {boolean}
+   * @private
+   */
+  hasMixedContent: {
+    get: function () {
+      return this._hasMixedContent;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("value", value);
+      //>>includeEnd('debug');
+
+      this._hasMixedContent = value;
+    },
+  },
+
+  /**
+   * Whether this tileset is actually skipping levels of detail.
+   * The user option may have been disabled if all tiles are using additive refinement,
+   * or if some tiles have a content type for which rendering does not support skipping
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {boolean}
+   * @private
+   * @readonly
+   */
+  isSkippingLevelOfDetail: {
+    get: function () {
+      return (
+        this.skipLevelOfDetail &&
+        !defined(this._classificationType) &&
+        !this._disableSkipLevelOfDetail &&
+        !this._allTilesAdditive
+      );
     },
   },
 
@@ -2531,12 +2578,6 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
     0.0
   );
 
-  this._skipLevelOfDetail =
-    this.skipLevelOfDetail &&
-    !defined(this._classificationType) &&
-    !this._disableSkipLevelOfDetail &&
-    !this._allTilesAdditive;
-
   if (this.dynamicScreenSpaceError) {
     updateDynamicScreenSpaceError(this, frameState);
   }
@@ -2836,18 +2877,15 @@ function updateTiles(tileset, frameState, passOptions) {
   tileset._styleEngine.applyStyle(tileset);
   tileset._styleApplied = true;
 
-  const isRender = passOptions.isRender;
-  const { statistics, tileVisible } = tileset;
-  const commandList = frameState.commandList;
+  const { commandList, context } = frameState;
   const numberOfInitialCommands = commandList.length;
   const selectedTiles = tileset._selectedTiles;
-  const selectedLength = selectedTiles.length;
 
   const bivariateVisibilityTest =
-    tileset._skipLevelOfDetail &&
+    tileset.isSkippingLevelOfDetail &&
     tileset._hasMixedContent &&
-    frameState.context.stencilBuffer &&
-    selectedLength > 0;
+    context.stencilBuffer &&
+    selectedTiles.length > 0;
 
   tileset._backfaceCommands.length = 0;
 
@@ -2864,8 +2902,11 @@ function updateTiles(tileset, frameState, passOptions) {
     commandList.push(tileset._stencilClearCommand);
   }
 
+  const { statistics, tileVisible } = tileset;
+  const isRender = passOptions.isRender;
   const lengthBeforeUpdate = commandList.length;
-  for (let i = 0; i < selectedLength; ++i) {
+
+  for (let i = 0; i < selectedTiles.length; ++i) {
     const tile = selectedTiles[i];
     // Raise the tileVisible event before update in case the tileVisible event
     // handler makes changes that update needs to apply to WebGL resources
@@ -3142,8 +3183,6 @@ function update(tileset, frameState, passStatistics, passOptions) {
   const statistics = tileset._statistics;
   statistics.clear();
 
-  const isRender = passOptions.isRender;
-
   // Resets the visibility check for each pass
   ++tileset._updatedVisibilityFrame;
 
@@ -3154,7 +3193,9 @@ function update(tileset, frameState, passStatistics, passOptions) {
   tileset._cullRequestsWhileMoving =
     tileset.cullRequestsWhileMoving && !tileset._modelMatrixChanged;
 
-  const ready = passOptions.traversal.selectTiles(tileset, frameState);
+  const ready = tileset
+    .getTraversal(passOptions)
+    .selectTiles(tileset, frameState);
 
   if (passOptions.requestTiles) {
     requestTiles(tileset);
@@ -3165,7 +3206,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
   // Update pass statistics
   Cesium3DTilesetStatistics.clone(statistics, passStatistics);
 
-  if (isRender) {
+  if (passOptions.isRender) {
     const credits = tileset._credits;
     if (defined(credits) && statistics.selected !== 0) {
       for (let i = 0; i < credits.length; ++i) {
@@ -3178,6 +3219,24 @@ function update(tileset, frameState, passStatistics, passOptions) {
 
   return ready;
 }
+
+/**
+ * @private
+ * @param {object} passOptions
+ * @returns {Cesium3DTilesetTraversal}
+ */
+Cesium3DTileset.prototype.getTraversal = function (passOptions) {
+  const { pass } = passOptions;
+  if (
+    pass === Cesium3DTilePass.MOST_DETAILED_PRELOAD ||
+    pass === Cesium3DTilePass.MOST_DETAILED_PICK
+  ) {
+    return Cesium3DTilesetMostDetailedTraversal;
+  }
+  return this.isSkippingLevelOfDetail
+    ? Cesium3DTilesetSkipTraversal
+    : Cesium3DTilesetBaseTraversal;
+};
 
 /**
  * @private

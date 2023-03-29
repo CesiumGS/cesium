@@ -1,6 +1,3 @@
-import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedTraversal.js";
-import Cesium3DTilesetTraversal from "./Cesium3DTilesetTraversal.js";
-
 /**
  * The pass in which a 3D Tileset is updated.
  *
@@ -21,56 +18,56 @@ const Cesium3DTilePass = {
 const passOptions = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
 
 passOptions[Cesium3DTilePass.RENDER] = Object.freeze({
-  traversal: Cesium3DTilesetTraversal,
+  pass: Cesium3DTilePass.RENDER,
   isRender: true,
   requestTiles: true,
   ignoreCommands: false,
 });
 
 passOptions[Cesium3DTilePass.PICK] = Object.freeze({
-  traversal: Cesium3DTilesetTraversal,
+  pass: Cesium3DTilePass.PICK,
   isRender: false,
   requestTiles: false,
   ignoreCommands: false,
 });
 
 passOptions[Cesium3DTilePass.SHADOW] = Object.freeze({
-  traversal: Cesium3DTilesetTraversal,
+  pass: Cesium3DTilePass.SHADOW,
   isRender: false,
   requestTiles: true,
   ignoreCommands: false,
 });
 
 passOptions[Cesium3DTilePass.PRELOAD] = Object.freeze({
-  traversal: Cesium3DTilesetTraversal,
+  pass: Cesium3DTilePass.SHADOW,
   isRender: false,
   requestTiles: true,
   ignoreCommands: true,
 });
 
 passOptions[Cesium3DTilePass.PRELOAD_FLIGHT] = Object.freeze({
-  traversal: Cesium3DTilesetTraversal,
+  pass: Cesium3DTilePass.PRELOAD_FLIGHT,
   isRender: false,
   requestTiles: true,
   ignoreCommands: true,
 });
 
 passOptions[Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK] = Object.freeze({
-  traversal: Cesium3DTilesetTraversal,
+  pass: Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK,
   isRender: false,
   requestTiles: true,
   ignoreCommands: true,
 });
 
 passOptions[Cesium3DTilePass.MOST_DETAILED_PRELOAD] = Object.freeze({
-  traversal: Cesium3DTilesetMostDetailedTraversal,
+  pass: Cesium3DTilePass.MOST_DETAILED_PRELOAD,
   isRender: false,
   requestTiles: true,
   ignoreCommands: true,
 });
 
 passOptions[Cesium3DTilePass.MOST_DETAILED_PICK] = Object.freeze({
-  traversal: Cesium3DTilesetMostDetailedTraversal,
+  pass: Cesium3DTilePass.MOST_DETAILED_PICK,
   isRender: false,
   requestTiles: false,
   ignoreCommands: false,

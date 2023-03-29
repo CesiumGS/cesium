@@ -3802,12 +3802,12 @@ describe(
         const statistics = tileset._statistics;
         expect(statistics.numberOfTilesWithContentReady).toEqual(1);
         expect(tileset._selectedTiles[0]._selectionDepth).toEqual(0);
-        expect(tileset._hasMixedContent).toBe(false);
+        expect(tileset.hasMixedContent).toBe(false);
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
           function (tileset) {
             expect(statistics.numberOfTilesWithContentReady).toEqual(5);
-            expect(tileset._hasMixedContent).toBe(false);
+            expect(tileset.hasMixedContent).toBe(false);
           }
         );
       });
@@ -3828,7 +3828,7 @@ describe(
 
         scene.renderForSpecs();
 
-        expect(tileset._hasMixedContent).toBe(true);
+        expect(tileset.hasMixedContent).toBe(true);
         expect(statistics.numberOfTilesWithContentReady).toEqual(2);
         expect(
           tileset.root.children[0].children[0].children[3]._selectionDepth
@@ -3838,7 +3838,7 @@ describe(
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
           function (tileset) {
             expect(statistics.numberOfTilesWithContentReady).toEqual(5);
-            expect(tileset._hasMixedContent).toBe(false);
+            expect(tileset.hasMixedContent).toBe(false);
           }
         );
       });
@@ -3889,7 +3889,7 @@ describe(
         expect(root.children[0].children[0].children[3]._finalResolution).toBe(
           true
         );
-        expect(tileset._hasMixedContent).toBe(true);
+        expect(tileset.hasMixedContent).toBe(true);
 
         const commandList = scene.frameState.commandList;
         const rs = commandList[1].renderState;
@@ -3933,7 +3933,7 @@ describe(
         expect(
           isSelected(tileset, root.children[0].children[0].children[3])
         ).toBe(false);
-        expect(tileset._hasMixedContent).toBe(false);
+        expect(tileset.hasMixedContent).toBe(false);
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       });
