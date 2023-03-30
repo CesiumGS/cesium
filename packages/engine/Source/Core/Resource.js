@@ -39,39 +39,22 @@ const xhrBlobSupported = (function () {
 /**
  * Parses a query string and returns the object equivalent.
  *
- * @param {Uri} uri The Uri with a query object.
- * @param {Resource} resource The Resource that will be assigned queryParameters.
- * @param {boolean} merge If true, we'll merge with the resource's existing queryParameters. Otherwise they will be replaced.
- * @param {boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in uri will take precedence.
+ * @param {string} queryString The query string
+ * @returns {object}
  *
  * @private
  */
-function parseQuery(uri, resource, merge, preserveQueryParameters) {
-  const queryString = uri.query();
+function parseQuery(queryString) {
   if (queryString.length === 0) {
     return {};
   }
 
-  let query;
-  // Special case we run into where the querystring is just a string, not key/value pairs
+  // Special case where the querystring is just a string, not key/value pairs
   if (queryString.indexOf("=") === -1) {
-    const result = {};
-    result[queryString] = undefined;
-    query = result;
-  } else {
-    query = queryToObject(queryString);
+    return { [queryString]: undefined };
   }
 
-  if (merge) {
-    resource._queryParameters = combineQueryParameters(
-      query,
-      resource._queryParameters,
-      preserveQueryParameters
-    );
-  } else {
-    resource._queryParameters = query;
-  }
-  uri.search("");
+  return queryToObject(queryString);
 }
 
 /**
@@ -319,13 +302,7 @@ function Resource(options) {
   this.retryAttempts = defaultValue(options.retryAttempts, 0);
   this._retryCount = 0;
 
-  const uri = new Uri(options.url);
-  parseQuery(uri, this, true, true);
-
-  // Remove the fragment as it's not sent with a request
-  uri.fragment("");
-
-  this._url = uri.toString();
+  this.parseUrl(options.url, true, true);
 }
 
 /**
@@ -471,14 +448,7 @@ Object.defineProperties(Resource.prototype, {
       return this.getUrlComponent(true, true);
     },
     set: function (value) {
-      const uri = new Uri(value);
-
-      parseQuery(uri, this, false);
-
-      // Remove the fragment as it's not sent with a request
-      uri.fragment("");
-
-      this._url = uri.toString();
+      this.parseUrl(value, false, false);
     },
   },
 
@@ -553,6 +523,46 @@ Object.defineProperties(Resource.prototype, {
  */
 Resource.prototype.toString = function () {
   return this.getUrlComponent(true, true);
+};
+
+/**
+ * Parse a url string, and store its info
+ *
+ * @param {string} url The input url string.
+ * @param {boolean} merge If true, we'll merge with the resource's existing queryParameters. Otherwise they will be replaced.
+ * @param {boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in url will take precedence.
+ * @param {string} [baseUrl] If supplied, and input url is a relative url, it will be made absolute relative to baseUrl
+ *
+ * @private
+ */
+Resource.prototype.parseUrl = function (
+  url,
+  merge,
+  preserveQueryParameters,
+  baseUrl
+) {
+  const uri = new Uri(url);
+  const query = parseQuery(uri.query());
+
+  if (merge) {
+    this._queryParameters = combineQueryParameters(
+      query,
+      this._queryParameters,
+      preserveQueryParameters
+    );
+  } else {
+    this._queryParameters = query;
+  }
+
+  // Remove unneeded info from the Uri
+  uri.search("");
+  uri.fragment("");
+
+  if (defined(baseUrl) && uri.scheme === "") {
+    uri.absoluteTo(getAbsoluteUri(baseUrl));
+  }
+
+  this._url = uri.toString();
 };
 
 /**
@@ -667,24 +677,11 @@ Resource.prototype.getDerivedResource = function (options) {
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    const uri = new Uri(options.url);
-
     const preserveQueryParameters = defaultValue(
       options.preserveQueryParameters,
       false
     );
-    parseQuery(uri, resource, true, preserveQueryParameters);
-
-    // Remove the fragment as it's not sent with a request
-    uri.fragment("");
-
-    if (uri.scheme() !== "") {
-      resource._url = uri.toString();
-    } else {
-      resource._url = uri
-        .absoluteTo(new Uri(getAbsoluteUri(this._url)))
-        .toString();
-    }
+    resource.parseUrl(options.url, true, preserveQueryParameters, this._url);
   }
 
   if (defined(options.queryParameters)) {
