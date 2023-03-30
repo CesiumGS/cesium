@@ -1301,7 +1301,8 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
   resource.setQueryParameters(callbackQuery);
 
   const request = resource.request;
-  request.url = resource.url;
+  const url = resource.url;
+  request.url = url;
   request.requestFunction = function () {
     const deferred = defer();
 
@@ -1316,11 +1317,7 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
       }
     };
 
-    Resource._Implementations.loadAndExecuteScript(
-      resource.url,
-      functionName,
-      deferred
-    );
+    Resource._Implementations.loadAndExecuteScript(url, functionName, deferred);
     return deferred.promise;
   };
 
@@ -1376,7 +1373,8 @@ Resource.prototype._makeRequest = function (options) {
   checkAndResetRequest(resource.request);
 
   const request = resource.request;
-  request.url = resource.url;
+  const url = resource.url;
+  request.url = url;
 
   request.requestFunction = function () {
     const responseType = options.responseType;
@@ -1386,7 +1384,7 @@ Resource.prototype._makeRequest = function (options) {
     const data = options.data;
     const deferred = defer();
     const xhr = Resource._Implementations.loadWithXhr(
-      resource.url,
+      url,
       responseType,
       method,
       data,
