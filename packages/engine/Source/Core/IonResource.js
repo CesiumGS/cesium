@@ -198,6 +198,10 @@ IonResource.prototype._makeRequest = function (options) {
   }
   options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
   options.headers["X-Cesium-Client"] = "CesiumJS";
+  /* global CESIUM_VERSION */
+  if (typeof CESIUM_VERSION !== "undefined") {
+    options.headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
+  }
 
   return Resource.prototype._makeRequest.call(this, options);
 };
