@@ -123,7 +123,7 @@ function addAnimation(collection, animation, options) {
  * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for this animation.
  * @returns {ModelAnimation} The animation that was added to the collection.
  *
- * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
+ * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#ready} to return trues.
  * @exception {DeveloperError} options.name must be a valid animation name.
  * @exception {DeveloperError} options.index must be a valid animation index.
  * @exception {DeveloperError} Either options.name or options.index must be defined.
