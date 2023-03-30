@@ -20,6 +20,7 @@ try {
 ##### Additions :tada:
 
 - Added `ArcGisMapServerImageryProvider.fromUrl`, `ArcGISTiledElevationTerrainProvider.fromUrl`, `BingMapsImageryProvider.fromUrl`, `CesiumTerrainProvider.fromUrl`, `CesiumTerrainProvider.fromIonAssetId`, `GoogleEarthEnterpriseMetadata.fromUrl`, `GoogleEarthEnterpriseImageryProvider.fromMetadata`, `GoogleEarthEnterpriseMapsProvider.fromUrl`, `GoogleEarthEnterpriseTerrainProvider.fromMetadata`, `ImageryLayer.fromProviderAsync`, `IonImageryProvider.fromAssetId`, `SingleTileImageryProvider.fromUrl`, `Terrain`, `TileMapServiceImageryProvider.fromUrl`, `VRTheWorldTerrainProvider.fromUrl`, `createWorldTerrainAsync`, `Cesium3DTileset.fromUrl`, `Cesium3DTileset.fromIonAssetId`, `createOsmBuildingsAsync`, `Model.fromGltfAsync`, `Model.readyEvent`, `Model.errorEvent`,`Model.texturesReadyEvent`, `I3SDataProvider.fromUrl`, and `Cesium3DTilesVoxelProvider.fromUrl` for better async flow and error handling. [#11059](https://github.com/CesiumGS/cesium/pull/11059)
+- Send `X-Cesium-*` headers to requests to cesium ion. [#11200](https://github.com/CesiumGS/cesium/pull/11200)
 
 ##### Fixes :wrench:
 
