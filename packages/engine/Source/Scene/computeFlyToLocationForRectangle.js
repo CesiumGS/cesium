@@ -10,11 +10,11 @@ import SceneMode from "./SceneMode.js";
  * @param {Rectangle} rectangle The rectangle being zoomed to.
  * @param {Scene} scene The scene being used.
  *
- * @returns {Cartographic} The optimal location to place the camera so that the entire rectangle is in view.
+ * @returns {Promise<Cartographic>} The optimal location to place the camera so that the entire rectangle is in view.
  *
  * @private
  */
-function computeFlyToLocationForRectangle(rectangle, scene) {
+async function computeFlyToLocationForRectangle(rectangle, scene) {
   const terrainProvider = scene.terrainProvider;
   const mapProjection = scene.mapProjection;
   const ellipsoid = mapProjection.ellipsoid;
@@ -28,49 +28,45 @@ function computeFlyToLocationForRectangle(rectangle, scene) {
   }
 
   if (!defined(terrainProvider)) {
-    return Promise.resolve(positionWithoutTerrain);
+    return positionWithoutTerrain;
   }
 
-  return terrainProvider.readyPromise.then(function () {
-    const availability = terrainProvider.availability;
+  // readyPromise has been deprecated; This is here for backwards compatibility
+  await terrainProvider._readyPromise;
+  const availability = terrainProvider.availability;
 
-    if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {
-      return positionWithoutTerrain;
+  if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {
+    return positionWithoutTerrain;
+  }
+
+  const cartographics = [
+    Rectangle.center(rectangle),
+    Rectangle.southeast(rectangle),
+    Rectangle.southwest(rectangle),
+    Rectangle.northeast(rectangle),
+    Rectangle.northwest(rectangle),
+  ];
+
+  const positionsOnTerrain = await computeFlyToLocationForRectangle._sampleTerrainMostDetailed(
+    terrainProvider,
+    cartographics
+  );
+
+  let heightFound = false;
+  const maxHeight = positionsOnTerrain.reduce(function (currentMax, item) {
+    if (!defined(item.height)) {
+      return currentMax;
     }
+    heightFound = true;
+    return Math.max(item.height, currentMax);
+  }, -Number.MAX_VALUE);
 
-    const cartographics = [
-      Rectangle.center(rectangle),
-      Rectangle.southeast(rectangle),
-      Rectangle.southwest(rectangle),
-      Rectangle.northeast(rectangle),
-      Rectangle.northwest(rectangle),
-    ];
+  const finalPosition = positionWithoutTerrain;
+  if (heightFound) {
+    finalPosition.height += maxHeight;
+  }
 
-    return computeFlyToLocationForRectangle
-      ._sampleTerrainMostDetailed(terrainProvider, cartographics)
-      .then(function (positionsOnTerrain) {
-        let heightFound = false;
-        const maxHeight = positionsOnTerrain.reduce(function (
-          currentMax,
-          item
-        ) {
-          if (!defined(item.height)) {
-            return currentMax;
-          }
-          heightFound = true;
-          return Math.max(item.height, currentMax);
-        },
-        -Number.MAX_VALUE);
-
-        const finalPosition = positionWithoutTerrain;
-
-        if (heightFound) {
-          finalPosition.height += maxHeight;
-        }
-
-        return finalPosition;
-      });
-  });
+  return finalPosition;
 }
 
 //Exposed for testing.

@@ -2,8 +2,9 @@ import {
   ArcGISTiledElevationTerrainProvider,
   Cartographic,
   CesiumTerrainProvider,
-  createWorldTerrain,
+  createWorldTerrainAsync,
   defined,
+  IonResource,
   RequestScheduler,
   Resource,
   sampleTerrain,
@@ -11,9 +12,29 @@ import {
 
 describe("Core/sampleTerrain", function () {
   let worldTerrain;
-  beforeAll(function () {
-    worldTerrain = createWorldTerrain();
-    return worldTerrain.readyPromise;
+  beforeAll(async function () {
+    worldTerrain = await createWorldTerrainAsync();
+  });
+
+  it("queries heights from deprecated world terrain", function () {
+    const positions = [
+      Cartographic.fromDegrees(86.925145, 27.988257),
+      Cartographic.fromDegrees(87.0, 28.0),
+    ];
+
+    const terrain = new CesiumTerrainProvider({
+      url: IonResource.fromAssetId(1),
+    });
+
+    return sampleTerrain(terrain, 11, positions).then(function (
+      passedPositions
+    ) {
+      expect(passedPositions).toBe(positions);
+      expect(positions[0].height).toBeGreaterThan(5000);
+      expect(positions[0].height).toBeLessThan(10000);
+      expect(positions[1].height).toBeGreaterThan(5000);
+      expect(positions[1].height).toBeLessThan(10000);
+    });
   });
 
   it("queries heights", function () {
@@ -33,25 +54,22 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
-  it("queries heights from Small Terrain", function () {
-    const terrainProvider = new CesiumTerrainProvider({
-      url: "https://s3.amazonaws.com/cesiumjs/smallTerrain",
-    });
+  it("queries heights from Small Terrain", async function () {
+    const terrainProvider = await CesiumTerrainProvider.fromUrl(
+      "https://s3.amazonaws.com/cesiumjs/smallTerrain"
+    );
 
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(87.0, 28.0),
     ];
 
-    return sampleTerrain(terrainProvider, 11, positions).then(function (
-      passedPositions
-    ) {
-      expect(passedPositions).toBe(positions);
-      expect(positions[0].height).toBeGreaterThan(5000);
-      expect(positions[0].height).toBeLessThan(10000);
-      expect(positions[1].height).toBeGreaterThan(5000);
-      expect(positions[1].height).toBeLessThan(10000);
-    });
+    const passedPositions = await sampleTerrain(terrainProvider, 11, positions);
+    expect(passedPositions).toBe(positions);
+    expect(positions[0].height).toBeGreaterThan(5000);
+    expect(positions[0].height).toBeLessThan(10000);
+    expect(positions[1].height).toBeGreaterThan(5000);
+    expect(positions[1].height).toBeLessThan(10000);
   });
 
   it("sets height to undefined if terrain data is not available at the position and specified level", function () {
@@ -78,24 +96,24 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
-  it("requires terrainProvider, level, and positions", function () {
+  it("requires terrainProvider, level, and positions", async function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),
       Cartographic.fromDegrees(0.0, 0.0, 0.0),
       Cartographic.fromDegrees(87.0, 28.0),
     ];
 
-    expect(function () {
-      sampleTerrain(undefined, 11, positions);
-    }).toThrowDeveloperError();
+    await expectAsync(
+      sampleTerrain(undefined, 11, positions)
+    ).toBeRejectedWithDeveloperError();
 
-    expect(function () {
-      sampleTerrain(worldTerrain, undefined, positions);
-    }).toThrowDeveloperError();
+    await expectAsync(
+      sampleTerrain(worldTerrain, undefined, positions)
+    ).toBeRejectedWithDeveloperError();
 
-    expect(function () {
-      sampleTerrain(worldTerrain, 11, undefined);
-    }).toThrowDeveloperError();
+    await expectAsync(
+      sampleTerrain(worldTerrain, 11, undefined)
+    ).toBeRejectedWithDeveloperError();
   });
 
   it("works for a dodgy point right near the edge of a tile", function () {
@@ -210,15 +228,15 @@ describe("Core/sampleTerrain", function () {
       };
     }
 
-    it("should work for Cesium World Terrain", function () {
+    it("should work for Cesium World Terrain", async function () {
       patchXHRLoad({
         "/layer.json": "Data/CesiumTerrainTileJson/9_759_335/layer.json",
         "/9/759/335.terrain?v=1.2.0":
           "Data/CesiumTerrainTileJson/9_759_335/9_759_335.terrain",
       });
-      const terrainProvider = new CesiumTerrainProvider({
-        url: "made/up/url",
-      });
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url"
+      );
 
       spyOnTerrainDataCreateMesh(terrainProvider);
 
@@ -251,7 +269,7 @@ describe("Core/sampleTerrain", function () {
       });
     });
 
-    it("should work for ArcGIS terrain", function () {
+    it("should work for ArcGIS terrain", async function () {
       patchXHRLoad({
         "/?f=pjson": "Data/ArcGIS/9_214_379/root.json",
         "/tilemap/10/384/640/128/128":
@@ -259,9 +277,9 @@ describe("Core/sampleTerrain", function () {
         "/tile/9/214/379": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
       });
 
-      const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-        url: "made/up/url",
-      });
+      const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+        "made/up/url"
+      );
 
       spyOnTerrainDataCreateMesh(terrainProvider);
 
@@ -279,22 +297,21 @@ describe("Core/sampleTerrain", function () {
       );
 
       const level = 9;
-      return sampleTerrain(terrainProvider, level, [
+      await sampleTerrain(terrainProvider, level, [
         positionA,
         positionB,
         positionC,
-      ]).then(function () {
-        // 3 very similar positions
-        expect(positionA.height).toBeCloseTo(7681, 0);
-        expect(positionB.height).toBeCloseTo(7681, 0);
-        expect(positionC.height).toBeCloseTo(7681, 0);
-        // 1 tile was requested (all positions were close enough on the same tile)
-        //  and the mesh was created once because we're using an ArcGIS tile
-        return expectTileAndMeshCounts(terrainProvider, 1, true);
-      });
+      ]);
+      // 3 very similar positions
+      expect(positionA.height).toBeCloseTo(7681, 0);
+      expect(positionB.height).toBeCloseTo(7681, 0);
+      expect(positionC.height).toBeCloseTo(7681, 0);
+      // 1 tile was requested (all positions were close enough on the same tile)
+      //  and the mesh was created once because we're using an ArcGIS tile
+      await expectTileAndMeshCounts(terrainProvider, 1, true);
     });
 
-    it("should handle the RequestScheduler throttling the requestTileGeometry requests with a retry", function () {
+    it("should handle the RequestScheduler throttling the requestTileGeometry requests with a retry", async function () {
       patchXHRLoad({
         "/?f=pjson": "Data/ArcGIS/9_214_379/root.json",
         "/tilemap/10/384/640/128/128":
@@ -305,9 +322,9 @@ describe("Core/sampleTerrain", function () {
         "/tile/9/214/376": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
       });
 
-      const terrainProvider = new ArcGISTiledElevationTerrainProvider({
-        url: "made/up/url",
-      });
+      const terrainProvider = await ArcGISTiledElevationTerrainProvider.fromUrl(
+        "made/up/url"
+      );
 
       let i = 0;
       const originalRequestTileGeometry = terrainProvider.requestTileGeometry;
@@ -339,22 +356,21 @@ describe("Core/sampleTerrain", function () {
       const positionC = Cartographic.fromDegrees(87, 28);
 
       const level = 9;
-      return sampleTerrain(terrainProvider, level, [
+      await sampleTerrain(terrainProvider, level, [
         positionA,
         positionB,
         positionC,
-      ]).then(function () {
-        // the order of requests is an implementation detail and not important,
-        //  but it is deterministic, and we can assert that there were some retries in there
-        const calls = terrainProvider.requestTileGeometry.calls;
-        expect(calls.count()).toEqual(5);
-        expect(calls.argsFor(0)).toEqual([376, 214, 9]);
-        expect(calls.argsFor(1)).toEqual([378, 214, 9]);
-        // this tile was retried twice, because the 2nd and 3rd call to requestTileGeometry returned undefined as expected
-        expect(calls.argsFor(2)).toEqual([378, 214, 9]);
-        expect(calls.argsFor(3)).toEqual([378, 214, 9]);
-        expect(calls.argsFor(4)).toEqual([379, 214, 9]);
-      });
+      ]);
+      // the order of requests is an implementation detail and not important,
+      //  but it is deterministic, and we can assert that there were some retries in there
+      const calls = terrainProvider.requestTileGeometry.calls;
+      expect(calls.count()).toEqual(5);
+      expect(calls.argsFor(0)).toEqual([376, 214, 9]);
+      expect(calls.argsFor(1)).toEqual([378, 214, 9]);
+      // this tile was retried twice, because the 2nd and 3rd call to requestTileGeometry returned undefined as expected
+      expect(calls.argsFor(2)).toEqual([378, 214, 9]);
+      expect(calls.argsFor(3)).toEqual([378, 214, 9]);
+      expect(calls.argsFor(4)).toEqual([379, 214, 9]);
     });
   });
 });

@@ -1,6 +1,7 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
@@ -42,7 +43,15 @@ function Geometry3DTileContent(
   this.featurePropertiesDirty = false;
   this._group = undefined;
 
-  this._readyPromise = initialize(this, arrayBuffer, byteOffset);
+  this._ready = false;
+
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  this._resolveContent = undefined;
+  this._readyPromise = new Promise((resolve) => {
+    this._resolveContent = resolve;
+  });
+
+  initialize(this, arrayBuffer, byteOffset);
 }
 
 Object.defineProperties(Geometry3DTileContent.prototype, {
@@ -96,8 +105,37 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Geometry3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
+    get: function () {
+      return this._ready;
+    },
+  },
+
+  /**
+   * Gets the promise that will be resolved when the tile's content is ready to render.
+   *
+   * @memberof Geometry3DTileContent.prototype
+   *
+   * @type {Promise<Geometry3DTileContent>}
+   * @readonly
+   * @deprecated
+   * @private
+   */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "Geometry3DTileContent.readyPromise",
+        "Geometry3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Geometry3DTileContent.ready to return true instead."
+      );
       return this._readyPromise;
     },
   },
@@ -224,7 +262,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
   if (atLeastOneDefined && atLeastOneUndefined) {
     throw new RuntimeError(
-      "If one group of batch ids is defined, then all batch ids must be defined."
+      "If one group of batch ids is defined, then all batch ids must be defined"
     );
   }
 
@@ -290,7 +328,8 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
-    content._readyPromise.resolve(content);
+    content._ready = true;
+    content._resolveContent(content);
     return;
   }
 
@@ -451,9 +490,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       boundingVolume: content.tile.boundingVolume.boundingVolume,
     });
 
-    return content._geometries.readyPromise.then(function () {
-      return content;
-    });
+    return content;
   }
 
   return Promise.resolve(content);
@@ -509,8 +546,11 @@ Geometry3DTileContent.prototype.update = function (tileset, frameState) {
     this._geometries.debugWireframe = this._tileset.debugWireframe;
     this._geometries.update(frameState);
   }
-  if (defined(this._batchTable) && this._geometries._ready) {
+
+  if (defined(this._batchTable) && this._geometries.ready) {
     this._batchTable.update(tileset, frameState);
+    this._ready = true;
+    this._resolveContent(this);
   }
 };
 

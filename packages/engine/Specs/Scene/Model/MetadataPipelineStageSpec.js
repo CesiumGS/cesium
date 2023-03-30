@@ -56,15 +56,15 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    function loadGltf(gltfPath) {
+    async function loadGltf(gltfPath) {
       const gltfLoader = new GltfLoader({
         gltfResource: new Resource({ url: gltfPath }),
         incrementallyLoadTextures: false,
       });
       gltfLoaders.push(gltfLoader);
-      gltfLoader.load();
-
-      return waitForLoaderProcess(gltfLoader, scene);
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+      return gltfLoader;
     }
 
     function mockRenderResources(components) {

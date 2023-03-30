@@ -22,34 +22,24 @@ import ResourceCache from "./ResourceCache.js";
  * Subtrees also handle content metadata and metadata about the subtree itself.
  * </p>
  *
+ * This object is normally not instantiated directly, use {@link ImplicitSubtree.fromSubtreeJson}.
+ *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_metadata#implicit-tile-properties|Implicit Tile Properties in the 3DTILES_metadata specification}
+ * @see ImplicitSubtree.fromSubtreeJson
  *
  * @alias ImplicitSubtree
  * @constructor
  *
  * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
- * @param {object} [json] The JSON object for this subtree. Mutually exclusive with subtreeView.
- * @param {Uint8Array} [subtreeView] The contents of a subtree binary in a Uint8Array. Mutually exclusive with json.
  * @param {ImplicitTileset} implicitTileset The implicit tileset. This includes information about the size of subtrees
  * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the subtree's root tile.
- *
- * @exception {DeveloperError} One of json and subtreeView must be defined.
  *
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
-function ImplicitSubtree(
-  resource,
-  json,
-  subtreeView,
-  implicitTileset,
-  implicitCoordinates
-) {
+function ImplicitSubtree(resource, implicitTileset, implicitCoordinates) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("resource", resource);
-  if (defined(json) === defined(subtreeView)) {
-    throw new DeveloperError("One of json and subtreeView must be defined.");
-  }
   Check.typeOf.object("implicitTileset", implicitTileset);
   Check.typeOf.object("implicitCoordinates", implicitCoordinates);
   //>>includeEnd('debug');
@@ -77,21 +67,21 @@ function ImplicitSubtree(
   this._tileJumpBuffer = undefined;
   this._contentJumpBuffers = [];
 
-  this._readyPromise = initialize(this, json, subtreeView, implicitTileset);
+  this._ready = false;
 }
 
 Object.defineProperties(ImplicitSubtree.prototype, {
   /**
-   * A promise that resolves once all necessary availability buffers
+   * Returns true once all necessary availability buffers
    * are loaded.
    *
-   * @type {Promise}
+   * @type {boolean}
    * @readonly
    * @private
    */
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 
@@ -309,16 +299,40 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
 
 /**
  * Parse all relevant information out of the subtree. This fetches any
- * external buffers that are used by the implicit tileset. When finished,
- * it resolves/rejects subtree.readyPromise.
+ * external buffers that are used by the implicit tileset.
  *
- * @param {ImplicitSubtree} subtree The subtree
+ * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
  * @param {object} [json] The JSON object for this subtree. If parsing from a binary subtree file, this will be undefined.
  * @param {Uint8Array} [subtreeView] The contents of the subtree binary
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
+ * @param {ImplicitTileCoordinates} implicitCoordinates The coordinates of the subtree's root tile.
+ * @return {Promise<ImplicitSubtree>} The created subtree
  * @private
+ *
+ * @exception {DeveloperError} One of json and subtreeView must be defined.
  */
-function initialize(subtree, json, subtreeView, implicitTileset) {
+ImplicitSubtree.fromSubtreeJson = async function (
+  resource,
+  json,
+  subtreeView,
+  implicitTileset,
+  implicitCoordinates
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("resource", resource);
+  if (defined(json) === defined(subtreeView)) {
+    throw new DeveloperError("One of json and subtreeView must be defined.");
+  }
+  Check.typeOf.object("implicitTileset", implicitTileset);
+  Check.typeOf.object("implicitCoordinates", implicitCoordinates);
+  //>>includeEnd('debug');
+
+  const subtree = new ImplicitSubtree(
+    resource,
+    implicitTileset,
+    implicitCoordinates
+  );
+
   let chunks;
   if (defined(json)) {
     chunks = {
@@ -409,26 +423,25 @@ function initialize(subtree, json, subtreeView, implicitTileset) {
     markActiveMetadataBufferViews(contentPropertyTableJson, bufferViewHeaders);
   }
 
-  return requestActiveBuffers(subtree, bufferHeaders, chunks.binary).then(
-    function (buffersU8) {
-      const bufferViewsU8 = parseActiveBufferViews(
-        bufferViewHeaders,
-        buffersU8
-      );
-      parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
-
-      if (defined(tilePropertyTableJson)) {
-        parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8);
-        makeTileJumpBuffer(subtree);
-      }
-
-      parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8);
-      makeContentJumpBuffers(subtree);
-
-      return subtree;
-    }
+  const buffersU8 = await requestActiveBuffers(
+    subtree,
+    bufferHeaders,
+    chunks.binary
   );
-}
+  const bufferViewsU8 = parseActiveBufferViews(bufferViewHeaders, buffersU8);
+  parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
+
+  if (defined(tilePropertyTableJson)) {
+    parseTileMetadataTable(subtree, implicitTileset, bufferViewsU8);
+    makeTileJumpBuffer(subtree);
+  }
+
+  parseContentMetadataTables(subtree, implicitTileset, bufferViewsU8);
+  makeContentJumpBuffers(subtree);
+
+  subtree._ready = true;
+  return subtree;
+};
 
 /**
  * A helper object for storing the two parts of the subtree binary
@@ -708,20 +721,28 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
   });
 }
 
-function requestExternalBuffer(subtree, bufferHeader) {
+async function requestExternalBuffer(subtree, bufferHeader) {
   const baseResource = subtree._resource;
   const bufferResource = baseResource.getDerivedResource({
     url: bufferHeader.uri,
   });
 
-  const bufferLoader = ResourceCache.loadExternalBuffer({
+  const bufferLoader = ResourceCache.getExternalBufferLoader({
     resource: bufferResource,
   });
   subtree._bufferLoader = bufferLoader;
 
-  return bufferLoader.promise.then(function (bufferLoader) {
-    return bufferLoader.typedArray;
-  });
+  try {
+    await bufferLoader.load();
+  } catch (error) {
+    if (bufferLoader.isDestroyed()) {
+      return;
+    }
+
+    throw error;
+  }
+
+  return bufferLoader.typedArray;
 }
 
 /**

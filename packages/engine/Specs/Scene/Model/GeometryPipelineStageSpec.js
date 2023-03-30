@@ -132,12 +132,12 @@ describe(
       });
     }
 
-    function loadGltf(gltfPath, options) {
+    async function loadGltf(gltfPath, options) {
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
-      gltfLoader.load();
-
-      return waitForLoaderProcess(gltfLoader, scene);
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+      return gltfLoader;
     }
 
     function mockRenderResources(primitive) {

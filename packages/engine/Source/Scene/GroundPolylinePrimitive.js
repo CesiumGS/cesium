@@ -4,6 +4,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryInstanceAttribute from "../Core/GeometryInstanceAttribute.js";
 import GroundPolylineGeometry from "../Core/GroundPolylineGeometry.js";
@@ -193,6 +194,7 @@ function GroundPolylinePrimitive(options) {
 
   this._ready = false;
   const groundPolylinePrimitive = this;
+  // This is here for backwards compatibility. This promise wrapper can be removed once readyPromise is removed.
   this._readyPromise = new Promise((resolve, reject) => {
     groundPolylinePrimitive._completeLoad = () => {
       this._ready = true;
@@ -318,9 +320,14 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    * @memberof GroundPolylinePrimitive.prototype
    * @type {Promise<GroundPolylinePrimitive>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "GroundPolylinePrimitive.readyPromise",
+        "GroundPolylinePrimitive.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for GroundPolylinePrimitive.ready to return true instead."
+      );
       return this._readyPromise;
     },
   },
@@ -825,7 +832,6 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
     };
 
     this._primitive = new Primitive(primitiveOptions);
-    this._primitive.readyPromise.then(this._completeLoad);
   }
 
   if (
@@ -841,6 +847,11 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
   this._primitive.show = this.show;
   this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
   this._primitive.update(frameState);
+  frameState.afterRender.push(() => {
+    if (!this._ready && defined(this._primitive) && this._primitive.ready) {
+      this._completeLoad();
+    }
+  });
 };
 
 /**

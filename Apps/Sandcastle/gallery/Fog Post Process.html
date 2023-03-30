@@ -27,22 +27,12 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
         });
-
-        if (!viewer.scene.context.depthTexture) {
-          window.alert("This browser does not support the fog post process.");
-        }
-
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(40866),
-        });
-
-        viewer.scene.primitives.add(tileset);
 
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
@@ -57,6 +47,10 @@
           ),
           endTransform: Cesium.Matrix4.IDENTITY,
         });
+
+        if (!viewer.scene.context.depthTexture) {
+          window.alert("This browser does not support the fog post process.");
+        }
 
         const fragmentShaderSource = `
           float getDistance(sampler2D depthTexture, vec2 texCoords) 
@@ -105,12 +99,22 @@
               fogColor: Cesium.Color.BLACK,
             },
           })
-        ); //Sandcastle_End
-        Sandcastle.finishedLoading();
+        );
+
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

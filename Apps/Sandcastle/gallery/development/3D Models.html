@@ -90,7 +90,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -160,7 +160,7 @@
             model.colorBlendAmount = Number(newValue);
           });
 
-        function createModel(url, height, heading, pitch, roll) {
+        async function createModel(url, height, heading, pitch, roll) {
           height = Cesium.defaultValue(height, 0.0);
           heading = Cesium.defaultValue(heading, 0.0);
           pitch = Cesium.defaultValue(pitch, 0.0);
@@ -178,16 +178,16 @@
           );
 
           scene.primitives.removeAll(); // Remove previous model
-          model = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: url,
-              modelMatrix: modelMatrix,
-              minimumPixelSize: 128,
-            })
-          );
+          try {
+            model = scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                modelMatrix: modelMatrix,
+                minimumPixelSize: 128,
+              })
+            );
 
-          model.readyPromise
-            .then(function (model) {
+            model.readyEvent.addEventListener(() => {
               model.color = Cesium.Color.fromAlpha(
                 getColor(viewModel.color),
                 Number(viewModel.alpha)
@@ -218,10 +218,10 @@
                 center,
                 new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
               );
-            })
-            .catch(function (error) {
-              window.alert(error);
             });
+          } catch (error) {
+            window.alert(error);
+          }
         }
 
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -305,11 +305,14 @@
         });
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

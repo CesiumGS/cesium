@@ -69,20 +69,6 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GltfJsonLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof GltfJsonLoader.prototype
-   *
-   * @type {Promise<GltfJsonLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
-  /**
    * The cache key of the resource.
    *
    * @memberof GltfJsonLoader.prototype
@@ -117,56 +103,55 @@ Object.defineProperties(GltfJsonLoader.prototype, {
  * @returns {Promise<GltfJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
-GltfJsonLoader.prototype.load = function () {
-  this._state = ResourceLoaderState.LOADING;
-
-  let processPromise;
-  if (defined(this._gltfJson)) {
-    processPromise = processGltfJson(this, this._gltfJson);
-  } else if (defined(this._typedArray)) {
-    processPromise = processGltfTypedArray(this, this._typedArray);
-  } else {
-    processPromise = loadFromUri(this);
+GltfJsonLoader.prototype.load = async function () {
+  if (defined(this._promise)) {
+    return this._promise;
   }
 
-  const that = this;
-  this._promise = processPromise
-    .then(function (gltf) {
-      if (that.isDestroyed()) {
-        return;
-      }
-      that._gltf = gltf;
-      that._state = ResourceLoaderState.READY;
-      return that;
-    })
-    .catch(function (error) {
-      if (that.isDestroyed()) {
-        return;
-      }
-      return handleError(that, error);
-    });
+  this._state = ResourceLoaderState.LOADING;
 
+  if (defined(this._gltfJson)) {
+    this._promise = processGltfJson(this, this._gltfJson);
+    return this._promise;
+  }
+
+  if (defined(this._typedArray)) {
+    this._promise = processGltfTypedArray(this, this._typedArray);
+    return this._promise;
+  }
+
+  this._promise = loadFromUri(this);
   return this._promise;
 };
 
-function loadFromUri(gltfJsonLoader) {
-  return gltfJsonLoader._fetchGltf().then(function (arrayBuffer) {
+async function loadFromUri(gltfJsonLoader) {
+  let typedArray;
+  try {
+    const arrayBuffer = await gltfJsonLoader._fetchGltf();
     if (gltfJsonLoader.isDestroyed()) {
       return;
     }
-    const typedArray = new Uint8Array(arrayBuffer);
-    return processGltfTypedArray(gltfJsonLoader, typedArray);
-  });
+
+    typedArray = new Uint8Array(arrayBuffer);
+  } catch (error) {
+    if (gltfJsonLoader.isDestroyed()) {
+      return;
+    }
+
+    handleError(gltfJsonLoader, error);
+  }
+
+  return processGltfTypedArray(gltfJsonLoader, typedArray);
 }
 
 function handleError(gltfJsonLoader, error) {
   gltfJsonLoader.unload();
   gltfJsonLoader._state = ResourceLoaderState.FAILED;
   const errorMessage = `Failed to load glTF: ${gltfJsonLoader._gltfResource.url}`;
-  return Promise.reject(gltfJsonLoader.getError(errorMessage, error));
+  throw gltfJsonLoader.getError(errorMessage, error);
 }
 
-function upgradeVersion(gltfJsonLoader, gltf) {
+async function upgradeVersion(gltfJsonLoader, gltf) {
   if (
     defined(gltf.asset) &&
     gltf.asset.version === "2.0" &&
@@ -188,23 +173,25 @@ function upgradeVersion(gltfJsonLoader, gltf) {
         url: buffer.uri,
       });
       const resourceCache = gltfJsonLoader._resourceCache;
-      const bufferLoader = resourceCache.loadExternalBuffer({
+      const bufferLoader = resourceCache.getExternalBufferLoader({
         resource: resource,
       });
-
       gltfJsonLoader._bufferLoaders.push(bufferLoader);
 
       promises.push(
-        bufferLoader.promise.then(function (bufferLoader) {
+        bufferLoader.load().then(function () {
+          if (bufferLoader.isDestroyed()) {
+            return;
+          }
+
           buffer.extras._pipeline.source = bufferLoader.typedArray;
         })
       );
     }
   });
 
-  return Promise.all(promises).then(function () {
-    updateVersion(gltf);
-  });
+  await Promise.all(promises);
+  updateVersion(gltf);
 }
 
 function decodeDataUris(gltf) {
@@ -233,42 +220,54 @@ function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
     const source = buffer.extras._pipeline.source;
     if (defined(source) && !defined(buffer.uri)) {
       const resourceCache = gltfJsonLoader._resourceCache;
-      const bufferLoader = resourceCache.loadEmbeddedBuffer({
+      const bufferLoader = resourceCache.getEmbeddedBufferLoader({
         parentResource: gltfJsonLoader._gltfResource,
         bufferId: bufferId,
         typedArray: source,
       });
-
       gltfJsonLoader._bufferLoaders.push(bufferLoader);
-      promises.push(bufferLoader.promise);
+      promises.push(bufferLoader.load());
     }
   });
   return Promise.all(promises);
 }
 
-function processGltfJson(gltfJsonLoader, gltf) {
-  addPipelineExtras(gltf);
+async function processGltfJson(gltfJsonLoader, gltf) {
+  try {
+    addPipelineExtras(gltf);
 
-  return decodeDataUris(gltf)
-    .then(function () {
-      return upgradeVersion(gltfJsonLoader, gltf);
-    })
-    .then(function () {
-      addDefaults(gltf);
-      return loadEmbeddedBuffers(gltfJsonLoader, gltf);
-    })
-    .then(function () {
-      removePipelineExtras(gltf);
-      return gltf;
-    });
+    await decodeDataUris(gltf);
+    await upgradeVersion(gltfJsonLoader, gltf);
+    addDefaults(gltf);
+    await loadEmbeddedBuffers(gltfJsonLoader, gltf);
+    removePipelineExtras(gltf);
+
+    gltfJsonLoader._gltf = gltf;
+    gltfJsonLoader._state = ResourceLoaderState.READY;
+    return gltfJsonLoader;
+  } catch (error) {
+    if (gltfJsonLoader.isDestroyed()) {
+      return;
+    }
+
+    handleError(gltfJsonLoader, error);
+  }
 }
 
-function processGltfTypedArray(gltfJsonLoader, typedArray) {
+async function processGltfTypedArray(gltfJsonLoader, typedArray) {
   let gltf;
-  if (getMagic(typedArray) === "glTF") {
-    gltf = parseGlb(typedArray);
-  } else {
-    gltf = getJsonFromTypedArray(typedArray);
+  try {
+    if (getMagic(typedArray) === "glTF") {
+      gltf = parseGlb(typedArray);
+    } else {
+      gltf = getJsonFromTypedArray(typedArray);
+    }
+  } catch (error) {
+    if (gltfJsonLoader.isDestroyed()) {
+      return;
+    }
+
+    handleError(gltfJsonLoader, error);
   }
 
   return processGltfJson(gltfJsonLoader, gltf);
@@ -282,7 +281,9 @@ GltfJsonLoader.prototype.unload = function () {
   const bufferLoaders = this._bufferLoaders;
   const bufferLoadersLength = bufferLoaders.length;
   for (let i = 0; i < bufferLoadersLength; ++i) {
-    this._resourceCache.unload(bufferLoaders[i]);
+    bufferLoaders[i] =
+      !bufferLoaders[i].isDestroyed() &&
+      this._resourceCache.unload(bufferLoaders[i]);
   }
   this._bufferLoaders.length = 0;
 

@@ -3,6 +3,7 @@ import {
   ResourceCache,
   ResourceLoaderState,
   MetadataSchemaLoader,
+  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/MetadataSchemaLoader", function () {
@@ -61,7 +62,7 @@ describe("Scene/MetadataSchemaLoader", function () {
     }).toThrowDeveloperError();
   });
 
-  it("rejects promise if schema cannot be fetched", function () {
+  it("load throws if schema cannot be fetched", async function () {
     spyOn(Resource.prototype, "fetchJson").and.callFake(function () {
       const error = new Error("404 Not Found");
       return Promise.reject(error);
@@ -71,38 +72,29 @@ describe("Scene/MetadataSchemaLoader", function () {
       resource: resource,
     });
 
-    schemaLoader.load();
-
-    return schemaLoader.promise
-      .then(function (schemaLoader) {
-        fail();
-      })
-      .catch(function (runtimeError) {
-        expect(runtimeError.message).toBe(
-          "Failed to load schema: https://example.com/schema.json\n404 Not Found"
-        );
-      });
+    await expectAsync(schemaLoader.load()).toBeRejectedWithError(
+      RuntimeError,
+      "Failed to load schema: https://example.com/schema.json\n404 Not Found"
+    );
   });
 
-  it("loads schema from JSON", function () {
+  it("loads schema from JSON", async function () {
     const schemaLoader = new MetadataSchemaLoader({
       schema: schemaJson,
     });
-    schemaLoader.load();
+    await schemaLoader.load();
 
-    return schemaLoader.promise.then(function (schemaLoader) {
-      const schema = schemaLoader.schema;
-      expect(schema).toBeDefined();
+    const schema = schemaLoader.schema;
+    expect(schema).toBeDefined();
 
-      const enums = schema.enums;
-      expect(enums.treeType).toBeDefined();
+    const enums = schema.enums;
+    expect(enums.treeType).toBeDefined();
 
-      const classes = schema.classes;
-      expect(classes.tree).toBeDefined();
-    });
+    const classes = schema.classes;
+    expect(classes.tree).toBeDefined();
   });
 
-  it("loads external schema", function () {
+  it("loads external schema", async function () {
     const fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
       Promise.resolve(schemaJson)
     );
@@ -111,23 +103,21 @@ describe("Scene/MetadataSchemaLoader", function () {
       resource: resource,
     });
 
-    schemaLoader.load();
+    await schemaLoader.load();
 
-    return schemaLoader.promise.then(function (schemaLoader) {
-      expect(fetchJson).toHaveBeenCalled();
+    expect(fetchJson).toHaveBeenCalled();
 
-      const schema = schemaLoader.schema;
-      expect(schema).toBeDefined();
+    const schema = schemaLoader.schema;
+    expect(schema).toBeDefined();
 
-      const enums = schema.enums;
-      expect(enums.treeType).toBeDefined();
+    const enums = schema.enums;
+    expect(enums.treeType).toBeDefined();
 
-      const classes = schema.classes;
-      expect(classes.tree).toBeDefined();
-    });
+    const classes = schema.classes;
+    expect(classes.tree).toBeDefined();
   });
 
-  it("destroys schema", function () {
+  it("destroys schema", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
       Promise.resolve(schemaJson)
     );
@@ -138,27 +128,20 @@ describe("Scene/MetadataSchemaLoader", function () {
 
     expect(schemaLoader.schema).not.toBeDefined();
 
-    schemaLoader.load();
+    await schemaLoader.load();
 
-    return schemaLoader.promise.then(function (schemaLoader) {
-      expect(schemaLoader.schema).toBeDefined();
-      expect(schemaLoader.isDestroyed()).toBe(false);
+    expect(schemaLoader.schema).toBeDefined();
+    expect(schemaLoader.isDestroyed()).toBe(false);
 
-      schemaLoader.destroy();
-      expect(schemaLoader.schema).not.toBeDefined();
-      expect(schemaLoader.isDestroyed()).toBe(true);
-    });
+    schemaLoader.destroy();
+    expect(schemaLoader.schema).not.toBeDefined();
+    expect(schemaLoader.isDestroyed()).toBe(true);
   });
 
-  function resolveJsonAfterDestroy(rejectPromise) {
-    const promise = new Promise(function (resolve, reject) {
-      if (rejectPromise) {
-        reject(new Error());
-      } else {
-        resolve(schemaJson);
-      }
-    });
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(promise);
+  async function resolveJsonAfterDestroy(rejectPromise) {
+    spyOn(Resource.prototype, "fetchJson").and.callFake(() =>
+      rejectPromise ? Promise.reject(new Error()) : Promise.resolve(schemaJson)
+    );
 
     const schemaLoader = new MetadataSchemaLoader({
       resource: resource,
@@ -166,13 +149,13 @@ describe("Scene/MetadataSchemaLoader", function () {
 
     expect(schemaLoader.schema).not.toBeDefined();
 
-    schemaLoader.load();
+    const promise = schemaLoader.load();
     expect(schemaLoader._state).toBe(ResourceLoaderState.LOADING);
     schemaLoader.destroy();
-    return schemaLoader.promise.then(function () {
-      expect(schemaLoader.schema).not.toBeDefined();
-      expect(schemaLoader.isDestroyed()).toBe(true);
-    });
+
+    await expectAsync(promise).toBeResolved();
+    expect(schemaLoader.schema).not.toBeDefined();
+    expect(schemaLoader.isDestroyed()).toBe(true);
   }
 
   it("handles resolving json after destroy", function () {

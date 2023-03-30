@@ -168,14 +168,10 @@ describe(
       });
 
       function loadGeometries(geometries) {
-        let ready = false;
-        geometries.readyPromise.then(function () {
-          ready = true;
-        });
         return pollToPromise(function () {
           geometries.update(scene.frameState);
           scene.frameState.commandList.length = 0;
-          return ready;
+          return geometries.ready;
         });
       }
 

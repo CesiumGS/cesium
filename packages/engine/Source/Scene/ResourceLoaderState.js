@@ -21,13 +21,21 @@ const ResourceLoaderState = {
    */
   LOADING: 1,
   /**
-   * The resource has finished loading, but requires further processing. GPU resources are allocated in this state as needed.
+   * The resource has finished loading, but requires further processing.
    *
    * @type {number}
    * @constant
    * @private
    */
-  PROCESSING: 2,
+  LOADED: 2,
+  /**
+   * The resource is processing. GPU resources are allocated in this state as needed.
+   *
+   * @type {Number}
+   * @constant
+   * @private
+   */
+  PROCESSING: 3,
   /**
    * The resource has finished loading and processing; the results are ready to be used.
    *
@@ -35,7 +43,7 @@ const ResourceLoaderState = {
    * @constant
    * @private
    */
-  READY: 3,
+  READY: 4,
   /**
    * The resource loading or processing has failed due to an error.
    *
@@ -43,6 +51,6 @@ const ResourceLoaderState = {
    * @constant
    * @private
    */
-  FAILED: 4,
+  FAILED: 5,
 };
 export default Object.freeze(ResourceLoaderState);

@@ -25,6 +25,69 @@ function createMissingFunctionMessageFunction(
   };
 }
 
+function makeAsyncThrowFunction(debug, Type, name) {
+  if (debug) {
+    return function (util) {
+      return {
+        compare: function (actualPromise, message) {
+          // based on the built-in Jasmine toBeRejectedWithError async-matcher
+          if (!defined(actualPromise) || !defined(actualPromise.then)) {
+            throw new Error("Expected function to be called on a promise.");
+          }
+
+          return actualPromise
+            .then(() => {
+              return {
+                pass: false,
+                message:
+                  "Expected a promise to be rejected but it was resolved.",
+              };
+            })
+            .catch((e) => {
+              let result = e instanceof Type || e.name === name;
+              if (defined(message)) {
+                result = result && util.equals(e.message, message);
+              }
+              return {
+                pass: result,
+                message: result
+                  ? `Expected a promise to be rejected with ${name}.`
+                  : `Expected a promise to be rejected with ${
+                      defined(message) ? `${name}: ${message}` : name
+                    }, but it was rejected with ${e}`,
+              };
+            });
+        },
+      };
+    };
+  }
+
+  return function () {
+    return {
+      compare: function (actualPromise) {
+        return Promise.resolve(actualPromise)
+          .then(() => {
+            return { pass: true };
+          })
+          .catch((e) => {
+            // Ignore any error
+            return { pass: true };
+          });
+      },
+      negativeCompare: function (actualPromise) {
+        return Promise.resolve(actualPromise)
+          .then(() => {
+            return { pass: true };
+          })
+          .catch((e) => {
+            // Ignore any error
+            return { pass: true };
+          });
+      },
+    };
+  };
+}
+
 function makeThrowFunction(debug, Type, name) {
   if (debug) {
     return function (util) {
@@ -627,6 +690,16 @@ function createDefaultMatchers(debug) {
   };
 }
 
+function createDefaultAsyncMatchers(debug) {
+  return {
+    toBeRejectedWithDeveloperError: makeAsyncThrowFunction(
+      debug,
+      DeveloperError,
+      "DeveloperError"
+    ),
+  };
+}
+
 function countRenderedPixels(rgba) {
   const pixelCount = rgba.length / 4;
   let count = 0;
@@ -926,6 +999,7 @@ function expectContextToRender(actual, expected, expectEqual) {
 function addDefaultMatchers(debug) {
   return function () {
     this.addMatchers(createDefaultMatchers(debug));
+    this.addAsyncMatchers(createDefaultAsyncMatchers(debug));
   };
 }
 export default addDefaultMatchers;

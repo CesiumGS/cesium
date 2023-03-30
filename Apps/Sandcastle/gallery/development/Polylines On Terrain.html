@@ -50,16 +50,14 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const worldTerrain = Cesium.createWorldTerrain({
-          requestWaterMask: true,
-          requestVertexNormals: true,
-        });
-
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: worldTerrain,
+          terrain: Cesium.Terrain.fromWorldTerrain({
+            requestWaterMask: true,
+            requestVertexNormals: true,
+          }),
         });
 
         if (!Cesium.GroundPolylinePrimitive.isSupported(viewer.scene)) {
@@ -362,13 +360,15 @@
             },
           },
         ]);
-
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -1,10 +1,11 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
+import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -24,8 +25,8 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * Initialization options for the ArcGisMapServerImageryProvider constructor
  *
- * @property {Resource|string} url The URL of the ArcGIS MapServer service.
- * @property {string} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
+ * @property {Resource|string} [url] The URL of the ArcGIS MapServer service. Deprecated.
+ * @property {string} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service. Deprecated.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  If this value is not specified, a default
  *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -61,14 +62,220 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 
 /**
+ * Used to track creation details while fetching initial metadata
+ *
+ * @constructor
+ * @private
+ *
+ * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options An object describing initialization options
+ */
+function ImageryProviderBuilder(options) {
+  this.useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+
+  const ellipsoid = options.ellipsoid;
+  this.tilingScheme = defaultValue(
+    options.tilingScheme,
+    new GeographicTilingScheme({ ellipsoid: ellipsoid })
+  );
+  this.rectangle = defaultValue(options.rectangle, this.tilingScheme.rectangle);
+  this.ellipsoid = ellipsoid;
+
+  let credit = options.credit;
+  if (typeof credit === "string") {
+    credit = new Credit(credit);
+  }
+  this.credit = credit;
+  this.tileDiscardPolicy = options.tileDiscardPolicy;
+
+  this.tileWidth = defaultValue(options.tileWidth, 256);
+  this.tileHeight = defaultValue(options.tileHeight, 256);
+  this.maximumLevel = options.maximumLevel;
+}
+
+/**
+ * Complete ArcGisMapServerImageryProvider creation based on builder values.
+ *
+ * @private
+ *
+ * @param {ArcGisMapServerImageryProvider} provider
+ */
+ImageryProviderBuilder.prototype.build = function (provider) {
+  provider._useTiles = this.useTiles;
+  provider._tilingScheme = this.tilingScheme;
+  provider._rectangle = this.rectangle;
+  provider._credit = this.credit;
+  provider._tileDiscardPolicy = this.tileDiscardPolicy;
+  provider._tileWidth = this.tileWidth;
+  provider._tileHeight = this.tileHeight;
+  provider._maximumLevel = this.maximumLevel;
+
+  // Install the default tile discard policy if none has been supplied.
+  if (this.useTiles && !defined(this.tileDiscardPolicy)) {
+    provider._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
+      missingImageUrl: buildImageResource(provider, 0, 0, this.maximumLevel)
+        .url,
+      pixelsToCheck: [
+        new Cartesian2(0, 0),
+        new Cartesian2(200, 20),
+        new Cartesian2(20, 200),
+        new Cartesian2(80, 110),
+        new Cartesian2(160, 130),
+      ],
+      disableCheckIfAllPixelsAreTransparent: true,
+    });
+  }
+
+  provider._ready = true;
+};
+
+function metadataSuccess(data, imageryProviderBuilder) {
+  const tileInfo = data.tileInfo;
+  if (!defined(tileInfo)) {
+    imageryProviderBuilder.useTiles = false;
+  } else {
+    imageryProviderBuilder.tileWidth = tileInfo.rows;
+    imageryProviderBuilder.tileHeight = tileInfo.cols;
+
+    if (
+      tileInfo.spatialReference.wkid === 102100 ||
+      tileInfo.spatialReference.wkid === 102113
+    ) {
+      imageryProviderBuilder.tilingScheme = new WebMercatorTilingScheme({
+        ellipsoid: imageryProviderBuilder.ellipsoid,
+      });
+    } else if (data.tileInfo.spatialReference.wkid === 4326) {
+      imageryProviderBuilder.tilingScheme = new GeographicTilingScheme({
+        ellipsoid: imageryProviderBuilder.ellipsoid,
+      });
+    } else {
+      const message = `Tile spatial reference WKID ${data.tileInfo.spatialReference.wkid} is not supported.`;
+      throw new RuntimeError(message);
+    }
+    imageryProviderBuilder.maximumLevel = data.tileInfo.lods.length - 1;
+
+    if (defined(data.fullExtent)) {
+      if (
+        defined(data.fullExtent.spatialReference) &&
+        defined(data.fullExtent.spatialReference.wkid)
+      ) {
+        if (
+          data.fullExtent.spatialReference.wkid === 102100 ||
+          data.fullExtent.spatialReference.wkid === 102113
+        ) {
+          const projection = new WebMercatorProjection();
+          const extent = data.fullExtent;
+          const sw = projection.unproject(
+            new Cartesian3(
+              Math.max(
+                extent.xmin,
+                -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
+                  Math.PI
+              ),
+              Math.max(
+                extent.ymin,
+                -imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
+                  Math.PI
+              ),
+              0.0
+            )
+          );
+          const ne = projection.unproject(
+            new Cartesian3(
+              Math.min(
+                extent.xmax,
+                imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
+                  Math.PI
+              ),
+              Math.min(
+                extent.ymax,
+                imageryProviderBuilder.tilingScheme.ellipsoid.maximumRadius *
+                  Math.PI
+              ),
+              0.0
+            )
+          );
+          imageryProviderBuilder.rectangle = new Rectangle(
+            sw.longitude,
+            sw.latitude,
+            ne.longitude,
+            ne.latitude
+          );
+        } else if (data.fullExtent.spatialReference.wkid === 4326) {
+          imageryProviderBuilder.rectangle = Rectangle.fromDegrees(
+            data.fullExtent.xmin,
+            data.fullExtent.ymin,
+            data.fullExtent.xmax,
+            data.fullExtent.ymax
+          );
+        } else {
+          const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
+          throw new RuntimeError(extentMessage);
+        }
+      }
+    } else {
+      imageryProviderBuilder.rectangle =
+        imageryProviderBuilder.tilingScheme.rectangle;
+    }
+
+    imageryProviderBuilder.useTiles = true;
+  }
+
+  if (defined(data.copyrightText) && data.copyrightText.length > 0) {
+    imageryProviderBuilder.credit = new Credit(data.copyrightText);
+  }
+}
+
+function metadataFailure(resource, error, provider) {
+  let message = `An error occurred while accessing ${resource.url}`;
+  if (defined(error) && defined(error.message)) {
+    message += `: ${error.message}`;
+  }
+
+  // When readyPromise is deprecated, TileProviderError.reportError,
+  // and related parameters can be removed
+  TileProviderError.reportError(
+    undefined,
+    provider,
+    defined(provider) ? provider._errorEvent : undefined,
+    message,
+    undefined,
+    undefined,
+    undefined,
+    error
+  );
+
+  throw new RuntimeError(message);
+}
+
+async function requestMetadata(resource, imageryProviderBuilder, provider) {
+  const jsonResource = resource.getDerivedResource({
+    queryParameters: {
+      f: "json",
+    },
+  });
+
+  try {
+    const data = await jsonResource.fetchJsonp();
+    metadataSuccess(data, imageryProviderBuilder);
+  } catch (error) {
+    metadataFailure(resource, error, provider);
+  }
+}
+
+/**
+ * <div class="notice">
+ * To construct a ArcGisMapServerImageryProvider call {@link ArcGisMapServerImageryProvider.fromUrl}. Do not call the constructor directly.
+ * </div>
+ *
  * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
  *
  * @alias ArcGisMapServerImageryProvider
  * @constructor
  *
- * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options Object describing initialization options
+ * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options
  *
+ * @see ArcGisMapServerImagery.fromUrl
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
  * @see OpenStreetMapImageryProvider
@@ -78,11 +285,10 @@ import ImageryProvider from "./ImageryProvider.js";
  * @see WebMapTileServiceImageryProvider
  * @see UrlTemplateImageryProvider
  *
- *
  * @example
- * const esri = new Cesium.ArcGisMapServerImageryProvider({
- *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
- * });
+ * const esri = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+ *     "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
+ * );
  *
  * @see {@link https://developers.arcgis.com/rest/|ArcGIS Server REST API}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
@@ -90,110 +296,18 @@ import ImageryProvider from "./ImageryProvider.js";
 function ArcGisMapServerImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.url)) {
-    throw new DeveloperError("options.url is required.");
-  }
-  //>>includeEnd('debug');
+  this._defaultAlpha = undefined;
+  this._defaultNightAlpha = undefined;
+  this._defaultDayAlpha = undefined;
+  this._defaultBrightness = undefined;
+  this._defaultContrast = undefined;
+  this._defaultHue = undefined;
+  this._defaultSaturation = undefined;
+  this._defaultGamma = undefined;
+  this._defaultMinificationFilter = undefined;
+  this._defaultMagnificationFilter = undefined;
 
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultNightAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultDayAlpha = undefined;
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultBrightness = undefined;
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultContrast = undefined;
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultHue = undefined;
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultSaturation = undefined;
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultGamma = undefined;
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   *
-   * @type {TextureMinificationFilter}
-   * @default undefined
-   */
-  this.defaultMinificationFilter = undefined;
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   *
-   * @type {TextureMagnificationFilter}
-   * @default undefined
-   */
-  this.defaultMagnificationFilter = undefined;
-
-  const resource = Resource.createIfNeeded(options.url);
-  resource.appendForwardSlash();
-
-  if (defined(options.token)) {
-    resource.setQueryParameters({
-      token: options.token,
-    });
-  }
-
-  this._resource = resource;
   this._tileDiscardPolicy = options.tileDiscardPolicy;
-
   this._tileWidth = defaultValue(options.tileWidth, 256);
   this._tileHeight = defaultValue(options.tileHeight, 256);
   this._maximumLevel = options.maximumLevel;
@@ -207,12 +321,7 @@ function ArcGisMapServerImageryProvider(options) {
     this._tilingScheme.rectangle
   );
   this._layers = options.layers;
-
-  let credit = options.credit;
-  if (typeof credit === "string") {
-    credit = new Credit(credit);
-  }
-  this._credit = credit;
+  this._credit = undefined;
 
   /**
    * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
@@ -228,173 +337,37 @@ function ArcGisMapServerImageryProvider(options) {
 
   this._ready = false;
 
-  // Grab the details of this MapServer.
-  const that = this;
-  let metadataError;
-
-  function metadataSuccess(data) {
-    const tileInfo = data.tileInfo;
-    if (!defined(tileInfo)) {
-      that._useTiles = false;
-    } else {
-      that._tileWidth = tileInfo.rows;
-      that._tileHeight = tileInfo.cols;
-
-      if (
-        tileInfo.spatialReference.wkid === 102100 ||
-        tileInfo.spatialReference.wkid === 102113
-      ) {
-        that._tilingScheme = new WebMercatorTilingScheme({
-          ellipsoid: options.ellipsoid,
-        });
-      } else if (data.tileInfo.spatialReference.wkid === 4326) {
-        that._tilingScheme = new GeographicTilingScheme({
-          ellipsoid: options.ellipsoid,
-        });
-      } else {
-        const message = `Tile spatial reference WKID ${data.tileInfo.spatialReference.wkid} is not supported.`;
-        metadataError = TileProviderError.reportError(
-          metadataError,
-          that,
-          that._errorEvent,
-          message,
-          undefined,
-          undefined,
-          undefined
-        );
-        if (metadataError.retry) {
-          return requestMetadata();
-        }
-        return Promise.reject(new RuntimeError(message));
-      }
-      that._maximumLevel = data.tileInfo.lods.length - 1;
-
-      if (defined(data.fullExtent)) {
-        if (
-          defined(data.fullExtent.spatialReference) &&
-          defined(data.fullExtent.spatialReference.wkid)
-        ) {
-          if (
-            data.fullExtent.spatialReference.wkid === 102100 ||
-            data.fullExtent.spatialReference.wkid === 102113
-          ) {
-            const projection = new WebMercatorProjection();
-            const extent = data.fullExtent;
-            const sw = projection.unproject(
-              new Cartesian3(
-                Math.max(
-                  extent.xmin,
-                  -that._tilingScheme.ellipsoid.maximumRadius * Math.PI
-                ),
-                Math.max(
-                  extent.ymin,
-                  -that._tilingScheme.ellipsoid.maximumRadius * Math.PI
-                ),
-                0.0
-              )
-            );
-            const ne = projection.unproject(
-              new Cartesian3(
-                Math.min(
-                  extent.xmax,
-                  that._tilingScheme.ellipsoid.maximumRadius * Math.PI
-                ),
-                Math.min(
-                  extent.ymax,
-                  that._tilingScheme.ellipsoid.maximumRadius * Math.PI
-                ),
-                0.0
-              )
-            );
-            that._rectangle = new Rectangle(
-              sw.longitude,
-              sw.latitude,
-              ne.longitude,
-              ne.latitude
-            );
-          } else if (data.fullExtent.spatialReference.wkid === 4326) {
-            that._rectangle = Rectangle.fromDegrees(
-              data.fullExtent.xmin,
-              data.fullExtent.ymin,
-              data.fullExtent.xmax,
-              data.fullExtent.ymax
-            );
-          } else {
-            const extentMessage = `fullExtent.spatialReference WKID ${data.fullExtent.spatialReference.wkid} is not supported.`;
-            metadataError = TileProviderError.reportError(
-              metadataError,
-              that,
-              that._errorEvent,
-              extentMessage,
-              undefined,
-              undefined,
-              undefined
-            );
-            if (metadataError.retry) {
-              return requestMetadata();
-            }
-            return Promise.reject(new RuntimeError(extentMessage));
-          }
-        }
-      } else {
-        that._rectangle = that._tilingScheme.rectangle;
-      }
-
-      // Install the default tile discard policy if none has been supplied.
-      if (!defined(that._tileDiscardPolicy)) {
-        that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-          missingImageUrl: buildImageResource(that, 0, 0, that._maximumLevel)
-            .url,
-          pixelsToCheck: [
-            new Cartesian2(0, 0),
-            new Cartesian2(200, 20),
-            new Cartesian2(20, 200),
-            new Cartesian2(80, 110),
-            new Cartesian2(160, 130),
-          ],
-          disableCheckIfAllPixelsAreTransparent: true,
-        });
-      }
-
-      that._useTiles = true;
-    }
-
-    if (defined(data.copyrightText) && data.copyrightText.length > 0) {
-      that._credit = new Credit(data.copyrightText);
-    }
-
-    that._ready = true;
-    TileProviderError.reportSuccess(metadataError);
-    return Promise.resolve(true);
-  }
-
-  function metadataFailure(e) {
-    const message = `An error occurred while accessing ${that._resource.url}.`;
-    metadataError = TileProviderError.reportError(
-      metadataError,
-      that,
-      that._errorEvent,
-      message,
-      undefined,
-      undefined,
-      undefined
+  if (defined(options.url)) {
+    deprecationWarning(
+      "ArcGisMapServerImageryProvider options.url",
+      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGisMapServerImageryProvider.fromUrl instead."
     );
-    return Promise.reject(new RuntimeError(message));
-  }
-  function requestMetadata() {
-    const resource = that._resource.getDerivedResource({
-      queryParameters: {
-        f: "json",
-      },
-    });
-    return resource.fetchJsonp().then(metadataSuccess).catch(metadataFailure);
-  }
+    const resource = Resource.createIfNeeded(options.url);
+    resource.appendForwardSlash();
 
-  if (this._useTiles) {
-    this._readyPromise = requestMetadata();
-  } else {
-    this._ready = true;
-    this._readyPromise = Promise.resolve(true);
+    this._tileDiscardPolicy = options.tileDiscardPolicy;
+
+    if (defined(options.token)) {
+      resource.setQueryParameters({
+        token: options.token,
+      });
+    }
+
+    this._resource = resource;
+    const imageryProviderBuilder = new ImageryProviderBuilder(options);
+    if (imageryProviderBuilder.useTiles) {
+      this._readyPromise = requestMetadata(
+        resource,
+        imageryProviderBuilder,
+        this
+      ).then(() => {
+        imageryProviderBuilder.build(this);
+        return true;
+      });
+    } else {
+      imageryProviderBuilder.build(this);
+      this._readyPromise = Promise.resolve(true);
+    }
   }
 }
 
@@ -482,127 +455,73 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {number}
    * @readonly
    */
   tileWidth: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileWidth must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileWidth;
     },
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {number}
    * @readonly
    */
   tileHeight: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileHeight must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileHeight;
     },
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maximumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._maximumLevel;
     },
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {number}
    * @readonly
    */
   minimumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minimumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return 0;
     },
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme;
     },
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
    */
   rectangle: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "rectangle must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._rectangle;
     },
   },
@@ -610,22 +529,13 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
    */
   tileDiscardPolicy: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileDiscardPolicy must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileDiscardPolicy;
     },
   },
@@ -649,9 +559,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.ready",
+        "ArcGisMapServerImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGisMapServerImageryProvider.fromUrl instead."
+      );
       return this._ready;
     },
   },
@@ -661,9 +576,14 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * @memberof ArcGisMapServerImageryProvider.prototype
    * @type {Promise<boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.readyPromise",
+        "ArcGisMapServerImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGisMapServerImageryProvider.fromUrl instead."
+      );
       return this._readyPromise;
     },
   },
@@ -683,9 +603,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
 
   /**
    * Gets a value indicating whether this imagery provider is using pre-cached tiles from the
-   * ArcGIS MapServer.  If the imagery provider is not yet ready ({@link ArcGisMapServerImageryProvider#ready}), this function
-   * will return the value of `options.usePreCachedTilesIfAvailable`, even if the MapServer does
-   * not have pre-cached tiles.
+   * ArcGIS MapServer.
    * @memberof ArcGisMapServerImageryProvider.prototype
    *
    * @type {boolean}
@@ -727,7 +645,288 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
       return this._layers;
     },
   },
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultAlpha: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultAlpha",
+        "ArcGisMapServerImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      return this._defaultAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultAlpha",
+        "ArcGisMapServerImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      this._defaultAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultNightAlpha: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultNightAlpha",
+        "ArcGisMapServerImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      return this._defaultNightAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultNightAlpha",
+        "ArcGisMapServerImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      this._defaultNightAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultDayAlpha: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultDayAlpha",
+        "ArcGisMapServerImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      return this._defaultDayAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultDayAlpha",
+        "ArcGisMapServerImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      this._defaultDayAlpha = value;
+    },
+  },
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultBrightness: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultBrightness",
+        "ArcGisMapServerImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      return this._defaultBrightness;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultBrightness",
+        "ArcGisMapServerImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      this._defaultBrightness = value;
+    },
+  },
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultContrast: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultContrast",
+        "ArcGisMapServerImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      return this._defaultContrast;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultContrast",
+        "ArcGisMapServerImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      this._defaultContrast = value;
+    },
+  },
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultHue: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultHue",
+        "ArcGisMapServerImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      return this._defaultHue;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultHue",
+        "ArcGisMapServerImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      this._defaultHue = value;
+    },
+  },
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultSaturation: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultSaturation",
+        "ArcGisMapServerImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      return this._defaultSaturation;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultSaturation",
+        "ArcGisMapServerImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      this._defaultSaturation = value;
+    },
+  },
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultGamma: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultGamma",
+        "ArcGisMapServerImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      return this._defaultGamma;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultGamma",
+        "ArcGisMapServerImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      this._defaultGamma = value;
+    },
+  },
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {TextureMinificationFilter}
+   * @deprecated
+   */
+  defaultMinificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultMinificationFilter",
+        "ArcGisMapServerImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      return this._defaultMinificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultMinificationFilter",
+        "ArcGisMapServerImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      this._defaultMinificationFilter = value;
+    },
+  },
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   * @memberof ArcGisMapServerImageryProvider.prototype
+   * @type {TextureMagnificationFilter}
+   * @deprecated
+   */
+  defaultMagnificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultMagnificationFilter",
+        "ArcGisMapServerImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      return this._defaultMagnificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "ArcGisMapServerImageryProvider.defaultMagnificationFilter",
+        "ArcGisMapServerImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      this._defaultMagnificationFilter = value;
+    },
+  },
 });
+
+/**
+ * Creates an {@link ImageryProvider} which provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
+ * used, if available.
+ *
+ * @param {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
+ * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
+ *
+ * @example
+ * const esri = await Cesium.ArcGisMapServerImageryProvider.fromUrl(
+ *     "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"
+ * );
+ *
+ * @exception {RuntimeError} metadata spatial reference specifies an unknown WKID
+ * @exception {RuntimeError} metadata fullExtent.spatialReference specifies an unknown WKID
+ */
+ArcGisMapServerImageryProvider.fromUrl = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  const resource = Resource.createIfNeeded(url);
+  resource.appendForwardSlash();
+
+  if (defined(options.token)) {
+    resource.setQueryParameters({
+      token: options.token,
+    });
+  }
+
+  const provider = new ArcGisMapServerImageryProvider(options);
+  provider._resource = resource;
+  const imageryProviderBuilder = new ImageryProviderBuilder(options);
+  const useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+  if (useTiles) {
+    await requestMetadata(resource, imageryProviderBuilder);
+  }
+
+  imageryProviderBuilder.build(provider);
+  provider._readyPromise = Promise.resolve(true);
+  return provider;
+};
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
@@ -736,8 +935,6 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
   x,
@@ -748,8 +945,7 @@ ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
@@ -757,8 +953,6 @@ ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 ArcGisMapServerImageryProvider.prototype.requestImage = function (
   x,
@@ -766,14 +960,6 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "requestImage must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   return ImageryProvider.loadImage(
     this,
     buildImageResource(this, x, y, level, request)
@@ -783,7 +969,7 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
 /**
     /**
      * Asynchronously determines what features, if any, are located at a given longitude and latitude within
-     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
+     * a tile.
      *
      * @param {number} x The tile X coordinate.
      * @param {number} y The tile Y coordinate.
@@ -793,8 +979,6 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
      * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
-     *
-     * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
 ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
   x,
@@ -803,14 +987,6 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
   longitude,
   latitude
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "pickFeatures must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   if (!this.enablePickFeatures) {
     return undefined;
   }

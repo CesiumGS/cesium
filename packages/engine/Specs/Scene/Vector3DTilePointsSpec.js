@@ -83,14 +83,10 @@ describe(
     }
 
     function loadPoints(points) {
-      let ready = false;
-      points.readyPromise.then(function () {
-        ready = true;
-      });
       return pollToPromise(function () {
         points.update(scene.frameState);
         scene.frameState.commandList.length = 0;
-        return ready;
+        return points.ready;
       });
     }
 

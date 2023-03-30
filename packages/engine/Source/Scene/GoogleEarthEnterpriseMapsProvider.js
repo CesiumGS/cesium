@@ -3,6 +3,7 @@ import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
@@ -18,7 +19,7 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * Initialization options for the GoogleEarthEnterpriseMapsProvider constructor
  *
- * @property {Resource|string} url The url of the Google Earth server hosting the imagery.
+ * @property {Resource|string} [url] The url of the Google Earth server hosting the imagery. Deprecated.
  * @property {number} channel The channel (id) to be used when requesting data from the server.
  *        The channel number can be found by looking at the json file located at:
  *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
@@ -47,6 +48,123 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 
 /**
+ * Used to track creation details while fetching initial metadata
+ *
+ * @constructor
+ * @private
+ *
+ * @param {GoogleEarthEnterpriseMapsProvider.ConstructorOptions} options An object describing initialization options
+ */
+function ImageryProviderBuilder(options) {
+  this.channel = options.channel;
+  this.ellipsoid = options.ellipsoid;
+  this.tilingScheme = undefined;
+  this.version = undefined;
+}
+
+/**
+ * Complete GoogleEarthEnterpriseMapsProvider creation based on builder values.
+ *
+ * @private
+ *
+ * @param {GoogleEarthEnterpriseMapsProvider} provider
+ */
+ImageryProviderBuilder.prototype.build = function (provider) {
+  provider._channel = this.channel;
+  provider._version = this.version;
+  provider._tilingScheme = this.tilingScheme;
+};
+
+function metadataSuccess(text, imageryProviderBuilder) {
+  let data;
+
+  // The Google Earth server sends malformed JSON data currently...
+  try {
+    // First, try parsing it like normal in case a future version sends correctly formatted JSON
+    data = JSON.parse(text);
+  } catch (e) {
+    // Quote object strings manually, then try parsing again
+    data = JSON.parse(
+      text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":')
+    );
+  }
+
+  let layer;
+  for (let i = 0; i < data.layers.length; i++) {
+    if (data.layers[i].id === imageryProviderBuilder.channel) {
+      layer = data.layers[i];
+      break;
+    }
+  }
+
+  if (!defined(layer)) {
+    const message = `Could not find layer with channel (id) of ${imageryProviderBuilder.channel}.`;
+    throw new RuntimeError(message);
+  }
+
+  if (!defined(layer.version)) {
+    const message = `Could not find a version in channel (id) ${imageryProviderBuilder.channel}.`;
+    throw new RuntimeError(message);
+  }
+
+  imageryProviderBuilder.version = layer.version;
+
+  if (defined(data.projection) && data.projection === "flat") {
+    imageryProviderBuilder.tilingScheme = new GeographicTilingScheme({
+      numberOfLevelZeroTilesX: 2,
+      numberOfLevelZeroTilesY: 2,
+      rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
+      ellipsoid: imageryProviderBuilder.ellipsoid,
+    });
+    // Default to mercator projection when projection is undefined
+  } else if (!defined(data.projection) || data.projection === "mercator") {
+    imageryProviderBuilder.tilingScheme = new WebMercatorTilingScheme({
+      numberOfLevelZeroTilesX: 2,
+      numberOfLevelZeroTilesY: 2,
+      ellipsoid: imageryProviderBuilder.ellipsoid,
+    });
+  } else {
+    const message = `Unsupported projection ${data.projection}.`;
+    throw new RuntimeError(message);
+  }
+
+  return true;
+}
+
+function metadataFailure(error, metadataResource, provider) {
+  let message = `An error occurred while accessing ${metadataResource.url}.`;
+  if (defined(error) && defined(error.message)) {
+    message += `: ${error.message}`;
+  }
+
+  TileProviderError.reportError(
+    undefined,
+    provider,
+    defined(provider) ? provider._errorEvent : undefined,
+    message
+  );
+
+  throw new RuntimeError(message);
+}
+
+async function requestMetadata(
+  metadataResource,
+  imageryProviderBuilder,
+  provider
+) {
+  try {
+    const text = await metadataResource.fetchText();
+    metadataSuccess(text, imageryProviderBuilder);
+  } catch (error) {
+    metadataFailure(error, metadataResource, provider);
+  }
+}
+
+/**
+ * <div class="notice">
+ * To construct a GoogleEarthEnterpriseMapsProvider, call {@link GoogleEarthEnterpriseImageryProvider.fromUrl}. Do not call the constructor directly.
+ * </div>
+ *
  * Provides tiled imagery using the Google Earth Imagery API.
  *
  * Notes: This imagery provider does not work with the public Google Earth servers. It works with the
@@ -81,124 +199,24 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  *
  * @example
- * const google = new Cesium.GoogleEarthEnterpriseMapsProvider({
- *     url : 'https://earth.localdomain',
- *     channel : 1008
- * });
+ * const google = await Cesium.GoogleEarthEnterpriseMapsProvider.fromUrl("https://earth.localdomain", 1008);
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */
 function GoogleEarthEnterpriseMapsProvider(options) {
   options = defaultValue(options, {});
 
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.url)) {
-    throw new DeveloperError("options.url is required.");
-  }
-  if (!defined(options.channel)) {
-    throw new DeveloperError("options.channel is required.");
-  }
-  //>>includeEnd('debug');
+  this._defaultAlpha = undefined;
+  this._defaultNightAlpha = undefined;
+  this._defaultDayAlpha = undefined;
+  this._defaultBrightness = undefined;
+  this._defaultContrast = undefined;
+  this._defaultHue = undefined;
+  this._defaultSaturation = undefined;
+  this._defaultGamma = 1.9;
+  this._defaultMinificationFilter = undefined;
+  this._defaultMagnificationFilter = undefined;
 
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultNightAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultDayAlpha = undefined;
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultBrightness = undefined;
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultContrast = undefined;
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultHue = undefined;
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultSaturation = undefined;
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default 1.9
-   */
-  this.defaultGamma = 1.9;
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   *
-   * @type {TextureMinificationFilter}
-   * @default undefined
-   */
-  this.defaultMinificationFilter = undefined;
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   *
-   * @type {TextureMagnificationFilter}
-   * @default undefined
-   */
-  this.defaultMagnificationFilter = undefined;
-
-  const url = options.url;
-  const path = defaultValue(options.path, "/default_map");
-
-  const resource = Resource.createIfNeeded(url).getDerivedResource({
-    // We used to just append path to url, so now that we do proper URI resolution, removed the /
-    url: path[0] === "/" ? path.substring(1) : path,
-  });
-
-  resource.appendForwardSlash();
-
-  this._resource = resource;
-  this._url = url;
-  this._path = path;
   this._tileDiscardPolicy = options.tileDiscardPolicy;
   this._channel = options.channel;
   this._requestType = "ImageryMaps";
@@ -216,126 +234,56 @@ function GoogleEarthEnterpriseMapsProvider(options) {
 
   this._errorEvent = new Event();
 
-  this._ready = false;
-  const metadataResource = resource.getDerivedResource({
-    url: "query",
-    queryParameters: {
-      request: "Json",
-      vars: "geeServerDefs",
-      is2d: "t",
-    },
-  });
-  const that = this;
-  let metadataError;
-
-  function metadataSuccess(text) {
-    let data;
-
-    // The Google Earth server sends malformed JSON data currently...
-    try {
-      // First, try parsing it like normal in case a future version sends correctly formatted JSON
-      data = JSON.parse(text);
-    } catch (e) {
-      // Quote object strings manually, then try parsing again
-      data = JSON.parse(
-        text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":')
-      );
+  if (defined(options.url) || defined(options.channel)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(options.url)) {
+      throw new DeveloperError("options.url is required.");
     }
-
-    let layer;
-    for (let i = 0; i < data.layers.length; i++) {
-      if (data.layers[i].id === that._channel) {
-        layer = data.layers[i];
-        break;
-      }
+    if (!defined(options.channel)) {
+      throw new DeveloperError("options.channel is required.");
     }
+    //>>includeEnd('debug');
 
-    let message;
-
-    if (!defined(layer)) {
-      message = `Could not find layer with channel (id) of ${that._channel}.`;
-      metadataError = TileProviderError.reportError(
-        metadataError,
-        that,
-        that._errorEvent,
-        message
-      );
-      if (metadataError.retry) {
-        return requestMetadata();
-      }
-      return Promise.reject(new RuntimeError(message));
-    }
-
-    if (!defined(layer.version)) {
-      message = `Could not find a version in channel (id) ${that._channel}.`;
-      metadataError = TileProviderError.reportError(
-        metadataError,
-        that,
-        that._errorEvent,
-        message
-      );
-      if (metadataError.retry) {
-        return requestMetadata();
-      }
-      return Promise.reject(new RuntimeError(message));
-    }
-    that._version = layer.version;
-
-    if (defined(data.projection) && data.projection === "flat") {
-      that._tilingScheme = new GeographicTilingScheme({
-        numberOfLevelZeroTilesX: 2,
-        numberOfLevelZeroTilesY: 2,
-        rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
-        ellipsoid: options.ellipsoid,
-      });
-      // Default to mercator projection when projection is undefined
-    } else if (!defined(data.projection) || data.projection === "mercator") {
-      that._tilingScheme = new WebMercatorTilingScheme({
-        numberOfLevelZeroTilesX: 2,
-        numberOfLevelZeroTilesY: 2,
-        ellipsoid: options.ellipsoid,
-      });
-    } else {
-      message = `Unsupported projection ${data.projection}.`;
-      metadataError = TileProviderError.reportError(
-        metadataError,
-        that,
-        that._errorEvent,
-        message
-      );
-      if (metadataError.retry) {
-        return requestMetadata();
-      }
-      return Promise.reject(new RuntimeError(message));
-    }
-
-    that._ready = true;
-    TileProviderError.reportSuccess(metadataError);
-    return Promise.resolve(true);
-  }
-
-  function metadataFailure(e) {
-    const message = defaultValue(
-      e.message,
-      `An error occurred while accessing ${metadataResource.url}.`
+    deprecationWarning(
+      "GoogleEarthEnterpriseMapsProvider.url",
+      "GoogleEarthEnterpriseMapsProvider.url and GoogleEarthEnterpriseMapsProvider.channel were deprecated in CesiumJS 1.104.  They will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
     );
-    metadataError = TileProviderError.reportError(
-      metadataError,
-      that,
-      that._errorEvent,
-      message
-    );
-    return Promise.reject(new RuntimeError(message));
-  }
 
-  function requestMetadata() {
-    return metadataResource
-      .fetchText()
-      .then(metadataSuccess)
-      .catch(metadataFailure);
-  }
+    const url = options.url;
+    const path = defaultValue(options.path, "/default_map");
 
-  this._readyPromise = requestMetadata();
+    const resource = Resource.createIfNeeded(url).getDerivedResource({
+      // We used to just append path to url, so now that we do proper URI resolution, removed the /
+      url: path[0] === "/" ? path.substring(1) : path,
+    });
+
+    resource.appendForwardSlash();
+
+    this._resource = resource;
+    this._url = url;
+    this._path = path;
+
+    this._ready = false;
+    const metadataResource = resource.getDerivedResource({
+      url: "query",
+      queryParameters: {
+        request: "Json",
+        vars: "geeServerDefs",
+        is2d: "t",
+      },
+    });
+
+    const imageryProviderBuilder = new ImageryProviderBuilder(options);
+    this._readyPromise = requestMetadata(
+      metadataResource,
+      imageryProviderBuilder,
+      this
+    ).then(() => {
+      imageryProviderBuilder.build(this);
+      this._ready = true;
+      return true;
+    });
+  }
 }
 
 Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
@@ -388,168 +336,96 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels. This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {number}
    * @readonly
    */
   tileWidth: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileWidth must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileWidth;
     },
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {number}
    * @readonly
    */
   tileHeight: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileHeight must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileHeight;
     },
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {number|undefined}
    * @readonly
    */
   maximumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maximumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._maximumLevel;
     },
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * Gets the minimum level-of-detail that can be requested.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {number}
    * @readonly
    */
   minimumLevel: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minimumLevel must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return 0;
     },
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {TilingScheme}
    * @readonly
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme;
     },
   },
 
   /**
-   * Gets the version of the data used by this provider.  This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * Gets the version of the data used by this provider.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {number}
    * @readonly
    */
   version: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "version must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._version;
     },
   },
 
   /**
-   * Gets the type of data that is being requested from the provider.  This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * Gets the type of data that is being requested from the provider.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {string}
    * @readonly
    */
   requestType: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "requestType must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._requestType;
     },
   },
   /**
-   * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by this instance.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {Rectangle}
    * @readonly
    */
   rectangle: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "rectangle must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme.rectangle;
     },
   },
@@ -557,22 +433,13 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
    */
   tileDiscardPolicy: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tileDiscardPolicy must not be called before the imagery provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tileDiscardPolicy;
     },
   },
@@ -596,9 +463,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.ready",
+        "GoogleEarthEnterpriseMapsProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
+      );
       return this._ready;
     },
   },
@@ -608,16 +480,21 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {Promise<boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.readyPromise",
+        "GoogleEarthEnterpriseMapsProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
+      );
       return this._readyPromise;
     },
   },
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery.  This function should not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
    * @type {Credit}
    * @readonly
@@ -643,7 +520,303 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
       return true;
     },
   },
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultAlpha: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultAlpha",
+        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      return this._defaultAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultAlpha",
+        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      this._defaultAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultNightAlpha: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha",
+        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      return this.defaultNightAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha",
+        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      this.defaultNightAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultDayAlpha: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha",
+        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      return this._defaultDayAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha",
+        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      this._defaultDayAlpha = value;
+    },
+  },
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultBrightness: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultBrightness",
+        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      return this._defaultBrightness;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultBrightness",
+        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      this._defaultBrightness = value;
+    },
+  },
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultContrast: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultContrast",
+        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      return this._defaultContrast;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultContrast",
+        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      this._defaultContrast = value;
+    },
+  },
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultHue: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultHue",
+        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      return this._defaultHue;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultHue",
+        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      this._defaultHue = value;
+    },
+  },
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultSaturation: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultSaturation",
+        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      return this._defaultSaturation;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultSaturation",
+        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      this._defaultSaturation = value;
+    },
+  },
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultGamma: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultGamma",
+        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      return this._defaultGamma;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultGamma",
+        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      this._defaultGamma = value;
+    },
+  },
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {TextureMinificationFilter}
+   * @deprecated
+   */
+  defaultMinificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter",
+        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      return this._defaultMinificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter",
+        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      this._defaultMinificationFilter = value;
+    },
+  },
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
+   * @type {TextureMagnificationFilter}
+   * @deprecated
+   */
+  defaultMagnificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter",
+        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      return this._defaultMagnificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter",
+        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      this._defaultMagnificationFilter = value;
+    },
+  },
 });
+
+/**
+ * Creates a tiled imagery provider using the Google Earth Imagery API.
+ *
+ * @param {Resource|String} url The url of the Google Earth server hosting the imagery.
+ * @param {GoogleEarthEnterpriseMapsProvider.ConstructorOptions} [options] Object describing initialization options
+ * @returns {Promise<GoogleEarthEnterpriseMapsProvider>} The created GoogleEarthEnterpriseMapsProvider.
+ *
+ * @exception {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
+ * @exception {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
+ * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
+ *
+ * @example
+ * const google = await Cesium.GoogleEarthEnterpriseMapsProvider.fromUrl("https://earth.localdomain", 1008);
+ */
+GoogleEarthEnterpriseMapsProvider.fromUrl = async function (
+  url,
+  channel,
+  options
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  Check.defined("channel", channel);
+  //>>includeEnd('debug');
+
+  options = defaultValue(options, {});
+
+  const path = defaultValue(options.path, "/default_map");
+
+  const resource = Resource.createIfNeeded(url).getDerivedResource({
+    // We used to just append path to url, so now that we do proper URI resolution, removed the /
+    url: path[0] === "/" ? path.substring(1) : path,
+  });
+
+  resource.appendForwardSlash();
+
+  const metadataResource = resource.getDerivedResource({
+    url: "query",
+    queryParameters: {
+      request: "Json",
+      vars: "geeServerDefs",
+      is2d: "t",
+    },
+  });
+
+  const imageryProviderBuilder = new ImageryProviderBuilder(options);
+  imageryProviderBuilder.channel = channel;
+  await requestMetadata(metadataResource, imageryProviderBuilder);
+
+  const provider = new GoogleEarthEnterpriseMapsProvider(options);
+  imageryProviderBuilder.build(provider);
+
+  provider._readyPromise = Promise.resolve(true);
+  provider._ready = true;
+  provider._resource = resource;
+  provider._url = url;
+  provider._path = path;
+
+  return provider;
+};
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
@@ -652,8 +825,6 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
   x,
@@ -664,8 +835,7 @@ GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
@@ -673,8 +843,6 @@ GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function (
   x,
@@ -682,14 +850,6 @@ GoogleEarthEnterpriseMapsProvider.prototype.requestImage = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this._ready) {
-    throw new DeveloperError(
-      "requestImage must not be called before the imagery provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   const resource = this._resource.getDerivedResource({
     url: "query",
     request: request,

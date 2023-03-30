@@ -176,14 +176,10 @@ describe(
       });
 
       function loadPolygons(polygons) {
-        let ready = false;
-        polygons.readyPromise.then(function () {
-          ready = true;
-        });
         return pollToPromise(function () {
           polygons.update(scene.frameState);
           scene.frameState.commandList.length = 0;
-          return ready;
+          return polygons.ready;
         });
       }
 
