@@ -541,7 +541,7 @@ Resource.prototype.parseUrl = function (
   preserveQueryParameters,
   baseUrl
 ) {
-  const uri = new Uri(url);
+  let uri = new Uri(url);
   const query = parseQuery(uri.query());
 
   if (merge) {
@@ -558,8 +558,8 @@ Resource.prototype.parseUrl = function (
   uri.search("");
   uri.fragment("");
 
-  if (defined(baseUrl) && uri.scheme === "") {
-    uri.absoluteTo(getAbsoluteUri(baseUrl));
+  if (defined(baseUrl) && uri.scheme() === "") {
+    uri = uri.absoluteTo(getAbsoluteUri(baseUrl));
   }
 
   this._url = uri.toString();
