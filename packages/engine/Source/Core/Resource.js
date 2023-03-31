@@ -37,167 +37,6 @@ const xhrBlobSupported = (function () {
 })();
 
 /**
- * Parses a query string and returns the object equivalent.
- *
- * @param {string} queryString The query string
- * @returns {object}
- *
- * @private
- */
-function parseQueryString(queryString) {
-  if (queryString.length === 0) {
-    return {};
-  }
-
-  // Special case where the querystring is just a string, not key/value pairs
-  if (queryString.indexOf("=") === -1) {
-    return { [queryString]: undefined };
-  }
-
-  return queryToObject(queryString);
-}
-
-/**
- * Converts a query object into a string.
- *
- * @param {Uri} uri The Uri object that will have the query object set.
- * @param {Resource} resource The resource that has queryParameters
- *
- * @private
- */
-function stringifyQuery(uri, resource) {
-  const queryObject = resource._queryParameters;
-
-  const keys = Object.keys(queryObject);
-
-  // We have 1 key with an undefined value, so this is just a string, not key/value pairs
-  if (keys.length === 1 && !defined(queryObject[keys[0]])) {
-    uri.search(keys[0]);
-  } else {
-    uri.search(objectToQuery(queryObject));
-  }
-}
-
-/**
- * Clones a value if it is defined, otherwise returns the default value
- *
- * @param {*} [val] The value to clone.
- * @param {*} [defaultVal] The default value.
- *
- * @returns {*} A clone of val or the defaultVal.
- *
- * @private
- */
-function defaultClone(val, defaultVal) {
-  if (!defined(val)) {
-    return defaultVal;
-  }
-
-  return defined(val.clone) ? val.clone() : clone(val);
-}
-
-/**
- * Checks to make sure the Resource isn't already being requested.
- *
- * @param {Request} request The request to check.
- *
- * @private
- */
-function checkAndResetRequest(request) {
-  if (
-    request.state === RequestState.ISSUED ||
-    request.state === RequestState.ACTIVE
-  ) {
-    throw new RuntimeError("The Resource is already being fetched.");
-  }
-
-  request.state = RequestState.UNISSUED;
-  request.deferred = undefined;
-}
-
-/**
- * This combines a map of query parameters.
- *
- * @param {object} q1 The first map of query parameters. Values in this map will take precedence if preserveQueryParameters is false.
- * @param {object} q2 The second map of query parameters.
- * @param {boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in q1 will take precedence.
- *
- * @returns {object} The combined map of query parameters.
- *
- * @example
- * const q1 = {
- *   a: 1,
- *   b: 2
- * };
- * const q2 = {
- *   a: 3,
- *   c: 4
- * };
- * const q3 = {
- *   b: [5, 6],
- *   d: 7
- * }
- *
- * // Returns
- * // {
- * //   a: [1, 3],
- * //   b: 2,
- * //   c: 4
- * // };
- * combineQueryParameters(q1, q2, true);
- *
- * // Returns
- * // {
- * //   a: 1,
- * //   b: 2,
- * //   c: 4
- * // };
- * combineQueryParameters(q1, q2, false);
- *
- * // Returns
- * // {
- * //   a: 1,
- * //   b: [2, 5, 6],
- * //   d: 7
- * // };
- * combineQueryParameters(q1, q3, true);
- *
- * // Returns
- * // {
- * //   a: 1,
- * //   b: 2,
- * //   d: 7
- * // };
- * combineQueryParameters(q1, q3, false);
- *
- * @private
- */
-function combineQueryParameters(q1, q2, preserveQueryParameters) {
-  if (!preserveQueryParameters) {
-    return combine(q1, q2);
-  }
-
-  const result = clone(q1, true);
-  for (const param in q2) {
-    if (q2.hasOwnProperty(param)) {
-      let value = result[param];
-      const q2Value = q2[param];
-      if (defined(value)) {
-        if (!Array.isArray(value)) {
-          value = result[param] = [value];
-        }
-
-        result[param] = value.concat(q2Value);
-      } else {
-        result[param] = Array.isArray(q2Value) ? q2Value.slice() : q2Value;
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
  * @typedef {object} Resource.ConstructorOptions
  *
  * Initialization options for the Resource constructor
@@ -309,6 +148,24 @@ function Resource(options) {
   } else {
     this._url = options.url;
   }
+}
+
+/**
+ * Clones a value if it is defined, otherwise returns the default value
+ *
+ * @param {*} [val] The value to clone.
+ * @param {*} [defaultVal] The default value.
+ *
+ * @returns {*} A clone of val or the defaultVal.
+ *
+ * @private
+ */
+function defaultClone(val, defaultVal) {
+  if (!defined(val)) {
+    return defaultVal;
+  }
+
+  return defined(val.clone) ? val.clone() : clone(val);
 }
 
 /**
@@ -561,6 +418,109 @@ Resource.prototype.parseUrl = function (url, merge, preserveQuery, baseUrl) {
 };
 
 /**
+ * Parses a query string and returns the object equivalent.
+ *
+ * @param {string} queryString The query string
+ * @returns {object}
+ *
+ * @private
+ */
+function parseQueryString(queryString) {
+  if (queryString.length === 0) {
+    return {};
+  }
+
+  // Special case where the querystring is just a string, not key/value pairs
+  if (queryString.indexOf("=") === -1) {
+    return { [queryString]: undefined };
+  }
+
+  return queryToObject(queryString);
+}
+
+/**
+ * This combines a map of query parameters.
+ *
+ * @param {object} q1 The first map of query parameters. Values in this map will take precedence if preserveQueryParameters is false.
+ * @param {object} q2 The second map of query parameters.
+ * @param {boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in q1 will take precedence.
+ *
+ * @returns {object} The combined map of query parameters.
+ *
+ * @example
+ * const q1 = {
+ *   a: 1,
+ *   b: 2
+ * };
+ * const q2 = {
+ *   a: 3,
+ *   c: 4
+ * };
+ * const q3 = {
+ *   b: [5, 6],
+ *   d: 7
+ * }
+ *
+ * // Returns
+ * // {
+ * //   a: [1, 3],
+ * //   b: 2,
+ * //   c: 4
+ * // };
+ * combineQueryParameters(q1, q2, true);
+ *
+ * // Returns
+ * // {
+ * //   a: 1,
+ * //   b: 2,
+ * //   c: 4
+ * // };
+ * combineQueryParameters(q1, q2, false);
+ *
+ * // Returns
+ * // {
+ * //   a: 1,
+ * //   b: [2, 5, 6],
+ * //   d: 7
+ * // };
+ * combineQueryParameters(q1, q3, true);
+ *
+ * // Returns
+ * // {
+ * //   a: 1,
+ * //   b: 2,
+ * //   d: 7
+ * // };
+ * combineQueryParameters(q1, q3, false);
+ *
+ * @private
+ */
+function combineQueryParameters(q1, q2, preserveQueryParameters) {
+  if (!preserveQueryParameters) {
+    return combine(q1, q2);
+  }
+
+  const result = clone(q1, true);
+  for (const param in q2) {
+    if (q2.hasOwnProperty(param)) {
+      let value = result[param];
+      const q2Value = q2[param];
+      if (defined(value)) {
+        if (!Array.isArray(value)) {
+          value = result[param] = [value];
+        }
+
+        result[param] = value.concat(q2Value);
+      } else {
+        result[param] = Array.isArray(q2Value) ? q2Value.slice() : q2Value;
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
  * Returns the url, optional with the query string and processed by a proxy.
  *
  * @param {boolean} [query=false] If true, the query string is included.
@@ -598,6 +558,27 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
   }
   return url;
 };
+
+/**
+ * Converts a query object into a string.
+ *
+ * @param {Uri} uri The Uri object that will have the query object set.
+ * @param {Resource} resource The resource that has queryParameters
+ *
+ * @private
+ */
+function stringifyQuery(uri, resource) {
+  const queryObject = resource._queryParameters;
+
+  const keys = Object.keys(queryObject);
+
+  // We have 1 key with an undefined value, so this is just a string, not key/value pairs
+  if (keys.length === 1 && !defined(queryObject[keys[0]])) {
+    uri.search(keys[0]);
+  } else {
+    uri.search(objectToQuery(queryObject));
+  }
+}
 
 /**
  * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
@@ -1426,6 +1407,25 @@ Resource.prototype._makeRequest = function (options) {
       });
     });
 };
+
+/**
+ * Checks to make sure the Resource isn't already being requested.
+ *
+ * @param {Request} request The request to check.
+ *
+ * @private
+ */
+function checkAndResetRequest(request) {
+  if (
+    request.state === RequestState.ISSUED ||
+    request.state === RequestState.ACTIVE
+  ) {
+    throw new RuntimeError("The Resource is already being fetched.");
+  }
+
+  request.state = RequestState.UNISSUED;
+  request.deferred = undefined;
+}
 
 const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 
