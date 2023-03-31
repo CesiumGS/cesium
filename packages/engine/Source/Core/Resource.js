@@ -533,51 +533,53 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
     return this._url;
   }
 
-  const uri = new Uri(this._url);
-
-  if (query) {
-    stringifyQuery(uri, this);
-  }
-
-  // objectToQuery escapes the placeholders.  Undo that.
-  let url = uri.toString().replace(/%7B/g, "{").replace(/%7D/g, "}");
+  let url = query
+    ? `${this._url}${stringifyQuery(this.queryParameters)}`
+    : this._url;
 
   const templateValues = this._templateValues;
-  url = url.replace(/{(.*?)}/g, function (match, key) {
-    const replacement = templateValues[key];
-    if (defined(replacement)) {
-      // use the replacement value from templateValues if there is one...
-      return encodeURIComponent(replacement);
-    }
-    // otherwise leave it unchanged
-    return match;
-  });
+  if (Object.keys(templateValues).length > 0) {
+    url = url.replace(/{(.*?)}/g, function (match, key) {
+      const replacement = templateValues[key];
+      if (defined(replacement)) {
+        // use the replacement value from templateValues if there is one...
+        return encodeURIComponent(replacement);
+      }
+      // otherwise leave it unchanged
+      return match;
+    });
+  }
 
   if (proxy && defined(this.proxy)) {
     url = this.proxy.getURL(url);
   }
+
   return url;
 };
 
 /**
  * Converts a query object into a string.
  *
- * @param {Uri} uri The Uri object that will have the query object set.
- * @param {Resource} resource The resource that has queryParameters
+ * @param {object} queryObject The object with query parameters
+ * @returns {string}
  *
  * @private
  */
-function stringifyQuery(uri, resource) {
-  const queryObject = resource._queryParameters;
-
+function stringifyQuery(queryObject) {
   const keys = Object.keys(queryObject);
 
-  // We have 1 key with an undefined value, so this is just a string, not key/value pairs
+  let queryString;
   if (keys.length === 1 && !defined(queryObject[keys[0]])) {
-    uri.search(keys[0]);
+    // We have 1 key with an undefined value, so this is just a string, not key/value pairs
+    queryString = keys[0];
   } else {
-    uri.search(objectToQuery(queryObject));
+    // objectToQuery escapes the placeholders. Undo that.
+    queryString = objectToQuery(queryObject)
+      .replace(/%7B/g, "{")
+      .replace(/%7D/g, "}");
   }
+
+  return queryString.length > 0 ? `?${queryString}` : queryString;
 }
 
 /**
