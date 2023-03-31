@@ -352,7 +352,7 @@ RequestScheduler.getServerKey = function (url) {
 
   let uri = new Uri(url);
   if (uri.scheme() === "") {
-    uri = new Uri(url).absoluteTo(pageUri);
+    uri = uri.absoluteTo(pageUri);
     uri.normalize();
   }
 
