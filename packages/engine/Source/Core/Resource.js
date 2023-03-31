@@ -537,6 +537,9 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
     ? `${this._url}${stringifyQuery(this.queryParameters)}`
     : this._url;
 
+  // Restore the placeholders, which may have been escaped in objectToQuery or elsewhere
+  url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
+
   const templateValues = this._templateValues;
   if (Object.keys(templateValues).length > 0) {
     url = url.replace(/{(.*?)}/g, function (match, key) {
@@ -568,18 +571,15 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
 function stringifyQuery(queryObject) {
   const keys = Object.keys(queryObject);
 
-  let queryString;
+  if (keys.length === 0) {
+    return "";
+  }
   if (keys.length === 1 && !defined(queryObject[keys[0]])) {
     // We have 1 key with an undefined value, so this is just a string, not key/value pairs
-    queryString = keys[0];
-  } else {
-    // objectToQuery escapes the placeholders. Undo that.
-    queryString = objectToQuery(queryObject)
-      .replace(/%7B/g, "{")
-      .replace(/%7D/g, "}");
+    return `?${keys[0]}`;
   }
 
-  return queryString.length > 0 ? `?${queryString}` : queryString;
+  return `?${objectToQuery(queryObject)}`;
 }
 
 /**
