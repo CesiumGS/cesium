@@ -44,7 +44,7 @@ const xhrBlobSupported = (function () {
  *
  * @private
  */
-function parseQuery(queryString) {
+function parseQueryString(queryString) {
   if (queryString.length === 0) {
     return {};
   }
@@ -210,6 +210,7 @@ function combineQueryParameters(q1, q2, preserveQueryParameters) {
  * @property {Resource.RetryCallback} [retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @property {number} [retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @property {Request} [request] A Request object that will be used. Intended for internal use only.
+ * @property {boolean} [parseUrl=true] If true, parse the url for query parameters; otherwise store the url without change
  */
 
 /**
@@ -302,7 +303,12 @@ function Resource(options) {
   this.retryAttempts = defaultValue(options.retryAttempts, 0);
   this._retryCount = 0;
 
-  this.parseUrl(options.url, true, true);
+  const parseUrl = defaultValue(options.parseUrl, true);
+  if (parseUrl) {
+    this.parseUrl(options.url, true, true);
+  } else {
+    this._url = options.url;
+  }
 }
 
 /**
@@ -530,29 +536,18 @@ Resource.prototype.toString = function () {
  *
  * @param {string} url The input url string.
  * @param {boolean} merge If true, we'll merge with the resource's existing queryParameters. Otherwise they will be replaced.
- * @param {boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in url will take precedence.
+ * @param {boolean} preserveQuery If true duplicate parameters will be concatenated into an array. If false, keys in url will take precedence.
  * @param {string} [baseUrl] If supplied, and input url is a relative url, it will be made absolute relative to baseUrl
  *
  * @private
  */
-Resource.prototype.parseUrl = function (
-  url,
-  merge,
-  preserveQueryParameters,
-  baseUrl
-) {
+Resource.prototype.parseUrl = function (url, merge, preserveQuery, baseUrl) {
   let uri = new Uri(url);
-  const query = parseQuery(uri.query());
+  const query = parseQueryString(uri.query());
 
-  if (merge) {
-    this._queryParameters = combineQueryParameters(
-      query,
-      this._queryParameters,
-      preserveQueryParameters
-    );
-  } else {
-    this._queryParameters = query;
-  }
+  this._queryParameters = merge
+    ? combineQueryParameters(query, this.queryParameters, preserveQuery)
+    : query;
 
   // Remove unneeded info from the Uri
   uri.search("");
@@ -677,17 +672,14 @@ Resource.prototype.getDerivedResource = function (options) {
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    const preserveQueryParameters = defaultValue(
-      options.preserveQueryParameters,
-      false
-    );
-    resource.parseUrl(options.url, true, preserveQueryParameters, this._url);
+    const preserveQuery = defaultValue(options.preserveQueryParameters, false);
+    resource.parseUrl(options.url, true, preserveQuery, this._url);
   }
 
   if (defined(options.queryParameters)) {
     resource._queryParameters = combine(
       options.queryParameters,
-      resource._queryParameters
+      resource.queryParameters
     );
   }
   if (defined(options.templateValues)) {
@@ -750,8 +742,16 @@ Resource.prototype.retryOnError = function (error) {
  */
 Resource.prototype.clone = function (result) {
   if (!defined(result)) {
-    result = new Resource({
+    return new Resource({
       url: this._url,
+      queryParameters: this.queryParameters,
+      templateValues: this.templateValues,
+      headers: this.headers,
+      proxy: this.proxy,
+      retryCallback: this.retryCallback,
+      retryAttempts: this.retryAttempts,
+      request: this.request.clone(),
+      parseUrl: false,
     });
   }
 
@@ -762,7 +762,6 @@ Resource.prototype.clone = function (result) {
   result.proxy = this.proxy;
   result.retryCallback = this.retryCallback;
   result.retryAttempts = this.retryAttempts;
-  result._retryCount = 0;
   result.request = this.request.clone();
 
   return result;
