@@ -70,11 +70,13 @@ import TweenCollection from "./TweenCollection.js";
 import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
 
-const requestRenderAfterFrame = function (scene) {
-  return function () {
-    scene.frameState.afterRender.push(function () {
-      scene.requestRender();
-    });
+const requestRenderAfterFrame = function (scene, filterCallback) {
+  return function (event) {
+    if (!filterCallback || filterCallback(event)) {
+      scene.frameState.afterRender.push(function () {
+        scene.requestRender();
+      });
+    }
   };
 };
 
@@ -372,13 +374,13 @@ function Scene(options) {
    *
    * @example
    * // Do not execute any commands.
-   * scene.debugCommandFilter = function(command) {
+   * scene.debugCommandFilter = function (command) {
    *     return false;
    * };
    *
    * // Execute only the billboard's commands.  That is, only draw the billboard.
    * const billboards = new Cesium.BillboardCollection();
-   * scene.debugCommandFilter = function(command) {
+   * scene.debugCommandFilter = function (command) {
    *     return command.owner === billboards;
    * };
    */
@@ -632,7 +634,16 @@ function Scene(options) {
   this._frameRateMonitor = undefined;
 
   this._removeRequestListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(
-    requestRenderAfterFrame(this)
+    requestRenderAfterFrame(
+      this,
+      (request) =>
+        !(
+          request &&
+          request.serverKey &&
+          RequestScheduler.disableRenderByServer &&
+          RequestScheduler.disableRenderByServer.has(request.serverKey)
+        )
+    )
   );
   this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(
     requestRenderAfterFrame(this)

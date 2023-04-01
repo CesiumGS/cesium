@@ -22,7 +22,7 @@ const statistics = {
   numberOfActiveRequestsEver: 0,
   lastNumberOfActiveRequests: 0,
 };
-
+let disableRenderByServer = new Set();
 let priorityHeapLength = 20;
 const requestHeap = new Heap({
   comparator: sortRequests,
@@ -147,6 +147,27 @@ Object.defineProperties(RequestScheduler, {
       requestHeap.reserve(value);
     },
   },
+
+  /**
+   * An array of servers to prevent map render on requestCompetedEvent
+   * @type {Array}
+   * @example
+   * RequestScheduler.disableRenderByServer = ['localhost:5001']
+   */
+  disableRenderByServer: {
+    get: function () {
+      return disableRenderByServer;
+    },
+    set: function (value) {
+      if (Array.isArray(value)) {
+        disableRenderByServer = new Set(value);
+      } else {
+        console.error(
+          `expected array when assigning RequestScheduler.disableRenderByServer but got ${value}`
+        );
+      }
+    },
+  },
 });
 
 function updatePriority(request) {
@@ -209,7 +230,7 @@ function getRequestReceivedFunction(request) {
 
     --statistics.numberOfActiveRequests;
     --numberOfActiveRequestsByServer[request.serverKey];
-    requestCompletedEvent.raiseEvent();
+    requestCompletedEvent.raiseEvent(request);
     request.state = RequestState.RECEIVED;
     request.deferred = undefined;
 
@@ -226,6 +247,7 @@ function getRequestFailedFunction(request) {
     ++statistics.numberOfFailedRequests;
     --statistics.numberOfActiveRequests;
     --numberOfActiveRequestsByServer[request.serverKey];
+    error.serverKey = request.serverKey;
     requestCompletedEvent.raiseEvent(error);
     request.state = RequestState.FAILED;
     request.deferred.reject(error);
@@ -388,7 +410,7 @@ RequestScheduler.request = function (request) {
   //>>includeEnd('debug');
 
   if (isDataUri(request.url) || isBlobUri(request.url)) {
-    requestCompletedEvent.raiseEvent();
+    requestCompletedEvent.raiseEvent(request);
     request.state = RequestState.RECEIVED;
     return request.requestFunction();
   }
