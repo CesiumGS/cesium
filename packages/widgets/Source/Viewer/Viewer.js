@@ -720,6 +720,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     if (createBaseLayerPicker) {
       baseLayerPicker.viewModel.selectedTerrain = undefined;
+      // Required as this is otherwise set by the baseLayerPicker
+      scene.globe.depthTestAgainstTerrain = true;
     }
 
     scene.setTerrain(options.terrain);
