@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.105 - 2023-05-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed an issue when zooming in an orthographic frustum. [#11206](https://github.com/CesiumGS/cesium/pull/11206)
+
 ### 1.104 - 2023-04-03
 
 #### Major Announcements :loudspeaker:
