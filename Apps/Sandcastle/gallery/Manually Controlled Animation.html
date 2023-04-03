@@ -29,7 +29,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -109,12 +109,46 @@
         }
 
         // Add our model.
-        const modelPrimitive = viewer.scene.primitives.add(
-          Cesium.Model.fromGltf({
-            url: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
-            scale: 4,
-          })
-        );
+        try {
+          const modelPrimitive = viewer.scene.primitives.add(
+            await Cesium.Model.fromGltfAsync({
+              url: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+              scale: 4,
+            })
+          );
+
+          modelPrimitive.readyEvent.addEventListener(() => {
+            modelPrimitive.activeAnimations.addAll({
+              loop: Cesium.ModelAnimationLoop.REPEAT,
+              animationTime: function (duration) {
+                return distance.getValue(viewer.clock.currentTime) / duration;
+              },
+              multiplier: 0.25,
+            });
+          });
+
+          const rotation = new Cesium.Matrix3();
+          viewer.scene.preUpdate.addEventListener(function () {
+            const time = viewer.clock.currentTime;
+            const pos = position.getValue(time);
+            const vel = velocityVectorProperty.getValue(time);
+            Cesium.Cartesian3.normalize(vel, vel);
+            Cesium.Transforms.rotationMatrixFromPositionVelocity(
+              pos,
+              vel,
+              viewer.scene.globe.ellipsoid,
+              rotation
+            );
+            Cesium.Matrix4.fromRotationTranslation(
+              rotation,
+              pos,
+              modelPrimitive.modelMatrix
+            );
+          });
+        } catch (error) {
+          window.alert(error);
+        }
+
         const modelLabel = viewer.entities.add({
           position: position,
           orientation: new Cesium.VelocityOrientationProperty(position), // Automatically set the model's orientation to the direction it's facing.
@@ -129,38 +163,17 @@
             eyeOffset: new Cesium.Cartesian3(0, 7.2, 0),
           },
         });
-
-        modelPrimitive.readyPromise.then(function (model) {
-          model.activeAnimations.addAll({
-            loop: Cesium.ModelAnimationLoop.REPEAT,
-            animationTime: function (duration) {
-              return distance.getValue(viewer.clock.currentTime) / duration;
-            },
-            multiplier: 0.25,
-          });
-          const rot = new Cesium.Matrix3();
-          viewer.scene.preUpdate.addEventListener(function () {
-            const time = viewer.clock.currentTime;
-            const pos = position.getValue(time);
-            const vel = velocityVectorProperty.getValue(time);
-            Cesium.Cartesian3.normalize(vel, vel);
-            Cesium.Transforms.rotationMatrixFromPositionVelocity(
-              pos,
-              vel,
-              viewer.scene.globe.ellipsoid,
-              rot
-            );
-            Cesium.Matrix4.fromRotationTranslation(rot, pos, model.modelMatrix);
-          });
-        });
         viewer.trackedEntity = modelLabel;
         modelLabel.viewFrom = new Cesium.Cartesian3(-30.0, -10.0, 10.0);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

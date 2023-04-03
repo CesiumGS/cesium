@@ -53,36 +53,31 @@ describe(
     });
 
     describe("tileset options", function () {
-      it("show properties", function () {
+      it("show properties", async function () {
         viewModel = new Cesium3DTilesInspectorViewModel(
           scene,
           performanceContainer
         );
-        const tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
+        const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
         viewModel.tileset = tileset;
-        return tileset.readyPromise.then(function () {
-          expect(viewModel.properties.indexOf("id") !== -1).toBe(true);
-          expect(viewModel.properties.indexOf("Longitude") !== -1).toBe(true);
-          expect(viewModel.properties.indexOf("Latitude") !== -1).toBe(true);
-          expect(viewModel.properties.indexOf("Height") !== -1).toBe(true);
-          viewModel.destroy();
-        });
+        // Here to allow backwards compatibility- This immediately resolves for tilesets created with fromUrl(). Can be removed when ready promises are removed.
+        await tileset.readyPromise;
+        expect(viewModel.properties.indexOf("id") !== -1).toBe(true);
+        expect(viewModel.properties.indexOf("Longitude") !== -1).toBe(true);
+        expect(viewModel.properties.indexOf("Latitude") !== -1).toBe(true);
+        expect(viewModel.properties.indexOf("Height") !== -1).toBe(true);
+        viewModel.destroy();
       });
     });
 
     describe("display options", function () {
-      beforeAll(function () {
+      beforeAll(async function () {
         viewModel = new Cesium3DTilesInspectorViewModel(
           scene,
           performanceContainer
         );
-        const tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
+        const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
         viewModel.tileset = tileset;
-        return tileset.readyPromise;
       });
 
       afterAll(function () {
@@ -228,15 +223,12 @@ describe(
     });
 
     describe("update options", function () {
-      beforeAll(function () {
+      beforeAll(async function () {
         viewModel = new Cesium3DTilesInspectorViewModel(
           scene,
           performanceContainer
         );
-        viewModel.tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
-        return viewModel.tileset.readyPromise;
+        viewModel.tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
       });
 
       afterAll(function () {
@@ -270,7 +262,7 @@ describe(
     describe("style options", function () {
       let style;
 
-      beforeAll(function () {
+      beforeAll(async function () {
         style = new Cesium3DTileStyle({
           color: {
             conditions: [
@@ -292,11 +284,7 @@ describe(
           scene,
           performanceContainer
         );
-        viewModel.tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
-
-        return viewModel.tileset.readyPromise;
+        viewModel.tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
       });
 
       afterAll(function () {

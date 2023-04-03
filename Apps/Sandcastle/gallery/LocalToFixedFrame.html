@@ -62,7 +62,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -129,24 +129,28 @@
           const position = localFrames[i].pos;
           const converter = localFrames[i].converter;
           const comments = localFrames[i].comments;
-          const planePrimitive = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
-              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
-                position,
-                hpRoll,
-                Cesium.Ellipsoid.WGS84,
-                converter
-              ),
-              minimumPixelSize: 128,
-            })
-          );
+          try {
+            const planePrimitive = scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+                modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                  position,
+                  hpRoll,
+                  Cesium.Ellipsoid.WGS84,
+                  converter
+                ),
+                minimumPixelSize: 128,
+              })
+            );
 
-          primitives.push({
-            primitive: planePrimitive,
-            converter: converter,
-            position: position,
-          });
+            primitives.push({
+              primitive: planePrimitive,
+              converter: converter,
+              position: position,
+            });
+          } catch (error) {
+            console.log(`Error loading model: ${error}`);
+          }
           const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             position,
             hprRollZero,
@@ -178,14 +182,8 @@
           });
         }
 
-        primitives[0].primitive.readyPromise.then(function (model) {
-          // Play and loop all animations at half-speed
-          model.activeAnimations.addAll({
-            multiplier: 0.5,
-            loop: Cesium.ModelAnimationLoop.REPEAT,
-          });
-
-          // Zoom to model
+        primitives[0].primitive.readyEvent.addEventListener((model) => {
+          // Zoom to first model
           r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
           controller.minimumZoomDistance = r * 0.5;
           const center = model.boundingSphere.center;
@@ -274,11 +272,14 @@
           rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
         });
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

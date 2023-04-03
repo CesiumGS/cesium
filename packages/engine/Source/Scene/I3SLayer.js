@@ -1,6 +1,7 @@
 import defined from "../Core/defined.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import I3SNode from "./I3SNode.js";
 
@@ -84,7 +85,7 @@ Object.defineProperties(I3SLayer.prototype, {
   /**
    * Gets the Cesium3DTileset for this layer.
    * @memberof I3SLayer.prototype
-   * @type {Cesium3DTileset}
+   * @type {Cesium3DTileset|undefined}
    * @readonly
    */
   tileset: {
@@ -167,28 +168,22 @@ Object.defineProperties(I3SLayer.prototype, {
  * @returns {Promise} A promise that is resolved when the layer data is loaded
  * @private
  */
-I3SLayer.prototype.load = function () {
-  const that = this;
-
+I3SLayer.prototype.load = async function () {
   if (this._data.spatialReference.wkid !== 4326) {
-    console.log(
+    throw new RuntimeError(
       `Unsupported spatial reference: ${this._data.spatialReference.wkid}`
     );
-    return Promise.reject();
   }
 
-  return this._dataProvider._geoidDataIsReadyPromise.then(function () {
-    return that._loadRootNode().then(function () {
-      that._create3DTileset();
-      return that._tileset.readyPromise.then(function () {
-        that._rootNode._tile = that._tileset._root;
-        that._tileset._root._i3sNode = that._rootNode;
-        if (that.legacyVersion16) {
-          return that._rootNode._loadChildren();
-        }
-      });
-    });
-  });
+  await this._dataProvider.loadGeoidData();
+  await this._loadRootNode();
+  await this._create3DTileset();
+
+  this._rootNode._tile = this._tileset._root;
+  this._tileset._root._i3sNode = this._rootNode;
+  if (this.legacyVersion16) {
+    return this._rootNode._loadChildren();
+  }
 };
 
 /**
@@ -378,7 +373,7 @@ I3SLayer.prototype._computeExtent = function () {
 /**
  * @private
  */
-I3SLayer.prototype._create3DTileset = function () {
+I3SLayer.prototype._create3DTileset = async function () {
   const inPlaceTileset = {
     asset: {
       version: "1.0",
@@ -391,7 +386,7 @@ I3SLayer.prototype._create3DTileset = function () {
     type: "application/json",
   });
 
-  const inPlaceTilesetURL = URL.createObjectURL(tilesetBlob);
+  const tilesetUrl = URL.createObjectURL(tilesetBlob);
 
   const tilesetOptions = {};
   if (defined(this._dataProvider._cesium3dTilesetOptions)) {
@@ -401,26 +396,20 @@ I3SLayer.prototype._create3DTileset = function () {
       }
     }
   }
-  tilesetOptions.url = inPlaceTilesetURL;
-  tilesetOptions.show = this._dataProvider.show;
 
-  this._tileset = new Cesium3DTileset(tilesetOptions);
-
+  this._tileset = await Cesium3DTileset.fromUrl(tilesetUrl, tilesetOptions);
+  this._tileset.show = this._dataProvider.show;
   this._tileset._isI3STileSet = true;
+  this._tileset.tileUnload.addEventListener(function (tile) {
+    tile._i3sNode._clearGeometryData();
+    URL.revokeObjectURL(tile._contentResource._url);
+    tile._contentResource = tile._i3sNode.resource;
+  });
 
-  const that = this;
-  this._tileset.readyPromise.then(function () {
-    that._tileset.tileUnload.addEventListener(function (tile) {
-      tile._i3sNode._clearGeometryData();
-      URL.revokeObjectURL(tile._contentResource._url);
-      tile._contentResource = tile._i3sNode.resource;
-    });
-
-    that._tileset.tileVisible.addEventListener(function (tile) {
-      if (defined(tile._i3sNode)) {
-        tile._i3sNode._loadChildren();
-      }
-    });
+  this._tileset.tileVisible.addEventListener(function (tile) {
+    if (defined(tile._i3sNode)) {
+      tile._i3sNode._loadChildren();
+    }
   });
 };
 

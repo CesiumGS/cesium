@@ -98,9 +98,10 @@ let implementation;
  *
  * @example
  * const viewer = new Cesium.Viewer("cesiumContainer", {
- *   imageryProvider: new Cesium.TileMapServiceImageryProvider({
- *   url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
- *   }),
+ *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+ *     Cesium.TileMapServiceImageryProvider.fromUrl(
+ *       Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+ *     )),
  *   baseLayerPicker: false,
  * });
  */

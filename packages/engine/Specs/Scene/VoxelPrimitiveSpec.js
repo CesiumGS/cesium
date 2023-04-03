@@ -14,18 +14,17 @@ describe(
     let scene;
     let provider;
 
-    beforeEach(function () {
+    beforeEach(async function () {
       scene = createScene();
 
       const camera = scene.camera;
       camera.position = Cartesian3.fromElements(-10, -10, -10);
       camera.direction = Cartesian3.fromElements(1, 1, 1);
 
-      provider = new Cesium3DTilesVoxelProvider({
-        url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-      });
-
-      return provider.readyPromise;
+      provider = await Cesium3DTilesVoxelProvider.fromUrl(
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+      );
+      return provider;
     });
 
     afterEach(function () {
@@ -44,10 +43,12 @@ describe(
     it("constructs with options", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
-      scene.renderForSpecs();
 
       expect(primitive.provider).toBe(provider);
-      await primitive.readyPromise;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
 
       expect(primitive.shape._type).toBe(provider.shape._type);
       expect(primitive.dimensions.equals(provider.dimensions)).toBe(true);
@@ -134,7 +135,10 @@ describe(
       const shape = primitive._shape;
       shape.translation = new Cartesian3(2.382, -3.643, 1.084);
 
-      await primitive.readyPromise;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
 
       primitive.update(scene.frameState);
       const stepSizeUv = shape.computeApproximateStepSize(primitive.dimensions);
@@ -146,7 +150,10 @@ describe(
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      await primitive.readyPromise;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
 
       expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
 
@@ -173,7 +180,10 @@ describe(
       scene.renderForSpecs();
       expect(primitive.isDestroyed()).toBe(false);
 
-      await primitive.readyPromise;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
+      });
 
       primitive.update(scene.frameState);
       expect(primitive.isDestroyed()).toBe(false);

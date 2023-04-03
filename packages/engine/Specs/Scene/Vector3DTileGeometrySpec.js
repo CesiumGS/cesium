@@ -22,24 +22,16 @@ import {
   Vector3DTileGeometry,
 } from "../../index.js";
 
-import createContext from "../../../../Specs/createContext.js";
+import createWebglVersionHelper from "../createWebglVersionHelper.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/Vector3DTileGeometry",
   function () {
-    createGeometrySpecs({});
-    const c = createContext({});
-    // Don't repeat WebGL 1 tests when WebGL 2 is not supported
-    if (c.webgl2) {
-      createGeometrySpecs({});
-    }
-    c.destroyForSpecs();
+    createWebglVersionHelper(createGeometrySpecs);
 
     function createGeometrySpecs(contextOptions) {
-      const webglMessage = contextOptions.requestWebgl1 ? "" : "WebGL 2";
-
       let scene;
       let rectangle;
       let geometry;
@@ -168,14 +160,10 @@ describe(
       });
 
       function loadGeometries(geometries) {
-        let ready = false;
-        geometries.readyPromise.then(function () {
-          ready = true;
-        });
         return pollToPromise(function () {
           geometries.update(scene.frameState);
           scene.frameState.commandList.length = 0;
-          return ready;
+          return geometries.ready;
         });
       }
 
@@ -334,7 +322,7 @@ describe(
         });
       }
 
-      it(`renders a single box${webglMessage}`, function () {
+      it(`renders a single box`, function () {
         const dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
         const boxes = packBoxes([
           {
@@ -354,7 +342,7 @@ describe(
         });
       });
 
-      it(`renders multiple boxes${webglMessage}`, function () {
+      it(`renders multiple boxes`, function () {
         const dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
         const modelMatrices = [
           Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
@@ -382,7 +370,7 @@ describe(
         });
       });
 
-      it(`renders a single cylinder${webglMessage}`, function () {
+      it(`renders a single cylinder`, function () {
         const radius = 1000000.0;
         const length = 1000000.0;
         const cylinders = packCylinders([
@@ -404,7 +392,7 @@ describe(
         });
       });
 
-      it(`renders multiple cylinders${webglMessage}`, function () {
+      it(`renders multiple cylinders`, function () {
         const radius = 500000.0;
         const length = 500000.0;
         const modelMatrices = [
@@ -435,7 +423,7 @@ describe(
         });
       });
 
-      it(`renders a single ellipsoid${webglMessage}`, function () {
+      it(`renders a single ellipsoid`, function () {
         const radii = new Cartesian3(500000.0, 500000.0, 500000.0);
         const ellipsoid = packEllipsoids([
           {
@@ -455,7 +443,7 @@ describe(
         });
       });
 
-      it(`renders multiple ellipsoids${webglMessage}`, function () {
+      it(`renders multiple ellipsoids`, function () {
         const radii = new Cartesian3(500000.0, 500000.0, 500000.0);
         const modelMatrices = [
           Matrix4.fromTranslation(new Cartesian3(radii.x, 0.0, 0.0)),
@@ -483,7 +471,7 @@ describe(
         });
       });
 
-      it(`renders a single sphere${webglMessage}`, function () {
+      it(`renders a single sphere`, function () {
         const radius = 500000.0;
         const sphere = packSpheres([
           {
@@ -500,7 +488,7 @@ describe(
         });
       });
 
-      it(`renders multiple spheres${webglMessage}`, function () {
+      it(`renders multiple spheres`, function () {
         const radius = 500000.0;
         const modelMatrices = [
           Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
@@ -525,7 +513,7 @@ describe(
         });
       });
 
-      it(`renders with multiple types of each geometry${webglMessage}`, function () {
+      it(`renders with multiple types of each geometry`, function () {
         const dimensions = new Cartesian3(125000.0, 125000.0, 125000.0);
         const modelMatrices = [
           Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
@@ -611,7 +599,7 @@ describe(
         });
       });
 
-      it(`renders multiple geometries after a re-batch${webglMessage}`, function () {
+      it(`renders multiple geometries after a re-batch`, function () {
         const dimensions = new Cartesian3(125000.0, 125000.0, 125000.0);
         const modelMatrices = [
           Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
@@ -705,7 +693,7 @@ describe(
         });
       });
 
-      it(`renders with inverted classification${webglMessage}`, function () {
+      it(`renders with inverted classification`, function () {
         const radii = new Cartesian3(100.0, 100.0, 1000.0);
         const ellipsoids = packEllipsoids([
           {
@@ -760,7 +748,7 @@ describe(
         });
       });
 
-      it(`renders wireframe${webglMessage}`, function () {
+      it(`renders wireframe`, function () {
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
         const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
@@ -800,7 +788,7 @@ describe(
         });
       });
 
-      it(`renders based on classificationType${webglMessage}`, function () {
+      it(`renders based on classificationType`, function () {
         const radii = new Cartesian3(100.0, 100.0, 1000.0);
         const ellipsoids = packEllipsoids([
           {
@@ -870,7 +858,7 @@ describe(
         });
       });
 
-      it(`picks geometry${webglMessage}`, function () {
+      it(`picks geometry`, function () {
         const origin = Rectangle.center(rectangle);
         const center = ellipsoid.cartographicToCartesian(origin);
         const modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
@@ -918,7 +906,7 @@ describe(
         });
       });
 
-      it(`isDestroyed${webglMessage}`, function () {
+      it(`isDestroyed`, function () {
         geometry = new Vector3DTileGeometry({});
         expect(geometry.isDestroyed()).toEqual(false);
         geometry.destroy();

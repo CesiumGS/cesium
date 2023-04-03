@@ -33,7 +33,7 @@ Cesium3DTileStyleEngine.prototype.resetDirty = function () {
 };
 
 Cesium3DTileStyleEngine.prototype.applyStyle = function (tileset) {
-  if (!tileset.ready) {
+  if (!defined(tileset.root)) {
     return;
   }
 

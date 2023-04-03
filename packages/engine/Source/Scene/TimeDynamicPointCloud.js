@@ -3,6 +3,7 @@ import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -183,6 +184,7 @@ function TimeDynamicPointCloud(options) {
   this._clockMultiplier = 0.0;
   this._resolveReadyPromise = undefined;
   const that = this;
+  // This is here for backwards compatibility and can be removed when readyPromise is removed.
   this._readyPromise = new Promise(function (resolve) {
     that._resolveReadyPromise = resolve;
   });
@@ -252,9 +254,14 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
    *
    * @type {Promise<TimeDynamicPointCloud>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "TimeDynamicPointCloud.readyPromise",
+        "TimeDynamicPointCloud.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use TimeDynamicPointCloud.frameFailed instead."
+      );
       return this._readyPromise;
     },
   },
@@ -395,6 +402,7 @@ function requestFrame(that, interval, frameState) {
       sequential: true,
       ready: false,
       touchedFrameNumber: frameState.frameNumber,
+      uri: uri,
     };
     frames[index] = frame;
     Resource.fetchArrayBuffer({
@@ -410,7 +418,6 @@ function requestFrame(that, interval, frameState) {
           uniformMapLoaded: getUniformMapLoaded(that),
           pickIdLoaded: getPickIdLoaded,
         });
-        return frame.pointCloud.readyPromise;
       })
       .catch(handleFrameFailure(that, uri));
   }
@@ -507,7 +514,12 @@ function renderFrame(that, frame, updateState, frameState) {
   pointCloud.geometricErrorScale = shading.geometricErrorScale;
   pointCloud.maximumAttenuation = getMaximumAttenuation(that);
 
-  pointCloud.update(frameState);
+  try {
+    pointCloud.update(frameState);
+  } catch (error) {
+    handleFrameFailure(that, frame.uri)(error);
+  }
+
   frame.touchedFrameNumber = frameState.frameNumber;
 }
 
@@ -738,6 +750,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   const that = this;
   if (defined(frame) && !defined(this._lastRenderedFrame)) {
     frameState.afterRender.push(function () {
+      // This is here for backwards compatibility and can be removed when readyPromise is removed.
       that._resolveReadyPromise(that);
       return true;
     });

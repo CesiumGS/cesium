@@ -19,7 +19,6 @@ describe("Scene/Empty3DTileContent", function () {
     expect(content.texturesByteLength).toBe(0);
     expect(content.batchTableByteLength).toBe(0);
     expect(content.innerContents).toBeUndefined();
-    expect(content.readyPromise).toBeUndefined();
     expect(content.tileset).toBe(mockTileset);
     expect(content.tile).toBe(mockTile);
     expect(content.url).toBeUndefined();

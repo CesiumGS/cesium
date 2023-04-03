@@ -9,6 +9,7 @@ import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
@@ -350,6 +351,7 @@ function Primitive(options) {
   this._ready = false;
 
   const primitive = this;
+  // This is here for backwards compatibility. This promise wrapper can be removed once readyPromise is removed.
   this._readyPromise = new Promise((resolve, reject) => {
     primitive._completeLoad = (frameState, state, error) => {
       this._error = error;
@@ -486,6 +488,19 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @type {boolean}
    * @readonly
+   *
+   * @example
+   * // Wait for a primitive to become ready before accessing attributes
+   * const removeListener = scene.postRender.addEventListener(() => {
+   *   if (!frustumPrimitive.ready) {
+   *     return;
+   *   }
+   *
+   *   const attributes = primitive.getGeometryInstanceAttributes('an id');
+   *   attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
+   *
+   *   removeListener();
+   * });
    */
   ready: {
     get: function () {
@@ -498,9 +513,14 @@ Object.defineProperties(Primitive.prototype, {
    * @memberof Primitive.prototype
    * @type {Promise<Primitive>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "Primitive.readyPromise",
+        "Primitive.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Primitive.ready to return true instead."
+      );
       return this._readyPromise;
     },
   },

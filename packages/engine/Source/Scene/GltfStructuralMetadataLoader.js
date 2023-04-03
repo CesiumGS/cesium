@@ -68,7 +68,9 @@ function GltfStructuralMetadataLoader(options) {
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._bufferViewLoaders = [];
+  this._bufferViewIds = [];
   this._textureLoaders = [];
+  this._textureIds = [];
   this._schemaLoader = undefined;
   this._structuralMetadata = undefined;
   this._state = ResourceLoaderState.UNLOADED;
@@ -83,20 +85,6 @@ if (defined(Object.create)) {
 }
 
 Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
-  /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof GltfStructuralMetadataLoader.prototype
-   *
-   * @type {Promise<GltfStructuralMetadataLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
   /**
    * The cache key of the resource.
    *
@@ -127,61 +115,47 @@ Object.defineProperties(GltfStructuralMetadataLoader.prototype, {
   },
 });
 
+async function loadResources(loader) {
+  try {
+    const bufferViewsPromise = loadBufferViews(loader);
+    const texturesPromise = loadTextures(loader);
+    const schemaPromise = loadSchema(loader);
+
+    await Promise.all([bufferViewsPromise, texturesPromise, schemaPromise]);
+
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    loader._gltf = undefined; // No longer need to hold onto the glTF
+
+    loader._state = ResourceLoaderState.LOADED;
+    return loader;
+  } catch (error) {
+    if (loader.isDestroyed()) {
+      return;
+    }
+
+    loader.unload();
+    loader._state = ResourceLoaderState.FAILED;
+    const errorMessage = "Failed to load structural metadata";
+    throw loader.getError(errorMessage, error);
+  }
+}
+
 /**
  * Loads the resource.
  * @returns {Promise<GltfStructuralMetadataLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GltfStructuralMetadataLoader.prototype.load = function () {
-  const bufferViewsPromise = loadBufferViews(this);
-  const texturesPromise = loadTextures(this);
-  const schemaPromise = loadSchema(this);
+  if (defined(this._promise)) {
+    return this._promise;
+  }
 
-  this._gltf = undefined; // No longer need to hold onto the glTF
   this._state = ResourceLoaderState.LOADING;
-
-  const that = this;
-
-  this._promise = Promise.all([
-    bufferViewsPromise,
-    texturesPromise,
-    schemaPromise,
-  ])
-    .then(function (results) {
-      if (that.isDestroyed()) {
-        return;
-      }
-      const bufferViews = results[0];
-      const textures = results[1];
-      const schema = results[2];
-
-      if (defined(that._extension)) {
-        that._structuralMetadata = parseStructuralMetadata({
-          extension: that._extension,
-          schema: schema,
-          bufferViews: bufferViews,
-          textures: textures,
-        });
-      } else {
-        that._structuralMetadata = parseFeatureMetadataLegacy({
-          extension: that._extensionLegacy,
-          schema: schema,
-          bufferViews: bufferViews,
-          textures: textures,
-        });
-      }
-      that._state = ResourceLoaderState.READY;
-      return that;
-    })
-    .catch(function (error) {
-      if (that.isDestroyed()) {
-        return;
-      }
-      that.unload();
-      that._state = ResourceLoaderState.FAILED;
-      const errorMessage = "Failed to load structural metadata";
-      return Promise.reject(that.getError(errorMessage, error));
-    });
+  this._promise = loadResources(this);
+  return this._promise;
 };
 
 function gatherBufferViewIdsFromProperties(properties, bufferViewIdSet) {
@@ -261,7 +235,7 @@ function gatherUsedBufferViewIdsLegacy(extensionLegacy) {
   return bufferViewIdSet;
 }
 
-function loadBufferViews(structuralMetadataLoader) {
+async function loadBufferViews(structuralMetadataLoader) {
   let bufferViewIds;
   if (defined(structuralMetadataLoader._extension)) {
     bufferViewIds = gatherUsedBufferViewIds(
@@ -275,40 +249,23 @@ function loadBufferViews(structuralMetadataLoader) {
 
   // Load the buffer views
   const bufferViewPromises = [];
-  const bufferViewLoaders = {};
   for (const bufferViewId in bufferViewIds) {
     if (bufferViewIds.hasOwnProperty(bufferViewId)) {
-      const bufferViewLoader = ResourceCache.loadBufferView({
+      const bufferViewLoader = ResourceCache.getBufferViewLoader({
         gltf: structuralMetadataLoader._gltf,
         bufferViewId: parseInt(bufferViewId),
         gltfResource: structuralMetadataLoader._gltfResource,
         baseResource: structuralMetadataLoader._baseResource,
       });
-      bufferViewPromises.push(bufferViewLoader.promise);
+
       structuralMetadataLoader._bufferViewLoaders.push(bufferViewLoader);
-      bufferViewLoaders[bufferViewId] = bufferViewLoader;
+      structuralMetadataLoader._bufferViewIds.push(bufferViewId);
+
+      bufferViewPromises.push(bufferViewLoader.load());
     }
   }
 
-  // Return a promise to a map of buffer view IDs to typed arrays
-  return Promise.all(bufferViewPromises).then(function () {
-    const bufferViews = {};
-    for (const bufferViewId in bufferViewLoaders) {
-      if (bufferViewLoaders.hasOwnProperty(bufferViewId)) {
-        const bufferViewLoader = bufferViewLoaders[bufferViewId];
-        // Copy the typed array and let the underlying ArrayBuffer be freed
-        const bufferViewTypedArray = new Uint8Array(
-          bufferViewLoader.typedArray
-        );
-        bufferViews[bufferViewId] = bufferViewTypedArray;
-      }
-    }
-
-    // Buffer views can be unloaded after the data has been copied
-    unloadBufferViews(structuralMetadataLoader);
-
-    return bufferViews;
-  });
+  return Promise.all(bufferViewPromises);
 }
 
 function gatherUsedTextureIds(structuralMetadataExtension) {
@@ -385,10 +342,9 @@ function loadTextures(structuralMetadataLoader) {
 
   // Load the textures
   const texturePromises = [];
-  const textureLoaders = {};
   for (const textureId in textureIds) {
     if (textureIds.hasOwnProperty(textureId)) {
-      const textureLoader = ResourceCache.loadTexture({
+      const textureLoader = ResourceCache.getTextureLoader({
         gltf: gltf,
         textureInfo: textureIds[textureId],
         gltfResource: gltfResource,
@@ -397,26 +353,16 @@ function loadTextures(structuralMetadataLoader) {
         frameState: frameState,
         asynchronous: asynchronous,
       });
-      texturePromises.push(textureLoader.promise);
       structuralMetadataLoader._textureLoaders.push(textureLoader);
-      textureLoaders[textureId] = textureLoader;
+      structuralMetadataLoader._textureIds.push(textureId);
+      texturePromises.push(textureLoader.load());
     }
   }
 
-  // Return a promise to a map of texture IDs to Texture objects
-  return Promise.all(texturePromises).then(function () {
-    const textures = {};
-    for (const textureId in textureLoaders) {
-      if (textureLoaders.hasOwnProperty(textureId)) {
-        const textureLoader = textureLoaders[textureId];
-        textures[textureId] = textureLoader.texture;
-      }
-    }
-    return textures;
-  });
+  return Promise.all(texturePromises);
 }
 
-function loadSchema(structuralMetadataLoader) {
+async function loadSchema(structuralMetadataLoader) {
   const extension = defaultValue(
     structuralMetadataLoader._extension,
     structuralMetadataLoader._extensionLegacy
@@ -427,20 +373,20 @@ function loadSchema(structuralMetadataLoader) {
     const resource = structuralMetadataLoader._baseResource.getDerivedResource({
       url: extension.schemaUri,
     });
-    schemaLoader = ResourceCache.loadSchema({
+    schemaLoader = ResourceCache.getSchemaLoader({
       resource: resource,
     });
   } else {
-    schemaLoader = ResourceCache.loadSchema({
+    schemaLoader = ResourceCache.getSchemaLoader({
       schema: extension.schema,
     });
   }
 
   structuralMetadataLoader._schemaLoader = schemaLoader;
-
-  return schemaLoader.promise.then(function (schemaLoader) {
+  await schemaLoader.load();
+  if (!schemaLoader.isDestroyed()) {
     return schemaLoader.schema;
-  });
+  }
 }
 
 /**
@@ -454,17 +400,68 @@ GltfStructuralMetadataLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
-  if (this._state !== ResourceLoaderState.LOADING) {
-    return;
+  if (this._state === ResourceLoaderState.READY) {
+    return true;
+  }
+
+  if (this._state !== ResourceLoaderState.LOADED) {
+    return false;
   }
 
   const textureLoaders = this._textureLoaders;
   const textureLoadersLength = textureLoaders.length;
-
+  let ready = true;
   for (let i = 0; i < textureLoadersLength; ++i) {
     const textureLoader = textureLoaders[i];
-    textureLoader.process(frameState);
+    const textureReady = textureLoader.process(frameState);
+    ready = ready && textureReady;
   }
+
+  if (!ready) {
+    return false;
+  }
+
+  const schema = this._schemaLoader.schema;
+  const bufferViews = {};
+  for (let i = 0; i < this._bufferViewIds.length; ++i) {
+    const bufferViewId = this._bufferViewIds[i];
+    const bufferViewLoader = this._bufferViewLoaders[i];
+    if (!bufferViewLoader.isDestroyed()) {
+      // Copy the typed array and let the underlying ArrayBuffer be freed
+      const bufferViewTypedArray = new Uint8Array(bufferViewLoader.typedArray);
+      bufferViews[bufferViewId] = bufferViewTypedArray;
+    }
+  }
+
+  const textures = {};
+  for (let i = 0; i < this._textureIds.length; ++i) {
+    const textureId = this._textureIds[i];
+    const textureLoader = textureLoaders[i];
+    if (!textureLoader.isDestroyed()) {
+      textures[textureId] = textureLoader.texture;
+    }
+  }
+  if (defined(this._extension)) {
+    this._structuralMetadata = parseStructuralMetadata({
+      extension: this._extension,
+      schema: schema,
+      bufferViews: bufferViews,
+      textures: textures,
+    });
+  } else {
+    this._structuralMetadata = parseFeatureMetadataLegacy({
+      extension: this._extensionLegacy,
+      schema: schema,
+      bufferViews: bufferViews,
+      textures: textures,
+    });
+  }
+
+  // Buffer views can be unloaded after the data has been copied
+  unloadBufferViews(this);
+
+  this._state = ResourceLoaderState.READY;
+  return true;
 };
 
 function unloadBufferViews(structuralMetadataLoader) {
@@ -474,6 +471,7 @@ function unloadBufferViews(structuralMetadataLoader) {
     ResourceCache.unload(bufferViewLoaders[i]);
   }
   structuralMetadataLoader._bufferViewLoaders.length = 0;
+  structuralMetadataLoader._bufferViewIds.length = 0;
 }
 
 function unloadTextures(structuralMetadataLoader) {
@@ -483,6 +481,7 @@ function unloadTextures(structuralMetadataLoader) {
     ResourceCache.unload(textureLoaders[i]);
   }
   structuralMetadataLoader._textureLoaders.length = 0;
+  structuralMetadataLoader._textureIds.length = 0;
 }
 
 /**

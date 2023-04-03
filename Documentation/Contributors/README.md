@@ -3,7 +3,6 @@
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) - Start here. How to find something to work on, submit issues, and open pull requests.
 - [Build Guide](BuildGuide/README.md) - How to build and run CesiumJS locally.
 - **IDEs** - use any IDE you want for CesiumJS development. Most contributors use WebStorm (commercial) or VSCode (open source).
-  - [WebStorm Guide](WebStormGuide/README.md) - How to set up WebStorm.
   - [VSCode Guide](VSCodeGuide/README.md) - How to set up VSCode.
 - [Coding Guide](CodingGuide/README.md) - JavaScript and GLSL coding conventions and best practices for design, maintainability, and performance.
 - [Testing Guide](TestingGuide/README.md) - How to run the CesiumJS tests and write awesome tests.

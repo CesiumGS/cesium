@@ -520,6 +520,7 @@ function selectTilesForRendering(primitive, frameState) {
   let i;
   const tileProvider = primitive._tileProvider;
   if (!defined(primitive._levelZeroTiles)) {
+    // ready is deprecated. This is here for backwards compatibility
     if (tileProvider.ready) {
       const tilingScheme = tileProvider.tilingScheme;
       primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(
@@ -1387,6 +1388,7 @@ const scratchPosition = new Cartesian3();
 const scratchArray = [];
 
 function updateHeights(primitive, frameState) {
+  // ready is deprecated. This is here for backwards compatibility.
   if (!primitive.tileProvider.ready) {
     return;
   }

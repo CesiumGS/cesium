@@ -16,7 +16,7 @@ import RuntimeError from "./RuntimeError.js";
  * @augments Resource
  *
  * @param {object} endpoint The result of the Cesium ion asset endpoint service.
- * @param {Resource} endpointResource The resource used to retreive the endpoint.
+ * @param {Resource} endpointResource The resource used to retrieve the endpoint.
  *
  * @see Ion
  * @see IonImageryProvider
@@ -87,8 +87,14 @@ if (defined(Object.create)) {
  * @returns {Promise<IonResource>} A Promise to am instance representing the Cesium ion Asset.
  *
  * @example
- * //Load a Cesium3DTileset with asset ID of 124624234
- * viewer.scene.primitives.add(new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(124624234) }));
+ * // Load a Cesium3DTileset with asset ID of 124624234
+ * try {
+ *   const resource = await Cesium.IonResource.fromAssetId(124624234);
+ *   const tileset = await Cesium.Cesium3DTileset.fromUrl(resource);
+ *   scene.primitives.add(tileset);
+ * } catch (error) {
+ *   console.error(`Error creating tileset: ${error}`);
+ * }
  *
  * @example
  * //Load a CZML file with asset ID of 10890
@@ -197,6 +203,11 @@ IonResource.prototype._makeRequest = function (options) {
     options.headers = {};
   }
   options.headers.Authorization = `Bearer ${this._ionEndpoint.accessToken}`;
+  options.headers["X-Cesium-Client"] = "CesiumJS";
+  /* global CESIUM_VERSION */
+  if (typeof CESIUM_VERSION !== "undefined") {
+    options.headers["X-Cesium-Client-Version"] = CESIUM_VERSION;
+  }
 
   return Resource.prototype._makeRequest.call(this, options);
 };

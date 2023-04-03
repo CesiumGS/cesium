@@ -230,12 +230,12 @@ describe("Scene/ImplicitMetadataView", function () {
   let treeView;
   let secondTreeView;
 
-  beforeEach(function () {
+  beforeEach(async function () {
     const results = ImplicitTilingTester.generateSubtreeBuffers(
       subtreeDescription
     );
 
-    subtree = new ImplicitSubtree(
+    subtree = await ImplicitSubtree.fromSubtreeJson(
       subtreeResource,
       undefined,
       results.subtreeBuffer,
@@ -243,52 +243,50 @@ describe("Scene/ImplicitMetadataView", function () {
       rootCoordinates
     );
 
-    return subtree.readyPromise.then(function () {
-      tileView = new ImplicitMetadataView({
-        metadataTable: subtree.tileMetadataTable,
-        class: tileClass,
-        entityId: 0,
-        propertyTableJson: emptyJson,
-      });
+    tileView = new ImplicitMetadataView({
+      metadataTable: subtree.tileMetadataTable,
+      class: tileClass,
+      entityId: 0,
+      propertyTableJson: emptyJson,
+    });
 
-      secondTileView = new ImplicitMetadataView({
-        metadataTable: subtree.tileMetadataTable,
-        class: tileClass,
-        entityId: 1,
-        propertyTableJson: emptyJson,
-      });
+    secondTileView = new ImplicitMetadataView({
+      metadataTable: subtree.tileMetadataTable,
+      class: tileClass,
+      entityId: 1,
+      propertyTableJson: emptyJson,
+    });
 
-      buildingView = new ImplicitMetadataView({
-        metadataTable: subtree.contentMetadataTables[0],
-        class: buildingClass,
-        entityId: 0,
-        contentIndex: 0,
-        propertyTableJson: emptyJson,
-      });
+    buildingView = new ImplicitMetadataView({
+      metadataTable: subtree.contentMetadataTables[0],
+      class: buildingClass,
+      entityId: 0,
+      contentIndex: 0,
+      propertyTableJson: emptyJson,
+    });
 
-      secondBuildingView = new ImplicitMetadataView({
-        metadataTable: subtree.contentMetadataTables[0],
-        class: buildingClass,
-        entityId: 1,
-        contentIndex: 0,
-        propertyTableJson: emptyJson,
-      });
+    secondBuildingView = new ImplicitMetadataView({
+      metadataTable: subtree.contentMetadataTables[0],
+      class: buildingClass,
+      entityId: 1,
+      contentIndex: 0,
+      propertyTableJson: emptyJson,
+    });
 
-      treeView = new ImplicitMetadataView({
-        metadataTable: subtree.contentMetadataTables[1],
-        class: treeClass,
-        entityId: 0,
-        contentIndex: 1,
-        propertyTableJson: emptyJson,
-      });
+    treeView = new ImplicitMetadataView({
+      metadataTable: subtree.contentMetadataTables[1],
+      class: treeClass,
+      entityId: 0,
+      contentIndex: 1,
+      propertyTableJson: emptyJson,
+    });
 
-      secondTreeView = new ImplicitMetadataView({
-        metadataTable: subtree.contentMetadataTables[1],
-        class: treeClass,
-        entityId: 1,
-        contentIndex: 1,
-        propertyTableJson: emptyJson,
-      });
+    secondTreeView = new ImplicitMetadataView({
+      metadataTable: subtree.contentMetadataTables[1],
+      class: treeClass,
+      entityId: 1,
+      contentIndex: 1,
+      propertyTableJson: emptyJson,
     });
   });
 

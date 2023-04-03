@@ -145,9 +145,9 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
 
 /**
  * @typedef {object} CesiumBundles
- * @property {object} esmBundle The ESM bundle.
- * @property {object} iifeBundle The IIFE bundle, for use in browsers.
- * @property {object} nodeBundle The CommonJS bundle, for use in NodeJS.
+ * @property {object} esm The ESM bundle.
+ * @property {object} iife The IIFE bundle, for use in browsers.
+ * @property {object} node The CommonJS bundle, for use in NodeJS.
  */
 
 /**
@@ -853,7 +853,7 @@ export function bundleCombinedSpecs(options) {
  * @returns
  */
 export async function createIndexJs(workspace) {
-  let contents = "";
+  let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
   const workspaceSources = workspaceSourceFiles[workspace];

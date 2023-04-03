@@ -88,7 +88,7 @@ describe(
         _projectTo2D: false,
         content: {
           tileset: {
-            _hasMixedContent: true,
+            hasMixedContent: true,
             _backfaceCommands: [],
           },
           tile: {

@@ -51,10 +51,11 @@ import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
 import Resource from "../Core/Resource.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import I3SLayer from "./I3SLayer.js";
@@ -62,48 +63,65 @@ import Lerc from "lerc";
 import Rectangle from "../Core/Rectangle.js";
 
 /**
+ * @typedef {Object} I3SDataProvider.ConstructorOptions
+ *
+ * Initialization options for the I3SDataProvider constructor
+ *
+ * @property {Resource|string} [url] The url of the I3S dataset. Deprecated.
+ * @property {string} [name] The name of the I3S dataset.
+ * @property {boolean} [show=true] Determines if the dataset will be shown.
+ * @property {ArcGISTiledElevationTerrainProvider|Promise<ArcGISTiledElevationTerrainProvider>} [geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
+ * @property {boolean} [traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
+ * @property {Cesium3DTileset.ConstructorOptions} [cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
+ */
+
+/**
  * An I3SDataProvider is the main public class for I3S support. The url option
  * should return a scene object. Currently supported I3S versions are 1.6 and
  * 1.7/1.8 (OGC I3S 1.2). I3SFeature and I3SNode classes implement the
  * Object Model for I3S entities, with public interfaces.
  *
+ * <div class="notice">
+ * This object is normally not instantiated directly, use {@link I3SDataProvider.fromUrl}.
+ * </div>
+ *
  * @alias I3SDataProvider
  * @constructor
  *
- * @param {object} options Object with the following properties:
- * @param {Resource|string} options.url The url of the I3S dataset.
- * @param {string} [options.name] The name of the I3S dataset.
- * @param {boolean} [options.show=true] Determines if the dataset will be shown.
- * @param {ArcGISTiledElevationTerrainProvider} [options.geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
- * @param {boolean} [options.traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
- * @param {object} [options.cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
+ * @param {I3SDataProvider.ConstructorOptions} options An object describing initialization options
+ *
+ * @see I3SDataProvider.fromUrl
+ * @see ArcGISTiledElevationTerrainProvider
  *
  * @example
- * const i3sData = new I3SDataProvider({
- *   url: 'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0'
- * });
- * viewer.scene.primitives.add(i3sData);
+ * try {
+ *   const i3sData = await I3SDataProvider.fromUrl(
+ *     "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0"
+ *   );
+ *   viewer.scene.primitives.add(i3sData);
+ * } catch (error) {
+ *   console.log(`There was an error creating the I3S Data Provider: ${error}`);
+ * }
  *
  * @example
- * const geoidService = new Cesium.ArcGISTiledElevationTerrainProvider({
- *   url: "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer",
- * });
- * let i3sData = new I3SDataProvider({
- *   url: 'https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0',
- *   geoidTiledTerrainProvider: geoidService
- * });
- * viewer.scene.primitives.add(i3sData);
+ * try {
+ *   const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+ *     "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
+ *   );
+ *   const i3sData = await I3SDataProvider.fromUrl(
+ *     "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0", {
+ *       geoidTiledTerrainProvider: geoidService
+ *   });
+ *   viewer.scene.primitives.add(i3sData);
+ * } catch (error) {
+ *   console.log(`There was an error creating the I3S Data Provider: ${error}`);
+ * }
  */
 function I3SDataProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.url", options.url);
-  //>>includeEnd('debug');
-
   // All public configuration is defined as ES5 properties
   // These are just the "private" variables and their defaults.
-  this._resource = Resource.createIfNeeded(options.url);
   this._name = options.name;
   this._show = defaultValue(options.show, true);
   this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
@@ -117,13 +135,22 @@ function I3SDataProvider(options) {
   this._layers = [];
   this._data = undefined;
   this._extent = undefined;
-  this._geoidDataIsReadyPromise = undefined;
+  this._geoidDataPromise = undefined;
   this._geoidDataList = undefined;
   this._decoderTaskProcessor = undefined;
-  this._readyPromise = undefined;
-  this._ready = false;
+  this._taskProcessorReadyPromise = undefined;
 
-  this._load();
+  if (defined(options.url)) {
+    deprecationWarning(
+      "I3SDataProvider options.url",
+      "I3SDataProvider constructor parameter options.url was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use I3SDataProvider.fromUrl instead."
+    );
+    this._readyPromise = undefined;
+    this._ready = false;
+
+    this._resource = Resource.createIfNeeded(options.url);
+    this._load();
+  }
 }
 
 Object.defineProperties(I3SDataProvider.prototype, {
@@ -200,14 +227,6 @@ Object.defineProperties(I3SDataProvider.prototype, {
    */
   layers: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "The dataset is not loaded. Use I3SDataProvider.readyPromise or wait for I3SDataProvider.ready to be true."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._layers;
     },
   },
@@ -220,14 +239,6 @@ Object.defineProperties(I3SDataProvider.prototype, {
    */
   data: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "The dataset is not loaded. Use I3SDataProvider.readyPromise or wait for I3SDataProvider.ready to be true."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._data;
     },
   },
@@ -240,14 +251,6 @@ Object.defineProperties(I3SDataProvider.prototype, {
    */
   extent: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "The dataset is not loaded. Use I3SDataProvider.readyPromise or wait for I3SDataProvider.ready to be true."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._extent;
     },
   },
@@ -257,9 +260,14 @@ Object.defineProperties(I3SDataProvider.prototype, {
    * @memberof I3SDataProvider.prototype
    * @type {Promise<I3SDataProvider>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "I3SDataProvider.readyPromise",
+        "I3SDataProvider.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use I3SDataProvider.fromUrl instead."
+      );
       return this._readyPromise;
     },
   },
@@ -270,9 +278,14 @@ Object.defineProperties(I3SDataProvider.prototype, {
    * @memberof I3SDataProvider.prototype
    * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "I3SDataProvider.ready",
+        "I3SDataProvider.ready was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use I3SDataProvider.fromUrl instead."
+      );
       return this._ready;
     },
   },
@@ -333,9 +346,7 @@ I3SDataProvider.prototype.isDestroyed = function () {
  */
 I3SDataProvider.prototype.update = function (frameState) {
   for (let i = 0; i < this._layers.length; i++) {
-    // Reintroducing tileset.ready check to prevent random failures
-    // when initially loading the tileset
-    if (defined(this._layers[i]._tileset) && this._layers[i]._tileset.ready) {
+    if (defined(this._layers[i]._tileset)) {
       this._layers[i]._tileset.update(frameState);
     }
   }
@@ -346,7 +357,7 @@ I3SDataProvider.prototype.update = function (frameState) {
  */
 I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
   for (let i = 0; i < this._layers.length; i++) {
-    if (defined(this._layers[i]._tileset) && this._layers[i]._tileset.ready) {
+    if (defined(this._layers[i]._tileset)) {
       this._layers[i]._tileset.prePassesUpdate(frameState);
     }
   }
@@ -357,7 +368,7 @@ I3SDataProvider.prototype.prePassesUpdate = function (frameState) {
  */
 I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
   for (let i = 0; i < this._layers.length; i++) {
-    if (defined(this._layers[i]._tileset) && this._layers[i]._tileset.ready) {
+    if (defined(this._layers[i]._tileset)) {
       this._layers[i]._tileset.postPassesUpdate(frameState);
     }
   }
@@ -368,10 +379,85 @@ I3SDataProvider.prototype.postPassesUpdate = function (frameState) {
  */
 I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
   for (let i = 0; i < this._layers.length; i++) {
-    if (defined(this._layers[i]._tileset) && this._layers[i]._tileset.ready) {
+    if (defined(this._layers[i]._tileset)) {
       this._layers[i]._tileset.updateForPass(frameState, passState);
     }
   }
+};
+
+/**
+ * Creates an I3SDataProvider. Currently supported I3S versions are 1.6 and
+ * 1.7/1.8 (OGC I3S 1.2).
+ *
+ * @param {string|Resource} url The url of the I3S dataset, which should return an I3S scene object
+ * @param {I3SDataProvider.ConstructorOptions} options An object describing initialization options
+ * @returns {Promise<I3SDataProvider>}
+ *
+ * @example
+ * try {
+ *   const i3sData = await I3SDataProvider.fromUrl(
+ *     "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0"
+ *   );
+ *   viewer.scene.primitives.add(i3sData);
+ * } catch (error) {
+ *   console.log(`There was an error creating the I3S Data Provider: ${error}`);
+ * }
+ *
+ * @example
+ * try {
+ *   const geoidService = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
+ *     "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/EGM2008/ImageServer"
+ *   );
+ *   const i3sData = await I3SDataProvider.fromUrl(
+ *     "https://tiles.arcgis.com/tiles/z2tnIkrLQ2BRzr6P/arcgis/rest/services/Frankfurt2017_vi3s_18/SceneServer/layers/0", {
+ *       geoidTiledTerrainProvider: geoidService
+ *   });
+ *   viewer.scene.primitives.add(i3sData);
+ * } catch (error) {
+ *   console.log(`There was an error creating the I3S Data Provider: ${error}`);
+ * }
+ */
+I3SDataProvider.fromUrl = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  const resource = Resource.createIfNeeded(url);
+  const data = await I3SDataProvider.loadJson(resource);
+
+  const provider = new I3SDataProvider(options);
+  provider._resource = resource;
+  provider._data = data;
+
+  // Success
+  if (defined(data.layers)) {
+    for (let layerIndex = 0; layerIndex < data.layers.length; layerIndex++) {
+      const newLayer = new I3SLayer(
+        provider,
+        data.layers[layerIndex],
+        layerIndex
+      );
+      provider._layers.push(newLayer);
+    }
+  } else {
+    const newLayer = new I3SLayer(provider, data, data.id);
+    provider._layers.push(newLayer);
+  }
+
+  provider._computeExtent();
+
+  // Start loading all of the tiles
+  const layerPromises = [];
+  for (let i = 0; i < provider._layers.length; i++) {
+    layerPromises.push(provider._layers[i].load());
+  }
+
+  await Promise.all(layerPromises);
+  provider._ready = true;
+  provider._readyPromise = Promise.resolve(provider);
+  return provider;
 };
 
 /**
@@ -379,29 +465,27 @@ I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
  */
 I3SDataProvider.prototype._load = function () {
   const that = this;
-  this._readyPromise = this._loadJson(this._resource).then(function (data) {
+  this._readyPromise = I3SDataProvider.loadJson(
+    this._resource,
+    this._traceFetches
+  ).then(function (data) {
     // Success
     that._data = data;
-    if (defined(that._data.layers)) {
-      for (
-        let layerIndex = 0;
-        layerIndex < that._data.layers.length;
-        layerIndex++
-      ) {
+    if (defined(data.layers)) {
+      for (let layerIndex = 0; layerIndex < data.layers.length; layerIndex++) {
         const newLayer = new I3SLayer(
           that,
-          that._data.layers[layerIndex],
+          data.layers[layerIndex],
           layerIndex
         );
         that._layers.push(newLayer);
       }
     } else {
-      const newLayer = new I3SLayer(that, that._data, that._data.id);
+      const newLayer = new I3SLayer(that, data, data.id);
       that._layers.push(newLayer);
     }
 
     that._computeExtent();
-    that._loadGeoidData();
 
     // Start loading all of the tiles
     const layerPromises = [];
@@ -427,27 +511,32 @@ I3SDataProvider._fetchJson = function (resource) {
 
 /**
  * @private
+ *
+ * @param {Resource} resource The JSON resource to request
+ * @param {boolean} [trace=false] Log the resource
+ * @returns {Promise<object>} The fetched data
  */
-I3SDataProvider.prototype._loadJson = function (resource) {
-  if (this._traceFetches) {
+I3SDataProvider.loadJson = async function (resource, trace) {
+  if (trace) {
     console.log("I3S FETCH:", resource.url);
   }
 
-  return I3SDataProvider._fetchJson(resource).then(function (data) {
-    if (defined(data.error)) {
-      console.error("Failed to fetch I3S ", resource.url);
-      if (defined(data.error.message)) {
-        console.error(data.error.message);
-      }
-      if (defined(data.error.details)) {
-        for (let i = 0; i < data.error.details.length; i++) {
-          console.log(data.error.details[i]);
-        }
-      }
-      return Promise.reject(data.error);
+  const data = await I3SDataProvider._fetchJson(resource);
+  if (defined(data.error)) {
+    console.error("Failed to fetch I3S ", resource.url);
+    if (defined(data.error.message)) {
+      console.error(data.error.message);
     }
-    return data;
-  });
+    if (defined(data.error.details)) {
+      for (let i = 0; i < data.error.details.length; i++) {
+        console.log(data.error.details[i]);
+      }
+    }
+
+    throw new RuntimeError(data.error);
+  }
+
+  return data;
 };
 
 /**
@@ -496,25 +585,32 @@ I3SDataProvider.prototype._binarizeGltf = function (rawGltf) {
 
 /**
  * @private
+ * @returns {Promise<TaskProcessor>}
  */
-I3SDataProvider.prototype._getDecoderTaskProcessor = function () {
+I3SDataProvider.prototype.getDecoderTaskProcessor = function () {
+  if (defined(this._taskProcessorReadyPromise)) {
+    return this._taskProcessorReadyPromise;
+  }
+
   if (!defined(this._decoderTaskProcessor)) {
     const processor = new TaskProcessor("decodeI3S");
-    this._taskProcessorReadyPromise = processor.initWebAssemblyModule({
-      modulePath: "ThirdParty/Workers/draco_decoder_nodejs.js",
-      wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-    });
+    this._taskProcessorReadyPromise = processor
+      .initWebAssemblyModule({
+        modulePath: "ThirdParty/Workers/draco_decoder_nodejs.js",
+        wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
+      })
+      .then(() => {
+        return processor;
+      });
 
     this._decoderTaskProcessor = processor;
   }
 
-  return this._decoderTaskProcessor;
+  return this._taskProcessorReadyPromise;
 };
 
 function getCoveredTiles(terrainProvider, extent) {
-  return terrainProvider.readyPromise.then(function () {
-    return getTiles(terrainProvider, extent);
-  });
+  return getTiles(terrainProvider, extent);
 }
 
 const scratchCartesian2 = new Cartesian2();
@@ -614,35 +710,40 @@ function getTiles(terrainProvider, extent) {
   });
 }
 
-/**
- * @private
- */
-I3SDataProvider.prototype._loadGeoidData = function () {
+async function loadGeoidData(provider) {
   // Load tiles from arcgis
-  const that = this;
-  const geoidTerrainProvider = this._geoidTiledTerrainProvider;
+  const geoidTerrainProvider = provider._geoidTiledTerrainProvider;
 
   if (!defined(geoidTerrainProvider)) {
     console.log(
       "No Geoid Terrain service provided - no geoid conversion will be performed."
     );
-    this._geoidDataIsReadyPromise = Promise.resolve();
-    return this._geoidDataIsReadyPromise;
+    return;
   }
 
-  this._geoidDataIsReadyPromise = geoidTerrainProvider.readyPromise.then(
-    function () {
-      const tilesReadyPromise = getCoveredTiles(
-        geoidTerrainProvider,
-        that._extent
-      );
-      return tilesReadyPromise.then(function (heightMaps) {
-        that._geoidDataList = heightMaps;
-      });
-    }
-  );
+  try {
+    const heightMaps = await getCoveredTiles(
+      geoidTerrainProvider,
+      provider._extent
+    );
+    provider._geoidDataList = heightMaps;
+  } catch (error) {
+    console.log(
+      "Error retrieving Geoid Terrain tiles - no geoid conversion will be performed."
+    );
+  }
+}
 
-  return this._geoidDataIsReadyPromise;
+/**
+ * @private
+ */
+I3SDataProvider.prototype.loadGeoidData = async function () {
+  if (defined(this._geoidDataPromise)) {
+    return this._geoidDataPromise;
+  }
+
+  this._geoidDataPromise = loadGeoidData(this);
+  return this._geoidDataPromise;
 };
 
 /**

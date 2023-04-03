@@ -20,29 +20,27 @@ function ModelUtility() {}
 /**
  * Create a function for reporting when a model fails to load
  *
- * @param {Model} model The model to report about
  * @param {string} type The type of object to report about
  * @param {string} path The URI of the model file
- * @returns {Function} An error function that throws an error for the failed model
+ * @param {Error} [error] The error which caused the failure
+ * @returns {RuntimeError} An error for the failed model
  *
  * @private
  */
-ModelUtility.getFailedLoadFunction = function (model, type, path) {
-  return function (error) {
-    let message = `Failed to load ${type}: ${path}`;
-    if (defined(error)) {
-      message += `\n${error.message}`;
-    }
+ModelUtility.getError = function (type, path, error) {
+  let message = `Failed to load ${type}: ${path}`;
+  if (defined(error) && defined(error.message)) {
+    message += `\n${error.message}`;
+  }
 
-    const runtimeError = new RuntimeError(message);
-    if (defined(error)) {
-      // the original call stack is often more useful than the new error's stack,
-      // so add the information here
-      runtimeError.stack = `Original stack:\n${error.stack}\nHandler stack:\n${runtimeError.stack}`;
-    }
+  const runtimeError = new RuntimeError(message);
+  if (defined(error)) {
+    // the original call stack is often more useful than the new error's stack,
+    // so add the information here
+    runtimeError.stack = `Original stack:\n${error.stack}\nHandler stack:\n${runtimeError.stack}`;
+  }
 
-    return Promise.reject(runtimeError);
-  };
+  return runtimeError;
 };
 
 /**
@@ -372,6 +370,8 @@ ModelUtility.supportedExtensions = {
  * a {@link RuntimeError} with the extension name.
  *
  * @param {string[]} extensionsRequired The extensionsRequired array in the glTF.
+ *
+ * @exception {RuntimeError} Unsupported glTF Extension
  */
 ModelUtility.checkSupportedExtensions = function (extensionsRequired) {
   const length = extensionsRequired.length;

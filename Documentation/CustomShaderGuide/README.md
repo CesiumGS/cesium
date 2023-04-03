@@ -67,13 +67,14 @@ follows:
 const customShader = new Cesium.CustomShader(/* ... */);
 
 // Applying to all tiles in a tileset.
-const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-  url: "http://example.com/tileset.json",
-  customShader: customShader
-}));
+const tileset = await Cesium.Cesium3DTileset.fromUrl(
+  "http://example.com/tileset.json", {
+    customShader: customShader
+});
+viewer.scene.primitives.add(tileset);
 
 // Applying to a model directly
-const model = Cesium.Model.fromGltf({,
+const model = await Cesium.Model.fromGltfAsync({,
   url: "http://example.com/model.gltf",
   customShader: customShader
 });
@@ -143,12 +144,12 @@ The user is responsible for assigning a value to this varying in
 const customShader = new Cesium.CustomShader({
   // Varying is declared here
   varyings: {
-    v_selectedColor: VaryingType.VEC3,
+    v_selectedColor: Cesium.VaryingType.VEC4,
   },
   // User assigns the varying in the vertex shader
   vertexShaderText: `
     void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
-        float positiveX = step(0.0, positionMC.x);
+        float positiveX = step(0.0, vsOutput.positionMC.x);
         v_selectedColor = mix(
             vsInput.attributes.color_0,
             vsInput.attributes.color_1,
@@ -159,7 +160,7 @@ const customShader = new Cesium.CustomShader({
   // User uses the varying in the fragment shader
   fragmentShaderText: `
     void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-        material.diffuse = v_selectedColor;
+        material.diffuse = v_selectedColor.rgb;
     }
   `,
 });
@@ -837,7 +838,7 @@ For `ENUM` type metadata, the statistics struct for that property should contain
 
 ## `czm_modelVertexOutput` struct
 
-This struct is built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelVertexOutput.glsl).
+This struct is built-in, see the [documentation comment](../../packages/engine/Source/Shaders/Builtin/Structs/modelVertexOutput.glsl).
 
 This struct contains the output of the custom vertex shader. This includes:
 
@@ -855,7 +856,7 @@ This struct contains the output of the custom vertex shader. This includes:
 
 ## `czm_modelMaterial` struct
 
-This struct is a built-in, see the [documentation comment](../../Source/Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but has slightly different fields as this one supports PBR lighting.
+This struct is a built-in, see the [documentation comment](../../packages/engine/Source/Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but has slightly different fields as this one supports PBR lighting.
 
 This struct serves as the basic input/output of the fragment shader pipeline stages. For example:
 

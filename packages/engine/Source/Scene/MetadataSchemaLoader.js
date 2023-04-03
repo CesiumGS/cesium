@@ -53,20 +53,6 @@ if (defined(Object.create)) {
 
 Object.defineProperties(MetadataSchemaLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof MetadataSchemaLoader.prototype
-   *
-   * @type {Promise<MetadataSchemaLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
-  /**
    * The cache key of the resource.
    *
    * @memberof MetadataSchemaLoader.prototype
@@ -101,37 +87,41 @@ Object.defineProperties(MetadataSchemaLoader.prototype, {
  * @returns {Promise<MetadataSchemaLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
-MetadataSchemaLoader.prototype.load = function () {
-  if (defined(this._schema)) {
-    this._promise = Promise.resolve(this);
-  } else {
-    this._promise = loadExternalSchema(this);
+MetadataSchemaLoader.prototype.load = async function () {
+  if (defined(this._promise)) {
+    return this._promise;
   }
 
+  if (defined(this._schema)) {
+    this._promise = Promise.resolve(this);
+    return this._promise;
+  }
+
+  this._promise = loadExternalSchema(this);
   return this._promise;
 };
 
-function loadExternalSchema(schemaLoader) {
+async function loadExternalSchema(schemaLoader) {
   const resource = schemaLoader._resource;
   schemaLoader._state = ResourceLoaderState.LOADING;
-  return resource
-    .fetchJson()
-    .then(function (json) {
-      if (schemaLoader.isDestroyed()) {
-        return;
-      }
-      schemaLoader._schema = MetadataSchema.fromJson(json);
-      schemaLoader._state = ResourceLoaderState.READY;
-      return schemaLoader;
-    })
-    .catch(function (error) {
-      if (schemaLoader.isDestroyed()) {
-        return;
-      }
-      schemaLoader._state = ResourceLoaderState.FAILED;
-      const errorMessage = `Failed to load schema: ${resource.url}`;
-      return Promise.reject(schemaLoader.getError(errorMessage, error));
-    });
+  try {
+    const json = await resource.fetchJson();
+    if (schemaLoader.isDestroyed()) {
+      return;
+    }
+
+    schemaLoader._schema = MetadataSchema.fromJson(json);
+    schemaLoader._state = ResourceLoaderState.READY;
+    return schemaLoader;
+  } catch (error) {
+    if (schemaLoader.isDestroyed()) {
+      return;
+    }
+
+    schemaLoader._state = ResourceLoaderState.FAILED;
+    const errorMessage = `Failed to load schema: ${resource.url}`;
+    throw schemaLoader.getError(errorMessage, error);
+  }
 }
 
 /**

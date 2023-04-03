@@ -1,6 +1,6 @@
 import {
   buildModuleUrl,
-  createWorldTerrain,
+  createWorldTerrainAsync,
   EllipsoidTerrainProvider,
 } from "@cesium/engine";
 import ProviderViewModel from "./ProviderViewModel.js";
@@ -32,7 +32,7 @@ function createDefaultTerrainProviderViewModels() {
         "High-resolution global terrain tileset curated from several datasources and hosted by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldTerrain({
+        return createWorldTerrainAsync({
           requestWaterMask: true,
           requestVertexNormals: true,
         });

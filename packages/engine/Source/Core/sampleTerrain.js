@@ -26,27 +26,26 @@ import defined from "./defined.js";
  *
  * @example
  * // Query the terrain height of two Cartographic positions
- * const terrainProvider = Cesium.createWorldTerrain();
+ * const terrainProvider = await Cesium.createWorldTerrainAsync();
  * const positions = [
  *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
- * const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
- * Promise.resolve(promise).then(function(updatedPositions) {
- *     // positions[0].height and positions[1].height have been updated.
- *     // updatedPositions is just a reference to positions.
- * });
+ * const updatedPositions = await Cesium.sampleTerrain(terrainProvider, 11, positions);
+ * // positions[0].height and positions[1].height have been updated.
+ * // updatedPositions is just a reference to positions.
  */
-function sampleTerrain(terrainProvider, level, positions) {
+async function sampleTerrain(terrainProvider, level, positions) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("terrainProvider", terrainProvider);
   Check.typeOf.number("level", level);
   Check.defined("positions", positions);
   //>>includeEnd('debug');
 
-  return terrainProvider.readyPromise.then(function () {
-    return doSampling(terrainProvider, level, positions);
-  });
+  // readyPromise has been deprecated; This is here for backwards compatibility
+  await terrainProvider._readyPromise;
+
+  return doSampling(terrainProvider, level, positions);
 }
 
 /**

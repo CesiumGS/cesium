@@ -175,9 +175,9 @@ describe("Core/IonResource", function () {
   it("Calls base _makeRequest with expected options when resource no Authorization header is defined", function () {
     const originalOptions = {};
     const expectedOptions = {
-      headers: {
+      headers: jasmine.objectContaining({
         Authorization: `Bearer ${endpoint.accessToken}`,
-      },
+      }),
     };
 
     const _makeRequest = spyOn(Resource.prototype, "_makeRequest");
@@ -190,15 +190,31 @@ describe("Core/IonResource", function () {
   it("Calls base _makeRequest with expected options when resource Authorization header is already defined", function () {
     const originalOptions = {};
     const expectedOptions = {
-      headers: {
+      headers: jasmine.objectContaining({
         Authorization: `Bearer ${endpoint.accessToken}`,
-      },
+      }),
     };
 
     const _makeRequest = spyOn(Resource.prototype, "_makeRequest");
     const endpointResource = IonResource._createEndpointResource(assetId);
     const resource = new IonResource(endpoint, endpointResource);
     resource.headers.Authorization = "Not valid";
+    resource._makeRequest(originalOptions);
+    expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
+  });
+
+  it("Calls base _makeRequest including X-Cesium-* headers", function () {
+    const originalOptions = {};
+    const expectedOptions = {
+      headers: jasmine.objectContaining({
+        "X-Cesium-Client": "CesiumJS",
+        "X-Cesium-Client-Version": jasmine.stringContaining("1."),
+      }),
+    };
+
+    const _makeRequest = spyOn(Resource.prototype, "_makeRequest");
+    const endpointResource = IonResource._createEndpointResource(assetId);
+    const resource = new IonResource(endpoint, endpointResource);
     resource._makeRequest(originalOptions);
     expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
   });

@@ -1,6 +1,5 @@
 import Cartographic from "../Core/Cartographic.js";
 import defaultValue from "../Core/defaultValue.js";
-import defer from "../Core/defer.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
@@ -11,6 +10,7 @@ import Resource from "../Core/Resource.js";
 import Quaternion from "../Core/Quaternion.js";
 import Transforms from "../Core/Transforms.js";
 import Cesium3DTile from "./Cesium3DTile.js";
+import I3SDataProvider from "./I3SDataProvider.js";
 import I3SFeature from "./I3SFeature.js";
 import I3SField from "./I3SField.js";
 import I3SGeometry from "./I3SGeometry.js";
@@ -52,6 +52,7 @@ function I3SNode(parent, ref, isRoot) {
   this._layer = layer;
   this._nodeIndex = nodeIndex;
   this._resource = resource;
+  this._isLoading = false;
 
   this._tile = undefined;
   this._data = undefined;
@@ -170,7 +171,7 @@ Object.defineProperties(I3SNode.prototype, {
 /**
  * @private
  */
-I3SNode.prototype.load = function () {
+I3SNode.prototype.load = async function () {
   const that = this;
 
   function processData() {
@@ -191,28 +192,29 @@ I3SNode.prototype.load = function () {
 
   // If we don't have a nodepage index load from json
   if (!defined(this._nodeIndex)) {
-    return this._dataProvider._loadJson(this._resource).then(function (data) {
-      // Success
-      that._data = data;
-      processData();
-    });
+    const data = await I3SDataProvider.loadJson(
+      this._resource,
+      this._dataProvider._traceFetches
+    );
+    that._data = data;
+    processData();
+    return;
   }
 
-  return this._layer._getNodeInNodePages(this._nodeIndex).then(function (node) {
-    that._data = node;
-    let uri;
-    if (that._isRoot) {
-      uri = "nodes/root/";
-    } else if (defined(node.mesh)) {
-      const uriIndex = node.mesh.geometry.resource;
-      uri = `../${uriIndex}/`;
-    }
-    if (defined(uri)) {
-      that._resource = that._parent.resource.getDerivedResource({ url: uri });
-    }
+  const node = await this._layer._getNodeInNodePages(this._nodeIndex);
+  that._data = node;
+  let uri;
+  if (that._isRoot) {
+    uri = "nodes/root/";
+  } else if (defined(node.mesh)) {
+    const uriIndex = node.mesh.geometry.resource;
+    uri = `../${uriIndex}/`;
+  }
+  if (defined(uri)) {
+    that._resource = that._parent.resource.getDerivedResource({ url: uri });
+  }
 
-    processData();
-  });
+  processData();
 };
 
 /**
@@ -609,7 +611,10 @@ I3SNode.prototype._create3DTileDefinition = function () {
 /**
  * @private
  */
-I3SNode.prototype._createI3SDecoderTask = function (dataProvider, data) {
+I3SNode.prototype._createI3SDecoderTask = async function (
+  decodeI3STaskProcessor,
+  data
+) {
   // Prepare the data to send to the worker
   const parentData = data.geometryData._parent._data;
   const parentRotationInverseMatrix =
@@ -664,18 +669,14 @@ I3SNode.prototype._createI3SDecoderTask = function (dataProvider, data) {
     parentRotation: parentRotation,
   };
 
-  const decodeI3STaskProcessor = dataProvider._getDecoderTaskProcessor();
-
   const transferrableObjects = [];
-  return dataProvider._taskProcessorReadyPromise.then(function () {
-    return decodeI3STaskProcessor.scheduleTask(payload, transferrableObjects);
-  });
+  return decodeI3STaskProcessor.scheduleTask(payload, transferrableObjects);
 };
 
 /**
  * @private
  */
-I3SNode.prototype._createContentURL = function () {
+I3SNode.prototype._createContentURL = async function () {
   let rawGltf = {
     scene: 0,
     scenes: [
@@ -701,6 +702,8 @@ I3SNode.prototype._createContentURL = function () {
     },
   };
 
+  const decodeI3STaskProcessor = await this._dataProvider.getDecoderTaskProcessor();
+
   // Load the geometry data
   const dataPromises = [this._loadGeometryData()];
   if (this._dataProvider.legacyVersion16) {
@@ -720,13 +723,16 @@ I3SNode.prototype._createContentURL = function () {
         tile: that._tile,
       };
 
-      const task = that._createI3SDecoderTask(that._dataProvider, parameters);
-      if (!defined(task)) {
+      const promise = that._createI3SDecoderTask(
+        decodeI3STaskProcessor,
+        parameters
+      );
+      if (!defined(promise)) {
         // Postponed
         return;
       }
 
-      generateGltfPromise = task.then(function (result) {
+      generateGltfPromise = promise.then(function (result) {
         rawGltf = parameters.geometryData._generateGltf(
           result.meshData.nodesInScene,
           result.meshData.nodes,
@@ -746,7 +752,7 @@ I3SNode.prototype._createContentURL = function () {
       const glbDataBlob = new Blob([binaryGltfData], {
         type: "application/binary",
       });
-      that._glbURL = URL.createObjectURL(glbDataBlob);
+      return URL.createObjectURL(glbDataBlob);
     });
   });
 };
@@ -757,50 +763,37 @@ Cesium3DTile.prototype._hookedRequestContent =
   Cesium3DTile.prototype.requestContent;
 
 /**
+ * Requests the tile's content.
+ * <p>
+ * The request may not be made if the Cesium Request Scheduler can't prioritize it.
+ * </p>
+ *
+ * @return {Promise<Cesium3DTileContent>|undefined} A promise that resolves when the request completes, or undefined if there is no request needed, or the request cannot be scheduled.
  * @private
  */
-Cesium3DTile.prototype._resolveHookedObject = function () {
-  const that = this;
-  // Keep a handle on the early promises
-  // Call the real requestContent function
-  this._hookedRequestContent();
-
-  // Fulfill the promises
-  this._contentReadyToProcessPromise.then(function () {
-    that._contentReadyToProcessDefer.resolve();
-  });
-
-  this._contentReadyPromise.then(function (content) {
-    that._isLoading = false;
-    that._contentReadyDefer.resolve(content);
-  });
-};
-
 Cesium3DTile.prototype.requestContent = function () {
-  const that = this;
   if (!this.tileset._isI3STileSet) {
     return this._hookedRequestContent();
   }
 
   if (!this._isLoading) {
     this._isLoading = true;
+    return this._i3sNode
+      ._createContentURL()
+      .then((url) => {
+        if (!defined(url)) {
+          this._isLoading = false;
+          return;
+        }
 
-    // Create early promises that will be fulfilled later
-    this._contentReadyToProcessDefer = defer();
-    this._contentReadyDefer = defer();
-    this._contentReadyToProcessPromise = this._contentReadyToProcessDefer.promise;
-    this._contentReadyPromise = this._contentReadyDefer.promise;
-
-    this._i3sNode._createContentURL().then(function () {
-      that._contentResource = new Resource({ url: that._i3sNode._glbURL });
-      that._resolveHookedObject();
-    });
-
-    // Returns the number of requests
-    return 0;
+        this._contentResource = new Resource({ url: url });
+        return this._hookedRequestContent();
+      })
+      .then((content) => {
+        this._isLoading = false;
+        return content;
+      });
   }
-
-  return 1;
 };
 
 function bilinearInterpolate(tx, ty, h00, h10, h01, h11) {

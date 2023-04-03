@@ -12,7 +12,7 @@ import {
 
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import loadAndZoomToModel from "./Model/loadAndZoomToModel.js";
+import loadAndZoomToModelAsync from "./Model/loadAndZoomToModelAsync.js";
 
 describe(
   "Scene/PostProcessStage",
@@ -243,7 +243,7 @@ describe(
       // the camera just a little
       const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf",
           offset: offset,
