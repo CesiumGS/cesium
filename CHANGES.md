@@ -1,5 +1,11 @@
 # Change Log
 
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed atmosphere rendering performance issue. [10510](https://github.com/CesiumGS/cesium/issues/10510)
+
 ### 1.104 - 2023-04-03
 
 #### @cesium/engine
