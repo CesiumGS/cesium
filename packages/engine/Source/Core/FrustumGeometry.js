@@ -327,8 +327,9 @@ FrustumGeometry._computeNearFarPlanes = function (
       );
 
       if (!defined(inverseViewProjection)) {
-        if (defined(frustum._offCenterFrustum)) {
-          frustum = frustum._offCenterFrustum;
+        const offCenterFrustum = frustum.offCenterFrustum;
+        if (defined(offCenterFrustum)) {
+          frustum = offCenterFrustum;
         }
 
         const near = frustumSplits[i];

@@ -917,8 +917,9 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
     frameState.mode === SceneMode.SCENE2D ||
     frustum instanceof OrthographicFrustum
   ) {
-    if (defined(frustum._offCenterFrustum)) {
-      frustum = frustum._offCenterFrustum;
+    const offCenterFrustum = frustum.offCenterFrustum;
+    if (defined(offCenterFrustum)) {
+      frustum = offCenterFrustum;
     }
     const pixelSize =
       Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) /
