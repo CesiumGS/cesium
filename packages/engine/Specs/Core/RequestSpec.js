@@ -63,8 +63,8 @@ describe("Core/Request", function () {
     expect(clone.serverKey).toBe(initialOptions.serverKey);
   });
 
-  it("cloning with options creates a request with updated properties", function () {
-    const initialOptions = Object.freeze({
+  it("cloning with a result parameter updates the properties of the result", function () {
+    const options1 = Object.freeze({
       url: "https://www.example.com",
       requestFunction: Promise.resolve(),
       cancelFunction: () => undefined,
@@ -76,7 +76,7 @@ describe("Core/Request", function () {
       serverKey: "customKey",
     });
 
-    const updatedOptions = Object.freeze({
+    const options2 = Object.freeze({
       url: "http://example.com",
       requestFunction: fetch,
       cancelFunction: () => "cancelled",
@@ -88,17 +88,18 @@ describe("Core/Request", function () {
       serverKey: "updatedKey",
     });
 
-    const request = new Request(initialOptions);
-    const clone = request.clone(updatedOptions);
+    const request1 = new Request(options1);
+    const request2 = new Request(options2);
+    const clone = request2.clone(request1);
 
-    expect(clone.url).toBe(updatedOptions.url);
-    expect(clone.requestFunction).toBe(updatedOptions.requestFunction);
-    expect(clone.cancelFunction).toBe(updatedOptions.cancelFunction);
-    expect(clone.priorityFunction).toBe(updatedOptions.priorityFunction);
-    expect(clone.priority).toBe(updatedOptions.priority);
-    expect(clone.throttle).toBe(updatedOptions.throttle);
-    expect(clone.throttleByServer).toBe(updatedOptions.throttleByServer);
-    expect(clone.type).toBe(updatedOptions.type);
-    expect(clone.serverKey).toBe(updatedOptions.serverKey);
+    expect(clone.url).toBe(options2.url);
+    expect(clone.requestFunction).toBe(options2.requestFunction);
+    expect(clone.cancelFunction).toBe(options2.cancelFunction);
+    expect(clone.priorityFunction).toBe(options2.priorityFunction);
+    expect(clone.priority).toBe(options2.priority);
+    expect(clone.throttle).toBe(options2.throttle);
+    expect(clone.throttleByServer).toBe(options2.throttleByServer);
+    expect(clone.type).toBe(options2.type);
+    expect(clone.serverKey).toBe(options2.serverKey);
   });
 });
