@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.105 - 2023-05-01
+
+##### Fixes :wrench:
+
+- Fixed Repeated URI parsing slows 3D Tiles performance [#11197](https://github.com/CesiumGS/cesium/issues/11197). Together with [#11211](https://github.com/CesiumGS/cesium/pull/11211), this can reduce tile parsing time by as much as 25% on large tilesets
+
 ### 1.104 - 2023-04-03
 
 #### Major Announcements :loudspeaker:
