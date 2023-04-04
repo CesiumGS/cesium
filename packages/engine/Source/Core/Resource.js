@@ -153,19 +153,15 @@ function Resource(options) {
 /**
  * Clones a value if it is defined, otherwise returns the default value
  *
- * @param {*} [val] The value to clone.
- * @param {*} [defaultVal] The default value.
+ * @param {object} [value] The value to clone.
+ * @param {object} [defaultValue] The default value.
  *
- * @returns {*} A clone of val or the defaultVal.
+ * @returns {object} A clone of value or the defaultValue.
  *
  * @private
  */
-function defaultClone(val, defaultVal) {
-  if (!defined(val)) {
-    return defaultVal;
-  }
-
-  return defined(val.clone) ? val.clone() : clone(val);
+function defaultClone(value, defaultValue) {
+  return defined(value) ? clone(value) : defaultValue;
 }
 
 /**
