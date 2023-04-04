@@ -139,6 +139,20 @@ describe("Core/Resource", function () {
     });
   });
 
+  it("Constructing with parseUrl false does not strip query parameters from url", function () {
+    const resource = new Resource({
+      url: "http://test.com/tileset?foo=bar&baz=foo",
+      parseUrl: false,
+    });
+    expect(resource.getUrlComponent()).toEqual(
+      "http://test.com/tileset?foo=bar&baz=foo"
+    );
+    expect(resource.getUrlComponent(true)).toEqual(
+      "http://test.com/tileset?foo=bar&baz=foo"
+    );
+    expect(resource.queryParameters).toEqual({});
+  });
+
   it("createIfNeeded returns undefined, if parameter is undefined", function () {
     expect(Resource.createIfNeeded()).toBeUndefined();
   });

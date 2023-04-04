@@ -167,7 +167,7 @@ Request.prototype.clone = function (result) {
   result.serverKey = this.serverKey;
 
   // These get defaulted because the cloned request hasn't been issued
-  result.state = this.RequestState.UNISSUED;
+  result.state = RequestState.UNISSUED;
   result.deferred = undefined;
   result.cancelled = false;
 

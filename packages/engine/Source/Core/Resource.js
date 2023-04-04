@@ -533,9 +533,10 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
     return this._url;
   }
 
-  let url = query
-    ? `${this._url}${stringifyQuery(this.queryParameters)}`
-    : this._url;
+  let url = this._url;
+  if (query) {
+    url = `${url}${stringifyQuery(this.queryParameters)}`;
+  }
 
   // Restore the placeholders, which may have been escaped in objectToQuery or elsewhere
   url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
@@ -745,6 +746,7 @@ Resource.prototype.clone = function (result) {
   result.proxy = this.proxy;
   result.retryCallback = this.retryCallback;
   result.retryAttempts = this.retryAttempts;
+  result._retryCount = 0;
   result.request = this.request.clone();
 
   return result;
