@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.105 - 2023-05-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed issue with calling `switchToOrthographicFunction` and `camera.flyTo` in immediate succession. [#11210](https://github.com/CesiumGS/cesium/pull/11210)
+
 ### 1.104 - 2023-04-03
 
 #### Major Announcements :loudspeaker:
