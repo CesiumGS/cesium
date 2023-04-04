@@ -3,12 +3,11 @@ import {
   defaultValue,
   GoogleEarthEnterpriseMetadata,
   GoogleEarthEnterpriseTileInformation,
+  Math as CesiumMath,
   Request,
   Resource,
   RuntimeError,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 describe("Core/GoogleEarthEnterpriseMetadata", function () {
   it("tileXYToQuadKey", function () {
@@ -109,7 +108,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
     }).toThrowError(RuntimeError);
   });
 
-  it("populateSubtree", function () {
+  it("populateSubtree", async function () {
     const quad = "0123";
     let index = 0;
     spyOn(
@@ -128,45 +127,35 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       return Promise.resolve();
     });
 
-    const metadata = new GoogleEarthEnterpriseMetadata({
-      url: "http://test.server",
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(
+      "http://test.server"
+    );
     const request = new Request({
       throttle: true,
     });
-    return metadata.readyPromise
-      .then(function () {
-        const tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
-        return metadata.populateSubtree(
-          tileXY.x,
-          tileXY.y,
-          tileXY.level,
-          request
-        );
-      })
-      .then(function () {
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket.calls.count()
-        ).toEqual(4);
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
-        ).toHaveBeenCalledWith("", 1);
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
-        ).toHaveBeenCalledWith("0", 1, request);
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
-        ).toHaveBeenCalledWith("01", 1, request);
-        expect(
-          GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
-        ).toHaveBeenCalledWith("012", 1, request);
+    const tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
+    await metadata.populateSubtree(tileXY.x, tileXY.y, tileXY.level, request);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket.calls.count()
+    ).toEqual(4);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+    ).toHaveBeenCalledWith("", 1);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+    ).toHaveBeenCalledWith("0", 1, request);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+    ).toHaveBeenCalledWith("01", 1, request);
+    expect(
+      GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket
+    ).toHaveBeenCalledWith("012", 1, request);
 
-        const tileInfo = metadata._tileInfo;
-        expect(tileInfo["0"]).toBeDefined();
-        expect(tileInfo["01"]).toBeDefined();
-        expect(tileInfo["012"]).toBeDefined();
-        expect(tileInfo["0123"]).toBeDefined();
-      });
+    const tileInfo = metadata._tileInfo;
+    expect(tileInfo["0"]).toBeDefined();
+    expect(tileInfo["01"]).toBeDefined();
+    expect(tileInfo["012"]).toBeDefined();
+    expect(tileInfo["0123"]).toBeDefined();
   });
 
   it("resolves readyPromise", function () {
@@ -295,5 +284,118 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       .catch(function (e) {
         expect(e.message).toContain(url);
       });
+  });
+
+  it("from url resolves to GoogleEarthEnterpriseMetadata", async function () {
+    const baseurl = "http://fake.fake.invalid/";
+
+    let req = 0;
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      expect(responseType).toEqual("arraybuffer");
+      if (req === 0) {
+        expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
+        deferred.reject(); // Reject dbRoot request and use defaults
+      } else {
+        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/GoogleEarthEnterprise/gee.metadata",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      }
+      ++req;
+    });
+
+    const provider = await GoogleEarthEnterpriseMetadata.fromUrl(baseurl);
+
+    expect(provider.imageryPresent).toBe(true);
+    expect(provider.protoImagery).toBeUndefined();
+    expect(provider.terrainPresent).toBe(true);
+    expect(provider.negativeAltitudeThreshold).toBe(CesiumMath.EPSILON12);
+    expect(provider.negativeAltitudeExponentBias).toBe(32);
+    expect(provider.providers).toEqual({});
+
+    const tileInfo = provider._tileInfo["0"];
+    expect(tileInfo).toBeDefined();
+    expect(tileInfo._bits).toEqual(0x40);
+    expect(tileInfo.cnodeVersion).toEqual(2);
+    expect(tileInfo.imageryVersion).toEqual(1);
+    expect(tileInfo.terrainVersion).toEqual(1);
+    expect(tileInfo.ancestorHasTerrain).toEqual(false);
+    expect(tileInfo.terrainState).toBeUndefined();
+  });
+
+  it("fromUrl with Resource resolves to GoogleEarthEnterpriseMetadata", async function () {
+    const baseurl = "http://fake.fake.invalid/";
+    const resource = new Resource({
+      url: baseurl,
+    });
+
+    let req = 0;
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      expect(responseType).toEqual("arraybuffer");
+      if (req === 0) {
+        expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
+        deferred.reject(); // Reject dbRoot request and use defaults
+      } else {
+        expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/GoogleEarthEnterprise/gee.metadata",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      }
+      ++req;
+    });
+
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(resource);
+
+    expect(metadata.imageryPresent).toBe(true);
+    expect(metadata.protoImagery).toBeUndefined();
+    expect(metadata.terrainPresent).toBe(true);
+    expect(metadata.negativeAltitudeThreshold).toBe(CesiumMath.EPSILON12);
+    expect(metadata.negativeAltitudeExponentBias).toBe(32);
+    expect(metadata.providers).toEqual({});
+
+    const tileInfo = metadata._tileInfo["0"];
+    expect(tileInfo).toBeDefined();
+    expect(tileInfo._bits).toEqual(0x40);
+    expect(tileInfo.cnodeVersion).toEqual(2);
+    expect(tileInfo.imageryVersion).toEqual(1);
+    expect(tileInfo.terrainVersion).toEqual(1);
+    expect(tileInfo.ancestorHasTerrain).toEqual(false);
+    expect(tileInfo.terrainState).toBeUndefined();
+  });
+
+  it("fromUrl rejects on error", async function () {
+    const url = "host.invalid/";
+    await expectAsync(
+      GoogleEarthEnterpriseMetadata.fromUrl(url)
+    ).toBeRejectedWithError(
+      RuntimeError,
+      new RegExp("Request has failed. Status Code: 404")
+    );
   });
 });

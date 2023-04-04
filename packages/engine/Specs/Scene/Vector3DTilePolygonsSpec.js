@@ -6,6 +6,7 @@ import {
   destroyObject,
   Ellipsoid,
   GeometryInstance,
+  Math as CesiumMath,
   Rectangle,
   RectangleGeometry,
   Pass,
@@ -19,31 +20,19 @@ import {
   Vector3DTilePolygons,
 } from "../../index.js";
 
-import { Math as CesiumMath } from "../../index.js";
-
-import createContext from "../../../../Specs/createContext.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-
-// Testing of this feature in WebGL is currently disabled due to test
-// failures that started in https://github.com/CesiumGS/cesium/pull/8600.
-// Classification does NOT work reliably in WebGL2 anyway, see
-// https://github.com/CesiumGS/cesium/issues/8629
-const testInWebGL2 = false;
 
 describe(
   "Scene/Vector3DTilePolygons",
   function () {
     createPolygonSpecs({});
 
-    if (testInWebGL2) {
-      const c = createContext({});
-      // Don't repeat WebGL 1 tests when WebGL 2 is not supported
-      if (c.webgl2) {
-        createPolygonSpecs({});
-      }
-      c.destroyForSpecs();
-    }
+    // Testing of this feature in WebGL is currently disabled due to test
+    // failures that started in https://github.com/CesiumGS/cesium/pull/8600.
+    // Classification does NOT work reliably in WebGL2 anyway, see
+    // https://github.com/CesiumGS/cesium/issues/8629
+    //createWebglVersionHelper(createPolygonSpecs);
 
     function createPolygonSpecs(contextOptions) {
       const webglMessage = contextOptions.requestWebgl1 ? "" : "WebGL 2";
@@ -176,14 +165,10 @@ describe(
       });
 
       function loadPolygons(polygons) {
-        let ready = false;
-        polygons.readyPromise.then(function () {
-          ready = true;
-        });
         return pollToPromise(function () {
           polygons.update(scene.frameState);
           scene.frameState.commandList.length = 0;
-          return ready;
+          return polygons.ready;
         });
       }
 

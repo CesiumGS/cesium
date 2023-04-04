@@ -46,14 +46,14 @@ Object.defineProperties(QuadtreeTileProvider.prototype, {
    * Gets a value indicating whether or not the provider is ready for use.
    * @memberof QuadtreeTileProvider.prototype
    * @type {boolean}
+   * @deprecated
    */
   ready: {
     get: DeveloperError.throwInstantiationError,
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This property should
-   * not be accessed before {@link QuadtreeTileProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof QuadtreeTileProvider.prototype
    * @type {TilingScheme}
    */
@@ -112,8 +112,7 @@ QuadtreeTileProvider.prototype.endUpdate =
   DeveloperError.throwInstantiationError;
 
 /**
- * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
- * called before {@link QuadtreeTileProvider#ready} returns true.
+ * Gets the maximum geometric error allowed in a tile at a given level, in meters.
  *
  * @see QuadtreeTileProvider#computeDefaultLevelZeroMaximumGeometricError
  *
@@ -128,8 +127,7 @@ QuadtreeTileProvider.prototype.getLevelMaximumGeometricError =
 
 /**
  * Loads, or continues loading, a given tile.  This function will continue to be called
- * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
- * not be called before {@link QuadtreeTileProvider#ready} returns true.
+ * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.
  *
  * @memberof QuadtreeTileProvider
  * @function
@@ -137,8 +135,6 @@ QuadtreeTileProvider.prototype.getLevelMaximumGeometricError =
  * @param {Context} context The rendering context.
  * @param {FrameState} frameState The frame state.
  * @param {QuadtreeTile} tile The tile to load.
- *
- * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
  */
 QuadtreeTileProvider.prototype.loadTile =
   DeveloperError.throwInstantiationError;

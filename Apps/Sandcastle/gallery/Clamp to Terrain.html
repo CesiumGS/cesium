@@ -34,13 +34,19 @@
       <div id="sampleButtons"></div>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.scene.globe.depthTestAgainstTerrain = true;
+
+        let worldTerrain;
+        try {
+          worldTerrain = await Cesium.createWorldTerrainAsync();
+          viewer.scene.terrainProvider = worldTerrain;
+        } catch (error) {
+          window.alert(`There was an error creating world terrain. ${error}`);
+        }
 
         Sandcastle.addDefaultToolbarMenu(
           [
@@ -237,7 +243,14 @@
             },
             {
               text: "Sample line positions and draw with depth test disabled",
-              onselect: function () {
+              onselect: async function () {
+                if (!Cesium.defined(worldTerrain)) {
+                  window.alert(
+                    "Cannot sample terrain. World terrain failed to load."
+                  );
+                  return;
+                }
+
                 const length = 1000;
 
                 const startLon = Cesium.Math.toRadians(86.953793);
@@ -256,12 +269,11 @@
                   terrainSamplePositions.push(position);
                 }
 
-                Promise.resolve(
-                  Cesium.sampleTerrainMostDetailed(
-                    viewer.terrainProvider,
+                try {
+                  const samples = await Cesium.sampleTerrainMostDetailed(
+                    worldTerrain,
                     terrainSamplePositions
-                  )
-                ).then(function (samples) {
+                  );
                   let offset = 10.0;
                   for (let i = 0; i < samples.length; ++i) {
                     samples[i].height += offset;
@@ -301,7 +313,9 @@
                   );
                   viewer.camera.lookAt(target, offset);
                   viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-                });
+                } catch (error) {
+                  window.alert(`There was an error sampling terrain ${error}`);
+                }
               },
             },
             {
@@ -354,13 +368,15 @@
         Sandcastle.reset = function () {
           viewer.entities.removeAll();
         };
-
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -436,6 +436,7 @@ Object.defineProperties(Globe.prototype, {
         return true;
       }
       return (
+        // ready is deprecated. This is here for backwards compatibility
         this._surface.tileProvider.ready &&
         this._surface._tileLoadQueueHigh.length === 0 &&
         this._surface._tileLoadQueueMedium.length === 0 &&
@@ -984,7 +985,10 @@ Globe.prototype.beginFrame = function (frameState) {
   const terrainProvider = this.terrainProvider;
   const hasWaterMask =
     this.showWaterEffect &&
-    terrainProvider.ready &&
+    defined(terrainProvider) &&
+    terrainProvider.hasWaterMask &&
+    // ready is deprecated; This is here for backwards compatibility
+    terrainProvider._ready &&
     terrainProvider.hasWaterMask;
 
   if (hasWaterMask && this._oceanNormalMapResourceDirty) {

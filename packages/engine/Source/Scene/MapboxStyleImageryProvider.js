@@ -1,6 +1,7 @@
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
@@ -64,91 +65,16 @@ function MapboxStyleImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultNightAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultDayAlpha = undefined;
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultBrightness = undefined;
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultContrast = undefined;
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultHue = undefined;
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultSaturation = undefined;
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultGamma = undefined;
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   *
-   * @type {TextureMinificationFilter}
-   * @default undefined
-   */
-  this.defaultMinificationFilter = undefined;
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   *
-   * @type {TextureMagnificationFilter}
-   * @default undefined
-   */
-  this.defaultMagnificationFilter = undefined;
+  this._defaultAlpha = undefined;
+  this._defaultNightAlpha = undefined;
+  this._defaultDayAlpha = undefined;
+  this._defaultBrightness = undefined;
+  this._defaultContrast = undefined;
+  this._defaultHue = undefined;
+  this._defaultSaturation = undefined;
+  this._defaultGamma = undefined;
+  this._defaultMinificationFilter = undefined;
+  this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(
     defaultValue(options.url, "https://api.mapbox.com/styles/v1/")
@@ -195,6 +121,9 @@ function MapboxStyleImageryProvider(options) {
     maximumLevel: options.maximumLevel,
     rectangle: options.rectangle,
   });
+
+  this._ready = true;
+  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(MapboxStyleImageryProvider.prototype, {
@@ -215,9 +144,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.ready",
+        "MapboxStyleImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+      );
       return this._imageryProvider.ready;
     },
   },
@@ -227,16 +161,20 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Promise<boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.readyPromise",
+        "MapboxStyleImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+      );
       return this._imageryProvider.readyPromise;
     },
   },
 
   /**
-   * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by the instance.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -248,8 +186,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {number}
    * @readonly
@@ -261,8 +198,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {number}
    * @readonly
@@ -274,8 +210,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {number|undefined}
    * @readonly
@@ -287,8 +222,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true. Generally,
+   * Gets the minimum level-of-detail that can be requested. Generally,
    * a minimum level should only be used when the rectangle of the imagery is small
    * enough that the number of tiles at the minimum level is small.  An imagery
    * provider with more than a few tiles at the minimum level will lead to
@@ -304,8 +238,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -319,8 +252,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -347,8 +279,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery. This function should
-   * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof MapboxStyleImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -386,6 +317,242 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
       return this._imageryProvider.hasAlphaChannel;
     },
   },
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultAlpha: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultAlpha",
+        "MapboxStyleImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      return this._defaultAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultAlpha",
+        "MapboxStyleImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+      );
+      this._defaultAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultNightAlpha: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultNightAlpha",
+        "MapboxStyleImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      return this._defaultNightAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultNightAlpha",
+        "MapboxStyleImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+      );
+      this._defaultNightAlpha = value;
+    },
+  },
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultDayAlpha: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultDayAlpha",
+        "MapboxStyleImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      return this._defaultDayAlpha;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultDayAlpha",
+        "MapboxStyleImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+      );
+      this._defaultDayAlpha = value;
+    },
+  },
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultBrightness: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultBrightness",
+        "MapboxStyleImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      return this._defaultBrightness;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultBrightness",
+        "MapboxStyleImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+      );
+      this._defaultBrightness = value;
+    },
+  },
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultContrast: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultContrast",
+        "MapboxStyleImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      return this._defaultContrast;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultContrast",
+        "MapboxStyleImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+      );
+      this._defaultContrast = value;
+    },
+  },
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultHue: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultHue",
+        "MapboxStyleImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      return this._defaultHue;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultHue",
+        "MapboxStyleImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+      );
+      this._defaultHue = value;
+    },
+  },
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultSaturation: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultSaturation",
+        "MapboxStyleImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      return this._defaultSaturation;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultSaturation",
+        "MapboxStyleImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+      );
+      this._defaultSaturation = value;
+    },
+  },
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {Number|undefined}
+   * @deprecated
+   */
+  defaultGamma: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultGamma",
+        "MapboxStyleImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      return this._defaultGamma;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultGamma",
+        "MapboxStyleImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+      );
+      this._defaultGamma = value;
+    },
+  },
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {TextureMinificationFilter}
+   * @deprecated
+   */
+  defaultMinificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultMinificationFilter",
+        "MapboxStyleImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      return this._defaultMinificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultMinificationFilter",
+        "MapboxStyleImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+      );
+      this._defaultMinificationFilter = value;
+    },
+  },
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   * @memberof MapboxStyleImageryProvider.prototype
+   * @type {TextureMagnificationFilter}
+   * @deprecated
+   */
+  defaultMagnificationFilter: {
+    get: function () {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultMagnificationFilter",
+        "MapboxStyleImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      return this._defaultMagnificationFilter;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "MapboxStyleImageryProvider.defaultMagnificationFilter",
+        "MapboxStyleImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+      );
+      this._defaultMagnificationFilter = value;
+    },
+  },
 });
 
 /**
@@ -395,16 +562,13 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 MapboxStyleImageryProvider.prototype.getTileCredits = function (x, y, level) {
   return undefined;
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
@@ -412,8 +576,6 @@ MapboxStyleImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 MapboxStyleImageryProvider.prototype.requestImage = function (
   x,
@@ -426,8 +588,7 @@ MapboxStyleImageryProvider.prototype.requestImage = function (
 
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
- * a tile.  This function should not be called before {@link MapboxStyleImageryProvider#ready} returns true.
- * This function is optional, so it may not exist on all ImageryProviders.
+ * a tile. This function is optional, so it may not exist on all ImageryProviders.
  *
  *
  * @param {number} x The tile X coordinate.
@@ -439,8 +600,6 @@ MapboxStyleImageryProvider.prototype.requestImage = function (
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.
- *
- * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
  */
 MapboxStyleImageryProvider.prototype.pickFeatures = function (
   x,

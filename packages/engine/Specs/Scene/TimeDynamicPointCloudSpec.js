@@ -828,29 +828,21 @@ describe(
       });
       return loadFrame(pointCloud).then(function () {
         const decoder = DracoLoader._getDecoderTaskProcessor();
+        let frameFailed = false;
         spyOn(decoder, "scheduleTask").and.callFake(function () {
           return Promise.reject({ message: "my error" });
         });
-        const spyUpdate = jasmine.createSpy("listener");
-        pointCloud.frameFailed.addEventListener(spyUpdate);
+        pointCloud.frameFailed.addEventListener((error) => {
+          frameFailed = true;
+          expect(error).toBeDefined();
+          expect(error.uri).toContain("1.pnts");
+          expect(error.message).toBe("my error");
+        });
         goToFrame(1);
         scene.renderForSpecs();
-        let failedPromise;
-        let frameFailed = false;
         return pollToPromise(function () {
-          const contents = pointCloud._frames[1].pointCloud;
-          if (defined(contents) && !defined(failedPromise)) {
-            failedPromise = contents.readyPromise.catch(function () {
-              frameFailed = true;
-            });
-          }
           scene.renderForSpecs();
           return frameFailed;
-        }).then(function () {
-          const arg = spyUpdate.calls.argsFor(0)[0];
-          expect(arg).toBeDefined();
-          expect(arg.uri).toContain("1.pnts");
-          expect(arg.message).toBe("my error");
         });
       });
     });

@@ -1,9 +1,13 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import Check from "../Core/Check.js";
+import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Event from "../Core/Event.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -37,35 +41,31 @@ import SplitDirection from "./SplitDirection.js";
 import TileImagery from "./TileImagery.js";
 
 /**
- * An imagery layer that displays tiled image data from a single imagery provider
- * on a {@link Globe}.
+ * @typedef {Object} ImageryLayer.ConstructorOptions
  *
- * @alias ImageryLayer
- * @constructor
+ * Initialization options for the ImageryLayer constructor.
  *
- * @param {ImageryProvider} imageryProvider The imagery provider to use.
- * @param {object} [options] Object with the following properties:
- * @param {Rectangle} [options.rectangle=imageryProvider.rectangle] The rectangle of the layer.  This rectangle
+ * @property {Rectangle} [rectangle=imageryProvider.rectangle] The rectangle of the layer.  This rectangle
  *        can limit the visible portion of the imagery provider.
- * @param {number|Function} [options.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+ * @property {number|Function} [alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile.
- * @param {number|Function} [options.nightAlpha=1.0] The alpha blending value of this layer on the night side of the globe, from 0.0 to 1.0.
+ * @property {number|Function} [nightAlpha=1.0] The alpha blending value of this layer on the night side of the globe, from 0.0 to 1.0.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile. This only takes effect when <code>enableLighting</code> is <code>true</code>.
- * @param {number|Function} [options.dayAlpha=1.0] The alpha blending value of this layer on the day side of the globe, from 0.0 to 1.0.
+ * @property {number|Function} [dayAlpha=1.0] The alpha blending value of this layer on the day side of the globe, from 0.0 to 1.0.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile. This only takes effect when <code>enableLighting</code> is <code>true</code>.
- * @param {number|Function} [options.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
+ * @property {number|Function} [brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
  *                          color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -73,7 +73,7 @@ import TileImagery from "./TileImagery.js";
  *                          imagery tile for which the brightness is required, and it is expected to return
  *                          the brightness value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @param {number|Function} [options.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
+ * @property {number|Function} [contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
  *                          Less than 1.0 reduces the contrast while greater than 1.0 increases it.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -81,14 +81,14 @@ import TileImagery from "./TileImagery.js";
  *                          imagery tile for which the contrast is required, and it is expected to return
  *                          the contrast value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @param {number|Function} [options.hue=0.0] The hue of this layer.  0.0 uses the unmodified imagery color.
+ * @property {number|Function} [hue=0.0] The hue of this layer.  0.0 uses the unmodified imagery color.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates
  *                          of the imagery tile for which the hue is required, and it is expected to return
  *                          the contrast value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @param {number|Function} [options.saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
+ * @property {number|Function} [saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
  *                          Less than 1.0 reduces the saturation while greater than 1.0 increases it.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -96,39 +96,75 @@ import TileImagery from "./TileImagery.js";
  *                          of the imagery tile for which the saturation is required, and it is expected to return
  *                          the contrast value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @param {number|Function} [options.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
+ * @property {number|Function} [gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
  *                          This can either be a simple number or a function with the signature
  *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the gamma is required, and it is expected to return
  *                          the gamma value to use for the tile.  The function is executed for every
  *                          frame and for every tile, so it must be fast.
- * @param {SplitDirection|Function} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this layer.
- * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The
+ * @property {SplitDirection|Function} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this layer.
+ * @property {TextureMinificationFilter} [minificationFilter=TextureMinificationFilter.LINEAR] The
  *                                    texture minification filter to apply to this layer. Possible values
  *                                    are <code>TextureMinificationFilter.LINEAR</code> and
  *                                    <code>TextureMinificationFilter.NEAREST</code>.
- * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The
+ * @property {TextureMagnificationFilter} [magnificationFilter=TextureMagnificationFilter.LINEAR] The
  *                                     texture minification filter to apply to this layer. Possible values
  *                                     are <code>TextureMagnificationFilter.LINEAR</code> and
  *                                     <code>TextureMagnificationFilter.NEAREST</code>.
- * @param {boolean} [options.show=true] True if the layer is shown; otherwise, false.
- * @param {number} [options.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
+ * @property {boolean} [show=true] True if the layer is shown; otherwise, false.
+ * @property {number} [maximumAnisotropy=maximum supported] The maximum anisotropy level to use
  *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
  *        by the WebGL stack will be used.  Larger values make the imagery look better in horizon
  *        views.
- * @param {number} [options.minimumTerrainLevel] The minimum terrain level-of-detail at which to show this imagery layer,
+ * @property {number} [minimumTerrainLevel] The minimum terrain level-of-detail at which to show this imagery layer,
  *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
- * @param {number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
+ * @property {number} [maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
  *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
- * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
- * @param {Color} [options.colorToAlpha] Color to be used as alpha.
- * @param {number} [options.colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
+ * @property {Rectangle} [cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
+ * @property {Color} [colorToAlpha] Color to be used as alpha.
+ * @property {number} [colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
+ */
+
+/**
+ * An imagery layer that displays tiled image data from a single imagery provider
+ * on a {@link Globe}.
+ *
+ * @alias ImageryLayer
+ * @constructor
+ *
+ * @param {ImageryProvider} imageryProvider The imagery provider to use.
+ * @param {ImageryLayer.ConstructorOptions} options An object describing initialization options
+ *
+ * @see ImageryLayer.fromProviderAsync
+ * @see ImageryLayer.fromWorldImagery
+ *
+ * @example
+ * // Add an OpenStreetMaps layer
+ * const imageryLayer = new Cesium.ImageryLayer(OpenStreetMapImageryProvider({
+ *   url: "https://a.tile.openstreetmap.org/"
+ * })),
+ * scene.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * // Add Cesium ion's default world imagery layer
+ * const imageryLayer = Cesium.ImageryLayer.fromWorldImagery();
+ * scene.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * // Add a new transparent layer from Cesium ion
+ * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
+ * imageryLayer.alpha = 0.5;
+ * scene.imageryLayers.add(imageryLayer);
  */
 function ImageryLayer(imageryProvider, options) {
   this._imageryProvider = imageryProvider;
 
+  this._readyEvent = new Event();
+  this._errorEvent = new Event();
+
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  imageryProvider = defaultValue(imageryProvider, defaultValue.EMPTY_OBJECT);
 
   /**
    * The alpha blending value of this layer, with 0.0 representing fully transparent and
@@ -139,7 +175,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.alpha = defaultValue(
     options.alpha,
-    defaultValue(imageryProvider.defaultAlpha, 1.0)
+    defaultValue(imageryProvider._defaultAlpha, 1.0)
   );
 
   /**
@@ -151,7 +187,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.nightAlpha = defaultValue(
     options.nightAlpha,
-    defaultValue(imageryProvider.defaultNightAlpha, 1.0)
+    defaultValue(imageryProvider._defaultNightAlpha, 1.0)
   );
 
   /**
@@ -163,7 +199,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.dayAlpha = defaultValue(
     options.dayAlpha,
-    defaultValue(imageryProvider.defaultDayAlpha, 1.0)
+    defaultValue(imageryProvider._defaultDayAlpha, 1.0)
   );
 
   /**
@@ -176,7 +212,7 @@ function ImageryLayer(imageryProvider, options) {
   this.brightness = defaultValue(
     options.brightness,
     defaultValue(
-      imageryProvider.defaultBrightness,
+      imageryProvider._defaultBrightness,
       ImageryLayer.DEFAULT_BRIGHTNESS
     )
   );
@@ -190,7 +226,10 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.contrast = defaultValue(
     options.contrast,
-    defaultValue(imageryProvider.defaultContrast, ImageryLayer.DEFAULT_CONTRAST)
+    defaultValue(
+      imageryProvider._defaultContrast,
+      ImageryLayer.DEFAULT_CONTRAST
+    )
   );
 
   /**
@@ -201,7 +240,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.hue = defaultValue(
     options.hue,
-    defaultValue(imageryProvider.defaultHue, ImageryLayer.DEFAULT_HUE)
+    defaultValue(imageryProvider._defaultHue, ImageryLayer.DEFAULT_HUE)
   );
 
   /**
@@ -214,7 +253,7 @@ function ImageryLayer(imageryProvider, options) {
   this.saturation = defaultValue(
     options.saturation,
     defaultValue(
-      imageryProvider.defaultSaturation,
+      imageryProvider._defaultSaturation,
       ImageryLayer.DEFAULT_SATURATION
     )
   );
@@ -227,7 +266,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.gamma = defaultValue(
     options.gamma,
-    defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA)
+    defaultValue(imageryProvider._defaultGamma, ImageryLayer.DEFAULT_GAMMA)
   );
 
   /**
@@ -238,7 +277,7 @@ function ImageryLayer(imageryProvider, options) {
    */
   this.splitDirection = defaultValue(
     options.splitDirection,
-    defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT)
+    ImageryLayer.DEFAULT_SPLIT
   );
 
   /**
@@ -255,7 +294,7 @@ function ImageryLayer(imageryProvider, options) {
   this.minificationFilter = defaultValue(
     options.minificationFilter,
     defaultValue(
-      imageryProvider.defaultMinificationFilter,
+      imageryProvider._defaultMinificationFilter,
       ImageryLayer.DEFAULT_MINIFICATION_FILTER
     )
   );
@@ -274,7 +313,7 @@ function ImageryLayer(imageryProvider, options) {
   this.magnificationFilter = defaultValue(
     options.magnificationFilter,
     defaultValue(
-      imageryProvider.defaultMagnificationFilter,
+      imageryProvider._defaultMagnificationFilter,
       ImageryLayer.DEFAULT_MAGNIFICATION_FILTER
     )
   );
@@ -337,7 +376,7 @@ function ImageryLayer(imageryProvider, options) {
 
 Object.defineProperties(ImageryLayer.prototype, {
   /**
-   * Gets the imagery provider for this layer.
+   * Gets the imagery provider for this layer. This should not be called before {@link ImageryLayer#ready} returns true.
    * @memberof ImageryLayer.prototype
    * @type {ImageryProvider}
    * @readonly
@@ -345,6 +384,45 @@ Object.defineProperties(ImageryLayer.prototype, {
   imageryProvider: {
     get: function () {
       return this._imageryProvider;
+    },
+  },
+
+  /**
+   * Returns true when the terrain provider has been successfully created. Otherwise, returns false.
+   * @memberof ImageryLayer.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  ready: {
+    get: function () {
+      return defined(this._imageryProvider);
+    },
+  },
+
+  /**
+   * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+   * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+   * are passed an instance of the thrown error.
+   * @memberof Imagery.prototype
+   * @type {Event<Imagery.ErrorEventCallback>}
+   * @readonly
+   */
+  errorEvent: {
+    get: function () {
+      return this._errorEvent;
+    },
+  },
+
+  /**
+   * Gets an event that is raised when the imagery provider has been successfully created. Event listeners
+   * are passed the created instance of {@link ImageryProvider}.
+   * @memberof ImageryLayer.prototype
+   * @type {Event<ImageryLayer.ReadyEventCallback>}
+   * @readonly
+   */
+  readyEvent: {
+    get: function () {
+      return this._readyEvent;
     },
   },
 
@@ -431,6 +509,113 @@ ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
 ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
 
 /**
+ * Create a new imagery layer from an asynchronous imagery provider. The layer will handle any asynchronous loads or errors, and begin rendering the imagery layer once ready.
+ *
+ * @param {Promise<ImageryProvider>} imageryProviderPromise A promise which resolves to a imagery provider
+ * @param {ImageryLayer.ConstructorOptions} options An object describing initialization options
+ * @returns {ImageryLayer} The created imagery layer.
+ *
+ * @example
+ * // Create a new base layer
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
+ *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
+ * });
+ *
+ * @example
+ * // Add a new transparent layer
+ * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
+ * imageryLayer.alpha = 0.5;
+ * viewer.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * // Handle loading events
+ * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
+ * viewer.imageryLayers.add(imageryLayer);
+ *
+ * imageryLayer.readyEvent.addEventListener(provider => {
+ *   imageryLayer.provider.errorEvent.addEventListener(error => {
+ *     alert(`Encountered an error while loading imagery tiles! ${error}`);
+ *   });
+ * });
+ *
+ * imageryLayer.errorEvent.addEventListener(error => {
+ *   alert(`Encountered an error while creating an imagery layer! ${error}`);
+ * });
+ *
+ * @see ImageryLayer.errorEvent
+ * @see ImageryLayer.readyEvent
+ * @see ImageryLayer.provider
+ * @see ImageryLayer.fromWorldImagery
+ */
+ImageryLayer.fromProviderAsync = function (imageryProviderPromise, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("imageryProviderPromise", imageryProviderPromise);
+  //>>includeEnd('debug');
+
+  const layer = new ImageryLayer(undefined, options);
+
+  handlePromise(layer, Promise.resolve(imageryProviderPromise));
+
+  return layer;
+};
+
+/**
+ * @typedef {ImageryLayer.ConstructorOptions} ImageryLayer.WorldImageryConstructorOptions
+ *
+ * Initialization options for ImageryLayer.fromWorldImagery
+ *
+ * @property {IonWorldImageryStyle} [options.style=IonWorldImageryStyle] The style of base imagery, only AERIAL, AERIAL_WITH_LABELS, and ROAD are currently supported.
+ */
+
+/**
+ * Create a new imagery layer for ion's default global base imagery layer, currently Bing Maps. The layer will handle any asynchronous loads or errors, and begin rendering the imagery layer once ready.
+ *
+ * @param {ImageryLayer.WorldImageryConstructorOptions} options An object describing initialization options
+ * @returns {ImageryLayer} The created imagery layer.
+ *
+ * * @example
+ * // Create a new base layer
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
+ *   baseLayer: Cesium.ImageryLayer.fromWorldImagery();
+ * });
+ *
+ * @example
+ * // Add a new transparent layer
+ * const imageryLayer = Cesium.ImageryLayer.fromWorldImagery();
+ * imageryLayer.alpha = 0.5;
+ * viewer.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * // Handle loading events
+ * const imageryLayer = Cesium.ImageryLayer.fromWorldImagery();
+ * viewer.imageryLayers.add(imageryLayer);
+ *
+ * imageryLayer.readyEvent.addEventListener(provider => {
+ *   imageryLayer.provider.errorEvent.addEventListener(error => {
+ *     alert(`Encountered an error while loading imagery tiles! ${error}`);
+ *   });
+ * });
+ *
+ * imageryLayer.errorEvent.addEventListener(error => {
+ *   alert(`Encountered an error while creating an imagery layer! ${error}`);
+ * });
+ *
+ * @see ImageryLayer.errorEvent
+ * @see ImageryLayer.readyEvent
+ * @see ImageryLayer.provider
+ */
+ImageryLayer.fromWorldImagery = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  return ImageryLayer.fromProviderAsync(
+    createWorldImageryAsync({
+      style: options.style,
+    }),
+    options
+  );
+};
+
+/**
  * Gets a value indicating whether this layer is the base layer in the
  * {@link ImageryLayerCollection}.  The base layer is the one that underlies all
  * others.  It is special in that it is treated as if it has global rectangle, even if
@@ -496,12 +681,37 @@ const terrainRectangleScratch = new Rectangle();
  *     });
  * });
  */
-ImageryLayer.prototype.getViewableRectangle = function () {
+ImageryLayer.prototype.getViewableRectangle = async function () {
+  deprecationWarning(
+    "ImageryLayer.getViewableRectangle",
+    "ImageryLayer.getViewableRectangle was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.getImageryRectangle instead."
+  );
+
   const imageryProvider = this._imageryProvider;
   const rectangle = this._rectangle;
-  return imageryProvider.readyPromise.then(function () {
-    return Rectangle.intersection(imageryProvider.rectangle, rectangle);
-  });
+  // readyPromise has been deprecated. This is here for backward compatibility and can be removed with readyPromise.
+  await imageryProvider._readyPromise;
+  return Rectangle.intersection(imageryProvider.rectangle, rectangle);
+};
+
+/**
+ * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
+ * producing the overall bounds of imagery that can be produced by this layer.
+ *
+ * @returns {Rectangle} A rectangle which defines the overall bounds of imagery that can be produced by this layer.
+ *
+ * @example
+ * // Zoom to an imagery layer.
+ * const imageryRectangle = imageryLayer.getImageryRectangle();
+ * scene.camera.flyTo({
+ *     destination: rectangle
+ * });
+ *
+ */
+ImageryLayer.prototype.getImageryRectangle = function () {
+  const imageryProvider = this._imageryProvider;
+  const rectangle = this._rectangle;
+  return Rectangle.intersection(imageryProvider.rectangle, rectangle);
 };
 
 /**
@@ -511,7 +721,7 @@ ImageryLayer.prototype.getViewableRectangle = function () {
  * @private
  *
  * @param {Tile} tile The terrain tile.
- * @param {TerrainProvider} terrainProvider The terrain provider associated with the terrain tile.
+ * @param {TerrainProvider|undefined} terrainProvider The terrain provider associated with the terrain tile.
  * @param {number} insertionPoint The position to insert new skeletons before in the tile's imagery list.
  * @returns {boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
  */
@@ -523,8 +733,9 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   const surfaceTile = tile.data;
 
   if (
-    defined(this._minimumTerrainLevel) &&
-    tile.level < this._minimumTerrainLevel
+    !defined(terrainProvider) ||
+    (defined(this._minimumTerrainLevel) &&
+      tile.level < this._minimumTerrainLevel)
   ) {
     return false;
   }
@@ -535,13 +746,13 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     return false;
   }
 
-  const imageryProvider = this._imageryProvider;
-
   if (!defined(insertionPoint)) {
     insertionPoint = surfaceTile.imagery.length;
   }
 
-  if (!imageryProvider.ready) {
+  const imageryProvider = this._imageryProvider;
+  // ready is deprecated. This is here for backwards compatibility
+  if (!this.ready || !imageryProvider._ready) {
     // The imagery provider is not ready, so we can't create skeletons, yet.
     // Instead, add a placeholder so that we'll know to create
     // the skeletons once the provider is ready.
@@ -959,7 +1170,7 @@ ImageryLayer.prototype._requestImagery = function (imagery) {
       return;
     }
 
-    // Initially assume failure.  handleError may retry, in which case the state will
+    // Initially assume failure. An error handler may retry, in which case the state will
     // change to TRANSITIONING.
     imagery.state = ImageryState.FAILED;
     imagery.request = undefined;
@@ -1538,4 +1749,44 @@ function getLevelWithMaximumTexelSpacing(
   const rounded = Math.round(level);
   return rounded | 0;
 }
+
+function handleError(errorEvent, error) {
+  if (errorEvent.numberOfListeners > 0) {
+    errorEvent.raiseEvent(error);
+  } else {
+    // Default handler is to log to the console
+    console.error(error);
+  }
+}
+
+async function handlePromise(instance, promise) {
+  let provider;
+  try {
+    provider = await Promise.resolve(promise);
+    if (instance.isDestroyed()) {
+      return;
+    }
+    instance._imageryProvider = provider;
+    instance._readyEvent.raiseEvent(provider);
+  } catch (error) {
+    handleError(instance._errorEvent, error);
+  }
+}
+
 export default ImageryLayer;
+
+/**
+ * A function that is called when an error occurs.
+ * @callback ImageryLayer.ErrorEventCallback
+ *
+ * @this ImageryLayer
+ * @param {Error} err An object holding details about the error that occurred.
+ */
+
+/**
+ * A function that is called when the provider has been created
+ * @callback ImageryLayer.ReadyEventCallback
+ *
+ * @this ImageryLayer
+ * @param {ImageryProvider} provider The created imagery provider.
+ */

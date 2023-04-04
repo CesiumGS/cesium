@@ -1275,12 +1275,22 @@ describe(
         setCamera(centerLongitude, centerLatitude, 100.0);
       });
 
-      it("resolves readyPromise with glb", function () {
-        return Cesium3DTilesTester.resolvesReadyPromise(scene, glbContentUrl);
+      it("becomes ready with glb", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          glbContentUrl
+        );
+        expect(tileset.root.contentReady).toBeTrue();
+        expect(tileset.root.content).toBeDefined();
       });
 
-      it("resolves readyPromise with glTF", function () {
-        return Cesium3DTilesTester.resolvesReadyPromise(scene, gltfContentUrl);
+      it("becomes ready with glTF", async function () {
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          gltfContentUrl
+        );
+        expect(tileset.root.contentReady).toBeTrue();
+        expect(tileset.root.content).toBeDefined();
       });
 
       it("renders glb content", function () {

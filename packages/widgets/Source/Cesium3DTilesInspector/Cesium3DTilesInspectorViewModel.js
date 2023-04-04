@@ -1224,7 +1224,8 @@ Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
 
       if (defined(tileset)) {
         const that = this;
-        tileset.readyPromise.then(function (t) {
+        // This is here for backwards compatibility. It can be removed when Cesium3DTileset.readyPromise is fully deprecated.
+        tileset._readyPromise.then(function (t) {
           if (!that.isDestroyed()) {
             that._properties(t.properties);
           }

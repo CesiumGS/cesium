@@ -32,11 +32,11 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         const scene = viewer.scene;
 
@@ -116,14 +116,15 @@
           Cesium.Cartesian3.fromDegrees(-122.2058, 46.1955, 1000.0),
           new Cesium.Cartesian3(5000.0, 5000.0, 5000.0)
         );
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

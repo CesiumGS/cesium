@@ -1,9 +1,11 @@
 import {
+  Cesium3DTileset,
   GeographicTilingScheme,
   I3SDataProvider,
   Math as CesiumMath,
   Rectangle,
   Resource,
+  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/I3SDataProvider", function () {
@@ -182,8 +184,9 @@ describe("Scene/I3SDataProvider", function () {
     const frameState = {};
     testProvider.update(frameState);
 
-    // Function should not be called for tilesets that are not yet ready
-    expect(testProvider._layers[0]._tileset.update).not.toHaveBeenCalled();
+    expect(testProvider._layers[0]._tileset.update).toHaveBeenCalledWith(
+      frameState
+    );
     expect(testProvider._layers[1]._tileset.update).toHaveBeenCalledWith(
       frameState
     );
@@ -203,10 +206,9 @@ describe("Scene/I3SDataProvider", function () {
     const frameState = {};
     testProvider.prePassesUpdate(frameState);
 
-    // Function should not be called for tilesets that are not yet ready
     expect(
       testProvider._layers[0]._tileset.prePassesUpdate
-    ).not.toHaveBeenCalled();
+    ).toHaveBeenCalledWith(frameState);
     expect(
       testProvider._layers[1]._tileset.prePassesUpdate
     ).toHaveBeenCalledWith(frameState);
@@ -226,10 +228,9 @@ describe("Scene/I3SDataProvider", function () {
     const frameState = {};
     testProvider.postPassesUpdate(frameState);
 
-    // Function should not be called for tilesets that are not yet ready
     expect(
       testProvider._layers[0]._tileset.postPassesUpdate
-    ).not.toHaveBeenCalled();
+    ).toHaveBeenCalledWith(frameState);
     expect(
       testProvider._layers[1]._tileset.postPassesUpdate
     ).toHaveBeenCalledWith(frameState);
@@ -250,10 +251,10 @@ describe("Scene/I3SDataProvider", function () {
     const passState = { test: "test" };
     testProvider.updateForPass(frameState, passState);
 
-    // Function should not be called for tilesets that are not yet ready
-    expect(
-      testProvider._layers[0]._tileset.updateForPass
-    ).not.toHaveBeenCalled();
+    expect(testProvider._layers[0]._tileset.updateForPass).toHaveBeenCalledWith(
+      frameState,
+      passState
+    );
     expect(testProvider._layers[1]._tileset.updateForPass).toHaveBeenCalledWith(
       frameState,
       passState
@@ -342,12 +343,9 @@ describe("Scene/I3SDataProvider", function () {
       Promise.resolve(mockBinaryResponse)
     );
 
-    spyOn(console, "log");
-
     const resource = Resource.createIfNeeded("mockBinaryUri");
     return testProvider._loadBinary(resource).then(function (result) {
       expect(Resource.prototype.fetchArrayBuffer).toHaveBeenCalled();
-      expect(console.log).toHaveBeenCalledWith("I3S FETCH:", resource.url);
       expect(result).toBe(mockBinaryResponse);
     });
   });
@@ -370,69 +368,38 @@ describe("Scene/I3SDataProvider", function () {
       });
   });
 
-  it("loads json", function () {
-    const mockJsonResponse = { test: 1 };
+  it("fromUrl throws without url ", async function () {
+    await expectAsync(
+      I3SDataProvider.fromUrl()
+    ).toBeRejectedWithDeveloperError();
+  });
 
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
-      name: "testProvider",
-    });
-
+  it("loads json", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockJsonResponse)
+      Promise.resolve(mockProviderData)
     );
-
-    const resource = Resource.createIfNeeded("mockJsonUri");
-    return testProvider._loadJson(resource).then(function (result) {
-      expect(Resource.prototype.fetchJson).toHaveBeenCalled();
-      expect(result).toBe(mockJsonResponse);
-    });
-  });
-
-  it("loads json with traceFetches enabled", function () {
-    const mockJsonResponse = { test: 1 };
-
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
-      name: "testProvider",
-      traceFetches: true,
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
     });
 
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockJsonResponse)
-    );
-
-    spyOn(console, "log");
-
-    const resource = Resource.createIfNeeded("mockJsonUri");
-    return testProvider._loadJson(resource).then(function (result) {
-      expect(Resource.prototype.fetchJson).toHaveBeenCalled();
-      expect(console.log).toHaveBeenCalledWith("I3S FETCH:", resource.url);
-      expect(result).toBe(mockJsonResponse);
-    });
-  });
-
-  it("loadJson rejects invalid uri", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
 
-    const resource = Resource.createIfNeeded("mockJsonUri");
-    return testProvider
-      ._loadJson(resource)
-      .then(function () {
-        fail("Promise should not be resolved for invalid uri");
-      })
-      .catch(function (error) {
-        expect(error.statusCode).toEqual(404);
-      });
+    expect(Resource.prototype.fetchJson).toHaveBeenCalled();
+    expect(testProvider).toBeInstanceOf(I3SDataProvider);
+    expect(testProvider.data).toEqual(mockProviderData);
+    expect(Cesium3DTileset.fromUrl).toHaveBeenCalled();
   });
 
-  it("loadJson rejects error response", function () {
+  it("loadJson rejects invalid uri", async function () {
+    const resource = Resource.createIfNeeded("mockJsonUri");
+    await expectAsync(I3SDataProvider.loadJson(resource)).toBeRejected();
+  });
+
+  it("loadJson rejects error response", async function () {
     const mockErrorResponse = {
       error: {
         code: 498,
@@ -444,25 +411,15 @@ describe("Scene/I3SDataProvider", function () {
       },
     };
 
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
-      name: "testProvider",
-    });
-
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
       Promise.resolve(mockErrorResponse)
     );
 
     const resource = Resource.createIfNeeded("mockJsonUri");
-    return testProvider
-      ._loadJson(resource)
-      .then(function () {
-        fail("Promise should not be resolved for error response");
-      })
-      .catch(function (error) {
-        expect(error).toBe(mockErrorResponse.error);
-      });
+    await expectAsync(I3SDataProvider.loadJson(resource)).toBeRejectedWithError(
+      RuntimeError,
+      mockErrorResponse.error
+    );
   });
 
   it("loads geoid data", function () {
@@ -475,7 +432,7 @@ describe("Scene/I3SDataProvider", function () {
 
     testProvider._extent = Rectangle.fromDegrees(-1, 0, 1, 2);
 
-    return testProvider._loadGeoidData().then(function () {
+    return testProvider.loadGeoidData().then(function () {
       expect(testProvider._geoidDataList.length).toEqual(2);
       expect(testProvider._geoidDataList[0].height).toEqual(2);
       expect(testProvider._geoidDataList[0].width).toEqual(2);
@@ -499,7 +456,7 @@ describe("Scene/I3SDataProvider", function () {
     });
     testProvider._extent = Rectangle.fromDegrees(-1, 0, 1, 2);
 
-    return testProvider._loadGeoidData().then(function () {
+    return testProvider.loadGeoidData().then(function () {
       expect(testProvider._geoidDataList).toBeUndefined();
     });
   });
@@ -526,7 +483,7 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider._extent.north).toEqual(CesiumMath.toRadians(3));
   });
 
-  it("loads i3s provider", function () {
+  it("loads i3s provider", async function () {
     spyOn(I3SDataProvider, "_fetchJson").and.callFake(function (resource) {
       if (resource.url.endsWith("mockProviderUrl/layers/0/mockRootNodeUrl/")) {
         return Promise.resolve(mockRootNodeData);
@@ -534,36 +491,33 @@ describe("Scene/I3SDataProvider", function () {
         return Promise.resolve(mockProviderData);
       }
 
-      return Promise.reject();
+      return Promise.reject("invalid i3s request");
     });
 
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
       geoidTiledTerrainProvider: mockGeoidProvider,
     });
 
-    return testProvider.readyPromise.then(function () {
-      expect(testProvider.ready).toBe(true);
+    expect(testProvider.ready).toBe(true);
 
-      // Layers have been populated and root node is loaded
-      expect(testProvider.layers.length).toEqual(1);
-      expect(testProvider.layers[0].rootNode.tile).toBeDefined();
-      expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
-        testProvider.layers[0].rootNode
-      );
+    // Layers have been populated and root node is loaded
+    expect(testProvider.layers.length).toEqual(1);
+    expect(testProvider.layers[0].rootNode.tile).toBeDefined();
+    expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
+      testProvider.layers[0].rootNode
+    );
 
-      // Expect geoid data to have been loaded
-      expect(testProvider._geoidDataList.length).toEqual(1);
-      expect(testProvider._geoidDataList[0].height).toEqual(2);
-      expect(testProvider._geoidDataList[0].width).toEqual(2);
-      expect(testProvider._geoidDataList[0].buffer).toEqual(
-        new Float32Array([4, 5, 6, 7])
-      );
-    });
+    // Expect geoid data to have been loaded
+    expect(testProvider._geoidDataList.length).toEqual(1);
+    expect(testProvider._geoidDataList[0].height).toEqual(2);
+    expect(testProvider._geoidDataList[0].width).toEqual(2);
+    expect(testProvider._geoidDataList[0].buffer).toEqual(
+      new Float32Array([4, 5, 6, 7])
+    );
   });
 
-  it("loads i3s provider from single layer url", function () {
+  it("loads i3s provider from single layer url", async function () {
     spyOn(I3SDataProvider, "_fetchJson").and.callFake(function (resource) {
       if (resource.url.endsWith("mockProviderUrl/layers/0/mockRootNodeUrl/")) {
         return Promise.resolve(mockRootNodeData);
@@ -571,32 +525,32 @@ describe("Scene/I3SDataProvider", function () {
         return Promise.resolve(mockLayerData);
       }
 
-      return Promise.reject();
+      return Promise.reject("invalid i3s request");
     });
 
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl/layers/0/",
-      name: "testProvider",
-      geoidTiledTerrainProvider: mockGeoidProvider,
-    });
+    const testProvider = await I3SDataProvider.fromUrl(
+      "mockProviderUrl/layers/0/",
+      {
+        name: "testProvider",
+        geoidTiledTerrainProvider: mockGeoidProvider,
+      }
+    );
 
-    return testProvider.readyPromise.then(function () {
-      expect(testProvider.ready).toBe(true);
+    expect(testProvider.ready).toBe(true);
 
-      // Layers have been populated and root node is loaded
-      expect(testProvider.layers.length).toEqual(1);
-      expect(testProvider.layers[0].rootNode.tile).toBeDefined();
-      expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
-        testProvider.layers[0].rootNode
-      );
+    // Layers have been populated and root node is loaded
+    expect(testProvider.layers.length).toEqual(1);
+    expect(testProvider.layers[0].rootNode.tile).toBeDefined();
+    expect(testProvider.layers[0].rootNode.tile.i3sNode).toEqual(
+      testProvider.layers[0].rootNode
+    );
 
-      // Expect geoid data to have been loaded
-      expect(testProvider._geoidDataList.length).toEqual(1);
-      expect(testProvider._geoidDataList[0].height).toEqual(2);
-      expect(testProvider._geoidDataList[0].width).toEqual(2);
-      expect(testProvider._geoidDataList[0].buffer).toEqual(
-        new Float32Array([4, 5, 6, 7])
-      );
-    });
+    // Expect geoid data to have been loaded
+    expect(testProvider._geoidDataList.length).toEqual(1);
+    expect(testProvider._geoidDataList[0].height).toEqual(2);
+    expect(testProvider._geoidDataList[0].width).toEqual(2);
+    expect(testProvider._geoidDataList[0].buffer).toEqual(
+      new Float32Array([4, 5, 6, 7])
+    );
   });
 });

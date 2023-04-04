@@ -29,7 +29,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Create the viewer.
@@ -106,18 +106,27 @@
           })
         );
 
-        frustumPrimitive.readyPromise.then(function (primitive) {
-          const bs = primitive.getGeometryInstanceAttributes("frustum")
+        const removeListener = scene.postRender.addEventListener(() => {
+          if (!frustumPrimitive.ready) {
+            return;
+          }
+
+          const bs = frustumPrimitive.getGeometryInstanceAttributes("frustum")
             .boundingSphere;
           scene.camera.viewBoundingSphere(bs);
           scene.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+          removeListener();
         });
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

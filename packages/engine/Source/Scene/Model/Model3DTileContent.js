@@ -2,6 +2,7 @@ import Color from "../../Core/Color.js";
 import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
+import deprecationWarning from "../../Core/deprecationWarning.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
@@ -14,6 +15,8 @@ import Model from "./Model.js";
  * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
+ * This object is normally not instantiated directly, use {@link Model3DTileContent.fromGltf}, {@link Model3DTileContent.fromB3dm}, {@link Model3DTileContent.fromI3dm}, {@link Model3DTileContent.fromPnts}, or {@link Model3DTileContent.fromGeoJson}.
+ *
  * @alias Model3DTileContent
  * @constructor
  * @private
@@ -24,9 +27,12 @@ function Model3DTileContent(tileset, tile, resource) {
   this._resource = resource;
 
   this._model = undefined;
-  this._readyPromise = undefined;
   this._metadata = undefined;
   this._group = undefined;
+  this._ready = false;
+
+  this._resolveContent = undefined;
+  this._readyPromise = undefined;
 }
 
 Object.defineProperties(Model3DTileContent.prototype, {
@@ -83,8 +89,37 @@ Object.defineProperties(Model3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Model3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
+    get: function () {
+      return this._ready;
+    },
+  },
+
+  /**
+   * Gets the promise that will be resolved when the tile's content is ready to render.
+   *
+   * @memberof Model3DTileContent.prototype
+   *
+   * @type {Promise<Model3DTileContent>}
+   * @readonly
+   * @deprecated
+   * @private
+   */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "Model3DTileContent.readyPromise",
+        "Model3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Model3DTileContent.ready to return true instead."
+      );
       return this._readyPromise;
     },
   },
@@ -244,6 +279,16 @@ Model3DTileContent.prototype.update = function (tileset, frameState) {
   }
 
   model.update(frameState);
+
+  if (!this._ready && model.ready) {
+    // Animation can only be added once the model is ready
+    model.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
+    });
+
+    this._ready = true;
+    this._resolveContent = this._resolveContent && this._resolveContent(this);
+  }
 };
 
 Model3DTileContent.prototype.isDestroyed = function () {
@@ -255,7 +300,7 @@ Model3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
+Model3DTileContent.fromGltf = async function (tileset, tile, resource, gltf) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
@@ -276,20 +321,18 @@ Model3DTileContent.fromGltf = function (tileset, tile, resource, gltf) {
 
   modelOptions.classificationType = classificationType;
 
-  const model = Model.fromGltf(modelOptions);
+  const model = await Model.fromGltfAsync(modelOptions);
   content._model = model;
-  // Include the animation setup in the ready promise to avoid an uncaught exception
-  content._readyPromise = model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
-    });
-    return model;
+
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
   });
 
   return content;
 };
 
-Model3DTileContent.fromB3dm = function (
+Model3DTileContent.fromB3dm = async function (
   tileset,
   tile,
   resource,
@@ -317,20 +360,18 @@ Model3DTileContent.fromB3dm = function (
 
   modelOptions.classificationType = classificationType;
 
-  const model = Model.fromB3dm(modelOptions);
+  const model = await Model.fromB3dm(modelOptions);
   content._model = model;
-  // Include the animation setup in the ready promise to avoid an uncaught exception
-  content._readyPromise = model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
-    });
-    return model;
+
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
   });
 
   return content;
 };
 
-Model3DTileContent.fromI3dm = function (
+Model3DTileContent.fromI3dm = async function (
   tileset,
   tile,
   resource,
@@ -352,20 +393,18 @@ Model3DTileContent.fromI3dm = function (
     additionalOptions
   );
 
-  const model = Model.fromI3dm(modelOptions);
+  const model = await Model.fromI3dm(modelOptions);
   content._model = model;
-  // Include the animation setup in the ready promise to avoid an uncaught exception
-  content._readyPromise = model.readyPromise.then(function (model) {
-    model.activeAnimations.addAll({
-      loop: ModelAnimationLoop.REPEAT,
-    });
-    return model;
+
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
   });
 
   return content;
 };
 
-Model3DTileContent.fromPnts = function (
+Model3DTileContent.fromPnts = async function (
   tileset,
   tile,
   resource,
@@ -386,14 +425,23 @@ Model3DTileContent.fromPnts = function (
     content,
     additionalOptions
   );
-  const model = Model.fromPnts(modelOptions);
+  const model = await Model.fromPnts(modelOptions);
   content._model = model;
-  content._readyPromise = model.readyPromise;
+
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
+  });
 
   return content;
 };
 
-Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
+Model3DTileContent.fromGeoJson = async function (
+  tileset,
+  tile,
+  resource,
+  geoJson
+) {
   const content = new Model3DTileContent(tileset, tile, resource);
 
   const additionalOptions = {
@@ -407,9 +455,13 @@ Model3DTileContent.fromGeoJson = function (tileset, tile, resource, geoJson) {
     content,
     additionalOptions
   );
-  const model = Model.fromGeoJson(modelOptions);
+  const model = await Model.fromGeoJson(modelOptions);
   content._model = model;
-  content._readyPromise = model.readyPromise;
+
+  // This is for backwards compatibility. It can be removed once readyPromise is removed.
+  content._readyPromise = new Promise((resolve) => {
+    content._resolveContent = resolve;
+  });
 
   return content;
 };

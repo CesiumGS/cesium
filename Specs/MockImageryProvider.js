@@ -9,7 +9,7 @@ import {
 
 function MockImageryProvider() {
   this.tilingScheme = new GeographicTilingScheme();
-  this.ready = false;
+  this.ready = this._ready = false;
   this.rectangle = this.tilingScheme.rectangle;
   this.tileWidth = 256;
   this.tileHeight = 256;
@@ -18,7 +18,7 @@ function MockImageryProvider() {
 
   const that = this;
   Resource.fetchImage("./Data/Images/Green.png").then(function (image) {
-    that.ready = true;
+    that.ready = that._ready = true;
     that._image = image;
   });
 }

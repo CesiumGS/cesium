@@ -22,7 +22,7 @@ function TerrainProvider() {
 
 Object.defineProperties(TerrainProvider.prototype, {
   /**
-   * Gets an event that is raised when the terrain provider encounters an asynchronous error..  By subscribing
+   * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of {@link TileProviderError}.
    * @memberof TerrainProvider.prototype
@@ -35,8 +35,7 @@ Object.defineProperties(TerrainProvider.prototype, {
 
   /**
    * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-   * the source of the terrain. This function should
-   * not be called before {@link TerrainProvider#ready} returns true.
+   * the source of the terrain.
    * @memberof TerrainProvider.prototype
    * @type {Credit}
    * @readonly
@@ -46,8 +45,7 @@ Object.defineProperties(TerrainProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This function should
-   * not be called before {@link TerrainProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof TerrainProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -61,6 +59,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * @memberof TerrainProvider.prototype
    * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: DeveloperError.throwInstantiationError,
@@ -71,6 +70,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * @memberof TerrainProvider.prototype
    * @type {Promise<boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: DeveloperError.throwInstantiationError,
@@ -79,8 +79,7 @@ Object.defineProperties(TerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
    * indicates which areas of the globe are water rather than land, so they can be rendered
-   * as a reflective surface with animated waves.  This function should not be
-   * called before {@link TerrainProvider#ready} returns true.
+   * as a reflective surface with animated waves.
    * @memberof TerrainProvider.prototype
    * @type {boolean}
    * @readonly
@@ -91,7 +90,6 @@ Object.defineProperties(TerrainProvider.prototype, {
 
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
-   * This function should not be called before {@link TerrainProvider#ready} returns true.
    * @memberof TerrainProvider.prototype
    * @type {boolean}
    * @readonly
@@ -102,8 +100,7 @@ Object.defineProperties(TerrainProvider.prototype, {
 
   /**
    * Gets an object that can be used to determine availability of terrain from this provider, such as
-   * at points and in rectangles.  This function should not be called before
-   * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
+   * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof TerrainProvider.prototype
    * @type {TileAvailability}
@@ -399,8 +396,7 @@ TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function (
 };
 
 /**
- * Requests the geometry for a given tile.  This function should not be called before
- * {@link TerrainProvider#ready} returns true.  The result must include terrain data and
+ * Requests the geometry for a given tile. The result must include terrain data and
  * may optionally include a water mask and an indication of which child tiles are available.
  * @function
  *
@@ -417,8 +413,7 @@ TerrainProvider.prototype.requestTileGeometry =
   DeveloperError.throwInstantiationError;
 
 /**
- * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
- * called before {@link TerrainProvider#ready} returns true.
+ * Gets the maximum geometric error allowed in a tile at a given level.
  * @function
  *
  * @param {number} level The tile level for which to get the maximum geometric error.

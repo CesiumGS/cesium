@@ -41,7 +41,7 @@ const Cesium3DTileContentFactory = {
   },
   cmpt: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     // Send in the factory in order to avoid a cyclical dependency
-    return new Composite3DTileContent(
+    return Composite3DTileContent.fromTileType(
       tileset,
       tile,
       resource,
@@ -51,7 +51,7 @@ const Cesium3DTileContentFactory = {
     );
   },
   externalTileset: function (tileset, tile, resource, json) {
-    return new Tileset3DTileContent(tileset, tile, resource, json);
+    return Tileset3DTileContent.fromJson(tileset, tile, resource, json);
   },
   geom: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     return new Geometry3DTileContent(
@@ -72,7 +72,7 @@ const Cesium3DTileContentFactory = {
     );
   },
   subt: function (tileset, tile, resource, arrayBuffer, byteOffset) {
-    return new Implicit3DTileContent(
+    return Implicit3DTileContent.fromSubtreeJson(
       tileset,
       tile,
       resource,
@@ -82,7 +82,7 @@ const Cesium3DTileContentFactory = {
     );
   },
   subtreeJson: function (tileset, tile, resource, json) {
-    return new Implicit3DTileContent(tileset, tile, resource, json);
+    return Implicit3DTileContent.fromSubtreeJson(tileset, tile, resource, json);
   },
   glb: function (tileset, tile, resource, arrayBuffer, byteOffset) {
     const arrayBufferByteLength = arrayBuffer.byteLength;

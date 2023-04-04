@@ -281,18 +281,17 @@ describe(
       );
     }
 
-    function loadModel(options) {
-      const model = scene.primitives.add(Model.fromGltf(options));
-      return pollToPromise(
+    async function loadModel(options) {
+      const model = scene.primitives.add(await Model.fromGltfAsync(options));
+      await pollToPromise(
         function () {
           // Render scene to progressively load the model
           scene.render();
           return model.ready;
         },
         { timeout: 10000 }
-      ).then(function () {
-        return model;
-      });
+      );
+      return model;
     }
 
     /**

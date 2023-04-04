@@ -110,7 +110,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -128,18 +128,6 @@
             "This browser does not support the ambient occlusion post process."
           );
         }
-
-        // Power Plant design model provided by Bentley Systems
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(1240402),
-        });
-        tileset.readyPromise
-          .then(function (tileset) {
-            viewer.scene.primitives.add(tileset);
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
 
         const viewModel = {
           show: true,
@@ -202,12 +190,21 @@
           new Cesium.Cartesian3()
         );
 
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
+        try {
+          // Power Plant design model provided by Bentley Systems
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1240402);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

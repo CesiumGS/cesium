@@ -853,7 +853,7 @@ export function bundleCombinedSpecs(options) {
  * @returns
  */
 export async function createIndexJs(workspace) {
-  let contents = "";
+  let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
   const workspaceSources = workspaceSourceFiles[workspace];

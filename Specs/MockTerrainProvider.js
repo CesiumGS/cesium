@@ -17,8 +17,8 @@ function MockTerrainProvider() {
     this.heightmapWidth,
     this.tilingScheme.getNumberOfXTilesAtLevel(0)
   );
-  this.ready = true;
-  this.readyPromise = Promise.resolve();
+  this.ready = this._ready = true;
+  this.readyPromise = this._readyPromise = Promise.resolve();
   this.hasWaterMask = true;
   this.errorEvent = new Event();
 

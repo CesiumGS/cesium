@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ev
-if [ $TRAVIS_REPO_SLUG == "CesiumGS/cesium" ]; then
+if [ $TRAVIS_SECURE_ENV_VARS ]; then
   # Files deployed to cesium.com are "production", and should be cached at edge locations for 
   # better performance. Otherwise, this is a development deploy and nothing should be cached
   if [ $TRAVIS_BRANCH == "cesium.com" ]; then

@@ -79,7 +79,6 @@ function GltfIndexBufferLoader(options) {
   this._buffer = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._promise = undefined;
-  this._process = function (loader, frameState) {};
 }
 
 if (defined(Object.create)) {
@@ -88,20 +87,6 @@ if (defined(Object.create)) {
 }
 
 Object.defineProperties(GltfIndexBufferLoader.prototype, {
-  /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource has not yet started loading.
-   *
-   * @memberof GltfIndexBufferLoader.prototype
-   *
-   * @type {Promise<GltfIndexBufferLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
   /**
    * The cache key of the resource.
    *
@@ -168,135 +153,72 @@ const scratchIndexBufferJob = new CreateIndexBufferJob();
  * @returns {Promise<GltfIndexBufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
-GltfIndexBufferLoader.prototype.load = function () {
-  let promise;
-
-  if (defined(this._draco)) {
-    promise = loadFromDraco(this);
-  } else {
-    promise = loadFromBufferView(this);
+GltfIndexBufferLoader.prototype.load = async function () {
+  if (defined(this._promise)) {
+    return this._promise;
   }
 
-  const that = this;
-  const processPromise = new Promise(function (resolve) {
-    that._process = function (loader, frameState) {
-      if (loader._state === ResourceLoaderState.READY) {
-        return;
-      }
+  if (defined(this._draco)) {
+    this._promise = loadFromDraco(this);
+    return this._promise;
+  }
 
-      const typedArray = loader._typedArray;
-      const indexDatatype = loader._indexDatatype;
-
-      if (defined(loader._dracoLoader)) {
-        loader._dracoLoader.process(frameState);
-      }
-
-      if (defined(loader._bufferViewLoader)) {
-        loader._bufferViewLoader.process(frameState);
-      }
-
-      if (!defined(typedArray)) {
-        // Buffer view hasn't been loaded yet
-        return;
-      }
-
-      let buffer;
-      if (loader._loadBuffer && loader._asynchronous) {
-        const indexBufferJob = scratchIndexBufferJob;
-        indexBufferJob.set(typedArray, indexDatatype, frameState.context);
-        const jobScheduler = frameState.jobScheduler;
-        if (!jobScheduler.execute(indexBufferJob, JobType.BUFFER)) {
-          // Job scheduler is full. Try again next frame.
-          return;
-        }
-        buffer = indexBufferJob.buffer;
-      } else if (loader._loadBuffer) {
-        buffer = createIndexBuffer(
-          typedArray,
-          indexDatatype,
-          frameState.context
-        );
-      }
-
-      // Unload everything except the index buffer and/or typed array.
-      loader.unload();
-
-      loader._buffer = buffer;
-      loader._typedArray = loader._loadTypedArray ? typedArray : undefined;
-      loader._state = ResourceLoaderState.READY;
-      resolve(loader);
-    };
-  });
-
-  this._promise = promise
-    .then(function () {
-      if (that.isDestroyed()) {
-        return;
-      }
-
-      return processPromise;
-    })
-    .catch(function (error) {
-      if (that.isDestroyed()) {
-        return;
-      }
-
-      return handleError(that, error);
-    });
-
+  this._promise = loadFromBufferView(this);
   return this._promise;
 };
 
-function loadFromDraco(indexBufferLoader) {
-  const resourceCache = indexBufferLoader._resourceCache;
-  const dracoLoader = resourceCache.loadDraco({
-    gltf: indexBufferLoader._gltf,
-    draco: indexBufferLoader._draco,
-    gltfResource: indexBufferLoader._gltfResource,
-    baseResource: indexBufferLoader._baseResource,
-  });
-
-  indexBufferLoader._dracoLoader = dracoLoader;
+async function loadFromDraco(indexBufferLoader) {
   indexBufferLoader._state = ResourceLoaderState.LOADING;
+  const resourceCache = indexBufferLoader._resourceCache;
 
-  return dracoLoader.promise.then(function () {
+  try {
+    const dracoLoader = resourceCache.getDracoLoader({
+      gltf: indexBufferLoader._gltf,
+      draco: indexBufferLoader._draco,
+      gltfResource: indexBufferLoader._gltfResource,
+      baseResource: indexBufferLoader._baseResource,
+    });
+    indexBufferLoader._dracoLoader = dracoLoader;
+    await dracoLoader.load();
+
     if (indexBufferLoader.isDestroyed()) {
       return;
     }
+
     // Now wait for process() to run to finish loading
-    const typedArray = dracoLoader.decodedData.indices.typedArray;
-    indexBufferLoader._typedArray = typedArray;
-    // The index datatype may be a smaller datatype after draco decode
-    indexBufferLoader._indexDatatype = ComponentDatatype.fromTypedArray(
-      typedArray
-    );
-    indexBufferLoader._state = ResourceLoaderState.PROCESSING;
+    indexBufferLoader._state = ResourceLoaderState.LOADED;
     return indexBufferLoader;
-  });
+  } catch (error) {
+    if (indexBufferLoader.isDestroyed()) {
+      return;
+    }
+
+    handleError(indexBufferLoader, error);
+  }
 }
 
-function loadFromBufferView(indexBufferLoader) {
+async function loadFromBufferView(indexBufferLoader) {
   const gltf = indexBufferLoader._gltf;
   const accessorId = indexBufferLoader._accessorId;
   const accessor = gltf.accessors[accessorId];
   const bufferViewId = accessor.bufferView;
 
-  const resourceCache = indexBufferLoader._resourceCache;
-  const bufferViewLoader = resourceCache.loadBufferView({
-    gltf: gltf,
-    bufferViewId: bufferViewId,
-    gltfResource: indexBufferLoader._gltfResource,
-    baseResource: indexBufferLoader._baseResource,
-  });
   indexBufferLoader._state = ResourceLoaderState.LOADING;
-  indexBufferLoader._bufferViewLoader = bufferViewLoader;
+  const resourceCache = indexBufferLoader._resourceCache;
+  try {
+    const bufferViewLoader = resourceCache.getBufferViewLoader({
+      gltf: gltf,
+      bufferViewId: bufferViewId,
+      gltfResource: indexBufferLoader._gltfResource,
+      baseResource: indexBufferLoader._baseResource,
+    });
+    indexBufferLoader._bufferViewLoader = bufferViewLoader;
 
-  return bufferViewLoader.promise.then(function () {
+    await bufferViewLoader.load();
     if (indexBufferLoader.isDestroyed()) {
       return;
     }
 
-    // Now wait for process() to run to finish loading
     const bufferViewTypedArray = bufferViewLoader.typedArray;
     indexBufferLoader._typedArray = createIndicesTypedArray(
       indexBufferLoader,
@@ -304,7 +226,13 @@ function loadFromBufferView(indexBufferLoader) {
     );
     indexBufferLoader._state = ResourceLoaderState.PROCESSING;
     return indexBufferLoader;
-  });
+  } catch (error) {
+    if (indexBufferLoader.isDestroyed()) {
+      return;
+    }
+
+    handleError(indexBufferLoader, error);
+  }
 }
 
 function createIndicesTypedArray(indexBufferLoader, bufferViewTypedArray) {
@@ -346,8 +274,7 @@ function handleError(indexBufferLoader, error) {
   indexBufferLoader.unload();
   indexBufferLoader._state = ResourceLoaderState.FAILED;
   const errorMessage = "Failed to load index buffer";
-  error = indexBufferLoader.getError(errorMessage, error);
-  return Promise.reject(error);
+  throw indexBufferLoader.getError(errorMessage, error);
 }
 
 function CreateIndexBufferJob() {
@@ -397,7 +324,64 @@ GltfIndexBufferLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
-  return this._process(this, frameState);
+  if (this._state === ResourceLoaderState.READY) {
+    return true;
+  }
+
+  if (
+    this._state !== ResourceLoaderState.LOADED &&
+    this._state !== ResourceLoaderState.PROCESSING
+  ) {
+    return false;
+  }
+
+  let typedArray = this._typedArray;
+  let indexDatatype = this._indexDatatype;
+
+  if (defined(this._dracoLoader)) {
+    try {
+      const ready = this._dracoLoader.process(frameState);
+      if (ready) {
+        const dracoLoader = this._dracoLoader;
+        typedArray = dracoLoader.decodedData.indices.typedArray;
+        this._typedArray = typedArray;
+        // The index datatype may be a smaller datatype after draco decode
+        indexDatatype = ComponentDatatype.fromTypedArray(typedArray);
+        this._indexDatatype = indexDatatype;
+      }
+    } catch (error) {
+      handleError(this, error);
+    }
+  }
+
+  if (!defined(typedArray)) {
+    // Buffer view hasn't been loaded yet
+    return false;
+  }
+
+  let buffer;
+  if (this._loadBuffer && this._asynchronous) {
+    const indexBufferJob = scratchIndexBufferJob;
+    indexBufferJob.set(typedArray, indexDatatype, frameState.context);
+    const jobScheduler = frameState.jobScheduler;
+    if (!jobScheduler.execute(indexBufferJob, JobType.BUFFER)) {
+      // Job scheduler is full. Try again next frame.
+      return false;
+    }
+    buffer = indexBufferJob.buffer;
+  } else if (this._loadBuffer) {
+    buffer = createIndexBuffer(typedArray, indexDatatype, frameState.context);
+  }
+
+  // Unload everything except the index buffer and/or typed array.
+  this.unload();
+
+  this._buffer = buffer;
+  this._typedArray = this._loadTypedArray ? typedArray : undefined;
+  this._state = ResourceLoaderState.READY;
+
+  this._resourceCache.statistics.addGeometryLoader(this);
+  return true;
 };
 
 /**
@@ -411,7 +395,10 @@ GltfIndexBufferLoader.prototype.unload = function () {
 
   const resourceCache = this._resourceCache;
 
-  if (defined(this._bufferViewLoader)) {
+  if (
+    defined(this._bufferViewLoader) &&
+    !this._bufferViewLoader.isDestroyed()
+  ) {
     resourceCache.unload(this._bufferViewLoader);
   }
 

@@ -654,14 +654,12 @@ describe("Scene/I3SNode", function () {
   it("loads root node from uri", function () {
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
 
-    spyOn(rootNode._dataProvider, "_loadJson").and.returnValue(
+    const spy = spyOn(I3SDataProvider, "loadJson").and.returnValue(
       Promise.resolve(rootNodeWithChildren)
     );
 
     return rootNode.load().then(function () {
-      expect(rootNode._dataProvider._loadJson).toHaveBeenCalledWith(
-        rootNode.resource
-      );
+      expect(spy).toHaveBeenCalledWith(rootNode.resource, false);
       expect(rootNode.data.children.length).toEqual(2);
     });
   });
@@ -669,7 +667,7 @@ describe("Scene/I3SNode", function () {
   it("loads child node from uri", function () {
     const rootNode = new I3SNode(mockI3SLayerWithoutNodePages, "mockUrl", true);
     const childNode = new I3SNode(rootNode, "mockUrlChild", false);
-    spyOn(childNode._dataProvider, "_loadJson").and.returnValue(
+    const spy = spyOn(I3SDataProvider, "loadJson").and.returnValue(
       Promise.resolve(nodeWithContent)
     );
 
@@ -679,9 +677,7 @@ describe("Scene/I3SNode", function () {
         return childNode.load();
       })
       .then(function () {
-        expect(childNode._dataProvider._loadJson).toHaveBeenCalledWith(
-          childNode.resource
-        );
+        expect(spy).toHaveBeenCalledWith(childNode.resource, false);
         expect(childNode.data.children.length).toEqual(0);
         expect(childNode.tile).toBeDefined();
         expect(childNode.tile.i3sNode).toBe(childNode);
@@ -951,7 +947,7 @@ describe("Scene/I3SNode", function () {
       true
     );
 
-    spyOn(nodeWithMesh._dataProvider, "_loadJson").and.returnValue(
+    spyOn(I3SDataProvider, "loadJson").and.returnValue(
       Promise.resolve(nodeWithContent)
     );
     spyOn(nodeWithMesh._dataProvider, "_loadBinary").and.returnValue(
@@ -1070,7 +1066,7 @@ describe("Scene/I3SNode", function () {
       true
     );
 
-    spyOn(nodeWithTexturedMesh._dataProvider, "_loadJson").and.returnValue(
+    spyOn(I3SDataProvider, "loadJson").and.returnValue(
       Promise.resolve(nodeWithTexturedContent)
     );
     spyOn(nodeWithTexturedMesh._dataProvider, "_loadBinary").and.returnValue(
@@ -1131,7 +1127,7 @@ describe("Scene/I3SNode", function () {
       true
     );
 
-    spyOn(nodeWithMesh._dataProvider, "_loadJson").and.callFake(function (
+    const spy = spyOn(I3SDataProvider, "loadJson").and.callFake(function (
       resource
     ) {
       if (
@@ -1151,7 +1147,7 @@ describe("Scene/I3SNode", function () {
         return Promise.resolve(nodeWithContent);
       }
 
-      return Promise.reject();
+      return Promise.reject("invalid i3s node");
     });
 
     return nodeWithMesh
@@ -1167,8 +1163,9 @@ describe("Scene/I3SNode", function () {
         expect(nodeWithMesh.featureData[0].data.featureData).toEqual([]);
         expect(nodeWithMesh.featureData[0].data.geometryData).toEqual([]);
 
-        expect(nodeWithMesh._dataProvider._loadJson).toHaveBeenCalledWith(
-          nodeWithMesh.featureData[0].resource
+        expect(spy).toHaveBeenCalledWith(
+          nodeWithMesh.featureData[0].resource,
+          false
         );
       });
   });
@@ -1188,16 +1185,14 @@ describe("Scene/I3SNode", function () {
       });
   });
 
-  it("load feature data rejects invalid url", function () {
+  it("load feature data rejects invalid url", async function () {
     const nodeWithMesh = new I3SNode(
       mockI3SLayerWithoutNodePages,
       "mockNodeUrl",
       true
     );
 
-    spyOn(nodeWithMesh._dataProvider, "_loadJson").and.callFake(function (
-      resource
-    ) {
+    spyOn(I3SDataProvider, "loadJson").and.callFake(function (resource) {
       if (
         resource
           .getUrlComponent()
@@ -1215,20 +1210,11 @@ describe("Scene/I3SNode", function () {
         return Promise.resolve(nodeWithContent);
       }
 
-      return Promise.reject();
+      return Promise.reject("invalid i3s node");
     });
 
-    return nodeWithMesh
-      .load()
-      .then(function () {
-        return nodeWithMesh._loadFeatureData();
-      })
-      .then(function () {
-        fail("Promise should not be resolved for invalid uri");
-      })
-      .catch(function (error) {
-        expect(error.statusCode).toEqual(404);
-      });
+    await nodeWithMesh.load();
+    await expectAsync(nodeWithMesh._loadFeatureData()).toBeRejected();
   });
 
   it("creates 3d tile content", function () {
@@ -1270,8 +1256,8 @@ describe("Scene/I3SNode", function () {
     };
     spyOn(
       nodeWithMesh._dataProvider,
-      "_getDecoderTaskProcessor"
-    ).and.returnValue(mockProcessor);
+      "getDecoderTaskProcessor"
+    ).and.returnValue(Promise.resolve(mockProcessor));
 
     return rootNode
       .load()
@@ -1282,11 +1268,11 @@ describe("Scene/I3SNode", function () {
         return nodeWithMesh._createContentURL();
       })
       .then(function (result) {
-        expect(nodeWithMesh._glbURL).toBeDefined();
+        expect(result).toBeDefined();
         expect(nodeWithMesh.tile).toBeDefined();
 
         //Test fetching the blob url that was created
-        return Resource.fetchArrayBuffer(nodeWithMesh._glbURL);
+        return Resource.fetchArrayBuffer(result);
       })
       .then(function (data) {
         expect(data.error).toBeUndefined();
@@ -1419,22 +1405,11 @@ describe("Scene/I3SNode", function () {
       })
       .then(function (result) {
         spyOn(childNode, "_createContentURL").and.callFake(function () {
-          childNode._glbURL = "mockGlbUrl";
-          return Promise.resolve();
+          return Promise.resolve("mockGlbUrl");
         });
-        spyOn(childNode.tile, "_hookedRequestContent").and.callFake(
-          function () {
-            childNode.tile._contentReadyToProcessPromise = Promise.resolve();
-            childNode.tile._contentReadyPromise = Promise.resolve();
-          }
-        );
+        spyOn(childNode.tile, "_hookedRequestContent");
 
-        childNode.tile._contentResource = { _url: "mockOriginalContentUrl" };
-        childNode.tile.requestContent();
-        return Promise.all([
-          childNode.tile._contentReadyToProcessPromise,
-          childNode.tile._contentReadyPromise,
-        ]);
+        return childNode.tile.requestContent();
       })
       .then(function () {
         expect(childNode.tile._contentResource._url).toEqual("mockGlbUrl");
