@@ -8,6 +8,8 @@ uniform vec3 u_atmosphereRayleighCoefficient;
 uniform vec3 u_atmosphereMieCoefficient;
 
 const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in meters.
+const int PRIMARY_STEPS_MAX = 16; // Maximum number of times the ray from the camera to the world position (primary ray) is sampled.
+const int LIGHT_STEPS_MAX = 4; // Maximum number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
 
 /**
  * Rational approximation to tanh(x)
@@ -76,8 +78,8 @@ void computeScattering(
     // (2) within atmosphere we need fewer steps for faster rendering
     float x_o_a = start_0 - ATMOSPHERE_THICKNESS; // ATMOSPHERE_THICKNESS used as an ad-hoc constant, no precise meaning here, only the order of magnitude matters
     float w_inside_atmosphere = 1.0 - 0.5 * (1.0 + approximateTanh(x_o_a));
-    int PRIMARY_STEPS = int(16.0 - w_inside_atmosphere * 12.0); // Number of times the ray from the camera to the world position (primary ray) is sampled.
-    int LIGHT_STEPS = int(4.0 - w_inside_atmosphere * 2.0); // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
+    int PRIMARY_STEPS = PRIMARY_STEPS_MAX - int(w_inside_atmosphere * 12.0); // Number of times the ray from the camera to the world position (primary ray) is sampled.
+    int LIGHT_STEPS = LIGHT_STEPS_MAX - int(w_inside_atmosphere * 2.0); // Number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
 
     // Setup for sampling positions along the ray - starting from the intersection with the outer ring of the atmosphere.
     float rayPositionLength = primaryRayAtmosphereIntersect.start;
@@ -93,12 +95,13 @@ void computeScattering(
     vec2 heightScale = vec2(u_atmosphereRayleighScaleHeight, u_atmosphereMieScaleHeight);
 
     // Sample positions on the primary ray.
-    for (int i = 0; i < 999999999; ++i) {
+    for (int i = 0; i < PRIMARY_STEPS_MAX; ++i) {
 
         // The loop should be: for (int i = 0; i < PRIMARY_STEPS; ++i) {...} but WebGL1 cannot
         // loop with non-constant condition, so it has to break early instead
-        if (i >= PRIMARY_STEPS)
+        if (i >= PRIMARY_STEPS) {
             break;
+        }
 
         // Calculate sample position along viewpoint ray.
         vec3 samplePosition = primaryRay.origin + primaryRay.direction * (rayPositionLength + rayStepLength);
@@ -120,12 +123,13 @@ void computeScattering(
         vec2 lightOpticalDepth = vec2(0.0);
 
         // Sample positions along the light ray, to accumulate incidence of light on the latest sample segment.
-        for (int j = 0; j < 999999999; ++j) {
+        for (int j = 0; j < LIGHT_STEPS_MAX; ++j) {
 
             // The loop should be: for (int j = 0; i < LIGHT_STEPS; ++j) {...} but WebGL1 cannot
             // loop with non-constant condition, so it has to break early instead
-            if (j >= LIGHT_STEPS)
+            if (j >= LIGHT_STEPS) {
                 break;
+            }
 
             // Calculate sample position along light ray.
             vec3 lightPosition = samplePosition + lightDirection * (lightPositionLength + lightStepLength * 0.5);
