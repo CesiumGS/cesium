@@ -383,6 +383,8 @@ We strive to write isolated isolated tests so that a test can be run individuall
 
 The tests in the `'WebGL'` category do not strictly follow this pattern. Creating a WebGL context (which is implicit, for example, in `createScene`) is slow. Because it creates a lot of contexts, e.g., one per test, it is not well supported in browsers. So the tests use the pattern in the code example below where a `scene` (or `viewer` or `context`) has the lifetime of the suite using `beforeAll` and `afterAll`.
 
+Due to side-effects, a WebGL context should never be created in the global scope, that is, outside of a `it`, `beforeAll`, `afterAll`, `beforeEach`, or `afterEach` block. Since they create a context, this applies to helper functions `createContext`, `createScene`, and `createViewer`.
+
 ### Rendering Tests
 
 Unlike the `Cartesian3` tests we first saw, many tests need to construct the main CesiumJS `Viewer` widget or one of its major components. Low-level renderer tests construct just `Context` (which, itself, has a canvas and WebGL context), and primitive tests construct a `Scene` (which contains a `Context`).
@@ -501,6 +503,40 @@ it("can declare automatic uniforms", function () {
     fragmentShader: fs,
   }).contextToRender();
 });
+```
+
+#### Test in WebGL 1 and WebGL 2
+
+Sometimes, it's helpful to run rendering test in both WebGL 1 and WebGL 2 contexts to verify code works in either case. `createWebglVersionHelper` is a helper function that duplicates a block of specs in each context, and only runs WebGL 2 if supported by the environment.
+
+For example, the following code will execute the spec `"can create a vertex buffer from a size in bytes"` twice, once in a WebGL 1 context and once in a WebGL 2 context.
+
+```js
+createWebglVersionHelper(createBufferSpecs);
+
+function createBufferSpecs(contextOptions) {
+  let buffer;
+  let buffer2;
+  let context;
+
+  beforeAll(function () {
+    context = createContext(contextOptions);
+  });
+
+  afterAll(function () {
+    context.destroyForSpecs();
+  });
+
+  it("can create a vertex buffer from a size in bytes", function () {
+    buffer = Buffer.createVertexBuffer({
+      context: context,
+      sizeInBytes: 4,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    expect(buffer.sizeInBytes).toEqual(4);
+    expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
+  });
+}
 ```
 
 #### Debugging Rendering Tests

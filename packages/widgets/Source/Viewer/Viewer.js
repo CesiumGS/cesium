@@ -720,6 +720,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     if (createBaseLayerPicker) {
       baseLayerPicker.viewModel.selectedTerrain = undefined;
+      // Required as this is otherwise set by the baseLayerPicker
+      scene.globe.depthTestAgainstTerrain = true;
     }
 
     scene.setTerrain(options.terrain);
@@ -2135,8 +2137,22 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
 
     //If the zoom target is a rectangular imagery in an ImageLayer
     if (zoomTarget instanceof ImageryLayer) {
-      zoomTarget
-        .getViewableRectangle()
+      let rectanglePromise;
+
+      if (defined(zoomTarget.imageryProvider)) {
+        // This is here for backward compatibility. It can be removed when readyPromise is removed.
+        rectanglePromise = zoomTarget.imageryProvider._readyPromise.then(() => {
+          return zoomTarget.getImageryRectangle();
+        });
+      } else {
+        rectanglePromise = new Promise((resolve) => {
+          const removeListener = zoomTarget.readyEvent.addEventListener(() => {
+            removeListener();
+            resolve(zoomTarget.getImageryRectangle());
+          });
+        });
+      }
+      rectanglePromise
         .then(function (rectangle) {
           return computeFlyToLocationForRectangle(rectangle, that.scene);
         })

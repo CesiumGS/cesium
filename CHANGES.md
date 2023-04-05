@@ -100,7 +100,7 @@ try {
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `Viewer` constructor option `options.imageryProvider` haw been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
+- `Viewer` constructor option `options.imageryProvider` has been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
 
 ### 1.103 - 2023-03-01
 

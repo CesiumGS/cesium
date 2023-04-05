@@ -39,7 +39,8 @@
         });
 
         const scene = viewer.scene;
-        scene.primitives.add(Cesium.createOsmBuildings());
+        const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
+        scene.primitives.add(osmBuildingsTileset);
 
         ///////////////////////////
         // Create clouds
