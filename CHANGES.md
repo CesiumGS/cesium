@@ -8,6 +8,13 @@
 
 - Fixed atmosphere rendering performance issue. [10510](https://github.com/CesiumGS/cesium/issues/10510)
 
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed missing `ContextOptions` in generated TypeScript definitions. [10963](https://github.com/CesiumGS/cesium/issues/10963)
+
+
 ### 1.104 - 2023-04-03
 
 #### Major Announcements :loudspeaker:
