@@ -14,7 +14,6 @@
 
 - Fixed missing `ContextOptions` in generated TypeScript definitions. [10963](https://github.com/CesiumGS/cesium/issues/10963)
 
-
 ### 1.104 - 2023-04-03
 
 #### Major Announcements :loudspeaker:
