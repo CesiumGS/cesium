@@ -296,18 +296,18 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       return this._imageryProvider.hasAlphaChannel;
     },
+  },
 
-    /**
-     * Gets the proxy used by this provider.
-     * @memberof IonImageryProvider.prototype
-     * @type {Proxy}
-     * @readonly
-     * @default undefined
-     */
-    proxy: {
-      get: function () {
-        return undefined;
-      },
+  /**
+   * Gets the proxy used by this provider.
+   * @memberof IonImageryProvider.prototype
+   * @type {Proxy}
+   * @readonly
+   * @default undefined
+   */
+  proxy: {
+    get: function () {
+      return undefined;
     },
   },
 
