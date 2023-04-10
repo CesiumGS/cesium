@@ -353,3 +353,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jacob Van Dine](https://github.com/JacobVanDine)
 - [Michael Cabana](https://github.com/mikecabana)
 - [Joseph Stanton](https://github.com/romejoe)
+- [Zehua Hu](https://github.com/lanvada)
