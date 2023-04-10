@@ -100,7 +100,9 @@ describe(
     });
 
     it("errorEvent is raised when asynchronous provider cannot be constructed", async function () {
-      const providerPromise = Promise.reject();
+      const providerPromise = Promise.reject(
+        "Can't construct imagery provider"
+      );
       const layer = ImageryLayer.fromProviderAsync(providerPromise);
       expect(layer.ready).toBe(false);
 

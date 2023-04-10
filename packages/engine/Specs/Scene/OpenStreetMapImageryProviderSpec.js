@@ -299,7 +299,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("OSM image load fail");
         }, 1);
       }
     };

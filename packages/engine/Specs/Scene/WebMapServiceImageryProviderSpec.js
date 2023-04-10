@@ -974,7 +974,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("WMS image load fail");
         }, 1);
       }
     };
@@ -1368,7 +1368,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         expect(url).toContain("GetFeatureInfo");
 
         if (url.indexOf("json") >= 0) {
-          deferred.reject();
+          deferred.reject("WMS feature info load fail");
         } else {
           // this should not happen
           Resource._DefaultImplementations.loadWithXhr(
@@ -1533,7 +1533,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
         expect(url).toContain("GetFeatureInfo");
 
         if (url.indexOf(encodeURIComponent("application/foo")) < 0) {
-          deferred.reject();
+          deferred.reject("WMS feature info load fail");
         }
 
         return Resource._DefaultImplementations.loadWithXhr(
@@ -1570,7 +1570,7 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       ) {
         expect(url).toContain("GetFeatureInfo");
         if (url.indexOf(encodeURIComponent("text/html")) < 0) {
-          deferred.reject();
+          deferred.reject("WMS feature info load fail");
         }
         Resource._DefaultImplementations.loadWithXhr(
           "Data/WMS/GetFeatureInfo.html",

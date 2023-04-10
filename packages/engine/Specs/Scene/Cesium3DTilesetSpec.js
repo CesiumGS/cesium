@@ -274,7 +274,7 @@ describe(
         deferred,
         overrideMimeType
       ) {
-        deferred.reject();
+        deferred.reject("tileset.json load fail");
       });
 
       options.url = "invalid.json";

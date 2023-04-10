@@ -262,7 +262,7 @@ describe("Scene/SingleTileImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("Failed to load image");
         }, 1);
       }
     };

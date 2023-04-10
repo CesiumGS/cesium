@@ -239,7 +239,7 @@ describe(
 
     it("sets a defaultTexture on error", function () {
       spyOn(Resource.prototype, "fetchImage").and.callFake(function () {
-        return Promise.reject();
+        return Promise.reject("texture image load fail");
       });
       const textureManager = new TextureManager();
       textureManagers.push(textureManager);

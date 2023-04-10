@@ -340,7 +340,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         overrideMimeType
       ) {
         if (url.indexOf("dbRoot.v5") !== -1) {
-          return deferred.reject(); // Just reject dbRoot file and use defaults.
+          return deferred.reject("dbRoot request failed"); // Just reject dbRoot file and use defaults.
         }
 
         if (loadRealTile) {

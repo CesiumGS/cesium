@@ -174,7 +174,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       expect(responseType).toEqual("arraybuffer");
       if (req === 0) {
         expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
-        deferred.reject(); // Reject dbRoot request and use defaults
+        deferred.reject("dbRoot request failed"); // Reject dbRoot request and use defaults
       } else {
         expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
         Resource._DefaultImplementations.loadWithXhr(
@@ -233,7 +233,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       expect(responseType).toEqual("arraybuffer");
       if (req === 0) {
         expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
-        deferred.reject(); // Reject dbRoot request and use defaults
+        deferred.reject("dbRoot request failed"); // Reject dbRoot request and use defaults
       } else {
         expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
         Resource._DefaultImplementations.loadWithXhr(
@@ -302,7 +302,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       expect(responseType).toEqual("arraybuffer");
       if (req === 0) {
         expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
-        deferred.reject(); // Reject dbRoot request and use defaults
+        deferred.reject("dbRoot request failed"); // Reject dbRoot request and use defaults
       } else {
         expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
         Resource._DefaultImplementations.loadWithXhr(
@@ -355,7 +355,7 @@ describe("Core/GoogleEarthEnterpriseMetadata", function () {
       expect(responseType).toEqual("arraybuffer");
       if (req === 0) {
         expect(url).toEqual(`${baseurl}dbRoot.v5?output=proto`);
-        deferred.reject(); // Reject dbRoot request and use defaults
+        deferred.reject("dbRoot request failed"); // Reject dbRoot request and use defaults
       } else {
         expect(url).toEqual(`${baseurl}flatfile?q2-0-q.1`);
         Resource._DefaultImplementations.loadWithXhr(

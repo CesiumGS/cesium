@@ -759,7 +759,7 @@ describe("Core/RequestScheduler", function () {
     promises.push(RequestScheduler.request(requests[2]));
     RequestScheduler.update();
 
-    deferreds[0].reject();
+    deferreds[0].reject("fail scheduled request");
     requests[0].cancel();
     requests[1].cancel();
     requests[2].cancel();

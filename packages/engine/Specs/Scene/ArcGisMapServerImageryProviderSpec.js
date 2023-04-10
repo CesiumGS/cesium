@@ -938,7 +938,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("ArcGIS image load fail");
         }, 1);
       }
     };

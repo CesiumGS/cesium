@@ -303,7 +303,7 @@ describe("Scene/MapboxImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("Mapbox image load fail");
         }, 1);
       }
     };

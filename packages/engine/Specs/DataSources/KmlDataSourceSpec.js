@@ -4595,7 +4595,7 @@ describe("DataSources/KmlDataSource", function () {
       overrideMimeType
     ) {
       requestNetworkLink.resolve(url);
-      deferred.reject();
+      deferred.reject("kml network link fail");
     });
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
@@ -4625,7 +4625,7 @@ describe("DataSources/KmlDataSource", function () {
       overrideMimeType
     ) {
       requestNetworkLink.resolve(url);
-      deferred.reject();
+      deferred.reject("kml network link fail");
     });
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
@@ -4656,7 +4656,7 @@ describe("DataSources/KmlDataSource", function () {
       overrideMimeType
     ) {
       requestNetworkLink.resolve(url);
-      deferred.reject();
+      deferred.reject("kml network link fail");
     });
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
@@ -4690,7 +4690,7 @@ describe("DataSources/KmlDataSource", function () {
       overrideMimeType
     ) {
       requestNetworkLink.resolve(url);
-      deferred.reject();
+      deferred.reject("kml network link fail");
     });
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
@@ -4724,7 +4724,7 @@ describe("DataSources/KmlDataSource", function () {
       overrideMimeType
     ) {
       requestNetworkLink.resolve(url);
-      deferred.reject();
+      deferred.reject("kml network link fail");
     });
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
@@ -4760,7 +4760,7 @@ describe("DataSources/KmlDataSource", function () {
       overrideMimeType
     ) {
       requestNetworkLink.resolve(url);
-      deferred.reject();
+      deferred.reject("kml network link fail");
     });
 
     KmlDataSource.load(
@@ -4799,7 +4799,7 @@ describe("DataSources/KmlDataSource", function () {
       overrideMimeType
     ) {
       requestNetworkLink.resolve(url);
-      deferred.reject();
+      deferred.reject("kml network link fail");
     });
 
     const src = new KmlDataSource();
@@ -4837,7 +4837,7 @@ describe("DataSources/KmlDataSource", function () {
       overrideMimeType
     ) {
       requestNetworkLink.resolve(url);
-      deferred.reject();
+      deferred.reject("kml network link fail");
     });
 
     KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);

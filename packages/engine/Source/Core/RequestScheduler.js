@@ -255,7 +255,7 @@ function cancelRequest(request) {
   if (defined(request.deferred)) {
     const deferred = request.deferred;
     request.deferred = undefined;
-    deferred.reject();
+    deferred.reject("cancelled");
   }
 
   if (active) {

@@ -371,7 +371,7 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("GEE Image load fail");
         }, 1);
       }
     };

@@ -646,7 +646,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("Bing Maps image load fail");
         }, 1);
       }
     };
@@ -673,7 +673,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("Bing Maps image load fail");
         }, 1);
       }
     };

@@ -468,7 +468,7 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("WMTS image load fail");
         }, 1);
       }
     };

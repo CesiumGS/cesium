@@ -202,7 +202,7 @@ describe("Scene/UrlTemplateImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("URL template image load fail");
         }, 1);
       }
     };

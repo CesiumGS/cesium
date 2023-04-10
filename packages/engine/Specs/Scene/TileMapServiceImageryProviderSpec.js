@@ -540,7 +540,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       } else {
         // fail
         setTimeout(function () {
-          deferred.reject();
+          deferred.reject("TMS image load fail");
         }, 1);
       }
     };
