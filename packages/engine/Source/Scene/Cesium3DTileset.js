@@ -2029,7 +2029,7 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * used for streaming massive heterogeneous 3D geospatial datasets.
  *
  * @param {Resource|string} url The url to a tileset JSON file.
- * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
+ * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
