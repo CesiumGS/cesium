@@ -13,6 +13,7 @@
 ##### Fixes :wrench:
 
 - Fixed missing `ContextOptions` in generated TypeScript definitions. [10963](https://github.com/CesiumGS/cesium/issues/10963)
+- Fixed model rendering when emissiveTexture is defined and emissiveFactor is not. [#11215](https://github.com/CesiumGS/cesium/pull/11215)
 
 ### 1.104 - 2023-04-03
 
@@ -44,7 +45,6 @@ try {
 - Fixed ion URL in `RequestScheduler` throttling overrides. [#11193](https://github.com/CesiumGS/cesium/pull/11193)
 - Fixed `SingleTileImageryProvider` fetching image when `show` is `false` by allowing lazy-loading for `SingleTileImageryProvider` if `tileWidth` and `tileHeight` are provided to the constructor. [#9529](https://github.com/CesiumGS/cesium/issues/9529)
 - Fixed various race conditions from async operations. [#10909](https://github.com/CesiumGS/cesium/issues/10909)
-- Fixed model rendering when emissiveTexture is defined and emissiveFactor is not. [#11215](https://github.com/CesiumGS/cesium/pull/11215)
 
 ##### Deprecated :hourglass_flowing_sand:
 
