@@ -1,11 +1,9 @@
 import Uri from "urijs";
 import {
-  appendForwardSlash,
   ArcGisMapServerImageryProvider,
   Cartesian2,
   Cartesian3,
   Cartographic,
-  defined,
   DiscardMissingTileImagePolicy,
   GeographicTilingScheme,
   getAbsoluteUri,
@@ -49,49 +47,18 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       Resource._DefaultImplementations.loadWithXhr;
   });
 
-  function expectCorrectUrl(
-    expectedBaseUrl,
-    actualUrl,
-    functionName,
-    withProxy,
-    token
-  ) {
-    let uri = new Uri(actualUrl);
-
-    if (withProxy) {
-      uri = new Uri(decodeURIComponent(uri.query()));
-    }
-
-    const params = queryToObject(uri.query());
-
-    const uriWithoutQuery = new Uri(uri);
-    uriWithoutQuery.query("");
-
-    expect(uriWithoutQuery.toString()).toEqual(
-      appendForwardSlash(expectedBaseUrl)
-    );
-
-    const expectedParams = {
-      callback: functionName,
-      f: "pjson",
-    };
-    if (defined(token)) {
-      expectedParams.token = token;
-    }
-    expect(params).toEqual(expectedParams);
-  }
-
-  function stubJSONPCall(baseUrl, result, withProxy, token) {
-    Resource._Implementations.loadAndExecuteScript = function (
+  function stubJSONCall(baseUrl, result, withProxy, token) {
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
       url,
-      functionName,
-      deferred
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
     ) {
-      expectCorrectUrl(baseUrl, url, functionName, withProxy, token);
-      setTimeout(function () {
-        window[functionName](result);
-      }, 1);
-    };
+      deferred.resolve(JSON.stringify(result));
+    });
   }
 
   it("conforms to ImageryProvider interface", function () {
@@ -142,7 +109,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   it("resolves readyPromise", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid";
 
-    stubJSONPCall(baseUrl, webMercatorResult);
+    stubJSONCall(baseUrl, webMercatorResult);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -157,7 +124,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   it("resolves readyPromise with Resource", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid";
 
-    stubJSONPCall(baseUrl, webMercatorResult);
+    stubJSONCall(baseUrl, webMercatorResult);
 
     const resource = new Resource({
       url: baseUrl,
@@ -193,7 +160,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   it("supports tiled servers in web mercator projection", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
-    stubJSONPCall(baseUrl, webMercatorResult);
+    stubJSONCall(baseUrl, webMercatorResult);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -304,7 +271,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   it("supports tiled servers in geographic projection", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
-    stubJSONPCall(baseUrl, geographicResult);
+    stubJSONCall(baseUrl, geographicResult);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -385,7 +352,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   it("supports non-tiled servers", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
-    stubJSONPCall(baseUrl, {
+    stubJSONCall(baseUrl, {
       currentVersion: 10.01,
       copyrightText: "Test copyright text",
     });
@@ -449,7 +416,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
     const token = "5e(u|2!7Y";
 
-    stubJSONPCall(
+    stubJSONCall(
       baseUrl,
       {
         currentVersion: 10.01,
@@ -528,7 +495,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/",
       token = "5e(u|2!7Y";
 
-    stubJSONPCall(baseUrl, webMercatorResult, false, token);
+    stubJSONCall(baseUrl, webMercatorResult, false, token);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -651,7 +618,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       },
     };
 
-    stubJSONPCall(baseUrl, unsupportedWKIDResult);
+    stubJSONCall(baseUrl, unsupportedWKIDResult);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -708,7 +675,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   it("raises error event when image cannot be loaded", function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
-    stubJSONPCall(baseUrl, {
+    stubJSONCall(baseUrl, {
       currentVersion: 10.01,
       copyrightText: "Test copyright text",
     });
@@ -812,7 +779,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       },
     };
 
-    stubJSONPCall(baseUrl, webMercatorFullExtentResult);
+    stubJSONCall(baseUrl, webMercatorFullExtentResult);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -883,7 +850,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       },
     };
 
-    stubJSONPCall(baseUrl, webMercatorOutsideBoundsResult);
+    stubJSONCall(baseUrl, webMercatorOutsideBoundsResult);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -948,7 +915,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       },
     };
 
-    stubJSONPCall(baseUrl, geographicFullExtentResult);
+    stubJSONCall(baseUrl, geographicFullExtentResult);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -1008,7 +975,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       },
     };
 
-    stubJSONPCall(baseUrl, unknownSpatialReferenceResult);
+    stubJSONCall(baseUrl, unknownSpatialReferenceResult);
 
     const provider = new ArcGisMapServerImageryProvider({
       url: baseUrl,
@@ -1039,33 +1006,33 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
   describe("pickFeatures", function () {
     it("works with WebMercator geometry", function () {
+      stubJSONCall("made/up/map/server", webMercatorResult);
       const provider = new ArcGisMapServerImageryProvider({
         url: "made/up/map/server",
         usePreCachedTilesIfAvailable: false,
       });
 
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/ArcGIS/identify-WebMercator.json",
+      return provider.readyPromise.then(function () {
+        Resource._Implementations.loadWithXhr = function (
+          url,
           responseType,
           method,
           data,
           headers,
           deferred,
           overrideMimeType
-        );
-      };
-
-      return provider.readyPromise.then(function () {
+        ) {
+          expect(url).toContain("identify");
+          Resource._DefaultImplementations.loadWithXhr(
+            "Data/ArcGIS/identify-WebMercator.json",
+            responseType,
+            method,
+            data,
+            headers,
+            deferred,
+            overrideMimeType
+          );
+        };
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1084,33 +1051,33 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     });
 
     it("works with Geographic geometry", function () {
+      stubJSONCall("made/up/map/server", geographicResult);
       const provider = new ArcGisMapServerImageryProvider({
         url: "made/up/map/server",
         usePreCachedTilesIfAvailable: false,
       });
 
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/ArcGIS/identify-Geographic.json",
+      return provider.readyPromise.then(function () {
+        Resource._Implementations.loadWithXhr = function (
+          url,
           responseType,
           method,
           data,
           headers,
           deferred,
           overrideMimeType
-        );
-      };
-
-      return provider.readyPromise.then(function () {
+        ) {
+          expect(url).toContain("identify");
+          Resource._DefaultImplementations.loadWithXhr(
+            "Data/ArcGIS/identify-Geographic.json",
+            responseType,
+            method,
+            data,
+            headers,
+            deferred,
+            overrideMimeType
+          );
+        };
         return provider
           .pickFeatures(0, 0, 0, 0.5, 0.5)
           .then(function (pickResult) {
@@ -1127,6 +1094,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     });
 
     it("returns undefined if enablePickFeatures is false", function () {
+      stubJSONCall("made/up/map/server", webMercatorResult);
       const provider = new ArcGisMapServerImageryProvider({
         url: "made/up/map/server",
         usePreCachedTilesIfAvailable: false,
@@ -1139,6 +1107,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     });
 
     it("returns undefined if enablePickFeatures is dynamically set to false", function () {
+      stubJSONCall("made/up/map/server", geographicResult);
       const provider = new ArcGisMapServerImageryProvider({
         url: "made/up/map/server",
         usePreCachedTilesIfAvailable: false,
@@ -1153,6 +1122,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     });
 
     it("does not return undefined if enablePickFeatures is dynamically set to true", function () {
+      stubJSONCall("made/up/map/server", webMercatorResult);
       const provider = new ArcGisMapServerImageryProvider({
         url: "made/up/map/server",
         usePreCachedTilesIfAvailable: false,
@@ -1161,29 +1131,29 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
       provider.enablePickFeatures = true;
 
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        expect(url).toContain("identify");
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/ArcGIS/identify-WebMercator.json",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType
-        );
-      };
-
       return provider.readyPromise
         .then(function () {
+          Resource._Implementations.loadWithXhr = function (
+            url,
+            responseType,
+            method,
+            data,
+            headers,
+            deferred,
+            overrideMimeType
+          ) {
+            expect(url).toContain("identify");
+            Resource._DefaultImplementations.loadWithXhr(
+              "Data/ArcGIS/identify-WebMercator.json",
+              responseType,
+              method,
+              data,
+              headers,
+              deferred,
+              overrideMimeType
+            );
+          };
+
           return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
         })
         .then(function (value) {
@@ -1192,38 +1162,38 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     });
 
     it("picks from individual layers", function () {
+      stubJSONCall("made/up/map/server", webMercatorResult);
       const provider = new ArcGisMapServerImageryProvider({
         url: "made/up/map/server",
         usePreCachedTilesIfAvailable: false,
         layers: "someLayer,anotherLayerYay",
       });
 
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        const uri = new Uri(url);
-        const query = queryToObject(uri.query());
-
-        expect(query.layers).toContain("visible:someLayer,anotherLayerYay");
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/ArcGIS/identify-WebMercator.json",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType
-        );
-      };
-
       return provider.readyPromise
         .then(function () {
+          Resource._Implementations.loadWithXhr = function (
+            url,
+            responseType,
+            method,
+            data,
+            headers,
+            deferred,
+            overrideMimeType
+          ) {
+            const uri = new Uri(url);
+            const query = queryToObject(uri.query());
+
+            expect(query.layers).toContain("visible:someLayer,anotherLayerYay");
+            Resource._DefaultImplementations.loadWithXhr(
+              "Data/ArcGIS/identify-WebMercator.json",
+              responseType,
+              method,
+              data,
+              headers,
+              deferred,
+              overrideMimeType
+            );
+          };
           return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
         })
         .then(function (pickResult) {

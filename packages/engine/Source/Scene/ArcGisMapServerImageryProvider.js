@@ -29,7 +29,7 @@ import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
  * Initialization options for the ArcGisMapServerImageryProvider constructor
  *
  * @property {Resource|string} url The URL of the ArcGIS MapServer service.
- * @property {string} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service. To get a token, create an ArcGIS developer account at {@link https://developers.arcgis.com}.
+ * @property {string} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
  * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  If this value is not specified, a default
  *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -94,6 +94,9 @@ import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
  *
  * @see {@link https://developers.arcgis.com/rest/|ArcGIS Server REST API}
  * @see {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token }
+ * is required to authenticate requests to an ArcGIS Image Tile service.
+ * To access secure ArcGIS resources, you need to create an ArcGIS developer
+ * account or an ArcGIS online account, then implement an authentication method to obtain an access token.
  */
 function ArcGisMapServerImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -244,7 +247,9 @@ function ArcGisMapServerImageryProvider(options) {
 
   function metadataSuccess(data) {
     const tileInfo = data.tileInfo;
-    if (defined(tileInfo)) {
+    if (!defined(tileInfo)) {
+      that._useTiles = false;
+    } else {
       that._tileWidth = tileInfo.rows;
       that._tileHeight = tileInfo.cols;
 
@@ -365,7 +370,7 @@ function ArcGisMapServerImageryProvider(options) {
       }
 
       that._useTiles = true;
-    } else {
+    } /*else {
       const message = `The service does not have any Pre Cached Tiles or the required tileInfo resources and is not supported.`;
       metadataError = TileProviderError.reportError(
         metadataError,
@@ -377,7 +382,7 @@ function ArcGisMapServerImageryProvider(options) {
         undefined
       );
       return Promise.reject(new RuntimeError(message));
-    }
+    }*/
 
     if (
       defined(data.copyrightText) &&
@@ -405,20 +410,29 @@ function ArcGisMapServerImageryProvider(options) {
     );
     return Promise.reject(new RuntimeError(message));
   }
+  const cacheKey = that._resource.url;
   function requestMetadata() {
     const resource = that._resource.getDerivedResource({
       queryParameters: {
-        f: "pjson",
+        f: "json",
+        //token: that.token,
       },
     });
     return resource.fetchJson().then(metadataSuccess).catch(metadataFailure);
   }
 
-  if (this._useTiles) {
+  /*if (this._useTiles) {
     this._readyPromise = requestMetadata();
   } else {
     this._ready = true;
     this._readyPromise = Promise.resolve(true);
+  }*/
+
+  const promise = ArcGisMapServerImageryProvider._metadataCache[cacheKey];
+  if (defined(promise)) {
+    this._readyPromise = promise.then(metadataSuccess).catch(metadataFailure);
+  } else {
+    this._readyPromise = requestMetadata();
   }
 }
 
@@ -496,7 +510,7 @@ ArcGisMapServerImageryProvider.fromBasemapType = function (options) {
   }
 
   return new ArcGisMapServerImageryProvider({
-    options,
+    ...options,
     url: server,
     token: accessToken,
     warning: warningCredit,
@@ -1006,4 +1020,5 @@ ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
     return result;
   });
 };
+ArcGisMapServerImageryProvider._metadataCache = {};
 export default ArcGisMapServerImageryProvider;
