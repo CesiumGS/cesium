@@ -13,6 +13,7 @@
 ##### Fixes :wrench:
 
 - Fixed missing `ContextOptions` in generated TypeScript definitions. [10963](https://github.com/CesiumGS/cesium/issues/10963)
+- Fixed model rendering when emissiveTexture is defined and emissiveFactor is not. [#11215](https://github.com/CesiumGS/cesium/pull/11215)
 
 ### 1.104 - 2023-04-03
 
