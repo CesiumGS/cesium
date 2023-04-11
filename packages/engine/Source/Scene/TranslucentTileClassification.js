@@ -184,10 +184,10 @@ function updateResources(
 
     if (debugShowPackedDepth) {
       fs.defines = ["DEBUG_SHOW_DEPTH"];
-      uniformMap.u_packedTranslucentDepth = function () {
-        return transpClass._packFBO.getColorTexture();
-      };
     }
+    uniformMap.u_packedTranslucentDepth = function () {
+      return transpClass._packFBO.getColorTexture();
+    };
 
     transpClass._compositeCommand = context.createViewportQuadCommand(fs, {
       uniformMap: uniformMap,
