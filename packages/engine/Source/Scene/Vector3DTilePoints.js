@@ -101,8 +101,8 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    */
   texturesByteLength: {
     get: function () {
-      const billboardSize =
-        this._billboardCollection.textureAtlas.texture.sizeInBytes;
+      const billboardSize = this._billboardCollection.textureAtlas.texture
+        .sizeInBytes;
       const labelSize = this._labelCollection._textureAtlas.texture.sizeInBytes;
       return billboardSize + labelSize;
     },
@@ -408,8 +408,9 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.translucencyByDistance)) {
-      const translucencyByDistanceCart4 =
-        style.translucencyByDistance.evaluate(feature);
+      const translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(
+        feature
+      );
       if (defined(translucencyByDistanceCart4)) {
         scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
         scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
@@ -424,8 +425,9 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.distanceDisplayCondition)) {
-      const distanceDisplayConditionCart2 =
-        style.distanceDisplayCondition.evaluate(feature);
+      const distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(
+        feature
+      );
       if (defined(distanceDisplayConditionCart2)) {
         scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
         scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
@@ -459,8 +461,9 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.disableDepthTestDistance)) {
-      feature.disableDepthTestDistance =
-        style.disableDepthTestDistance.evaluate(feature);
+      feature.disableDepthTestDistance = style.disableDepthTestDistance.evaluate(
+        feature
+      );
     }
 
     if (defined(style.horizontalOrigin)) {
@@ -472,8 +475,9 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
     }
 
     if (defined(style.labelHorizontalOrigin)) {
-      feature.labelHorizontalOrigin =
-        style.labelHorizontalOrigin.evaluate(feature);
+      feature.labelHorizontalOrigin = style.labelHorizontalOrigin.evaluate(
+        feature
+      );
     }
 
     if (defined(style.labelVerticalOrigin)) {
