@@ -1797,7 +1797,7 @@ Cesium3DTile.prototype.createBoundingVolume = function (
  */
 Cesium3DTile.prototype.updateTransform = function (parentTransform) {
   parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
-  const computedTransform = Matrix4.multiply(
+  const computedTransform = Matrix4.multiplyTransformation(
     parentTransform,
     this.transform,
     scratchTransform

@@ -4,6 +4,7 @@
   },
   "source": {
     "include": [
+      "packages/engine/Source/Renderer/Context.js",
       "packages/widgets/Source"
     ],
     "exclude": [
