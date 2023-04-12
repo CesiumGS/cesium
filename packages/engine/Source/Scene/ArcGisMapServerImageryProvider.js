@@ -42,7 +42,7 @@ import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
  *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
  *        parameter.
  * @property {boolean} [usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
- *        tiles are used if they are available. Exporting Tiles is not supported with this service.
+ *        tiles are used if they are available. Exporting Tiles is only supported with deprecated APIs.
  * @property {string} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
  * @property {boolean} [enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
  *        the Identify service on the MapServer and return the features included in the response.  If false,
@@ -366,19 +366,7 @@ function ArcGisMapServerImageryProvider(options) {
       }
 
       that._useTiles = true;
-    } /*else {
-      const message = `The service does not have any Pre Cached Tiles or the required tileInfo resources and is not supported.`;
-      metadataError = TileProviderError.reportError(
-        metadataError,
-        that,
-        that._errorEvent,
-        message,
-        undefined,
-        undefined,
-        undefined
-      );
-      return Promise.reject(new RuntimeError(message));
-    }*/
+    }
 
     if (
       defined(data.copyrightText) &&
@@ -406,29 +394,20 @@ function ArcGisMapServerImageryProvider(options) {
     );
     return Promise.reject(new RuntimeError(message));
   }
-  const cacheKey = that._resource.url;
   function requestMetadata() {
     const resource = that._resource.getDerivedResource({
       queryParameters: {
         f: "json",
-        //token: that.token,
       },
     });
     return resource.fetchJson().then(metadataSuccess).catch(metadataFailure);
   }
 
-  /*if (this._useTiles) {
+  if (this._useTiles) {
     this._readyPromise = requestMetadata();
   } else {
     this._ready = true;
     this._readyPromise = Promise.resolve(true);
-  }*/
-
-  const promise = ArcGisMapServerImageryProvider._metadataCache[cacheKey];
-  if (defined(promise)) {
-    this._readyPromise = promise.then(metadataSuccess).catch(metadataFailure);
-  } else {
-    this._readyPromise = requestMetadata();
   }
 }
 
