@@ -18,6 +18,7 @@ import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
 import sampleTerrainMostDetailed from "../Core/sampleTerrainMostDetailed.js";
 import Cartographic from "../Core/Cartographic.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 
 const defaultScale = 1.0;
 const defaultMinimumPixelSize = 0.0;
@@ -63,6 +64,7 @@ function ModelVisualizer(scene, entityCollection) {
   this._entityCollection = entityCollection;
   this._modelHash = {};
   this._entitiesToVisualize = new AssociativeArray();
+
   this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
 }
 
@@ -444,8 +446,10 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
   const scene = this._scene;
   const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
-  const terrainProvider = globe.terrainProvider;
+  // Check if the globe is undefined and use a substitute ellipsoid if it is not
+  const ellipsoid = globe ? globe.ellipsoid : Ellipsoid.WGS84;
+  // cannot access a terrainprovider if there is not one; formally set to undefined
+  const terrainProvider = globe ? globe.terrainProvider : undefined;
 
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
   if (hasHeightReference) {
