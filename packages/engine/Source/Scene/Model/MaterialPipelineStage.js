@@ -245,18 +245,6 @@ function processMaterialUniforms(
   defaultEmissiveTexture,
   disableTextures
 ) {
-  const emissiveTexture = material.emissiveTexture;
-  if (defined(emissiveTexture) && !disableTextures) {
-    processTexture(
-      shaderBuilder,
-      uniformMap,
-      emissiveTexture,
-      "u_emissiveTexture",
-      "EMISSIVE",
-      defaultEmissiveTexture
-    );
-  }
-
   const emissiveFactor = material.emissiveFactor;
   if (
     defined(emissiveFactor) &&
@@ -275,6 +263,18 @@ function processMaterialUniforms(
       undefined,
       ShaderDestination.FRAGMENT
     );
+
+    const emissiveTexture = material.emissiveTexture;
+    if (defined(emissiveTexture) && !disableTextures) {
+      processTexture(
+        shaderBuilder,
+        uniformMap,
+        emissiveTexture,
+        "u_emissiveTexture",
+        "EMISSIVE",
+        defaultEmissiveTexture
+      );
+    }
   }
 
   const normalTexture = material.normalTexture;
