@@ -42,7 +42,8 @@
           terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        viewer.scene.primitives.add(Cesium.createOsmBuildings());
+        const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
+        viewer.scene.primitives.add(osmBuildingsTileset);
 
         viewer.scene.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(-74.019, 40.6912, 750),

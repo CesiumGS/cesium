@@ -684,7 +684,7 @@ const terrainRectangleScratch = new Rectangle();
 ImageryLayer.prototype.getViewableRectangle = async function () {
   deprecationWarning(
     "ImageryLayer.getViewableRectangle",
-    "ImageryLayer.getViewableRectangle was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.getImageryRectangle instead."
+    "ImageryLayer.getViewableRectangle was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.getImageryRectangle instead."
   );
 
   const imageryProvider = this._imageryProvider;

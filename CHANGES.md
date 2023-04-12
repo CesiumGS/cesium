@@ -7,6 +7,14 @@
 ##### Fixes :wrench:
 
 - Fixed an issue when zooming in an orthographic frustum. [#11206](https://github.com/CesiumGS/cesium/pull/11206)
+- Fixed atmosphere rendering performance issue. [10510](https://github.com/CesiumGS/cesium/issues/10510)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed missing `ContextOptions` in generated TypeScript definitions. [10963](https://github.com/CesiumGS/cesium/issues/10963)
+- Fixed model rendering when emissiveTexture is defined and emissiveFactor is not. [#11215](https://github.com/CesiumGS/cesium/pull/11215)
 
 ### 1.104 - 2023-04-03
 
@@ -102,7 +110,7 @@ try {
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `Viewer` constructor option `options.imageryProvider` haw been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
+- `Viewer` constructor option `options.imageryProvider` has been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
 
 ### 1.103 - 2023-03-01
 
