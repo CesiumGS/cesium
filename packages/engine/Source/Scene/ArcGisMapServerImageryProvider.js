@@ -61,8 +61,6 @@ import ArcGisBaseMapType from "./ArcGisBaseMapType.js";
  * @property {number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
  * @property {number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
  *                                        a tiled server.
- *@property {Credit|string} [warning] A warning message when using evaluation token for authenticating ArcGIS Base Map Service Layers.
- *
  *
  *
  */
@@ -218,15 +216,13 @@ function ArcGisMapServerImageryProvider(options) {
     this._tilingScheme.rectangle
   );
   this._layers = options.layers;
+  this._credit = options.credit;
 
   let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
-  if (defined(options.warning)) {
-    this._credit = Credit.clone(options.warning);
-    this._useTiles = true; //ArcGIS Base Map Service Layers only support Tiled views
-  }
+
   /**
    * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
    * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
@@ -513,7 +509,8 @@ ArcGisMapServerImageryProvider.fromBasemapType = function (options) {
     ...options,
     url: server,
     token: accessToken,
-    warning: warningCredit,
+    credit: warningCredit,
+    usePreCachedTilesIfAvailable: true, // ArcGIS Base Map Service Layers only support Tiled views
   });
 };
 
@@ -777,7 +774,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets a promise that resolves to true when the provider is ready for use.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Promise.<boolean>}
+   * @type {Promise<boolean>}
    * @readonly
    */
   readyPromise: {
@@ -873,7 +870,7 @@ ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
@@ -908,7 +905,7 @@ ArcGisMapServerImageryProvider.prototype.requestImage = function (
      * @param {number} level The tile level.
      * @param {number} longitude The longitude at which to pick features.
      * @param {number} latitude  The latitude at which to pick features.
-     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
+     * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *
