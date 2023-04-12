@@ -354,3 +354,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Michael Cabana](https://github.com/mikecabana)
 - [Joseph Stanton](https://github.com/romejoe)
 - [Zehua Hu](https://github.com/lanvada)
+- [Shapovalov Kirill](https://github.com/ShapovalovKL)
