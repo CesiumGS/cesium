@@ -748,6 +748,34 @@ describe(
         visualizer.getBoundingSphere(testObject, undefined);
       }).toThrowDeveloperError();
     });
+
+    it("does not throw error when globe is not present while zooming to entity", async function () {
+      // Disable the globe
+      scene.globe = undefined;
+
+      // Create a new entity with position and model
+      const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics();
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      // Update the visualizer
+      visualizer.update(JulianDate.now());
+
+      // Try to get the bounding sphere
+      const result = new BoundingSphere();
+      let errorOccurred = false;
+      try {
+        visualizer.getBoundingSphere(testObject, result);
+      } catch (error) {
+        errorOccurred = true;
+      }
+
+      // If no error occurred while getting the bounding sphere, the test case passes
+      expect(errorOccurred).toBe(false);
+    });
   },
   "WebGL"
 );
