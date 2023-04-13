@@ -764,7 +764,7 @@ describe(
 
       // Create a new entity with position and model
       const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
-      const testObject = entityCollection.getOrCreateEntity("test");
+      const testObject = customViewer.entities.getOrCreateEntity("test");
       const model = new ModelGraphics();
       testObject.model = model;
       testObject.position = new ConstantProperty(position);
