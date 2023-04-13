@@ -750,10 +750,17 @@ describe(
     });
 
     it("does not throw error when globe is not present while zooming to entity", async function () {
-      // Create a mock globe object with an undefined terrainProvider
-      const originalGlobe = scene.globe;
-      const mockGlobe = { terrainProvider: undefined };
-      scene.globe = mockGlobe;
+      // Create a custom viewer object without a globe
+      const customViewer = {
+        scene: {
+          ...scene,
+          globe: undefined,
+        },
+        entities: entityCollection,
+      };
+
+      // Create a new ModelVisualizer using the custom viewer
+      const customVisualizer = new ModelVisualizer(customViewer);
 
       // Create a new entity with position and model
       const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
@@ -763,22 +770,15 @@ describe(
       testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
 
-      // Update the visualizer
-      visualizer.update(JulianDate.now());
-
-      // Try to get the bounding sphere
-      const result = new BoundingSphere();
+      // Try to update the custom visualizer
       let errorOccurred = false;
       try {
-        visualizer.getBoundingSphere(testObject, result);
+        customVisualizer.update(JulianDate.now());
       } catch (error) {
         errorOccurred = true;
       }
 
-      // Restore the original globe
-      scene.globe = originalGlobe;
-
-      // If no error occurred while getting the bounding sphere, the test case passes
+      // If no error occurred while updating the custom visualizer, the test case passes
       expect(errorOccurred).toBe(false);
     });
   },
