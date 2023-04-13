@@ -750,8 +750,10 @@ describe(
     });
 
     it("does not throw error when globe is not present while zooming to entity", async function () {
-      // Disable the globe
-      scene.globe = undefined;
+      // Create a mock globe object with an undefined terrainProvider
+      const originalGlobe = scene.globe;
+      const mockGlobe = { terrainProvider: undefined };
+      scene.globe = mockGlobe;
 
       // Create a new entity with position and model
       const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
@@ -772,6 +774,9 @@ describe(
       } catch (error) {
         errorOccurred = true;
       }
+
+      // Restore the original globe
+      scene.globe = originalGlobe;
 
       // If no error occurred while getting the bounding sphere, the test case passes
       expect(errorOccurred).toBe(false);
