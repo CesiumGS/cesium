@@ -276,7 +276,7 @@ async function requestMetadata(resource, imageryProviderBuilder, provider) {
 
 /**
  * <div class="notice">
- * This object is normally not instantiated directly, use {@link ArcGisMapServerImageryProvider.fromBasemapType} {@link ArcGisMapServerImageryProvider.fromUrl}.
+ * This object is normally not instantiated directly, use {@link ArcGisMapServerImageryProvider.fromBasemapType} or {@link ArcGisMapServerImageryProvider.fromUrl}.
  * </div>
  *
  * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
@@ -411,7 +411,25 @@ function ArcGisMapServerImageryProvider(options) {
  * Creates an {@link ImageryProvider} which provides tiled imagery from an ArcGIS base map.
  * @param {ArcGisBaseMapType} style The style of the ArcGIS base map imagery. Valid options are {@link ArcGisBaseMapType.SATELLITE}, {@link ArcGisBaseMapType.OCEANS}, and {@link ArcGisBaseMapType.HILLSHADE}.
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options.
- * @returns {Promise<ArcGisMapServerImageryProvider>}
+ * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
+ *
+ * @example
+ * const provider = await Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+ *   Cesium.ArcGisBaseMapType.SATELLITE, {
+ *     token: "<ArcGIS Access Token>"
+ *   });
+ *
+ * @example
+ * // Add a base layer from a default ArcGIS Basemap
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
+ *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+ *     Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
+ *       Cesium.ArcGisBaseMapType.HILLSHADE, {
+ *         token: "<ArcGIS Access Token>"
+ *       }
+ *     )
+ *   ),
+ * });
  */
 
 ArcGisMapServerImageryProvider.fromBasemapType = async function (
