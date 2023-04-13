@@ -751,12 +751,13 @@ describe(
 
     it("does not throw error when globe is not present while zooming to entity", async function () {
       // Create a custom viewer object without a globe
+      const customEntityCollection = new EntityCollection();
       const customViewer = {
         scene: {
           ...scene,
           globe: undefined,
         },
-        entities: entityCollection,
+        entities: customEntityCollection,
       };
 
       // Create a new ModelVisualizer using the custom viewer
