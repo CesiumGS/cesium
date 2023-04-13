@@ -4,9 +4,6 @@ describe("Scene/ResourceLoader", function () {
   it("throws when using ResourceLoader directly", function () {
     const resourceLoader = new ResourceLoader();
     expect(function () {
-      return resourceLoader.promise;
-    }).toThrowDeveloperError();
-    expect(function () {
       return resourceLoader.cacheKey;
     }).toThrowDeveloperError();
     expect(function () {

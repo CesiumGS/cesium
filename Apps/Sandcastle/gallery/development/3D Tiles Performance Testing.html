@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         /*
@@ -64,8 +64,7 @@ The heatmapTileProperty will colorize the tile property in a heatmap. Booleans s
         const referenceMaximum = new Cesium.JulianDate();
         const heatmapTileProperty = "_foveatedFactor";
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(75343),
+        const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {
           debugHeatmapTilePropertyName: heatmapTileProperty,
         });
 
@@ -262,11 +261,14 @@ Sandcastle.addToolbarButton(VIEW, function() {\n\
 });`
           );
         }); //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

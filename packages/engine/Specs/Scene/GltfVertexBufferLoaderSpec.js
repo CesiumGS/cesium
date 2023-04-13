@@ -9,6 +9,7 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
+  RuntimeError,
 } from "../../index.js";
 import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -351,10 +352,9 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("rejects promise if buffer view fails to load", function () {
-      const error = new Error("404 Not Found");
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-        Promise.reject(error)
+    it("load throws if buffer view fails to load", async function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
+        Promise.reject(new Error("404 Not Found"))
       );
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
@@ -366,20 +366,13 @@ describe(
         loadBuffer: true,
       });
 
-      vertexBufferLoader.load();
-
-      return vertexBufferLoader.promise
-        .then(function (vertexBufferLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load vertex buffer\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
-          );
-        });
+      await expectAsync(vertexBufferLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load vertex buffer\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+      );
     });
 
-    it("rejects promise if draco fails to load", function () {
+    it("process throws if draco fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(dracoArrayBuffer)
       );
@@ -400,20 +393,16 @@ describe(
         loadBuffer: true,
       });
 
-      vertexBufferLoader.load();
-
-      return waitForLoaderProcess(vertexBufferLoader, scene)
-        .then(function (vertexBufferLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load vertex buffer\nFailed to load Draco\nDraco decode failed"
-          );
-        });
+      await vertexBufferLoader.load();
+      await expectAsync(
+        waitForLoaderProcess(vertexBufferLoader, scene)
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load vertex buffer\nFailed to load Draco\nDraco decode failed"
+      );
     });
 
-    it("loads as buffer", function () {
+    it("loads as buffer", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -443,20 +432,18 @@ describe(
         loadBuffer: true,
       });
 
-      vertexBufferLoader.load();
+      await vertexBufferLoader.load();
+      await waitForLoaderProcess(vertexBufferLoader, scene);
 
-      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
-        vertexBufferLoader
-      ) {
-        loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
-          positions.byteLength
-        );
-        expect(vertexBufferLoader.typedArray).toBeUndefined();
-      });
+      expect(() => loaderProcess(vertexBufferLoader, scene)).not.toThrowError();
+      expect(vertexBufferLoader.buffer.sizeInBytes).toBe(positions.byteLength);
+      expect(vertexBufferLoader.typedArray).toBeUndefined();
+      expect(ResourceCache.statistics.geometryByteLength).toBe(
+        vertexBufferLoader.buffer.sizeInBytes
+      );
     });
 
-    it("loads as typed array", function () {
+    it("loads as typed array", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -473,20 +460,22 @@ describe(
         loadTypedArray: true,
       });
 
-      vertexBufferLoader.load();
+      await vertexBufferLoader.load();
+      await waitForLoaderProcess(vertexBufferLoader, scene);
 
-      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
-        vertexBufferLoader
-      ) {
-        expect(vertexBufferLoader.typedArray.byteLength).toBe(
-          positions.byteLength
-        );
-        expect(vertexBufferLoader.buffer).toBeUndefined();
-        expect(Buffer.createVertexBuffer.calls.count()).toBe(0);
-      });
+      expect(() => loaderProcess(vertexBufferLoader, scene)).not.toThrowError();
+      expect(vertexBufferLoader.typedArray.byteLength).toBe(
+        positions.byteLength
+      );
+      expect(vertexBufferLoader.buffer).toBeUndefined();
+      expect(Buffer.createVertexBuffer.calls.count()).toBe(0);
+
+      expect(ResourceCache.statistics.geometryByteLength).toBe(
+        vertexBufferLoader.typedArray.byteLength
+      );
     });
 
-    it("loads as both buffer and typed array", function () {
+    it("loads as both buffer and typed array", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -517,22 +506,21 @@ describe(
         loadTypedArray: true,
       });
 
-      vertexBufferLoader.load();
+      await vertexBufferLoader.load();
+      await waitForLoaderProcess(vertexBufferLoader, scene);
 
-      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
-        vertexBufferLoader
-      ) {
-        loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
-          positions.byteLength
-        );
-        expect(vertexBufferLoader.typedArray.byteLength).toBe(
-          positions.byteLength
-        );
-      });
+      expect(() => loaderProcess(vertexBufferLoader, scene)).not.toThrowError();
+      expect(vertexBufferLoader.buffer.sizeInBytes).toBe(positions.byteLength);
+      expect(vertexBufferLoader.typedArray.byteLength).toBe(
+        positions.byteLength
+      );
+      const totalSize =
+        vertexBufferLoader.typedArray.byteLength +
+        vertexBufferLoader.buffer.sizeInBytes;
+      expect(ResourceCache.statistics.geometryByteLength).toBe(totalSize);
     });
 
-    it("creates vertex buffer synchronously", function () {
+    it("creates vertex buffer synchronously", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -548,19 +536,13 @@ describe(
         loadBuffer: true,
       });
 
-      vertexBufferLoader.load();
-
-      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
-        vertexBufferLoader
-      ) {
-        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
-          positions.byteLength
-        );
-        expect(vertexBufferLoader.typedArray).toBeUndefined();
-      });
+      await vertexBufferLoader.load();
+      await waitForLoaderProcess(vertexBufferLoader, scene);
+      expect(vertexBufferLoader.buffer.sizeInBytes).toBe(positions.byteLength);
+      expect(vertexBufferLoader.typedArray).toBeUndefined();
     });
 
-    it("loads positions from draco", function () {
+    it("loads positions from draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -586,34 +568,34 @@ describe(
         loadBuffer: true,
       });
 
-      vertexBufferLoader.load();
+      await vertexBufferLoader.load();
+      await waitForLoaderProcess(vertexBufferLoader, scene);
 
-      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
-        vertexBufferLoader
-      ) {
-        loaderProcess(vertexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
-          decodedPositions.byteLength
-        );
-        expect(vertexBufferLoader.typedArray).toBeUndefined();
-        const quantization = vertexBufferLoader.quantization;
-        expect(quantization.octEncoded).toBe(false);
-        expect(quantization.quantizedVolumeOffset).toEqual(
-          new Cartesian3(-1.0, -1.0, -1.0)
-        );
-        expect(quantization.quantizedVolumeDimensions).toEqual(
-          new Cartesian3(2.0, 2.0, 2.0)
-        );
-        expect(quantization.normalizationRange).toEqual(
-          new Cartesian3(16383, 16383, 16383)
-        );
-        expect(quantization.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_SHORT
-        );
-      });
+      expect(() => loaderProcess(vertexBufferLoader, scene)).not.toThrowError();
+      expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
+        decodedPositions.byteLength
+      );
+      expect(vertexBufferLoader.typedArray).toBeUndefined();
+      const quantization = vertexBufferLoader.quantization;
+      expect(quantization.octEncoded).toBe(false);
+      expect(quantization.quantizedVolumeOffset).toEqual(
+        new Cartesian3(-1.0, -1.0, -1.0)
+      );
+      expect(quantization.quantizedVolumeDimensions).toEqual(
+        new Cartesian3(2.0, 2.0, 2.0)
+      );
+      expect(quantization.normalizationRange).toEqual(
+        new Cartesian3(16383, 16383, 16383)
+      );
+      expect(quantization.componentDatatype).toBe(
+        ComponentDatatype.UNSIGNED_SHORT
+      );
+      expect(ResourceCache.statistics.geometryByteLength).toBe(
+        vertexBufferLoader.buffer.sizeInBytes
+      );
     });
 
-    it("loads normals from draco", function () {
+    it("loads normals from draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -633,28 +615,25 @@ describe(
         loadBuffer: true,
       });
 
-      vertexBufferLoader.load();
+      await vertexBufferLoader.load();
+      await waitForLoaderProcess(vertexBufferLoader, scene);
 
-      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
-        vertexBufferLoader
-      ) {
-        expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
-          decodedNormals.byteLength
-        );
+      expect(vertexBufferLoader.buffer.sizeInBytes).toBe(
+        decodedNormals.byteLength
+      );
 
-        const quantization = vertexBufferLoader.quantization;
-        expect(quantization.octEncoded).toBe(true);
-        expect(quantization.octEncodedZXY).toBe(true);
-        expect(quantization.quantizedVolumeOffset).toBeUndefined();
-        expect(quantization.quantizedVolumeDimensions).toBeUndefined();
-        expect(quantization.normalizationRange).toBe(1023);
-        expect(quantization.componentDatatype).toBe(
-          ComponentDatatype.UNSIGNED_BYTE
-        );
-      });
+      const quantization = vertexBufferLoader.quantization;
+      expect(quantization.octEncoded).toBe(true);
+      expect(quantization.octEncodedZXY).toBe(true);
+      expect(quantization.quantizedVolumeOffset).toBeUndefined();
+      expect(quantization.quantizedVolumeDimensions).toBeUndefined();
+      expect(quantization.normalizationRange).toBe(1023);
+      expect(quantization.componentDatatype).toBe(
+        ComponentDatatype.UNSIGNED_BYTE
+      );
     });
 
-    it("destroys vertex buffer loaded from buffer view", function () {
+    it("destroys vertex buffer loaded from buffer view", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -679,24 +658,20 @@ describe(
         loadBuffer: true,
       });
 
-      vertexBufferLoader.load();
+      await vertexBufferLoader.load();
+      await waitForLoaderProcess(vertexBufferLoader, scene);
+      expect(vertexBufferLoader.buffer).toBeDefined();
+      expect(vertexBufferLoader.isDestroyed()).toBe(false);
 
-      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
-        vertexBufferLoader
-      ) {
-        expect(vertexBufferLoader.buffer).toBeDefined();
-        expect(vertexBufferLoader.isDestroyed()).toBe(false);
+      vertexBufferLoader.destroy();
 
-        vertexBufferLoader.destroy();
-
-        expect(vertexBufferLoader.buffer).not.toBeDefined();
-        expect(vertexBufferLoader.isDestroyed()).toBe(true);
-        expect(unloadBufferView).toHaveBeenCalled();
-        expect(destroyVertexBuffer).toHaveBeenCalled();
-      });
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
+      expect(vertexBufferLoader.isDestroyed()).toBe(true);
+      expect(unloadBufferView).toHaveBeenCalled();
+      expect(destroyVertexBuffer).toHaveBeenCalled();
     });
 
-    it("destroys vertex buffer loaded from draco", function () {
+    it("destroys vertex buffer loaded from draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -726,33 +701,26 @@ describe(
         loadBuffer: true,
       });
 
-      vertexBufferLoader.load();
+      await vertexBufferLoader.load();
+      await waitForLoaderProcess(vertexBufferLoader, scene);
 
-      return waitForLoaderProcess(vertexBufferLoader, scene).then(function (
-        vertexBufferLoader
-      ) {
-        expect(vertexBufferLoader.buffer).toBeDefined();
-        expect(vertexBufferLoader.isDestroyed()).toBe(false);
+      expect(vertexBufferLoader.buffer).toBeDefined();
+      expect(vertexBufferLoader.isDestroyed()).toBe(false);
 
-        vertexBufferLoader.destroy();
+      vertexBufferLoader.destroy();
 
-        expect(vertexBufferLoader.buffer).not.toBeDefined();
-        expect(vertexBufferLoader.isDestroyed()).toBe(true);
-        expect(unloadDraco).toHaveBeenCalled();
-        expect(destroyVertexBuffer).toHaveBeenCalled();
-      });
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
+      expect(vertexBufferLoader.isDestroyed()).toBe(true);
+      expect(unloadDraco).toHaveBeenCalled();
+      expect(destroyVertexBuffer).toHaveBeenCalled();
     });
 
-    function resolveBufferViewAfterDestroy(rejectPromise) {
-      const promise = new Promise(function (resolve, reject) {
-        if (rejectPromise) {
-          reject(new Error());
-        } else {
-          resolve(arrayBuffer);
-        }
-      });
-
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(promise);
+    async function resolveBufferViewAfterDestroy(rejectPromise) {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
+        rejectPromise
+          ? Promise.reject(new Error())
+          : Promise.resolve(arrayBuffer)
+      );
 
       const vertexBufferLoader = new GltfVertexBufferLoader({
         resourceCache: ResourceCache,
@@ -765,13 +733,13 @@ describe(
 
       expect(vertexBufferLoader.buffer).not.toBeDefined();
 
-      vertexBufferLoader.load();
+      const promise = vertexBufferLoader.load();
       vertexBufferLoader.destroy();
 
-      return vertexBufferLoader.promise.finally(function () {
-        expect(vertexBufferLoader.buffer).not.toBeDefined();
-        expect(vertexBufferLoader.isDestroyed()).toBe(true);
-      });
+      await expectAsync(promise).toBeResolved();
+
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
+      expect(vertexBufferLoader.isDestroyed()).toBe(true);
     }
 
     it("handles resolving buffer view after destroy", function () {
@@ -782,7 +750,7 @@ describe(
       return resolveBufferViewAfterDestroy(true);
     });
 
-    function resolveDracoAfterDestroy(rejectPromise) {
+    async function resolveDracoAfterDestroy(rejectPromise) {
       const vertexBufferLoader = new GltfVertexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
@@ -820,14 +788,14 @@ describe(
 
       expect(vertexBufferLoader.buffer).not.toBeDefined();
 
-      vertexBufferLoader.load();
-      loaderProcess(vertexBufferLoader, scene);
-      return vertexBufferLoader.promise.finally(function () {
-        expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
+      await vertexBufferLoader.load(); // Destroy happens in mock function above
+      await expectAsync(
+        waitForLoaderProcess(vertexBufferLoader, scene)
+      ).toBeResolved();
 
-        expect(vertexBufferLoader.buffer).not.toBeDefined();
-        expect(vertexBufferLoader.isDestroyed()).toBe(true);
-      });
+      expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
+      expect(vertexBufferLoader.buffer).not.toBeDefined();
+      expect(vertexBufferLoader.isDestroyed()).toBe(true);
     }
 
     it("handles resolving draco after destroy", function () {

@@ -1,16 +1,12 @@
 import {
-  Cartesian2,
   Color,
   defaultValue,
   defined,
   JulianDate,
-  ImageBasedLighting,
   Resource,
   Cesium3DTileContentFactory,
   Cesium3DTileset,
-  PointCloudShading,
   TileBoundingSphere,
-  RuntimeError,
 } from "@cesium/engine";
 
 import pollToPromise from "./pollToPromise.js";
@@ -106,110 +102,34 @@ Cesium3DTilesTester.waitForTilesLoaded = function (scene, tileset) {
   });
 };
 
-Cesium3DTilesTester.waitForReady = function (scene, tileset) {
-  return pollToPromise(function () {
-    scene.renderForSpecs();
-    return tileset.ready;
-  }).then(function () {
-    return tileset;
-  });
-};
-
-Cesium3DTilesTester.loadTileset = function (scene, url, options) {
+Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
   options = defaultValue(options, {});
-  options.url = url;
   options.cullRequestsWhileMoving = defaultValue(
     options.cullRequestsWhileMoving,
     false
   );
+
+  const tileset = await Cesium3DTileset.fromUrl(url, options);
+
   // Load all visible tiles
-  const tileset = scene.primitives.add(new Cesium3DTileset(options));
-  return tileset.readyPromise.then(function () {
-    return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-  });
+  scene.primitives.add(tileset);
+  await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+  return tileset;
 };
 
-Cesium3DTilesTester.loadTileExpectError = function (scene, arrayBuffer, type) {
-  const tileset = {};
-  const url = Resource.createIfNeeded("");
-  expect(function () {
-    return Cesium3DTileContentFactory[type](
-      tileset,
-      mockTile,
-      url,
-      arrayBuffer,
-      0
-    );
-  }).toThrowError(RuntimeError);
-};
-
-Cesium3DTilesTester.loadTile = function (scene, arrayBuffer, type) {
-  const tileset = {
-    _statistics: {
-      batchTableByteLength: 0,
-    },
-    root: {},
-  };
-  const url = Resource.createIfNeeded("");
-  const content = Cesium3DTileContentFactory[type](
-    tileset,
-    mockTile,
-    url,
-    arrayBuffer,
-    0
-  );
-  content.update(tileset, scene.frameState);
-  return content;
-};
-
-// Use counter to prevent models from sharing the same cache key,
-// this fixes tests that load a model with the same invalid url
-let counter = 0;
-Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
-  scene,
+Cesium3DTilesTester.createContentForMockTile = async function (
   arrayBuffer,
   type
 ) {
-  const tileset = {
-    basePath: counter++,
-    _statistics: {
-      batchTableByteLength: 0,
-    },
-    imageBasedLighting: new ImageBasedLighting({
-      imageBasedLighting: new Cartesian2(1, 1),
-    }),
-    pointCloudShading: new PointCloudShading(),
-    featureIdLabel: "featureId_0",
-    instanceFeatureIdLabel: "instanceFeatureId_0",
-  };
+  const tileset = {};
   const url = Resource.createIfNeeded("");
-  const content = Cesium3DTileContentFactory[type](
+  return Cesium3DTileContentFactory[type](
     tileset,
     mockTile,
     url,
     arrayBuffer,
     0
   );
-  content.update(tileset, scene.frameState);
-
-  return content.readyPromise
-    .then(function (content) {
-      fail("should not resolve");
-    })
-    .catch(function (error) {
-      expect(error).toBeDefined();
-    });
-};
-
-Cesium3DTilesTester.resolvesReadyPromise = function (scene, url, options) {
-  return Cesium3DTilesTester.loadTileset(scene, url, options).then(function (
-    tileset
-  ) {
-    const content = tileset.root.content;
-    return content.readyPromise.then(function (content) {
-      expect(content).toBeDefined();
-    });
-  });
 };
 
 Cesium3DTilesTester.tileDestroys = function (scene, url, options) {

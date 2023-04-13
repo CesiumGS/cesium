@@ -46,13 +46,15 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          imageryProvider: new Cesium.TileMapServiceImageryProvider({
-            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-          }),
+          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+            Cesium.TileMapServiceImageryProvider.fromUrl(
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
+            )
+          ),
           baseLayerPicker: false,
         });
 
@@ -78,16 +80,19 @@
         imageryBaseLayer.cutoutRectangle = defaultImageryLayerCutout;
 
         // Fit a SingleTileImageryProvider inside the cutout on the lowest layer
-        layers.addImageryProvider(
-          new Cesium.SingleTileImageryProvider({
-            url: "../images/Cesium_Logo_overlay.png",
-            rectangle: defaultImageryLayerCutout,
-          })
+        const logo = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.SingleTileImageryProvider.fromUrl(
+            "../images/Cesium_Logo_overlay.png",
+            {
+              rectangle: defaultImageryLayerCutout,
+            }
+          )
         );
+        layers.add(logo);
 
         // Add an Earth at Night layer and a "traveling" cutout
-        const earthAtNight = layers.addImageryProvider(
-          new Cesium.IonImageryProvider({ assetId: 3812 })
+        const earthAtNight = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.IonImageryProvider.fromAssetId(3812)
         );
         earthAtNight.cutoutRectangle = Cesium.Rectangle.fromDegrees(
           -100,
@@ -96,6 +101,7 @@
           50
         );
         earthAtNight.alpha = 0.9;
+        layers.add(earthAtNight);
 
         // "traveling" code
         const flags = {
@@ -182,11 +188,14 @@
         }
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

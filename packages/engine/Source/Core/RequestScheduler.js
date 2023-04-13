@@ -76,7 +76,7 @@ RequestScheduler.maximumRequestsPerServer = 6;
  */
 RequestScheduler.requestsByServer = {
   "api.cesium.com:443": 18,
-  "assets.cesium.com:443": 18,
+  "assets.ion.cesium.com:443": 18,
 };
 
 /**

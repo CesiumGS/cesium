@@ -1,8 +1,9 @@
 import Cartesian2 from "./Cartesian2.js";
+import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
+import deprecationWarning from "./deprecationWarning.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
@@ -22,34 +23,220 @@ import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
 const ALL_CHILDREN = 15;
 
 /**
+ * @typedef {Object} ArcGISTiledElevationTerrainProvider.ConstructorOptions
+ *
+ * Initialization options for the ArcGISTiledElevationTerrainProvider constructor
+ *
+ * @property {string} [token] The authorization token to use to connect to the service.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
+ *                    If neither parameter is specified, the WGS84 ellipsoid is used.
+ * @property {Resource|string|Promise<Resource>|Promise<string>} [url] The URL of the ArcGIS ImageServer service. Deprecated.
+ */
+
+/**
+ * Used to track creation details while fetching initial metadata
+ *
+ * @constructor
+ * @private
+ *
+ * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
+ */
+function TerrainProviderBuilder(options) {
+  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
+  this.credit = undefined;
+  this.tilingScheme = undefined;
+  this.height = undefined;
+  this.width = undefined;
+  this.encoding = undefined;
+  this.lodCount = undefined;
+  this.hasAvailability = false;
+  this.tilesAvailable = undefined;
+  this.tilesAvailabilityLoaded = undefined;
+  this.levelZeroMaximumGeometricError = undefined;
+  this.terrainDataStructure = undefined;
+}
+
+/**
+ * Complete ArcGISTiledElevationTerrainProvider creation based on builder values.
+ *
+ * @private
+ *
+ * @param {ArcGISTiledElevationTerrainProvider} provider
+ */
+TerrainProviderBuilder.prototype.build = function (provider) {
+  provider._credit = this.credit;
+  provider._tilingScheme = this.tilingScheme;
+  provider._height = this.height;
+  provider._width = this.width;
+  provider._encoding = this.encoding;
+  provider._lodCount = this.lodCount;
+  provider._hasAvailability = this.hasAvailability;
+  provider._tilesAvailable = this.tilesAvailable;
+  provider._tilesAvailabilityLoaded = this.tilesAvailabilityLoaded;
+  provider._levelZeroMaximumGeometricError = this.levelZeroMaximumGeometricError;
+  provider._terrainDataStructure = this.terrainDataStructure;
+
+  provider._ready = true;
+};
+
+function parseMetadataSuccess(terrainProviderBuilder, metadata) {
+  const copyrightText = metadata.copyrightText;
+  if (defined(copyrightText)) {
+    terrainProviderBuilder.credit = new Credit(copyrightText);
+  }
+
+  const spatialReference = metadata.spatialReference;
+  const wkid = defaultValue(spatialReference.latestWkid, spatialReference.wkid);
+  const extent = metadata.extent;
+  const tilingSchemeOptions = {
+    ellipsoid: terrainProviderBuilder.ellipsoid,
+  };
+  if (wkid === 4326) {
+    tilingSchemeOptions.rectangle = Rectangle.fromDegrees(
+      extent.xmin,
+      extent.ymin,
+      extent.xmax,
+      extent.ymax
+    );
+    terrainProviderBuilder.tilingScheme = new GeographicTilingScheme(
+      tilingSchemeOptions
+    );
+  } else if (wkid === 3857) {
+    // Clamp extent to EPSG 3857 bounds
+    const epsg3857Bounds =
+      Math.PI * terrainProviderBuilder.ellipsoid.maximumRadius;
+    if (metadata.extent.xmax > epsg3857Bounds) {
+      metadata.extent.xmax = epsg3857Bounds;
+    }
+    if (metadata.extent.ymax > epsg3857Bounds) {
+      metadata.extent.ymax = epsg3857Bounds;
+    }
+    if (metadata.extent.xmin < -epsg3857Bounds) {
+      metadata.extent.xmin = -epsg3857Bounds;
+    }
+    if (metadata.extent.ymin < -epsg3857Bounds) {
+      metadata.extent.ymin = -epsg3857Bounds;
+    }
+
+    tilingSchemeOptions.rectangleSouthwestInMeters = new Cartesian2(
+      extent.xmin,
+      extent.ymin
+    );
+    tilingSchemeOptions.rectangleNortheastInMeters = new Cartesian2(
+      extent.xmax,
+      extent.ymax
+    );
+    terrainProviderBuilder.tilingScheme = new WebMercatorTilingScheme(
+      tilingSchemeOptions
+    );
+  } else {
+    throw new RuntimeError("Invalid spatial reference");
+  }
+
+  const tileInfo = metadata.tileInfo;
+  if (!defined(tileInfo)) {
+    throw new RuntimeError("tileInfo is required");
+  }
+
+  terrainProviderBuilder.width = tileInfo.rows + 1;
+  terrainProviderBuilder.height = tileInfo.cols + 1;
+  terrainProviderBuilder.encoding =
+    tileInfo.format === "LERC"
+      ? HeightmapEncoding.LERC
+      : HeightmapEncoding.NONE;
+  terrainProviderBuilder.lodCount = tileInfo.lods.length - 1;
+
+  const hasAvailability = (terrainProviderBuilder.hasAvailability =
+    metadata.capabilities.indexOf("Tilemap") !== -1);
+  if (hasAvailability) {
+    terrainProviderBuilder.tilesAvailable = new TileAvailability(
+      terrainProviderBuilder.tilingScheme,
+      terrainProviderBuilder.lodCount
+    );
+    terrainProviderBuilder.tilesAvailable.addAvailableTileRange(
+      0,
+      0,
+      0,
+      terrainProviderBuilder.tilingScheme.getNumberOfXTilesAtLevel(0),
+      terrainProviderBuilder.tilingScheme.getNumberOfYTilesAtLevel(0)
+    );
+    terrainProviderBuilder.tilesAvailabilityLoaded = new TileAvailability(
+      terrainProviderBuilder.tilingScheme,
+      terrainProviderBuilder.lodCount
+    );
+  }
+
+  terrainProviderBuilder.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+    terrainProviderBuilder.tilingScheme.ellipsoid,
+    terrainProviderBuilder.width,
+    terrainProviderBuilder.tilingScheme.getNumberOfXTilesAtLevel(0)
+  );
+
+  if (metadata.bandCount > 1) {
+    console.log(
+      "ArcGISTiledElevationTerrainProvider: Terrain data has more than 1 band. Using the first one."
+    );
+  }
+
+  if (defined(metadata.minValues) && defined(metadata.maxValues)) {
+    terrainProviderBuilder.terrainDataStructure = {
+      elementMultiplier: 1.0,
+      lowestEncodedHeight: metadata.minValues[0],
+      highestEncodedHeight: metadata.maxValues[0],
+    };
+  } else {
+    terrainProviderBuilder.terrainDataStructure = {
+      elementMultiplier: 1.0,
+    };
+  }
+}
+
+async function requestMetadata(
+  terrainProviderBuilder,
+  metadataResource,
+  provider
+) {
+  try {
+    const metadata = await metadataResource.fetchJson();
+    parseMetadataSuccess(terrainProviderBuilder, metadata);
+  } catch (error) {
+    const message = `An error occurred while accessing ${metadataResource}.`;
+    TileProviderError.reportError(
+      undefined,
+      provider,
+      defined(provider) ? provider._errorEvent : undefined,
+      message
+    );
+
+    throw error;
+  }
+}
+
+/**
+ * <div class="notice">
+ * To construct a CesiumTerrainProvider, call {@link ArcGISTiledElevationTerrainProvider.fromUrl}. Do not call the constructor directly.
+ * </div>
+ *
  * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from Elevation Tiles of an an ArcGIS ImageService.
  *
  * @alias ArcGISTiledElevationTerrainProvider
  * @constructor
  *
- * @param {object} options Object with the following properties:
- * @param {Resource|string|Promise<Resource>|Promise<string>} options.url The URL of the ArcGIS ImageServer service.
- * @param {string} [options.token] The authorization token to use to connect to the service.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
- *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
- *                    If neither parameter is specified, the WGS84 ellipsoid is used.
+ * @param {CesiumTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options
  *
  * @example
- * const terrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
- *   url : 'https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer',
- *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..'
+ * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
+ *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
  * });
  * viewer.terrainProvider = terrainProvider;
  *
- *  @see TerrainProvider
+ * @see TerrainProvider
  */
 function ArcGISTiledElevationTerrainProvider(options) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options) || !defined(options.url)) {
-    throw new DeveloperError("options.url is required.");
-  }
-  //>>includeEnd('debug');
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   this._resource = undefined;
   this._credit = undefined;
@@ -57,21 +244,31 @@ function ArcGISTiledElevationTerrainProvider(options) {
   this._levelZeroMaximumGeometricError = undefined;
   this._maxLevel = undefined;
   this._terrainDataStructure = undefined;
-  this._ready = false;
   this._width = undefined;
   this._height = undefined;
   this._encoding = undefined;
+  this._lodCount = undefined;
   const token = options.token;
 
   this._hasAvailability = false;
   this._tilesAvailable = undefined;
-  this._tilesAvailablityLoaded = undefined;
+  this._tilesAvailabilityLoaded = undefined;
   this._availableCache = {};
+  this._ready = false;
 
-  const that = this;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-  this._readyPromise = Promise.resolve(options.url)
-    .then(function (url) {
+  this._errorEvent = new Event();
+
+  if (defined(options.url)) {
+    deprecationWarning(
+      "ArcGISTiledElevationTerrainProvider options.url",
+      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
+    );
+
+    const that = this;
+    const terrainProviderBuilder = new TerrainProviderBuilder(options);
+    this._readyPromise = Promise.resolve(options.url).then(async function (
+      url
+    ) {
       let resource = Resource.createIfNeeded(url);
       resource.appendForwardSlash();
       if (defined(token)) {
@@ -89,128 +286,12 @@ function ArcGISTiledElevationTerrainProvider(options) {
         },
       });
 
-      return metadataResource.fetchJson();
-    })
-    .then(function (metadata) {
-      const copyrightText = metadata.copyrightText;
-      if (defined(copyrightText)) {
-        that._credit = new Credit(copyrightText);
-      }
-
-      const spatialReference = metadata.spatialReference;
-      const wkid = defaultValue(
-        spatialReference.latestWkid,
-        spatialReference.wkid
-      );
-      const extent = metadata.extent;
-      const tilingSchemeOptions = {
-        ellipsoid: ellipsoid,
-      };
-      if (wkid === 4326) {
-        tilingSchemeOptions.rectangle = Rectangle.fromDegrees(
-          extent.xmin,
-          extent.ymin,
-          extent.xmax,
-          extent.ymax
-        );
-        that._tilingScheme = new GeographicTilingScheme(tilingSchemeOptions);
-      } else if (wkid === 3857) {
-        // Clamp extent to EPSG 3857 bounds
-        const epsg3857Bounds = Math.PI * ellipsoid.maximumRadius;
-        if (metadata.extent.xmax > epsg3857Bounds) {
-          metadata.extent.xmax = epsg3857Bounds;
-        }
-        if (metadata.extent.ymax > epsg3857Bounds) {
-          metadata.extent.ymax = epsg3857Bounds;
-        }
-        if (metadata.extent.xmin < -epsg3857Bounds) {
-          metadata.extent.xmin = -epsg3857Bounds;
-        }
-        if (metadata.extent.ymin < -epsg3857Bounds) {
-          metadata.extent.ymin = -epsg3857Bounds;
-        }
-
-        tilingSchemeOptions.rectangleSouthwestInMeters = new Cartesian2(
-          extent.xmin,
-          extent.ymin
-        );
-        tilingSchemeOptions.rectangleNortheastInMeters = new Cartesian2(
-          extent.xmax,
-          extent.ymax
-        );
-        that._tilingScheme = new WebMercatorTilingScheme(tilingSchemeOptions);
-      } else {
-        return Promise.reject(new RuntimeError("Invalid spatial reference"));
-      }
-
-      const tileInfo = metadata.tileInfo;
-      if (!defined(tileInfo)) {
-        return Promise.reject(new RuntimeError("tileInfo is required"));
-      }
-
-      that._width = tileInfo.rows + 1;
-      that._height = tileInfo.cols + 1;
-      that._encoding =
-        tileInfo.format === "LERC"
-          ? HeightmapEncoding.LERC
-          : HeightmapEncoding.NONE;
-      that._lodCount = tileInfo.lods.length - 1;
-
-      const hasAvailability = (that._hasAvailability =
-        metadata.capabilities.indexOf("Tilemap") !== -1);
-      if (hasAvailability) {
-        that._tilesAvailable = new TileAvailability(
-          that._tilingScheme,
-          that._lodCount
-        );
-        that._tilesAvailable.addAvailableTileRange(
-          0,
-          0,
-          0,
-          that._tilingScheme.getNumberOfXTilesAtLevel(0),
-          that._tilingScheme.getNumberOfYTilesAtLevel(0)
-        );
-        that._tilesAvailablityLoaded = new TileAvailability(
-          that._tilingScheme,
-          that._lodCount
-        );
-      }
-
-      that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-        that._tilingScheme.ellipsoid,
-        that._width,
-        that._tilingScheme.getNumberOfXTilesAtLevel(0)
-      );
-
-      if (metadata.bandCount > 1) {
-        console.log(
-          "ArcGISTiledElevationTerrainProvider: Terrain data has more than 1 band. Using the first one."
-        );
-      }
-
-      if (defined(metadata.minValues) && defined(metadata.maxValues)) {
-        that._terrainDataStructure = {
-          elementMultiplier: 1.0,
-          lowestEncodedHeight: metadata.minValues[0],
-          highestEncodedHeight: metadata.maxValues[0],
-        };
-      } else {
-        that._terrainDataStructure = {
-          elementMultiplier: 1.0,
-        };
-      }
-
-      that._ready = true;
+      await requestMetadata(terrainProviderBuilder, metadataResource, that);
+      terrainProviderBuilder.build(that);
 
       return true;
-    })
-    .catch(function (error) {
-      const message = `An error occurred while accessing ${that._resource.url}.`;
-      TileProviderError.reportError(undefined, that, that._errorEvent, message);
-      return Promise.reject(error);
     });
-
-  this._errorEvent = new Event();
+  }
 }
 
 Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
@@ -230,40 +311,25 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
 
   /**
    * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-   * the source of the terrain.  This function should not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
+   * the source of the terrain.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {Credit}
    * @readonly
    */
   credit: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "credit must not be called before ready returns true."
-        );
-      }
-      //>>includeEnd('debug');
       return this._credit;
     },
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {GeographicTilingScheme}
    * @readonly
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before ready returns true."
-        );
-      }
-      //>>includeEnd('debug');
       return this._tilingScheme;
     },
   },
@@ -273,9 +339,14 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {boolean}
    * @readonly
+   * @deprecated
    */
   ready: {
     get: function () {
+      deprecationWarning(
+        "ArcGISTiledElevationTerrainProvider.ready",
+        "ArcGISTiledElevationTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
+      );
       return this._ready;
     },
   },
@@ -285,9 +356,14 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {Promise<boolean>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "ArcGISTiledElevationTerrainProvider.readyPromise",
+        "ArcGISTiledElevationTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
+      );
       return this._readyPromise;
     },
   },
@@ -295,8 +371,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
   /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
    * indicates which areas of the globe are water rather than land, so they can be rendered
-   * as a reflective surface with animated waves.  This function should not be
-   * called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
+   * as a reflective surface with animated waves.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {boolean}
    * @readonly
@@ -309,7 +384,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
 
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
-   * This function should not be called before {@link ArcGISTiledElevationTerrainProvider#ready} returns true.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {boolean}
    * @readonly
@@ -321,8 +395,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
   },
   /**
    * Gets an object that can be used to determine availability of terrain from this provider, such as
-   * at points and in rectangles.  This function should not be called before
-   * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
+   * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof ArcGISTiledElevationTerrainProvider.prototype
    * @type {TileAvailability}
@@ -330,21 +403,64 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    */
   availability: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "availability must not be called before the terrain provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
       return this._tilesAvailable;
     },
   },
 });
 
 /**
- * Requests the geometry for a given tile.  This function should not be called before
- * {@link ArcGISTiledElevationTerrainProvider#ready} returns true.  The result includes terrain
+ * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
+ * retrieved from Elevation Tiles of an an ArcGIS ImageService.
+ *
+ * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the ArcGIS ImageServer service.
+ * @param {ArcGISTiledElevationTerrainProvider.ConstructorOptions} [options] A url or an object describing initialization options.
+ * @returns {Promise<ArcGISTiledElevationTerrainProvider>}
+ *
+ * @example
+ * const terrainProvider = await Cesium.ArcGISTiledElevationTerrainProvider.fromUrl("https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer", {
+ *   token: "KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg.."
+ * });
+ * viewer.terrainProvider = terrainProvider;
+ *
+ * @exception {RuntimeError} metadata specifies invalid spatial reference
+ * @exception {RuntimeError} metadata does not specify tileInfo
+ */
+ArcGISTiledElevationTerrainProvider.fromUrl = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  url = await Promise.resolve(url);
+  let resource = Resource.createIfNeeded(url);
+  resource.appendForwardSlash();
+  if (defined(options.token)) {
+    resource = resource.getDerivedResource({
+      queryParameters: {
+        token: options.token,
+      },
+    });
+  }
+
+  const metadataResource = resource.getDerivedResource({
+    queryParameters: {
+      f: "pjson",
+    },
+  });
+
+  const terrainProviderBuilder = new TerrainProviderBuilder(options);
+  await requestMetadata(terrainProviderBuilder, metadataResource);
+
+  const provider = new ArcGISTiledElevationTerrainProvider(options);
+  terrainProviderBuilder.build(provider);
+  provider._resource = resource;
+
+  return provider;
+};
+
+/**
+ * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
  *
  * @param {number} x The X coordinate of the tile for which to request geometry.
@@ -361,14 +477,6 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug)
-  if (!this._ready) {
-    throw new DeveloperError(
-      "requestTileGeometry must not be called before the terrain provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   const tileResource = this._resource.getDerivedResource({
     url: `tile/${level}/${y}/${x}`,
     request: request,
@@ -436,7 +544,7 @@ function isTileAvailable(that, level, x, y) {
     return undefined;
   }
 
-  const tilesAvailablityLoaded = that._tilesAvailablityLoaded;
+  const tilesAvailabilityLoaded = that._tilesAvailabilityLoaded;
   const tilesAvailable = that._tilesAvailable;
 
   if (level > that._lodCount) {
@@ -449,7 +557,7 @@ function isTileAvailable(that, level, x, y) {
   }
 
   // or to not be available
-  if (tilesAvailablityLoaded.isTileAvailable(level, x, y)) {
+  if (tilesAvailabilityLoaded.isTileAvailable(level, x, y)) {
     return false;
   }
 
@@ -465,14 +573,6 @@ function isTileAvailable(that, level, x, y) {
 ArcGISTiledElevationTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   level
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this.ready) {
-    throw new DeveloperError(
-      "getLevelMaximumGeometricError must not be called before ready returns true."
-    );
-  }
-  //>>includeEnd('debug');
-
   return this._levelZeroMaximumGeometricError / (1 << level);
 };
 
@@ -685,7 +785,7 @@ function requestAvailability(that, level, x, y) {
     );
 
     // Mark whole area as having availability loaded
-    that._tilesAvailablityLoaded.addAvailableTileRange(
+    that._tilesAvailabilityLoaded.addAvailableTileRange(
       level,
       xOffset,
       yOffset,

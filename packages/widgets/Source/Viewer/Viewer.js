@@ -13,6 +13,7 @@ import {
   DataSourceDisplay,
   defaultValue,
   defined,
+  deprecationWarning,
   destroyObject,
   DeveloperError,
   Entity,
@@ -313,8 +314,10 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
- * @property {ImageryProvider|false} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false.
+ * @property {ImageryProvider|false} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false. Deprecated.
+ * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
+ * @property {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
  * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @property {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
@@ -354,7 +357,7 @@ function enableVRUI(viewer, enabled) {
  * @param {Viewer.ConstructorOptions} [options] Object describing initialization options
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
- * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.imageryProvider instead.
+ * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.baseLayer instead.
  * @exception {DeveloperError} options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.terrainProvider instead.
  *
  * @see Animation
@@ -369,39 +372,43 @@ function enableVRUI(viewer, enabled) {
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
  *
  * @example
- * //Initialize the viewer widget with several custom options and mixins.
- * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     //Start in Columbus Viewer
- *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
- *     //Use Cesium World Terrain
- *     terrainProvider : Cesium.createWorldTerrain(),
- *     //Hide the base layer picker
- *     baseLayerPicker : false,
- *     //Use OpenStreetMaps
- *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
- *         url : 'https://a.tile.openstreetmap.org/'
- *     }),
- *     skyBox : new Cesium.SkyBox({
- *         sources : {
- *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
- *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
- *           positiveY : 'stars/TychoSkymapII.t3_08192x04096_80_py.jpg',
- *           negativeY : 'stars/TychoSkymapII.t3_08192x04096_80_my.jpg',
- *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
- *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
- *         }
+ * // Initialize the viewer widget with several custom options and mixins.
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     // Start in Columbus Viewer
+ *     sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+ *     // Use Cesium World Terrain
+ *     terrain: Cesium.Terrain.fromWorldTerrain(),
+ *     // Hide the base layer picker
+ *     baseLayerPicker: false,
+ *     // Use OpenStreetMaps
+ *     baseLayer: new Cesium.ImageryLayer(OpenStreetMapImageryProvider({
+ *       url: "https://a.tile.openstreetmap.org/"
+ *     })),
+ *     skyBox: new Cesium.SkyBox({
+ *       sources: {
+ *         positiveX: "stars/TychoSkymapII.t3_08192x04096_80_px.jpg",
+ *         negativeX: "stars/TychoSkymapII.t3_08192x04096_80_mx.jpg",
+ *         positiveY: "stars/TychoSkymapII.t3_08192x04096_80_py.jpg",
+ *         negativeY: "stars/TychoSkymapII.t3_08192x04096_80_my.jpg",
+ *         positiveZ: "stars/TychoSkymapII.t3_08192x04096_80_pz.jpg",
+ *         negativeZ: "stars/TychoSkymapII.t3_08192x04096_80_mz.jpg"
+ *       }
  *     }),
  *     // Show Columbus View map with Web Mercator projection
- *     mapProjection : new Cesium.WebMercatorProjection()
- * });
+ *     mapProjection: new Cesium.WebMercatorProjection()
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
  *
- * //Add basic drag and drop functionality
+ * // Add basic drag and drop functionality
  * viewer.extend(Cesium.viewerDragDropMixin);
  *
- * //Show a pop-up alert if we encounter an error when processing a dropped file
+ * // Show a pop-up alert if we encounter an error when processing a dropped file
  * viewer.dropError.addEventListener(function(dropHandler, name, error) {
- *     console.log(error);
- *     window.alert(error);
+ *   console.log(error);
+ *   window.alert(error);
  * });
  */
 function Viewer(container, options) {
@@ -426,7 +433,7 @@ function Viewer(container, options) {
   ) {
     throw new DeveloperError(
       "options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
-Either specify options.imageryProvider instead or set options.baseLayerPicker to true."
+Either specify options.baseLayer instead or set options.baseLayerPicker to true."
     );
   }
 
@@ -479,8 +486,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   // Cesium widget
   const cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
-    imageryProvider:
-      createBaseLayerPicker || defined(options.imageryProvider)
+    baseLayer:
+      createBaseLayerPicker ||
+      defined(options.baseLayer) ||
+      defined(options.imageryProvider)
         ? false
         : undefined,
     clock: clock,
@@ -673,17 +682,49 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
   // These need to be set after the BaseLayerPicker is created in order to take effect
   if (defined(options.imageryProvider) && options.imageryProvider !== false) {
+    deprecationWarning(
+      "Viewer options.imageryProvider",
+      "options.imageryProvider was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use options.baseLayer instead."
+    );
+
     if (createBaseLayerPicker) {
       baseLayerPicker.viewModel.selectedImagery = undefined;
     }
     scene.imageryLayers.removeAll();
     scene.imageryLayers.addImageryProvider(options.imageryProvider);
   }
+
+  if (defined(options.baseLayer) && options.baseLayer !== false) {
+    if (createBaseLayerPicker) {
+      baseLayerPicker.viewModel.selectedImagery = undefined;
+    }
+    scene.imageryLayers.removeAll();
+    scene.imageryLayers.add(options.baseLayer);
+  }
+
   if (defined(options.terrainProvider)) {
     if (createBaseLayerPicker) {
       baseLayerPicker.viewModel.selectedTerrain = undefined;
     }
     scene.terrainProvider = options.terrainProvider;
+  }
+
+  if (defined(options.terrain)) {
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(options.terrainProvider)) {
+      throw new DeveloperError(
+        "Specify either options.terrainProvider or options.terrain."
+      );
+    }
+    //>>includeEnd('debug')
+
+    if (createBaseLayerPicker) {
+      baseLayerPicker.viewModel.selectedTerrain = undefined;
+      // Required as this is otherwise set by the baseLayerPicker
+      scene.globe.depthTestAgainstTerrain = true;
+    }
+
+    scene.setTerrain(options.terrain);
   }
 
   // Navigation Help Button
@@ -2096,8 +2137,22 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
 
     //If the zoom target is a rectangular imagery in an ImageLayer
     if (zoomTarget instanceof ImageryLayer) {
-      zoomTarget
-        .getViewableRectangle()
+      let rectanglePromise;
+
+      if (defined(zoomTarget.imageryProvider)) {
+        // This is here for backward compatibility. It can be removed when readyPromise is removed.
+        rectanglePromise = zoomTarget.imageryProvider._readyPromise.then(() => {
+          return zoomTarget.getImageryRectangle();
+        });
+      } else {
+        rectanglePromise = new Promise((resolve) => {
+          const removeListener = zoomTarget.readyEvent.addEventListener(() => {
+            removeListener();
+            resolve(zoomTarget.getImageryRectangle());
+          });
+        });
+      }
+      rectanglePromise
         .then(function (rectangle) {
           return computeFlyToLocationForRectangle(rectangle, that.scene);
         })
@@ -2194,7 +2249,8 @@ function updateZoomTarget(viewer) {
 
   // If zoomTarget was Cesium3DTileset
   if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
-    return target.readyPromise
+    // This is here for backwards compatibility and can be removed once Cesium3DTileset.readyPromise and VoxelPrimitive.readyPromise is removed.
+    return target._readyPromise
       .then(function () {
         const boundingSphere = target.boundingSphere;
         // If offset was originally undefined then give it base value instead of empty object
@@ -2237,7 +2293,8 @@ function updateZoomTarget(viewer) {
 
   // If zoomTarget was TimeDynamicPointCloud
   if (target instanceof TimeDynamicPointCloud) {
-    return target.readyPromise.then(function () {
+    // This is here for backwards compatibility and can be removed once TimeDynamicPointCloud.readyPromise is removed.
+    return target._readyPromise.then(function () {
       const boundingSphere = target.boundingSphere;
       // If offset was originally undefined then give it base value instead of empty object
       if (!defined(zoomOptions.offset)) {

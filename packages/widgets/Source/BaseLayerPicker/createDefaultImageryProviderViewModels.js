@@ -1,7 +1,7 @@
 import {
   ArcGisMapServerImageryProvider,
   buildModuleUrl,
-  createWorldImagery,
+  createWorldImageryAsync,
   IonImageryProvider,
   IonWorldImageryStyle,
   OpenStreetMapImageryProvider,
@@ -22,7 +22,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps aerial imagery, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.AERIAL,
         });
       },
@@ -38,7 +38,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps aerial imagery with labels, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.AERIAL_WITH_LABELS,
         });
       },
@@ -52,7 +52,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps standard road maps, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.ROAD,
         });
       },
@@ -77,12 +77,12 @@ For more information on this map, including the terms of use, visit us online at
 https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9",
       category: "Other",
       creationFunction: function () {
-        return ArcGisMapServerImageryProvider.fromBasemapType({
-          style: ArcGisBaseMapType.SATELLITE,
-          url:
-            "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromBasemapType(
+          ArcGisBaseMapType.SATELLITE,
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
@@ -102,12 +102,12 @@ down to ~1:9k. For more information on this map, including the terms of use, vis
 https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d",
       category: "Other",
       creationFunction: function () {
-        return ArcGisMapServerImageryProvider.fromBasemapType({
-          style: ArcGisBaseMapType.HILLSHADE,
-          url:
-            "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromBasemapType(
+          ArcGisBaseMapType.HILLSHADE,
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
@@ -130,12 +130,12 @@ For more information on this map, including our terms of use, visit us online at
 https://www.arcgis.com/home/item.html?id=1e126e7520f9466c9ca28b8f28b5e500",
       category: "Other",
       creationFunction: function () {
-        return ArcGisMapServerImageryProvider.fromBasemapType({
-          style: ArcGisBaseMapType.OCEANS,
-          url:
-            "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromBasemapType(
+          ArcGisBaseMapType.OCEANS,
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
@@ -204,7 +204,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "Sentinel-2 cloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 and 2017).",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3954 });
+        return IonImageryProvider.fromAssetId(3954);
       },
     })
   );
@@ -216,7 +216,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
       tooltip: "Blue Marble Next Generation July, 2004 imagery from NASA.",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3845 });
+        return IonImageryProvider.fromAssetId(3845);
       },
     })
   );
@@ -231,7 +231,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "The Earth at night, also known as The Black Marble, is a 500 meter resolution global composite imagery layer released by NASA.",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3812 });
+        return IonImageryProvider.fromAssetId(3812);
       },
     })
   );
@@ -246,9 +246,9 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/",
       category: "Cesium ion",
       creationFunction: function () {
-        return new TileMapServiceImageryProvider({
-          url: buildModuleUrl("Assets/Textures/NaturalEarthII"),
-        });
+        return TileMapServiceImageryProvider.fromUrl(
+          buildModuleUrl("Assets/Textures/NaturalEarthII")
+        );
       },
     })
   );

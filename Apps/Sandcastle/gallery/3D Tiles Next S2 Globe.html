@@ -41,7 +41,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
 
@@ -74,13 +74,16 @@
           easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
         });
 
-        // MAXAR OWT WFF 1.2 Base Globe
-        const tileset = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(691510),
+        let tileset;
+        try {
+          // MAXAR OWT WFF 1.2 Base Globe
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(691510, {
             maximumScreenSpaceError: 4,
-          })
-        );
+          });
+          scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // --- Style ---
 
@@ -228,11 +231,14 @@
         });
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

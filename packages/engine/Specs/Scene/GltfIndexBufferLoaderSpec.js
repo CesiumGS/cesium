@@ -9,6 +9,7 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
+  RuntimeError,
 } from "../../index.js";
 import concatTypedArrays from "../../../../Specs/concatTypedArrays.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -348,11 +349,10 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("rejects promise if buffer view fails to load", function () {
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
-        const error = new Error("404 Not Found");
-        return Promise.reject(error);
-      });
+    it("load throws if buffer view fails to load", async function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
+        Promise.reject(new Error("404 Not Found"))
+      );
 
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
@@ -363,20 +363,13 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
-
-      return indexBufferLoader.promise
-        .then(function (indexBufferLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load index buffer\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
-          );
-        });
+      await expectAsync(indexBufferLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load index buffer\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+      );
     });
 
-    it("rejects promise if draco fails to load", function () {
+    it("process throws if draco fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(dracoArrayBuffer)
       );
@@ -396,20 +389,16 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
-
-      return waitForLoaderProcess(indexBufferLoader, scene)
-        .then(function (indexBufferLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load index buffer\nFailed to load Draco\nDraco decode failed"
-          );
-        });
+      await indexBufferLoader.load();
+      await expectAsync(
+        waitForLoaderProcess(indexBufferLoader, scene)
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load index buffer\nFailed to load Draco\nDraco decode failed"
+      );
     });
 
-    it("loads from accessor into buffer", function () {
+    it("loads from accessor into buffer", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -438,20 +427,20 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
+      await waitForLoaderProcess(indexBufferLoader, scene);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
-          indicesUint16.byteLength
-        );
-        expect(indexBufferLoader.typedArray).toBeUndefined();
-      });
+      expect(() => loaderProcess(indexBufferLoader, scene)).not.toThrow();
+      expect(indexBufferLoader.buffer.sizeInBytes).toBe(
+        indicesUint16.byteLength
+      );
+      expect(indexBufferLoader.typedArray).toBeUndefined();
+      expect(ResourceCache.statistics.geometryByteLength).toBe(
+        indexBufferLoader.buffer.sizeInBytes
+      );
     });
 
-    it("loads from accessor as typed array", function () {
+    it("loads from accessor as typed array", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -467,20 +456,20 @@ describe(
         loadTypedArray: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.typedArray.byteLength).toBe(
-          indicesUint16.byteLength
-        );
-        expect(indexBufferLoader.buffer).toBeUndefined();
-        expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
-      });
+      await waitForLoaderProcess(indexBufferLoader, scene);
+      expect(indexBufferLoader.typedArray.byteLength).toBe(
+        indicesUint16.byteLength
+      );
+      expect(indexBufferLoader.buffer).toBeUndefined();
+      expect(Buffer.createIndexBuffer.calls.count()).toBe(0);
+      expect(ResourceCache.statistics.geometryByteLength).toBe(
+        indexBufferLoader.typedArray.byteLength
+      );
     });
 
-    it("loads from accessor as buffer and typed array", function () {
+    it("loads from accessor as buffer and typed array", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -495,21 +484,21 @@ describe(
         loadTypedArray: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
+      await waitForLoaderProcess(indexBufferLoader, scene);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
-          indicesUint16.byteLength
-        );
-        expect(indexBufferLoader.typedArray.byteLength).toBe(
-          indicesUint16.byteLength
-        );
-      });
+      expect(indexBufferLoader.buffer.sizeInBytes).toBe(
+        indicesUint16.byteLength
+      );
+      expect(indexBufferLoader.typedArray.byteLength).toBe(
+        indicesUint16.byteLength
+      );
+      expect(ResourceCache.statistics.geometryByteLength).toBe(
+        2 * indexBufferLoader.typedArray.byteLength
+      );
     });
 
-    it("creates index buffer synchronously", function () {
+    it("creates index buffer synchronously", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -524,18 +513,15 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
+      await waitForLoaderProcess(indexBufferLoader, scene);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
-          indicesUint16.byteLength
-        );
-      });
+      expect(indexBufferLoader.buffer.sizeInBytes).toBe(
+        indicesUint16.byteLength
+      );
     });
 
-    function loadIndices(accessorId, expectedByteLength) {
+    async function loadIndices(accessorId, expectedByteLength) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -549,13 +535,10 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
+      await waitForLoaderProcess(indexBufferLoader, scene);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer.sizeInBytes).toBe(expectedByteLength);
-      });
+      expect(indexBufferLoader.buffer.sizeInBytes).toBe(expectedByteLength);
     }
 
     it("loads uint32 indices", function () {
@@ -574,7 +557,7 @@ describe(
       return loadIndices(4, indicesUint8.byteLength);
     });
 
-    it("loads from draco", function () {
+    it("loads from draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -599,19 +582,19 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
+      await waitForLoaderProcess(indexBufferLoader, scene);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        loaderProcess(indexBufferLoader, scene); // Check that calling process after load doesn't break anything
-        expect(indexBufferLoader.buffer.sizeInBytes).toBe(
-          decodedIndices.byteLength
-        );
-      });
+      expect(() => loaderProcess(indexBufferLoader, scene)).not.toThrow();
+      expect(indexBufferLoader.buffer.sizeInBytes).toBe(
+        decodedIndices.byteLength
+      );
+      expect(ResourceCache.statistics.geometryByteLength).toBe(
+        indexBufferLoader.buffer.sizeInBytes
+      );
     });
 
-    it("uses the decoded data's type instead of the accessor component type", function () {
+    it("uses the decoded data's type instead of the accessor component type", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -633,17 +616,14 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
+      await waitForLoaderProcess(indexBufferLoader, scene);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.indexDatatype).toBe(5123);
-        expect(indexBufferLoader.buffer.indexDatatype).toBe(5123);
-      });
+      expect(indexBufferLoader.indexDatatype).toBe(5123);
+      expect(indexBufferLoader.buffer.indexDatatype).toBe(5123);
     });
 
-    it("destroys index buffer loaded from buffer view", function () {
+    it("destroys index buffer loaded from buffer view", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -667,24 +647,21 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
+      await waitForLoaderProcess(indexBufferLoader, scene);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer).toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(false);
+      expect(indexBufferLoader.buffer).toBeDefined();
+      expect(indexBufferLoader.isDestroyed()).toBe(false);
 
-        indexBufferLoader.destroy();
+      indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.buffer).not.toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(true);
-        expect(unloadBufferView).toHaveBeenCalled();
-        expect(destroyIndexBuffer).toHaveBeenCalled();
-      });
+      expect(indexBufferLoader.buffer).not.toBeDefined();
+      expect(indexBufferLoader.isDestroyed()).toBe(true);
+      expect(unloadBufferView).toHaveBeenCalled();
+      expect(destroyIndexBuffer).toHaveBeenCalled();
     });
 
-    it("destroys index buffer loaded from draco", function () {
+    it("destroys index buffer loaded from draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(arrayBuffer)
       );
@@ -713,24 +690,21 @@ describe(
         loadBuffer: true,
       });
 
-      indexBufferLoader.load();
+      await indexBufferLoader.load();
+      await waitForLoaderProcess(indexBufferLoader, scene);
 
-      return waitForLoaderProcess(indexBufferLoader, scene).then(function (
-        indexBufferLoader
-      ) {
-        expect(indexBufferLoader.buffer).toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(false);
+      expect(indexBufferLoader.buffer).toBeDefined();
+      expect(indexBufferLoader.isDestroyed()).toBe(false);
 
-        indexBufferLoader.destroy();
+      indexBufferLoader.destroy();
 
-        expect(indexBufferLoader.buffer).not.toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(true);
-        expect(unloadDraco).toHaveBeenCalled();
-        expect(destroyIndexBuffer).toHaveBeenCalled();
-      });
+      expect(indexBufferLoader.buffer).not.toBeDefined();
+      expect(indexBufferLoader.isDestroyed()).toBe(true);
+      expect(unloadDraco).toHaveBeenCalled();
+      expect(destroyIndexBuffer).toHaveBeenCalled();
     });
 
-    function resolveBufferViewAfterDestroy(rejectPromise) {
+    async function resolveBufferViewAfterDestroy(rejectPromise) {
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfUncompressed,
@@ -740,24 +714,21 @@ describe(
         loadBuffer: true,
       });
 
-      const promise = new Promise(function (resolve, reject) {
-        if (rejectPromise) {
-          reject(new Error());
-        } else {
-          resolve(arrayBuffer);
-        }
-      });
-      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(promise);
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
+        rejectPromise
+          ? Promise.reject(new Error())
+          : Promise.resolve(arrayBuffer)
+      );
 
       expect(indexBufferLoader.buffer).not.toBeDefined();
 
-      indexBufferLoader.load();
+      const promise = indexBufferLoader.load();
       indexBufferLoader.destroy();
 
-      return indexBufferLoader.promise.then(function () {
-        expect(indexBufferLoader.buffer).not.toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(true);
-      });
+      await expectAsync(promise).toBeResolved();
+
+      expect(indexBufferLoader.buffer).not.toBeDefined();
+      expect(indexBufferLoader.isDestroyed()).toBe(true);
     }
 
     it("handles resolving buffer view after destroy", function () {
@@ -768,7 +739,7 @@ describe(
       return resolveBufferViewAfterDestroy(true);
     });
 
-    function resolveDracoAfterDestroy(rejectPromise) {
+    async function resolveDracoAfterDestroy(rejectPromise) {
       const indexBufferLoader = new GltfIndexBufferLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
@@ -782,7 +753,6 @@ describe(
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
         // After we resolve, process again, then destroy
         setTimeout(function () {
-          loaderProcess(indexBufferLoader, scene);
           indexBufferLoader.destroy();
         }, 1);
         return Promise.resolve(arrayBuffer);
@@ -803,14 +773,14 @@ describe(
 
       expect(indexBufferLoader.buffer).not.toBeDefined();
 
-      indexBufferLoader.load();
-      loaderProcess(indexBufferLoader, scene);
-      return indexBufferLoader.promise.then(function () {
-        expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
+      await indexBufferLoader.load(); // Destroy is called in mock function above
+      await expectAsync(
+        waitForLoaderProcess(indexBufferLoader, scene)
+      ).toBeResolved();
+      expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
-        expect(indexBufferLoader.buffer).not.toBeDefined();
-        expect(indexBufferLoader.isDestroyed()).toBe(true);
-      });
+      expect(indexBufferLoader.buffer).not.toBeDefined();
+      expect(indexBufferLoader.isDestroyed()).toBe(true);
     }
 
     it("handles resolving draco after destroy", function () {

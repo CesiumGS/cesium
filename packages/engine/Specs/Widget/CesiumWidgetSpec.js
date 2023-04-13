@@ -6,6 +6,7 @@ import {
   ScreenSpaceEventHandler,
   WebMercatorProjection,
   Camera,
+  ImageryLayer,
   ImageryLayerCollection,
   Scene,
   SceneMode,
@@ -141,6 +142,26 @@ describe(
       widget = createCesiumWidget(container, {
         imageryProvider: false,
       });
+      const imageryLayers = widget.scene.imageryLayers;
+      expect(imageryLayers.length).toEqual(0);
+    });
+
+    it("sets expected options baseLayer", function () {
+      const provider = new TileCoordinatesImageryProvider();
+      const options = {
+        baseLayer: new ImageryLayer(provider),
+      };
+      widget = createCesiumWidget(container, options);
+      const imageryLayers = widget.scene.imageryLayers;
+      expect(imageryLayers.length).toEqual(1);
+      expect(imageryLayers.get(0).imageryProvider).toBe(provider);
+    });
+
+    it("does not create imagery if baseLayer option is false", function () {
+      const options = {
+        baseLayer: false,
+      };
+      widget = createCesiumWidget(container, options);
       const imageryLayers = widget.scene.imageryLayers;
       expect(imageryLayers.length).toEqual(0);
     });

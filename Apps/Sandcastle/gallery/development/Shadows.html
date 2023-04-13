@@ -302,7 +302,7 @@
     </div>
 
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
 
@@ -743,12 +743,6 @@
 
         scene.debugShowFramesPerSecond = true;
 
-        const cesiumTerrainProvider = Cesium.createWorldTerrain();
-
-        const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
-
-        updateLocation();
-
         function getModelPosition() {
           if (viewModel.modelPosition === "Ground") {
             return 0.0;
@@ -763,7 +757,15 @@
           }
         }
 
-        function updateLocation() {
+        const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+        let worldTerrain;
+        try {
+          worldTerrain = await Cesium.createWorldTerrainAsync();
+        } catch (error) {
+          console.log(`Failed to create world terrain. ${error}`);
+        }
+
+        async function updateLocation() {
           // Get the height of the terrain at the given longitude/latitude, then create the scene.
           const location = uiOptions.locations[viewModel.location];
           const positions = [
@@ -772,16 +774,29 @@
               location.centerLatitude
             ),
           ];
-          const terrainProvider = viewModel.terrain
-            ? cesiumTerrainProvider
-            : ellipsoidTerrainProvider;
-          globe.terrainProvider = terrainProvider;
-          const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
-          Promise.resolve(promise).then(function (updatedPositions) {
+
+          let terrainProvider = ellipsoidTerrainProvider;
+          if (viewModel.terrain && Cesium.defined(worldTerrain)) {
+            terrainProvider = worldTerrain;
+          }
+
+          scene.terrainProvider = terrainProvider;
+
+          try {
+            const updatedPositions = await Cesium.sampleTerrain(
+              terrainProvider,
+              11,
+              positions
+            );
             location.height = updatedPositions[0].height + getModelPosition();
-            createScene();
-          });
+          } catch (error) {
+            console.log(`There was an error sampling terrain. ${error}`);
+          }
+
+          createScene();
         }
+
+        updateLocation();
 
         function createScene() {
           const location = uiOptions.locations[viewModel.location];
@@ -884,46 +899,46 @@
           }
         }
 
-        function createTileset(resource) {
-          resource
-            .then(function (url) {
-              viewer.scene.primitives.add(
-                new Cesium.Cesium3DTileset({
-                  url: url,
-                })
-              );
-            })
-            .catch(function (error) {
-              console.log(error);
-            });
+        async function createTileset(url) {
+          try {
+            const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+            const location = uiOptions.locations[viewModel.location];
+            if (location.tileset !== url) {
+              // Another option was loaded. Discard the result;
+              return;
+            }
+            viewer.scene.primitives.add(tileset);
+          } catch (error) {
+            console.log(`Error loading tileset: ${error}`);
+          }
         }
 
-        function createModel(url, origin) {
+        async function createModel(url, origin) {
           const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
             origin,
             new Cesium.HeadingPitchRoll()
           );
 
-          const model = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: url,
-              modelMatrix: modelMatrix,
-            })
-          );
+          try {
+            const model = scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                modelMatrix: modelMatrix,
+              })
+            );
 
-          model.readyPromise
-            .then(function (model) {
+            model.readyEvent.addEventListener(() => {
               // Play and loop all animations at half-speed
               model.activeAnimations.addAll({
                 multiplier: 0.5,
                 loop: Cesium.ModelAnimationLoop.REPEAT,
               });
-            })
-            .catch(function (error) {
-              window.alert(error);
             });
 
-          return model;
+            return model;
+          } catch (error) {
+            window.alert(error);
+          }
         }
 
         function createBoxRTC(origin) {
@@ -1081,11 +1096,14 @@
         }, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

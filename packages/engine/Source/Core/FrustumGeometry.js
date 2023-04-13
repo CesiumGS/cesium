@@ -295,8 +295,8 @@ FrustumGeometry._computeNearFarPlanes = function (
 
   let inverseView;
   let inverseViewProjection;
+  const projection = frustum.projectionMatrix;
   if (frustumType === PERSPECTIVE) {
-    const projection = frustum.projectionMatrix;
     const viewProjection = Matrix4.multiply(
       projection,
       view,

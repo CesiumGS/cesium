@@ -129,34 +129,17 @@ if (defined(Object.create)) {
 
 Object.defineProperties(B3dmLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
+   * true if textures are loaded, useful when incrementallyLoadTextures is true
    *
    * @memberof B3dmLoader.prototype
    *
-   * @type {Promise<B3dmLoader>|undefined}
+   * @type {boolean}
    * @readonly
    * @private
    */
-  promise: {
+  texturesLoaded: {
     get: function () {
-      return this._promise;
-    },
-  },
-
-  /**
-   * A promise that resolves when all textures are loaded.
-   * When <code>incrementallyLoadTextures</code> is true this may resolve after
-   * <code>promise</code> resolves.
-   *
-   * @memberof B3dmLoader.prototype
-   *
-   * @type {Promise}
-   * @readonly
-   * @private
-   */
-  texturesLoadedPromise: {
-    get: function () {
-      return this._gltfLoader.texturesLoadedPromise;
+      return this._gltfLoader?.texturesLoaded;
     },
   },
   /**
@@ -196,6 +179,10 @@ Object.defineProperties(B3dmLoader.prototype, {
  * @private
  */
 B3dmLoader.prototype.load = function () {
+  if (defined(this._promise)) {
+    return this._promise;
+  }
+
   const b3dm = B3dmParser.parse(this._arrayBuffer, this._byteOffset);
 
   let batchLength = b3dm.batchLength;
@@ -246,37 +233,21 @@ B3dmLoader.prototype.load = function () {
   this._state = B3dmLoaderState.LOADING;
 
   const that = this;
-  gltfLoader.load();
-  this._promise = gltfLoader.promise
+  this._promise = gltfLoader
+    .load()
     .then(function () {
       if (that.isDestroyed()) {
         return;
       }
 
-      const components = gltfLoader.components;
-
-      // Combine the RTC_CENTER transform from the b3dm and the CESIUM_RTC
-      // transform from the glTF. In practice usually only one or the
-      // other is supplied. If they don't exist the transforms will
-      // be identity matrices.
-      components.transform = Matrix4.multiplyTransformation(
-        that._transform,
-        components.transform,
-        components.transform
-      );
-      createStructuralMetadata(that, components);
-      that._components = components;
-
-      // Now that we have the parsed components, we can release the array buffer
-      that._arrayBuffer = undefined;
-
-      that._state = B3dmLoaderState.READY;
+      that._state = B3dmLoaderState.PROCESSING;
       return that;
     })
     .catch(function (error) {
       if (that.isDestroyed()) {
         return;
       }
+
       return handleError(that, error);
     });
 
@@ -296,13 +267,38 @@ B3dmLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
-  if (this._state === B3dmLoaderState.LOADING) {
-    this._state = B3dmLoaderState.PROCESSING;
+  if (this._state === B3dmLoaderState.READY) {
+    return true;
   }
 
-  if (this._state === B3dmLoaderState.PROCESSING) {
-    this._gltfLoader.process(frameState);
+  if (this._state !== B3dmLoaderState.PROCESSING) {
+    return false;
   }
+
+  const ready = this._gltfLoader.process(frameState);
+  if (!ready) {
+    return false;
+  }
+
+  const components = this._gltfLoader.components;
+
+  // Combine the RTC_CENTER transform from the b3dm and the CESIUM_RTC
+  // transform from the glTF. In practice usually only one or the
+  // other is supplied. If they don't exist the transforms will
+  // be identity matrices.
+  components.transform = Matrix4.multiplyTransformation(
+    this._transform,
+    components.transform,
+    components.transform
+  );
+  createStructuralMetadata(this, components);
+  this._components = components;
+
+  // Now that we have the parsed components, we can release the array buffer
+  this._arrayBuffer = undefined;
+
+  this._state = B3dmLoaderState.READY;
+  return true;
 };
 
 function createStructuralMetadata(loader, components) {
@@ -368,7 +364,7 @@ function processNode(node) {
 }
 
 B3dmLoader.prototype.unload = function () {
-  if (defined(this._gltfLoader)) {
+  if (defined(this._gltfLoader) && !this._gltfLoader.isDestroyed()) {
     this._gltfLoader.unload();
   }
 

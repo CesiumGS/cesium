@@ -2,6 +2,7 @@ import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribu
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
@@ -164,6 +165,7 @@ function ClassificationPrimitive(options) {
   this._ready = false;
 
   const classificationPrimitive = this;
+  // This is here for backwards compatibility. This promise wrapper can be removed once readyPromise is removed.
   this._readyPromise = new Promise((resolve, reject) => {
     classificationPrimitive._completeLoad = () => {
       if (this._ready) {
@@ -340,9 +342,14 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    * @memberof ClassificationPrimitive.prototype
    * @type {Promise<ClassificationPrimitive>}
    * @readonly
+   * @deprecated
    */
   readyPromise: {
     get: function () {
+      deprecationWarning(
+        "ClassificationPrimitive.readyPromise",
+        "ClassificationPrimitive.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for ClassificationPrimitive.ready to return true instead."
+      );
       return this._readyPromise;
     },
   },

@@ -4,6 +4,7 @@ import {
   Request,
   RequestScheduler,
   Resource,
+  RuntimeError,
   WebMercatorTilingScheme,
   GoogleEarthEnterpriseMapsProvider,
   Imagery,
@@ -148,6 +149,187 @@ describe("Scene/GoogleEarthEnterpriseMapsProvider", function () {
         expect(provider.ready).toBe(false);
         expect(e.message).toContain(url);
       });
+  });
+
+  it("fromUrl throws without url", async function () {
+    await expectAsync(
+      GoogleEarthEnterpriseMapsProvider.fromUrl(undefined, 1234)
+    ).toBeRejectedWithDeveloperError();
+  });
+
+  it("fromUrl throws without channel", async function () {
+    await expectAsync(
+      GoogleEarthEnterpriseMapsProvider.fromUrl("url", undefined)
+    ).toBeRejectedWithDeveloperError();
+  });
+
+  it("fromUrl resolves to imagery provider", async function () {
+    const path = "";
+    const url = "http://example.invalid";
+    const channel = 1234;
+
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      Resource._DefaultImplementations.loadWithXhr(
+        "Data/GoogleEarthEnterpriseMapsProvider/good.json",
+        responseType,
+        method,
+        data,
+        headers,
+        deferred
+      );
+    };
+
+    const provider = await GoogleEarthEnterpriseMapsProvider.fromUrl(
+      url,
+      channel,
+      {
+        path: path,
+      }
+    );
+
+    expect(provider).toBeInstanceOf(GoogleEarthEnterpriseMapsProvider);
+  });
+
+  it("fromUrl with Resource resolves to imagery provider", async function () {
+    const path = "";
+    const url = "http://example.invalid";
+    const channel = 1234;
+
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      Resource._DefaultImplementations.loadWithXhr(
+        "Data/GoogleEarthEnterpriseMapsProvider/good.json",
+        responseType,
+        method,
+        data,
+        headers,
+        deferred
+      );
+    };
+
+    const resource = new Resource({
+      url: url,
+    });
+
+    const provider = await GoogleEarthEnterpriseMapsProvider.fromUrl(
+      resource,
+      channel,
+      { path: path }
+    );
+
+    expect(provider).toBeInstanceOf(GoogleEarthEnterpriseMapsProvider);
+  });
+
+  it("fromUrl throws with invalid url", async function () {
+    const url = "http://invalid.localhost";
+    await expectAsync(
+      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234)
+    ).toBeRejectedWithError(
+      RuntimeError,
+      new RegExp("An error occurred while accessing")
+    );
+  });
+
+  it("fromUrl throws when channel cannot be found", async function () {
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      Resource._DefaultImplementations.loadWithXhr(
+        "Data/GoogleEarthEnterpriseMapsProvider/bad_channel.json",
+        responseType,
+        method,
+        data,
+        headers,
+        deferred
+      );
+    };
+
+    const url = "http://invalid.localhost";
+    await expectAsync(
+      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1235)
+    ).toBeRejectedWithError(
+      RuntimeError,
+      new RegExp("Could not find layer with channel \\(id\\) of 1235")
+    );
+  });
+
+  it("fromUrl throws when channel version cannot be found", async function () {
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      Resource._DefaultImplementations.loadWithXhr(
+        "Data/GoogleEarthEnterpriseMapsProvider/bad_version.json",
+        responseType,
+        method,
+        data,
+        headers,
+        deferred
+      );
+    };
+
+    const url = "http://invalid.localhost";
+    await expectAsync(
+      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234)
+    ).toBeRejectedWithError(
+      RuntimeError,
+      new RegExp("Could not find a version in channel \\(id\\) 1234")
+    );
+  });
+
+  it("fromUrl throws when unsupported projection is specified", async function () {
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      Resource._DefaultImplementations.loadWithXhr(
+        "Data/GoogleEarthEnterpriseMapsProvider/bad_projection.json",
+        responseType,
+        method,
+        data,
+        headers,
+        deferred
+      );
+    };
+
+    const url = "http://invalid.localhost";
+    await expectAsync(
+      GoogleEarthEnterpriseMapsProvider.fromUrl(url, 1234)
+    ).toBeRejectedWithError(
+      RuntimeError,
+      new RegExp("Unsupported projection asdf")
+    );
   });
 
   it("returns valid value for hasAlphaChannel", function () {

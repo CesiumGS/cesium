@@ -29,13 +29,15 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          imageryProvider: new Cesium.TileMapServiceImageryProvider({
-            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
-          }),
+          baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+            Cesium.TileMapServiceImageryProvider.fromUrl(
+              Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII")
+            )
+          ),
           baseLayerPicker: false,
           geocoder: false,
         });
@@ -76,7 +78,6 @@
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
           this.ready = true;
-          this.readyPromise = Promise.resolve(this);
         }
 
         const scratchColor = new Cesium.Color();
@@ -299,16 +300,10 @@
             })
           );
 
-          voxelPrimitive.readyPromise
-            .then(function () {
-              viewer.voxelInspector.viewModel.voxelPrimitive = voxelPrimitive;
-              viewer.camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
-                duration: 0.0,
-              });
-            })
-            .catch(function (error) {
-              console.log(error);
-            });
+          viewer.voxelInspector.viewModel.voxelPrimitive = voxelPrimitive;
+          viewer.camera.flyToBoundingSphere(voxelPrimitive.boundingSphere, {
+            duration: 0.0,
+          });
 
           return voxelPrimitive;
         }
@@ -392,11 +387,10 @@
           },
           {
             text: "Box - 3D Tiles",
-            onselect: function () {
-              const provider = new Cesium.Cesium3DTilesVoxelProvider({
-                url:
-                  "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json",
-              });
+            onselect: async function () {
+              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelBox3DTiles/tileset.json"
+              );
               const primitive = createPrimitive(
                 provider,
                 customShaderWhite,
@@ -419,11 +413,10 @@
           },
           {
             text: "Ellipsoid - 3D Tiles",
-            onselect: function () {
-              const provider = new Cesium.Cesium3DTilesVoxelProvider({
-                url:
-                  "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-              });
+            onselect: async function () {
+              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+              );
               const primitive = createPrimitive(
                 provider,
                 customShaderWhite,
@@ -446,11 +439,10 @@
           },
           {
             text: "Cylinder - 3D Tiles",
-            onselect: function () {
-              const provider = new Cesium.Cesium3DTilesVoxelProvider({
-                url:
-                  "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json",
-              });
+            onselect: async function () {
+              const provider = await Cesium.Cesium3DTilesVoxelProvider.fromUrl(
+                "../../SampleData/Cesium3DTiles/Voxel/VoxelCylinder3DTiles/tileset.json"
+              );
               const primitive = createPrimitive(
                 provider,
                 customShaderWhite,
@@ -469,11 +461,14 @@
           console.log(pickedPrimitive);
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

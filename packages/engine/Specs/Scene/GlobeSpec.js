@@ -92,14 +92,15 @@ describe(
       });
     }
 
-    it("renders with enableLighting", function () {
+    it("renders with enableLighting", async function () {
       globe.enableLighting = true;
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Red16x16.png" })
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
       );
+      layerCollection.addImageryProvider(provider);
 
       scene.camera.setView({
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
@@ -113,15 +114,16 @@ describe(
       });
     });
 
-    it("renders with dynamicAtmosphereLighting", function () {
+    it("renders with dynamicAtmosphereLighting", async function () {
       globe.enableLighting = true;
       globe.dynamicAtmosphereLighting = true;
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Red16x16.png" })
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
       );
+      layerCollection.addImageryProvider(provider);
 
       scene.camera.setView({
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
@@ -135,16 +137,17 @@ describe(
       });
     });
 
-    it("renders with dynamicAtmosphereLightingFromSun", function () {
+    it("renders with dynamicAtmosphereLightingFromSun", async function () {
       globe.enableLighting = true;
       globe.dynamicAtmosphereLighting = true;
       globe.dynamicAtmosphereLightingFromSun = true;
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Red16x16.png" })
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
       );
+      layerCollection.addImageryProvider(provider);
 
       scene.camera.setView({
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
@@ -158,14 +161,16 @@ describe(
       });
     });
 
-    it("renders with showWaterEffect set to false", function () {
+    it("renders with showWaterEffect set to false", async function () {
       globe.showWaterEffect = false;
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Red16x16.png" })
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
       );
+
+      layerCollection.addImageryProvider(provider);
 
       scene.camera.setView({
         destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
@@ -179,7 +184,7 @@ describe(
       });
     });
 
-    it("ImageryLayersUpdated event fires when layer is added, hidden, shown, moved, or removed", function () {
+    it("ImageryLayersUpdated event fires when layer is added, hidden, shown, moved, or removed", async function () {
       let timesEventRaised = 0;
       globe.imageryLayersUpdatedEvent.addEventListener(function () {
         ++timesEventRaised;
@@ -187,12 +192,11 @@ describe(
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      const layer = layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Red16x16.png" })
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
       );
-      layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Red16x16.png" })
-      );
+      const layer = layerCollection.addImageryProvider(provider);
+      layerCollection.addImageryProvider(provider);
       return updateUntilDone(globe)
         .then(function () {
           expect(timesEventRaised).toEqual(2);
@@ -223,11 +227,13 @@ describe(
         });
     });
 
-    it("terrainProviderChanged event fires", function () {
-      const terrainProvider = new CesiumTerrainProvider({
-        url: "made/up/url",
-        requestVertexNormals: true,
-      });
+    it("terrainProviderChanged event fires", async function () {
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
+          requestVertexNormals: true,
+        }
+      );
 
       const spyListener = jasmine.createSpy("listener");
       globe.terrainProviderChanged.addEventListener(spyListener);
@@ -237,7 +243,7 @@ describe(
       expect(spyListener).toHaveBeenCalledWith(terrainProvider);
     });
 
-    it("tilesLoaded return true when tile load queue is empty", function () {
+    it("tilesLoaded return true when tile load queue is empty", async function () {
       expect(globe.tilesLoaded).toBe(true);
 
       globe._surface._tileLoadQueueHigh.length = 2;
@@ -258,17 +264,19 @@ describe(
       globe._surface._tileLoadQueueLow.length = 0;
       expect(globe.tilesLoaded).toBe(true);
 
-      const terrainProvider = new CesiumTerrainProvider({
-        url: "made/up/url",
-        requestVertexNormals: true,
-      });
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
+          requestVertexNormals: true,
+        }
+      );
 
       globe.terrainProvider = terrainProvider;
       scene.render();
       expect(globe.tilesLoaded).toBe(false);
     });
 
-    it("renders terrain with enableLighting", function () {
+    it("renders terrain with enableLighting", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2557522.0),
@@ -277,52 +285,51 @@ describe(
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      const imageryProvider = new SingleTileImageryProvider({
-        url: "Data/Images/Red16x16.png",
-      });
+      const imageryProvider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
+      );
       layerCollection.addImageryProvider(imageryProvider);
-      return imageryProvider.readyPromise.then(function () {
-        Resource._Implementations.loadWithXhr = function (
-          url,
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
-          overrideMimeType
-        ) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred
-          );
-        };
+          deferred
+        );
+      };
 
-        returnVertexNormalTileJson();
+      returnVertexNormalTileJson();
 
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
           requestVertexNormals: true,
-        });
+        }
+      );
 
-        globe.terrainProvider = terrainProvider;
-        scene.camera.setView({
-          destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
-        });
-
-        return updateUntilDone(globe).then(function () {
-          expect(renderOptions).notToRender([0, 0, 0, 255]);
-
-          scene.globe.show = false;
-          expect(renderOptions).toRender([0, 0, 0, 255]);
-        });
+      globe.terrainProvider = terrainProvider;
+      scene.camera.setView({
+        destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
+
+      await updateUntilDone(globe);
+      expect(renderOptions).notToRender([0, 0, 0, 255]);
+
+      scene.globe.show = false;
+      expect(renderOptions).toRender([0, 0, 0, 255]);
     });
 
-    it("renders terrain with lambertDiffuseMultiplier", function () {
+    it("renders terrain with lambertDiffuseMultiplier", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2557522.0),
@@ -331,55 +338,54 @@ describe(
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      const imageryProvider = new SingleTileImageryProvider({
-        url: "Data/Images/Red16x16.png",
-      });
+      const imageryProvider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
+      );
       layerCollection.addImageryProvider(imageryProvider);
-      return imageryProvider.readyPromise.then(function () {
-        Resource._Implementations.loadWithXhr = function (
-          url,
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
-          overrideMimeType
-        ) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred
-          );
-        };
+          deferred
+        );
+      };
 
-        returnVertexNormalTileJson();
+      returnVertexNormalTileJson();
 
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
           requestVertexNormals: true,
-        });
+        }
+      );
 
-        globe.terrainProvider = terrainProvider;
-        scene.camera.setView({
-          destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
-        });
-
-        return updateUntilDone(globe).then(function () {
-          let initialRgba;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            initialRgba = rgba;
-            expect(renderOptions).notToRender([0, 0, 0, 255]);
-          });
-          globe.lambertDiffuseMultiplier = 10.0;
-          expect(renderOptions).notToRender(initialRgba);
-        });
+      globe.terrainProvider = terrainProvider;
+      scene.camera.setView({
+        destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
       });
+
+      await updateUntilDone(globe);
+      let initialRgba;
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        initialRgba = rgba;
+        expect(renderOptions).notToRender([0, 0, 0, 255]);
+      });
+      globe.lambertDiffuseMultiplier = 10.0;
+      expect(renderOptions).notToRender(initialRgba);
     });
 
-    it("renders terrain with vertexShadowDarkness", function () {
+    it("renders terrain with vertexShadowDarkness", async function () {
       const renderOptions = {
         scene: scene,
         time: new JulianDate(2557522.0),
@@ -388,117 +394,116 @@ describe(
 
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      const imageryProvider = new SingleTileImageryProvider({
-        url: "Data/Images/Red16x16.png",
-      });
+      const imageryProvider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
+      );
       layerCollection.addImageryProvider(imageryProvider);
-      return imageryProvider.readyPromise.then(function () {
-        Resource._Implementations.loadWithXhr = function (
-          url,
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
           responseType,
           method,
           data,
           headers,
-          deferred,
-          overrideMimeType
-        ) {
-          Resource._DefaultImplementations.loadWithXhr(
-            "Data/CesiumTerrainTileJson/tile.vertexnormals.terrain",
-            responseType,
-            method,
-            data,
-            headers,
-            deferred
-          );
-        };
+          deferred
+        );
+      };
 
-        returnVertexNormalTileJson();
+      returnVertexNormalTileJson();
 
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url",
+        {
           requestVertexNormals: true,
-        });
+        }
+      );
 
-        globe.terrainProvider = terrainProvider;
-        scene.camera.setView({
-          destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
-        });
+      globe.terrainProvider = terrainProvider;
+      scene.camera.setView({
+        destination: new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+      });
 
-        return updateUntilDone(globe).then(function () {
-          let initialRgba;
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            initialRgba = rgba;
-            expect(renderOptions).notToRender([0, 0, 0, 255]);
-            globe.vertexShadowDarkness = 0.1;
-            expect(renderOptions).notToRender(initialRgba);
-          });
-        });
+      await updateUntilDone(globe);
+      let initialRgba;
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        initialRgba = rgba;
+        expect(renderOptions).notToRender([0, 0, 0, 255]);
+        globe.vertexShadowDarkness = 0.1;
+        expect(renderOptions).notToRender(initialRgba);
       });
     });
 
-    it("renders with hue shift", function () {
+    it("renders with hue shift", async function () {
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Blue.png" })
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Blue.png"
       );
+      layerCollection.addImageryProvider(provider);
 
       scene.camera.flyHome(0.0);
 
-      return updateUntilDone(globe).then(function () {
-        scene.globe.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-        scene.globe.show = true;
+      await updateUntilDone(globe);
+      scene.globe.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.globe.show = true;
+      expect(scene).notToRender([0, 0, 0, 255]);
+      expect(scene).toRenderAndCall(function (rgba) {
+        scene.globe.atmosphereHueShift = 0.1;
         expect(scene).notToRender([0, 0, 0, 255]);
-        expect(scene).toRenderAndCall(function (rgba) {
-          scene.globe.atmosphereHueShift = 0.1;
-          expect(scene).notToRender([0, 0, 0, 255]);
-          expect(scene).notToRender(rgba);
-        });
+        expect(scene).notToRender(rgba);
       });
     });
 
-    it("renders with saturation shift", function () {
+    it("renders with saturation shift", async function () {
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Blue.png" })
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Blue.png"
       );
+      layerCollection.addImageryProvider(provider);
 
       scene.camera.flyHome(0.0);
 
-      return updateUntilDone(globe).then(function () {
-        scene.globe.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-        scene.globe.show = true;
+      await updateUntilDone(globe);
+      scene.globe.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.globe.show = true;
+      expect(scene).notToRender([0, 0, 0, 255]);
+      expect(scene).toRenderAndCall(function (rgba) {
+        scene.globe.atmosphereSaturationShift = 0.1;
         expect(scene).notToRender([0, 0, 0, 255]);
-        expect(scene).toRenderAndCall(function (rgba) {
-          scene.globe.atmosphereSaturationShift = 0.1;
-          expect(scene).notToRender([0, 0, 0, 255]);
-          expect(scene).notToRender(rgba);
-        });
+        expect(scene).notToRender(rgba);
       });
     });
 
-    it("renders with brightness shift", function () {
+    it("renders with brightness shift", async function () {
       const layerCollection = globe.imageryLayers;
       layerCollection.removeAll();
-      layerCollection.addImageryProvider(
-        new SingleTileImageryProvider({ url: "Data/Images/Blue.png" })
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Blue.png"
       );
+      layerCollection.addImageryProvider(provider);
 
       scene.camera.flyHome(0.0);
 
-      return updateUntilDone(globe).then(function () {
-        scene.globe.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
-        scene.globe.show = true;
+      await updateUntilDone(globe);
+      scene.globe.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+      scene.globe.show = true;
+      expect(scene).notToRender([0, 0, 0, 255]);
+      expect(scene).toRenderAndCall(function (rgba) {
+        scene.globe.atmosphereBrightnessShift = 0.1;
         expect(scene).notToRender([0, 0, 0, 255]);
-        expect(scene).toRenderAndCall(function (rgba) {
-          scene.globe.atmosphereBrightnessShift = 0.1;
-          expect(scene).notToRender([0, 0, 0, 255]);
-          expect(scene).notToRender(rgba);
-        });
+        expect(scene).notToRender(rgba);
       });
     });
 

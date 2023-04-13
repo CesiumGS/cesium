@@ -3,6 +3,7 @@ import {
   GltfBufferViewLoader,
   Resource,
   ResourceCache,
+  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/GltfBufferViewLoader", function () {
@@ -101,9 +102,6 @@ describe("Scene/GltfBufferViewLoader", function () {
   const gltfResource = new Resource({
     url: gltfUri,
   });
-  const bufferResource = new Resource({
-    url: "https://example.com/external.bin",
-  });
 
   afterEach(function () {
     ResourceCache.clearForSpecs();
@@ -169,11 +167,10 @@ describe("Scene/GltfBufferViewLoader", function () {
     }).toThrowDeveloperError();
   });
 
-  it("rejects promise if buffer fails to load", function () {
-    const error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
-      return Promise.reject(error);
-    });
+  it("load throws if buffer fails to load", async function () {
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
+      Promise.reject(new Error("404 Not Found"))
+    );
 
     const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
@@ -183,25 +180,20 @@ describe("Scene/GltfBufferViewLoader", function () {
       baseResource: gltfResource,
     });
 
-    bufferViewLoader.load();
-
-    return bufferViewLoader.promise
-      .then(function (bufferViewLoader) {
-        fail();
-      })
-      .catch(function (runtimeError) {
-        expect(runtimeError.message).toBe(
-          "Failed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
-        );
-      });
+    await expectAsync(bufferViewLoader.load()).toBeRejectedWithError(
+      RuntimeError,
+      "Failed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+    );
   });
 
-  it("loads buffer view for embedded buffer", function () {
-    ResourceCache.loadEmbeddedBuffer({
+  it("loads buffer view for embedded buffer", async function () {
+    const bufferLoader = ResourceCache.getEmbeddedBufferLoader({
       parentResource: gltfResource,
       bufferId: 0,
       typedArray: bufferTypedArray,
     });
+
+    await bufferLoader.load();
 
     const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
@@ -210,14 +202,13 @@ describe("Scene/GltfBufferViewLoader", function () {
       gltfResource: gltfResource,
       baseResource: gltfResource,
     });
-    bufferViewLoader.load();
 
-    return bufferViewLoader.promise.then(function (bufferViewLoader) {
-      expect(bufferViewLoader.typedArray).toEqual(new Uint8Array([7, 15, 31]));
-    });
+    await bufferViewLoader.load();
+
+    expect(bufferViewLoader.typedArray).toEqual(new Uint8Array([7, 15, 31]));
   });
 
-  it("loads buffer view for external buffer", function () {
+  it("loads buffer view for external buffer", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       Promise.resolve(bufferArrayBuffer)
     );
@@ -229,14 +220,13 @@ describe("Scene/GltfBufferViewLoader", function () {
       gltfResource: gltfResource,
       baseResource: gltfResource,
     });
-    bufferViewLoader.load();
 
-    return bufferViewLoader.promise.then(function (bufferViewLoader) {
-      expect(bufferViewLoader.typedArray).toEqual(new Uint8Array([7, 15, 31]));
-    });
+    await bufferViewLoader.load();
+
+    expect(bufferViewLoader.typedArray).toEqual(new Uint8Array([7, 15, 31]));
   });
 
-  it("destroys buffer view", function () {
+  it("destroys buffer view", async function () {
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
       Promise.resolve(bufferArrayBuffer)
     );
@@ -256,26 +246,26 @@ describe("Scene/GltfBufferViewLoader", function () {
 
     expect(bufferViewLoader.typedArray).not.toBeDefined();
 
-    bufferViewLoader.load();
+    await bufferViewLoader.load();
 
-    return bufferViewLoader.promise.then(function (bufferViewLoader) {
-      expect(bufferViewLoader.typedArray).toEqual(new Uint8Array([7, 15, 31]));
-      expect(bufferViewLoader.isDestroyed()).toBe(false);
+    expect(bufferViewLoader.typedArray).toEqual(new Uint8Array([7, 15, 31]));
+    expect(bufferViewLoader.isDestroyed()).toBe(false);
 
-      bufferViewLoader.destroy();
+    bufferViewLoader.destroy();
 
-      expect(bufferViewLoader.typedArray).not.toBeDefined();
-      expect(bufferViewLoader.isDestroyed()).toBe(true);
-      expect(unloadBuffer).toHaveBeenCalled();
-    });
+    expect(bufferViewLoader.typedArray).not.toBeDefined();
+    expect(bufferViewLoader.isDestroyed()).toBe(true);
+    expect(unloadBuffer).toHaveBeenCalled();
   });
 
-  it("decodes positions with EXT_meshopt_compression", function () {
-    const bufferLoader = ResourceCache.loadEmbeddedBuffer({
+  it("decodes positions with EXT_meshopt_compression", async function () {
+    const bufferLoader = ResourceCache.getEmbeddedBufferLoader({
       parentResource: gltfResource,
       bufferId: 0,
       typedArray: meshoptPositionTypedArray,
     });
+
+    await bufferLoader.load();
 
     const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
@@ -285,35 +275,18 @@ describe("Scene/GltfBufferViewLoader", function () {
       baseResource: gltfResource,
     });
 
-    bufferViewLoader.load();
-    return bufferLoader.promise
-      .then(function () {
-        bufferViewLoader.process({});
-        return bufferViewLoader.promise;
-      })
-      .then(function (bufferViewLoader) {
-        const decodedPositionBase64 = getBase64FromTypedArray(
-          bufferViewLoader.typedArray
-        );
-        expect(decodedPositionBase64).toEqual(fallbackPositionBufferBase64);
-      });
+    await bufferViewLoader.load();
+
+    const decodedPositionBase64 = getBase64FromTypedArray(
+      bufferViewLoader.typedArray
+    );
+    expect(decodedPositionBase64).toEqual(fallbackPositionBufferBase64);
   });
 
-  function resolveAfterDestroy(rejectPromise) {
-    const fetchPromise = new Promise(function (resolve, reject) {
-      if (rejectPromise) {
-        reject(new Error());
-      } else {
-        resolve(bufferArrayBuffer);
-      }
-    });
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(fetchPromise);
-
-    // Load a copy of the buffer into the cache so that the buffer promise
-    // resolves even if the buffer view loader is destroyed
-    const bufferLoaderCopy = ResourceCache.loadExternalBuffer({
-      resource: bufferResource,
-    });
+  it("handles asynchronous load after destroy", async function () {
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      Promise.resolve(bufferArrayBuffer)
+    );
 
     const bufferViewLoader = new GltfBufferViewLoader({
       resourceCache: ResourceCache,
@@ -328,19 +301,31 @@ describe("Scene/GltfBufferViewLoader", function () {
     const loadPromise = bufferViewLoader.load();
     bufferViewLoader.destroy();
 
-    return loadPromise.finally(function () {
-      expect(bufferViewLoader.typedArray).not.toBeDefined();
-      expect(bufferViewLoader.isDestroyed()).toBe(true);
-
-      ResourceCache.unload(bufferLoaderCopy);
-    });
-  }
-
-  it("handles resolving buffer after destroy", function () {
-    return resolveAfterDestroy(false);
+    await expectAsync(loadPromise).toBeResolved();
+    expect(bufferViewLoader.typedArray).not.toBeDefined();
+    expect(bufferViewLoader.isDestroyed()).toBe(true);
   });
 
-  it("handles rejecting buffer after destroy", function () {
-    return resolveAfterDestroy(true);
+  it("handles asynchronous error after destroy", async function () {
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() =>
+      Promise.reject(new Error())
+    );
+
+    const bufferViewLoader = new GltfBufferViewLoader({
+      resourceCache: ResourceCache,
+      gltf: gltfExternal,
+      bufferViewId: 0,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    expect(bufferViewLoader.typedArray).not.toBeDefined();
+
+    const loadPromise = bufferViewLoader.load();
+    bufferViewLoader.destroy();
+
+    await expectAsync(loadPromise).toBeResolved();
+    expect(bufferViewLoader.typedArray).not.toBeDefined();
+    expect(bufferViewLoader.isDestroyed()).toBe(true);
   });
 });

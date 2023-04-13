@@ -3,6 +3,7 @@ import {
   Cesium3DContentGroup,
   Cesium3DTileset,
   Color,
+  Event,
   HeadingPitchRange,
   Multiple3DTileContent,
   MetadataClass,
@@ -175,10 +176,11 @@ describe(
       ]);
     });
 
-    it("contentsFetchedPromise is undefined until requestInnerContents is successful", function () {
+    it("requestInnerContents returns promise that resolves to content if successful", async function () {
       const mockTileset = {
         statistics: {
           numberOfPendingRequests: 0,
+          numberOfAttemptedRequests: 0,
         },
       };
       const tile = {};
@@ -188,20 +190,25 @@ describe(
         tilesetResource,
         contentsJson
       );
-
-      expect(content.contentsFetchedPromise).not.toBeDefined();
 
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
         return Promise.resolve(makeGltfBuffer());
       });
-      content.requestInnerContents();
-      expect(content.contentsFetchedPromise).toBeDefined();
+
+      const promise = content.requestInnerContents();
+      expect(mockTileset.statistics.numberOfPendingRequests).toBe(3);
+      expect(mockTileset.statistics.numberOfAttemptedRequests).toBe(0);
+
+      await expectAsync(promise).toBeResolvedTo(jasmine.any(Array));
+      expect(mockTileset.statistics.numberOfPendingRequests).toBe(0);
+      expect(mockTileset.statistics.numberOfAttemptedRequests).toBe(0);
     });
 
-    it("contentsFetchedPromise is undefined if no requests are scheduled", function () {
+    it("requestInnerContents returns undefined and updates statistics if all requests cannot be scheduled", function () {
       const mockTileset = {
         statistics: {
           numberOfPendingRequests: 0,
+          numberOfAttemptedRequests: 0,
         },
       };
       const tile = {};
@@ -211,19 +218,55 @@ describe(
         tilesetResource,
         contentsJson
       );
-
-      expect(content.contentsFetchedPromise).not.toBeDefined();
 
       RequestScheduler.maximumRequestsPerServer = 2;
-      content.requestInnerContents();
-
-      expect(content.contentsFetchedPromise).not.toBeDefined();
+      expect(content.requestInnerContents()).toBeUndefined();
+      expect(mockTileset.statistics.numberOfPendingRequests).toBe(0);
+      expect(mockTileset.statistics.numberOfAttemptedRequests).toBe(3);
     });
 
-    it("requestInnerContents returns 0 if successful", function () {
+    it("requestInnerContents handles inner content failures", async function () {
       const mockTileset = {
         statistics: {
           numberOfPendingRequests: 0,
+          numberOfAttemptedRequests: 0,
+        },
+        tileFailed: new Event(),
+      };
+      const tile = {};
+      const content = new Multiple3DTileContent(
+        mockTileset,
+        tile,
+        tilesetResource,
+        contentsJson
+      );
+
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+        return Promise.reject(new Error("my error"));
+      });
+
+      const failureSpy = jasmine.createSpy();
+      mockTileset.tileFailed.addEventListener(failureSpy);
+
+      const promise = content.requestInnerContents();
+      expect(mockTileset.statistics.numberOfPendingRequests).toBe(3);
+      expect(mockTileset.statistics.numberOfAttemptedRequests).toBe(0);
+
+      await expectAsync(promise).toBeResolved();
+      expect(mockTileset.statistics.numberOfPendingRequests).toBe(0);
+      expect(mockTileset.statistics.numberOfAttemptedRequests).toBe(0);
+      expect(failureSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          message: "my error",
+        })
+      );
+    });
+
+    it("requestInnerContents handles cancelled requests", async function () {
+      const mockTileset = {
+        statistics: {
+          numberOfPendingRequests: 0,
+          numberOfAttemptedRequests: 0,
         },
       };
       const tile = {};
@@ -234,41 +277,28 @@ describe(
         contentsJson
       );
 
-      const fetchArray = spyOn(
-        Resource.prototype,
-        "fetchArrayBuffer"
-      ).and.callFake(function () {
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
         return Promise.resolve(makeGltfBuffer());
       });
-      expect(content.requestInnerContents()).toBe(0);
-      expect(fetchArray.calls.count()).toBe(3);
+
+      const promise = content.requestInnerContents();
+      expect(mockTileset.statistics.numberOfPendingRequests).toBe(3);
+      expect(mockTileset.statistics.numberOfAttemptedRequests).toBe(0);
+
+      content.cancelRequests();
+
+      await expectAsync(promise).toBeResolved();
+      expect(mockTileset.statistics.numberOfPendingRequests).toBe(0);
+      expect(mockTileset.statistics.numberOfAttemptedRequests).toBe(3);
     });
 
-    it("requestInnerContents schedules no requests if there are not enough open slots", function () {
-      const mockTileset = {
-        statistics: {
-          numberOfPendingRequests: 0,
-        },
-      };
-      const tile = {};
-      const content = new Multiple3DTileContent(
-        mockTileset,
-        tile,
-        tilesetResource,
-        contentsJson
-      );
-
-      const fetchArray = spyOn(Resource.prototype, "fetchArrayBuffer");
-      RequestScheduler.maximumRequestsPerServer = 2;
-      expect(content.requestInnerContents()).toBe(3);
-      expect(fetchArray).not.toHaveBeenCalled();
-    });
-
-    it("resolves readyPromise", function () {
-      return Cesium3DTilesTester.resolvesReadyPromise(
+    it("becomes ready", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         multipleContentsUrl
       );
+      expect(tileset.root.contentReady).toBeTrue();
+      expect(tileset.root.content).toBeDefined();
     });
 
     it("renders multiple contents", function () {

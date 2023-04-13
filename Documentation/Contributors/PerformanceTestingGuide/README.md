@@ -127,37 +127,29 @@ class Timer {
 
 To time how long it takes for the tileset.json to be fetched and the
 `Cesium3DTileset` to be initialized (not including the tile content), start
-the timer just before creating the tileset, and stop it in the `readyPromise`
+the timer just before creating the tileset with `Cesium3DTileset.fromUrl`, and
+stop it after the asynchronous function has completed.
 
 ```js
 tilesetTimer.start();
-const tileset = new Cesium.Cesium3DTileset({
-  url,
-});
-tileset.maximumScreenSpaceError = 4;
-// and any other initialization code
-
-viewer.scene.primitives.add(tileset);
-
-tileset.readyPromise.then(() => {
-  tilesetTimer.stop();
-  tilesetTimer.print();
-});
+const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+tilesetTimer.stop();
+tilesetTimer.print();
 ```
 
 ### How to measure tile load time
 
 To time how long it takes for all the tiles in the current camera view to load
-(not including the tileset load time), start the timer in the ready promise
-and stop it in the `initialTilesLoaded` event handler. This event is used
+(not including the tileset load time), start the timer after the tileset has
+been created with `Cesium3DTileset.fromUrl` and stop it in the `initialTilesLoaded`
+event handler. This event is used
 because we only care about our initial fixed camera view. `allTilesLoaded`, in
 contrast, may trigger multiple times if the camera moves, which is undesireable
 here.
 
 ```js
-tileset.readyPromise.then(() => {
-  tileTimer.start();
-});
+const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+tileTimer.start();
 
 // This callback is fired the first time that all the visible tiles are loaded.
 // It indicates the end of the test.

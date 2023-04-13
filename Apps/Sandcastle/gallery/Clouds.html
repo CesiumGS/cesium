@@ -29,17 +29,18 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
           infoBox: false,
           shouldAnimate: true,
         });
 
         const scene = viewer.scene;
-        scene.primitives.add(Cesium.createOsmBuildings());
+        const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
+        scene.primitives.add(osmBuildingsTileset);
 
         ///////////////////////////
         // Create clouds
@@ -266,13 +267,15 @@
           },
         });
 
-        scene.fog.density = 1.15e-4;
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
+        scene.fog.density = 1.15e-4; //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

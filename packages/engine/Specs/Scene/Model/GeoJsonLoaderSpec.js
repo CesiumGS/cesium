@@ -55,18 +55,19 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    function loadGeoJson(geoJsonPath) {
-      return Resource.fetchJson({
+    async function loadGeoJson(geoJsonPath) {
+      const json = await Resource.fetchJson({
         url: geoJsonPath,
-      }).then(function (json) {
-        const loader = new GeoJsonLoader({
-          geoJson: json,
-        });
-        geoJsonLoaders.push(loader);
-        loader.load();
-
-        return waitForLoaderProcess(loader, scene);
       });
+
+      const loader = new GeoJsonLoader({
+        geoJson: json,
+      });
+
+      geoJsonLoaders.push(loader);
+      await loader.load();
+      await waitForLoaderProcess(loader, scene);
+      return loader;
     }
 
     function getAttribute(attributes, semantic, setIndex) {

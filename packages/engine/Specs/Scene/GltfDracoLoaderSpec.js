@@ -5,11 +5,10 @@ import {
   GltfDracoLoader,
   Resource,
   ResourceCache,
-  ResourceLoaderState,
+  RuntimeError,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import loaderProcess from "../../../../Specs/loaderProcess.js";
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 import waitForLoaderProcess from "../../../../Specs/waitForLoaderProcess.js";
 
 describe(
@@ -200,7 +199,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("rejects promise if buffer view fails to load", function () {
+    it("load throws if buffer view fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
         const error = new Error("404 Not Found");
         return Promise.reject(error);
@@ -214,20 +213,13 @@ describe(
         baseResource: gltfResource,
       });
 
-      dracoLoader.load();
-
-      return dracoLoader.promise
-        .then(function (dracoLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load Draco\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
-          );
-        });
+      await expectAsync(dracoLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load Draco\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+      );
     });
 
-    it("rejects promise if draco decoding fails", function () {
+    it("process throws if draco decoding fails", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(bufferArrayBuffer)
       );
@@ -245,20 +237,18 @@ describe(
         baseResource: gltfResource,
       });
 
-      dracoLoader.load();
+      await dracoLoader.load();
 
-      return waitForLoaderProcess(dracoLoader, scene)
-        .then(function (dracoLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load Draco\nDraco decode failed"
-          );
-        });
+      await expectAsync(
+        waitForLoaderProcess(dracoLoader, scene)
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load Draco\nDraco decode failed"
+      );
+      expect(() => loaderProcess(dracoLoader, scene)).not.toThrowError();
     });
 
-    it("loads draco", function () {
+    it("loads draco", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(bufferArrayBuffer)
       );
@@ -281,30 +271,19 @@ describe(
         baseResource: gltfResource,
       });
 
-      dracoLoader.load();
+      await dracoLoader.load();
+      await waitForLoaderProcess(dracoLoader, scene);
 
-      return pollToPromise(function () {
-        loaderProcess(dracoLoader, scene);
-        return (
-          dracoLoader._state === ResourceLoaderState.READY ||
-          dracoLoader._state === ResourceLoaderState.FAILED
-        );
-      })
-        .then(function () {
-          return dracoLoader.promise;
-        })
-        .then(function (dracoLoader) {
-          loaderProcess(dracoLoader, scene); // Check that calling process after load doesn't break anything
-          expect(dracoLoader.decodedData.indices).toBe(
-            decodeDracoResults.indexArray
-          );
-          expect(dracoLoader.decodedData.vertexAttributes).toBe(
-            decodeDracoResults.attributeData
-          );
-        });
+      expect(() => loaderProcess(dracoLoader, scene)).not.toThrowError();
+      expect(dracoLoader.decodedData.indices).toBe(
+        decodeDracoResults.indexArray
+      );
+      expect(dracoLoader.decodedData.vertexAttributes).toBe(
+        decodeDracoResults.attributeData
+      );
     });
 
-    it("destroys draco loader", function () {
+    it("destroys draco loader", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(bufferArrayBuffer)
       );
@@ -326,23 +305,20 @@ describe(
         baseResource: gltfResource,
       });
 
-      dracoLoader.load();
+      await dracoLoader.load();
+      await waitForLoaderProcess(dracoLoader, scene);
 
-      return waitForLoaderProcess(dracoLoader, scene).then(function (
-        dracoLoader
-      ) {
-        expect(dracoLoader.decodedData).toBeDefined();
-        expect(dracoLoader.isDestroyed()).toBe(false);
+      expect(dracoLoader.decodedData).toBeDefined();
+      expect(dracoLoader.isDestroyed()).toBe(false);
 
-        dracoLoader.destroy();
+      dracoLoader.destroy();
 
-        expect(dracoLoader.decodedData).not.toBeDefined();
-        expect(dracoLoader.isDestroyed()).toBe(true);
-        expect(unloadBufferView).toHaveBeenCalled();
-      });
+      expect(dracoLoader.decodedData).not.toBeDefined();
+      expect(dracoLoader.isDestroyed()).toBe(true);
+      expect(unloadBufferView).toHaveBeenCalled();
     });
 
-    function resolveBufferViewAfterDestroy(reject) {
+    async function resolveBufferViewAfterDestroy(reject) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
         if (reject) {
           return Promise.reject(new Error());
@@ -354,15 +330,6 @@ describe(
       spyOn(DracoLoader, "decodeBufferView").and.returnValue(
         Promise.resolve(decodeDracoResults)
       );
-
-      // Load a copy of the buffer view into the cache so that the buffer view
-      // promise resolves even if the draco loader is destroyed
-      const bufferViewLoaderCopy = ResourceCache.loadBufferView({
-        gltf: gltfDraco,
-        bufferViewId: 0,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-      });
 
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
@@ -376,12 +343,11 @@ describe(
 
       const promise = dracoLoader.load();
       dracoLoader.destroy();
-      return promise.finally(function () {
-        expect(dracoLoader.decodedData).not.toBeDefined();
-        expect(dracoLoader.isDestroyed()).toBe(true);
 
-        ResourceCache.unload(bufferViewLoaderCopy);
-      });
+      await expectAsync(promise).toBeResolved();
+
+      expect(dracoLoader.decodedData).not.toBeDefined();
+      expect(dracoLoader.isDestroyed()).toBe(true);
     }
 
     it("handles resolving buffer view after destroy", function () {
@@ -392,7 +358,7 @@ describe(
       return resolveBufferViewAfterDestroy(true);
     });
 
-    function resolveDracoAfterDestroy(rejectPromise) {
+    async function resolveDracoAfterDestroy(rejectPromise) {
       const dracoLoader = new GltfDracoLoader({
         resourceCache: ResourceCache,
         gltf: gltfDraco,
@@ -404,7 +370,6 @@ describe(
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
         // After we resolve, process again, then destroy
         setTimeout(function () {
-          loaderProcess(dracoLoader, scene);
           dracoLoader.destroy();
         }, 1);
         return Promise.resolve(bufferArrayBuffer);
@@ -425,14 +390,12 @@ describe(
 
       expect(dracoLoader.decodedData).not.toBeDefined();
 
-      dracoLoader.load();
-      loaderProcess(dracoLoader, scene);
-      return dracoLoader.promise.finally(function () {
-        expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
+      await dracoLoader.load();
+      await waitForLoaderProcess(dracoLoader, scene); // Destroy happens in mock above
+      expect(decodeBufferView).toHaveBeenCalled(); // Make sure the decode actually starts
 
-        expect(dracoLoader.decodedData).not.toBeDefined();
-        expect(dracoLoader.isDestroyed()).toBe(true);
-      });
+      expect(dracoLoader.decodedData).not.toBeDefined();
+      expect(dracoLoader.isDestroyed()).toBe(true);
     }
 
     it("handles resolving draco after destroy", function () {

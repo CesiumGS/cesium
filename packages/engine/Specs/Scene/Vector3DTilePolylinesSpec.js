@@ -56,14 +56,10 @@ describe(
     });
 
     function loadPolylines(polylines) {
-      let ready = false;
-      polylines.readyPromise.then(function () {
-        ready = true;
-      });
       return pollToPromise(function () {
         polylines.update(scene.frameState);
         scene.frameState.commandList.length = 0;
-        return ready;
+        return polylines.ready;
       });
     }
 
