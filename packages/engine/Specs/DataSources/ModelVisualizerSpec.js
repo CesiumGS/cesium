@@ -750,36 +750,43 @@ describe(
     });
 
     it("does not throw error when globe is not present while zooming to entity", async function () {
-      // Create a custom viewer object without a globe
-      const customEntityCollection = new EntityCollection();
-      const customViewer = {
-        scene: {
-          ...scene,
-          globe: undefined,
-        },
-        entities: customEntityCollection,
-      };
+      // Set the scene's globe to undefined
+      scene.globe = undefined;
 
-      // Create a new ModelVisualizer using the custom viewer
-      const customVisualizer = new ModelVisualizer(customViewer);
+      // Create a new ModelVisualizer using the scene
+      const customVisualizer = new ModelVisualizer(scene);
 
       // Create a new entity with position and model
       const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
-      const testObject = customViewer.entities.getOrCreateEntity("test");
-      const model = new ModelGraphics();
-      testObject.model = model;
-      testObject.position = new ConstantProperty(position);
-      model.uri = new ConstantProperty(boxUrl);
+      scene.entities.add({
+        position: position,
+        model: {
+          uri: boxUrl,
+        },
+      });
 
-      // Try to update the custom visualizer
+      // Update the custom visualizer
+      customVisualizer.update(JulianDate.now());
+
+      // Zoom to the entity
       let errorOccurred = false;
       try {
-        customVisualizer.update(JulianDate.now());
+        await scene.camera.flyTo({
+          destination: position,
+          orientation: {
+            heading: 0,
+            pitch: -Math.PI / 2,
+            roll: 0,
+          },
+          duration: 0,
+        });
+
+        await scene.zoomTo(scene.entities);
       } catch (error) {
         errorOccurred = true;
       }
 
-      // If no error occurred while updating the custom visualizer, the test case passes
+      // If no error occurred while zooming to the entity, the test case passes
       expect(errorOccurred).toBe(false);
     });
   },
