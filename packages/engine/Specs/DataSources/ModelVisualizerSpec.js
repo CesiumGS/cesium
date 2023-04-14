@@ -28,6 +28,7 @@ import {
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import { Viewer } from "../../Source/Widgets/Viewer/Viewer.js";
 
 describe(
   "DataSources/ModelVisualizer",
@@ -749,32 +750,42 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("does not throw error when globe is not present while zooming to entity", async function () {
-      // Temporarily remove the globe
-      const originalGlobe = scene.globe;
-      scene.globe = undefined;
+    it("can zoom to entity when globe is disabled", function () {
+      // Create container element for viewer
+      const container = document.createElement("div");
+      container.id = "cesiumContainer";
+      container.style.width = "640px";
+      container.style.height = "480px";
+      document.body.appendChild(container);
 
-      // Create a new entity with position and model
-      const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
-      const testObject = entityCollection.getOrCreateEntity("test");
-      const model = new ModelGraphics();
-      testObject.model = model;
-      testObject.position = new ConstantProperty(position);
-      model.uri = new ConstantProperty(boxUrl);
+      // Create viewer with globe disabled
+      const viewer = new Viewer(container, {
+        globe: false,
+        infoBox: false,
+        selectionIndicator: false,
+        shadows: true,
+        shouldAnimate: true,
+      });
 
-      // Update the visualizer
-      let errorOccurred = false;
-      try {
-        visualizer.update(JulianDate.now());
-      } catch (error) {
-        errorOccurred = true;
-      }
+      // Create position variable
+      const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000.0);
 
-      // Restore the original globe
-      scene.globe = originalGlobe;
+      // Add entity to viewer
+      const entity = viewer.entities.add({
+        position: position,
+        model: {
+          uri: "../SampleData/models/CesiumAir/Cesium_Air.glb",
+        },
+      });
 
-      // If no error occurred while updating the visualizer, the test case passes
-      expect(errorOccurred).toBe(false);
+      viewer.zoomTo(entity);
+
+      // Verify that no errors occurred
+      expect(viewer.scene).toBeDefined();
+      expect(viewer.scene.errorEvent).toBeUndefined();
+
+      // Remove container element
+      document.body.removeChild(container);
     });
   },
   "WebGL"
