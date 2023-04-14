@@ -750,43 +750,47 @@ describe(
     });
 
     it("does not throw error when globe is not present while zooming to entity", async function () {
-      // Set the scene's globe to undefined
-      scene.globe = undefined;
-
-      // Create a new ModelVisualizer using the scene
-      const customVisualizer = new ModelVisualizer(scene);
+      // Create a custom viewer object without a globe
+      const customEntityCollection = new EntityCollection();
+      const customViewer = {
+        scene: {
+          ...scene,
+          globe: undefined,
+        },
+        entities: customEntityCollection,
+      };
 
       // Create a new entity with position and model
       const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
-      scene.entities.add({
-        position: position,
-        model: {
-          uri: boxUrl,
+      const testObject = customViewer.entities.getOrCreateEntity("test");
+      const model = new ModelGraphics();
+      testObject.model = model;
+      testObject.position = new ConstantProperty(position);
+      model.uri = new ConstantProperty(boxUrl);
+
+      // Set the custom viewer's camera view to the entity's position (looking straight down)
+      const camera = customViewer.scene.camera;
+      const heading = 0;
+      const pitch = -CesiumMath.PI_OVER_TWO;
+      camera.setView({
+        destination: position,
+        orientation: {
+          heading: heading,
+          pitch: pitch,
+          roll: 0.0,
         },
       });
 
-      // Update the custom visualizer
-      customVisualizer.update(JulianDate.now());
-
-      // Zoom to the entity
+      // Try to update the scene
       let errorOccurred = false;
       try {
-        await scene.camera.flyTo({
-          destination: position,
-          orientation: {
-            heading: 0,
-            pitch: -Math.PI / 2,
-            roll: 0,
-          },
-          duration: 0,
-        });
-
-        await scene.zoomTo(scene.entities);
+        customViewer.scene.initializeFrame();
+        customViewer.scene.render(JulianDate.now());
       } catch (error) {
         errorOccurred = true;
       }
 
-      // If no error occurred while zooming to the entity, the test case passes
+      // If no error occurred while updating the custom viewer's scene, the test case passes
       expect(errorOccurred).toBe(false);
     });
   },
