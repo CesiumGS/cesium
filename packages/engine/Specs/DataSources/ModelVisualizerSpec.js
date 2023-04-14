@@ -749,7 +749,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("does not throw error when globe is not present while zooming to entity", async function () {
+    it("does not throw error when globe is not present while zooming to entity", function () {
       // Create a custom viewer object without a globe
       const customEntityCollection = new EntityCollection();
       const customViewer = {
@@ -760,6 +760,9 @@ describe(
         entities: customEntityCollection,
       };
 
+      // Create a new ModelVisualizer using the custom viewer
+      const customVisualizer = new ModelVisualizer(customViewer);
+
       // Create a new entity with position and model
       const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
       const testObject = customViewer.entities.getOrCreateEntity("test");
@@ -768,29 +771,24 @@ describe(
       testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
 
-      // Set the custom viewer's camera view to the entity's position (looking straight down)
-      const camera = customViewer.scene.camera;
-      const heading = 0;
+      // Set the camera view to simulate zooming to the entity
+      const heading = 0.0;
       const pitch = -CesiumMath.PI_OVER_TWO;
-      camera.setView({
+      const roll = 0.0;
+      customViewer.scene.camera.setView({
         destination: position,
-        orientation: {
-          heading: heading,
-          pitch: pitch,
-          roll: 0.0,
-        },
+        orientation: { heading, pitch, roll },
       });
 
-      // Try to update the scene
+      // Try to update the custom visualizer
       let errorOccurred = false;
       try {
-        customViewer.scene.initializeFrame();
-        customViewer.scene.render(JulianDate.now());
+        customVisualizer.update(JulianDate.now());
       } catch (error) {
         errorOccurred = true;
       }
 
-      // If no error occurred while updating the custom viewer's scene, the test case passes
+      // If no error occurred while updating the custom visualizer, the test case passes
       expect(errorOccurred).toBe(false);
     });
   },
