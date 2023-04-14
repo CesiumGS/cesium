@@ -138,8 +138,7 @@ describe("Core/OrthographicFrustum", function () {
   });
 
   it("get orthographic projection matrix", function () {
-    const projectionMatrix = frustum.projectionMatrix;
-    frustum = frustum._offCenterFrustum;
+    frustum = frustum.offCenterFrustum;
     const expected = Matrix4.computeOrthographicOffCenter(
       frustum.left,
       frustum.right,
@@ -149,6 +148,7 @@ describe("Core/OrthographicFrustum", function () {
       frustum.far,
       new Matrix4()
     );
+    const projectionMatrix = frustum.projectionMatrix;
     expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
   });
 
@@ -217,7 +217,7 @@ describe("Core/OrthographicFrustum", function () {
       pixelRatio,
       new Cartesian2()
     );
-    const expected = frustum._offCenterFrustum.getPixelDimensions(
+    const expected = frustum.offCenterFrustum.getPixelDimensions(
       dimensions.x,
       dimensions.y,
       distance,
@@ -239,7 +239,7 @@ describe("Core/OrthographicFrustum", function () {
       pixelRatio,
       new Cartesian2()
     );
-    const expected = frustum._offCenterFrustum.getPixelDimensions(
+    const expected = frustum.offCenterFrustum.getPixelDimensions(
       dimensions.x,
       dimensions.y,
       distance,

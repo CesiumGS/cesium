@@ -2602,9 +2602,8 @@ function rectangleCameraPosition3D(camera, rectangle, result, updateCamera) {
 
     let rightScalar;
     let topScalar;
-    const ratio =
-      camera.frustum._offCenterFrustum.right /
-      camera.frustum._offCenterFrustum.top;
+    const offCenterFrustum = camera.frustum._offCenterFrustum;
+    const ratio = offCenterFrustum.right / offCenterFrustum.top;
     const heightRatio = height * ratio;
     if (width > heightRatio) {
       rightScalar = width;
@@ -2950,8 +2949,9 @@ function getPickRayOrthographic(camera, windowPosition, result) {
   const height = canvas.clientHeight;
 
   let frustum = camera.frustum;
-  if (defined(frustum._offCenterFrustum)) {
-    frustum = frustum._offCenterFrustum;
+  const offCenterFrustum = frustum.offCenterFrustum;
+  if (defined(offCenterFrustum)) {
+    frustum = offCenterFrustum;
   }
   let x = (2.0 / width) * windowPosition.x - 1.0;
   x *= (frustum.right - frustum.left) * 0.5;
@@ -3440,8 +3440,9 @@ function distanceToBoundingSphere3D(camera, radius) {
 
 function distanceToBoundingSphere2D(camera, radius) {
   let frustum = camera.frustum;
-  if (defined(frustum._offCenterFrustum)) {
-    frustum = frustum._offCenterFrustum;
+  const offCenterFrustum = frustum.offCenterFrustum;
+  if (defined(offCenterFrustum)) {
+    frustum = offCenterFrustum;
   }
 
   let right, top;

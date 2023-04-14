@@ -184,6 +184,19 @@ Object.defineProperties(OrthographicFrustum.prototype, {
       return this._offCenterFrustum.projectionMatrix;
     },
   },
+  /**
+   * Gets the orthographic projection matrix computed from the view frustum.
+   * @memberof OrthographicFrustum.prototype
+   * @type {OrthographicOffCenterFrustum}
+   * @readonly
+   * @private
+   */
+  offCenterFrustum: {
+    get: function () {
+      update(this);
+      return this._offCenterFrustum;
+    },
+  },
 });
 
 /**
