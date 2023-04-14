@@ -28,7 +28,7 @@ import {
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import { Viewer } from "../../Source/Widgets/Viewer/Viewer.js";
+import createViewer from "../../../../Specs/createViewer.js";
 
 describe(
   "DataSources/ModelVisualizer",
@@ -759,7 +759,7 @@ describe(
       document.body.appendChild(container);
 
       // Create viewer with globe disabled
-      const viewer = new Viewer(container, {
+      const viewer = createViewer(container, {
         globe: false,
         infoBox: false,
         selectionIndicator: false,
