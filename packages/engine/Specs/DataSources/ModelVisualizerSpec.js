@@ -749,46 +749,31 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("does not throw error when globe is not present while zooming to entity", function () {
-      // Create a custom viewer object without a globe
-      const customEntityCollection = new EntityCollection();
-      const customViewer = {
-        scene: {
-          ...scene,
-          globe: undefined,
-        },
-        entities: customEntityCollection,
-      };
-
-      // Create a new ModelVisualizer using the custom viewer
-      const customVisualizer = new ModelVisualizer(customViewer);
+    it("does not throw error when globe is not present while zooming to entity", async function () {
+      // Temporarily remove the globe
+      const originalGlobe = scene.globe;
+      scene.globe = undefined;
 
       // Create a new entity with position and model
       const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000);
-      const testObject = customViewer.entities.getOrCreateEntity("test");
+      const testObject = entityCollection.getOrCreateEntity("test");
       const model = new ModelGraphics();
       testObject.model = model;
       testObject.position = new ConstantProperty(position);
       model.uri = new ConstantProperty(boxUrl);
 
-      // Set the camera view to simulate zooming to the entity
-      const heading = 0.0;
-      const pitch = -CesiumMath.PI_OVER_TWO;
-      const roll = 0.0;
-      customViewer.scene.camera.setView({
-        destination: position,
-        orientation: { heading, pitch, roll },
-      });
-
-      // Try to update the custom visualizer
+      // Update the visualizer
       let errorOccurred = false;
       try {
-        customVisualizer.update(JulianDate.now());
+        visualizer.update(JulianDate.now());
       } catch (error) {
         errorOccurred = true;
       }
 
-      // If no error occurred while updating the custom visualizer, the test case passes
+      // Restore the original globe
+      scene.globe = originalGlobe;
+
+      // If no error occurred while updating the visualizer, the test case passes
       expect(errorOccurred).toBe(false);
     });
   },
