@@ -1173,8 +1173,9 @@ UniformState.prototype.updateFrustum = function (frustum) {
   this._oneOverLog2FarDepthFromNearPlusOne =
     1.0 / this._log2FarDepthFromNearPlusOne;
 
-  if (defined(frustum._offCenterFrustum)) {
-    frustum = frustum._offCenterFrustum;
+  const offCenterFrustum = frustum.offCenterFrustum;
+  if (defined(offCenterFrustum)) {
+    frustum = offCenterFrustum;
   }
 
   this._frustumPlanes.x = frustum.top;

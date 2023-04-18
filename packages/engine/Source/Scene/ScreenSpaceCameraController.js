@@ -592,7 +592,7 @@ function handleZoom(
   if (camera.frustum instanceof OrthographicFrustum) {
     if (Math.abs(distance) > 0.0) {
       camera.zoomIn(distance);
-      camera._adjustOrthographicFrustum();
+      camera._adjustOrthographicFrustum(true);
     }
     return;
   }
