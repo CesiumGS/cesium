@@ -2,7 +2,7 @@ import {
   PerformanceWatchdog,
   viewerPerformanceWatchdogMixin,
 } from "../../index.js";
-import createViewer from "../../../../Specs/createViewer.js";
+import createViewer from "../createViewer.js";
 
 describe(
   "Widgets/Viewer/viewerPerformanceWatchdogMixin",
