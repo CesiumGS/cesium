@@ -112,7 +112,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @alias Model
  * @internalConstructor
  *
- * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
+ * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model. Deprecated.
  * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally. 
  * @privateParam {object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
@@ -464,7 +464,7 @@ function Model(options) {
   this._completeTexturesLoad = undefined;
   this._rejectTexturesLoad = undefined;
 
-  // This is for backward compatibility. When readyPromise is removed, this block can be too
+  // This is for backward compatibility. When readyPromise is removed, _loader and this block can be removed too
   if (!defined(this._loader._promise)) {
     this._readyPromise = new Promise((resolve, reject) => {
       this._completeLoad = () => {
@@ -2841,26 +2841,26 @@ Model.fromGltf = function (options) {
  * <p>
  * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
  *
- * @param {Object} options Object with the following properties:
- * @param {String|Resource} options.url The url to the .gltf or .glb file.
- * @param {String|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
- * @param {Boolean} [options.show=true] Whether or not to render the model.
+ * @param {object} options Object with the following properties:
+ * @param {string|Resource} options.url The url to the .gltf or .glb file.
+ * @param {string|Resource} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+ * @param {boolean} [options.show=true] Whether or not to render the model.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
- * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
- * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
- * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
- * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
- * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
- * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
- * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+ * @param {number} [options.scale=1.0] A uniform scale applied to this model.
+ * @param {number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
+ * @param {number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @param {object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
+ * @param {boolean} [options.allowPicking=true] When <code>true</code>, each primitive is pickable with {@link Scene#pick}.
+ * @param {boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+ * @param {boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+ * @param {boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
- * @param {Boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
- * @param {Boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
- * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
- * @param {Boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
- * @param {Boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
+ * @param {boolean} [options.releaseGltfJson=false] When true, the glTF JSON is released once the glTF is loaded. This is is especially useful for cases like 3D Tiles, where each .gltf model is unique and caching the glTF JSON is not effective.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
+ * @param {boolean} [options.enableDebugWireframe=false] For debugging only. This must be set to true for debugWireframe to work in WebGL1. This cannot be set after the model has loaded.
+ * @param {boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe. Will only work for WebGL1 if enableDebugWireframe is set to true.
+ * @param {boolean} [options.cull=true]  Whether or not to cull the model using frustum/horizon culling. If the model is part of a 3D Tiles tileset, this property will always be false, since the 3D Tiles culling system is used.
+ * @param {boolean} [options.opaquePass=Pass.OPAQUE] The pass to use in the {@link DrawCommand} for the opaque portions of the model.
  * @param {Axis} [options.upAxis=Axis.Y] The up-axis of the glTF model.
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {CustomShader} [options.customShader] A custom shader. This will add user-defined GLSL code to the vertex and fragment shaders. Using custom shaders with a {@link Cesium3DTileStyle} may lead to undefined behavior.
@@ -2870,28 +2870,31 @@ Model.fromGltf = function (options) {
  * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
  * @param {Color} [options.color] A color that blends with the model's rendered color.
  * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
- * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @param {number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
- * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
- * @param {Boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
- * @param {Boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
+ * @param {number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+ * @param {boolean} [options.enableShowOutline=true] Whether to enable outlines for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time. When false, the showOutlines and outlineColor options are ignored.
+ * @param {boolean} [options.showOutline=true] Whether to display the outline for models using the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. When true, outlines are displayed. When false, outlines are not displayed.
  * @param {Color} [options.outlineColor=Color.BLACK] The color to use when rendering outlines.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
  * @param {ImageBasedLighting} [options.imageBasedLighting] The properties for managing image-based lighting on this model.
- * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- * @param {Boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
+ * @param {boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if the model's color is translucent.
+ * @param {Credit|string} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
- * @param {Boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
- * @param {String|Number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {String|Number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
- * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
+ * @param {boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @param {string|number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
+ * @param {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
  * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
+ * @param {Model.GltfCallback} [options.gltfCallback] A function that is called with the loaded gltf object once loaded.
  *
  * @returns {Promise<Model>} A promise that resolves to the created model when it is ready to render.
  *
  * @exception {RuntimeError} The model failed to load.
+ * @exception {RuntimeError} Unsupported glTF version.
+ * @exception {RuntimeError} Unsupported glTF Extension
  *
  * @example
  * // Load a model and add it to the scene
@@ -2928,6 +2931,28 @@ Model.fromGltf = function (options) {
  *    minimumPixelSize: 128,
  *  });
  *  viewer.scene.primitives.add(model);
+ * } catch (error) {
+ *  console.log(`Failed to load model. ${error}`);
+ * }
+ *
+ * @example
+ * // Load a model and play the last animation at half speed
+ * let animations;
+ * try {
+ *  const model = await Cesium.Model.fromGltfAsync({
+ *    url: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+ *    gltfCallback: gltf => {
+ *      animations = gltf.animations
+ *    }
+ *  });
+ *  viewer.scene.primitives.add(model);
+ *  model.readyEvent.addEventListener(() => {
+ *    model.activeAnimations.add({
+ *      index: animations.length - 1,
+ *      loop: Cesium.ModelAnimationLoop.REPEAT,
+ *      multiplier: 0.5,
+ *    });
+ *  });
  * } catch (error) {
  *  console.log(`Failed to load model. ${error}`);
  * }
@@ -2988,22 +3013,31 @@ Model.fromGltfAsync = async function (options) {
     // Further resource loading is handled synchronously in loader.process(), and requires
     // hooking into model's update() as the frameState is needed
     await loader.load();
-
-    const model = new Model(modelOptions);
-
-    const resourceCredits = model._resource.credits;
-    if (defined(resourceCredits)) {
-      const length = resourceCredits.length;
-      for (let i = 0; i < length; i++) {
-        model._resourceCredits.push(resourceCredits[i]);
-      }
-    }
-
-    return model;
   } catch (error) {
     loader.destroy();
     throw ModelUtility.getError("model", resource, error);
   }
+
+  const gltfCallback = options.gltfCallback;
+  if (defined(gltfCallback)) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.func("options.gltfCallback", gltfCallback);
+    //>>includeEnd('debug');
+
+    gltfCallback(loader.gltfJson);
+  }
+
+  const model = new Model(modelOptions);
+
+  const resourceCredits = model._resource.credits;
+  if (defined(resourceCredits)) {
+    const length = resourceCredits.length;
+    for (let i = 0; i < length; i++) {
+      model._resourceCredits.push(resourceCredits[i]);
+    }
+  }
+
+  return model;
 };
 
 /*
@@ -3213,5 +3247,12 @@ function makeModelOptions(loader, modelType, options) {
     pickObject: options.pickObject,
   };
 }
+
+/**
+ * Interface for the function that is called with the loaded gltf object once loaded.
+ * @callback Model.GltfCallback
+ *
+ * @param {object} gltf The gltf object
+ */
 
 export default Model;
