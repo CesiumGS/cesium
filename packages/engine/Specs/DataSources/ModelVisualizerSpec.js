@@ -39,15 +39,13 @@ describe(
     let scene;
     let entityCollection;
     let visualizer;
-    let originalTerrainProvider;
 
     beforeAll(function () {
       scene = createScene();
-      scene.globe = new Globe();
-      originalTerrainProvider = scene.globe.terrainProvider;
     });
 
     beforeEach(function () {
+      scene.globe = new Globe();
       entityCollection = new EntityCollection();
       visualizer = new ModelVisualizer(scene, entityCollection);
     });
@@ -55,7 +53,6 @@ describe(
     afterEach(function () {
       visualizer = visualizer && visualizer.destroy();
       entityCollection.removeAll();
-      scene.globe.terrainProvider = originalTerrainProvider;
     });
 
     afterAll(function () {
@@ -646,6 +643,44 @@ describe(
           CesiumMath.EPSILON6
         );
       });
+    });
+
+    it("computes bounding sphere where globe is undefined", async function () {
+      scene.globe = undefined;
+
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics();
+      testObject.model = model;
+
+      testObject.position = new ConstantProperty(
+        new Cartesian3(5678, 1234, 1101112)
+      );
+      model.uri = new ConstantProperty(boxUrl);
+      visualizer.update(time);
+
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
+
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      await pollToPromise(function () {
+        scene.render();
+        visualizer.update(time);
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      });
+      expect(state).toBe(BoundingSphereState.DONE);
+      const expected = BoundingSphere.clone(
+        primitive.boundingSphere,
+        new BoundingSphere()
+      );
+      expect(result).toEqual(expected);
     });
 
     it("fails bounding sphere for entity without ModelGraphics", function () {

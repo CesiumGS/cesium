@@ -47,7 +47,7 @@ import {
   Timeline,
 } from "../../index.js";
 
-import createViewer from "../../../../Specs/createViewer.js";
+import createViewer from "../createViewer.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import MockDataSource from "../../../../Specs/MockDataSource.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -1549,6 +1549,34 @@ describe(
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
       });
+    });
+
+    it("zoomTo zooms to entity when globe is disabled", async function () {
+      // Create viewer with globe disabled
+      const viewer = createViewer(container, {
+        globe: false,
+        infoBox: false,
+        selectionIndicator: false,
+        shadows: true,
+        shouldAnimate: true,
+      });
+
+      // Create position variable
+      const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000.0);
+
+      // Add entity to viewer
+      const entity = viewer.entities.add({
+        position: position,
+        model: {
+          uri: "../SampleData/models/CesiumAir/Cesium_Air.glb",
+        },
+      });
+
+      await viewer.zoomTo(entity);
+
+      // Verify that no errors occurred
+      expect(viewer.scene).toBeDefined();
+      expect(viewer.scene.errorEvent).toBeUndefined();
     });
 
     it("flyTo throws if target is not defined", function () {
