@@ -450,7 +450,7 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   const terrainProvider = globe ? globe.terrainProvider : undefined;
 
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
-  if (globe !== undefined && hasHeightReference) {
+  if (defined(globe) && hasHeightReference) {
     const ellipsoid = globe.ellipsoid;
     // We cannot query the availability of the terrain provider till its ready, so the
     // bounding sphere state will remain pending till the terrain provider is ready.

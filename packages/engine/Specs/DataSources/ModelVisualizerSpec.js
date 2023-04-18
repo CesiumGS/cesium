@@ -28,7 +28,6 @@ import {
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
-import createViewer from "../../../../Specs/createViewer.js";
 
 describe(
   "DataSources/ModelVisualizer",
@@ -40,15 +39,13 @@ describe(
     let scene;
     let entityCollection;
     let visualizer;
-    let originalTerrainProvider;
 
     beforeAll(function () {
       scene = createScene();
-      scene.globe = new Globe();
-      originalTerrainProvider = scene.globe.terrainProvider;
     });
 
     beforeEach(function () {
+      scene.globe = new Globe();
       entityCollection = new EntityCollection();
       visualizer = new ModelVisualizer(scene, entityCollection);
     });
@@ -56,7 +53,6 @@ describe(
     afterEach(function () {
       visualizer = visualizer && visualizer.destroy();
       entityCollection.removeAll();
-      scene.globe.terrainProvider = originalTerrainProvider;
     });
 
     afterAll(function () {
@@ -649,6 +645,44 @@ describe(
       });
     });
 
+    it("computes bounding sphere where globe is undefined", async function () {
+      scene.globe = undefined;
+
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const model = new ModelGraphics();
+      testObject.model = model;
+
+      testObject.position = new ConstantProperty(
+        new Cartesian3(5678, 1234, 1101112)
+      );
+      model.uri = new ConstantProperty(boxUrl);
+      visualizer.update(time);
+
+      let primitive;
+      await pollToPromise(function () {
+        primitive = scene.primitives.get(0);
+        return defined(primitive);
+      });
+
+      const result = new BoundingSphere();
+      let state = visualizer.getBoundingSphere(testObject, result);
+      expect(state).toBe(BoundingSphereState.PENDING);
+
+      await pollToPromise(function () {
+        scene.render();
+        visualizer.update(time);
+        state = visualizer.getBoundingSphere(testObject, result);
+        return state !== BoundingSphereState.PENDING;
+      });
+      expect(state).toBe(BoundingSphereState.DONE);
+      const expected = BoundingSphere.clone(
+        primitive.boundingSphere,
+        new BoundingSphere()
+      );
+      expect(result).toEqual(expected);
+    });
+
     it("fails bounding sphere for entity without ModelGraphics", function () {
       const testObject = entityCollection.getOrCreateEntity("test");
       visualizer.update(JulianDate.now());
@@ -748,44 +782,6 @@ describe(
       expect(function () {
         visualizer.getBoundingSphere(testObject, undefined);
       }).toThrowDeveloperError();
-    });
-
-    it("can zoom to entity when globe is disabled", function () {
-      // Create container element for viewer
-      const container = document.createElement("div");
-      container.id = "cesiumContainer";
-      container.style.width = "640px";
-      container.style.height = "480px";
-      document.body.appendChild(container);
-
-      // Create viewer with globe disabled
-      const viewer = createViewer(container, {
-        globe: false,
-        infoBox: false,
-        selectionIndicator: false,
-        shadows: true,
-        shouldAnimate: true,
-      });
-
-      // Create position variable
-      const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000.0);
-
-      // Add entity to viewer
-      const entity = viewer.entities.add({
-        position: position,
-        model: {
-          uri: "../SampleData/models/CesiumAir/Cesium_Air.glb",
-        },
-      });
-
-      viewer.zoomTo(entity);
-
-      // Verify that no errors occurred
-      expect(viewer.scene).toBeDefined();
-      expect(viewer.scene.errorEvent).toBeUndefined();
-
-      // Remove container element
-      document.body.removeChild(container);
     });
   },
   "WebGL"
