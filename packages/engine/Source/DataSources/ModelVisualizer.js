@@ -446,9 +446,8 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   const scene = this._scene;
   const globe = scene.globe;
 
-  // cannot access a terrainprovider if there is not one; formally set to undefined
-  const terrainProvider = globe ? globe.terrainProvider : undefined;
-
+  // cannot access a terrain provider if there is no globe; formally set to undefined
+  const terrainProvider = defined(globe) ? globe.terrainProvider : undefined;
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
   if (defined(globe) && hasHeightReference) {
     const ellipsoid = globe.ellipsoid;
