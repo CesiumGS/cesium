@@ -112,7 +112,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @alias Model
  * @internalConstructor
  *
- * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model. Deprecated.
+ * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
  * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally. 
  * @privateParam {object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
@@ -464,7 +464,7 @@ function Model(options) {
   this._completeTexturesLoad = undefined;
   this._rejectTexturesLoad = undefined;
 
-  // This is for backward compatibility. When readyPromise is removed, _loader and this block can be removed too
+  // This is for backward compatibility. When readyPromise is removed, this block can be too
   if (!defined(this._loader._promise)) {
     this._readyPromise = new Promise((resolve, reject) => {
       this._completeLoad = () => {
