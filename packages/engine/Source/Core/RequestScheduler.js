@@ -1,4 +1,3 @@
-import Uri from "urijs";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defer from "./defer.js";
@@ -32,9 +31,6 @@ requestHeap.reserve(priorityHeapLength);
 
 const activeRequests = [];
 let numberOfActiveRequestsByServer = {};
-
-const pageUri =
-  typeof document !== "undefined" ? new Uri(document.location.href) : new Uri();
 
 const requestCompletedEvent = new Event();
 
@@ -70,13 +66,13 @@ RequestScheduler.maximumRequestsPerServer = 6;
  *
  * @example
  * RequestScheduler.requestsByServer = {
- *   'api.cesium.com:443': 18,
- *   'assets.cesium.com:443': 18
+ *   'api.cesium.com': 18,
+ *   'assets.cesium.com': 18
  * };
  */
 RequestScheduler.requestsByServer = {
-  "api.cesium.com:443": 18,
-  "assets.ion.cesium.com:443": 18,
+  "api.cesium.com": 18,
+  "assets.ion.cesium.com": 18,
 };
 
 /**
@@ -350,20 +346,9 @@ RequestScheduler.getServerKey = function (url) {
   Check.typeOf.string("url", url);
   //>>includeEnd('debug');
 
-  let uri = new Uri(url);
-  if (uri.scheme() === "") {
-    uri = uri.absoluteTo(pageUri);
-    uri.normalize();
-  }
+  const serverKey = new URL(url, location).host;
 
-  let serverKey = uri.authority();
-  if (!/:/.test(serverKey)) {
-    // If the authority does not contain a port number, add port 443 for https or port 80 for http
-    serverKey = `${serverKey}:${uri.scheme() === "https" ? "443" : "80"}`;
-  }
-
-  const length = numberOfActiveRequestsByServer[serverKey];
-  if (!defined(length)) {
+  if (!defined(numberOfActiveRequestsByServer[serverKey])) {
     numberOfActiveRequestsByServer[serverKey] = 0;
   }
 

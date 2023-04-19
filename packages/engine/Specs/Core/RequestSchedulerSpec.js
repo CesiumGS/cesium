@@ -62,12 +62,12 @@ describe("Core/RequestScheduler", function () {
 
   it("getServer with https", function () {
     const server = RequestScheduler.getServerKey("https://test.invalid/1");
-    expect(server).toEqual("test.invalid:443");
+    expect(server).toEqual("test.invalid");
   });
 
   it("getServer with http", function () {
     const server = RequestScheduler.getServerKey("http://test.invalid/1");
-    expect(server).toEqual("test.invalid:80");
+    expect(server).toEqual("test.invalid");
   });
 
   it("honors maximumRequests", function () {
@@ -982,7 +982,7 @@ describe("Core/RequestScheduler", function () {
     let promise;
     const promises = [];
 
-    RequestScheduler.requestsByServer["test.invalid:80"] = 23;
+    RequestScheduler.requestsByServer["test.invalid"] = 23;
 
     const deferred = defer();
     for (let i = 0; i < 23; i++) {
@@ -1029,7 +1029,7 @@ describe("Core/RequestScheduler", function () {
 
     function createRequest() {
       return new Request({
-        url: "https://test.invalid:80/1",
+        url: "https://test.invalid/1",
         requestFunction: requestFunction,
       });
     }
@@ -1037,12 +1037,12 @@ describe("Core/RequestScheduler", function () {
     RequestScheduler.maximumRequestsPerServer = 5;
     promises.push(RequestScheduler.request(createRequest()));
     promises.push(RequestScheduler.request(createRequest()));
-    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80")).toBe(true);
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid")).toBe(true);
 
     promises.push(RequestScheduler.request(createRequest()));
     promises.push(RequestScheduler.request(createRequest()));
     promises.push(RequestScheduler.request(createRequest()));
-    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80")).toBe(false);
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid")).toBe(false);
 
     const length = deferreds.length;
     for (let i = 0; i < length; ++i) {
@@ -1065,7 +1065,7 @@ describe("Core/RequestScheduler", function () {
 
     function createRequest() {
       return new Request({
-        url: "https://test.invalid:80/1",
+        url: "https://test.invalid/1",
         requestFunction: requestFunction,
       });
     }
@@ -1073,12 +1073,8 @@ describe("Core/RequestScheduler", function () {
     RequestScheduler.maximumRequestsPerServer = 5;
     promises.push(RequestScheduler.request(createRequest()));
     promises.push(RequestScheduler.request(createRequest()));
-    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80", 3)).toBe(
-      true
-    );
-    expect(RequestScheduler.serverHasOpenSlots("test.invalid:80", 4)).toBe(
-      false
-    );
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid", 3)).toBe(true);
+    expect(RequestScheduler.serverHasOpenSlots("test.invalid", 4)).toBe(false);
 
     const length = deferreds.length;
     for (let i = 0; i < length; ++i) {
