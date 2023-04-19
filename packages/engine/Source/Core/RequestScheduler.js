@@ -32,6 +32,65 @@ requestHeap.reserve(priorityHeapLength);
 const activeRequests = [];
 let numberOfActiveRequestsByServer = {};
 
+const serversWithUnknownProtocols = new Set();
+let serverProtocols = {};
+
+const protocolObserver = new PerformanceObserver(function (list) {
+  const entries = list.getEntries();
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    const serverKey = RequestScheduler.getServerKey(entry.name);
+    if (!serversWithUnknownProtocols.has(serverKey)) {
+      continue;
+    }
+    serverProtocols[serverKey] = entry.nextHopProtocol;
+    serversWithUnknownProtocols.delete(serverKey);
+    if (serversWithUnknownProtocols.size < 1) {
+      protocolObserver.disconnect();
+      break;
+    }
+  }
+});
+
+const http2Protocols = ["h2", "h2c", "h3"];
+
+/**
+ * Check whether a server is known to use HTTP2 or better.
+ * If the protocol is not known, start observing PerformanceResourceTiming
+ * entries to check the protocol after a request completes
+ *
+ * @param {string} serverKey A string ID for this server. See {@link RequestScheduler.getServerKey}
+ * @returns {boolean} Whether the server is known to use HTTP2 or better
+ *
+ * @private
+ */
+function serverIsKnownToUseHttp2(serverKey) {
+  const protocol = serverProtocols[serverKey];
+  if (defined(protocol)) {
+    return http2Protocols.includes(protocol);
+  }
+  serversWithUnknownProtocols.add(serverKey);
+  if (serversWithUnknownProtocols.size === 1) {
+    protocolObserver.observe({ type: "resource" });
+  }
+  return false;
+}
+
+/**
+ * For a given server, gets the default for the maximum number of simultaneous
+ * requests, based on what we know about the server's protocol (HTTP1 vs HTTP2)
+ *
+ * @param {string} serverKey A string ID for this server. See {@link RequestScheduler.getServerKey}
+ * @returns {number}
+ *
+ * @private
+ */
+function getMaximumRequestsByProtocol(serverKey) {
+  return serverIsKnownToUseHttp2(serverKey)
+    ? RequestScheduler.maximumRequestsPerHttp2Server
+    : RequestScheduler.maximumRequestsPerServer;
+}
+
 const requestCompletedEvent = new Event();
 
 /**
@@ -61,13 +120,22 @@ RequestScheduler.maximumRequests = 50;
 RequestScheduler.maximumRequestsPerServer = 6;
 
 /**
+ * The maximum number of simultaneous active requests per HTTP2 server.
+ * Un-throttled requests or servers specifically listed in
+ * {@link requestsByServer} do not observe this limit.
+ * @type {number}
+ * @default 18
+ */
+RequestScheduler.maximumRequestsPerHttp2Server = 18;
+
+/**
  * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>
  * @type {object}
  *
  * @example
  * RequestScheduler.requestsByServer = {
- *   'api.cesium.com': 18,
- *   'assets.cesium.com': 18
+ *   "api.cesium.com": 18,
+ *   "assets.cesium.com": 18
  * };
  */
 RequestScheduler.requestsByServer = {
@@ -163,7 +231,7 @@ RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
 
   const maxRequests = defaultValue(
     RequestScheduler.requestsByServer[serverKey],
-    RequestScheduler.maximumRequestsPerServer
+    getMaximumRequestsByProtocol(serverKey)
   );
   const hasOpenSlotsServer =
     numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests;
@@ -476,6 +544,9 @@ RequestScheduler.clearForSpecs = function () {
   }
   activeRequests.length = 0;
   numberOfActiveRequestsByServer = {};
+  serverProtocols = {};
+  serversWithUnknownProtocols.clear();
+  protocolObserver.disconnect();
 
   // Clear stats
   statistics.numberOfAttemptedRequests = 0;
