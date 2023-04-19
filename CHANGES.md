@@ -6,7 +6,7 @@
 
 ##### Additions :tada:
 
-- Added `ArcGisMapServerImagery.fromBasemapType`, `ArcGISMapServiceWorldHillshade`, `ArcGISMapServiceWorldImagery`, and `ArcGISMapServiceWorldOcean` for ease of use with the latest ArcGIS Imagery API.[#11098](https://github.com/CesiumGS/cesium/pull/11098)
+- Added `ArcGisMapServerImagery.fromBasemapType`, and `ArcGisBaseMapType`, and `ArcGISMapService` for ease of use with the latest ArcGIS Imagery API.[#11098](https://github.com/CesiumGS/cesium/pull/11098)
 
 ##### Fixes :wrench:
 

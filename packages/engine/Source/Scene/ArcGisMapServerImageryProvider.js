@@ -16,9 +16,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import WebMercatorTilingScheme from "../Core/WebMercatorTilingScheme.js";
-import ArcGISMapServiceWorldImagery from "./ArcGISMapServiceWorldImagery.js";
-import ArcGISMapServiceWorldOcean from "./ArcGISMapServiceWorldOcean.js";
-import ArcGISMapServiceWorldHillshade from "./ArcGISMapServiceWorldHillshade.js";
+import ArcGISMapService from "./ArcGISMapService.js";
 import DiscardMissingTileImagePolicy from "./DiscardMissingTileImagePolicy.js";
 import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
@@ -449,13 +447,13 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       {
         accessToken = defaultValue(
           options.token,
-          ArcGISMapServiceWorldImagery.defaultAccessToken
+          ArcGISMapService.defaultAccessToken
         );
         server = Resource.createIfNeeded(
-          defaultValue(options.url, ArcGISMapServiceWorldImagery.defaultServer)
+          defaultValue(options.url, ArcGISMapService.defaultWorldImageryServer)
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGISMapServiceWorldImagery.getDefaultTokenCredit(
+        const defaultTokenCredit = ArcGISMapService.getDefaultTokenCredit(
           accessToken
         );
         if (defined(defaultTokenCredit)) {
@@ -467,13 +465,13 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       {
         accessToken = defaultValue(
           options.token,
-          ArcGISMapServiceWorldOcean.defaultAccessToken
+          ArcGISMapService.defaultAccessToken
         );
         server = Resource.createIfNeeded(
-          defaultValue(options.url, ArcGISMapServiceWorldOcean.defaultServer)
+          defaultValue(options.url, ArcGISMapService.defaultWorldOceanServer)
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGISMapServiceWorldOcean.getDefaultTokenCredit(
+        const defaultTokenCredit = ArcGISMapService.getDefaultTokenCredit(
           accessToken
         );
         if (defined(defaultTokenCredit)) {
@@ -485,16 +483,16 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
       {
         accessToken = defaultValue(
           options.token,
-          ArcGISMapServiceWorldHillshade.defaultAccessToken
+          ArcGISMapService.defaultAccessToken
         );
         server = Resource.createIfNeeded(
           defaultValue(
             options.url,
-            ArcGISMapServiceWorldHillshade.defaultServer
+            ArcGISMapService.defaultWorldHillshadeServer
           )
         );
         server.appendForwardSlash();
-        const defaultTokenCredit = ArcGISMapServiceWorldHillshade.getDefaultTokenCredit(
+        const defaultTokenCredit = ArcGISMapService.getDefaultTokenCredit(
           accessToken
         );
         if (defined(defaultTokenCredit)) {

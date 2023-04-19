@@ -2,7 +2,7 @@ import Uri from "urijs";
 import {
   ArcGisMapServerImageryProvider,
   ArcGisBaseMapType,
-  ArcGISMapServiceWorldImagery,
+  ArcGISMapService,
   Cartesian2,
   Cartesian3,
   Cartographic,
@@ -332,7 +332,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   });
 
   it("fromBasemapType creates an ImageryProvider with expected values", async function () {
-    const expectedUrl = ArcGISMapServiceWorldImagery.defaultServer;
+    const expectedUrl = ArcGISMapService.defaultWorldImageryServer;
     stubJSONCall(expectedUrl, webMercatorResult);
     const provider = await ArcGisMapServerImageryProvider.fromBasemapType(
       ArcGisBaseMapType.SATELLITE,
@@ -348,7 +348,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
   });
 
   it("fromBasemapType displays default Credit if default token is used", async function () {
-    const expectedUrl = ArcGISMapServiceWorldImagery.defaultServer;
+    const expectedUrl = ArcGISMapService.defaultWorldImageryServer;
     stubJSONCall(expectedUrl, webMercatorResult);
     const provider = await ArcGisMapServerImageryProvider.fromBasemapType(
       ArcGisBaseMapType.SATELLITE

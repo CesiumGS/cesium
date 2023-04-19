@@ -95,7 +95,7 @@ https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9",
       ),
       tooltip:
         "\
-ArcGIS World Hillsahde map portrays elevation as an artistic hillshade. This map is designed to be used as a backdrop for topographical, soil, hydro, \
+ArcGIS World Hillshade map portrays elevation as an artistic hillshade. This map is designed to be used as a backdrop for topographical, soil, hydro, \
 landcover or other outdoor recreational maps. The map was compiled from a variety of sources from several data providers. \
 The basemap has global coverage down to a scale of ~1:72k. In select areas of the United States and Europe, coverage is available \
 down to ~1:9k. For more information on this map, including the terms of use, visit us online at \n\
