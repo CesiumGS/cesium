@@ -1275,8 +1275,9 @@ function screenSpaceError(primitive, frameState, tile) {
 function screenSpaceError2D(primitive, frameState, tile) {
   const camera = frameState.camera;
   let frustum = camera.frustum;
-  if (defined(frustum._offCenterFrustum)) {
-    frustum = frustum._offCenterFrustum;
+  const offCenterFrustum = frustum.offCenterFrustum;
+  if (defined(offCenterFrustum)) {
+    frustum = offCenterFrustum;
   }
 
   const context = frameState.context;

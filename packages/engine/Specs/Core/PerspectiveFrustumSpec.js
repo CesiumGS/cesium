@@ -250,7 +250,7 @@ describe("Core/PerspectiveFrustum", function () {
       pixelRatio,
       new Cartesian2()
     );
-    const expected = frustum._offCenterFrustum.getPixelDimensions(
+    const expected = frustum.offCenterFrustum.getPixelDimensions(
       dimensions.x,
       dimensions.y,
       distance,
@@ -272,7 +272,7 @@ describe("Core/PerspectiveFrustum", function () {
       pixelRatio,
       new Cartesian2()
     );
-    const expected = frustum._offCenterFrustum.getPixelDimensions(
+    const expected = frustum.offCenterFrustum.getPixelDimensions(
       dimensions.x,
       dimensions.y,
       distance,
