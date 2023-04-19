@@ -4,7 +4,7 @@ import Resource from "../Core/Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "AAPK2f7a9a89c6dc40ad926c3499141fecffWllt95jAiepZyFUkh3j3qU-pKQzn9odSccP_HhOnzggTIrQ90vijnlPCzvS4NJ3t";
+  "AAPKd815e334cb774973b7245e23a67f4d08Js7A8e8xvfBpgnZIzp1jbL3FWJTmx7AKG8wa87OwDcWEu4CxQCNiydpPbGpALiTf";
 /**
  * Default options for accessing the ArcGIS image tile service.
  *
@@ -14,16 +14,16 @@ const defaultAccessToken =
  * More info can be found in the {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security/ | ArcGIS developer guide}.
  *
  * @see ArcGisMapServerImageryProvider
- * @namespace ArcGISMapService
+ * @namespace ArcGisMapService
  */
 
-const ArcGISMapService = {};
+const ArcGisMapService = {};
 /**
  * Gets or sets the default ArcGIS access token.
  *
  * @type {string}
  */
-ArcGISMapService.defaultAccessToken = defaultAccessToken;
+ArcGisMapService.defaultAccessToken = defaultAccessToken;
 
 /**
  * Gets or sets the URL of the ArcGIS World Imagery tile service.
@@ -31,7 +31,7 @@ ArcGISMapService.defaultAccessToken = defaultAccessToken;
  * @type {string|Resource}
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer
  */
-ArcGISMapService.defaultWorldImageryServer = new Resource({
+ArcGisMapService.defaultWorldImageryServer = new Resource({
   url:
     "https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer",
 });
@@ -42,7 +42,7 @@ ArcGISMapService.defaultWorldImageryServer = new Resource({
  * @type {string|Resource}
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer
  */
-ArcGISMapService.defaultWorldHillshadeServer = new Resource({
+ArcGisMapService.defaultWorldHillshadeServer = new Resource({
   url:
     "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
 });
@@ -53,7 +53,7 @@ ArcGISMapService.defaultWorldHillshadeServer = new Resource({
  * @type {string|Resource}
  * @default https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer
  */
-ArcGISMapService.defaultWorldOceanServer = new Resource({
+ArcGisMapService.defaultWorldOceanServer = new Resource({
   url:
     "https://ibasemaps-api.arcgis.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer",
 });
@@ -63,7 +63,7 @@ ArcGISMapService.defaultWorldOceanServer = new Resource({
  * @param {string} providedKey
  * @return {string|undefined}
  */
-ArcGISMapService.getDefaultTokenCredit = function (providedKey) {
+ArcGisMapService.getDefaultTokenCredit = function (providedKey) {
   if (providedKey !== defaultAccessToken) {
     return undefined;
   }
@@ -71,8 +71,8 @@ ArcGISMapService.getDefaultTokenCredit = function (providedKey) {
   if (!defined(defaultTokenCredit)) {
     const defaultTokenMessage =
       '<b> \
-            This application is using a default ArcGIS access token. Please assign <i>Cesium.ArcGISMapService.defaultAccessToken</i> \
-            with an access token from your ArcGIS account before using the ArcGIS tile services. \
+            This application is using a default ArcGIS access token. Please assign <i>Cesium.ArcGisMapService.defaultAccessToken</i> \
+            with an API key from your ArcGIS Developer account before using the ArcGIS tile services. \
             You can sign up for a free ArcGIS Developer account at <a href="https://developers.arcgis.com/">https://developers.arcgis.com/</a>.</b>';
 
     defaultTokenCredit = new Credit(defaultTokenMessage, true);
@@ -80,4 +80,4 @@ ArcGISMapService.getDefaultTokenCredit = function (providedKey) {
 
   return defaultTokenCredit;
 };
-export default ArcGISMapService;
+export default ArcGisMapService;
