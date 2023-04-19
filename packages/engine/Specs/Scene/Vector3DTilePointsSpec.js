@@ -15,7 +15,6 @@ import {
   HorizontalOrigin,
   LabelStyle,
   Vector3DTilePoints,
-  Cesium3DTilePointFeature,
   VerticalOrigin,
 } from "../../index.js";
 
