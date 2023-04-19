@@ -987,6 +987,18 @@ Object.defineProperties(Viewer.prototype, {
   },
 
   /**
+   * Manages the list of credits to display on screen and in the lightbox.
+   * @memberof Viewer.prototype
+   *
+   * @type {CreditDisplay}
+   */
+  creditDisplay: {
+    get: function () {
+      return this._cesiumWidget.creditDisplay;
+    },
+  },
+
+  /**
    * Gets the DOM element for the area at the bottom of the window containing the
    * {@link CreditDisplay} and potentially other things.
    * @memberof Viewer.prototype

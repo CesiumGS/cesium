@@ -2509,19 +2509,19 @@ function addCreditsToCreditDisplay(model, frameState) {
   // Add all credits to the credit display.
   const credit = model._credit;
   if (defined(credit)) {
-    creditDisplay.addCredit(credit);
+    creditDisplay.addCreditToNextFrame(credit);
   }
 
   const resourceCredits = model._resourceCredits;
   const resourceCreditsLength = resourceCredits.length;
   for (let c = 0; c < resourceCreditsLength; c++) {
-    creditDisplay.addCredit(resourceCredits[c]);
+    creditDisplay.addCreditToNextFrame(resourceCredits[c]);
   }
 
   const gltfCredits = model._gltfCredits;
   const gltfCreditsLength = gltfCredits.length;
   for (let c = 0; c < gltfCreditsLength; c++) {
-    creditDisplay.addCredit(gltfCredits[c]);
+    creditDisplay.addCreditToNextFrame(gltfCredits[c]);
   }
 }
 

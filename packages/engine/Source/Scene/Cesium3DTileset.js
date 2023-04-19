@@ -3212,7 +3212,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
       for (let i = 0; i < credits.length; ++i) {
         const credit = credits[i];
         credit.showOnScreen = tileset._showCreditsOnScreen;
-        frameState.creditDisplay.addCredit(credit);
+        frameState.creditDisplay.addCreditToNextFrame(credit);
       }
     }
   }

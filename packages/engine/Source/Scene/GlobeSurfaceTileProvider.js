@@ -352,7 +352,7 @@ function updateCredits(surface, frameState) {
     surface._terrainProvider._ready &&
     defined(surface._terrainProvider.credit)
   ) {
-    creditDisplay.addCredit(surface._terrainProvider.credit);
+    creditDisplay.addCreditToNextFrame(surface._terrainProvider.credit);
   }
 
   const imageryLayers = surface._imageryLayers;
@@ -364,7 +364,7 @@ function updateCredits(surface, frameState) {
       layer.imageryProvider._ready &&
       defined(layer.imageryProvider.credit)
     ) {
-      creditDisplay.addCredit(layer.imageryProvider.credit);
+      creditDisplay.addCreditToNextFrame(layer.imageryProvider.credit);
     }
   }
 }
@@ -2098,7 +2098,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       tileCreditIndex < tileCreditLength;
       ++tileCreditIndex
     ) {
-      creditDisplay.addCredit(tileCredits[tileCreditIndex]);
+      creditDisplay.addCreditToNextFrame(tileCredits[tileCreditIndex]);
     }
   }
 
@@ -2719,7 +2719,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
           creditIndex < creditLength;
           ++creditIndex
         ) {
-          creditDisplay.addCredit(credits[creditIndex]);
+          creditDisplay.addCreditToNextFrame(credits[creditIndex]);
         }
       }
 

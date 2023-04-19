@@ -7,6 +7,7 @@ import {
   ClockRange,
   ClockStep,
   Color,
+  CreditDisplay,
   defined,
   EllipsoidTerrainProvider,
   HeadingPitchRange,
@@ -119,6 +120,7 @@ describe(
       expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
       expect(viewer.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
       expect(viewer.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
+      expect(viewer.creditDisplay).toBeInstanceOf(CreditDisplay);
       expect(viewer.camera).toBeInstanceOf(Camera);
       expect(viewer.dataSourceDisplay).toBeInstanceOf(DataSourceDisplay);
       expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
