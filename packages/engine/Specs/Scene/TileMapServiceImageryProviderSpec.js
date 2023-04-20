@@ -373,7 +373,7 @@ describe("Scene/TileMapServiceImageryProvider", function () {
       "made/up/tms/server/"
     );
 
-    // check some details about the tilemapresourcel.xml so we know we got parsed/configured properly
+    // check some details about the tilemapresource.xml so we know we got parsed/configured properly
     let url = getAbsoluteUri("made/up/tms/server/{z}/{x}/{reverseY}.jpg");
     // Uri.absoluteTo() escapes the placeholders. Undo that.
     url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
