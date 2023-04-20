@@ -394,11 +394,15 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
 
     if (defined(style.scaleByDistance)) {
       const scaleByDistanceCart4 = style.scaleByDistance.evaluate(feature);
-      scratchScaleByDistance.near = scaleByDistanceCart4.x;
-      scratchScaleByDistance.nearValue = scaleByDistanceCart4.y;
-      scratchScaleByDistance.far = scaleByDistanceCart4.z;
-      scratchScaleByDistance.farValue = scaleByDistanceCart4.w;
-      feature.scaleByDistance = scratchScaleByDistance;
+      if (defined(scaleByDistanceCart4)) {
+        scratchScaleByDistance.near = scaleByDistanceCart4.x;
+        scratchScaleByDistance.nearValue = scaleByDistanceCart4.y;
+        scratchScaleByDistance.far = scaleByDistanceCart4.z;
+        scratchScaleByDistance.farValue = scaleByDistanceCart4.w;
+        feature.scaleByDistance = scratchScaleByDistance;
+      } else {
+        feature.scaleByDistance = undefined;
+      }
     } else {
       feature.scaleByDistance = undefined;
     }
@@ -407,11 +411,15 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
       const translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(
         feature
       );
-      scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
-      scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
-      scratchTranslucencyByDistance.far = translucencyByDistanceCart4.z;
-      scratchTranslucencyByDistance.farValue = translucencyByDistanceCart4.w;
-      feature.translucencyByDistance = scratchTranslucencyByDistance;
+      if (defined(translucencyByDistanceCart4)) {
+        scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
+        scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
+        scratchTranslucencyByDistance.far = translucencyByDistanceCart4.z;
+        scratchTranslucencyByDistance.farValue = translucencyByDistanceCart4.w;
+        feature.translucencyByDistance = scratchTranslucencyByDistance;
+      } else {
+        feature.translucencyByDistance = undefined;
+      }
     } else {
       feature.translucencyByDistance = undefined;
     }
@@ -420,9 +428,13 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
       const distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(
         feature
       );
-      scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
-      scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
-      feature.distanceDisplayCondition = scratchDistanceDisplayCondition;
+      if (defined(distanceDisplayConditionCart2)) {
+        scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
+        scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
+        feature.distanceDisplayCondition = scratchDistanceDisplayCondition;
+      } else {
+        feature.distanceDisplayCondition = undefined;
+      }
     } else {
       feature.distanceDisplayCondition = undefined;
     }

@@ -355,3 +355,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Joseph Stanton](https://github.com/romejoe)
 - [Zehua Hu](https://github.com/lanvada)
 - [Jason Summercamp](https://github.com/fullstacc)
+- [Shapovalov Kirill](https://github.com/ShapovalovKL)
