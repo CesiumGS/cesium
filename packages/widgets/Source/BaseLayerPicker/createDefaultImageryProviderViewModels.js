@@ -63,7 +63,7 @@ function createDefaultImageryProviderViewModels() {
     new ProviderViewModel({
       name: "ArcGIS World Imagery",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldImagery.png"
+        "Widgets/Images/ImageryProviders/ArcGISMapServiceWorldImagery.png"
       ),
       tooltip:
         "\
@@ -91,7 +91,7 @@ https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9",
     new ProviderViewModel({
       name: "ArcGIS World Hillshade",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldHillshade.png"
+        "Widgets/Images/ImageryProviders/ArcGISMapServiceWorldHillshade.png"
       ),
       tooltip:
         "\
@@ -116,7 +116,7 @@ https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d",
     new ProviderViewModel({
       name: "Esri World Ocean",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldOcean.png"
+        "Widgets/Images/ImageryProviders/ArcGISMapServiceWorldOcean.png"
       ),
       tooltip:
         "\
