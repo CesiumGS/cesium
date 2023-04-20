@@ -7,6 +7,7 @@
 ##### Additions :tada:
 
 - Added `ArcGisMapServerImagery.fromBasemapType`, and `ArcGisBaseMapType`, and `ArcGisMapService` for ease of use with the latest ArcGIS Imagery API.[#11098](https://github.com/CesiumGS/cesium/pull/11098)
+- Added `options.gltfCallback` to `Model.loadGltfAsync` to allow apps to access the loaded glTF JSON. [#11240](https://github.com/CesiumGS/cesium/pull/11240)
 
 ##### Fixes :wrench:
 
