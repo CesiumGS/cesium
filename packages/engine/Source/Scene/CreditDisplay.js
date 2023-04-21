@@ -434,7 +434,7 @@ function setCredit(creditDisplay, credits, credit, count) {
 CreditDisplay.prototype.addCredit = function (credit) {
   deprecationWarning(
     "CreditDisplay.addCredit",
-    "CreditDisplay.addCredit was deprecated in CesiumJS 1.105.  It will be in CesiumJS 1.107.  Use CreditDisplay.addCreditToNextFrame instead."
+    "CreditDisplay.addCredit was deprecated in CesiumJS 1.105.  It will be removed in CesiumJS 1.107.  Use CreditDisplay.addCreditToNextFrame instead."
   );
 
   this.addCreditToNextFrame(credit);
@@ -487,7 +487,7 @@ CreditDisplay.prototype.addDefaultCredit = function (credit) {
 
   deprecationWarning(
     "CreditDisplay.addDefaultCredit",
-    "CreditDisplay.addDefaultCredit was deprecated in CesiumJS 1.105.  It will be in CesiumJS 1.107.  Use CreditDisplay.addStaticCredit instead."
+    "CreditDisplay.addDefaultCredit was deprecated in CesiumJS 1.105.  It will be removed in CesiumJS 1.107.  Use CreditDisplay.addStaticCredit instead."
   );
 
   const defaultCredits = this._defaultCredits;
@@ -548,7 +548,7 @@ CreditDisplay.prototype.removeStaticCredit = function (credit) {
 CreditDisplay.prototype.removeDefaultCredit = function (credit) {
   deprecationWarning(
     "CreditDisplay.removeDefaultCredit",
-    "CreditDisplay.removeDefaultCredit was deprecated in CesiumJS 1.105.  It will be in CesiumJS 1.107.  Use CreditDisplay.addStaticCredit instead."
+    "CreditDisplay.removeDefaultCredit was deprecated in CesiumJS 1.105.  It will be removed in CesiumJS 1.107.  Use CreditDisplay.addStaticCredit instead."
   );
 
   this.removeStaticCredit(credit);
