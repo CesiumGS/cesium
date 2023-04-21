@@ -598,6 +598,32 @@ describe("Scene/GltfJsonLoader", function () {
     );
   });
 
+  it("load throws if an unsupported extension is required", async function () {
+    const arrayBuffer = generateJsonBuffer({
+      ...gltf1,
+      extensionsRequired: ["NOT_supported_extension"],
+    }).buffer;
+
+    spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
+      Promise.resolve(arrayBuffer)
+    );
+
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      Promise.resolve(new Float32Array([0.0, 0.0, 0.0]).buffer)
+    );
+
+    const gltfJsonLoader = new GltfJsonLoader({
+      resourceCache: ResourceCache,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    await expectAsync(gltfJsonLoader.load()).toBeRejectedWithError(
+      RuntimeError,
+      "Failed to load glTF: https://example.com/model.glb\nUnsupported glTF Extension: NOT_supported_extension"
+    );
+  });
+
   it("load throws if glTF fails to process", async function () {
     const arrayBuffer = generateJsonBuffer(gltf1).buffer;
 
