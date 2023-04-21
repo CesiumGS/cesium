@@ -5,6 +5,7 @@ import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import isDataUri from "../Core/isDataUri.js";
 import Resource from "../Core/Resource.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import addDefaults from "./GltfPipeline/addDefaults.js";
 import addPipelineExtras from "./GltfPipeline/addPipelineExtras.js";
 import ForEach from "./GltfPipeline/ForEach.js";
@@ -14,6 +15,7 @@ import updateVersion from "./GltfPipeline/updateVersion.js";
 import usesExtension from "./GltfPipeline/usesExtension.js";
 import ResourceLoader from "./ResourceLoader.js";
 import ResourceLoaderState from "./ResourceLoaderState.js";
+import ModelUtility from "./Model/ModelUtility.js";
 
 /**
  * Loads a glTF JSON from a glTF or glb.
@@ -241,6 +243,16 @@ async function processGltfJson(gltfJsonLoader, gltf) {
     addDefaults(gltf);
     await loadEmbeddedBuffers(gltfJsonLoader, gltf);
     removePipelineExtras(gltf);
+
+    const version = gltf.asset.version;
+    if (version !== "1.0" && version !== "2.0") {
+      throw new RuntimeError(`Unsupported glTF version: ${version}`);
+    }
+
+    const extensionsRequired = gltf.extensionsRequired;
+    if (defined(extensionsRequired)) {
+      ModelUtility.checkSupportedExtensions(extensionsRequired);
+    }
 
     gltfJsonLoader._gltf = gltf;
     gltfJsonLoader._state = ResourceLoaderState.READY;

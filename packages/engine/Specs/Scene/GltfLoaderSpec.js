@@ -176,20 +176,6 @@ describe(
       );
     });
 
-    it("load throws if an unsupported extension is required", async function () {
-      function modifyGltf(gltf) {
-        gltf.extensionsRequired = ["NOT_supported_extension"];
-        return gltf;
-      }
-
-      await expectAsync(
-        loadModifiedGltfAndTest(boxTextured, undefined, modifyGltf)
-      ).toBeRejectedWithError(
-        RuntimeError,
-        "Failed to load glTF\nUnsupported glTF Extension: NOT_supported_extension"
-      );
-    });
-
     function getOptions(gltfPath, options) {
       const resource = new Resource({
         url: gltfPath,

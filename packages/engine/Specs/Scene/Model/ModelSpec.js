@@ -331,6 +331,30 @@ describe(
       });
     });
 
+    it("calls gltfCallback", function () {
+      let wasCalled = false;
+      return loadAndZoomToModelAsync(
+        {
+          url: boxTexturedGltfUrl,
+          gltfCallback: (gltf) => {
+            wasCalled = true;
+            expect(gltf).toEqual(
+              jasmine.objectContaining({
+                asset: { generator: "COLLADA2GLTF", version: "2.0" },
+              })
+            );
+          },
+        },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model._sceneGraph).toBeDefined();
+        expect(model._resourcesLoaded).toEqual(true);
+        expect(wasCalled).toBeTrue();
+        verifyRender(model, true);
+      });
+    });
+
     it("raises errorEvent when a texture fails to load and incrementallyLoadTextures is true", async function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       const gltf = await resource.fetchJson();

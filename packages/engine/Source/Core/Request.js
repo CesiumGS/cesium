@@ -18,6 +18,7 @@ import RequestType from "./RequestType.js";
  * @param {boolean} [options.throttle=false] Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the request will be throttled and sent based on priority.
  * @param {boolean} [options.throttleByServer=false] Whether to throttle the request by server.
  * @param {RequestType} [options.type=RequestType.OTHER] The type of request.
+ * @param {string} [options.serverKey] A key used to identify the server that a request is going to.
  */
 function Request(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -105,7 +106,7 @@ function Request(options) {
    *
    * @private
    */
-  this.serverKey = undefined;
+  this.serverKey = options.serverKey;
 
   /**
    * The current state of the request.
@@ -166,7 +167,7 @@ Request.prototype.clone = function (result) {
   result.serverKey = this.serverKey;
 
   // These get defaulted because the cloned request hasn't been issued
-  result.state = this.RequestState.UNISSUED;
+  result.state = RequestState.UNISSUED;
   result.deferred = undefined;
   result.cancelled = false;
 
