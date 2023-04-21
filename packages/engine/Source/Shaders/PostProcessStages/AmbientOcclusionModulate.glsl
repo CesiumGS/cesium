@@ -5,7 +5,7 @@ in vec2 v_textureCoordinates;
 
 void main(void)
 {
-    vec3 color = texture(colorTexture, v_textureCoordinates).rgb;
-    vec3 ao = texture(ambientOcclusionTexture, v_textureCoordinates).rgb;
-    out_FragColor.rgb = ambientOcclusionOnly ? ao : ao * color;
+    vec4 color = texture(colorTexture, v_textureCoordinates);
+    vec4 ao = texture(ambientOcclusionTexture, v_textureCoordinates);
+    out_FragColor = ambientOcclusionOnly ? ao : ao * color;
 }
