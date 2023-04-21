@@ -21,6 +21,7 @@
 - Fixed a crash when Cesium3DTileStyle's scaleByDistance, translucencyByDistance or distanceDisplayCondition set to StyleExpression
   which returns `undefined`. [#11228](https://github.com/CesiumGS/cesium/pull/11228)
 - Fixed handling of `out_FragColor` layout declarations when translating shaders to WebGL1. [#11230](https://github.com/CesiumGS/cesium/pull/11230)
+- Fixed a problem with Ambient Occlusion that affected some MacOS hardware. [#10106](https://github.com/CesiumGS/cesium/issues/10106)
 
 #### @cesium/widgets
 
