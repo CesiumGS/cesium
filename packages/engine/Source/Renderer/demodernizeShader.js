@@ -41,15 +41,15 @@ function demodernizeShader(input, isFragmentShader) {
       output = output.replaceAll(/out_FragData_(\d+)/g, `gl_FragData[$1]`);
     }
 
+    // Remove all layout declarations for out_FragColor.
+    output = output.replaceAll(
+      /layout\s+\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g,
+      ``
+    );
+
     // Replace out_FragColor with gl_FragColor.
     output = output.replaceAll(/out_FragColor/g, `gl_FragColor`);
     output = output.replaceAll(/out_FragColor\[(\d+)\]/g, `gl_FragColor[$1]`);
-
-    // Remove all layout declarations for out_FragColor.
-    output = output.replaceAll(
-      /layout\s+\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor/g,
-      ``
-    );
 
     if (/gl_FragDepth/.test(output)) {
       output = `#extension GL_EXT_frag_depth : enable\n${output}`;

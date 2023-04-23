@@ -20,6 +20,7 @@
 - Fixed crashing when zooming to an entity without globe present. [#10957](https://github.com/CesiumGS/cesium/pull/11226)
 - Fixed a crash when Cesium3DTileStyle's scaleByDistance, translucencyByDistance or distanceDisplayCondition set to StyleExpression
   which returns `undefined`. [#11228](https://github.com/CesiumGS/cesium/pull/11228)
+- Fixed handling of `out_FragColor` layout declarations when translating shaders to WebGL1. [#11230](https://github.com/CesiumGS/cesium/pull/11230)
 
 #### @cesium/widgets
 
