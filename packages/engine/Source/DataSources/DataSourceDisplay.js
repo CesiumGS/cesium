@@ -313,7 +313,7 @@ DataSourceDisplay.prototype._postRender = function () {
 
     const credit = dataSource.credit;
     if (defined(credit)) {
-      frameState.creditDisplay.addCredit(credit);
+      frameState.creditDisplay.addCreditToNextFrame(credit);
     }
 
     // Credits from the resource that the user can't remove
@@ -321,7 +321,7 @@ DataSourceDisplay.prototype._postRender = function () {
     if (defined(credits)) {
       const creditCount = credits.length;
       for (let c = 0; c < creditCount; c++) {
-        frameState.creditDisplay.addCredit(credits[c]);
+        frameState.creditDisplay.addCreditToNextFrame(credits[c]);
       }
     }
   }

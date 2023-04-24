@@ -7,6 +7,8 @@
 ##### Additions :tada:
 
 - Added `ArcGisMapServerImagery.fromBasemapType`, and `ArcGisBaseMapType`, and `ArcGisMapService` for ease of use with the latest ArcGIS Imagery API.[#11098](https://github.com/CesiumGS/cesium/pull/11098)
+- Added `CesiumWidget.creditDisplay` to access the onscreen and lightbox credits.
+- Added `CreditDisplay.addStaticCredit` and `CreditDisplay.removeStaticCredit` such that `Credit.showOnScreen` value is taken into account. [#6215](https://github.com/CesiumGS/cesium/issues/6215)
 - Added `options.gltfCallback` to `Model.loadGltfAsync` to allow apps to access the loaded glTF JSON. [#11240](https://github.com/CesiumGS/cesium/pull/11240)
 
 ##### Fixes :wrench:
@@ -23,7 +25,15 @@
 - Fixed handling of `out_FragColor` layout declarations when translating shaders to WebGL1. [#11230](https://github.com/CesiumGS/cesium/pull/11230)
 - Fixed a problem with Ambient Occlusion that affected some MacOS hardware. [#10106](https://github.com/CesiumGS/cesium/issues/10106)
 
+##### Deprecated :hourglass_flowing_sand:
+
+- `CreditDisplay.addCredit`, `CreditDisplay.addDefaultCredit`, and `CreditDisplay.removeDefaultCredit` have been deprecated in CesiumJS 1.105. They will be removed in 1.107. Use `CreditDisplay.addCreditToNextFrame`, `CreditDisplay.addStaticCredit`, and `CreditDisplay.removeStaticCredit` respectively instead.
+
 #### @cesium/widgets
+
+##### Additions :tada:
+
+- Added `Viewer.creditDisplay` to access the onscreen and lightbox credits.
 
 ##### Fixes :wrench:
 

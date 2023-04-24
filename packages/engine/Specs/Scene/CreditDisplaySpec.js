@@ -87,24 +87,45 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.beginFrame();
     }
 
-    it("credit display addCredit throws when credit is undefined", function () {
+    it("addCredit throws when credit is undefined", function () {
       expect(function () {
         creditDisplay = new CreditDisplay(container);
         creditDisplay.addCredit();
       }).toThrowDeveloperError();
     });
 
-    it("credit display addDefaultCredit throws when credit is undefined", function () {
+    it("addCreditToNextFrame throws when credit is undefined", function () {
+      expect(function () {
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.addCreditToNextFrame();
+      }).toThrowDeveloperError();
+    });
+
+    it("addDefaultCredit throws when credit is undefined", function () {
       expect(function () {
         creditDisplay = new CreditDisplay(container);
         creditDisplay.addDefaultCredit();
       }).toThrowDeveloperError();
     });
 
-    it("credit display removeDefaultCredit throws when credit is undefined", function () {
+    it("addStaticCredit throws when credit is undefined", function () {
+      expect(function () {
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.addStaticCredit();
+      }).toThrowDeveloperError();
+    });
+
+    it("removeDefaultCredit throws when credit is undefined", function () {
       expect(function () {
         creditDisplay = new CreditDisplay(container);
         creditDisplay.removeDefaultCredit();
+      }).toThrowDeveloperError();
+    });
+
+    it("removeStaticCredit throws when credit is undefined", function () {
+      expect(function () {
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.removeStaticCredit();
       }).toThrowDeveloperError();
     });
 
@@ -115,7 +136,7 @@ describe("Scene/CreditDisplay", function () {
         true
       );
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit);
+      creditDisplay.addCreditToNextFrame(credit);
       creditDisplay.endFrame();
 
       const creditContainer = container.childNodes[1];
@@ -132,7 +153,7 @@ describe("Scene/CreditDisplay", function () {
 
       // add only credit1 during the frame
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
+      creditDisplay.addCreditToNextFrame(credit1);
       creditDisplay.endFrame();
       const innerHTMLWithCredit1 = container.innerHTML;
       const creditContainer = container.childNodes[1];
@@ -141,7 +162,7 @@ describe("Scene/CreditDisplay", function () {
 
       // add only credit2 during the frame
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
       const innerHTMLWithCredit2 = container.innerHTML;
       expect(innerHTMLWithCredit2).not.toEqual(innerHTMLWithCredit1);
@@ -150,8 +171,8 @@ describe("Scene/CreditDisplay", function () {
 
       // add both credit1 and credit2 during the frame
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
       const innerHTMLWithCredit1AndCredit2 = container.innerHTML;
       expect(innerHTMLWithCredit1AndCredit2).not.toEqual(innerHTMLWithCredit1);
@@ -175,8 +196,8 @@ describe("Scene/CreditDisplay", function () {
       const delimiter = ", ";
       creditDisplay = new CreditDisplay(container, ", ");
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
 
       const creditContainer = container.childNodes[1];
@@ -193,9 +214,9 @@ describe("Scene/CreditDisplay", function () {
       const delimiter = ", ";
       creditDisplay = new CreditDisplay(container, delimiter);
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
-      creditDisplay.addCredit(credit3);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.addCreditToNextFrame(credit3);
       creditDisplay.endFrame();
       const creditContainer = container.childNodes[1];
       expect(creditContainer.childNodes.length).toEqual(5);
@@ -206,8 +227,8 @@ describe("Scene/CreditDisplay", function () {
       expect(creditContainer.childNodes[4]).toEqual(credit3.element);
 
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit2);
-      creditDisplay.addCredit(credit3);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.addCreditToNextFrame(credit3);
       creditDisplay.endFrame();
       expect(creditContainer.childNodes.length).toEqual(3);
       expect(creditContainer.childNodes[0]).toEqual(credit2.element);
@@ -221,8 +242,8 @@ describe("Scene/CreditDisplay", function () {
       expect(creditContainer.childNodes[0]).toEqual(credit2.element);
 
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit2);
-      creditDisplay.addCredit(credit3);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.addCreditToNextFrame(credit3);
       creditDisplay.endFrame();
       expect(creditContainer.childNodes.length).toEqual(3);
       expect(creditContainer.childNodes[0]).toEqual(credit2.element);
@@ -237,7 +258,7 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay = new CreditDisplay(container, ", ");
       creditDisplay.addDefaultCredit(defaultCredit);
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
+      creditDisplay.addCreditToNextFrame(credit1);
       creditDisplay.endFrame();
 
       const creditContainer = container.childNodes[1];
@@ -252,14 +273,36 @@ describe("Scene/CreditDisplay", function () {
       expect(creditContainer.childNodes[0]).toEqual(defaultCredit.element);
     });
 
-    it("credit display displays credits when default is removed", function () {
+    it("credit display displays a static credit", function () {
       const defaultCredit = new Credit("default credit", true);
       const credit1 = new Credit("credit1", true);
 
       creditDisplay = new CreditDisplay(container, ", ");
-      creditDisplay.addDefaultCredit(defaultCredit);
+      creditDisplay.addStaticCredit(defaultCredit);
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.endFrame();
+
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(3);
+      expect(creditContainer.childNodes[0]).toEqual(defaultCredit.element);
+      expect(creditContainer.childNodes[1].innerHTML).toEqual(", ");
+      expect(creditContainer.childNodes[2]).toEqual(credit1.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.endFrame();
+      expect(creditContainer.childNodes.length).toEqual(1);
+      expect(creditContainer.childNodes[0]).toEqual(defaultCredit.element);
+    });
+
+    it("credit display displays credits when a static credit is removed", function () {
+      const defaultCredit = new Credit("default credit", true);
+      const credit1 = new Credit("credit1", true);
+
+      creditDisplay = new CreditDisplay(container, ", ");
+      creditDisplay.addStaticCredit(defaultCredit);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
       creditDisplay.endFrame();
       const creditContainer = container.childNodes[1];
       expect(creditContainer.childNodes.length).toEqual(3);
@@ -269,7 +312,7 @@ describe("Scene/CreditDisplay", function () {
 
       creditDisplay.removeDefaultCredit(defaultCredit);
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
+      creditDisplay.addCreditToNextFrame(credit1);
       creditDisplay.endFrame();
       expect(creditContainer.childNodes.length).toEqual(1);
       expect(creditContainer.childNodes[0]).toEqual(credit1.element);
@@ -280,8 +323,8 @@ describe("Scene/CreditDisplay", function () {
       const credit2 = new Credit("credit1", true);
       creditDisplay = new CreditDisplay(container);
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
       const creditContainer = container.childNodes[1];
       expect(creditContainer.childNodes.length).toEqual(1);
@@ -294,9 +337,9 @@ describe("Scene/CreditDisplay", function () {
       beginFrame(creditDisplay);
 
       for (let i = 0; i < repeatedCreditCount; i++) {
-        creditDisplay.addCredit(new Credit("credit1", true));
+        creditDisplay.addCreditToNextFrame(new Credit("credit1", true));
       }
-      creditDisplay.addCredit(new Credit("credit2", true));
+      creditDisplay.addCreditToNextFrame(new Credit("credit2", true));
 
       const credits = creditDisplay._currentFrameCredits.screenCredits.values;
       expect(credits.length).toEqual(2);
@@ -324,7 +367,7 @@ describe("Scene/CreditDisplay", function () {
         const creditString = "credit".concat((i + 1).toString());
         const count = creditCounts[i];
         for (let j = 0; j < count; j++) {
-          creditDisplay.addCredit(new Credit(creditString, true));
+          creditDisplay.addCreditToNextFrame(new Credit(creditString, true));
         }
       }
       creditDisplay.endFrame();
@@ -337,7 +380,7 @@ describe("Scene/CreditDisplay", function () {
       expect(creditContainer.childNodes[6]).toEqual(credit4.element);
     });
 
-    it("credit display sorts credits by frequency with default credit", function () {
+    it("credit display sorts credits by frequency with static credit", function () {
       const defaultCredit = new Credit("default credit", true);
       const creditCounts = [2, 10, 6, 1];
       const credit1 = new Credit("credit1", true);
@@ -346,14 +389,14 @@ describe("Scene/CreditDisplay", function () {
       const credit4 = new Credit("credit4", true);
 
       creditDisplay = new CreditDisplay(container);
-      creditDisplay.addDefaultCredit(defaultCredit);
+      creditDisplay.addStaticCredit(defaultCredit);
       beginFrame(creditDisplay);
 
       for (let i = 0; i < creditCounts.length; i++) {
         const creditString = "credit".concat((i + 1).toString());
         const count = creditCounts[i];
         for (let j = 0; j < count; j++) {
-          creditDisplay.addCredit(new Credit(creditString, true));
+          creditDisplay.addCreditToNextFrame(new Credit(creditString, true));
         }
       }
       creditDisplay.endFrame();
@@ -377,7 +420,7 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.showLightbox();
 
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
+      creditDisplay.addCreditToNextFrame(credit1);
       creditDisplay.endFrame();
       creditDisplay.update();
 
@@ -386,7 +429,7 @@ describe("Scene/CreditDisplay", function () {
       expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
 
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
       creditDisplay.update();
 
@@ -396,8 +439,8 @@ describe("Scene/CreditDisplay", function () {
       expect(creditList.childNodes[0].childNodes[0]).toEqual(credit2.element);
 
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
       creditDisplay.update();
 
@@ -415,16 +458,84 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.hideLightbox();
     });
 
+    it("displays static credits in a lightbox", function () {
+      const credit1 = new Credit("credit1");
+      const credit2 = new Credit(`<img src="${imageUrl}"/>`);
+
+      creditDisplay = new CreditDisplay(container);
+      const creditList = creditDisplay._creditList;
+      creditDisplay.addStaticCredit(credit1);
+
+      creditDisplay.showLightbox();
+
+      beginFrame(creditDisplay);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      let innerHTML = creditList.innerHTML;
+      expect(creditList.childNodes.length).toEqual(1);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.innerHTML).not.toEqual(innerHTML);
+      innerHTML = creditList.innerHTML;
+      expect(creditList.childNodes.length).toEqual(2);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+      expect(creditList.childNodes[1].childNodes[0]).toEqual(credit2.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.endFrame();
+      expect(creditList.childNodes.length).toEqual(1);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+
+      creditDisplay.hideLightbox();
+    });
+
+    it("credit display displays credits when a static credit is removed from the lightbox", function () {
+      const credit1 = new Credit("credit1");
+      const credit2 = new Credit(`<img src="${imageUrl}"/>`);
+
+      creditDisplay = new CreditDisplay(container, ", ");
+      const creditList = creditDisplay._creditList;
+
+      creditDisplay.showLightbox();
+
+      creditDisplay.addStaticCredit(credit1);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(2);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+      expect(creditList.childNodes[1].childNodes[0]).toEqual(credit2.element);
+
+      creditDisplay.removeStaticCredit(credit1);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(1);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit2.element);
+    });
+
     it("handles showOnScreen toggles at runtime", function () {
       // Credits are constructed to show on screen
       const credit1 = new Credit("credit1", true);
       const credit2 = new Credit("credit2", true);
 
       creditDisplay = new CreditDisplay(container);
+      creditDisplay.addStaticCredit(credit1);
+
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
+      creditDisplay.update();
 
       const screenCreditContainer = container.childNodes[1];
       expect(screenCreditContainer.childNodes.length).toEqual(3);
@@ -436,9 +547,9 @@ describe("Scene/CreditDisplay", function () {
       credit2.showOnScreen = false;
 
       creditDisplay.showLightbox();
+
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
 
       const lightboxCreditList = creditDisplay._creditList;
@@ -456,8 +567,7 @@ describe("Scene/CreditDisplay", function () {
 
       creditDisplay.hideLightbox();
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
 
       expect(screenCreditContainer.childNodes.length).toEqual(3);
@@ -473,8 +583,8 @@ describe("Scene/CreditDisplay", function () {
       const creditList = creditDisplay._creditList;
 
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
       creditDisplay.update();
 
@@ -483,8 +593,8 @@ describe("Scene/CreditDisplay", function () {
       creditDisplay.showLightbox();
 
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
       creditDisplay.update();
 
@@ -505,8 +615,8 @@ describe("Scene/CreditDisplay", function () {
       expect(creditList.childNodes.length).toEqual(0);
 
       beginFrame(creditDisplay);
-      creditDisplay.addCredit(credit1);
-      creditDisplay.addCredit(credit2);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
       creditDisplay.endFrame();
       creditDisplay.update();
 

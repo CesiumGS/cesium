@@ -1,6 +1,7 @@
 import {
   CesiumWidget,
   Clock,
+  CreditDisplay,
   defaultValue,
   EllipsoidTerrainProvider,
   ScreenSpaceEventHandler,
@@ -59,6 +60,7 @@ describe(
       expect(widget.isDestroyed()).toEqual(false);
       expect(widget.container).toBeInstanceOf(HTMLElement);
       expect(widget.canvas).toBeInstanceOf(HTMLElement);
+      expect(widget.creditDisplay).toBeInstanceOf(CreditDisplay);
       expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
       expect(widget.creditViewport).toBeInstanceOf(HTMLElement);
       expect(widget.scene).toBeInstanceOf(Scene);

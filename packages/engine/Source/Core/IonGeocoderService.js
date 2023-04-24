@@ -33,7 +33,7 @@ function IonGeocoderService(options) {
 
   const defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
   if (defined(defaultTokenCredit)) {
-    options.scene.frameState.creditDisplay.addDefaultCredit(
+    options.scene.frameState.creditDisplay.addStaticCredit(
       Credit.clone(defaultTokenCredit)
     );
   }
