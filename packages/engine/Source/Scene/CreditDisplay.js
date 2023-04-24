@@ -381,7 +381,7 @@ function CreditDisplay(container, delimiter, viewport) {
   this._hideLightbox = hideLightbox;
   this._expandLink = expandLink;
   this._expanded = false;
-  this._defaultCredits = [];
+  this._staticCredits = [];
   this._cesiumCredit = cesiumCredit;
   this._previousCesiumCredit = undefined;
   this._currentCesiumCredit = cesiumCredit;
@@ -490,7 +490,7 @@ CreditDisplay.prototype.addDefaultCredit = function (credit) {
     "CreditDisplay.addDefaultCredit was deprecated in CesiumJS 1.105.  It will be removed in CesiumJS 1.107.  Use CreditDisplay.addStaticCredit instead."
   );
 
-  const defaultCredits = this._defaultCredits;
+  const defaultCredits = this._staticCredits;
   if (!contains(defaultCredits, credit)) {
     credit.showOnScreen = true;
     defaultCredits.push(credit);
@@ -517,9 +517,9 @@ CreditDisplay.prototype.addStaticCredit = function (credit) {
   Check.defined("credit", credit);
   //>>includeEnd('debug');
 
-  const defaultCredits = this._defaultCredits;
-  if (!contains(defaultCredits, credit)) {
-    defaultCredits.push(credit);
+  const staticCredits = this._staticCredits;
+  if (!contains(staticCredits, credit)) {
+    staticCredits.push(credit);
   }
 };
 
@@ -533,10 +533,10 @@ CreditDisplay.prototype.removeStaticCredit = function (credit) {
   Check.defined("credit", credit);
   //>>includeEnd('debug');
 
-  const defaultCredits = this._defaultCredits;
-  const index = defaultCredits.indexOf(credit);
+  const staticCredits = this._staticCredits;
+  const index = staticCredits.indexOf(credit);
   if (index !== -1) {
-    defaultCredits.splice(index, 1);
+    staticCredits.splice(index, 1);
   }
 };
 
@@ -592,13 +592,13 @@ CreditDisplay.prototype.beginFrame = function () {
   screenCredits.removeAll();
   lightboxCredits.removeAll();
 
-  const defaultCredits = this._defaultCredits;
-  for (let i = 0; i < defaultCredits.length; ++i) {
-    const defaultCredit = defaultCredits[i];
-    const creditCollection = defaultCredit.showOnScreen
+  const staticCredits = this._staticCredits;
+  for (let i = 0; i < staticCredits.length; ++i) {
+    const staticCredit = staticCredits[i];
+    const creditCollection = staticCredit.showOnScreen
       ? screenCredits
       : lightboxCredits;
-    setCredit(this, creditCollection, defaultCredit, Number.MAX_VALUE);
+    setCredit(this, creditCollection, staticCredit, Number.MAX_VALUE);
   }
 
   if (!Credit.equals(CreditDisplay.cesiumCredit, this._cesiumCredit)) {
