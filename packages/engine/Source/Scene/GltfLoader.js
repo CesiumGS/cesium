@@ -18,7 +18,6 @@ import getAccessorByteStride from "./GltfPipeline/getAccessorByteStride.js";
 import getComponentReader from "./GltfPipeline/getComponentReader.js";
 import numberOfComponentsForType from "./GltfPipeline/numberOfComponentsForType.js";
 import GltfStructuralMetadataLoader from "./GltfStructuralMetadataLoader.js";
-import ModelUtility from "./Model/ModelUtility.js";
 import AttributeType from "./AttributeType.js";
 import Axis from "./Axis.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
@@ -240,12 +239,6 @@ function GltfLoader(options) {
   this._loadForClassification = loadForClassification;
   this._renameBatchIdSemantic = renameBatchIdSemantic;
 
-  // This flag will be set in parse() if the KHR_mesh_quantization extension is
-  // present in extensionsRequired. This flag is used later when parsing
-  // attributes. When the extension is present, attributes may be stored as
-  // quantized integer values instead of floats.
-  this._hasKhrMeshQuantization = false;
-
   // When loading EXT_feature_metadata, the feature tables and textures
   // are now stored as arrays like the newer EXT_structural_metadata extension.
   // This requires sorting the dictionary keys for a consistent ordering.
@@ -390,26 +383,6 @@ async function loadGltfJson(loader) {
       gltfJsonLoader.isDestroyed()
     ) {
       return;
-    }
-
-    const gltf = gltfJsonLoader.gltf;
-    const version = gltf.asset.version;
-    if (version !== "1.0" && version !== "2.0") {
-      const url = loader._gltfResource.url;
-      throw new RuntimeError(
-        `Failed to load ${url}: \nUnsupported glTF version: ${version}`
-      );
-    }
-
-    const extensionsRequired = gltf.extensionsRequired;
-    if (defined(extensionsRequired)) {
-      ModelUtility.checkSupportedExtensions(extensionsRequired);
-
-      // Check for the KHR_mesh_quantization extension here, it will be used later
-      // in loadAttribute().
-      loader._hasKhrMeshQuantization = extensionsRequired.includes(
-        "KHR_mesh_quantization"
-      );
     }
 
     loader._state = GltfLoaderState.LOADED;
@@ -1014,14 +987,7 @@ function setQuantizationFromWeb3dQuantizedAttributes(
   attribute.quantization = quantization;
 }
 
-function createAttribute(
-  gltf,
-  accessorId,
-  name,
-  semantic,
-  setIndex,
-  hasKhrMeshQuantization
-) {
+function createAttribute(gltf, accessorId, name, semantic, setIndex) {
   const accessor = gltf.accessors[accessorId];
   const MathType = AttributeType.getMathType(accessor.type);
   const normalized = defaultValue(accessor.normalized, false);
@@ -1057,6 +1023,10 @@ function createAttribute(
   // In the glTF 2.0 spec, min and max are not affected by the normalized flag.
   // However, for KHR_mesh_quantization, min and max must be dequantized for
   // normalized values, else the bounding sphere will be computed incorrectly.
+  const hasKhrMeshQuantization = gltf.extensionsRequired?.includes(
+    "KHR_mesh_quantization"
+  );
+
   if (hasKhrMeshQuantization && normalized && isQuantizable) {
     dequantizeMinMax(attribute, MathType);
   }
@@ -1197,8 +1167,7 @@ function loadAttribute(
     accessorId,
     name,
     modelSemantic,
-    setIndex,
-    loader._hasKhrMeshQuantization
+    setIndex
   );
 
   if (!defined(draco) && !defined(bufferViewId)) {
