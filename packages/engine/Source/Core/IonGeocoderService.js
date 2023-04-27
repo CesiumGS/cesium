@@ -49,7 +49,26 @@ function IonGeocoderService(options) {
   this._accessToken = accessToken;
   this._server = server;
   this._pelias = new PeliasGeocoderService(searchEndpoint);
+  this._credit = new Credit(
+    `<img src="https:\/\/ion.cesium.com\/Images\/attributes\/geocoder.png"\/>`,
+    false
+  );
 }
+
+Object.defineProperties(IonGeocoderService.prototype, {
+  /**
+   * Gets the credit to display after a geocode is performed. Typically this is used to credit
+   * the geocoder service.
+   * @memberof IonGeocoderService.prototype
+   * @type {Credit|undefined}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return this._credit;
+    },
+  },
+});
 
 /**
  * @function
@@ -58,7 +77,7 @@ function IonGeocoderService(options) {
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
  * @returns {Promise<GeocoderService.Result[]>}
  */
-IonGeocoderService.prototype.geocode = function (query, geocodeType) {
+IonGeocoderService.prototype.geocode = async function (query, geocodeType) {
   return this._pelias.geocode(query, geocodeType);
 };
 export default IonGeocoderService;

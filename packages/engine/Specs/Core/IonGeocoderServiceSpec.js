@@ -1,4 +1,10 @@
-import { GeocodeType, Ion, IonGeocoderService } from "../../index.js";
+import {
+  Credit,
+  GeocoderService,
+  GeocodeType,
+  Ion,
+  IonGeocoderService,
+} from "../../index.js";
 
 import createScene from "../../../../Specs/createScene.js";
 
@@ -12,14 +18,18 @@ describe("Core/IonGeocoderService", function () {
     scene.destroyForSpecs();
   });
 
-  it("Creates with default parameters", function () {
+  it("conforms to GeocoderService interface", function () {
+    expect(IonGeocoderService).toConformToInterface(GeocoderService);
+  });
+
+  it("creates with default parameters", function () {
     const service = new IonGeocoderService({ scene: scene });
 
     expect(service._accessToken).toEqual(Ion.defaultAccessToken);
     expect(service._server.url).toEqual(Ion.defaultServer.url);
   });
 
-  it("Creates with specified parameters", function () {
+  it("creates with specified parameters", function () {
     const accessToken = "123456";
     const server = "http://not.ion.invalid/";
 
@@ -33,18 +43,30 @@ describe("Core/IonGeocoderService", function () {
     expect(service._server.url).toEqual(server);
   });
 
-  it("calls inner geocoder and returns result", function () {
+  it("calls inner geocoder and returns result", async function () {
     const service = new IonGeocoderService({ scene: scene });
 
-    const expectedResult = Promise.resolve();
-    spyOn(service._pelias, "geocode").and.returnValue(expectedResult);
+    const expectedResult = ["results"];
+    spyOn(service._pelias, "geocode").and.returnValue(
+      Promise.resolve(expectedResult)
+    );
 
     const query = "some query";
-    const result = service.geocode(query, GeocodeType.SEARCH);
-    expect(result).toBe(expectedResult);
+    const result = await service.geocode(query, GeocodeType.SEARCH);
+    expect(result).toEqual(expectedResult);
     expect(service._pelias.geocode).toHaveBeenCalledWith(
       query,
       GeocodeType.SEARCH
     );
+  });
+
+  it("credit returns expected value", async function () {
+    const service = new IonGeocoderService({ scene: scene });
+
+    expect(service.credit).toBeInstanceOf(Credit);
+    expect(service.credit.html).toEqual(
+      `<img src="http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png"/>`
+    );
+    expect(service.credit.showOnScreen).toBe(false);
   });
 });
