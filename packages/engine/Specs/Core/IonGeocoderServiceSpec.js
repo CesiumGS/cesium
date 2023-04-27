@@ -1,5 +1,4 @@
 import {
-  Credit,
   GeocoderService,
   GeocodeType,
   Ion,
@@ -63,10 +62,6 @@ describe("Core/IonGeocoderService", function () {
   it("credit returns expected value", async function () {
     const service = new IonGeocoderService({ scene: scene });
 
-    expect(service.credit).toBeInstanceOf(Credit);
-    expect(service.credit.html).toEqual(
-      `<img src="https:\/\/ion.cesium.com\/Images\/attributes\/geocoder.png"\/>`
-    );
-    expect(service.credit.showOnScreen).toBe(false);
+    expect(service.credit).toBeUndefined();
   });
 });

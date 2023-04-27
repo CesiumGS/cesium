@@ -98,6 +98,7 @@ PeliasGeocoderService.prototype.geocode = async function (query, type) {
       return {
         displayName: resultObject.properties.label,
         destination: destination,
+        attributions: results.attributions,
       };
     });
   });

@@ -49,10 +49,6 @@ function IonGeocoderService(options) {
   this._accessToken = accessToken;
   this._server = server;
   this._pelias = new PeliasGeocoderService(searchEndpoint);
-  this._credit = new Credit(
-    `<img src="https:\/\/ion.cesium.com\/Images\/attributes\/geocoder.png"\/>`,
-    false
-  );
 }
 
 Object.defineProperties(IonGeocoderService.prototype, {
@@ -65,7 +61,7 @@ Object.defineProperties(IonGeocoderService.prototype, {
    */
   credit: {
     get: function () {
-      return this._credit;
+      return undefined;
     },
   },
 });
