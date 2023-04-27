@@ -565,11 +565,11 @@ async function updateSearchSuggestions(viewModel) {
   const query = viewModel._searchText;
 
   clearSuggestions(viewModel);
+  clearCredits(viewModel);
+
   if (hasOnlyWhitespace(query)) {
     return;
   }
-
-  clearCredits(viewModel);
 
   for (const service of viewModel._geocoderServices) {
     const newResults = await service.geocode(query, GeocodeType.AUTOCOMPLETE);

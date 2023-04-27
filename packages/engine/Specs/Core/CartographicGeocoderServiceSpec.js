@@ -1,7 +1,15 @@
-import { Cartesian3, CartographicGeocoderService } from "../../index.js";
+import {
+  Cartesian3,
+  CartographicGeocoderService,
+  GeocoderService,
+} from "../../index.js";
 
 describe("Core/CartographicGeocoderService", function () {
   const service = new CartographicGeocoderService();
+
+  it("conforms to GeocoderService interface", function () {
+    expect(CartographicGeocoderService).toConformToInterface(GeocoderService);
+  });
 
   it("returns cartesian with matching coordinates for NS/EW input", function () {
     const query = "35N 75W";

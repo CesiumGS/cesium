@@ -65,7 +65,7 @@ describe("Core/IonGeocoderService", function () {
 
     expect(service.credit).toBeInstanceOf(Credit);
     expect(service.credit.html).toEqual(
-      `<img src="http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png"/>`
+      `<img src="https:\/\/ion.cesium.com\/Images\/attributes\/geocoder.png"\/>`
     );
     expect(service.credit.showOnScreen).toBe(false);
   });

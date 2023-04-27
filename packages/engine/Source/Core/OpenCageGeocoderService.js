@@ -81,7 +81,7 @@ Object.defineProperties(OpenCageGeocoderService.prototype, {
   /**
    * Gets the credit to display after a geocode is performed. Typically this is used to credit
    * the geocoder service.
-   * @memberof PeliasGeocoderService.prototype
+   * @memberof OpenCageGeocoderService.prototype
    * @type {Credit|undefined}
    * @readonly
    */
