@@ -92,7 +92,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("throws is searchText is not a string", function () {
+    it("throws if searchText is not a string", function () {
       geocoderViewModel = new GeocoderViewModel({
         scene: scene,
         geocoderServices: [customGeocoderOptions],

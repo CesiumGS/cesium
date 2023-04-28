@@ -603,8 +603,8 @@ CreditDisplay.prototype.beginFrame = function () {
       staticCredit._isIon &&
       Credit.equals(CreditDisplay.cesiumCredit, this._cesiumCredit)
     ) {
-      // If this is the an ion logo credit from the ion server,
-      // make sure to remove de-duplicate with the default ion credit
+      // If this is an ion logo credit from the ion server,
+      // make sure to de-duplicate with the default ion credit
       continue;
     }
 
