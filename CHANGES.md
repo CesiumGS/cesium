@@ -7,9 +7,10 @@
 ##### Additions :tada:
 
 - Added `ArcGisMapServerImagery.fromBasemapType`, and `ArcGisBaseMapType`, and `ArcGisMapService` for ease of use with the latest ArcGIS Imagery API.[#11098](https://github.com/CesiumGS/cesium/pull/11098)
-- Added `CesiumWidget.creditDisplay` to access the onscreen and lightbox credits.
+- Added `CesiumWidget.creditDisplay` to access the onscreen and lightbox credits. [#11241](https://github.com/CesiumGS/cesium/pull/11241)
 - Added `CreditDisplay.addStaticCredit` and `CreditDisplay.removeStaticCredit` such that `Credit.showOnScreen` value is taken into account. [#6215](https://github.com/CesiumGS/cesium/issues/6215)
 - Added `options.gltfCallback` to `Model.loadGltfAsync` to allow apps to access the loaded glTF JSON. [#11240](https://github.com/CesiumGS/cesium/pull/11240)
+- Added `GeocoderService.credit` and and `attributions` property to `GeocoderService.Result` to allow for geocoder services to attribute results. [#11256](https://github.com/CesiumGS/cesium/pull/11256)
 
 ##### Fixes :wrench:
 
@@ -27,13 +28,14 @@
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `CreditDisplay.addCredit`, `CreditDisplay.addDefaultCredit`, and `CreditDisplay.removeDefaultCredit` have been deprecated in CesiumJS 1.105. They will be removed in 1.107. Use `CreditDisplay.addCreditToNextFrame`, `CreditDisplay.addStaticCredit`, and `CreditDisplay.removeStaticCredit` respectively instead.
+- `CreditDisplay.addCredit`, `CreditDisplay.addDefaultCredit`, and `CreditDisplay.removeDefaultCredit` have been deprecated in CesiumJS 1.105. They will be removed in 1.107. Use `CreditDisplay.addCreditToNextFrame`, `CreditDisplay.addStaticCredit`, and `CreditDisplay.removeStaticCredit` respectively instead. [#11241](https://github.com/CesiumGS/cesium/pull/11241)
 
 #### @cesium/widgets
 
 ##### Additions :tada:
 
-- Added `Viewer.creditDisplay` to access the onscreen and lightbox credits.
+- Added `Viewer.creditDisplay` to access the onscreen and lightbox credits. [#11241](https://github.com/CesiumGS/cesium/pull/11241)
+- The `Geocoder` widget will now display attributions onscreen or in the lightbox for geocoder results if present, otherwise a default credit from a geocoder service if one is provided. [#11256](https://github.com/CesiumGS/cesium/pull/11256)
 
 ##### Fixes :wrench:
 

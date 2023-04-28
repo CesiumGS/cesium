@@ -598,6 +598,16 @@ CreditDisplay.prototype.beginFrame = function () {
     const creditCollection = staticCredit.showOnScreen
       ? screenCredits
       : lightboxCredits;
+
+    if (
+      staticCredit._isIon &&
+      Credit.equals(CreditDisplay.cesiumCredit, this._cesiumCredit)
+    ) {
+      // If this is an ion logo credit from the ion server,
+      // make sure to de-duplicate with the default ion credit
+      continue;
+    }
+
     setCredit(this, creditCollection, staticCredit, Number.MAX_VALUE);
   }
 
