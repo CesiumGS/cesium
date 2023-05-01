@@ -279,31 +279,30 @@ async function requestMetadata(resource, imageryProviderBuilder, provider) {
  *
  * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
  * used, if available.
+ * 
+ * <br/>
+ * 
+ * An {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token } is required to authenticate requests to an ArcGIS Image Tile service.
+ * To access secure ArcGIS resources, it's required to create an ArcGIS developer
+ * account or an ArcGIS online account, then implement an authentication method to obtain an access token.
  *
  * @alias ArcGisMapServerImageryProvider
  * @constructor
  *
  * @param {ArcGisMapServerImageryProvider.ConstructorOptions} [options] Object describing initialization options
  *
- * @see ArcGisMapServerImagery.fromBasemapType
- * @see ArcGisMapServerImagery.fromUrl
- * @see BingMapsImageryProvider
- * @see GoogleEarthEnterpriseMapsProvider
- * @see OpenStreetMapImageryProvider
- * @see SingleTileImageryProvider
- * @see TileMapServiceImageryProvider
- * @see WebMapServiceImageryProvider
- * @see WebMapTileServiceImageryProvider
- * @see UrlTemplateImageryProvider
+ * @see ArcGisMapServerImageryProvider.fromBasemapType
+ * @see ArcGisMapServerImageryProvider.fromUrl
  *
  * @example
- * // Add a base layer from a default ArcGIS Basemap
+ * // Set the default access token for accessing ArcGIS Image Tile service
+ * Cesium.ArcGisMapService.defaultAccessToken = "<ArcGIS Access Token>";
+ * 
+ * // Add a base layer from a default ArcGIS basemap
  * const viewer = new Cesium.Viewer("cesiumContainer", {
  *   baseLayer: Cesium.ImageryLayer.fromProviderAsync(
  *     Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
- *       Cesium.ArcGisBaseMapType.SATELLITE, {
- *         token: "<ArcGIS Access Token>"
- *       }
+ *       Cesium.ArcGisBaseMapType.SATELLITE
  *     )
  *   ),
  * });
@@ -317,9 +316,7 @@ async function requestMetadata(resource, imageryProviderBuilder, provider) {
  *
  * @see {@link https://developers.arcgis.com/rest/|ArcGIS Server REST API}
  * @see {@link https://developers.arcgis.com/documentation/mapping-apis-and-services/security| ArcGIS Access Token }
- * is required to authenticate requests to an ArcGIS Image Tile service.
- * To access secure ArcGIS resources, you need to create an ArcGIS developer
- * account or an ArcGIS online account, then implement an authentication method to obtain an access token.
+
  */
 function ArcGisMapServerImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -412,10 +409,12 @@ function ArcGisMapServerImageryProvider(options) {
  * @returns {Promise<ArcGisMapServerImageryProvider>} A promise that resolves to the created ArcGisMapServerImageryProvider.
  *
  * @example
+ * // Set the default access token for accessing ArcGIS Image Tile service
+ * Cesium.ArcGisMapService.defaultAccessToken = "<ArcGIS Access Token>";
+ *
+ * // Add a base layer from a default ArcGIS basemap
  * const provider = await Cesium.ArcGisMapServerImageryProvider.fromBasemapType(
- *   Cesium.ArcGisBaseMapType.SATELLITE, {
- *     token: "<ArcGIS Access Token>"
- *   });
+ *   Cesium.ArcGisBaseMapType.SATELLITE);
  *
  * @example
  * // Add a base layer from a default ArcGIS Basemap
