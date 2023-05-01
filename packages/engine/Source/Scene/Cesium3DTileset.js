@@ -141,7 +141,7 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * try {
  *   const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *      "http://localhost:8002/tilesets/Seattle/tileset.json"
- *   });
+ *   );
  *   scene.primitives.add(tileset);
  * } catch (error) {
  *   console.error(`Error creating tileset: ${error}`);
@@ -2029,7 +2029,7 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * used for streaming massive heterogeneous 3D geospatial datasets.
  *
  * @param {Resource|string} url The url to a tileset JSON file.
- * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
+ * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
@@ -2040,7 +2040,7 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * try {
  *   const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *      "http://localhost:8002/tilesets/Seattle/tileset.json"
- *   });
+ *   );
  *   scene.primitives.add(tileset);
  * } catch (error) {
  *   console.error(`Error creating tileset: ${error}`);
@@ -3212,7 +3212,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
       for (let i = 0; i < credits.length; ++i) {
         const credit = credits[i];
         credit.showOnScreen = tileset._showCreditsOnScreen;
-        frameState.creditDisplay.addCredit(credit);
+        frameState.creditDisplay.addCreditToNextFrame(credit);
       }
     }
   }

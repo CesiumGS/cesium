@@ -521,6 +521,18 @@ Object.defineProperties(CesiumWidget.prototype, {
   },
 
   /**
+   * Manages the list of credits to display on screen and in the lightbox.
+   * @memberof CesiumWidget.prototype
+   *
+   * @type {CreditDisplay}
+   */
+  creditDisplay: {
+    get: function () {
+      return this._scene.frameState.creditDisplay;
+    },
+  },
+
+  /**
    * Gets the camera.
    * @memberof CesiumWidget.prototype
    *

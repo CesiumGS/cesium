@@ -1,5 +1,46 @@
 # Change Log
 
+### 1.105 - 2023-05-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `ArcGisMapServerImagery.fromBasemapType`, and `ArcGisBaseMapType`, and `ArcGisMapService` for ease of use with the latest ArcGIS Imagery API.[#11098](https://github.com/CesiumGS/cesium/pull/11098)
+- Added `CesiumWidget.creditDisplay` to access the onscreen and lightbox credits. [#11241](https://github.com/CesiumGS/cesium/pull/11241)
+- Added `CreditDisplay.addStaticCredit` and `CreditDisplay.removeStaticCredit` such that `Credit.showOnScreen` value is taken into account. [#6215](https://github.com/CesiumGS/cesium/issues/6215)
+- Added `options.gltfCallback` to `Model.loadGltfAsync` to allow apps to access the loaded glTF JSON. [#11240](https://github.com/CesiumGS/cesium/pull/11240)
+- Added `GeocoderService.credit` and and `attributions` property to `GeocoderService.Result` to allow for geocoder services to attribute results. [#11256](https://github.com/CesiumGS/cesium/pull/11256)
+
+##### Fixes :wrench:
+
+- Fixed Repeated URI parsing slows 3D Tiles performance [#11197](https://github.com/CesiumGS/cesium/issues/11197). Together with [#11211](https://github.com/CesiumGS/cesium/pull/11211), this can reduce tile parsing time by as much as 25% on large tilesets
+- Fixed atmosphere rendering performance issue. [10510](https://github.com/CesiumGS/cesium/issues/10510)
+- Fixed crashing when zooming to an entity without globe present. [#10957](https://github.com/CesiumGS/cesium/pull/11226)
+- Fixed model rendering when emissiveTexture is defined and emissiveFactor is not. [#11215](https://github.com/CesiumGS/cesium/pull/11215)
+- Fixed issue with calling `switchToOrthographicFunction` and `camera.flyTo` in immediate succession. [#11210](https://github.com/CesiumGS/cesium/pull/11210)
+- Fixed an issue when zooming in an orthographic frustum. [#11206](https://github.com/CesiumGS/cesium/pull/11206)
+- Fixed a crash when Cesium3DTileStyle's scaleByDistance, translucencyByDistance or distanceDisplayCondition set to StyleExpression
+  which returns `undefined`. [#11228](https://github.com/CesiumGS/cesium/pull/11228)
+- Fixed handling of `out_FragColor` layout declarations when translating shaders to WebGL1. [#11230](https://github.com/CesiumGS/cesium/pull/11230)
+- Fixed a problem with Ambient Occlusion that affected some MacOS hardware. [#10106](https://github.com/CesiumGS/cesium/issues/10106)
+- Fixed UniformType.MAT3 value for custom shaders. [#11235](https://github.com/CesiumGS/cesium/pull/11235).
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `CreditDisplay.addCredit`, `CreditDisplay.addDefaultCredit`, and `CreditDisplay.removeDefaultCredit` have been deprecated in CesiumJS 1.105. They will be removed in 1.107. Use `CreditDisplay.addCreditToNextFrame`, `CreditDisplay.addStaticCredit`, and `CreditDisplay.removeStaticCredit` respectively instead. [#11241](https://github.com/CesiumGS/cesium/pull/11241)
+
+#### @cesium/widgets
+
+##### Additions :tada:
+
+- Added `Viewer.creditDisplay` to access the onscreen and lightbox credits. [#11241](https://github.com/CesiumGS/cesium/pull/11241)
+- The `Geocoder` widget will now display attributions onscreen or in the lightbox for geocoder results if present, otherwise a default credit from a geocoder service if one is provided. [#11256](https://github.com/CesiumGS/cesium/pull/11256)
+
+##### Fixes :wrench:
+
+- Fixed missing `ContextOptions` in generated TypeScript definitions. [10963](https://github.com/CesiumGS/cesium/issues/10963)
+
 ### 1.104 - 2023-04-03
 
 #### Major Announcements :loudspeaker:

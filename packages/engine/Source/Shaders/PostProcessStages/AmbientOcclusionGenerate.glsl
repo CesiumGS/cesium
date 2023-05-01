@@ -58,7 +58,7 @@ void main(void)
     float gapAngle = 90.0 * czm_radiansPerDegree;
 
     // RandomNoise
-    float randomVal = texture(randomTexture, v_textureCoordinates).x;
+    float randomVal = texture(randomTexture, v_textureCoordinates / pixelSize / 255.0).x;
 
     //Loop for each direction
     for (int i = 0; i < 4; i++)
