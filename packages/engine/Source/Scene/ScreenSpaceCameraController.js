@@ -217,7 +217,7 @@ function ScreenSpaceCameraController(scene) {
     modifier: KeyboardEventModifier.SHIFT,
   };
   /**
-   * The minimum height the camera must be before picking the terrain instead of the ellipsoid.
+   * The minimum height the camera must be before picking the terrain or scene content instead of the ellipsoid.
    * @type {number}
    * @default 150000.0
    */
@@ -611,19 +611,22 @@ function handleZoom(
       object._zoomMouseStart
     );
 
-    if (defined(object._globe)) {
-      if (mode === SceneMode.SCENE2D) {
-        pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay)
-          .origin;
-        pickedPosition = Cartesian3.fromElements(
-          pickedPosition.y,
-          pickedPosition.z,
-          pickedPosition.x
-        );
-      } else {
-        pickedPosition = pickGlobe(object, startPosition, scratchPickCartesian);
-      }
+    if (defined(object._globe) && mode === SceneMode.SCENE2D) {
+      pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay)
+        .origin;
+      pickedPosition = Cartesian3.fromElements(
+        pickedPosition.y,
+        pickedPosition.z,
+        pickedPosition.x
+      );
+    } else {
+      pickedPosition = pickPosition(
+        object,
+        startPosition,
+        scratchPickCartesian
+      );
     }
+
     if (defined(pickedPosition)) {
       object._useZoomWorldPosition = true;
       object._zoomWorldPosition = Cartesian3.clone(
@@ -709,7 +712,7 @@ function handleZoom(
         const centerPixel = scratchCenterPixel;
         centerPixel.x = canvas.clientWidth / 2;
         centerPixel.y = canvas.clientHeight / 2;
-        const centerPosition = pickGlobe(
+        const centerPosition = pickPosition(
           object,
           centerPixel,
           scratchCenterPosition
@@ -1107,16 +1110,10 @@ const pickGlobeScratchRay = new Ray();
 const scratchDepthIntersection = new Cartesian3();
 const scratchRayIntersection = new Cartesian3();
 
-function pickGlobe(controller, mousePosition, result) {
+function pickPosition(controller, mousePosition, result) {
   const scene = controller._scene;
   const globe = controller._globe;
   const camera = scene.camera;
-
-  if (!defined(globe)) {
-    return undefined;
-  }
-
-  const cullBackFaces = !controller._cameraUnderground;
 
   let depthIntersection;
   if (scene.pickPositionSupported) {
@@ -1126,6 +1123,14 @@ function pickGlobe(controller, mousePosition, result) {
     );
   }
 
+  if (
+    !defined(globe) ||
+    (defined(depthIntersection) && !globe.translucency.enabled)
+  ) {
+    return Cartesian3.clone(depthIntersection, result);
+  }
+
+  const cullBackFaces = !controller._cameraUnderground;
   const ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
   const rayIntersection = globe.pickWorldCoordinates(
     ray,
@@ -1289,7 +1294,8 @@ function translateCV(controller, startPosition, movement) {
 
   let globePos;
   if (camera.position.z < controller._minimumPickingTerrainHeight) {
-    globePos = pickGlobe(controller, startMouse, translateCVStartPos);
+    globePos = pickPosition(controller, startMouse, translateCVStartPos);
+
     if (defined(globePos)) {
       origin.x = globePos.x;
     }
@@ -1476,7 +1482,7 @@ function rotateCVOnTerrain(controller, startPosition, movement) {
     center = Cartesian3.clone(controller._tiltCenter, rotateCVCenter);
   } else {
     if (camera.position.z < controller._minimumPickingTerrainHeight) {
-      center = pickGlobe(controller, startPosition, rotateCVCenter);
+      center = pickPosition(controller, startPosition, rotateCVCenter);
     }
 
     if (!defined(center)) {
@@ -1711,7 +1717,7 @@ function zoomCV(controller, startPosition, movement) {
 
   let intersection;
   if (height < controller._minimumPickingTerrainHeight) {
-    intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
+    intersection = pickPosition(controller, windowPosition, zoomCVIntersection);
   }
 
   let distance;
@@ -1918,7 +1924,7 @@ function spin3D(controller, startPosition, movement) {
   const globe = controller._globe;
 
   if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
-    const mousePos = pickGlobe(
+    const mousePos = pickPosition(
       controller,
       movement.startPosition,
       scratchMousePos
@@ -2051,6 +2057,7 @@ const pan3DTemp2 = new Cartesian3();
 const pan3DTemp3 = new Cartesian3();
 const pan3DStartMousePosition = new Cartesian2();
 const pan3DEndMousePosition = new Cartesian2();
+const pan3DDiffMousePosition = new Cartesian2();
 
 function pan3D(controller, startPosition, movement, ellipsoid) {
   const scene = controller._scene;
@@ -2064,9 +2071,76 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
     movement.endPosition,
     pan3DEndMousePosition
   );
+  const height = ellipsoid.cartesianToCartographic(
+    camera.positionWC,
+    scratchCartographic
+  ).height;
 
-  let p0 = camera.pickEllipsoid(startMousePosition, ellipsoid, pan3DP0);
-  let p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);
+  let p0, p1;
+
+  if (
+    !movement.inertiaEnabled &&
+    height < controller._minimumPickingTerrainHeight
+  ) {
+    p0 = pickPosition(controller, startMousePosition, pan3DP0);
+
+    if (defined(p0)) {
+      let tanPhi = 1.0;
+      let tanTheta = 1.0;
+
+      if (defined(camera.frustum.fovy)) {
+        tanPhi *= 2 * Math.tan(camera.frustum.fovy * 0.5);
+        tanTheta *= camera.frustum.aspectRatio * tanPhi;
+      }
+
+      const distance = Math.abs(Cartesian3.distance(camera.positionWC, p0));
+      const dragDelta = Cartesian2.subtract(
+        endMousePosition,
+        startMousePosition,
+        pan3DDiffMousePosition
+      );
+      const x = (dragDelta.x * scene.pixelRatio) / scene.drawingBufferWidth;
+      const y = (-dragDelta.y * scene.pixelRatio) / scene.drawingBufferHeight;
+
+      // Move the camera to the the distance the cursor moved in worldspace
+      const right = Cartesian3.multiplyByScalar(
+        camera.rightWC,
+        x * distance * tanTheta,
+        pan3DTemp1
+      );
+
+      // Move the camera forward the distance the cursor moved in worldspace as the camera is pointed tangent to the ellipsoid
+      const cameraPositionNormal = Cartesian3.normalize(
+        camera.positionWC,
+        scratchCameraPositionNormal
+      );
+      let dot = Math.abs(
+        Cartesian3.dot(camera.directionWC, cameraPositionNormal)
+      );
+      const direction = Cartesian3.multiplyByScalar(
+        camera.directionWC,
+        y * (1.0 - dot) * 2 * distance,
+        pan3DTemp2
+      );
+
+      // Move the camera up the distance the cursor moved in worldspace as the camera is pointed towards the center
+      dot = Math.abs(Cartesian3.dot(camera.upWC, cameraPositionNormal));
+      const up = Cartesian3.multiplyByScalar(
+        camera.upWC,
+        y * (1.0 - dot) * distance * tanPhi,
+        pan3DTemp3
+      );
+
+      p1 = Cartesian3.add(p0, right, pan3DP1);
+      p1 = Cartesian3.add(p1, direction, p1);
+      p1 = Cartesian3.add(p1, up, p1);
+    }
+  }
+
+  if (!defined(p0)) {
+    p0 = camera.pickEllipsoid(startMousePosition, ellipsoid, pan3DP0);
+    p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);
+  }
 
   if (!defined(p0) || !defined(p1)) {
     controller._rotating = true;
@@ -2205,7 +2279,7 @@ function zoom3D(controller, startPosition, movement) {
     ? approachingCollision
     : height < controller._minimumPickingTerrainHeight;
   if (needPickGlobe) {
-    intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
+    intersection = pickPosition(controller, windowPosition, zoomCVIntersection);
   }
 
   let distance;
@@ -2397,7 +2471,7 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
     center = Cartesian3.clone(controller._tiltCenter, tilt3DCenter);
   } else {
-    center = pickGlobe(controller, startPosition, tilt3DCenter);
+    center = pickPosition(controller, startPosition, tilt3DCenter);
 
     if (!defined(center)) {
       ray = camera.getPickRay(startPosition, tilt3DRay);

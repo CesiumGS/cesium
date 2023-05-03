@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.106 - 2023-06-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Improved camera controls for panning on 3D Tiles and fixed camera controls when globe is off. [#7171](https://github.com/CesiumGS/cesium/issues/7171)
+
 ### 1.105 - 2023-05-01
 
 #### @cesium/engine
