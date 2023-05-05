@@ -291,6 +291,8 @@ function ScreenSpaceCameraController(scene) {
   this._zoomMouseStart = new Cartesian2(-1.0, -1.0);
   this._zoomWorldPosition = new Cartesian3();
   this._useZoomWorldPosition = false;
+  this._panLastMousePosition = new Cartesian2();
+  this._panLastWorldPosition = new Cartesian3();
   this._tiltCVOffMap = false;
   this._looking = false;
   this._rotating = false;
@@ -2082,7 +2084,17 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
     !movement.inertiaEnabled &&
     height < controller._minimumPickingTerrainHeight
   ) {
-    p0 = pickPosition(controller, startMousePosition, pan3DP0);
+    p0 = Cartesian3.clone(controller._panLastWorldPosition, pan3DP0);
+
+    // Use the last picked world position unless we're starting a new drag
+    if (
+      !Cartesian2.equalsEpsilon(
+        startMousePosition,
+        controller._panLastMousePosition
+      )
+    ) {
+      p0 = pickPosition(controller, startMousePosition, pan3DP0);
+    }
 
     if (defined(p0)) {
       let tanPhi = 1.0;
@@ -2134,6 +2146,9 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
       p1 = Cartesian3.add(p0, right, pan3DP1);
       p1 = Cartesian3.add(p1, direction, p1);
       p1 = Cartesian3.add(p1, up, p1);
+
+      Cartesian3.clone(p1, controller._panLastWorldPosition);
+      Cartesian2.clone(endMousePosition, controller._panLastMousePosition);
     }
   }
 
