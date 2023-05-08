@@ -915,6 +915,34 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
         layerToUse = layer;
         break;
       }
+
+      if (!defined(layer.availabilityLevels)) {
+        // This layer doesn't use cutout terrain, so we don't need to do the following check
+        continue;
+      }
+
+      const tile = getAvailabilityTile(layer, x, y, level);
+      if (
+        !defined(tile) ||
+        !layer.availability.isTileAvailable(tile.level, tile.x, tile.y) ||
+        layer.availabilityTilesLoaded.isTileAvailable(
+          tile.level,
+          tile.x,
+          tile.y
+        )
+      ) {
+        continue;
+      }
+
+      // There are some cases where availability tiles are not completely loaded at this point. Request them now.
+      return requestTileGeometry(
+        this,
+        tile.x,
+        tile.y,
+        tile.level,
+        layer,
+        request
+      );
     }
   }
 
