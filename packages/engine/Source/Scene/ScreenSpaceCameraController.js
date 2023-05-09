@@ -2060,6 +2060,8 @@ const pan3DTemp3 = new Cartesian3();
 const pan3DStartMousePosition = new Cartesian2();
 const pan3DEndMousePosition = new Cartesian2();
 const pan3DDiffMousePosition = new Cartesian2();
+const pan3DPixelDimensions = new Cartesian2();
+const panRay = new Ray();
 
 function pan3D(controller, startPosition, movement, ellipsoid) {
   const scene = controller._scene;
@@ -2097,41 +2099,41 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
     }
 
     if (defined(p0)) {
-      let tanPhi = 1.0;
-      let tanTheta = 1.0;
-
-      if (defined(camera.frustum.fovy)) {
-        tanPhi *= 2 * Math.tan(camera.frustum.fovy * 0.5);
-        tanTheta *= camera.frustum.aspectRatio * tanPhi;
-      }
-
       const distance = Math.abs(Cartesian3.distance(camera.positionWC, p0));
+      const pixelDimensions = camera.frustum.getPixelDimensions(
+        scene.drawingBufferWidth,
+        scene.drawingBufferHeight,
+        distance - camera.frustum.near,
+        scene.pixelRatio,
+        pan3DPixelDimensions
+      );
       const dragDelta = Cartesian2.subtract(
         endMousePosition,
         startMousePosition,
         pan3DDiffMousePosition
       );
-      const x = (dragDelta.x * scene.pixelRatio) / scene.drawingBufferWidth;
-      const y = (-dragDelta.y * scene.pixelRatio) / scene.drawingBufferHeight;
 
       // Move the camera to the the distance the cursor moved in worldspace
       const right = Cartesian3.multiplyByScalar(
         camera.rightWC,
-        x * distance * tanTheta,
+        dragDelta.x * pixelDimensions.x,
         pan3DTemp1
       );
 
-      // Move the camera forward the distance the cursor moved in worldspace as the camera is pointed tangent to the ellipsoid
+      // Move the camera towards the picked position in worldspace as the camera is pointed towards a horizon view
       const cameraPositionNormal = Cartesian3.normalize(
         camera.positionWC,
         scratchCameraPositionNormal
       );
-      let dot = Math.abs(
-        Cartesian3.dot(camera.directionWC, cameraPositionNormal)
-      );
+      const pickDirection = camera.getPickRay(startMousePosition, panRay)
+        .direction;
+      let dot = Math.abs(Cartesian3.dot(pickDirection, cameraPositionNormal));
+      let magnitude = -dragDelta.y * (1.0 - dot) * pixelDimensions.y * 2.0;
+      dot = Math.abs(Cartesian3.dot(camera.directionWC, cameraPositionNormal));
+      magnitude += -dragDelta.y * (1.0 - dot) * pixelDimensions.y * 2.0;
       const direction = Cartesian3.multiplyByScalar(
-        camera.directionWC,
-        y * (1.0 - dot) * 2 * distance,
+        pickDirection,
+        magnitude,
         pan3DTemp2
       );
 
@@ -2139,7 +2141,7 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
       dot = Math.abs(Cartesian3.dot(camera.upWC, cameraPositionNormal));
       const up = Cartesian3.multiplyByScalar(
         camera.upWC,
-        y * (1.0 - dot) * distance * tanPhi,
+        -dragDelta.y * (1.0 - dot) * pixelDimensions.y,
         pan3DTemp3
       );
 
