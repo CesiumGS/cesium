@@ -2384,19 +2384,21 @@ function updateShowCreditsOnScreen(model) {
 
   const showOnScreen = model._showCreditsOnScreen;
   if (defined(model._credit)) {
-    model._credit.showOnScreen = showOnScreen;
+    model._credit.showOnScreen = showOnScreen || model._credit._isDefaultToken;
   }
 
   const resourceCredits = model._resourceCredits;
   const resourceCreditsLength = resourceCredits.length;
   for (let i = 0; i < resourceCreditsLength; i++) {
-    resourceCredits[i].showOnScreen = showOnScreen;
+    resourceCredits[i].showOnScreen =
+      showOnScreen || resourceCredits[i]._isDefaultToken;
   }
 
   const gltfCredits = model._gltfCredits;
   const gltfCreditsLength = gltfCredits.length;
   for (let i = 0; i < gltfCreditsLength; i++) {
-    gltfCredits[i].showOnScreen = showOnScreen;
+    gltfCredits[i].showOnScreen =
+      showOnScreen || gltfCredits[i]._isDefaultToken;
   }
 }
 
