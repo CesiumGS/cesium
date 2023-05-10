@@ -1,8 +1,13 @@
 # Change Log
 
-### 1.106 - 2023-06-01
+### 1.105.1 - 2023-05-10
 
 #### @cesium/engine
+
+##### Additions :tada:
+
+- Added `createGooglePhotorealistic3DTileset` to create a 3D tileset streaming Google Photorealistic 3D Tiles.
+- Added `GoogleMaps` for managing credentials when loading data from the Google Map Tiles API.
 
 ##### Fixes :wrench:
 
