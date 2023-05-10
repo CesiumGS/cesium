@@ -1834,7 +1834,6 @@ const scratchStrafeRay = new Ray();
 const scratchStrafePlane = new Plane(Cartesian3.UNIT_X, 0.0);
 const scratchStrafeIntersection = new Cartesian3();
 const scratchStrafeDirection = new Cartesian3();
-const scratchMousePos = new Cartesian3();
 
 function strafe(controller, movement, strafeStartPosition) {
   const scene = controller._scene;
@@ -1926,10 +1925,13 @@ function spin3D(controller, startPosition, movement) {
   const globe = controller._globe;
 
   if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
-    const mousePos = camera.pickEllipsoid(
-      movement.startPosition,
-      controller._ellipsoid,
-      scratchMousePos
+    const ray = camera.getPickRay(startPosition, pickGlobeScratchRay);
+    const cullBackFaces = !controller._cameraUnderground;
+    const mousePos = globe.pickWorldCoordinates(
+      ray,
+      scene,
+      cullBackFaces,
+      scratchRayIntersection
     );
     if (defined(mousePos)) {
       let strafing = false;
