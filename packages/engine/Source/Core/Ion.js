@@ -50,6 +50,7 @@ Ion.getDefaultTokenCredit = function (providedKey) {
             You can sign up for a free ion account at <a href="https://cesium.com">https://cesium.com</a>.</b>';
 
     defaultTokenCredit = new Credit(defaultTokenMessage, true);
+    defaultTokenCredit._isDefaultToken = true;
   }
 
   return defaultTokenCredit;
