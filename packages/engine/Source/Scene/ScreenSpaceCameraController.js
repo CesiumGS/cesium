@@ -2090,6 +2090,7 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
 
     // Use the last picked world position unless we're starting a new drag
     if (
+      !scene.globe &&
       !Cartesian2.equalsEpsilon(
         startMousePosition,
         controller._panLastMousePosition
@@ -2098,15 +2099,22 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
       p0 = pickPosition(controller, startMousePosition, pan3DP0);
     }
 
-    if (defined(p0)) {
-      const distance = Math.abs(Cartesian3.distance(camera.positionWC, p0));
+    if (!scene.globe && defined(p0)) {
+      const toCenter = Cartesian3.subtract(p0, camera.positionWC, pan3DTemp1);
+      const toCenterProj = Cartesian3.multiplyByScalar(
+        camera.directionWC,
+        Cartesian3.dot(camera.directionWC, toCenter),
+        pan3DTemp1
+      );
+      const distanceToNearPlane = Cartesian3.magnitude(toCenterProj);
       const pixelDimensions = camera.frustum.getPixelDimensions(
         scene.drawingBufferWidth,
         scene.drawingBufferHeight,
-        distance - camera.frustum.near,
+        distanceToNearPlane,
         scene.pixelRatio,
         pan3DPixelDimensions
       );
+
       const dragDelta = Cartesian2.subtract(
         endMousePosition,
         startMousePosition,
@@ -2125,14 +2133,24 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
         camera.positionWC,
         scratchCameraPositionNormal
       );
-      const pickDirection = camera.getPickRay(startMousePosition, panRay)
+      const endPickDirection = camera.getPickRay(endMousePosition, panRay)
         .direction;
-      let dot = Math.abs(Cartesian3.dot(pickDirection, cameraPositionNormal));
-      let magnitude = -dragDelta.y * (1.0 - dot) * pixelDimensions.y * 2.0;
-      dot = Math.abs(Cartesian3.dot(camera.directionWC, cameraPositionNormal));
-      magnitude += -dragDelta.y * (1.0 - dot) * pixelDimensions.y * 2.0;
+      const endPickProj = Cartesian3.subtract(
+        endPickDirection,
+        Cartesian3.projectVector(endPickDirection, camera.rightWC, pan3DTemp2),
+        pan3DTemp2
+      );
+      const angle = Cartesian3.angleBetween(endPickProj, camera.directionWC);
+      const forward = Math.max(Math.tan(angle), 0.1); // Clamp so we don't make this value infinitely large when the angle is small
+      let dot = Math.abs(
+        Cartesian3.dot(camera.directionWC, cameraPositionNormal)
+      );
+      const magnitude =
+        ((-dragDelta.y * pixelDimensions.y) / Math.sqrt(forward)) *
+        2 *
+        (1.0 - dot);
       const direction = Cartesian3.multiplyByScalar(
-        pickDirection,
+        endPickDirection,
         magnitude,
         pan3DTemp2
       );
@@ -2154,7 +2172,7 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
     }
   }
 
-  if (!defined(p0)) {
+  if (!defined(p0) || !defined(p1)) {
     p0 = camera.pickEllipsoid(startMousePosition, ellipsoid, pan3DP0);
     p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);
   }
