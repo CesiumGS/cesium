@@ -6,7 +6,7 @@
 
 ##### Fixes :wrench:
 
-- Improved camera controls for panning on 3D Tiles and fixed camera controls when globe is off. [#7171](https://github.com/CesiumGS/cesium/issues/7171)
+- Improved camera controls when globe is off. [#7171](https://github.com/CesiumGS/cesium/issues/7171)
 
 ### 1.105 - 2023-05-01
 
