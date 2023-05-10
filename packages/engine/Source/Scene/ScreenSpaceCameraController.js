@@ -1125,10 +1125,7 @@ function pickPosition(controller, mousePosition, result) {
     );
   }
 
-  if (
-    !defined(globe) ||
-    (defined(depthIntersection) && !globe.translucency.enabled)
-  ) {
+  if (!defined(globe)) {
     return Cartesian3.clone(depthIntersection, result);
   }
 
@@ -1874,6 +1871,7 @@ const scratchRadii = new Cartesian3();
 const scratchEllipsoid = new Ellipsoid();
 const scratchLookUp = new Cartesian3();
 const scratchNormal = new Cartesian3();
+const scratchMousePosition = new Cartesian3();
 
 function spin3D(controller, startPosition, movement) {
   const scene = controller._scene;
@@ -1925,13 +1923,10 @@ function spin3D(controller, startPosition, movement) {
   const globe = controller._globe;
 
   if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
-    const ray = camera.getPickRay(startPosition, pickGlobeScratchRay);
-    const cullBackFaces = !controller._cameraUnderground;
-    const mousePos = globe.pickWorldCoordinates(
-      ray,
-      scene,
-      cullBackFaces,
-      scratchRayIntersection
+    const mousePos = pickPosition(
+      controller,
+      movement.startPosition,
+      scratchMousePosition
     );
     if (defined(mousePos)) {
       let strafing = false;
