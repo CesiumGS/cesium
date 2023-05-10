@@ -3211,7 +3211,8 @@ function update(tileset, frameState, passStatistics, passOptions) {
     if (defined(credits) && statistics.selected !== 0) {
       for (let i = 0; i < credits.length; ++i) {
         const credit = credits[i];
-        credit.showOnScreen = tileset._showCreditsOnScreen;
+        credit.showOnScreen =
+          tileset._showCreditsOnScreen || credit._isDefaultToken;
         frameState.creditDisplay.addCreditToNextFrame(credit);
       }
     }

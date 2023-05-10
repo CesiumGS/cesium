@@ -76,6 +76,7 @@ ArcGisMapService.getDefaultTokenCredit = function (providedKey) {
             You can sign up for a free ArcGIS Developer account at <a href="https://developers.arcgis.com/">https://developers.arcgis.com/</a>.</b>';
 
     defaultTokenCredit = new Credit(defaultTokenMessage, true);
+    defaultTokenCredit._isDefaultToken = true;
   }
 
   return defaultTokenCredit;
