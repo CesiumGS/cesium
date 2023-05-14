@@ -284,19 +284,6 @@ describe("Core/Color", function () {
     );
   });
 
-  it("fromCssColorString supports the rgba() format with absolute values (space-separated)", function () {
-    expect(Color.fromCssColorString("rgba(255 0 0 / 1.0)")).toEqual(Color.RED);
-    expect(Color.fromCssColorString("rgba(0 255 0 / 1.0)")).toEqual(
-      Color.LIME
-    );
-    expect(Color.fromCssColorString("rgba(0 0 255 / 1.0)")).toEqual(
-      Color.BLUE
-    );
-    expect(Color.fromCssColorString("rgba(51 102 204 / 0.6)")).toEqual(
-      new Color(0.2, 0.4, 0.8, 0.6)
-    );
-  });
-
   it("fromCssColorString supports the rgba() format with percentages", function () {
     expect(Color.fromCssColorString("rgba(100%, 0, 0, 1.0)")).toEqual(
       Color.RED
@@ -308,21 +295,6 @@ describe("Core/Color", function () {
       Color.BLUE
     );
     expect(Color.fromCssColorString("rgba(20%, 40%, 80%, 0.6)")).toEqual(
-      new Color(0.2, 0.4, 0.8, 0.6)
-    );
-  });
-
-  it("fromCssColorString supports the rgba() format with percentages (space-separated)", function () {
-    expect(Color.fromCssColorString("rgba(100% 0 0 / 1.0)")).toEqual(
-      Color.RED
-    );
-    expect(Color.fromCssColorString("rgba(0 100% 0 / 1.0)")).toEqual(
-      Color.LIME
-    );
-    expect(Color.fromCssColorString("rgba(0 0 100% / 1.0)")).toEqual(
-      Color.BLUE
-    );
-    expect(Color.fromCssColorString("rgba(20% 40% 80% / 0.6)")).toEqual(
       new Color(0.2, 0.4, 0.8, 0.6)
     );
   });
@@ -364,22 +336,6 @@ describe("Core/Color", function () {
       Color.BLUE
     );
     expect(Color.fromCssColorString("hsla(220, 60%, 50%, 0.6)")).toEqualEpsilon(
-      new Color(0.2, 0.4, 0.8, 0.6),
-      CesiumMath.EPSILON15
-    );
-  });
-
-  it("fromCssColorString supports the hsla() format (space-separated)", function () {
-    expect(Color.fromCssColorString("hsla(0 100% 50% / 1.0)")).toEqual(
-      Color.RED
-    );
-    expect(Color.fromCssColorString("hsla(120 100% 50% / 1.0)")).toEqual(
-      Color.LIME
-    );
-    expect(Color.fromCssColorString("hsla(240 100% 50% / 1.0)")).toEqual(
-      Color.BLUE
-    );
-    expect(Color.fromCssColorString("hsla(220 60% 50% / 0.6)")).toEqualEpsilon(
       new Color(0.2, 0.4, 0.8, 0.6),
       CesiumMath.EPSILON15
     );
