@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.105.2 - 2023-05-15
+
+- This is an npm-only release to fix a dependency issue published in 1.105.1.
+
 ### 1.105.1 - 2023-05-10
 
 #### @cesium/engine
