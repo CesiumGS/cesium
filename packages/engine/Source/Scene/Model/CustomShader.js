@@ -405,7 +405,7 @@ function validateBuiltinVariables(customShader) {
 /**
  * Update the value of a uniform declared in the shader
  * @param {string} uniformName The GLSL name of the uniform. This must match one of the uniforms declared in the constructor
- * @param {boolean|number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|string|Resource} value The new value of the uniform.
+ * @param {boolean|number|Cartesian2|Cartesian3|Cartesian4|Matrix2|Matrix3|Matrix4|string|Resource|TextureUniform} value The new value of the uniform.
  */
 CustomShader.prototype.setUniform = function (uniformName, value) {
   //>>includeStart('debug', pragmas.debug);
