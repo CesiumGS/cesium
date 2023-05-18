@@ -901,6 +901,8 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
   const layers = this._layers;
   let layerToUse;
   const layerCount = layers.length;
+  let unknownAvailability = false;
+  let availabilityPromise = Promise.resolve();
 
   if (layerCount === 1) {
     // Optimized path for single layers
@@ -916,34 +918,29 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
         break;
       }
 
-      if (!defined(layer.availabilityLevels)) {
-        // This layer doesn't use cutout terrain, so we don't need to do the following check
-        continue;
-      }
-
-      const tile = getAvailabilityTile(layer, x, y, level);
-      if (
-        !defined(tile) ||
-        !layer.availability.isTileAvailable(tile.level, tile.x, tile.y) ||
-        layer.availabilityTilesLoaded.isTileAvailable(
-          tile.level,
-          tile.x,
-          tile.y
-        )
-      ) {
-        continue;
-      }
-
-      // There are some cases where availability tiles are not completely loaded at this point. Request them now.
-      return requestTileGeometry(
+      const availabilityUnloaded = checkLayer(
         this,
-        tile.x,
-        tile.y,
-        tile.level,
+        x,
+        y,
+        level,
         layer,
-        request
+        i === 0
       );
+      if (availabilityUnloaded.result) {
+        // We can't know yet since the availability is not yet loaded
+        unknownAvailability = true;
+        availabilityPromise = availabilityPromise.then(
+          () => availabilityUnloaded.promise
+        );
+      }
     }
+  }
+
+  if (!defined(layerToUse) && unknownAvailability) {
+    // Try again when availability data is ready– Otherwise the tile will be marked as failed and never re-requested
+    return availabilityPromise.then(() =>
+      this.requestTileGeometry(x, y, level, request)
+    );
   }
 
   return requestTileGeometry(this, x, y, level, layerToUse, request);

@@ -396,10 +396,10 @@ function findMaxLevelFromNode(stopNode, node, position) {
   // Find the deepest quadtree node containing this point.
   let found = false;
   while (!found) {
-    const nw = node.nw && rectangleContainsPosition(node.nw.extent, position);
-    const ne = node.ne && rectangleContainsPosition(node.ne.extent, position);
-    const sw = node.sw && rectangleContainsPosition(node.sw.extent, position);
-    const se = node.se && rectangleContainsPosition(node.se.extent, position);
+    const nw = node._nw && rectangleContainsPosition(node._nw.extent, position);
+    const ne = node._ne && rectangleContainsPosition(node._ne.extent, position);
+    const sw = node._sw && rectangleContainsPosition(node._sw.extent, position);
+    const se = node._se && rectangleContainsPosition(node._se.extent, position);
 
     // The common scenario is that the point is in only one quadrant and we can simply
     // iterate down the tree.  But if the point is on a boundary between tiles, it is
@@ -408,36 +408,36 @@ function findMaxLevelFromNode(stopNode, node, position) {
       if (nw) {
         maxLevel = Math.max(
           maxLevel,
-          findMaxLevelFromNode(node, node.nw, position)
+          findMaxLevelFromNode(node, node._nw, position)
         );
       }
       if (ne) {
         maxLevel = Math.max(
           maxLevel,
-          findMaxLevelFromNode(node, node.ne, position)
+          findMaxLevelFromNode(node, node._ne, position)
         );
       }
       if (sw) {
         maxLevel = Math.max(
           maxLevel,
-          findMaxLevelFromNode(node, node.sw, position)
+          findMaxLevelFromNode(node, node._sw, position)
         );
       }
       if (se) {
         maxLevel = Math.max(
           maxLevel,
-          findMaxLevelFromNode(node, node.se, position)
+          findMaxLevelFromNode(node, node._se, position)
         );
       }
       break;
     } else if (nw) {
-      node = node.nw;
+      node = node._nw;
     } else if (ne) {
-      node = node.ne;
+      node = node._ne;
     } else if (sw) {
-      node = node.sw;
+      node = node._sw;
     } else if (se) {
-      node = node.se;
+      node = node._se;
     } else {
       found = true;
     }
@@ -501,10 +501,10 @@ function updateCoverageWithNode(
   }
 
   // Update with child nodes.
-  updateCoverageWithNode(remainingToCoverByLevel, node.nw, rectanglesToCover);
-  updateCoverageWithNode(remainingToCoverByLevel, node.ne, rectanglesToCover);
-  updateCoverageWithNode(remainingToCoverByLevel, node.sw, rectanglesToCover);
-  updateCoverageWithNode(remainingToCoverByLevel, node.se, rectanglesToCover);
+  updateCoverageWithNode(remainingToCoverByLevel, node._nw, rectanglesToCover);
+  updateCoverageWithNode(remainingToCoverByLevel, node._ne, rectanglesToCover);
+  updateCoverageWithNode(remainingToCoverByLevel, node._sw, rectanglesToCover);
+  updateCoverageWithNode(remainingToCoverByLevel, node._se, rectanglesToCover);
 }
 
 function subtractRectangle(rectangleList, rectangleToSubtract) {
