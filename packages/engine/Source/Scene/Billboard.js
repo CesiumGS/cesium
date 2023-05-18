@@ -1171,7 +1171,8 @@ Billboard.prototype._loadImage = function () {
   if (defined(image)) {
     // No need to wait on imageIndexPromise since these have already been added to the atlas
     const index = atlas.getImageIndex(imageId);
-    if (defined(index)) {
+    const subRegionIndex = atlas.getSubRegionIndex(imageId);
+    if (defined(index) && defined(subRegionIndex)) {
       completeImageLoad(index);
       return;
     }
