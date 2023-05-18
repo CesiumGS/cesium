@@ -2544,7 +2544,7 @@ function requestContent(tileset, tile) {
   tileset._requestedTilesInFlight.push(tile);
 }
 
-function sortRequestByPriority(a, b) {
+function sortTilesByPriority(a, b) {
   return a._priority - b._priority;
 }
 
@@ -2647,7 +2647,7 @@ function cancelOutOfViewRequests(tileset, frameState) {
  */
 function requestTiles(tileset) {
   const requestedTiles = tileset._requestedTiles;
-  requestedTiles.sort(sortRequestByPriority);
+  requestedTiles.sort(sortTilesByPriority);
   for (let i = 0; i < requestedTiles.length; ++i) {
     requestContent(tileset, requestedTiles[i]);
   }
@@ -2731,6 +2731,11 @@ function increaseScreenSpaceError(tileset) {
   console.log(
     `tileset.totalMemoryUsageInBytes = ${tileset.totalMemoryUsageInBytes}. memoryAdjustedScreenSpaceError increased to ${tileset.memoryAdjustedScreenSpaceError}`
   );
+  const tiles = tileset._processingQueue;
+  for (let i = 0; i < tiles.length; ++i) {
+    tiles[i].updatePriority();
+  }
+  tiles.sort(sortTilesByPriority);
 }
 
 function decreaseScreenSpaceError(tileset) {
