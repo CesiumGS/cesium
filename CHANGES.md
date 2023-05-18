@@ -1,5 +1,6 @@
 # Change Log
 
+
 ### 1.106 - 2023-06-01
 
 #### @cesium/engine
@@ -7,6 +8,23 @@
 ##### Fixes :wrench:
 
 - Fixed a race condition when loading cut-out terrain. [#11296](https://github.com/CesiumGS/cesium/pull/11296)
+
+### 1.105.2 - 2023-05-15
+
+- This is an npm-only release to fix a dependency issue published in 1.105.1.
+
+### 1.105.1 - 2023-05-10
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `createGooglePhotorealistic3DTileset` to create a 3D tileset streaming Google Photorealistic 3D Tiles.
+- Added `GoogleMaps` for managing credentials when loading data from the Google Map Tiles API.
+
+##### Fixes :wrench:
+
+- Improved camera controls when globe is off. [#7171](https://github.com/CesiumGS/cesium/issues/7171)
 
 ### 1.105 - 2023-05-01
 
