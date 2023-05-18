@@ -222,6 +222,7 @@ function Cesium3DTileset(options) {
     16
   );
   this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
+  this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
 
   this._styleEngine = new Cesium3DTileStyleEngine();
   this._styleApplied = false;
@@ -1560,6 +1561,25 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
+   * If loading the level of detail required by @{link Cesium3DTileset#maximumScreenSpaceError}
+   * results in the memory usage exceeding maximumMemoryUsage, level of detail refinement will
+   * instead use this (larger) adjusted screen space error to achieve the best possible visual
+   * quality within the available memory
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {number}
+   * @readonly
+   *
+   * @private
+   */
+  memoryAdjustedScreenSpaceError: {
+    get: function () {
+      return this._memoryAdjustedScreenSpaceError;
+    },
+  },
+
+  /**
    * Options for controlling point size based on geometric error and eye dome lighting.
    *
    * @memberof Cesium3DTileset.prototype
@@ -2662,42 +2682,25 @@ function handleTileFailure(error, tileset, tile) {
 }
 
 /**
- * @private
- * @param {Cesium3DTileset} tileset
- */
-function filterProcessingQueue(tileset) {
-  const tiles = tileset._processingQueue;
-
-  let removeCount = 0;
-  for (let i = 0; i < tiles.length; ++i) {
-    const tile = tiles[i];
-    if (
-      tile.isDestroyed() ||
-      tile._contentState !== Cesium3DTileContentState.PROCESSING
-    ) {
-      ++removeCount;
-      continue;
-    }
-    if (removeCount > 0) {
-      tiles[i - removeCount] = tile;
-    }
-  }
-  tiles.length -= removeCount;
-}
-
-/**
  * Process tiles in the PROCESSING state so they will eventually move to the READY state.
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  */
 function processTiles(tileset, frameState) {
-  filterProcessingQueue(tileset);
-  const tiles = tileset._processingQueue;
-  const statistics = tileset._statistics;
-  let tile;
+  const tiles = tileset._processingQueue.filter(
+    (tile) =>
+      !tile.isDestroyed() &&
+      tile._contentState === Cesium3DTileContentState.PROCESSING
+  );
+  tileset._processingQueue = tiles;
+
+  const { maximumMemoryUsage, statistics } = tileset;
+  const maximumMemoryUsageInBytes = maximumMemoryUsage * 1024 * 1024;
+
+  let memoryExceeded = false;
   for (let i = 0; i < tiles.length; ++i) {
-    tile = tiles[i];
+    const tile = tiles[i];
     try {
       tile.process(tileset, frameState);
 
@@ -2709,7 +2712,35 @@ function processTiles(tileset, frameState) {
       --statistics.numberOfTilesProcessing;
       handleTileFailure(error, tileset, tile);
     }
+
+    if (tileset.totalMemoryUsageInBytes > maximumMemoryUsageInBytes) {
+      memoryExceeded = true;
+      break;
+    }
   }
+
+  if (tileset.totalMemoryUsageInBytes < maximumMemoryUsageInBytes * 0.75) {
+    decreaseScreenSpaceError(tileset);
+  } else if (memoryExceeded && tiles.length > 1) {
+    increaseScreenSpaceError(tileset);
+  }
+}
+
+function increaseScreenSpaceError(tileset) {
+  tileset._memoryAdjustedScreenSpaceError *= 1.01;
+  console.log(
+    `tileset.totalMemoryUsageInBytes = ${tileset.totalMemoryUsageInBytes}. memoryAdjustedScreenSpaceError increased to ${tileset.memoryAdjustedScreenSpaceError}`
+  );
+}
+
+function decreaseScreenSpaceError(tileset) {
+  tileset._memoryAdjustedScreenSpaceError = Math.max(
+    tileset.memoryAdjustedScreenSpaceError / 1.01,
+    tileset.maximumScreenSpaceError
+  );
+  console.log(
+    `memoryAdjustedScreenSpaceError decreased to ${tileset.memoryAdjustedScreenSpaceError}`
+  );
 }
 
 const scratchCartesian = new Cartesian3();

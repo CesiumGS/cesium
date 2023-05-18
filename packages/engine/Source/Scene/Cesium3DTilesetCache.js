@@ -68,7 +68,8 @@ Cesium3DTilesetCache.prototype.unloadTiles = function (
   let node = list.head;
   while (
     node !== sentinel &&
-    (tileset.totalMemoryUsageInBytes > maximumMemoryUsageInBytes || trimTiles)
+    (tileset.totalMemoryUsageInBytes > maximumMemoryUsageInBytes * 0.7 ||
+      trimTiles)
   ) {
     const tile = node.item;
     node = node.next;

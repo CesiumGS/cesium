@@ -61,7 +61,7 @@ Cesium3DTilesetSkipTraversal.selectTiles = function (tileset, frameState) {
 
   if (
     root.getScreenSpaceError(frameState, true) <=
-    tileset._maximumScreenSpaceError
+    tileset.memoryAdjustedScreenSpaceError
   ) {
     return;
   }
