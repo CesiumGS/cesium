@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.106 - 2023-06-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a race condition when loading cut-out terrain. [#11296](https://github.com/CesiumGS/cesium/pull/11296)
+
 ### 1.105 - 2023-05-01
 
 #### @cesium/engine
