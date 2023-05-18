@@ -391,6 +391,7 @@ describe("Core/Color", function () {
     expect(Color.fromCssColorString("rgb( 255, 255, 255) ")).toEqual(
       Color.WHITE
     );
+    expect(Color.fromCssColorString("rgb (0 0 255) ")).toEqual(Color.BLUE);
     expect(Color.fromCssColorString("  #FF0000")).toEqual(Color.RED);
     expect(Color.fromCssColorString("#FF0  ")).toEqual(Color.YELLOW);
     expect(Color.fromCssColorString(" hsla(720,   100%, 50%, 1.0)  ")).toEqual(
