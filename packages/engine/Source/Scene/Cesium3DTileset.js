@@ -1532,6 +1532,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._maximumScreenSpaceError = value;
+      this._memoryAdjustedScreenSpaceError = value;
     },
   },
 
@@ -1582,6 +1583,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._maximumMemoryUsage = value;
+      this._cachedBytes = value * 1024 * 1024;
     },
   },
 
@@ -2819,9 +2821,6 @@ function processTiles(tileset, frameState) {
 
 function increaseScreenSpaceError(tileset) {
   tileset._memoryAdjustedScreenSpaceError *= 1.01;
-  console.log(
-    `tileset.totalMemoryUsageInBytes = ${tileset.totalMemoryUsageInBytes}. memoryAdjustedScreenSpaceError increased to ${tileset.memoryAdjustedScreenSpaceError}`
-  );
   const tiles = tileset._processingQueue;
   for (let i = 0; i < tiles.length; ++i) {
     tiles[i].updatePriority();
@@ -2833,9 +2832,6 @@ function decreaseScreenSpaceError(tileset) {
   tileset._memoryAdjustedScreenSpaceError = Math.max(
     tileset.memoryAdjustedScreenSpaceError / 1.01,
     tileset.maximumScreenSpaceError
-  );
-  console.log(
-    `memoryAdjustedScreenSpaceError decreased to ${tileset.memoryAdjustedScreenSpaceError}`
   );
 }
 
