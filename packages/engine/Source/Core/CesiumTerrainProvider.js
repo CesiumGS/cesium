@@ -901,6 +901,8 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
   const layers = this._layers;
   let layerToUse;
   const layerCount = layers.length;
+  let unknownAvailability = false;
+  let availabilityPromise = Promise.resolve();
 
   if (layerCount === 1) {
     // Optimized path for single layers
@@ -915,7 +917,30 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
         layerToUse = layer;
         break;
       }
+
+      const availabilityUnloaded = checkLayer(
+        this,
+        x,
+        y,
+        level,
+        layer,
+        i === 0
+      );
+      if (availabilityUnloaded.result) {
+        // We can't know yet since the availability is not yet loaded
+        unknownAvailability = true;
+        availabilityPromise = availabilityPromise.then(
+          () => availabilityUnloaded.promise
+        );
+      }
     }
+  }
+
+  if (!defined(layerToUse) && unknownAvailability) {
+    // Try again when availability data is ready– Otherwise the tile will be marked as failed and never re-requested
+    return availabilityPromise.then(() =>
+      this.requestTileGeometry(x, y, level, request)
+    );
   }
 
   return requestTileGeometry(this, x, y, level, layerToUse, request);
