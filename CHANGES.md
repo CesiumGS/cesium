@@ -7,12 +7,11 @@
 ##### Fixes :wrench:
 
 - Fixed a race condition when loading cut-out terrain. [#11296](https://github.com/CesiumGS/cesium/pull/11296)
+- Fixed label background rendering. [#11293](https://github.com/CesiumGS/cesium/pull/11293)
 
 ### 1.105.2 - 2023-05-15
 
 - This is an npm-only release to fix a dependency issue published in 1.105.1.
-
-- Fixed label background rendering. [#11293](https://github.com/CesiumGS/cesium/pull/11293)
 
 ### 1.105.1 - 2023-05-10
 
