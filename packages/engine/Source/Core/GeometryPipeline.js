@@ -2127,7 +2127,11 @@ function generateBarycentricInterpolateFunction(
     CartesianType.add(value, v2, value);
 
     if (normalize) {
-      CartesianType.normalize(value, value);
+      try {
+        CartesianType.normalize(value, value);
+      } catch (e) {
+        throw new DeveloperError(e);
+      }
     }
 
     CartesianType.pack(
