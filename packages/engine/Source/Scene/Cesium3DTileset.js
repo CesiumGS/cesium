@@ -69,8 +69,8 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {ShadowMode} [shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
  * @property {number} [maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
  * @property {number} [maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset. Deprecated.
- * @property {number} [cachedBytes=536870912] The size (in bytes) to which the tile cache will be trimmed
- * @property {number} [maximumCachedBytes=1073741824] The maximum amount of memory in bytes to use for the cache. Must be larger than {@link Cesium3DTileset#cachedBytes}
+ * @property {number} [cacheBytes=536870912] The size (in bytes) to which the tile cache will be trimmed, if the cache contains tiles not needed for the current view
+ * @property {number} [cacheHeadroomBytes=536870912] The maximum additional memory (in bytes) to allow for cache headroom, if more than {@link Cesium3DTileset#cacheBytes} are needed for the current view
  * @property {boolean} [cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
  * @property {boolean} [cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
  * @property {number} [cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
@@ -229,14 +229,14 @@ function Cesium3DTileset(options) {
   if (defined(options.maximumMemoryUsage)) {
     deprecationWarning(
       "Cesium3DTileset.maximumMemoryUsage",
-      "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cachedBytes instead."
+      "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cacheBytes instead."
     );
     defaultCachedBytes = options.maximumMemoryUsage * 1024 * 1024;
   }
-  this._cachedBytes = defaultValue(options.cachedBytes, defaultCachedBytes);
-  this._maximumCachedBytes = defaultValue(
-    options.maximumCachedBytes,
-    this._cachedBytes * 2.0
+  this._cacheBytes = defaultValue(options.cacheBytes, defaultCachedBytes);
+  this._cacheHeadroomBytes = defaultValue(
+    options.cacheHeadroomBytes,
+    defaultCachedBytes
   );
 
   this._styleEngine = new Cesium3DTileStyleEngine();
@@ -606,7 +606,7 @@ function Cesium3DTileset(options) {
    *     console.log('A tile was unloaded from the cache.');
    * });
    *
-   * @see Cesium3DTileset#cachedBytes
+   * @see Cesium3DTileset#cacheBytes
    * @see Cesium3DTileset#trimLoadedTiles
    */
   this.tileUnload = new Event();
@@ -1569,26 +1569,26 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     get: function () {
       deprecationWarning(
         "Cesium3DTileset.maximumMemoryUsage",
-        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cachedBytes instead."
+        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cacheBytes instead."
       );
       return this._maximumMemoryUsage;
     },
     set: function (value) {
       deprecationWarning(
         "Cesium3DTileset.maximumMemoryUsage",
-        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cachedBytes instead."
+        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cacheBytes instead."
       );
       //>>includeStart('debug', pragmas.debug);
       Check.typeOf.number.greaterThanOrEquals("value", value, 0);
       //>>includeEnd('debug');
 
       this._maximumMemoryUsage = value;
-      this._cachedBytes = value * 1024 * 1024;
+      this._cacheBytes = value * 1024 * 1024;
     },
   },
 
   /**
-   * The amount of GPU memory (in MB) used to cache tiles. This memory usage is estimated from
+   * The amount of GPU memory (in bytes) used to cache tiles. This memory usage is estimated from
    * geometry, textures, and batch table textures of loaded tiles. For point clouds, this value also
    * includes per-point metadata.
    * <p>
@@ -1598,10 +1598,10 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
    * </p>
    * <p>
-   * If tiles sized more than <code>cachedBytes</code> are needed to meet the
+   * If tiles sized more than <code>cacheBytes</code> are needed to meet the
    * desired screen space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
    * for the current view, then the memory usage of the tiles loaded will exceed
-   * <code>cachedBytes</code>.  For example, if the maximum is 256 MB, but 300 MB
+   * <code>cacheBytes</code>.  For example, if the maximum is 256 MB, but 300 MB
    * of tiles are needed to meet the screen space error, then 300 MB of tiles may
    * be loaded. When these tiles go out of view, they will be unloaded.
    * </p>
@@ -1611,54 +1611,60 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @type {number}
    * @default 536870912
    *
-   * @exception {DeveloperError} <code>cachedBytes</code> must be typeof 'number' and greater than or equal to 0
+   * @exception {DeveloperError} <code>cacheBytes</code> must be typeof 'number' and greater than or equal to 0
    * @see Cesium3DTileset#totalMemoryUsageInBytes
    */
-  cachedBytes: {
+  cacheBytes: {
     get: function () {
-      return this._cachedBytes;
+      return this._cacheBytes;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
       Check.typeOf.number.greaterThanOrEquals("value", value, 0);
       //>>includeEnd('debug');
 
-      this._cachedBytes = value;
-      this._maximumCachedBytes = Math.max(
-        this._maximumCachedBytes,
-        value * 1.1
-      );
+      this._cacheBytes = value;
     },
   },
 
   /**
-   * The maximum amount of GPU memory (in MB) that will be used to cache tiles.
+   * The maximum additional amount of GPU memory (in bytes) that will be used to cache tiles.
    * <p>
-   * If tiles sized more than <code>maximumCachedBytes</code> are needed to meet the
-   * desired screen space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
-   * for the current view, then {@link Cesium3DTileset#memoryAdjustedScreenSpaceError}
-   * will be adjusted until the tiles required to meet the adjusted screen space error
-   * are sized less than <code>maximumCachedBytes</code>.
+   * If tiles sized more than <code>cacheBytes</code> plus <code>cacheHeadroomBytes</code>
+   * are needed to meet the desired screen space error, determined by
+   * {@link Cesium3DTileset#maximumScreenSpaceError} for the current view, then
+   * {@link Cesium3DTileset#memoryAdjustedScreenSpaceError} will be adjusted
+   * until the tiles required to meet the adjusted screen space error use less
+   * than <code>cacheBytes</code> plus <code>cacheHeadroomBytes</code>.
    * </p>
    *
    * @memberof Cesium3DTileset.prototype
    *
    * @type {number}
-   * @readonly
+   * @default 536870912
    *
+   * @exception {DeveloperError} <code>cacheHeadroomBytes</code> must be typeof 'number' and greater than or equal to 0
    * @see Cesium3DTileset#totalMemoryUsageInBytes
    */
-  maximumCachedBytes: {
+  cacheHeadroomBytes: {
     get: function () {
-      return this._maximumCachedBytes;
+      return this._cacheHeadroomBytes;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0);
+      //>>includeEnd('debug');
+
+      this._cacheHeadroomBytes = value;
     },
   },
 
   /**
    * If loading the level of detail required by @{link Cesium3DTileset#maximumScreenSpaceError}
-   * results in the memory usage exceeding @{link Cesium3DTileset#maximumCachedBytes},
-   * level of detail refinement will instead use this (larger) adjusted screen space error
-   * to achieve the best possible visual quality within the available memory
+   * results in the memory usage exceeding @{link Cesium3DTileset#cacheBytes}
+   * plus @{link Cesium3DTileset#cacheHeadroomBytes}, level of detail refinement
+   * will instead use this (larger) adjusted screen space error to achieve the
+   * best possible visual quality within the available memory
    *
    * @memberof Cesium3DTileset.prototype
    *
@@ -1779,7 +1785,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * @type {number}
    * @readonly
    *
-   * @see Cesium3DTileset#cachedBytes
+   * @see Cesium3DTileset#cacheBytes
    */
   totalMemoryUsageInBytes: {
     get: function () {
@@ -2789,7 +2795,8 @@ function processTiles(tileset, frameState) {
   );
   tileset._processingQueue = tiles;
 
-  const { cachedBytes, maximumCachedBytes, statistics } = tileset;
+  const { cacheBytes, cacheHeadroomBytes, statistics } = tileset;
+  const cacheByteLimit = cacheBytes + cacheHeadroomBytes;
 
   let memoryExceeded = false;
   for (let i = 0; i < tiles.length; ++i) {
@@ -2806,13 +2813,13 @@ function processTiles(tileset, frameState) {
       handleTileFailure(error, tileset, tile);
     }
 
-    if (tileset.totalMemoryUsageInBytes > maximumCachedBytes) {
+    if (tileset.totalMemoryUsageInBytes > cacheByteLimit) {
       memoryExceeded = true;
       break;
     }
   }
 
-  if (tileset.totalMemoryUsageInBytes < cachedBytes) {
+  if (tileset.totalMemoryUsageInBytes < cacheBytes) {
     decreaseScreenSpaceError(tileset);
   } else if (memoryExceeded && tiles.length > 1) {
     increaseScreenSpaceError(tileset);
@@ -3180,7 +3187,7 @@ function destroyTile(tileset, tile) {
 /**
  * Unloads all tiles that weren't selected the previous frame.  This can be used to
  * explicitly manage the tile cache and reduce the total number of tiles loaded below
- * {@link Cesium3DTileset#cachedBytes}.
+ * {@link Cesium3DTileset#cacheBytes}.
  * <p>
  * Tile unloads occur at the next frame to keep all the WebGL delete calls
  * within the render loop.
