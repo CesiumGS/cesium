@@ -499,12 +499,13 @@ DataSourceDisplay.prototype._onDataSourceMoved = function (
  * @callback DataSourceDisplay.VisualizersCallback
  *
  * @param {Scene} scene The scene to create visualizers for.
+ * @param {EntityCluster} entityCluster The entity cluster to create visualizers for.
  * @param {DataSource} dataSource The data source to create visualizers for.
  * @returns {Visualizer[]} An array of visualizers used for visualization.
  *
  * @example
- * function createVisualizers(scene, dataSource) {
- *     return [new Cesium.BillboardVisualizer(scene, dataSource.entities)];
+ * function createVisualizers(scene, entityCluster, dataSource) {
+ *     return [new Cesium.BillboardVisualizer(entityCluster, dataSource.entities)];
  * }
  */
 export default DataSourceDisplay;

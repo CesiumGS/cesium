@@ -148,6 +148,8 @@ function Resource(options) {
   } else {
     this._url = options.url;
   }
+
+  this._credits = options.credits;
 }
 
 /**
@@ -370,6 +372,16 @@ Object.defineProperties(Resource.prototype, {
   hasHeaders: {
     get: function () {
       return Object.keys(this.headers).length > 0;
+    },
+  },
+
+  /**
+   * Gets the credits required for attribution of an asset.
+   * @private
+   */
+  credits: {
+    get: function () {
+      return this._credits;
     },
   },
 });
@@ -732,6 +744,7 @@ Resource.prototype.clone = function (result) {
       retryAttempts: this.retryAttempts,
       request: this.request.clone(),
       parseUrl: false,
+      credits: defined(this.credits) ? this.credits.slice() : undefined,
     });
   }
 
