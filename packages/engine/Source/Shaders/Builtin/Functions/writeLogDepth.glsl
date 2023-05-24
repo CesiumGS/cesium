@@ -3,9 +3,6 @@ in float v_depthFromNearPlusOne;
 
 #ifdef POLYGON_OFFSET
 uniform vec2 u_polygonOffset;
-#ifdef GL_OES_standard_derivatives
-#extension GL_OES_standard_derivatives : enable
-#endif
 #endif
 
 #endif
