@@ -225,18 +225,18 @@ function Cesium3DTileset(options) {
   );
   this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
 
-  let defaultCachedBytes = 512 * 1024 * 1024;
+  let defaultCacheBytes = 512 * 1024 * 1024;
   if (defined(options.maximumMemoryUsage)) {
     deprecationWarning(
       "Cesium3DTileset.maximumMemoryUsage",
       "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cacheBytes instead."
     );
-    defaultCachedBytes = options.maximumMemoryUsage * 1024 * 1024;
+    defaultCacheBytes = options.maximumMemoryUsage * 1024 * 1024;
   }
-  this._cacheBytes = defaultValue(options.cacheBytes, defaultCachedBytes);
+  this._cacheBytes = defaultValue(options.cacheBytes, defaultCacheBytes);
   this._cacheHeadroomBytes = defaultValue(
     options.cacheHeadroomBytes,
-    defaultCachedBytes
+    defaultCacheBytes
   );
 
   this._styleEngine = new Cesium3DTileStyleEngine();
