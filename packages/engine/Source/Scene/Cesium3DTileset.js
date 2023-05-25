@@ -2821,13 +2821,13 @@ function processTiles(tileset, frameState) {
 
   if (tileset.totalMemoryUsageInBytes < cacheBytes) {
     decreaseScreenSpaceError(tileset);
-  } else if (memoryExceeded && tiles.length > 1) {
+  } else if (memoryExceeded && tiles.length > 0) {
     increaseScreenSpaceError(tileset);
   }
 }
 
 function increaseScreenSpaceError(tileset) {
-  tileset._memoryAdjustedScreenSpaceError *= 1.01;
+  tileset._memoryAdjustedScreenSpaceError *= 1.02;
   const tiles = tileset._processingQueue;
   for (let i = 0; i < tiles.length; ++i) {
     tiles[i].updatePriority();
@@ -2837,7 +2837,7 @@ function increaseScreenSpaceError(tileset) {
 
 function decreaseScreenSpaceError(tileset) {
   tileset._memoryAdjustedScreenSpaceError = Math.max(
-    tileset.memoryAdjustedScreenSpaceError / 1.01,
+    tileset.memoryAdjustedScreenSpaceError / 1.02,
     tileset.maximumScreenSpaceError
   );
 }
