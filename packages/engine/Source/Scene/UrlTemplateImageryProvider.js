@@ -493,7 +493,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.ready",
-        "UrlTemplateImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "UrlTemplateImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._ready && defined(this._resource);
     },
@@ -510,7 +510,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.readyPromise",
-        "UrlTemplateImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "UrlTemplateImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._readyPromise;
     },
@@ -558,14 +558,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultAlpha",
-        "UrlTemplateImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "UrlTemplateImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultAlpha",
-        "UrlTemplateImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "UrlTemplateImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -582,14 +582,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultNightAlpha",
-        "UrlTemplateImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "UrlTemplateImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this._defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultNightAlpha",
-        "UrlTemplateImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "UrlTemplateImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this._defaultNightAlpha = value;
     },
@@ -606,14 +606,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultDayAlpha",
-        "UrlTemplateImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "UrlTemplateImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultDayAlpha",
-        "UrlTemplateImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "UrlTemplateImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -630,14 +630,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultBrightness",
-        "UrlTemplateImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "UrlTemplateImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultBrightness",
-        "UrlTemplateImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "UrlTemplateImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -654,14 +654,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultContrast",
-        "UrlTemplateImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "UrlTemplateImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultContrast",
-        "UrlTemplateImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "UrlTemplateImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -677,14 +677,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultHue",
-        "UrlTemplateImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "UrlTemplateImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultHue",
-        "UrlTemplateImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "UrlTemplateImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -701,14 +701,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultSaturation",
-        "UrlTemplateImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "UrlTemplateImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultSaturation",
-        "UrlTemplateImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "UrlTemplateImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -724,14 +724,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultGamma",
-        "UrlTemplateImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "UrlTemplateImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultGamma",
-        "UrlTemplateImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "UrlTemplateImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -747,14 +747,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultMinificationFilter",
-        "UrlTemplateImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "UrlTemplateImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultMinificationFilter",
-        "UrlTemplateImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "UrlTemplateImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -770,14 +770,14 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultMagnificationFilter",
-        "UrlTemplateImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "UrlTemplateImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "UrlTemplateImageryProvider.defaultMagnificationFilter",
-        "UrlTemplateImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "UrlTemplateImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },
@@ -794,7 +794,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
 UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
   deprecationWarning(
     "UrlTemplateImageryProvider.reinitialize",
-    "UrlTemplateImageryProvider.reinitialize was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+    "UrlTemplateImageryProvider.reinitialize was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
   );
 
   return this._reinitialize(options);

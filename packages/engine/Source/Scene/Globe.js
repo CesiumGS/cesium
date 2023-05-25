@@ -983,12 +983,16 @@ Globe.prototype.beginFrame = function (frameState) {
   const surface = this._surface;
   const tileProvider = surface.tileProvider;
   const terrainProvider = this.terrainProvider;
+  // ready is deprecated; This is here for backwards compatibility
+  const terrainReady =
+    defined(terrainProvider) &&
+    (defined(terrainProvider._ready)
+      ? terrainProvider._ready
+      : !defined(terrainProvider.ready) || terrainProvider.ready);
   const hasWaterMask =
     this.showWaterEffect &&
-    defined(terrainProvider) &&
+    terrainReady &&
     terrainProvider.hasWaterMask &&
-    // ready is deprecated; This is here for backwards compatibility
-    terrainProvider._ready &&
     terrainProvider.hasWaterMask;
 
   if (hasWaterMask && this._oceanNormalMapResourceDirty) {

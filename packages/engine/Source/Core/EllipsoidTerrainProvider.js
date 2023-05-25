@@ -98,7 +98,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "EllipsoidTerrainProvider.ready",
-        "EllipsoidTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "EllipsoidTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return true;
     },
@@ -115,7 +115,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "EllipsoidTerrainProvider.readyPromise",
-        "EllipsoidTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "EllipsoidTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._readyPromise;
     },

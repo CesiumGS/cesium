@@ -150,7 +150,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.ready",
-        "MapboxStyleImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "MapboxStyleImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._imageryProvider.ready;
     },
@@ -167,7 +167,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.readyPromise",
-        "MapboxStyleImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "MapboxStyleImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._imageryProvider.readyPromise;
     },
@@ -329,14 +329,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultAlpha",
-        "MapboxStyleImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "MapboxStyleImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultAlpha",
-        "MapboxStyleImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "MapboxStyleImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -353,14 +353,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultNightAlpha",
-        "MapboxStyleImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "MapboxStyleImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this._defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultNightAlpha",
-        "MapboxStyleImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "MapboxStyleImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this._defaultNightAlpha = value;
     },
@@ -377,14 +377,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultDayAlpha",
-        "MapboxStyleImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "MapboxStyleImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultDayAlpha",
-        "MapboxStyleImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "MapboxStyleImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -401,14 +401,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultBrightness",
-        "MapboxStyleImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "MapboxStyleImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultBrightness",
-        "MapboxStyleImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "MapboxStyleImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -425,14 +425,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultContrast",
-        "MapboxStyleImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "MapboxStyleImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultContrast",
-        "MapboxStyleImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "MapboxStyleImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -448,14 +448,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultHue",
-        "MapboxStyleImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "MapboxStyleImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultHue",
-        "MapboxStyleImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "MapboxStyleImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -472,14 +472,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultSaturation",
-        "MapboxStyleImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "MapboxStyleImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultSaturation",
-        "MapboxStyleImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "MapboxStyleImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -495,14 +495,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultGamma",
-        "MapboxStyleImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "MapboxStyleImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultGamma",
-        "MapboxStyleImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "MapboxStyleImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -518,14 +518,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultMinificationFilter",
-        "MapboxStyleImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "MapboxStyleImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultMinificationFilter",
-        "MapboxStyleImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "MapboxStyleImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -541,14 +541,14 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultMagnificationFilter",
-        "MapboxStyleImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "MapboxStyleImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "MapboxStyleImageryProvider.defaultMagnificationFilter",
-        "MapboxStyleImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "MapboxStyleImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },

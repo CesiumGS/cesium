@@ -135,7 +135,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "GoogleEarthEnterpriseTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use GoogleEarthEnterpriseTerrainProvider.fromMetadata instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use GoogleEarthEnterpriseTerrainProvider.fromMetadata instead."
     );
     const resource = Resource.createIfNeeded(options.url);
     const that = this;
@@ -172,7 +172,7 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
   } else if (defined(options.metadata)) {
     deprecationWarning(
       "GoogleEarthEnterpriseTerrainProvider options.metadata",
-      "options.metadata was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use GoogleEarthEnterpriseTerrainProvider.fromMetadata instead."
+      "options.metadata was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use GoogleEarthEnterpriseTerrainProvider.fromMetadata instead."
     );
     const metadata = options.metadata;
     this._metadata = metadata;
@@ -253,7 +253,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseTerrainProvider.ready",
-        "GoogleEarthEnterpriseTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "GoogleEarthEnterpriseTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._ready;
     },
@@ -270,7 +270,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseTerrainProvider.readyPromise",
-        "GoogleEarthEnterpriseTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "GoogleEarthEnterpriseTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._readyPromise;
     },
