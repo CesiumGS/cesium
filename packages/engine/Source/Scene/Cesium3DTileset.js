@@ -69,8 +69,8 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {ShadowMode} [shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
  * @property {number} [maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
  * @property {number} [maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset. Deprecated.
- * @property {number} [cacheBytes=536870912] The size (in bytes) to which the tile cache will be trimmed, if the cache contains tiles not needed for the current view
- * @property {number} [cacheHeadroomBytes=536870912] The maximum additional memory (in bytes) to allow for cache headroom, if more than {@link Cesium3DTileset#cacheBytes} are needed for the current view
+ * @property {number} [cacheBytes=536870912] The size (in bytes) to which the tile cache will be trimmed, if the cache contains tiles not needed for the current view.
+ * @property {number} [cacheHeadroomBytes=536870912] The maximum additional memory (in bytes) to allow for cache headroom, if more than {@link Cesium3DTileset#cacheBytes} are needed for the current view. Must be at least 10 * 1024 * 1024.
  * @property {boolean} [cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
  * @property {boolean} [cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
  * @property {number} [cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
@@ -234,9 +234,9 @@ function Cesium3DTileset(options) {
     defaultCacheBytes = options.maximumMemoryUsage * 1024 * 1024;
   }
   this._cacheBytes = defaultValue(options.cacheBytes, defaultCacheBytes);
-  this._cacheHeadroomBytes = defaultValue(
-    options.cacheHeadroomBytes,
-    defaultCacheBytes
+  this._cacheHeadroomBytes = Math.max(
+    10 * 1024 * 1024,
+    defaultValue(options.cacheHeadroomBytes, defaultCacheBytes)
   );
 
   this._styleEngine = new Cesium3DTileStyleEngine();
@@ -1637,6 +1637,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * until the tiles required to meet the adjusted screen space error use less
    * than <code>cacheBytes</code> plus <code>cacheHeadroomBytes</code>.
    * </p>
+   * <p>
+   * Must be at least 10 * 1024 * 1024.
+   * </p>
    *
    * @memberof Cesium3DTileset.prototype
    *
@@ -1655,7 +1658,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       Check.typeOf.number.greaterThanOrEquals("value", value, 0);
       //>>includeEnd('debug');
 
-      this._cacheHeadroomBytes = value;
+      this._cacheHeadroomBytes = Math.max(10 * 1024 * 1024, value);
     },
   },
 
