@@ -39,8 +39,8 @@ async function createGooglePhotorealistic3DTileset(key, options) {
   options = defaultValue(options, {});
   options.showCreditsOnScreen = true;
   options.cacheBytes = defaultValue(options.cacheBytes, 1536 * 1024 * 1024);
-  options.cacheHeadroomBytes = defaultValue(
-    options.cacheHeadroomBytes,
+  options.maximumCacheOverflowBytes = defaultValue(
+    options.maximumCacheOverflowBytes,
     1024 * 1024 * 1024
   );
 
