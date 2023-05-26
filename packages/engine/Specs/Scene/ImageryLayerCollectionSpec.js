@@ -22,9 +22,7 @@ describe(
   "Scene/ImageryLayerCollection",
   function () {
     const fakeProvider = {
-      isReady: function () {
-        return false;
-      },
+      ready: false,
     };
 
     it("tracks the base layer on add", function () {

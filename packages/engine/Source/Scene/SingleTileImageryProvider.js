@@ -253,7 +253,7 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.ready",
-        "SingleTileImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use SingleTileImageryProvider.fromUrl instead."
+        "SingleTileImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107. Use SingleTileImageryProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -270,7 +270,7 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.readyPromise",
-        "SingleTileImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use SingleTileImageryProvider.fromUrl instead."
+        "SingleTileImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107. Use SingleTileImageryProvider.fromUrl instead."
       );
       return this._readyPromise;
     },
@@ -316,14 +316,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultAlpha",
-        "SingleTileImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "SingleTileImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultAlpha",
-        "SingleTileImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "SingleTileImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -340,14 +340,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultNightAlpha",
-        "SingleTileImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "SingleTileImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this._defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultNightAlpha",
-        "SingleTileImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "SingleTileImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this._defaultNightAlpha = value;
     },
@@ -364,14 +364,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultDayAlpha",
-        "SingleTileImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "SingleTileImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultDayAlpha",
-        "SingleTileImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "SingleTileImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -388,14 +388,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultBrightness",
-        "SingleTileImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "SingleTileImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultBrightness",
-        "SingleTileImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "SingleTileImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -412,14 +412,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultContrast",
-        "SingleTileImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "SingleTileImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultContrast",
-        "SingleTileImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "SingleTileImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -435,14 +435,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultHue",
-        "SingleTileImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "SingleTileImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultHue",
-        "SingleTileImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "SingleTileImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -459,14 +459,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultSaturation",
-        "SingleTileImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "SingleTileImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultSaturation",
-        "SingleTileImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "SingleTileImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -482,14 +482,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultGamma",
-        "SingleTileImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "SingleTileImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultGamma",
-        "SingleTileImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "SingleTileImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -505,14 +505,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultMinificationFilter",
-        "SingleTileImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "SingleTileImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultMinificationFilter",
-        "SingleTileImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "SingleTileImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -528,14 +528,14 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "SingleTileImageryProvider.defaultMagnificationFilter",
-        "SingleTileImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "SingleTileImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "SingleTileImageryProvider.defaultMagnificationFilter",
-        "SingleTileImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "SingleTileImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },

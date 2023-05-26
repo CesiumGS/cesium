@@ -58,12 +58,7 @@ describe(
   function () {
     const readyPromise = Promise.resolve(true);
     const testProvider = {
-      isReady: function () {
-        return false;
-      },
-      _ready: true,
       ready: true,
-      _readyPromise: readyPromise,
       readyPromise: readyPromise,
       tilingScheme: {
         tileXYToRectangle: function () {

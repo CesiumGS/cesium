@@ -8,6 +8,7 @@
 
 - Fixed color creation from CSS color string with modern "space-separated" syntax. [#11271](https://github.com/CesiumGS/cesium/pull/11271)
 - Fixed a race condition when loading cut-out terrain. [#11296](https://github.com/CesiumGS/cesium/pull/11296)
+- Fixed async behavior for custom terrain and imagery providers. [#11274](https://github.com/CesiumGS/cesium/issues/11274)
 
 ### 1.105.2 - 2023-05-15
 

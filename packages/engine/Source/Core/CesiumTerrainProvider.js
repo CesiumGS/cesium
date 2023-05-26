@@ -535,7 +535,7 @@ function CesiumTerrainProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "CesiumTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
     );
     this._readyPromise = CesiumTerrainProvider._initializeReadyPromise(
       options,
@@ -1087,7 +1087,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "CesiumTerrainProvider.ready",
-        "CesiumTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
+        "CesiumTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -1104,7 +1104,7 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "CesiumTerrainProvider.readyPromise",
-        "CesiumTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
+        "CesiumTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
       );
       return this._readyPromise;
     },

@@ -43,7 +43,11 @@ async function sampleTerrain(terrainProvider, level, positions) {
   //>>includeEnd('debug');
 
   // readyPromise has been deprecated; This is here for backwards compatibility
-  await terrainProvider._readyPromise;
+  if (defined(terrainProvider._readyPromise)) {
+    await terrainProvider._readyPromise;
+  } else if (defined(terrainProvider.readyPromise)) {
+    await terrainProvider.readyPromise;
+  }
 
   return doSampling(terrainProvider, level, positions);
 }

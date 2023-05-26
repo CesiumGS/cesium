@@ -690,7 +690,12 @@ ImageryLayer.prototype.getViewableRectangle = async function () {
   const imageryProvider = this._imageryProvider;
   const rectangle = this._rectangle;
   // readyPromise has been deprecated. This is here for backward compatibility and can be removed with readyPromise.
-  await imageryProvider._readyPromise;
+  if (defined(imageryProvider._readyPromise)) {
+    await imageryProvider._readyPromise;
+  } else if (defined(imageryProvider.readyPromise)) {
+    await imageryProvider.readyPromise;
+  }
+
   return Rectangle.intersection(imageryProvider.rectangle, rectangle);
 };
 
@@ -751,8 +756,13 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   }
 
   const imageryProvider = this._imageryProvider;
-  // ready is deprecated. This is here for backwards compatibility
-  if (!this.ready || !imageryProvider._ready) {
+  if (
+    !this.ready ||
+    // ready is deprecated. This is here for backwards compatibility
+    (defined(imageryProvider._ready)
+      ? !imageryProvider._ready
+      : defined(imageryProvider.ready) && !imageryProvider.ready)
+  ) {
     // The imagery provider is not ready, so we can't create skeletons, yet.
     // Instead, add a placeholder so that we'll know to create
     // the skeletons once the provider is ready.

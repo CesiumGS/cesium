@@ -178,7 +178,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.ready",
-        "TileCoordinatesImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "TileCoordinatesImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return true;
     },
@@ -195,7 +195,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.readyPromise",
-        "TileCoordinatesImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "TileCoordinatesImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._readyPromise;
     },
@@ -241,14 +241,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultAlpha",
-        "TileCoordinatesImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "TileCoordinatesImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultAlpha",
-        "TileCoordinatesImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "TileCoordinatesImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -265,14 +265,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultNightAlpha",
-        "TileCoordinatesImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "TileCoordinatesImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this._defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultNightAlpha",
-        "TileCoordinatesImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "TileCoordinatesImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this._defaultNightAlpha = value;
     },
@@ -289,14 +289,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultDayAlpha",
-        "TileCoordinatesImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "TileCoordinatesImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultDayAlpha",
-        "TileCoordinatesImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "TileCoordinatesImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -313,14 +313,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultBrightness",
-        "TileCoordinatesImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "TileCoordinatesImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultBrightness",
-        "TileCoordinatesImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "TileCoordinatesImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -337,14 +337,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultContrast",
-        "TileCoordinatesImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "TileCoordinatesImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultContrast",
-        "TileCoordinatesImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "TileCoordinatesImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -360,14 +360,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultHue",
-        "TileCoordinatesImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "TileCoordinatesImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultHue",
-        "TileCoordinatesImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "TileCoordinatesImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -384,14 +384,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultSaturation",
-        "TileCoordinatesImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "TileCoordinatesImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultSaturation",
-        "TileCoordinatesImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "TileCoordinatesImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -407,14 +407,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultGamma",
-        "TileCoordinatesImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "TileCoordinatesImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultGamma",
-        "TileCoordinatesImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "TileCoordinatesImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -430,14 +430,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultMinificationFilter",
-        "TileCoordinatesImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "TileCoordinatesImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultMinificationFilter",
-        "TileCoordinatesImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "TileCoordinatesImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -453,14 +453,14 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultMagnificationFilter",
-        "TileCoordinatesImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "TileCoordinatesImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "TileCoordinatesImageryProvider.defaultMagnificationFilter",
-        "TileCoordinatesImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "TileCoordinatesImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },

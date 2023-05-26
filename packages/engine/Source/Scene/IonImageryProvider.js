@@ -123,7 +123,7 @@ function IonImageryProvider(options) {
   if (defined(assetId)) {
     deprecationWarning(
       "IonImageryProvider options.assetId",
-      "options.assetId was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
+      "options.assetId was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
     );
 
     IonImageryProvider._initialize(this, assetId, options);
@@ -142,7 +142,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.ready",
-        "IonImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
+        "IonImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
       );
       return this._ready;
     },
@@ -159,7 +159,7 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.readyPromise",
-        "IonImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
+        "IonImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use IonImageryProvider.fromAssetId instead."
       );
       return this._readyPromise;
     },
@@ -322,14 +322,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultAlpha",
-        "IonImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "IonImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultAlpha",
-        "IonImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "IonImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -346,14 +346,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultNightAlpha",
-        "IonImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "IonImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this.defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultNightAlpha",
-        "IonImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "IonImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this.defaultNightAlpha = value;
     },
@@ -370,14 +370,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultDayAlpha",
-        "IonImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "IonImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultDayAlpha",
-        "IonImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "IonImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -394,14 +394,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultBrightness",
-        "IonImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "IonImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultBrightness",
-        "IonImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "IonImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -418,14 +418,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultContrast",
-        "IonImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "IonImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultContrast",
-        "IonImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "IonImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -441,14 +441,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultHue",
-        "IonImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "IonImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultHue",
-        "IonImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "IonImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -465,14 +465,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultSaturation",
-        "IonImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "IonImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultSaturation",
-        "IonImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "IonImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -488,14 +488,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultGamma",
-        "IonImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "IonImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultGamma",
-        "IonImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "IonImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -511,14 +511,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultMinificationFilter",
-        "IonImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "IonImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultMinificationFilter",
-        "IonImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "IonImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -534,14 +534,14 @@ Object.defineProperties(IonImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "IonImageryProvider.defaultMagnificationFilter",
-        "IonImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "IonImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "IonImageryProvider.defaultMagnificationFilter",
-        "IonImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "IonImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },

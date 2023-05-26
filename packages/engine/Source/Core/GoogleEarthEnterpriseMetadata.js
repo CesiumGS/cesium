@@ -105,7 +105,7 @@ function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
   if (defined(resourceOrUrl)) {
     deprecationWarning(
       "GoogleEarthEnterpriseMetadata options.url",
-      "GoogleEarthEnterpriseMetadata constructor parmeter resourceOrUrl was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use GoogleEarthEnterpriseMetadata.fromUrl instead."
+      "GoogleEarthEnterpriseMetadata constructor parmeter resourceOrUrl was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use GoogleEarthEnterpriseMetadata.fromUrl instead."
     );
 
     let url = resourceOrUrl;
@@ -183,7 +183,7 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMetadata.readyPromise",
-        "GoogleEarthEnterpriseMetadata.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use GoogleEarthEnterpriseMetadata.fromUrl instead."
+        "GoogleEarthEnterpriseMetadata.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use GoogleEarthEnterpriseMetadata.fromUrl instead."
       );
       return this._readyPromise;
     },

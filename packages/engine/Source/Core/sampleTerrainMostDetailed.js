@@ -40,7 +40,11 @@ async function sampleTerrainMostDetailed(terrainProvider, positions) {
   const maxLevels = [];
 
   // readyPromise has been deprecated; This is here for backwards compatibility
-  await terrainProvider._readyPromise;
+  if (defined(terrainProvider._readyPromise)) {
+    await terrainProvider._readyPromise;
+  } else if (defined(terrainProvider.readyPromise)) {
+    await terrainProvider.readyPromise;
+  }
 
   const availability = terrainProvider.availability;
 
