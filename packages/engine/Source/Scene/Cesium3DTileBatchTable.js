@@ -1050,9 +1050,6 @@ function getLogDepthPolygonOffsetFragmentShaderProgram(context, shaderProgram) {
     fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
     fs.defines.push("POLYGON_OFFSET");
 
-    fs.sources.unshift(
-      "#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n"
-    );
     shader = context.shaderCache.createDerivedShaderProgram(
       shaderProgram,
       "zBackfaceLogDepth",

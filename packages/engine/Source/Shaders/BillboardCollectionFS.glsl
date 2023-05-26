@@ -1,7 +1,3 @@
-#ifdef GL_OES_standard_derivatives
-#extension GL_OES_standard_derivatives : enable
-#endif
-
 uniform sampler2D u_atlas;
 
 #ifdef VECTOR_TILE

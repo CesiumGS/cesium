@@ -56,6 +56,9 @@ function demodernizeShader(input, isFragmentShader) {
       // Replace gl_FragDepth with gl_FragDepthEXT.
       output = output.replaceAll(/gl_FragDepth/g, `gl_FragDepthEXT`);
     }
+
+    // Enable the OES_standard_derivatives extension
+    output = `#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n${output}`;
   } else {
     // Replace the in with attribute.
     output = output.replaceAll(/(in)\s+(vec\d|mat\d|float)/g, `attribute $2`);
