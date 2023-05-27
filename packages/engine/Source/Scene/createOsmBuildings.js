@@ -13,6 +13,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * tileset.
  *
  * @function
+ *  @deprecated
  *
  * @param {object} [options] Construction options. Any options allowed by the {@link Cesium3DTileset} constructor
  *        may be specified here. In addition to those, the following properties are supported:
@@ -52,7 +53,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 function createOsmBuildings(options) {
   deprecationWarning(
     "createOsmBuildings",
-    "createOsmBuildings was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createOsmBuildingsAsync instead."
+    "createOsmBuildings was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use createOsmBuildingsAsync instead."
   );
 
   options = combine(options, {

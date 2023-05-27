@@ -33,7 +33,7 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
 function createWorldImagery(options) {
   deprecationWarning(
     "createWorldImagery",
-    "createWorldImagery was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use createWorldImageryAsync instead."
+    "createWorldImagery was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use createWorldImageryAsync instead."
   );
 
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

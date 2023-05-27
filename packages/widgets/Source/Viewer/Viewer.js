@@ -2153,7 +2153,13 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
 
       if (defined(zoomTarget.imageryProvider)) {
         // This is here for backward compatibility. It can be removed when readyPromise is removed.
-        rectanglePromise = zoomTarget.imageryProvider._readyPromise.then(() => {
+        let promise = Promise.resolve();
+        if (defined(zoomTarget.imageryProvider._readyPromise)) {
+          promise = zoomTarget.imageryProvider._readyPromise;
+        } else if (defined(zoomTarget.imageryProvider.readyPromise)) {
+          promise = zoomTarget.imageryProvider.readyPromise;
+        }
+        rectanglePromise = promise.then(() => {
           return zoomTarget.getImageryRectangle();
         });
       } else {

@@ -34,11 +34,14 @@ function Imagery(imageryLayer, x, y, level, rectangle) {
   this.credits = undefined;
   this.referenceCount = 0;
 
-  // imageryProvider._ready is deprecated; This is here for backward compatibility
+  const imageryProvider = imageryLayer.imageryProvider;
   if (
     !defined(rectangle) &&
     imageryLayer.ready &&
-    imageryLayer.imageryProvider._ready
+    // imageryProvider._ready is deprecated; This is here for backward compatibility
+    (defined(imageryProvider._ready)
+      ? imageryProvider._ready
+      : !defined(imageryProvider.ready) || imageryProvider.ready)
   ) {
     const tilingScheme = imageryLayer.imageryProvider.tilingScheme;
     rectangle = tilingScheme.tileXYToRectangle(x, y, level);

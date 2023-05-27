@@ -145,7 +145,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "CustomHeightmapTerrainProvider.ready",
-        "CustomHeightmapTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "CustomHeightmapTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return true;
     },
@@ -162,7 +162,7 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "CustomHeightmapTerrainProvider.readyPromise",
-        "CustomHeightmapTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "CustomHeightmapTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._readyPromise;
     },

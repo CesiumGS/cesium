@@ -15,9 +15,15 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   }
   MockGlobe.prototype.isDestroyed = () => false;
 
-  const testProvider = {};
-  const testProvider2 = {};
-  const testProvider3 = {};
+  const testProvider = {
+    ready: false,
+  };
+  const testProvider2 = {
+    ready: false,
+  };
+  const testProvider3 = {
+    ready: false,
+  };
 
   const testProviderViewModel = new ProviderViewModel({
     name: "name",

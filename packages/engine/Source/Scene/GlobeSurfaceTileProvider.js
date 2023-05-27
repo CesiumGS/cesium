@@ -237,15 +237,32 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
    */
   ready: {
     get: function () {
-      return (
-        defined(this._terrainProvider) &&
+      const terrainProvider = this._terrainProvider;
+      if (
+        !defined(terrainProvider) ||
         // TerrainProvider.ready is deprecated; This is here for backwards compatibility
-        this._terrainProvider._ready &&
-        (this._imageryLayers.length === 0 ||
-          // ImageryProvider.ready is deprecated; This is here for backwards compatibility
-          (this._imageryLayers.get(0).ready &&
-            this._imageryLayers.get(0).imageryProvider._ready))
-      );
+        (defined(terrainProvider._ready)
+          ? !terrainProvider._ready
+          : defined(terrainProvider.ready) && !terrainProvider.ready)
+      ) {
+        return false;
+      }
+
+      if (this._imageryLayers.length === 0) {
+        return true;
+      }
+
+      const imageryLayer = this._imageryLayers.get(0);
+      if (!imageryLayer.ready) {
+        return false;
+      }
+
+      // ImageryProvider.ready is deprecated; This is here for backwards compatibility
+      const imageryProvider = imageryLayer.imageryProvider;
+      const imageryProviderReady = defined(imageryProvider._ready)
+        ? imageryProvider._ready
+        : !defined(imageryProvider.ready) || imageryProvider.ready;
+      return imageryProviderReady;
     },
   },
 
@@ -346,25 +363,30 @@ GlobeSurfaceTileProvider.prototype.update = function (frameState) {
 
 function updateCredits(surface, frameState) {
   const creditDisplay = frameState.creditDisplay;
+  const terrainProvider = surface._terrainProvider;
   if (
-    defined(surface._terrainProvider) &&
+    defined(terrainProvider) &&
     // ready is deprecated; This is here for backwards compatibility
-    surface._terrainProvider._ready &&
-    defined(surface._terrainProvider.credit)
+    (defined(terrainProvider._ready)
+      ? terrainProvider._ready
+      : !defined(terrainProvider.ready) || terrainProvider.ready) &&
+    defined(terrainProvider.credit)
   ) {
-    creditDisplay.addCreditToNextFrame(surface._terrainProvider.credit);
+    creditDisplay.addCreditToNextFrame(terrainProvider.credit);
   }
 
   const imageryLayers = surface._imageryLayers;
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
     const layer = imageryLayers.get(i);
-    // ImageryProvider.ready is deprecated; This is here for backwards compatibility
-    if (
-      layer.ready &&
-      layer.imageryProvider._ready &&
-      defined(layer.imageryProvider.credit)
-    ) {
-      creditDisplay.addCreditToNextFrame(layer.imageryProvider.credit);
+    if (layer.ready) {
+      // ImageryProvider.ready is deprecated; This is here for backwards compatibility
+      const imageryProvider = layer.imageryProvider;
+      const imageryProviderReady = defined(imageryProvider._ready)
+        ? imageryProvider._ready
+        : !defined(imageryProvider.ready) || imageryProvider.ready;
+      if (imageryProviderReady && defined(layer.imageryProvider.credit)) {
+        creditDisplay.addCreditToNextFrame(layer.imageryProvider.credit);
+      }
     }
   }
 }
@@ -2144,10 +2166,13 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     tileProvider.hasWaterMask && defined(waterMaskTexture);
   const oceanNormalMap = tileProvider.oceanNormalMap;
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
+  const terrainProvider = tileProvider.terrainProvider;
   const hasVertexNormals =
-    defined(tileProvider.terrainProvider) &&
+    defined(terrainProvider) &&
     // ready is deprecated; This is here for backwards compatibility
-    tileProvider.terrainProvider._ready &&
+    (defined(terrainProvider._ready)
+      ? terrainProvider._ready
+      : !defined(terrainProvider.ready) || terrainProvider.ready) &&
     tileProvider.terrainProvider.hasVertexNormals;
   const enableFog =
     frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;

@@ -469,7 +469,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.ready",
-        "GoogleEarthEnterpriseMapsProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
+        "GoogleEarthEnterpriseMapsProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -486,7 +486,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.readyPromise",
-        "GoogleEarthEnterpriseMapsProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
+        "GoogleEarthEnterpriseMapsProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
       );
       return this._readyPromise;
     },
@@ -532,14 +532,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -556,14 +556,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this.defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this.defaultNightAlpha = value;
     },
@@ -580,14 +580,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -604,14 +604,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultBrightness",
-        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultBrightness",
-        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -628,14 +628,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultContrast",
-        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultContrast",
-        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -651,14 +651,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultHue",
-        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultHue",
-        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -675,14 +675,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultSaturation",
-        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultSaturation",
-        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -698,14 +698,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultGamma",
-        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultGamma",
-        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -721,14 +721,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -744,14 +744,14 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
     get: function () {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },

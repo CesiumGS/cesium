@@ -81,7 +81,7 @@ function TileMapServiceImageryProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "TileMapServiceImageryProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use TileMapServiceImageryProvider.fromUrl instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use TileMapServiceImageryProvider.fromUrl instead."
     );
 
     this._metadataError = undefined;
