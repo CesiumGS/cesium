@@ -35,7 +35,34 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        function randomCoordinateJitter(degree, margin) {
+          return degree + (margin * (Math.random() - 0.5)) / 0.5;
+        }
+
         const viewer = new Cesium.Viewer("cesiumContainer");
+        for (let i = 0; i <= 15000; i++) {
+          const entity = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(
+              randomCoordinateJitter(-77.009003, 0.5),
+              randomCoordinateJitter(38.889931, 0.5)
+            ),
+            label: {
+              text: `CUTE # + ${i}`,
+            },
+            billboard: {
+              height: 24,
+              width: 36,
+              image:
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhFpaxDXCS5O9hx90F3ufJI2VnC_wW0lPnrr6BIb18P4V5JXxBCg",
+            },
+            ellipse: {
+              semiMajorAxis: 100,
+              semiMinorAxis: 80,
+            },
+          });
+          entity.manualUpdate = true;
+          entity.forceUpdate = true;
+        }
         //Sandcastle_End
       };
 
