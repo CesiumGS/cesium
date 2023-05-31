@@ -346,7 +346,7 @@ function CesiumWidget(container, options) {
     if (defined(options.imageryProvider)) {
       deprecationWarning(
         "CesiumWidget options.imageryProvider",
-        "options.imageryProvider was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use options.baseLayer instead."
+        "options.imageryProvider was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use options.baseLayer instead."
       );
     }
 

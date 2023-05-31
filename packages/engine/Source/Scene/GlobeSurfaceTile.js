@@ -346,7 +346,13 @@ GlobeSurfaceTile.prototype.processImagery = function (
     if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
       const imageryLayer = tileImagery.loadingImagery.imageryLayer;
       // ImageryProvider.ready is deprecated. This is here for backwards compatibility
-      if (imageryLayer.ready && imageryLayer.imageryProvider._ready) {
+      const imageryProvider = imageryLayer.imageryProvider;
+      if (
+        imageryLayer.ready &&
+        (defined(imageryProvider._ready)
+          ? imageryProvider._ready
+          : !defined(imageryProvider.ready) || imageryProvider.ready)
+      ) {
         // Remove the placeholder and add the actual skeletons (if any)
         // at the same position.  Then continue the loop at the same index.
         tileImagery.freeResources();

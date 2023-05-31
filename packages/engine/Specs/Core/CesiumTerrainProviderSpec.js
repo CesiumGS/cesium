@@ -133,6 +133,45 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   }
 
+  function returnParentUrlTileJsonWithMetadataAvailability() {
+    const paths = [
+      "Data/CesiumTerrainTileJson/ParentUrlAvailability.tile.json",
+      "Data/CesiumTerrainTileJson/ParentAvailability.tile.json",
+    ];
+    let i = 0;
+    const oldLoad = Resource._Implementations.loadWithXhr;
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      if (url.indexOf("layer.json") >= 0) {
+        Resource._DefaultImplementations.loadWithXhr(
+          paths[i++],
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      } else {
+        return oldLoad(
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        );
+      }
+    };
+  }
+
   async function waitForTile(level, x, y, requestNormals, requestWaterMask, f) {
     const terrainProvider = await CesiumTerrainProvider.fromUrl("made/up/url", {
       requestVertexNormals: requestNormals,
@@ -895,6 +934,43 @@ describe("Core/CesiumTerrainProvider", function () {
       expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(false);
 
       const loadedData = await terrainProvider.requestTileGeometry(0, 0, 0);
+      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+      expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(true);
+    });
+
+    it("provides QuantizedMeshTerrainData with multiple layers and with Metadata availability ", async function () {
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.metadataavailability.terrain",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      };
+
+      returnParentUrlTileJsonWithMetadataAvailability();
+
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url"
+      );
+
+      expect(terrainProvider.hasMetadata).toBe(true);
+      const layers = terrainProvider._layers;
+      expect(layers.length).toBe(2);
+
+      expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(false);
+
+      const loadedData = await terrainProvider.requestTileGeometry(0, 0, 1);
       expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
       expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(true);
     });

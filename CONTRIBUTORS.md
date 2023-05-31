@@ -357,3 +357,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [王秋艳](https://github.com/wqy224488)
 - [Jason Summercamp](https://github.com/fullstacc)
 - [Shapovalov Kirill](https://github.com/ShapovalovKL)
+- [Alexander Popoff](https://github.com/aerialist7)
+- [IKangXu](https://github.com/IKangXu)

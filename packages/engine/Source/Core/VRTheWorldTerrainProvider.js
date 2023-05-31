@@ -185,7 +185,7 @@ function VRTheWorldTerrainProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "VRTheWorldTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  VRTheWorldTerrainProvider.fromUrl instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  VRTheWorldTerrainProvider.fromUrl instead."
     );
     const that = this;
     const terrainProviderBuilder = new TerrainProviderBuilder(options);
@@ -255,7 +255,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "VRTheWorldTerrainProvider.ready",
-        "VRTheWorldTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use VRTheWorldTerrainProvider.fromUrl instead."
+        "VRTheWorldTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use VRTheWorldTerrainProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -272,7 +272,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "VRTheWorldTerrainProvider.readyPromise",
-        "VRTheWorldTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use VRTheWorldTerrainProvider.fromUrl instead."
+        "VRTheWorldTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use VRTheWorldTerrainProvider.fromUrl instead."
       );
       return this._readyPromise;
     },

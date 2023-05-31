@@ -261,7 +261,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
   if (defined(options.url)) {
     deprecationWarning(
       "ArcGISTiledElevationTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
+      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
     );
 
     const that = this;
@@ -345,7 +345,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGISTiledElevationTerrainProvider.ready",
-        "ArcGISTiledElevationTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
+        "ArcGISTiledElevationTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
       );
       return this._ready;
     },
@@ -362,7 +362,7 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
     get: function () {
       deprecationWarning(
         "ArcGISTiledElevationTerrainProvider.readyPromise",
-        "ArcGISTiledElevationTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
+        "ArcGISTiledElevationTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
       );
       return this._readyPromise;
     },

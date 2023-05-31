@@ -3,8 +3,12 @@ import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 let defaultTokenCredit;
-const defaultAccessToken =
+
+// This is the "cesium.com - sandcastle & cesium viewer" token from the CesiumJS account
+const cesiumWebsiteToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ODZkMDQzOS03ZGJjLTQzZWUtYjlmYy04ZmM5Y2UwNzNhMmYiLCJpZCI6MjU5LCJpYXQiOjE2MzgyMDYwMDB9.cK1hsaFBgz0l2dG9Ry5vBFHWp-HF2lwjLC0tcK8Z8tY";
+const defaultAccessToken =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmYmE2YWEzOS1lZDUyLTQ0YWMtOTlkNS0wN2VhZWI3NTc4MmEiLCJpZCI6MjU5LCJpYXQiOjE2ODU2MzQ0Njl9.AswCMxsN03WYwuZL-r183OZicN64Ks9aPExWhA3fuLY";
 
 /**
  * Default settings for accessing the Cesium ion API.
@@ -27,7 +31,7 @@ const Ion = {};
  *
  * @type {string}
  */
-Ion.defaultAccessToken = defaultAccessToken;
+Ion.defaultAccessToken = cesiumWebsiteToken;
 
 /**
  * Gets or sets the default Cesium ion server.

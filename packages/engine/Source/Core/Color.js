@@ -352,9 +352,9 @@ const rgbaMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$/i;
 //#rrggbbaa
 const rrggbbaaMatcher = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
 //rgb(), rgba(), or rgb%()
-const rgbParenthesesMatcher = /^rgba?\(\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
+const rgbParenthesesMatcher = /^rgba?\s*\(\s*([0-9.]+%?)\s*[,\s]+\s*([0-9.]+%?)\s*[,\s]+\s*([0-9.]+%?)(?:\s*[,\s/]+\s*([0-9.]+))?\s*\)$/i;
 //hsl() or hsla()
-const hslParenthesesMatcher = /^hsla?\(\s*([0-9.]+)\s*,\s*([0-9.]+%)\s*,\s*([0-9.]+%)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
+const hslParenthesesMatcher = /^hsla?\s*\(\s*([0-9.]+)\s*[,\s]+\s*([0-9.]+%)\s*[,\s]+\s*([0-9.]+%)(?:\s*[,\s/]+\s*([0-9.]+))?\s*\)$/i;
 
 /**
  * Creates a Color instance from a CSS color value.
@@ -379,8 +379,8 @@ Color.fromCssColorString = function (color, result) {
     result = new Color();
   }
 
-  // Remove all whitespaces from the color string
-  color = color.replace(/\s/g, "");
+  // Remove all surrounding whitespaces from the color string
+  color = color.trim();
 
   const namedColor = Color[color.toUpperCase()];
   if (defined(namedColor)) {

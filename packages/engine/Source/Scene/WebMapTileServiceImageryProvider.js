@@ -461,7 +461,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.ready",
-        "WebMapTileServiceImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "WebMapTileServiceImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return true;
     },
@@ -478,7 +478,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.readyPromise",
-        "WebMapTileServiceImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107."
+        "WebMapTileServiceImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
       );
       return this._readyPromise;
     },
@@ -570,14 +570,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultAlpha",
-        "WebMapTileServiceImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "WebMapTileServiceImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       return this._defaultAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultAlpha",
-        "WebMapTileServiceImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
+        "WebMapTileServiceImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
       );
       this._defaultAlpha = value;
     },
@@ -594,14 +594,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultNightAlpha",
-        "WebMapTileServiceImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "WebMapTileServiceImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       return this._defaultNightAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultNightAlpha",
-        "WebMapTileServiceImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
+        "WebMapTileServiceImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
       );
       this._defaultNightAlpha = value;
     },
@@ -618,14 +618,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultDayAlpha",
-        "WebMapTileServiceImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "WebMapTileServiceImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       return this._defaultDayAlpha;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultDayAlpha",
-        "WebMapTileServiceImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
+        "WebMapTileServiceImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
       );
       this._defaultDayAlpha = value;
     },
@@ -642,14 +642,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultBrightness",
-        "WebMapTileServiceImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "WebMapTileServiceImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       return this._defaultBrightness;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultBrightness",
-        "WebMapTileServiceImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
+        "WebMapTileServiceImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
       );
       this._defaultBrightness = value;
     },
@@ -666,14 +666,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultContrast",
-        "WebMapTileServiceImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "WebMapTileServiceImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       return this._defaultContrast;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultContrast",
-        "WebMapTileServiceImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
+        "WebMapTileServiceImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
       );
       this._defaultContrast = value;
     },
@@ -689,14 +689,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultHue",
-        "WebMapTileServiceImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "WebMapTileServiceImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       return this._defaultHue;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultHue",
-        "WebMapTileServiceImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.hue instead."
+        "WebMapTileServiceImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
       );
       this._defaultHue = value;
     },
@@ -713,14 +713,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultSaturation",
-        "WebMapTileServiceImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "WebMapTileServiceImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       return this._defaultSaturation;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultSaturation",
-        "WebMapTileServiceImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
+        "WebMapTileServiceImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
       );
       this._defaultSaturation = value;
     },
@@ -736,14 +736,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultGamma",
-        "WebMapTileServiceImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "WebMapTileServiceImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       return this._defaultGamma;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultGamma",
-        "WebMapTileServiceImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
+        "WebMapTileServiceImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
       );
       this._defaultGamma = value;
     },
@@ -759,14 +759,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultMinificationFilter",
-        "WebMapTileServiceImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "WebMapTileServiceImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       return this._defaultMinificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultMinificationFilter",
-        "WebMapTileServiceImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
+        "WebMapTileServiceImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
       );
       this._defaultMinificationFilter = value;
     },
@@ -782,14 +782,14 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
     get: function () {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultMagnificationFilter",
-        "WebMapTileServiceImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "WebMapTileServiceImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       return this._defaultMagnificationFilter;
     },
     set: function (value) {
       deprecationWarning(
         "WebMapTileServiceImageryProvider.defaultMagnificationFilter",
-        "WebMapTileServiceImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
+        "WebMapTileServiceImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
       );
       this._defaultMagnificationFilter = value;
     },

@@ -26,7 +26,6 @@ There is no release manager; instead, our community shares the responsibility. A
 8. Proofread [`CHANGES.md`](../../../CHANGES.md) with the date of the release. Adjust the order of changes so that prominent/popular changes come first. Ensure each change is in the section for the relevant workspace.
 9. Based on `CHANGES.md`, update each workspace version following the rules of [semantic versioning](https://semver.org/), e.g.,
    - `npm version minor -w @cesium/engine --no-git-tag-version`
-   - If there are no changes, skip updating the workspace version.
 10. Update the version in `package.json` to match, e.g. `1.14.0` -> `1.15.0`.
 11. Commit these changes.
 12. Make sure the repository is clean `git clean -d -x -f`. **This will delete all files not already in the repository.**

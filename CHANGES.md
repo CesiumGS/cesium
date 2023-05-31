@@ -1,5 +1,21 @@
 # Change Log
 
+### 1.106 - 2023-06-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed label background rendering. [#11293](https://github.com/CesiumGS/cesium/pull/11293)
+- Fixed color creation from CSS color string with modern "space-separated" syntax. [#11271](https://github.com/CesiumGS/cesium/pull/11271)
+- Fixed tracked entity camera controls. [#11286](https://github.com/CesiumGS/cesium/issues/11286)
+- Fixed a race condition when loading cut-out terrain. [#11296](https://github.com/CesiumGS/cesium/pull/11296)
+- Fixed async behavior for custom terrain and imagery providers. [#11274](https://github.com/CesiumGS/cesium/issues/11274)
+
+### 1.105.2 - 2023-05-15
+
+- This is an npm-only release to fix a dependency issue published in 1.105.1.
+
 ### 1.105.1 - 2023-05-10
 
 #### @cesium/engine
