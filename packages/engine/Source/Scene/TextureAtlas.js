@@ -75,7 +75,6 @@ function TextureAtlas(options) {
   this._guid = createGuid();
   this._idHash = {};
   this._indexHash = {};
-  this._subRegionIndexHash = {};
   this._initialSize = initialSize;
 
   this._root = undefined;
@@ -383,21 +382,6 @@ TextureAtlas.prototype.getImageIndex = function (id) {
 };
 
 /**
- * If the sub-region is already in the atlas, the existing index is returned. Otherwise, the result is undefined.
- *
- * @param {string} id An identifier to detect whether the sub-region already exists in the atlas.
- * @returns {number|undefined} The sub-region index, or undefined if the sub-region does not exist in the atlas.
- */
-TextureAtlas.prototype.getSubRegionIndex = function (id) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(id)) {
-    throw new DeveloperError("id is required.");
-  }
-  //>>includeEnd('debug');
-  return this._subRegionIndexHash[id];
-};
-
-/**
  * Adds an image to the atlas synchronously.  If the image is already in the atlas, the atlas is unchanged and
  * the existing index is used.
  *
@@ -523,7 +507,6 @@ TextureAtlas.prototype.addSubRegion = function (id, subRegion) {
     const newIndex =
       that._textureCoordinates.push(new BoundingRectangle(x, y, w, h)) - 1;
     that._indexHash[id] = newIndex;
-    that._subRegionIndexHash[id] = newIndex;
 
     that._guid = createGuid();
 
