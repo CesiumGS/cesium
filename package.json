@@ -52,8 +52,7 @@
   ],
   "dependencies": {
     "@cesium/engine": "2.4.0",
-    "@cesium/widgets": "2.3.0",
-    "meshoptimizer": "^0.19.0"
+    "@cesium/widgets": "2.3.0"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.342.0",
