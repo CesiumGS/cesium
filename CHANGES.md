@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.106.1 - 2023-06-02
+
+This is an npm-only release to fix a dependency issue published in 1.106
+
 ### 1.106 - 2023-06-01
 
 #### @cesium/engine
