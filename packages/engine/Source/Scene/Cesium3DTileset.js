@@ -229,7 +229,7 @@ function Cesium3DTileset(options) {
   if (defined(options.maximumMemoryUsage)) {
     deprecationWarning(
       "Cesium3DTileset.maximumMemoryUsage",
-      "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cacheBytes instead."
+      "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.107.  It will be removed in CesiumJS 1.110. Use Cesium3DTileset.cacheBytes instead."
     );
     defaultCacheBytes = options.maximumMemoryUsage * 1024 * 1024;
   }
@@ -1578,14 +1578,14 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     get: function () {
       deprecationWarning(
         "Cesium3DTileset.maximumMemoryUsage",
-        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cacheBytes instead."
+        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.107.  It will be removed in CesiumJS 1.110. Use Cesium3DTileset.cacheBytes instead."
       );
       return this._maximumMemoryUsage;
     },
     set: function (value) {
       deprecationWarning(
         "Cesium3DTileset.maximumMemoryUsage",
-        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.106.  It will be removed in CesiumJS 1.109. Use Cesium3DTileset.cacheBytes instead."
+        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.107.  It will be removed in CesiumJS 1.110. Use Cesium3DTileset.cacheBytes instead."
       );
       //>>includeStart('debug', pragmas.debug);
       Check.typeOf.number.greaterThanOrEquals("value", value, 0);
@@ -1610,9 +1610,11 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * If tiles sized more than <code>cacheBytes</code> are needed to meet the
    * desired screen space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
    * for the current view, then the memory usage of the tiles loaded will exceed
-   * <code>cacheBytes</code>.  For example, if the maximum is 256 MB, but 300 MB
-   * of tiles are needed to meet the screen space error, then 300 MB of tiles may
-   * be loaded. When these tiles go out of view, they will be unloaded.
+   * <code>cacheBytes</code> by up to <code>maximumCacheOverflowBytes</code>.
+   * For example, if <code>cacheBytes</code> is 500000, but 600000 bytes
+   * of tiles are needed to meet the screen space error, then 600000 bytes of tiles
+   * may be loaded (if <code>maximumCacheOverflowBytes</code> is at least 100000).
+   * When these tiles go out of view, they will be unloaded.
    * </p>
    *
    * @memberof Cesium3DTileset.prototype
@@ -2794,24 +2796,49 @@ function handleTileFailure(error, tileset, tile) {
 }
 
 /**
+ * @private
+ * @param {Cesium3DTileset} tileset
+ */
+function filterProcessingQueue(tileset) {
+  const tiles = tileset._processingQueue;
+
+  let removeCount = 0;
+  for (let i = 0; i < tiles.length; ++i) {
+    const tile = tiles[i];
+    if (
+      tile.isDestroyed() ||
+      tile._contentState !== Cesium3DTileContentState.PROCESSING
+    ) {
+      ++removeCount;
+      continue;
+    }
+    if (removeCount > 0) {
+      tiles[i - removeCount] = tile;
+    }
+  }
+  tiles.length -= removeCount;
+}
+
+/**
  * Process tiles in the PROCESSING state so they will eventually move to the READY state.
  * @private
  * @param {Cesium3DTileset} tileset
  * @param {Cesium3DTile} tile
  */
 function processTiles(tileset, frameState) {
-  const tiles = tileset._processingQueue.filter(
-    (tile) =>
-      !tile.isDestroyed() &&
-      tile._contentState === Cesium3DTileContentState.PROCESSING
-  );
-  tileset._processingQueue = tiles;
+  filterProcessingQueue(tileset);
+  const tiles = tileset._processingQueue;
 
   const { cacheBytes, maximumCacheOverflowBytes, statistics } = tileset;
   const cacheByteLimit = cacheBytes + maximumCacheOverflowBytes;
 
   let memoryExceeded = false;
   for (let i = 0; i < tiles.length; ++i) {
+    if (tileset.totalMemoryUsageInBytes > cacheByteLimit) {
+      memoryExceeded = true;
+      break;
+    }
+
     const tile = tiles[i];
     try {
       tile.process(tileset, frameState);
@@ -2823,11 +2850,6 @@ function processTiles(tileset, frameState) {
     } catch (error) {
       --statistics.numberOfTilesProcessing;
       handleTileFailure(error, tileset, tile);
-    }
-
-    if (tileset.totalMemoryUsageInBytes > cacheByteLimit) {
-      memoryExceeded = true;
-      break;
     }
   }
 

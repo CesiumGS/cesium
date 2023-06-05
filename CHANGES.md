@@ -1,5 +1,17 @@
 # Change Log
 
+### 1.107 - 2023-07-01
+
+##### Additions :tada:
+
+- Added `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` to better control memory usage. To replicate previous behavior, change `maximumMemoryUsage` to `cacheBytes`, and set `maximumCacheOverflowBytes = Number.MAX_VALUE`
+
+##### Fixes :wrench:
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Cesium3DTileset.maximumMemoryUsage` has been deprecated in CesiumJS 1.107. It will be removed in 1.110. Use `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` instead. [#11310](https://github.com/CesiumGS/cesium/pull/11310)
+
 ### 1.106 - 2023-06-01
 
 #### @cesium/engine

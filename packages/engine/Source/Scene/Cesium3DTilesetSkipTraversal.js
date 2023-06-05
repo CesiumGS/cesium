@@ -267,7 +267,10 @@ function executeTraversal(root, frameState) {
   const { tileset } = root;
   const baseScreenSpaceError = tileset.immediatelyLoadDesiredLevelOfDetail
     ? Number.MAX_VALUE
-    : Math.max(tileset.baseScreenSpaceError, tileset.maximumScreenSpaceError);
+    : Math.max(
+        tileset.baseScreenSpaceError,
+        tileset.memoryAdjustedScreenSpaceError
+      );
   const {
     canTraverse,
     loadTile,

@@ -2493,7 +2493,7 @@ describe(
       ) {
         const spyUpdate = jasmine.createSpy("listener");
         tileset.tileLoad.addEventListener(spyUpdate);
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
         viewRootOnly();
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
           function () {
@@ -2539,7 +2539,7 @@ describe(
             }
           );
           tileset.tileFailed.addEventListener(spyUpdate);
-          tileset.maximumMemoryUsage = 0;
+          tileset.cacheBytes = 0;
           viewRootOnly();
           return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
         })
@@ -3434,11 +3434,11 @@ describe(
     ///////////////////////////////////////////////////////////////////////////
     // Cache replacement tests
 
-    it("Unload all cached tiles not required to meet SSE using maximumMemoryUsage", function () {
+    it("Unload all cached tiles not required to meet SSE using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3471,11 +3471,11 @@ describe(
       });
     });
 
-    it("Unload some cached tiles not required to meet SSE using maximumMemoryUsage", function () {
+    it("Unload some cached tiles not required to meet SSE using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0.025; // Just enough memory to allow 3 tiles to remain
+        tileset.cacheBytes = 0.025 * 1024 * 1024; // Just enough memory to allow 3 tiles to remain
         // Render parent and four children (using additive refinement)
         viewAllTiles();
         scene.renderForSpecs();
@@ -3505,11 +3505,41 @@ describe(
       });
     });
 
-    it("Unloads cached tiles outside of the view frustum using maximumMemoryUsage", function () {
+    it("Restrict tileset memory usage with maximumCacheOverflowBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0.025 * 1024 * 1024; // Just enough memory to allow 3 tiles to remain
+        tileset._maximumCacheOverflowBytes = 0;
+        expect(tileset.memoryAdjustedScreenSpaceError).toEqual(16);
+
+        // Zoom out so only root tile is needed to meet SSE.
+        viewRootOnly();
+        scene.renderForSpecs();
+        const statistics = tileset._statistics;
+        expect(statistics.numberOfCommands).toEqual(1);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(3);
+
+        // Zoom back in and attempt to render all tiles
+        viewAllTiles();
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            // Only 3 tiles should have been actually loaded
+            expect(statistics.numberOfCommands).toEqual(3);
+            expect(statistics.numberOfTilesWithContentReady).toEqual(3); // Three loaded tiles
+            // SSE should have been adjusted higher
+            expect(tileset.memoryAdjustedScreenSpaceError).toBeGreaterThan(16);
+          }
+        );
+      });
+    });
+
+    it("Unloads cached tiles outside of the view frustum using cacheBytes", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.cacheBytes = 0;
 
         scene.renderForSpecs();
         const statistics = tileset._statistics;
@@ -3535,13 +3565,13 @@ describe(
       });
     });
 
-    it("Unloads cached tiles in a tileset with external tileset JSON file using maximumMemoryUsage", function () {
+    it("Unloads cached tiles in a tileset with external tileset JSON file using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(
         function (tileset) {
           const statistics = tileset._statistics;
           const cacheList = tileset._cache._list;
 
-          tileset.maximumMemoryUsage = 0.02;
+          tileset.cacheBytes = 0.02 * 1024 * 1024;
 
           scene.renderForSpecs();
           expect(statistics.numberOfCommands).toEqual(5);
@@ -3572,12 +3602,12 @@ describe(
       );
     });
 
-    it("Unloads cached tiles in a tileset with empty tiles using maximumMemoryUsage", function () {
+    it("Unloads cached tiles in a tileset with empty tiles using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetEmptyRootUrl).then(
         function (tileset) {
           const statistics = tileset._statistics;
 
-          tileset.maximumMemoryUsage = 0.02;
+          tileset.cacheBytes = 0.02 * 1024 * 1024;
 
           scene.renderForSpecs();
           expect(statistics.numberOfCommands).toEqual(4);
@@ -3603,7 +3633,7 @@ describe(
       );
     });
 
-    it("Unload cached tiles when a tileset uses replacement refinement using maximumMemoryUsage", function () {
+    it("Unload cached tiles when a tileset uses replacement refinement using cacheBytes", function () {
       // No children have content, but all grandchildren have content
       //
       //          C
@@ -3614,7 +3644,7 @@ describe(
         scene,
         tilesetReplacement1Url
       ).then(function (tileset) {
-        tileset.maximumMemoryUsage = 0; // Only root needs to be visible
+        tileset.cacheBytes = 0; // Only root needs to be visible
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3648,7 +3678,7 @@ describe(
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0.05;
+        tileset.cacheBytes = 0.05 * 1024 * 1024;
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3678,7 +3708,7 @@ describe(
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3713,6 +3743,20 @@ describe(
       const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       expect(function () {
         tileset.maximumMemoryUsage = -1;
+      }).toThrowDeveloperError();
+    });
+
+    it("cacheBytes throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(function () {
+        tileset.cacheBytes = -1;
+      }).toThrowDeveloperError();
+    });
+
+    it("maximumCacheOverflowBytes throws if less than 10 MB", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(function () {
+        tileset.maximumCacheOverflowBytes = 10000000;
       }).toThrowDeveloperError();
     });
 
@@ -4856,7 +4900,7 @@ describe(
         const cartographics = [centerCartographic];
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(
           function (tileset) {
-            tileset.maximumMemoryUsage = 0;
+            tileset.cacheBytes = 0;
             return sampleHeightMostDetailed(cartographics).then(function () {
               expect(centerCartographic.height).toEqualEpsilon(
                 2.47,
