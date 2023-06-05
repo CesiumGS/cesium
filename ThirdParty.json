@@ -36,7 +36,7 @@
     "license": [
       "Apache-2.0"
     ],
-    "version": "3.0.2",
+    "version": "3.0.3",
     "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },
@@ -125,7 +125,7 @@
     "license": [
       "MIT"
     ],
-    "version": "0.18.1",
+    "version": "0.19.0",
     "url": "https://www.npmjs.com/package/meshoptimizer"
   },
   {

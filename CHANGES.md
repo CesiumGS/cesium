@@ -12,13 +12,19 @@
 
 - `Cesium3DTileset.maximumMemoryUsage` has been deprecated in CesiumJS 1.107. It will be removed in 1.110. Use `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` instead. [#11310](https://github.com/CesiumGS/cesium/pull/11310)
 
+### 1.106.1 - 2023-06-02
+
+This is an npm-only release to fix a dependency issue published in 1.106
+
 ### 1.106 - 2023-06-01
 
 #### @cesium/engine
 
 ##### Fixes :wrench:
 
+- Fixed label background rendering. [#11293](https://github.com/CesiumGS/cesium/pull/11293)
 - Fixed color creation from CSS color string with modern "space-separated" syntax. [#11271](https://github.com/CesiumGS/cesium/pull/11271)
+- Fixed tracked entity camera controls. [#11286](https://github.com/CesiumGS/cesium/issues/11286)
 - Fixed a race condition when loading cut-out terrain. [#11296](https://github.com/CesiumGS/cesium/pull/11296)
 - Fixed async behavior for custom terrain and imagery providers. [#11274](https://github.com/CesiumGS/cesium/issues/11274)
 

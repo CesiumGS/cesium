@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.105.2",
+  "version": "1.106.1",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -51,14 +51,14 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "2.4.0",
-    "@cesium/widgets": "2.3.0"
+    "@cesium/engine": "2.4.1",
+    "@cesium/widgets": "2.3.1"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.276.0",
-    "@aws-sdk/lib-storage": "^3.276.0",
-    "@rollup/plugin-commonjs": "^24.0.1",
-    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@aws-sdk/client-s3": "^3.342.0",
+    "@aws-sdk/lib-storage": "^3.342.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-terser": "^0.4.0",
     "chokidar": "^3.5.3",
     "cloc": "^2.8.0",
@@ -67,7 +67,7 @@
     "download": "^8.0.0",
     "draco3d": "^1.5.1",
     "esbuild": "^0.17.10",
-    "eslint": "^8.29.0",
+    "eslint": "^8.41.0",
     "eslint-config-cesium": "^9.0.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-es": "^4.1.0",
@@ -99,7 +99,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-sourcemap-loader": "^0.4.0",
     "karma-spec-reporter": "^0.0.36",
-    "markdownlint-cli": "^0.33.0",
+    "markdownlint-cli": "^0.34.0",
     "merge-stream": "^2.0.0",
     "mime": "^3.0.0",
     "mkdirp": "^3.0.1",
@@ -110,7 +110,7 @@
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
     "rimraf": "^5.0.0",
-    "rollup": "^3.17.2",
+    "rollup": "^3.23.0",
     "rollup-plugin-strip-pragma": "^1.0.0",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",

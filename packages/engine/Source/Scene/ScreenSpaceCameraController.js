@@ -613,6 +613,7 @@ function handleZoom(
       object._zoomMouseStart
     );
 
+    // When camera transform is set, such as tracking an entity, object._globe will be undefined, and no position should be picked
     if (defined(object._globe) && mode === SceneMode.SCENE2D) {
       pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay)
         .origin;
@@ -621,7 +622,7 @@ function handleZoom(
         pickedPosition.z,
         pickedPosition.x
       );
-    } else {
+    } else if (defined(object._globe)) {
       pickedPosition = pickPosition(
         object,
         startPosition,

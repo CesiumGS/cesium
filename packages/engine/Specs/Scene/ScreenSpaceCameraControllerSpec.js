@@ -929,7 +929,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     );
   });
 
-  it("rotates in Columus view with camera transform set", function () {
+  it("rotates in Columbus view with camera transform set", function () {
     setUpCV();
 
     const origin = Cartesian3.fromDegrees(-72.0, 40.0);
@@ -983,7 +983,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
     expect(camera.position).not.toEqual(position);
   });
 
-  it("zooms in Columus view with camera transform set", function () {
+  it("zooms in Columbus view with camera transform set", function () {
     setUpCV();
 
     const origin = Cartesian3.fromDegrees(-72.0, 40.0);
@@ -1193,6 +1193,70 @@ describe("Scene/ScreenSpaceCameraController", function () {
 
     moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
     updateController();
+    expect(Cartesian3.magnitude(position)).toBeGreaterThan(
+      Cartesian3.magnitude(camera.position)
+    );
+  });
+
+  it("zooms in on an object in 3D", function () {
+    setUp3D();
+
+    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+    updateController();
+
+    const origin = Cartesian3.fromDegrees(-72.0, 40.0, 1.0);
+    camera.setView({
+      destination: origin,
+    });
+
+    updateController();
+
+    scene.pickPositionSupported = true;
+    scene.pickPositionWorldCoordinates = () =>
+      Cartesian3.fromDegrees(-72.0, 40.0, -10.0);
+
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(0, 0);
+    const endPosition = new Cartesian2(0, canvas.clientHeight / 2);
+
+    moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+
+    updateController();
+
+    expect(Cartesian3.magnitude(position)).toBeGreaterThan(
+      Cartesian3.magnitude(camera.position)
+    );
+  });
+
+  it("zooms in on an object in 3D when transform is set", function () {
+    setUp3D();
+
+    scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+    updateController();
+
+    const origin = Cartesian3.fromDegrees(-72.0, 40.0, 1.0);
+    camera.lookAtTransform(Transforms.eastNorthUpToFixedFrame(origin), {
+      heading: 0,
+      pitch: 0,
+      range: 10,
+    });
+
+    updateController();
+
+    scene.pickPositionSupported = true;
+    scene.pickPositionWorldCoordinates = () =>
+      Cartesian3.fromDegrees(-72.0, 40.0, -10.0);
+
+    const position = Cartesian3.clone(camera.position);
+    const startPosition = new Cartesian2(0, 0);
+    const endPosition = new Cartesian2(0, canvas.clientHeight / 2);
+
+    moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+
+    updateController();
+
     expect(Cartesian3.magnitude(position)).toBeGreaterThan(
       Cartesian3.magnitude(camera.position)
     );
