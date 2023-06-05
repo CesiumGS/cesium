@@ -33,6 +33,8 @@ const updateFunctions = {
  * @param {object} gltf A javascript object containing a glTF asset.
  * @param {object} [options] Options for updating the glTF.
  * @param {string} [options.targetVersion] The glTF will be upgraded until it hits the specified version.
+ * @param {string[]} [options.baseColorTextureNames] Names of uniforms that indicate base color textures.
+ * @param {string[]} [options.baseColorFactorNames] Names of uniforms that indicate base color factors.
  * @returns {object} The updated glTF asset.
  *
  * @private
@@ -73,7 +75,7 @@ function updateVersion(gltf, options) {
   }
 
   if (!options.keepLegacyExtensions) {
-    convertTechniquesToPbr(gltf);
+    convertTechniquesToPbr(gltf, options);
     convertMaterialsCommonToPbr(gltf);
   }
 
@@ -1003,8 +1005,13 @@ function glTF10to20(gltf) {
 // It's not possible to upgrade glTF 1.0 shaders to 2.0 PBR materials in a generic way,
 // but we can look for certain uniform names that are commonly found in glTF 1.0 assets
 // and create PBR materials out of those.
-const baseColorTextureNames = ["u_tex", "u_diffuse", "u_emission"];
-const baseColorFactorNames = ["u_diffuse"];
+const defaultBaseColorTextureNames = [
+  "u_tex",
+  "u_diffuse",
+  "u_emission",
+  "u_diffuse_tex",
+];
+const defaultBaseColorFactorNames = ["u_diffuse", "u_diffuse_mat"];
 
 function initializePbrMaterial(material) {
   material.pbrMetallicRoughness = defined(material.pbrMetallicRoughness)
@@ -1044,7 +1051,17 @@ function srgbToLinear(srgb) {
   return linear;
 }
 
-function convertTechniquesToPbr(gltf) {
+function convertTechniquesToPbr(gltf, options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  const baseColorTextureNames = defaultValue(
+    options.baseColorTextureNames,
+    defaultBaseColorTextureNames
+  );
+  const baseColorFactorNames = defaultValue(
+    options.baseColorFactorNames,
+    defaultBaseColorFactorNames
+  );
+
   // Future work: convert other values like emissive, specular, etc. Only handling diffuse right now.
   ForEach.material(gltf, function (material) {
     ForEach.materialValue(material, function (value, name) {
