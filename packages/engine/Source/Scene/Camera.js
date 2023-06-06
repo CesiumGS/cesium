@@ -44,7 +44,7 @@ import SceneMode from "./SceneMode.js";
  *
  * @property {number} [heading=0.0] The heading in radians
  * @property {number} [pitch=-CesiumMath.PI_OVER_TWO] The pitch in radians
- * @property {number} [roll=0.0] The roll in meters
+ * @property {number} [roll=0.0] The roll in radians
  **/
 
 /**
