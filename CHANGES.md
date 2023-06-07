@@ -4,7 +4,7 @@
 
 ##### Additions :tada:
 
-- Added `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` to better control memory usage. To replicate previous behavior, change `maximumMemoryUsage` to `cacheBytes`, and set `maximumCacheOverflowBytes = Number.MAX_VALUE`
+- Added `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` to better control memory usage. To replicate previous behavior, convert `maximumMemoryUsage` from MB to bytes, assign the value to `cacheBytes`, and set `maximumCacheOverflowBytes = Number.MAX_VALUE`
 
 ##### Fixes :wrench:
 
