@@ -870,7 +870,7 @@ function isPriorityDeferred(tile, frameState) {
   );
   const sseRelaxation = tileset.foveatedInterpolationCallback(
     tileset.foveatedMinimumScreenSpaceErrorRelaxation,
-    tileset.maximumScreenSpaceError,
+    tileset.memoryAdjustedScreenSpaceError,
     normalizedFoveatedFactor
   );
   const sse =
@@ -878,7 +878,7 @@ function isPriorityDeferred(tile, frameState) {
       ? tile.parent._screenSpaceError * 0.5
       : tile._screenSpaceError;
 
-  return tileset.maximumScreenSpaceError - sseRelaxation <= sse;
+  return tileset.memoryAdjustedScreenSpaceError - sseRelaxation <= sse;
 }
 
 const scratchJulianDate = new JulianDate();
@@ -957,12 +957,11 @@ function isPriorityProgressiveResolution(tileset, tile) {
     return false;
   }
 
+  const maximumScreenSpaceError = tileset.memoryAdjustedScreenSpaceError;
   let isProgressiveResolutionTile =
-    tile._screenSpaceErrorProgressiveResolution >
-    tileset._maximumScreenSpaceError; // Mark non-SSE leaves
+    tile._screenSpaceErrorProgressiveResolution > maximumScreenSpaceError; // Mark non-SSE leaves
   tile._priorityProgressiveResolutionScreenSpaceErrorLeaf = false; // Needed for skipLOD
   const parent = tile.parent;
-  const maximumScreenSpaceError = tileset._maximumScreenSpaceError;
   const tilePasses =
     tile._screenSpaceErrorProgressiveResolution <= maximumScreenSpaceError;
   const parentFails =

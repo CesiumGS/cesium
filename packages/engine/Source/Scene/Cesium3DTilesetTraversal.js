@@ -64,7 +64,7 @@ Cesium3DTilesetTraversal.canTraverse = function (tile) {
     // Don't traverse if the subtree is expired because it will be destroyed
     return !tile.contentExpired;
   }
-  return tile._screenSpaceError > tile.tileset._maximumScreenSpaceError;
+  return tile._screenSpaceError > tile.tileset.memoryAdjustedScreenSpaceError;
 };
 
 /**
@@ -260,7 +260,7 @@ function meetsScreenSpaceErrorEarly(tile, frameState) {
   // Use parent's geometric error with child's box to see if the tile already meet the SSE
   return (
     tile.getScreenSpaceError(frameState, true) <=
-    tileset._maximumScreenSpaceError
+    tileset.memoryAdjustedScreenSpaceError
   );
 }
 
