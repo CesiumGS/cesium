@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.107 - 2023-07-01
+
+##### Fixes :wrench:
+
+- Fixed `PostProcessStage` crash affecting point clouds rendered with attenuation. [#11339](https://github.com/CesiumGS/cesium/issues/11339)
+
 ### 1.106.1 - 2023-06-02
 
 This is an npm-only release to fix a dependency issue published in 1.106
