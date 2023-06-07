@@ -3510,7 +3510,7 @@ describe(
         tileset
       ) {
         tileset.cacheBytes = 0.025 * 1024 * 1024; // Just enough memory to allow 3 tiles to remain
-        tileset._maximumCacheOverflowBytes = 0;
+        tileset.maximumCacheOverflowBytes = 0;
         expect(tileset.memoryAdjustedScreenSpaceError).toEqual(16);
 
         // Zoom out so only root tile is needed to meet SSE.
@@ -3753,10 +3753,10 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("maximumCacheOverflowBytes throws if less than 10 MB", async function () {
+    it("maximumCacheOverflowBytes throws when negative", async function () {
       const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       expect(function () {
-        tileset.maximumCacheOverflowBytes = 10000000;
+        tileset.maximumCacheOverflowBytes = -1;
       }).toThrowDeveloperError();
     });
 

@@ -70,7 +70,7 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {number} [maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
  * @property {number} [maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset. Deprecated.
  * @property {number} [cacheBytes=536870912] The size (in bytes) to which the tile cache will be trimmed, if the cache contains tiles not needed for the current view.
- * @property {number} [maximumCacheOverflowBytes=536870912] The maximum additional memory (in bytes) to allow for cache headroom, if more than {@link Cesium3DTileset#cacheBytes} are needed for the current view. Must be at least 10 * 1024 * 1024.
+ * @property {number} [maximumCacheOverflowBytes=536870912] The maximum additional memory (in bytes) to allow for cache headroom, if more than {@link Cesium3DTileset#cacheBytes} are needed for the current view.
  * @property {boolean} [cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
  * @property {boolean} [cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
  * @property {number} [cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
@@ -234,6 +234,9 @@ function Cesium3DTileset(options) {
     defaultCacheBytes = options.maximumMemoryUsage * 1024 * 1024;
   }
   this._cacheBytes = defaultValue(options.cacheBytes, defaultCacheBytes);
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number.greaterThanOrEquals("cacheBytes", this._cacheBytes, 0);
+  //>>includeEnd('debug');
 
   const maximumCacheOverflowBytes = defaultValue(
     options.maximumCacheOverflowBytes,
@@ -243,7 +246,7 @@ function Cesium3DTileset(options) {
   Check.typeOf.number.greaterThanOrEquals(
     "maximumCacheOverflowBytes",
     maximumCacheOverflowBytes,
-    10 * 1024 * 1024
+    0
   );
   //>>includeEnd('debug');
   this._maximumCacheOverflowBytes = maximumCacheOverflowBytes;
@@ -1648,9 +1651,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * until the tiles required to meet the adjusted screen space error use less
    * than <code>cacheBytes</code> plus <code>maximumCacheOverflowBytes</code>.
    * </p>
-   * <p>
-   * Must be at least 10 * 1024 * 1024.
-   * </p>
    *
    * @memberof Cesium3DTileset.prototype
    *
@@ -1666,7 +1666,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.number.greaterThanOrEquals("value", value, 10 * 1024 * 1024);
+      Check.typeOf.number.greaterThanOrEquals("value", value, 0);
       //>>includeEnd('debug');
 
       this._maximumCacheOverflowBytes = value;
@@ -2861,6 +2861,15 @@ function processTiles(tileset, frameState) {
 }
 
 function increaseScreenSpaceError(tileset) {
+  //>>includeStart('debug', pragmas.debug);
+  oneTimeWarning(
+    "increase-screenSpaceError",
+    `The tiles needed to meet maximumScreenSpaceError would use more memory than allocated for this tileset.
+    The tileset will be rendered with a larger screen space error (see memoryAdjustedScreenSpaceError).
+    Consider using larger values for cacheBytes and maximumCacheOverflowBytes.`
+  );
+  //>>includeEnd('debug');
+
   tileset._memoryAdjustedScreenSpaceError *= 1.02;
   const tiles = tileset._processingQueue;
   for (let i = 0; i < tiles.length; ++i) {
