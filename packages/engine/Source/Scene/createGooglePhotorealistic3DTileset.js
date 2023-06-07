@@ -38,6 +38,11 @@ async function createGooglePhotorealistic3DTileset(key, options) {
 
   options = defaultValue(options, {});
   options.showCreditsOnScreen = true;
+  options.cacheBytes = defaultValue(options.cacheBytes, 1536 * 1024 * 1024);
+  options.maximumCacheOverflowBytes = defaultValue(
+    options.maximumCacheOverflowBytes,
+    1024 * 1024 * 1024
+  );
 
   const resource = new Resource({
     url: `${GoogleMaps.mapTilesApiEndpoint}3dtiles/root.json`,

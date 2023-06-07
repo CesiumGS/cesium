@@ -764,6 +764,7 @@ describe(
           },
           tileset: {
             maximumScreenSpaceError: 16,
+            memoryAdjustedScreenSpaceError: 16,
           },
         },
       });

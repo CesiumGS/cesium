@@ -140,7 +140,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to pan around the map. This only applies in 2D and Columbus view modes.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -151,7 +151,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to zoom in/out.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -166,7 +166,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to rotate around the globe or another object. This only applies in 3D and Columbus view modes.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -177,7 +177,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to tilt in 3D and Columbus view or twist in 2D.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -205,7 +205,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to change the direction the camera is viewing. This only applies in 3D and Columbus view modes.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
