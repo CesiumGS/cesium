@@ -682,7 +682,7 @@ Object.defineProperties(Model.prototype, {
   /**
    * Returns true if textures are loaded separately from the other glTF resources.
    *
-   * @memberof GltfLoader.prototype
+   * @memberof Model.prototype
    *
    * @type {boolean}
    * @readonly
