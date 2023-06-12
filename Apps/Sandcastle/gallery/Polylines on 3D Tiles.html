@@ -43,6 +43,19 @@
           "2022-08-01T00:00:00Z"
         );
 
+        scene.camera.setView({
+          destination: new Cesium.Cartesian3(
+            1234151.4883992162,
+            -5086036.79436967,
+            3633328.4278331124
+          ),
+          orientation: {
+            heading: 5.593695742186853,
+            pitch: -1.0786797635545216,
+            roll: 6.27892466154778,
+          },
+        });
+
         let powerPlant;
         let powerPlantShow = false;
         try {

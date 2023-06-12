@@ -57,6 +57,7 @@
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.342.0",
     "@aws-sdk/lib-storage": "^3.342.0",
+    "@playwright/test": "^1.34.3",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-terser": "^0.4.0",
@@ -112,6 +113,7 @@
     "rimraf": "^5.0.0",
     "rollup": "^3.23.0",
     "rollup-plugin-strip-pragma": "^1.0.0",
+    "sinon": "^15.1.0",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^5.0.2",
@@ -144,11 +146,18 @@
     "test-webgl-validation": "gulp test --webglValidation",
     "test-webgl-stub": "gulp test --webglStub",
     "test-release": "gulp test --release",
+    "test-e2e": "playwright test -c Specs/e2e/playwright.config.js --project=chromium",
+    "test-e2e-all": "playwright test -c Specs/e2e/playwright.config.js",
+    "test-e2e-release": "release=true playwright test -c Specs/e2e/playwright.config.js --project=chromium",
+    "test-e2e-release-all": "release=true playwright test -c Specs/e2e/playwright.config.js",
+    "test-e2e-report": "playwright show-report Build/Specs/e2e/report",
+    "test-e2e-update": "playwright test -c Specs/e2e/playwright.config.js --project=chromium -u",
     "deploy-s3": "gulp deployS3",
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
     "prettier": "prettier --write --no-config \"**/*\"",
-    "prettier-check": "prettier --check --no-config \"**/*\""
+    "prettier-check": "prettier --check --no-config \"**/*\"",
+    "postinstall": "playwright install"
   },
   "engines": {
     "node": ">=14.0.0"

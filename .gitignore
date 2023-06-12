@@ -23,6 +23,9 @@ Thumbs.db
 /Specs/SpecList.js
 /Specs/jasmine/**
 
+# playwright
+/playwright/.cache/
+
 /Tools/jsdoc/cesium_template/static/javascript/prism.js
 /Tools/jsdoc/cesium_template/static/styles/prism.css
 
