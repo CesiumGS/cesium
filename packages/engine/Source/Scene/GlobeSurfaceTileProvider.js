@@ -378,7 +378,7 @@ function updateCredits(surface, frameState) {
   const imageryLayers = surface._imageryLayers;
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
     const layer = imageryLayers.get(i);
-    if (layer.ready) {
+    if (layer.ready && layer.show) {
       // ImageryProvider.ready is deprecated; This is here for backwards compatibility
       const imageryProvider = layer.imageryProvider;
       const imageryProviderReady = defined(imageryProvider._ready)
