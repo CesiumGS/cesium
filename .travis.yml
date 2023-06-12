@@ -25,6 +25,17 @@ jobs:
         - ./travis/test-release.sh
         - ./travis/verify.sh
         - npm --silent run cloc
+        - name: "End to End Tests"
+    - node_js: "18"
+      before_script: 
+        - npx playwright install-deps
+        - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        - unzip awscliv2.zip
+        - sudo ./aws/install
+      script:
+	      - npm --silent run build-release
+	      - npm --silent run test-e2e-release
+        - aws s3 sync ./Build/Specs/e2e s3://cesium-dev/cesium/$TRAVIS_BRANCH/Build/e2e --delete --color on
     - name: "Linting, Deployment"
       node_js: "18"
       script:
