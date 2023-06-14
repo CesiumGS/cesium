@@ -248,7 +248,9 @@ End to end (E2E) testing is a type of testing that tests the entire stack from t
 
 Since CesiumJS often takes the current time into consideration for things like lighting, animation, and the position of the skybox corresponding to the earth's rotation, we use [Sinon](https://sinonjs.org/) to mock system time, ensuring consistency for all end to end tests.
 
-#### E2E Test Tasks
+#### End to End Test Tasks
+
+To generate initial screenshots, checkout the `main` branch (or a previous release tag), and run `npm run test-e2e-update`. Subsequently, you can test against the generated screenshots with `npm run test-e2e`.
 
 Common end to end workflows have been captured in the following tasks:
 
@@ -261,7 +263,7 @@ Common end to end workflows have been captured in the following tasks:
 
 For further info and options, see the [Playwright documentation on running tests](https://playwright.dev/docs/running-tests).
 
-#### Debugging E2E Tests
+#### Debugging End to End Tests
 
 `test-e2e`, `test-e2e-all`, `test-e2e-release`, and `test-e2e-release-all` can all have [command line options for playwright test](https://playwright.dev/docs/test-cli) appended. The most useful are:
 
@@ -284,7 +286,7 @@ test.only("focus this test", async ({ page }) => {
 });
 ```
 
-#### Updating E2E Tests
+#### Updating End to End Tests
 
 When new Sandcastle is added, or behavior is intentionally changed, the screenshots will need to be updated. Use `test-e2e-update` to run the relevant E2E tests and generate any new screenshots.
 
