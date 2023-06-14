@@ -21,6 +21,8 @@ if (!process.env.CI) {
   ];
 }
 
+const defaultViewport = { width: 960, height: 540 };
+
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
@@ -35,7 +37,7 @@ export default defineConfig({
   use: {
     baseURL: baseUrl,
     trace: "on-first-retry",
-    viewport: { width: 320, height: 180 },
+    viewport: defaultViewport,
   },
   expect: {
     timeout: 10000,
@@ -49,18 +51,20 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: { ...devices["Desktop Chrome"], viewport: defaultViewport },
     },
     {
       name: "firefox",
       use: {
         ...devices["Desktop Firefox"],
+        viewport: defaultViewport,
       },
     },
     {
       name: "webkit",
       use: {
         ...devices["Desktop Safari"],
+        viewport: defaultViewport,
       },
     },
   ],
