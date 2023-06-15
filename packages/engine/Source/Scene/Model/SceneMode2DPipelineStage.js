@@ -12,9 +12,6 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import SceneTransforms from "../SceneTransforms.js";
 
-const scratchModelMatrix = new Matrix4();
-const scratchModelView2D = new Matrix4();
-
 /**
  * The scene mode 2D stage generates resources for rendering a primitive in 2D / CV mode.
  *
@@ -66,7 +63,7 @@ SceneMode2DPipelineStage.process = function (
   const computedModelMatrix = Matrix4.multiplyTransformation(
     modelMatrix,
     nodeComputedTransform,
-    scratchModelMatrix
+    new Matrix4()
   );
 
   const boundingSphere2D = computeBoundingSphere2D(
@@ -126,7 +123,7 @@ SceneMode2DPipelineStage.process = function (
       return Matrix4.multiplyTransformation(
         context.uniformState.view,
         modelMatrix2D,
-        scratchModelView2D
+        new Matrix4()
       );
     },
   };
@@ -134,15 +131,12 @@ SceneMode2DPipelineStage.process = function (
   renderResources.uniformMap = combine(uniformMap, renderResources.uniformMap);
 };
 
-const scratchProjectedMin = new Cartesian3();
-const scratchProjectedMax = new Cartesian3();
-
 function computeBoundingSphere2D(renderResources, modelMatrix, frameState) {
   // Compute the bounding sphere in 2D.
   const transformedPositionMin = Matrix4.multiplyByPoint(
     modelMatrix,
     renderResources.positionMin,
-    scratchProjectedMin
+    new Cartesian3()
   );
 
   const projectedMin = SceneTransforms.computeActualWgs84Position(
@@ -154,7 +148,7 @@ function computeBoundingSphere2D(renderResources, modelMatrix, frameState) {
   const transformedPositionMax = Matrix4.multiplyByPoint(
     modelMatrix,
     renderResources.positionMax,
-    scratchProjectedMax
+    new Cartesian3()
   );
 
   const projectedMax = SceneTransforms.computeActualWgs84Position(
