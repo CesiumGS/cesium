@@ -125,19 +125,6 @@
           });
         }
 
-        addStyle("No style", {});
-
-        addStyle("Color by building", {
-          color: {
-            conditions: [
-              ["${building_name} === 'building0'", "color('purple')"],
-              ["${building_name} === 'building1'", "color('red')"],
-              ["${building_name} === 'building2'", "color('orange')"],
-              ["true", "color('blue')"],
-            ],
-          },
-        });
-
         addStyle("Color all doors", {
           color: {
             conditions: [
@@ -152,6 +139,17 @@
             conditions: [
               ["isClass('door')", "color('orange')"],
               ["true", "color('white')"],
+            ],
+          },
+        });
+
+        addStyle("Color by building", {
+          color: {
+            conditions: [
+              ["${building_name} === 'building0'", "color('purple')"],
+              ["${building_name} === 'building1'", "color('red')"],
+              ["${building_name} === 'building2'", "color('orange')"],
+              ["true", "color('blue')"],
             ],
           },
         });
@@ -180,6 +178,8 @@
             ],
           },
         });
+
+        addStyle("No style", {});
 
         const styleOptions = [];
         for (let i = 0; i < styles.length; ++i) {

@@ -30,9 +30,7 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          shouldAnimate: true,
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
 
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
