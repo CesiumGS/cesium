@@ -437,15 +437,18 @@ AnimationViewModel.defaultTicks = [
  */
 AnimationViewModel.defaultTimeFormatter = function (date, viewModel) {
   const gregorianDate = JulianDate.toGregorianDate(date);
-  const millisecond = Math.round(gregorianDate.millisecond);
+  let millisecond = Math.round(gregorianDate.millisecond);
+  let oMS = millisecond > 999;
   if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
     return `${gregorianDate.hour
       .toString()
       .padStart(2, "0")}:${gregorianDate.minute
       .toString()
-      .padStart(2, "0")}:${gregorianDate.second
+      .padStart(2, "0")}:${(gregorianDate.second + (oMS ?  1 : 0))
       .toString()
-      .padStart(2, "0")}.${millisecond.toString().padStart(3, "0")}`;
+      .padStart(2, "0")}.${(oMS ? 0 : millisecond)
+      .toString()
+      .padStart(3, "0")}`;
   }
   return `${gregorianDate.hour
     .toString()
