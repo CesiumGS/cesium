@@ -57,7 +57,7 @@
         });
 
         let powerPlant;
-        let powerPlantShow = false;
+        let powerPlantShow = true;
         try {
           powerPlant = await Cesium.Cesium3DTileset.fromIonAssetId(1240402);
           powerPlant.show = powerPlantShow;
@@ -120,7 +120,7 @@
               color: Cesium.Color.YELLOW,
               dashLength: 20.0,
             }),
-            show: false,
+            show: true,
             clampToGround: true,
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
           },
@@ -159,7 +159,7 @@
           },
         });
 
-        Sandcastle.addToolbarMenu([
+        Sandcastle.addDefaultToolbarMenu([
           {
             text: "BIM",
             onselect: function () {
