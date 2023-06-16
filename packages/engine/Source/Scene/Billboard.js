@@ -1181,6 +1181,13 @@ Billboard.prototype._loadImage = function () {
     return;
   }
 
+  // If the promise has already successfully resolved, we can return immediately without waiting a frame
+  const index = atlas.getImageIndex(imageId);
+  if (defined(index) && !defined(imageSubRegion)) {
+    completeImageLoad(index);
+    return;
+  }
+
   imageIndexPromise.then(completeImageLoad).catch(function (error) {
     console.error(`Error loading image for billboard: ${error}`);
     that._imageIndexPromise = undefined;

@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed `PostProcessStage` crash affecting point clouds rendered with attenuation. [#11339](https://github.com/CesiumGS/cesium/issues/11339)
+- Fixed debug label rendering in `Cesium3dTilesInspector`. [#11355](https://github.com/CesiumGS/cesium/issues/11355)
 
 ##### Deprecated :hourglass_flowing_sand:
 
