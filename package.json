@@ -157,7 +157,7 @@
     "deploy-set-version": "gulp deploySetVersion",
     "prettier": "prettier --write --no-config \"**/*\"",
     "prettier-check": "prettier --check --no-config \"**/*\"",
-    "postinstall": "playwright install"
+    "postinstall": "playwright install --with-deps"
   },
   "engines": {
     "node": ">=14.0.0"
