@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed `PostProcessStage` crash affecting point clouds rendered with attenuation. [#11339](https://github.com/CesiumGS/cesium/issues/11339)
+- Fixed Insufficient buffer size thrown by rendering 3dtiles. [#11358](https://github.com/CesiumGS/cesium/pull/11358)
 
 ##### Deprecated :hourglass_flowing_sand:
 
