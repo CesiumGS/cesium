@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed `PostProcessStage` crash affecting point clouds rendered with attenuation. [#11339](https://github.com/CesiumGS/cesium/issues/11339)
+- Fixed credits for imagery layer shows up even when layer is hidden [#11340](https://github.com/CesiumGS/cesium/issues/11340)
 
 ##### Deprecated :hourglass_flowing_sand:
 
