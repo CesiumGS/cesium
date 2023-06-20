@@ -35,6 +35,7 @@ import findGroupMetadata from "./findGroupMetadata.js";
 import findTileMetadata from "./findTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
+import parseBoundingVolume from "./parseBoundingVolume.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
@@ -107,6 +108,19 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.computedTransform = computedTransform;
 
+  /**
+   * When tile metadata is present (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension is used,
+   * this stores a {@link TileMetadata} object for accessing tile metadata.
+   *
+   * @type {TileMetadata}
+   * @readonly
+   * @private
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  this.metadata = findTileMetadata(tileset, header);
+
+  // Important: The bounding volume must be created _after_ parsing the
+  // tile metadata to correctly handle TILE_BOUNDING_BOX, TILE_BOUNDING_REGION, and TILE_BOUNDING_SPHERE
   this._boundingVolume = this.createBoundingVolume(
     header.boundingVolume,
     computedTransform
@@ -327,17 +341,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.hasMultipleContents = hasMultipleContents;
-
-  /**
-   * When tile metadata is present (3D Tiles 1.1) or the <code>3DTILES_metadata</code> extension is used,
-   * this stores a {@link TileMetadata} object for accessing tile metadata.
-   *
-   * @type {TileMetadata}
-   * @readonly
-   * @private
-   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  this.metadata = findTileMetadata(tileset, header);
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
@@ -1763,6 +1766,17 @@ Cesium3DTile.prototype.createBoundingVolume = function (
   transform,
   result
 ) {
+  // if explicit tile metadata includes TILE_BOUNDING_BOX, TILE_BOUNDING_REGION,
+  // or TILE_BOUNDING_SPHERE, override tile.boundingVolume.
+  const tileMetadata = this.metadata;
+  let metadataBoundingVolumeHeader;
+  if (defined(tileMetadata)) {
+    metadataBoundingVolumeHeader = parseBoundingVolume("TILE", tileMetadata);
+  }
+  if (defined(metadataBoundingVolumeHeader)) {
+    boundingVolumeHeader = metadataBoundingVolumeHeader;
+  }
+
   if (!defined(boundingVolumeHeader)) {
     throw new RuntimeError("boundingVolume must be defined");
   }
@@ -2003,8 +2017,8 @@ function updateContent(tile, tileset, frameState) {
  *  - clipping function (union v. intersection)
 
  * @private
- * @param {Cesium3DTile} tile 
- * @param {Cesium3DTileset} tileset 
+ * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset
  */
 function updateClippingPlanes(tile, tileset) {
   const clippingPlanes = tileset.clippingPlanes;
