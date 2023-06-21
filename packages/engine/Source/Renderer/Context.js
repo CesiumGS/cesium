@@ -1340,11 +1340,8 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
 
   if (defined(indexBuffer)) {
     offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
-    if (count) {
-      count =
-        count < indexBuffer.numberOfIndices
-          ? count
-          : indexBuffer.numberOfIndices;
+    if (defined(count)) {
+      count = Math.min(count, indexBuffer.numberOfIndices);
     } else {
       count = indexBuffer.numberOfIndices;
     }
@@ -1365,10 +1362,10 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
       );
     }
   } else {
-    if (count) {
-      count = count < va.numberOfIndices ? count : va.numberOfIndices;
+    if (defined(count)) {
+      count = Math.min(count, va.numberOfVertices);
     } else {
-      count = va.numberOfIndices;
+      count = va.numberOfVertices;
     }
     if (instanceCount === 0) {
       context._gl.drawArrays(primitiveType, offset, count);
