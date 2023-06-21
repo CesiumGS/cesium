@@ -15,7 +15,7 @@ import S2Cell from "../Core/S2Cell.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import hasExtension from "./hasExtension.js";
 import MetadataSemantic from "./MetadataSemantic.js";
-import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
+import BoundingVolumeSemantics from "./BoundingVolumeSemantics.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -488,7 +488,9 @@ function deriveChildTile(
   if (defined(subtree.tilePropertyTableJson)) {
     tileMetadata = subtree.getTileMetadataView(implicitCoordinates);
 
-    const boundingVolumeSemantics = parseBoundingVolumeSemantics(tileMetadata);
+    const boundingVolumeSemantics = BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
+      tileMetadata
+    );
     tileBounds = boundingVolumeSemantics.tile;
     contentBounds = boundingVolumeSemantics.content;
   }

@@ -35,7 +35,7 @@ import findGroupMetadata from "./findGroupMetadata.js";
 import findTileMetadata from "./findTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
-import parseBoundingVolume from "./parseBoundingVolume.js";
+import BoundingVolumeSemantics from "./BoundingVolumeSemantics.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
@@ -119,8 +119,9 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.metadata = findTileMetadata(tileset, header);
 
-  // Important: The bounding volume must be created _after_ parsing the
-  // tile metadata to correctly handle TILE_BOUNDING_BOX, TILE_BOUNDING_REGION, and TILE_BOUNDING_SPHERE
+  // Important: tile metadata must be parsed before this line so that the
+  // metadata semantics TILE_BOUNDING_BOX, TILE_BOUNDING_REGION, or TILE_BOUNDING_SPHERE
+  // can override header.boundingVolume (if necessary)
   this._boundingVolume = this.createBoundingVolume(
     header.boundingVolume,
     computedTransform
@@ -1771,7 +1772,10 @@ Cesium3DTile.prototype.createBoundingVolume = function (
   const tileMetadata = this.metadata;
   let metadataBoundingVolumeHeader;
   if (defined(tileMetadata)) {
-    metadataBoundingVolumeHeader = parseBoundingVolume("TILE", tileMetadata);
+    metadataBoundingVolumeHeader = BoundingVolumeSemantics.parseBoundingVolumeSemantic(
+      "TILE",
+      tileMetadata
+    );
   }
   if (defined(metadataBoundingVolumeHeader)) {
     boundingVolumeHeader = metadataBoundingVolumeHeader;
