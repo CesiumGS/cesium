@@ -2852,7 +2852,11 @@ Scene.prototype.updateAndExecuteCommands = function (
   const useWebVR = this._environmentState.useWebVR;
 
   if (useWebVR) {
-    executeWebVRCommands(this, passState, backgroundColor);
+    if (defined(this.xr)) {
+      executeWebXRCommands(this, passState, backgroundColor);
+    } else {
+      executeWebVRCommands(this, passState, backgroundColor);
+    }
   } else if (
     mode !== SceneMode.SCENE2D ||
     this._mapMode2D === MapMode2D.ROTATE
@@ -2863,6 +2867,98 @@ Scene.prototype.updateAndExecuteCommands = function (
     execute2DViewportCommands(this, passState);
   }
 };
+
+function executeWebXRCommands(scene, passState, backgroundColor) {
+  const view = scene._view;
+  const camera = view.camera;
+  const environmentState = scene._environmentState;
+  const renderTranslucentDepthForPick =
+    environmentState.renderTranslucentDepthForPick;
+
+  const xr = scene.xr;
+  const xrFrame = xr.frame;
+  const xrPose = xrFrame.getViewerPose(xr.refSpace);
+  if (!defined(xrPose)) {
+    return; // TODO: we should handle gracefully.
+  }
+
+  updateAndClearFramebuffers(scene, passState, backgroundColor);
+
+  updateAndRenderPrimitives(scene);
+
+  view.createPotentiallyVisibleSet(scene);
+
+  if (!renderTranslucentDepthForPick) {
+    executeShadowMapCastCommands(scene);
+  }
+
+  // Based on Calculating Stereo pairs by Paul Bourke
+  // http://paulbourke.net/stereographics/stereorender/
+  const savedCamera = Camera.clone(camera, scene._cameraVR);
+  savedCamera.frustum = camera.frustum;
+
+  const near = camera.frustum.near;
+  const fo = near * defaultValue(scene.focalLength, 5.0);
+  const eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
+  const eyeTranslation = Cartesian3.multiplyByScalar(
+    savedCamera.right,
+    eyeSeparation * 0.5,
+    scratchEyeTranslation
+  );
+
+  const offset = (0.5 * eyeSeparation * near) / fo;
+
+  const xrLayer = xrFrame.session.renderState.baseLayer;
+  for (const xrView of xrPose.views) {
+    const xrViewport = xrLayer.getViewport(xrView);
+    const viewport = passState.viewport;
+    viewport.x = xrViewport.x;
+    viewport.y = xrViewport.y;
+    viewport.width = xrViewport.width;
+    viewport.height = xrViewport.height;
+
+    camera.frustum.aspectRatio = viewport.width / viewport.height;
+
+    if (xrView.eye === "left") {
+      Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+      camera.frustum.xOffset = offset;
+    } else if (xrView.eye === "right") {
+      Cartesian3.subtract(
+        savedCamera.position,
+        eyeTranslation,
+        camera.position
+      );
+      camera.frustum.xOffset = -offset;
+    }
+
+    executeCommands(scene, passState);
+  }
+
+  Camera.clone(savedCamera, camera);
+
+  // Now manually blit into the framebuffer provided by WebXR, which
+  // is the framebuffer for the HMD's displays.
+  if (defined(xrLayer.framebuffer)) {
+    const srcFb = passState.framebuffer;
+    const gl = srcFb._gl;
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, srcFb._framebuffer);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, xrLayer.framebuffer);
+    gl.blitFramebuffer(
+      0,
+      0,
+      xrLayer.framebufferWidth,
+      xrLayer.framebufferHeight,
+      0,
+      0,
+      xrLayer.framebufferWidth,
+      xrLayer.framebufferHeight,
+      gl.COLOR_BUFFER_BIT,
+      gl.NEAREST
+    );
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+  }
+}
 
 function executeWebVRCommands(scene, passState, backgroundColor) {
   const view = scene._view;
