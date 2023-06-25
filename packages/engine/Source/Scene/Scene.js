@@ -594,6 +594,7 @@ function Scene(options) {
   this._useWebVR = false;
   this._cameraVR = undefined;
   this._aspectRatioVR = undefined;
+  this._poseVR = undefined;
 
   /**
    * When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.
@@ -2865,14 +2866,14 @@ Scene.prototype.updateAndExecuteCommands = function (
 };
 
 function prepareWebVRPose(scene, viewport) {
-  let pose = scene._webVRPose;
+  let pose = scene._poseVR;
 
   if (!defined(pose)) {
     pose = {
       xrLayer: null,
       viewports: {},
     };
-    scene._webVRPose = pose;
+    scene._poseVR = pose;
   }
 
   if (defined(scene.xr)) {
