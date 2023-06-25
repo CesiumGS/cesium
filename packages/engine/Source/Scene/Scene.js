@@ -2875,18 +2875,13 @@ function executeWebXRCommands(scene, passState, backgroundColor) {
   const renderTranslucentDepthForPick =
     environmentState.renderTranslucentDepthForPick;
 
-  const xr = scene.xr;
-  const xrFrame = xr.frame;
-  const xrPose = xrFrame.getViewerPose(xr.refSpace);
-  if (!defined(xrPose)) {
-    return; // TODO: we should handle gracefully.
-  }
-
   updateAndClearFramebuffers(scene, passState, backgroundColor);
 
   updateAndRenderPrimitives(scene);
 
   view.createPotentiallyVisibleSet(scene);
+
+  executeComputeCommands(scene);
 
   if (!renderTranslucentDepthForPick) {
     executeShadowMapCastCommands(scene);
@@ -2907,6 +2902,13 @@ function executeWebXRCommands(scene, passState, backgroundColor) {
   );
 
   const offset = (0.5 * eyeSeparation * near) / fo;
+
+  const xr = scene.xr;
+  const xrFrame = xr.frame;
+  const xrPose = xrFrame.getViewerPose(xr.refSpace);
+  if (!defined(xrPose)) {
+    return; // TODO: we should handle gracefully.
+  }
 
   const xrLayer = xrFrame.session.renderState.baseLayer;
   for (const xrView of xrPose.views) {
@@ -2938,6 +2940,8 @@ function executeWebXRCommands(scene, passState, backgroundColor) {
 
   // Now manually blit into the framebuffer provided by WebXR, which
   // is the framebuffer for the HMD's displays.
+
+  // When the WebXR Emulator is used, xrLayer has no framebuffer.
   if (defined(xrLayer.framebuffer)) {
     const srcFb = passState.framebuffer;
     const gl = srcFb._gl;
