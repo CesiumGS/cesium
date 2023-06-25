@@ -2970,6 +2970,8 @@ function executeWebVRCommands(scene, passState, backgroundColor) {
 
   for (const eye of Object.keys(pose.viewports)) {
     const viewport = pose.viewports[eye];
+    passState.viewport = viewport;
+
     camera.frustum.aspectRatio = viewport.width / viewport.height;
 
     if (eye === "left") {
