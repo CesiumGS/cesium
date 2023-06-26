@@ -594,6 +594,7 @@ function Scene(options) {
   this._useWebVR = false;
   this._cameraVR = undefined;
   this._aspectRatioVR = undefined;
+  this._webXR = undefined;
   this._poseVR = undefined;
 
   /**
@@ -1379,7 +1380,7 @@ Object.defineProperties(Scene.prototype, {
 
   /**
    * When <code>true</code>, splits the scene into two viewports with steroscopic views for the left and right eyes.
-   * Used for cardboard and WebVR.
+   * Used for cardboard, WebVR and WebXR.
    * @memberof Scene.prototype
    * @type {boolean}
    * @default false
@@ -1418,6 +1419,51 @@ Object.defineProperties(Scene.prototype, {
         this.camera.frustum.aspectRatio = this._aspectRatioVR;
         this.camera.frustum.xOffset = 0.0;
       }
+    },
+  },
+
+  /**
+   * An object from which WebXR information is pulled.
+   * <p>
+   * Member <code>refSpace</code> should be set when
+   * <code>XRSession:requestReferenceSpace</code> is resolved. If
+   * <code>refSpace</code> is not set, an inline reference space will
+   * be assumed.
+   * </p>
+   * <p>
+   * Member <code>frame</code> must be set with the
+   * <code>XRFrame</code> parameter received at the callback scheduled
+   * with <code>XRSession:requestAnimationFrame</code>.
+   * </p>
+   *
+   * @memberof Scene.prototype
+   * @type {object}
+   * @default undefined
+   *
+   * @see Scene#useWebVR
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XRSession/requestReferenceSpace|requestReferenceSpace}
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XRSession/requestAnimationFrame|requestAnimationFrame}
+   *
+   * @example
+   * const scene = new Cesium.Scene({ canvas: canvas });
+   * scene.useWebVR = true;
+   * scene.webXRContext = { refSpace: undefined, frame: undefined };
+   * navigator.xr.requestSession("immersive-vr").then((xrSession) => {
+   *   xrSession.requestReferenceSpace("local").then((xrRefSpace) => {
+   *     scene.webXRContext.refSpace = xrRefSpace;
+   *     xrSession.requestAnimationFrame((time, xrFrame) => {
+   *       scene.webXRContext.frame = xrFrame;
+   *       scene.render();
+   *     });
+   *   });
+   * });
+   */
+  webXRContext: {
+    get: function () {
+      return this._webXR;
+    },
+    set: function (value) {
+      this._webXR = value;
     },
   },
 
@@ -2876,10 +2922,10 @@ function prepareWebVRPose(scene, viewport) {
     scene._poseVR = pose;
   }
 
-  if (defined(scene.xr)) {
+  if (defined(scene._webXR)) {
     // WebXR provides the viewports indicating where to render for each display.
     // https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Rendering#frames_poses_views_and_framebuffers
-    const xr = scene.xr;
+    const xr = scene._webXR;
     const xrFrame = xr.frame;
     const xrPose = xrFrame.getViewerPose(xr.refSpace);
     if (!defined(xrPose)) {
