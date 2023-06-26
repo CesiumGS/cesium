@@ -436,22 +436,22 @@ AnimationViewModel.defaultTicks = [
  * @type {AnimationViewModel.TimeFormatter}
  */
 AnimationViewModel.defaultTimeFormatter = function (date, viewModel) {
-  const gregorianDate = JulianDate.toGregorianDate(date);
-  const millisecond = Math.round(gregorianDate.millisecond);
+  const jsDate = JulianDate.toDate(date);
+  const millisecond = Math.round(jsDate.getMilliseconds());
   if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
-    return `${gregorianDate.hour
+    return `${jsDate.getHours()
       .toString()
-      .padStart(2, "0")}:${gregorianDate.minute
+      .padStart(2, "0")}:${jsDate.getMinutes()
       .toString()
-      .padStart(2, "0")}:${gregorianDate.second
+      .padStart(2, "0")}:${jsDate.getSeconds()
       .toString()
       .padStart(2, "0")}.${millisecond.toString().padStart(3, "0")}`;
   }
-  return `${gregorianDate.hour
+  return `${jsDate.getUTCHours()
     .toString()
-    .padStart(2, "0")}:${gregorianDate.minute
+    .padStart(2, "0")}:${jsDate.getUTCMinutes()
     .toString()
-    .padStart(2, "0")}:${gregorianDate.second.toString().padStart(2, "0")} UTC`;
+    .padStart(2, "0")}:${jsDate.getUTCSeconds().toString().padStart(2, "0")} UTC`;
 };
 
 /**
