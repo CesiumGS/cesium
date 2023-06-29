@@ -83,7 +83,7 @@ TerrainCache.prototype.tidy = function () {
  * @alias GoogleEarthEnterpriseTerrainProvider
  * @constructor
  *
- * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options An object describing initialization options
+ * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} [options] An object describing initialization options
  *
  * @see GoogleEarthEnterpriseTerrainProvider.fromMetadata
  * @see GoogleEarthEnterpriseMetadata.fromUrl

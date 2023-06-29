@@ -50,7 +50,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * @constructor
  * @extends UrlTemplateImageryProvider
  *
- * @param {TileMapServiceImageryProvider.ConstructorOptions} options Object describing initialization options
+ * @param {TileMapServiceImageryProvider.ConstructorOptions} [options] Object describing initialization options
  *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider

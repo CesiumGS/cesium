@@ -395,7 +395,7 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
           ArcGisMapService.defaultAccessToken
         );
         server = Resource.createIfNeeded(
-          defaultValue(options.url, ArcGisMapService.defaultWorldImageryServer)
+          ArcGisMapService.defaultWorldImageryServer
         );
         server.appendForwardSlash();
         const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(
@@ -413,7 +413,7 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
           ArcGisMapService.defaultAccessToken
         );
         server = Resource.createIfNeeded(
-          defaultValue(options.url, ArcGisMapService.defaultWorldOceanServer)
+          ArcGisMapService.defaultWorldOceanServer
         );
         server.appendForwardSlash();
         const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(
@@ -431,10 +431,7 @@ ArcGisMapServerImageryProvider.fromBasemapType = async function (
           ArcGisMapService.defaultAccessToken
         );
         server = Resource.createIfNeeded(
-          defaultValue(
-            options.url,
-            ArcGisMapService.defaultWorldHillshadeServer
-          )
+          ArcGisMapService.defaultWorldHillshadeServer
         );
         server.appendForwardSlash();
         const defaultTokenCredit = ArcGisMapService.getDefaultTokenCredit(

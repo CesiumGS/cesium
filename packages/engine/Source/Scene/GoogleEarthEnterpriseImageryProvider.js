@@ -65,7 +65,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  * @alias GoogleEarthEnterpriseImageryProvider
  * @constructor
  *
- * @param {GoogleEarthEnterpriseImageryProvider.ConstructorOptions} options Object describing initialization options
+ * @param {GoogleEarthEnterpriseImageryProvider.ConstructorOptions} [options] Object describing initialization options
  *
  * @see GoogleEarthEnterpriseImageryProvider.fromMetadata
  * @see GoogleEarthEnterpriseTerrainProvider

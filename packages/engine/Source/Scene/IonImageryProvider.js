@@ -73,7 +73,7 @@ const ImageryProviderAsyncMapping = {
  * @alias IonImageryProvider
  * @constructor
  *
- * @param {IonImageryProvider.ConstructorOptions} options Object describing initialization options
+ * @param {IonImageryProvider.ConstructorOptions} [options] Object describing initialization options
  *
  * @example
  * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));

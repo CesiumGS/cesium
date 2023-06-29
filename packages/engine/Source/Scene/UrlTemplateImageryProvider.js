@@ -53,7 +53,6 @@ const pickFeaturesTags = combine(tags, {
  *
  * Initialization options for the UrlTemplateImageryProvider constructor
  *
- * @property {object} [options] Object with the following properties:
  * @property {Resource|string} url  The URL template to use to request tiles.  It has the following keywords:
  * <ul>
  *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
