@@ -587,7 +587,7 @@ export const postversion = async function () {
       return;
     }
     // Update the version for the updated workspace.
-    packageJson.dependencies[workspace] = version;
+    packageJson.dependencies[workspace] = `^${version}`;
     await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
   });
   return Promise.all(promises);
