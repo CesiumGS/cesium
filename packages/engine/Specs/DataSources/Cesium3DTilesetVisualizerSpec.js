@@ -211,6 +211,102 @@ describe(
       expect(tilesetPrimitive.id).toEqual(testObject);
     });
 
+    it("Visualizer does not create tileset primitive when show is false.", async function () {
+      const time = JulianDate.now();
+      const entityCollection = new EntityCollection();
+      visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
+
+      const tileset = new Cesium3DTilesetGraphics();
+      tileset.show = new ConstantProperty(false);
+      tileset.uri = new ConstantProperty(
+        new Resource({
+          url: tilesetUrl,
+        })
+      );
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.position = new ConstantPositionProperty(
+        Cartesian3.fromDegrees(1, 2, 3)
+      );
+      testObject.tileset = tileset;
+
+      spyOn(Cesium3DTileset, "fromUrl").and.callThrough();
+
+      visualizer.update(time);
+
+      expect(Cesium3DTileset.fromUrl).not.toHaveBeenCalled();
+
+      tileset.show = new ConstantProperty(true);
+
+      visualizer.update(time);
+
+      expect(Cesium3DTileset.fromUrl).toHaveBeenCalled();
+
+      await pollToPromise(function () {
+        return defined(scene.primitives.get(0));
+      });
+
+      expect(scene.primitives.length).toEqual(1);
+      expect(scene.primitives.get(0)).toBeInstanceOf(Cesium3DTileset);
+      expect(scene.primitives.get(0).show).toEqual(true);
+    });
+
+    it("Visualizer does not create tileset primitive when show is false.", async function () {
+      const time = JulianDate.now();
+      const entityCollection = new EntityCollection();
+      visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
+
+      const tileset = new Cesium3DTilesetGraphics();
+      tileset.show = new ConstantProperty(true);
+      tileset.uri = new ConstantProperty(
+        new Resource({
+          url: tilesetUrl,
+        })
+      );
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      testObject.position = new ConstantPositionProperty(
+        Cartesian3.fromDegrees(1, 2, 3)
+      );
+      testObject.tileset = tileset;
+
+      spyOn(Cesium3DTileset, "fromUrl");
+      visualizer.update(time);
+
+      tileset.show = new ConstantProperty(false);
+
+      expect(() => visualizer.update(time)).not.toThrow();
+    });
+
+    it("Visualizer sets show property.", async function () {
+      const entityCollection = new EntityCollection();
+      visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);
+
+      const time = JulianDate.now();
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const tileset = new Cesium3DTilesetGraphics();
+      testObject.tileset = tileset;
+
+      testObject.position = new ConstantProperty(
+        new Cartesian3(5678, 1234, 1101112)
+      );
+      tileset.uri = new ConstantProperty(tilesetUrl);
+      visualizer.update(time);
+
+      await pollToPromise(function () {
+        return defined(scene.primitives.get(0));
+      });
+
+      const tilesetPrimitive = scene.primitives.get(0);
+      expect(tilesetPrimitive.show).toEqual(true);
+
+      tileset.show = new ConstantProperty(false);
+
+      visualizer.update(time);
+
+      expect(tilesetPrimitive.show).toEqual(false);
+    });
+
     it("Computes bounding sphere.", async function () {
       const entityCollection = new EntityCollection();
       visualizer = new Cesium3DTilesetVisualizer(scene, entityCollection);

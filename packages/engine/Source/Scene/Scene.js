@@ -754,13 +754,13 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * The drawingBufferHeight of the underlying GL context.
+   * The drawingBufferWidth of the underlying GL context.
    * @memberof Scene.prototype
    *
    * @type {number}
    * @readonly
    *
-   * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
+   * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
    */
   drawingBufferWidth: {
     get: function () {

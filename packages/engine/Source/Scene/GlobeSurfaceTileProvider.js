@@ -334,7 +334,7 @@ function updateCredits(surface, frameState) {
   const imageryLayers = surface._imageryLayers;
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
     const layer = imageryLayers.get(i);
-    if (layer.ready && defined(layer.imageryProvider.credit)) {
+    if (layer.ready && layer.show && defined(layer.imageryProvider.credit)) {
       creditDisplay.addCreditToNextFrame(layer.imageryProvider.credit);
     }
   }
