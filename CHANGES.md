@@ -2,6 +2,87 @@
 
 ### 1.107 - 2023-07-01
 
+### Major Announcements :loudspeaker:
+
+- The `readyPromise` pattern has been removed across the API. This has been done to facilitate better asynchronous flow and error handling. For example:
+
+```js
+try {
+  const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+  viewer.scene.primitives.add(tileset);
+} catch (error) {
+  console.log(`Failed to load tileset: ${error}`);
+}
+```
+
+```js
+try {
+  const viewer = new Cesium.Viewer("cesiumContainer", {
+    terrainProvider: await Cesium.createWorldTerrainAsync();
+  });
+} catch (error) {
+  console.log(`Failed to created terrain: ${error}`);
+}
+```
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- `CesiumWidget` constructor option `options.imageryProvider` has been removed. Use `options.baseLayer` instead.
+- `ImageryProvider.ready` and `ImageryProvider.readyPromise` have been removed.
+- `ImageryProvider.defaultAlpha`, `ImageryProvider.defaultNightAlpha`, `ImageryProvider.defaultDayAlpha`, `ImageryProvider.defaultBrightness`, `ImageryProvider.defaultContrast`, `ImageryProvider.defaultHue`, `ImageryProvider.defaultSaturation`, `ImageryProvider.defaultGamma`, `ImageryProvider.defaultMinificationFilter`, `ImageryProvider.defaultMagnificationFilter` have been removed. Use `ImageryLayer.alpha`, `ImageryLayer.nightAlpha`, `ImageryLayer.dayAlpha`, `ImageryLayer.brightness`, `ImageryLayer.contrast`, `ImageryLayer.hue`, `ImageryLayer.saturation`, `ImageryLayer.gamma`, `ImageryLayer.minificationFilter`, `ImageryLayer.magnificationFilter`instead.
+- `ImageryLayer.getViewableRectangle` was removed. Use `ImageryLayer.getImageryRectangle` instead.
+- `ArcGisMapServerImageryProvider` constructor parameter `url`,`ArcGisMapServerImageryProvider.ready`, and `ArcGisMapServerImageryProvider.readyPromise` have been removed. Use `ArcGisMapServerImageryProvider.fromUrl` instead.
+- `BingMapsImageryProvider` constructor parameter `url`,`BingMapsImageryProvider.ready`, and `BingMapsImageryProvider.readyPromise` have been removed. Use `BingMapsImageryProvider.fromUrl` instead.
+- `GoogleEarthEnterpriseImageryProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseImageryProvider.ready`, and `GoogleEarthEnterpriseImageryProvider.readyPromise` have been removed. Use `GoogleEarthEnterpriseImageryProvider.fromMetadata` instead.
+- `GoogleEarthEnterpriseMapsProvider` constructor parameters `options.url` and `options.channel`, `GoogleEarthEnterpriseMapsProvider.ready`, and `GoogleEarthEnterpriseMapsProvider.readyPromise` have been removed. Use `GoogleEarthEnterpriseMapsProvider.fromUrl` instead.
+- `GridImageryProvider.ready` and `GridImageryProvider.readyPromise` have been removed.
+- `IonImageryProvider` constructor parameter `assetId`,`BIonImageryProvider.ready`, and `IonImageryProvider.readyPromise` have been removed. Use `IonImageryProvider.fromAssetId` instead.
+- `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` have been removed.
+- `MapboxStyleImageryProvider.ready` and `MapboxStyleImageryProvider.readyPromise` have been removed.
+- `OpenStreetMapImageryProvider.ready` and `OpenStreetMapImageryProvider.readyPromise` have been removed.
+- `SingleTileImageryProvider` constructor parameters `options.tileHeight` and `options.tileWidth` became required in CesiumJS 1.104. Omitting these properties will result in an error in 1.107. Provide `options.tileHeight` and `options.tileWidth`, or use `SingleTileImageryProvider.fromUrl` instead.
+- `SingleTileImageryProvider.ready` and `SingleTileImageryProvider.readyPromise` have been removed. Use `SingleTileImageryProvider.fromUrl` instead.
+- `TileCoordinatesImageryProvider.ready` and `TileCoordinatesImageryProvider.readyPromise` have been removed.
+- `TileMapServiceImageryProvider` constructor parameter `options.url`, `TileMapServiceImageryProvider.ready`, and `TileMapServiceImageryProvider.readyPromise` have been removed. Use `TileMapServiceImageryProvider.fromUrl` instead.
+- `UrlTemplateImageryProvider.reinitialize`, `UrlTemplateImageryProvider.ready`, and `UrlTemplateImageryProvider.readyPromise` have been removed.
+- `WebMapServiceImageryProvider.ready`, and `WebMapServiceImageryProvider.readyPromise` have been removed.
+- `WebMapTileServiceImageryProvider.ready`, and `WebMapTileServiceImageryProvider.readyPromise` have been removed.
+- `TerrainProvider.ready` and `TerrainProvider.readyPromise` have been removed.
+- `createWorldImagery` was removed. Use `createWorldImageryAsync` instead.
+- `ArcGISTiledElevationTerrainProvider` constructor parameter `options.url`, `ArcGISTiledElevationTerrainProvider.ready`, and `ArcGISTiledElevationTerrainProvider.readyPromise` have been removed. Use `ArcGISTiledElevationTerrainProvider.fromUrl` instead.
+- `CesiumTerrainProvider` constructor parameter `options.url`, `CesiumTerrainProvider.ready`, and `CesiumTerrainProvider.readyPromise` have been removed. Use `CesiumTerrainProvider.fromIonAssetId` or `CesiumTerrainProvider.fromUrl` instead.
+- `CustomHeightmapTerrainProvider.ready`, and `CustomHeightmapTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104.
+- `EllipsoidTerrainProvider.ready`, and `EllipsoidTerrainProvider.readyPromise` were deprecated in CesiumJS 1.104.
+- `GoogleEarthEnterpriseMetadata` constructor parameter `options.url` and `GoogleEarthEnterpriseMetadata.readyPromise` have been removed. Use `GoogleEarthEnterpriseMetadata.fromUrl` instead.
+- `GoogleEarthEnterpriseTerrainProvider` constructor parameters `options.url` and `options.metadata`, `GoogleEarthEnterpriseTerrainProvider.ready`, and `GoogleEarthEnterpriseTerrainProvider.readyPromise` have been removed. Use `GoogleEarthEnterpriseTerrainProvider.fromMetadata` instead.
+- `VRTheWorldTerrainProvider` constructor parameter `options.url`, `VRTheWorldTerrainProvider.ready`, and `VRTheWorldTerrainProvider.readyPromise` have been removed. Use `VRTheWorldTerrainProvider.fromUrl` instead.
+- `createWorldTerrain` was removed. Use `createWorldTerrainAsync` instead.
+- `Cesium3DTileset` constructor parameter `options.url`, `Cesium3DTileset.ready`, and `Cesium3DTileset.readyPromise` have been removed. Use `Cesium3DTileset.fromUrl` instead.
+- `createOsmBuildings` was removed. Use `createOsmBuildingsAsync` instead.
+- `Model.fromGltf`, `Model.readyPromise`, and `Model.texturesLoadedPromise` have been removed. Use `Model.fromGltfAsync`, `Model.readyEvent`, `Model.errorEvent`, and `Model.texturesReadyEvent` instead. For example:
+  ```js
+  try {
+    const model = await Cesium.Model.fromGltfAsync({
+      url: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+    });
+    viewer.scene.primitives.add(model);
+    model.readyEvent.addEventListener(() => {
+      // model is ready for rendering
+    });
+  } catch (error) {
+    console.log(`Failed to load model. ${error}`);
+  }
+  ```
+- `I3SDataProvider` construction parameter `options.url`, `I3SDataProvider.ready`, and `I3SDataProvider.readyPromise` have been removed. Use `I3SDataProvider.fromUrl` instead.
+- `TimeDynamicPointCloud.readyPromise` was removed. Use `TimeDynamicPointCloud.frameFailed` to track any errors.
+- `VoxelProvider.ready` and `VoxelProvider.readyPromise` have been removed.
+- `VoxelPrimitive.eadyPromise` have been removed.
+- `Cesium3DTilesVoxelProvider` construction parameter `options.url`, `Cesium3DTilesVoxelProvider.ready`, and `Cesium3DTilesVoxelProvider.readyPromise` have been removed. Use `Cesium3DTilesVoxelProvider.fromUrl` instead.
+- `Primitive.readyPromise`, `ClassificationPrimitive.readyPromise`, `GroundPrimitive.readyPromise`, and `GroundPolylinePrimitive.readyPromise` have been removed. Wait for `Primitive.ready`, `ClassificationPrimitive.ready`, `GroundPrimitive.ready`, or `GroundPolylinePrimitive.ready` to return true instead.
+- `CreditDisplay.addCredit`, `CreditDisplay.addDefaultCredit`, and `CreditDisplay.removeDefaultCredit` have been removed. Use `CreditDisplay.addCreditToNextFrame`, `CreditDisplay.addStaticCredit`, and `CreditDisplay.removeStaticCredit` respectively instead.
+
 ##### Additions :tada:
 
 - Added `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` to better control memory usage. To replicate previous behavior, convert `maximumMemoryUsage` from MB to bytes, assign the value to `cacheBytes`, and set `maximumCacheOverflowBytes = Number.MAX_VALUE`
@@ -13,6 +94,12 @@
 ##### Deprecated :hourglass_flowing_sand:
 
 - `Cesium3DTileset.maximumMemoryUsage` has been deprecated in CesiumJS 1.107. It will be removed in 1.110. Use `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` instead. [#11310](https://github.com/CesiumGS/cesium/pull/11310)
+
+#### @cesium/widgets
+
+##### Breaking Changes :mega:
+
+- `Viewer` constructor option `options.imageryProvider` has been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
 
 ### 1.106.1 - 2023-06-02
 
@@ -121,7 +208,7 @@ try {
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- `CesiumWidget` constructor option `options.imageryProvider` haw been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
+- `CesiumWidget` constructor option `options.imageryProvider` has been deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `options.baseLayer` instead.
 - `ImageryProvider.ready` and `ImageryProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
 - `ImageryProvider.defaultAlpha`, `ImageryProvider.defaultNightAlpha`, `ImageryProvider.defaultDayAlpha`, `ImageryProvider.defaultBrightness`, `ImageryProvider.defaultContrast`, `ImageryProvider.defaultHue`, `ImageryProvider.defaultSaturation`, `ImageryProvider.defaultGamma`, `ImageryProvider.defaultMinificationFilter`, `ImageryProvider.defaultMagnificationFilter` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `ImageryLayer.alpha`, `ImageryLayer.nightAlpha`, `ImageryLayer.dayAlpha`, `ImageryLayer.brightness`, `ImageryLayer.contrast`, `ImageryLayer.hue`, `ImageryLayer.saturation`, `ImageryLayer.gamma`, `ImageryLayer.minificationFilter`, `ImageryLayer.magnificationFilter`instead.
 - `ImageryLayer.getViewableRectangle` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `ImageryLayer.getImageryRectangle` instead.

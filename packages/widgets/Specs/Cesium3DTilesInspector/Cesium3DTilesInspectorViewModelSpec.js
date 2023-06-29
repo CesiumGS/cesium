@@ -60,8 +60,6 @@ describe(
         );
         const tileset = await Cesium3DTileset.fromUrl(tilesetUrl);
         viewModel.tileset = tileset;
-        // Here to allow backwards compatibility- This immediately resolves for tilesets created with fromUrl(). Can be removed when ready promises are removed.
-        await tileset.readyPromise;
         expect(viewModel.properties.indexOf("id") !== -1).toBe(true);
         expect(viewModel.properties.indexOf("Longitude") !== -1).toBe(true);
         expect(viewModel.properties.indexOf("Latitude") !== -1).toBe(true);

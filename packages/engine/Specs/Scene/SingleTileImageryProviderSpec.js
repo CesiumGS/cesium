@@ -24,47 +24,6 @@ describe("Scene/SingleTileImageryProvider", function () {
     expect(SingleTileImageryProvider).toConformToInterface(ImageryProvider);
   });
 
-  it("resolves readyPromise", function () {
-    const provider = new SingleTileImageryProvider({
-      url: "Data/Images/Red16x16.png",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "Data/Images/Red16x16.png",
-    });
-
-    const provider = new SingleTileImageryProvider({
-      url: resource,
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("rejects readyPromise on error", function () {
-    const provider = new SingleTileImageryProvider({
-      url: "invalid.image.url",
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail("should not resolve");
-      })
-      .catch(function (e) {
-        expect(provider.ready).toBe(false);
-        expect(e.message).toContain(provider.url);
-      });
-  });
-
   it("constructor throws without url", async function () {
     expect(() => new SingleTileImageryProvider()).toThrowDeveloperError();
   });
@@ -267,20 +226,16 @@ describe("Scene/SingleTileImageryProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      const imagery = new Imagery(layer, 0, 0, 0);
-      imagery.addReference();
-      layer._requestImagery(imagery);
+    const imagery = new Imagery(layer, 0, 0, 0);
+    imagery.addReference();
+    layer._requestImagery(imagery);
 
-      return pollToPromise(function () {
-        return imagery.state === ImageryState.RECEIVED;
-      }).then(function () {
-        expect(imagery.image).toBeImageOrImageBitmap();
-        expect(tries).toEqual(2);
-        imagery.releaseReference();
-      });
+    return pollToPromise(function () {
+      return imagery.state === ImageryState.RECEIVED;
+    }).then(function () {
+      expect(imagery.image).toBeImageOrImageBitmap();
+      expect(tries).toEqual(2);
+      imagery.releaseReference();
     });
   });
 });

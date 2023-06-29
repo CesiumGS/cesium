@@ -3,7 +3,6 @@ import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import deprecationWarning from "./deprecationWarning.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
@@ -31,7 +30,6 @@ const ALL_CHILDREN = 15;
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
  *                    If neither parameter is specified, the WGS84 ellipsoid is used.
- * @property {Resource|string|Promise<Resource>|Promise<string>} [url] The URL of the ArcGIS ImageServer service. Deprecated.
  */
 
 /**
@@ -77,8 +75,6 @@ TerrainProviderBuilder.prototype.build = function (provider) {
   provider._tilesAvailabilityLoaded = this.tilesAvailabilityLoaded;
   provider._levelZeroMaximumGeometricError = this.levelZeroMaximumGeometricError;
   provider._terrainDataStructure = this.terrainDataStructure;
-
-  provider._ready = true;
 };
 
 function parseMetadataSuccess(terrainProviderBuilder, metadata) {
@@ -248,50 +244,13 @@ function ArcGISTiledElevationTerrainProvider(options) {
   this._height = undefined;
   this._encoding = undefined;
   this._lodCount = undefined;
-  const token = options.token;
 
   this._hasAvailability = false;
   this._tilesAvailable = undefined;
   this._tilesAvailabilityLoaded = undefined;
   this._availableCache = {};
-  this._ready = false;
 
   this._errorEvent = new Event();
-
-  if (defined(options.url)) {
-    deprecationWarning(
-      "ArcGISTiledElevationTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
-    );
-
-    const that = this;
-    const terrainProviderBuilder = new TerrainProviderBuilder(options);
-    this._readyPromise = Promise.resolve(options.url).then(async function (
-      url
-    ) {
-      let resource = Resource.createIfNeeded(url);
-      resource.appendForwardSlash();
-      if (defined(token)) {
-        resource = resource.getDerivedResource({
-          queryParameters: {
-            token: token,
-          },
-        });
-      }
-      that._resource = resource;
-
-      const metadataResource = resource.getDerivedResource({
-        queryParameters: {
-          f: "pjson",
-        },
-      });
-
-      await requestMetadata(terrainProviderBuilder, metadataResource, that);
-      terrainProviderBuilder.build(that);
-
-      return true;
-    });
-  }
 }
 
 Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
@@ -331,40 +290,6 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
   tilingScheme: {
     get: function () {
       return this._tilingScheme;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "ArcGISTiledElevationTerrainProvider.ready",
-        "ArcGISTiledElevationTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
-      );
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof ArcGISTiledElevationTerrainProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "ArcGISTiledElevationTerrainProvider.readyPromise",
-        "ArcGISTiledElevationTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ArcGISTiledElevationTerrainProvider.fromUrl instead."
-      );
-      return this._readyPromise;
     },
   },
 

@@ -1,7 +1,6 @@
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
@@ -117,9 +116,6 @@ function MapboxImageryProvider(options) {
     maximumLevel: options.maximumLevel,
     rectangle: options.rectangle,
   });
-
-  this._ready = true;
-  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(MapboxImageryProvider.prototype, {
@@ -132,40 +128,6 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   url: {
     get: function () {
       return this._imageryProvider.url;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.ready",
-        "MapboxImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-      );
-      return this._imageryProvider.ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.readyPromise",
-        "MapboxImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-      );
-      return this._imageryProvider._readyPromise;
     },
   },
 
@@ -313,242 +275,6 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
       return this._imageryProvider.hasAlphaChannel;
     },
   },
-
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultAlpha: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultAlpha",
-        "MapboxImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
-      );
-      return this._defaultAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultAlpha",
-        "MapboxImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
-      );
-      this._defaultAlpha = value;
-    },
-  },
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultNightAlpha: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultNightAlpha",
-        "MapboxImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
-      );
-      return this.defaultNightAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultNightAlpha",
-        "MapboxImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
-      );
-      this.defaultNightAlpha = value;
-    },
-  },
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultDayAlpha: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultDayAlpha",
-        "MapboxImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
-      );
-      return this._defaultDayAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultDayAlpha",
-        "MapboxImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
-      );
-      this._defaultDayAlpha = value;
-    },
-  },
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultBrightness: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultBrightness",
-        "MapboxImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
-      );
-      return this._defaultBrightness;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultBrightness",
-        "MapboxImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
-      );
-      this._defaultBrightness = value;
-    },
-  },
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultContrast: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultContrast",
-        "MapboxImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
-      );
-      return this._defaultContrast;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultContrast",
-        "MapboxImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
-      );
-      this._defaultContrast = value;
-    },
-  },
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultHue: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultHue",
-        "MapboxImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
-      );
-      return this._defaultHue;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultHue",
-        "MapboxImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
-      );
-      this._defaultHue = value;
-    },
-  },
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultSaturation: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultSaturation",
-        "MapboxImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
-      );
-      return this._defaultSaturation;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultSaturation",
-        "MapboxImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
-      );
-      this._defaultSaturation = value;
-    },
-  },
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultGamma: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultGamma",
-        "MapboxImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
-      );
-      return this._defaultGamma;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultGamma",
-        "MapboxImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
-      );
-      this._defaultGamma = value;
-    },
-  },
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {TextureMinificationFilter}
-   * @deprecated
-   */
-  defaultMinificationFilter: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultMinificationFilter",
-        "MapboxImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
-      );
-      return this._defaultMinificationFilter;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultMinificationFilter",
-        "MapboxImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
-      );
-      this._defaultMinificationFilter = value;
-    },
-  },
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {TextureMagnificationFilter}
-   * @deprecated
-   */
-  defaultMagnificationFilter: {
-    get: function () {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultMagnificationFilter",
-        "MapboxImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
-      );
-      return this._defaultMagnificationFilter;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "MapboxImageryProvider.defaultMagnificationFilter",
-        "MapboxImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
-      );
-      this._defaultMagnificationFilter = value;
-    },
-  },
 });
 
 /**
@@ -572,8 +298,6 @@ MapboxImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 MapboxImageryProvider.prototype.requestImage = function (x, y, level, request) {
   return this._imageryProvider.requestImage(x, y, level, request);

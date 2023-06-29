@@ -31,12 +31,6 @@ async function computeFlyToLocationForRectangle(rectangle, scene) {
     return positionWithoutTerrain;
   }
 
-  // readyPromise has been deprecated; This is here for backwards compatibility
-  if (defined(terrainProvider._readyPromise)) {
-    await terrainProvider._readyPromise;
-  } else if (defined(terrainProvider.readyPromise)) {
-    await terrainProvider.readyPromise;
-  }
   const availability = terrainProvider.availability;
 
   if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {

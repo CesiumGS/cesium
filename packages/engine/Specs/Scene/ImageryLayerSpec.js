@@ -518,24 +518,6 @@ describe(
       });
     });
 
-    it("uses default texture filter properties of ImageryProvider", async function () {
-      const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Red16x16.png"
-      );
-
-      provider.defaultMinificationFilter = TextureMinificationFilter.NEAREST;
-      provider.defaultMagnificationFilter = TextureMinificationFilter.NEAREST;
-
-      const layer = new ImageryLayer(provider);
-      expect(layer.minificationFilter).toEqual(
-        TextureMinificationFilter.NEAREST
-      );
-      expect(layer.magnificationFilter).toEqual(
-        TextureMagnificationFilter.NEAREST
-      );
-      layer.destroy();
-    });
-
     it("returns HTTP status code information in TileProviderError", async function () {
       // Web browsers unfortunately provide very little information about what went wrong when an Image fails
       // to load.  But when an imagery provider is configured to use a TileDiscardPolicy, Cesium downloads the image
@@ -564,27 +546,6 @@ describe(
 
       return pollToPromise(function () {
         return errorRaised;
-      });
-    });
-
-    it("getViewableRectangle works", async function () {
-      const providerRectangle = Rectangle.fromDegrees(8.2, 61.09, 8.5, 61.7);
-      const provider = await SingleTileImageryProvider.fromUrl(
-        "Data/Images/Green4x4.png",
-        {
-          rectangle: providerRectangle,
-        }
-      );
-
-      const layerRectangle = Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7);
-      const layer = new ImageryLayer(provider, {
-        rectangle: layerRectangle,
-      });
-
-      return layer.getViewableRectangle().then(function (rectangle) {
-        expect(rectangle).toEqual(
-          Rectangle.intersection(providerRectangle, layerRectangle)
-        );
       });
     });
 

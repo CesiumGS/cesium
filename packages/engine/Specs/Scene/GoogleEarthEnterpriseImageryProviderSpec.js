@@ -152,76 +152,6 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
     };
   }
 
-  it("resolves readyPromise", function () {
-    installMockGetQuadTreePacket();
-    const url = "http://fake.fake.invalid";
-
-    const resource = new Resource({
-      url: url,
-    });
-
-    imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-      url: resource,
-    });
-
-    return imageryProvider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(imageryProvider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    installMockGetQuadTreePacket();
-    const url = "http://fake.fake.invalid";
-
-    imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-      url: url,
-    });
-
-    return imageryProvider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(imageryProvider.ready).toBe(true);
-    });
-  });
-
-  it("rejects readyPromise on error", function () {
-    const url = "http://host.invalid";
-    imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-      url: url,
-    });
-
-    return imageryProvider.readyPromise
-      .then(function () {
-        fail("should not resolve");
-      })
-      .catch(function (e) {
-        expect(imageryProvider.ready).toBe(false);
-        expect(e.message).toContain(url);
-      });
-  });
-
-  it("readyPromise rejects if there isn't imagery", function () {
-    installMockGetQuadTreePacket();
-
-    const metadata = new GoogleEarthEnterpriseMetadata({
-      url: "made/up/url",
-    });
-
-    metadata.imageryPresent = false;
-
-    imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-      metadata: metadata,
-    });
-
-    return imageryProvider.readyPromise
-      .then(function () {
-        fail("Server does not have imagery, so we shouldn't resolve.");
-      })
-      .catch(function () {
-        expect(imageryProvider.ready).toBe(false);
-      });
-  });
-
   it("fromMetadata throws without metadata", function () {
     expect(() =>
       GoogleEarthEnterpriseImageryProvider.fromMetadata()
@@ -300,31 +230,6 @@ describe("Scene/GoogleEarthEnterpriseImageryProvider", function () {
 
     const image = await imageryProvider.requestImage(0, 0, 0);
     expect(image).toBeImageOrImageBitmap();
-  });
-
-  it("raises error on invalid url", function () {
-    const url = "http://host.invalid";
-    imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-      url: url,
-    });
-
-    let errorEventRaised = false;
-    imageryProvider.errorEvent.addEventListener(function (error) {
-      expect(error.message).toContain(url);
-      errorEventRaised = true;
-    });
-
-    return imageryProvider.readyPromise
-      .then(function () {
-        fail();
-      })
-      .catch(function () {
-        // Catch the error
-      })
-      .finally(function () {
-        expect(imageryProvider.ready).toEqual(false);
-        expect(errorEventRaised).toEqual(true);
-      });
   });
 
   it("raises error event when image cannot be loaded", async function () {

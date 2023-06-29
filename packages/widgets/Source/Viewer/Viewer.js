@@ -13,7 +13,6 @@ import {
   DataSourceDisplay,
   defaultValue,
   defined,
-  deprecationWarning,
   destroyObject,
   DeveloperError,
   Entity,
@@ -314,7 +313,6 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
- * @property {ImageryProvider|false} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false. Deprecated.
  * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
  * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
@@ -681,19 +679,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // These need to be set after the BaseLayerPicker is created in order to take effect
-  if (defined(options.imageryProvider) && options.imageryProvider !== false) {
-    deprecationWarning(
-      "Viewer options.imageryProvider",
-      "options.imageryProvider was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use options.baseLayer instead."
-    );
-
-    if (createBaseLayerPicker) {
-      baseLayerPicker.viewModel.selectedImagery = undefined;
-    }
-    scene.imageryLayers.removeAll();
-    scene.imageryLayers.addImageryProvider(options.imageryProvider);
-  }
-
   if (defined(options.baseLayer) && options.baseLayer !== false) {
     if (createBaseLayerPicker) {
       baseLayerPicker.viewModel.selectedImagery = undefined;
@@ -2152,16 +2137,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
       let rectanglePromise;
 
       if (defined(zoomTarget.imageryProvider)) {
-        // This is here for backward compatibility. It can be removed when readyPromise is removed.
-        let promise = Promise.resolve();
-        if (defined(zoomTarget.imageryProvider._readyPromise)) {
-          promise = zoomTarget.imageryProvider._readyPromise;
-        } else if (defined(zoomTarget.imageryProvider.readyPromise)) {
-          promise = zoomTarget.imageryProvider.readyPromise;
-        }
-        rectanglePromise = promise.then(() => {
-          return zoomTarget.getImageryRectangle();
-        });
+        rectanglePromise = zoomTarget.getImageryRectangle();
       } else {
         rectanglePromise = new Promise((resolve) => {
           const removeListener = zoomTarget.readyEvent.addEventListener(() => {
@@ -2265,88 +2241,44 @@ function updateZoomTarget(viewer) {
   const zoomOptions = defaultValue(viewer._zoomOptions, {});
   let options;
 
-  // If zoomTarget was Cesium3DTileset
-  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
-    // This is here for backwards compatibility and can be removed once Cesium3DTileset.readyPromise and VoxelPrimitive.readyPromise is removed.
-    return target._readyPromise
-      .then(function () {
-        const boundingSphere = target.boundingSphere;
-        // If offset was originally undefined then give it base value instead of empty object
-        if (!defined(zoomOptions.offset)) {
-          zoomOptions.offset = new HeadingPitchRange(
-            0.0,
-            -0.5,
-            boundingSphere.radius
-          );
-        }
+  if (
+    target instanceof Cesium3DTileset ||
+    target instanceof VoxelPrimitive ||
+    target instanceof TimeDynamicPointCloud
+  ) {
+    const boundingSphere = target.boundingSphere;
+    // If offset was originally undefined then give it base value instead of empty object
+    if (!defined(zoomOptions.offset)) {
+      zoomOptions.offset = new HeadingPitchRange(
+        0.0,
+        -0.5,
+        boundingSphere.radius
+      );
+    }
 
-        options = {
-          offset: zoomOptions.offset,
-          duration: zoomOptions.duration,
-          maximumHeight: zoomOptions.maximumHeight,
-          complete: function () {
-            viewer._completeZoom(true);
-          },
-          cancel: function () {
-            viewer._completeZoom(false);
-          },
-        };
-
-        if (viewer._zoomIsFlight) {
-          camera.flyToBoundingSphere(target.boundingSphere, options);
-        } else {
-          camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-          camera.lookAtTransform(Matrix4.IDENTITY);
-
-          // Finish the promise
-          viewer._completeZoom(true);
-        }
-
-        clearZoom(viewer);
-      })
-      .catch(() => {
-        cancelZoom(viewer);
-      });
-  }
-
-  // If zoomTarget was TimeDynamicPointCloud
-  if (target instanceof TimeDynamicPointCloud) {
-    // This is here for backwards compatibility and can be removed once TimeDynamicPointCloud.readyPromise is removed.
-    return target._readyPromise.then(function () {
-      const boundingSphere = target.boundingSphere;
-      // If offset was originally undefined then give it base value instead of empty object
-      if (!defined(zoomOptions.offset)) {
-        zoomOptions.offset = new HeadingPitchRange(
-          0.0,
-          -0.5,
-          boundingSphere.radius
-        );
-      }
-
-      options = {
-        offset: zoomOptions.offset,
-        duration: zoomOptions.duration,
-        maximumHeight: zoomOptions.maximumHeight,
-        complete: function () {
-          viewer._completeZoom(true);
-        },
-        cancel: function () {
-          viewer._completeZoom(false);
-        },
-      };
-
-      if (viewer._zoomIsFlight) {
-        camera.flyToBoundingSphere(boundingSphere, options);
-      } else {
-        camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-        camera.lookAtTransform(Matrix4.IDENTITY);
-
-        // Finish the promise
+    options = {
+      offset: zoomOptions.offset,
+      duration: zoomOptions.duration,
+      maximumHeight: zoomOptions.maximumHeight,
+      complete: function () {
         viewer._completeZoom(true);
-      }
+      },
+      cancel: function () {
+        viewer._completeZoom(false);
+      },
+    };
 
-      clearZoom(viewer);
-    });
+    if (viewer._zoomIsFlight) {
+      camera.flyToBoundingSphere(target.boundingSphere, options);
+    } else {
+      camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+      camera.lookAtTransform(Matrix4.IDENTITY);
+
+      // Finish the promise
+      viewer._completeZoom(true);
+    }
+
+    clearZoom(viewer);
   }
 
   // If zoomTarget was an ImageryLayer

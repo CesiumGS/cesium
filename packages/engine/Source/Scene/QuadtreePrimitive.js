@@ -520,24 +520,16 @@ function selectTilesForRendering(primitive, frameState) {
   let i;
   const tileProvider = primitive._tileProvider;
   if (!defined(primitive._levelZeroTiles)) {
-    // ready is deprecated. This is here for backwards compatibility
-    if (tileProvider.ready) {
-      const tilingScheme = tileProvider.tilingScheme;
-      primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(
-        tilingScheme
-      );
-      const numberOfRootTiles = primitive._levelZeroTiles.length;
-      if (rootTraversalDetails.length < numberOfRootTiles) {
-        rootTraversalDetails = new Array(numberOfRootTiles);
-        for (i = 0; i < numberOfRootTiles; ++i) {
-          if (rootTraversalDetails[i] === undefined) {
-            rootTraversalDetails[i] = new TraversalDetails();
-          }
+    const tilingScheme = tileProvider.tilingScheme;
+    primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+    const numberOfRootTiles = primitive._levelZeroTiles.length;
+    if (rootTraversalDetails.length < numberOfRootTiles) {
+      rootTraversalDetails = new Array(numberOfRootTiles);
+      for (i = 0; i < numberOfRootTiles; ++i) {
+        if (rootTraversalDetails[i] === undefined) {
+          rootTraversalDetails[i] = new TraversalDetails();
         }
       }
-    } else {
-      // Nothing to do until the provider is ready.
-      return;
     }
   }
 
@@ -1389,11 +1381,6 @@ const scratchPosition = new Cartesian3();
 const scratchArray = [];
 
 function updateHeights(primitive, frameState) {
-  // ready is deprecated. This is here for backwards compatibility.
-  if (!primitive.tileProvider.ready) {
-    return;
-  }
-
   const tryNextFrame = scratchArray;
   tryNextFrame.length = 0;
   const tilesToUpdateHeights = primitive._tileToUpdateHeights;

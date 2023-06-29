@@ -1,5 +1,4 @@
 import destroyObject from "../Core/destroyObject.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
  * Represents content for a tile in a
@@ -25,7 +24,6 @@ function Tileset3DTileContent(tileset, tile, resource) {
   this._group = undefined;
 
   this._ready = false;
-  this._readyPromise = Promise.resolve(this);
 }
 
 Object.defineProperties(Tileset3DTileContent.prototype, {
@@ -83,26 +81,6 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the tile's content is ready to render.
-   *
-   * @memberof Tileset3DTileContent.prototype
-   *
-   * @type {Promise<Tileset3DTileContent>}
-   * @readonly
-   * @deprecated
-   * @private
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "Tileset3DTileContent.readyPromise",
-        "Tileset3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Tileset3DTileContent.ready to return true instead."
-      );
-      return this._readyPromise;
     },
   },
 

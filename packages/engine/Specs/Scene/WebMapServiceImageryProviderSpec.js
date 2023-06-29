@@ -61,34 +61,6 @@ describe("Scene/WebMapServiceImageryProvider", function () {
     expect(createWithoutUrl).toThrowDeveloperError();
   });
 
-  it("resolves readyPromise", function () {
-    const provider = new WebMapServiceImageryProvider({
-      url: "made/up/wms/server",
-      layers: "someLayer",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "made/up/wms/server",
-    });
-
-    const provider = new WebMapServiceImageryProvider({
-      url: resource,
-      layers: "someLayer",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
   it("returns valid value for hasAlphaChannel", function () {
     const provider = new WebMapServiceImageryProvider({
       url: "made/up/wms/server",
