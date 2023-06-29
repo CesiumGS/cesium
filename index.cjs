@@ -11,10 +11,12 @@ if (
 ) {
   // eslint-disable-next-line global-require
   module.exports = require(path.join(__dirname, "Build/Cesium/index.cjs"));
-  return;
+  //PROPELLER HACK
+  //return;
+} else {
+  // eslint-disable-next-line global-require
+  module.exports = require(path.join(
+    __dirname,
+    "Build/CesiumUnminified/index.cjs"
+  ));
 }
-
-module.exports = require(path.join(
-  __dirname,
-  "Build/CesiumUnminified/index.cjs"
-));

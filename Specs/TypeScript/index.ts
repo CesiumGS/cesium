@@ -99,7 +99,8 @@ import {
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
   writeTextToCanvas,
-} from "@propelleraero/cesium";
+} from "@propelleraero/cesium-engine";
+//PROPELLER HACK
 
 // Verify ImageryProvider instances conform to the expected interface
 let imageryProvider: ImageryProvider;

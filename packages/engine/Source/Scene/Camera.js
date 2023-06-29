@@ -44,7 +44,7 @@ function clampSphere(sphere, position, result) {
   if (Cartesian3.distance(result, sphere.center) <= sphere.radius) {
     return result;
   }
-  var directionVector = new Cartesian3();
+  let directionVector = new Cartesian3();
   directionVector = Cartesian3.normalize(
     Cartesian3.subtract(result, sphere.center, directionVector),
     directionVector

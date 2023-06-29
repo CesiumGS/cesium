@@ -71,9 +71,8 @@ async function sampleTerrain(
     await terrainProvider.readyPromise;
   }
 
-    // PROPELLER HACK
-    return doSampling(terrainProvider, level, positions, failResultOnTileFail);
-  });
+  // PROPELLER HACK
+  return doSampling(terrainProvider, level, positions, failResultOnTileFail);
 }
 
 /**
@@ -189,7 +188,7 @@ function doSampling(terrainProvider, level, positions, failResultOnTileFail) {
         level: level,
         tilingScheme: tilingScheme,
         terrainProvider: terrainProvider,
-        positions: []
+        positions: [],
       };
       tileRequestSet[key] = value;
       tileRequests.push(value);
@@ -281,7 +280,7 @@ function createInterpolateFunction(tileRequest) {
         level: tileRequest.level,
         // don't throttle this mesh creation because we've asked to sample these points;
         //  so sample them! We don't care how many tiles that is!
-        throttle: false
+        throttle: false,
       })
       .then(function () {
         // mesh has been created - so go through every position (maybe again)

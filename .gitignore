@@ -7,6 +7,7 @@
 .DS_Store
 Thumbs.db
 .eslintcache
+.env
 
 /Apps/CesiumViewer/Gallery/gallery-index.js
 
@@ -27,6 +28,8 @@ Thumbs.db
 /Tools/jsdoc/cesium_template/static/styles/prism.css
 
 /node_modules
+/engine/node_modules/
+/widget/node_modules/
 npm-debug.log
 npm-debug.log.*
 package-lock.json

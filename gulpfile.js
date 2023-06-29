@@ -1,7 +1,7 @@
 /*eslint-env node*/
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import { join, basename, relative, extname, resolve, posix } from "path";
+import { join, basename, resolve, posix, dirname } from "path";
 import { exec, execSync } from "child_process";
 import { createHash } from "crypto";
 import { gzipSync } from "zlib";
@@ -14,15 +14,22 @@ import gulpTap from "gulp-tap";
 import gulpZip from "gulp-zip";
 import gulpRename from "gulp-rename";
 import gulpReplace from "gulp-replace";
-import { globby, globbySync } from "globby";
+import { globby } from "globby";
 import open from "open";
-import rimraf from "rimraf";
-import mkdirp from "mkdirp";
+import { rimraf } from "rimraf";
+import { mkdirp } from "mkdirp";
 import mergeStream from "merge-stream";
 import streamToPromise from "stream-to-promise";
 import karma from "karma";
 import yargs from "yargs";
-import aws from "aws-sdk";
+import {
+  S3Client,
+  DeleteObjectsCommand,
+  HeadObjectCommand,
+  ListObjectsCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import mime from "mime";
 import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
@@ -32,17 +39,21 @@ import download from "download";
 import decompress from "decompress";
 
 import {
-  createCesiumJs,
-  copyAssets,
-  buildCesiumJs,
-  buildWorkers,
+  buildCesium,
+  buildEngine,
+  buildWidgets,
+  bundleWorkers,
   glslToJavaScript,
-  createSpecList,
-  buildSpecs,
-  createGalleryList,
+  createCombinedSpecList,
   createJsHintOptions,
-  esbuildBaseConfig,
+  defaultESBuildOptions,
+  bundleCombinedWorkers,
 } from "./build.js";
+
+// Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
+// This should match the scope of the dependencies of the root level package.json.
+//PROPELLER HACK
+const scope = "propelleraero";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
@@ -67,26 +78,32 @@ const argv = yargs(process.argv).argv;
 const verbose = argv.verbose;
 
 const sourceFiles = [
-  "Source/**/*.js",
-  "!Source/*.js",
-  "!Source/Workers/**",
-  "!Source/WorkersES6/**",
-  "Source/WorkersES6/createTaskProcessorWorker.js",
-  "!Source/ThirdParty/Workers/**",
-  "!Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!Source/ThirdParty/_*",
+  "packages/engine/Source/**/*.js",
+  "!packages/engine/Source/*.js",
+  "packages/widgets/Source/**/*.js",
+  "!packages/widgets/Source/*.js",
+  "!packages/engine/Source/Shaders/**",
+  "!packages/engine/Source/Workers/**",
+  "!packages/engine/Source/WorkersES6/**",
+  "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
+  "!packages/engine/Source/ThirdParty/Workers/**",
+  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
+  "!packages/engine/Source/ThirdParty/_*",
 ];
 
-const workerSourceFiles = ["Source/WorkersES6/**"];
+const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
 const watchedSpecFiles = [
-  "Specs/**/*Spec.js",
+  "packages/engine/Specs/**/*Spec.js",
+  "!packages/engine/Specs/SpecList.js",
+  "packages/widgets/Specs/**/*Spec.js",
+  "!packages/widgets/Specs/SpecList.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
   "Specs/TestWorkers/*.js",
 ];
 const shaderFiles = [
-  "Source/Shaders/**/*.glsl",
-  "Source/ThirdParty/Shaders/*.glsl",
+  "packages/engine/Source/Shaders/**/*.glsl",
+  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
 
 // Print an esbuild warning
@@ -117,61 +134,34 @@ function handleBuildWarnings(result) {
   }
 }
 
-async function buildCesium(options) {
-  options = options || {};
-  mkdirp.sync("Build");
+export async function build() {
+  // Configure build options from command line arguments.
+  const minify = argv.minify ?? false;
+  const removePragmas = argv.pragmas ?? false;
+  const sourcemap = argv.sourcemap ?? true;
+  const node = argv.node ?? true;
 
-  const outputDirectory =
-    options.outputDirectory ||
-    join("Build", `Cesium${!options.minify ? "Unminified" : ""}`);
-  rimraf.sync(outputDirectory);
-
-  writeFileSync(
-    "Build/package.json",
-    JSON.stringify({
-      type: "commonjs",
-    }),
-    "utf8"
-  );
-
-  await glslToJavaScript(options.minify, "Build/minifyShaders.state");
-  await createCesiumJs();
-  await createSpecList();
-  await Promise.all([
-    createJsHintOptions(),
-    buildCesiumJs({
-      minify: options.minify,
-      iife: true,
-      sourcemap: options.sourcemap,
-      removePragmas: options.removePragmas,
-      path: outputDirectory,
-      node: options.node,
-    }),
-    buildWorkers({
-      minify: options.minify,
-      sourcemap: options.sourcemap,
-      path: outputDirectory,
-      removePragmas: options.removePragmas,
-    }),
-    createGalleryList(noDevelopmentGallery),
-    buildSpecs(),
-  ]);
-
-  return copyAssets(outputDirectory);
-}
-
-export function build() {
-  const minify = argv.minify ? argv.minify : false;
-  const removePragmas = argv.pragmas ? argv.pragmas : false;
-  const sourcemap = argv.sourcemap ? argv.sourcemap : true;
-  const node = argv.node ? argv.node : true;
-
-  return buildCesium({
+  const buildOptions = {
+    development: !noDevelopmentGallery,
+    iife: true,
     minify: minify,
     removePragmas: removePragmas,
     sourcemap: sourcemap,
     node: node,
-  });
+  };
+
+  // Configure build target.
+  const workspace = argv.workspace ? argv.workspace : undefined;
+
+  if (workspace === `@${scope}/engine`) {
+    return buildEngine(buildOptions);
+  } else if (workspace === `@${scope}/widgets`) {
+    return buildWidgets(buildOptions);
+  }
+
+  await buildEngine(buildOptions);
+  await buildWidgets(buildOptions);
+  await buildCesium(buildOptions);
 }
 export default build;
 
@@ -182,7 +172,7 @@ export const buildWatch = gulp.series(build, async function () {
 
   const outputDirectory = join("Build", `Cesium${!minify ? "Unminified" : ""}`);
 
-  let [esmResult, iifeResult, cjsResult] = await buildCesiumJs({
+  const bundles = await buildCesium({
     minify: minify,
     path: outputDirectory,
     removePragmas: removePragmas,
@@ -190,27 +180,21 @@ export const buildWatch = gulp.series(build, async function () {
     incremental: true,
   });
 
-  let specResult = await buildSpecs({
-    incremental: true,
-  });
-
-  await buildWorkers({
-    minify: minify,
-    path: outputDirectory,
-    removePragmas: removePragmas,
-    sourcemap: sourcemap,
-  });
+  const esm = bundles.esm;
+  const cjs = bundles.node;
+  const iife = bundles.iife;
+  const specs = bundles.specs;
 
   gulp.watch(shaderFiles, async () => {
-    glslToJavaScript(minify, "Build/minifyShaders.state");
-    esmResult = await esmResult.rebuild();
+    glslToJavaScript(minify, "Build/minifyShaders.state", "engine");
+    await esm.rebuild();
 
-    if (iifeResult) {
-      iifeResult = await iifeResult.rebuild();
+    if (iife) {
+      await iife.rebuild();
     }
 
-    if (cjsResult) {
-      cjsResult = await cjsResult.rebuild();
+    if (cjs) {
+      await cjs.rebuild();
     }
   });
 
@@ -222,14 +206,14 @@ export const buildWatch = gulp.series(build, async function () {
     ],
     async () => {
       createJsHintOptions();
-      esmResult = await esmResult.rebuild();
+      await esm.rebuild();
 
-      if (iifeResult) {
-        iifeResult = await iifeResult.rebuild();
+      if (iife) {
+        await iife.rebuild();
       }
 
-      if (cjsResult) {
-        cjsResult = await cjsResult.rebuild();
+      if (cjs) {
+        await cjs.rebuild();
       }
     }
   );
@@ -240,8 +224,8 @@ export const buildWatch = gulp.series(build, async function () {
       events: ["add", "unlink"],
     },
     async () => {
-      createSpecList();
-      specResult = await specResult.rebuild();
+      createCombinedSpecList();
+      await specs.rebuild();
     }
   );
 
@@ -251,12 +235,12 @@ export const buildWatch = gulp.series(build, async function () {
       events: ["change"],
     },
     async () => {
-      specResult = await specResult.rebuild();
+      await specs.rebuild();
     }
   );
 
   gulp.watch(workerSourceFiles, () => {
-    return buildWorkers({
+    return bundleCombinedWorkers({
       minify: minify,
       path: outputDirectory,
       removePragmas: removePragmas,
@@ -266,23 +250,62 @@ export const buildWatch = gulp.series(build, async function () {
 
   process.on("SIGINT", () => {
     // Free up resources
-    esmResult.rebuild.dispose();
+    esm.dispose();
 
-    if (iifeResult) {
-      iifeResult.rebuild.dispose();
+    if (iife) {
+      iife.dispose();
     }
 
-    if (cjsResult) {
-      cjsResult.rebuild.dispose();
+    if (cjs) {
+      cjs.dispose();
     }
 
-    specResult.rebuild.dispose();
+    specs.dispose();
     process.exit(0);
   });
 });
 
-export function buildTs() {
-  return createTypeScriptDefinitions();
+export async function buildTs() {
+  let workspaces;
+  if (argv.workspace && !Array.isArray(argv.workspace)) {
+    workspaces = [argv.workspace];
+  } else if (argv.workspace) {
+    workspaces = argv.workspace;
+  } else {
+    workspaces = packageJson.workspaces;
+  }
+
+  // Generate types for passed packages in order.
+  const importModules = {};
+  console.error("workspaces: ", workspaces);
+  // ["packages/engine", "packages/widgets"];
+
+  for (const workspace of workspaces) {
+    const directory = workspace
+      .replace(`@${scope}/`, "")
+      .replace(`packages/`, "");
+
+    //PROPELLER HACK
+
+    const workspaceModules = await generateTypeScriptDefinitions(
+      directory,
+      `packages/${directory}/index.d.ts`,
+      `packages/${directory}/tsd-conf.json`,
+      // The engine package needs additional processing for its enum strings
+      directory === "engine" ? processEngineSource : undefined,
+      // Handle engine's module naming exceptions
+      directory === "engine" ? processEngineModules : undefined,
+      importModules
+    );
+    importModules[directory] = workspaceModules;
+  }
+
+  if (argv.workspace) {
+    return;
+  }
+
+  // Generate types for CesiumJS.
+  await createTypeScriptDefinitions();
 }
 
 export function buildApps() {
@@ -305,13 +328,13 @@ const filesToClean = [
   "Apps/Sandcastle/templates/bucket.css",
   "Cesium-*.zip",
   "cesium-*.tgz",
+  "packages/**/*.tgz",
 ];
 
 export async function clean() {
-  const rimrafAsync = (file) => new Promise((resolve) => rimraf(file, resolve));
-  await rimrafAsync("Build");
+  await rimraf("Build");
   const files = await globby(filesToClean);
-  return Promise.all(files.map(rimrafAsync));
+  return Promise.all(files.map((file) => rimraf(file)));
 }
 
 async function clocSource() {
@@ -322,7 +345,7 @@ async function clocSource() {
     cmdLine =
       "npx cloc" +
       " --quiet --progress-rate=0" +
-      " Source/ --exclude-dir=Assets,ThirdParty,Workers --not-match-f=copyrightHeader.js";
+      " packages/engine/Source/ packages/widgets/Source --exclude-dir=Assets,ThirdParty,Workers";
 
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
@@ -339,7 +362,9 @@ async function clocSource() {
   await source;
   return new Promise(function (resolve, reject) {
     cmdLine =
-      "npx cloc" + " --quiet --progress-rate=0" + " Specs/ --exclude-dir=Data";
+      "npx cloc" +
+      " --quiet --progress-rate=0" +
+      " Specs/ packages/engine/Specs packages/widget/Specs --exclude-dir=Data --not-match-f=SpecList.js --not-match-f=.eslintrc.json";
     exec(cmdLine, function (error, stdout, stderr) {
       if (error) {
         console.log(stderr);
@@ -356,25 +381,25 @@ export async function prepare() {
   // Copy Draco3D files from node_modules into Source
   copyFileSync(
     "node_modules/draco3d/draco_decoder_nodejs.js",
-    "Source/ThirdParty/Workers/draco_decoder_nodejs.js"
+    "packages/engine/Source/ThirdParty/Workers/draco_decoder_nodejs.js"
   );
   copyFileSync(
     "node_modules/draco3d/draco_decoder.wasm",
-    "Source/ThirdParty/draco_decoder.wasm"
+    "packages/engine/Source/ThirdParty/draco_decoder.wasm"
   );
 
   // Copy pako and zip.js worker files to Source/ThirdParty
   copyFileSync(
     "node_modules/pako/dist/pako_inflate.min.js",
-    "Source/ThirdParty/Workers/pako_inflate.min.js"
+    "packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js"
   );
   copyFileSync(
     "node_modules/pako/dist/pako_deflate.min.js",
-    "Source/ThirdParty/Workers/pako_deflate.min.js"
+    "packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js"
   );
   copyFileSync(
     "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
-    "Source/ThirdParty/Workers/z-worker-pako.js"
+    "packages/engine/Source/ThirdParty/Workers/z-worker-pako.js"
   );
 
   // Copy prism.js and prism.css files into Tools
@@ -407,7 +432,10 @@ export function buildDocs() {
     `npx jsdoc --configure Tools/jsdoc/conf.json --pedantic ${generatePrivateDocumentation}`,
     {
       stdio: "inherit",
-      env: Object.assign({}, process.env, { CESIUM_VERSION: version }),
+      env: Object.assign({}, process.env, {
+        CESIUM_VERSION: version,
+        CESIUM_PACKAGES: packageJson.workspaces,
+      }),
     }
   );
 
@@ -427,6 +455,7 @@ export async function buildDocsWatch() {
 function combineForSandcastle() {
   const outputDirectory = join("Build", "Sandcastle", "CesiumUnminified");
   return buildCesium({
+    development: false,
     minify: false,
     removePragmas: false,
     node: false,
@@ -437,6 +466,7 @@ function combineForSandcastle() {
 export const websiteRelease = gulp.series(
   function () {
     return buildCesium({
+      development: false,
       minify: false,
       removePragmas: false,
       node: false,
@@ -446,36 +476,55 @@ export const websiteRelease = gulp.series(
   buildDocs
 );
 
-export const release = gulp.series(
+export const buildRelease = gulp.series(
+  buildEngine,
+  buildWidgets,
+  // Generate Build/CesiumUnminified
   function () {
     return buildCesium({
       minify: false,
       removePragmas: false,
       node: true,
+      sourcemap: false,
     });
   },
+  // Generate Build/Cesium
   function () {
     return buildCesium({
+      development: false,
       minify: true,
       removePragmas: true,
       node: true,
+      sourcemap: false,
     });
-  },
-  buildTs,
-  buildDocs
+  }
 );
 
-export const makeZip = gulp.series(release, async function () {
-  //For now we regenerate the JS glsl to force it to be unminified in the release zip
-  //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
-  await glslToJavaScript(false, "Build/minifyShaders.state");
+export const release = gulp.series(
+  buildRelease,
+  gulp.parallel(buildTs, buildDocs)
+);
 
-  const scripts = packageJson.scripts;
+/**
+ * Removes scripts from package.json files to ensure that
+ * they still work when run from within the ZIP file.
+ *
+ * @param {string} packageJsonPath The path to the package.json.
+ * @returns {WritableStream} A stream that writes to the updated package.json file.
+ */
+async function pruneScriptsForZip(packageJsonPath) {
+  // Read the contents of the file.
+  const contents = await readFile(packageJsonPath);
+  const contentsJson = JSON.parse(contents);
+
+  const scripts = contentsJson.scripts;
+
   // Remove prepare step from package.json to avoid running "prepare" an extra time.
   delete scripts.prepare;
 
   // Remove build and transform tasks since they do not function as intended from within the release zip
   delete scripts.build;
+  delete scripts["build-release"];
   delete scripts["build-watch"];
   delete scripts["build-ts"];
   delete scripts["build-third-party"];
@@ -494,21 +543,90 @@ export const makeZip = gulp.series(release, async function () {
   delete scripts["deploy-set-version"];
   delete scripts["website-release"];
 
-  await writeFile(
-    "./Build/package.noprepare.json",
-    JSON.stringify(packageJson, null, 2)
-  );
+  // Set server tasks to use production flag
+  scripts["start"] = "node server.js --production";
+  scripts["start-public"] = "node server.js --public --production";
+  scripts["start-public"] = "node server.js --public --production";
+  scripts["test"] = "gulp test --production";
+  scripts["test-all"] = "gulp test --all --production";
+  scripts["test-webgl"] = "gulp test --include WebGL --production";
+  scripts["test-non-webgl"] = "gulp test --exclude WebGL --production";
+  scripts["test-webgl-validation"] = "gulp test --webglValidation --production";
+  scripts["test-webgl-stub"] = "gulp test --webglStub --production";
+  scripts["test-release"] = "gulp test --release --production";
 
-  const packageJsonSrc = gulp
-    .src("Build/package.noprepare.json")
-    .pipe(gulpRename("package.json"));
+  // Write to a temporary package.json file.
+  const noPreparePackageJson = join(
+    dirname(packageJsonPath),
+    "Build/package.noprepare.json"
+  );
+  await writeFile(noPreparePackageJson, JSON.stringify(contentsJson, null, 2));
+
+  return gulp.src(noPreparePackageJson).pipe(gulpRename(packageJsonPath));
+}
+
+export const postversion = async function () {
+  const workspace = argv.workspace;
+  if (!workspace) {
+    return;
+  }
+  const directory = workspace.replaceAll(`@${scope}/`, ``);
+  const workspacePackageJson = require(`./packages/${directory}/package.json`);
+  const version = workspacePackageJson.version;
+
+  // Iterate through all package JSONs that may depend on the updated package and
+  // update the version of the updated workspace.
+  const packageJsons = await globby([
+    "./package.json",
+    "./packages/*/package.json",
+  ]);
+  const promises = packageJsons.map(async (packageJsonPath) => {
+    // Ensure that we don't check the updated workspace itself.
+    if (basename(dirname(packageJsonPath)) === directory) {
+      return;
+    }
+    // Ensure that we only update workspaces where the dependency to the updated workspace already exists.
+    const packageJson = require(packageJsonPath);
+    if (!Object.hasOwn(packageJson.dependencies, workspace)) {
+      console.log(
+        `Skipping update for ${workspace} as it is not a dependency.`
+      );
+      return;
+    }
+    // Update the version for the updated workspace.
+    packageJson.dependencies[workspace] = version;
+    await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
+  });
+  return Promise.all(promises);
+};
+
+export const makeZip = gulp.series(release, async function () {
+  //For now we regenerate the JS glsl to force it to be unminified in the release zip
+  //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
+  await glslToJavaScript(false, "Build/minifyShaders.state", "engine");
+
+  const packageJsonSrc = await pruneScriptsForZip("package.json");
+  const enginePackageJsonSrc = await pruneScriptsForZip(
+    "packages/engine/package.json"
+  );
+  const widgetsPackageJsonSrc = await pruneScriptsForZip(
+    "packages/widgets/package.json"
+  );
 
   const builtSrc = gulp.src(
     [
       "Build/Cesium/**",
       "Build/CesiumUnminified/**",
       "Build/Documentation/**",
+      "Build/Specs/**",
       "Build/package.json",
+      "packages/engine/Build/**",
+      "packages/widgets/Build/**",
+      "!packages/engine/Build/Specs/**",
+      "!packages/widgets/Build/Specs/**",
+      "!packages/engine/Build/minifyShaders.state",
+      "!packages/engine/Build/package.noprepare.json",
+      "!packages/widgets/Build/package.noprepare.json",
     ],
     {
       base: ".",
@@ -521,6 +639,18 @@ export const makeZip = gulp.series(release, async function () {
       "Apps/**/.eslintrc.json",
       "Apps/Sandcastle/.jshintrc",
       "!Apps/Sandcastle/gallery/development/**",
+      "packages/engine/index.js",
+      "packages/engine/index.d.ts",
+      "packages/engine/LICENSE.md",
+      "packages/engine/README.md",
+      "packages/engine/Source/**",
+      "!packages/engine/.gitignore",
+      "packages/widgets/index.js",
+      "packages/widgets/index.d.ts",
+      "packages/widgets/LICENSE.md",
+      "packages/widgets/README.md",
+      "packages/widgets/Source/**",
+      "!packages/widgets/.gitignore",
       "Source/**",
       "Source/**/.eslintrc.json",
       "Specs/**",
@@ -549,7 +679,14 @@ export const makeZip = gulp.series(release, async function () {
     .pipe(gulpRename("index.html"));
 
   return streamToPromise(
-    mergeStream(packageJsonSrc, builtSrc, staticSrc, indexSrc)
+    mergeStream(
+      packageJsonSrc,
+      enginePackageJsonSrc,
+      widgetsPackageJsonSrc,
+      builtSrc,
+      staticSrc,
+      indexSrc
+    )
       .pipe(
         gulpTap(function (file) {
           // Work around an issue with gulp-zip where archives generated on Windows do
@@ -564,6 +701,8 @@ export const makeZip = gulp.series(release, async function () {
       .pipe(gulp.dest("."))
       .on("finish", function () {
         rimraf.sync("./Build/package.noprepare.json");
+        rimraf.sync("./packages/engine/Build/package.noprepare.json");
+        rimraf.sync("./packages/widgets/Build/package.noprepare.json");
       })
   );
 });
@@ -657,7 +796,8 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   const sandcastlePrefix = "sandcastle/";
   const cesiumViewerPrefix = "cesiumjs/cesium-viewer/";
 
-  const s3 = new aws.S3({
+  const s3Client = new S3Client({
+    region: "us-east-1",
     maxRetries: 10,
     retryDelayOptions: {
       base: 500,
@@ -671,7 +811,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   const errors = [];
 
   if (!isProduction) {
-    await listAll(s3, bucketName, `${uploadDirectory}/`, existingBlobs);
+    await listAll(s3Client, bucketName, `${uploadDirectory}/`, existingBlobs);
   }
 
   async function getContents(file, blobName) {
@@ -714,13 +854,11 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     existingBlobs.splice(index, 1);
 
     // get file info
-    const data = await s3
-      .headObject({
-        Bucket: bucketName,
-        Key: blobName,
-      })
-      .promise();
-
+    const headObjectCommand = new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: blobName,
+    });
+    const data = await s3Client.send(headObjectCommand);
     const hash = createHash("md5").update(content).digest("hex");
 
     if (
@@ -774,13 +912,15 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       CacheControl: cacheControl,
     };
 
+    const putObjectCommand = new PutObjectCommand(params);
+
     if (dryRun) {
       uploaded++;
       return;
     }
 
     try {
-      await s3.putObject(params).promise();
+      await s3Client.send(putObjectCommand);
       uploaded++;
     } catch (e) {
       errors.push(e);
@@ -826,7 +966,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       uploadSandcastle(),
       uploadRefDoc(),
       uploadCesiumViewer(),
-      deployCesiumRelease(bucketName, s3, errors),
+      deployCesiumRelease(bucketName, s3Client, errors),
     ];
   } else {
     const files = await globby(
@@ -834,6 +974,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
         "Apps/**",
         "Build/**",
         "!Build/CesiumDev/**",
+        "packages/**",
         "Source/**",
         "Specs/**",
         "ThirdParty/**",
@@ -885,23 +1026,23 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
       batches.push(objectsToDelete);
 
       const deleteObjects = async (objects) => {
+        const deleteObjectsCommand = new DeleteObjectsCommand({
+          Bucket: bucketName,
+          Delete: {
+            Objects: objects,
+          },
+        });
+
         try {
           if (!dryRun) {
-            await s3
-              .deleteObjects({
-                Bucket: bucketName,
-                Delete: {
-                  Objects: objects,
-                },
-              })
-              .promise();
-          }
-
-          if (verbose) {
-            console.log(`Cleaned ${objects.length} files.`);
+            await s3Client.send(deleteObjectsCommand);
           }
         } catch (e) {
           errors.push(e);
+        }
+
+        if (verbose) {
+          console.log(`Cleaned ${objects.length} files.`);
         }
       };
 
@@ -918,7 +1059,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
   return Promise.reject("There was an error while deploying Cesium");
 }
 
-async function deployCesiumRelease(bucketName, s3, errors) {
+async function deployCesiumRelease(bucketName, s3Client, errors) {
   const releaseDir = "cesiumjs/releases";
   const quiet = process.env.TRAVIS;
 
@@ -946,39 +1087,41 @@ async function deployCesiumRelease(bucketName, s3, errors) {
       url: body.assets[0].browser_download_url,
     };
 
-    await s3
-      .headObject({
-        Bucket: bucketName,
-        Key: posix.join(releaseDir, release.tag, "cesium.zip"),
-      })
-      .promise();
+    const headObjectCommand = new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: posix.join(releaseDir, release.tag, "cesium.zip"),
+    });
+    await s3Client.send(headObjectCommand);
     console.log(
       `Cesium version ${release.tag} up to date. Skipping release deployment.`
     );
   } catch (error) {
-    // The current version is not uploaded
-    if (error.code === "NotFound") {
-      console.log("Updating cesium version...");
-      const data = await download(release.url);
-      // upload and unzip contents
-      const key = posix.join(releaseDir, release.tag, "cesium.zip");
-      await uploadObject(bucketName, s3, key, data, quiet);
-      const files = await decompress(data);
-      const limit = pLimit(5);
-      return Promise.all(
-        files.map((file) => {
-          return limit(() => {
-            if (file.path.startsWith("Apps")) {
-              // skip uploading apps and sandcastle
-              return;
-            }
+    if (error.$metadata) {
+      const { httpStatusCode } = error.$metadata;
+      // The current version is not uploaded
+      if (httpStatusCode === 404) {
+        console.log("Updating cesium version...");
+        const data = await download(release.url);
+        // upload and unzip contents
+        const key = posix.join(releaseDir, release.tag, "cesium.zip");
+        await uploadObject(bucketName, s3Client, key, data, quiet);
+        const files = await decompress(data);
+        const limit = pLimit(5);
+        return Promise.all(
+          files.map((file) => {
+            return limit(async () => {
+              if (file.path.startsWith("Apps")) {
+                // skip uploading apps and sandcastle
+                return;
+              }
 
-            // Upload to release directory
-            const key = posix.join(releaseDir, release.tag, file.path);
-            return uploadObject(bucketName, s3, key, file.data, quiet);
-          });
-        })
-      );
+              // Upload to release directory
+              const key = posix.join(releaseDir, release.tag, file.path);
+              return uploadObject(bucketName, s3Client, key, file.data, quiet);
+            });
+          })
+        );
+      }
     }
 
     // else, unexpected error
@@ -986,20 +1129,22 @@ async function deployCesiumRelease(bucketName, s3, errors) {
   }
 }
 
-function uploadObject(bucketName, s3, key, contents, quiet) {
+async function uploadObject(bucketName, s3Client, key, contents, quiet) {
   if (!quiet) {
     console.log(`Uploading ${key}...`);
   }
 
-  return s3
-    .upload({
+  const upload = new Upload({
+    client: s3Client,
+    params: {
       Bucket: bucketName,
       Key: key,
       Body: contents,
       ContentType: mime.getType(key) || undefined,
       CacheControl: "public, max-age=1800",
-    })
-    .promise();
+    },
+  });
+  return upload.done();
 }
 
 function getMimeType(filename) {
@@ -1043,23 +1188,32 @@ function getMimeType(filename) {
 }
 
 // get all files currently in bucket asynchronously
-async function listAll(s3, bucketName, prefix, files, marker) {
-  const data = await s3
-    .listObjects({
-      Bucket: bucketName,
-      MaxKeys: 1000,
-      Prefix: prefix,
-      Marker: marker,
-    })
-    .promise();
+async function listAll(s3Client, bucketName, prefix, files, marker) {
+  const listObjectsCommand = new ListObjectsCommand({
+    Bucket: bucketName,
+    MaxKeys: 1000,
+    Prefix: prefix,
+    Marker: marker,
+  });
+  const data = await s3Client.send(listObjectsCommand);
   const items = data.Contents;
+  if (!items) {
+    return;
+  }
+
   for (let i = 0; i < items.length; i++) {
     files.push(items[i].Key);
   }
 
   if (data.IsTruncated) {
     // get next page of results
-    return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
+    return listAll(
+      s3Client,
+      bucketName,
+      prefix,
+      files,
+      files[files.length - 1]
+    );
   }
 }
 
@@ -1125,10 +1279,24 @@ async function setStatus(state, targetUrl, description, context) {
   return response.json();
 }
 
-export async function coverage() {
-  const webglStub = argv.webglStub ? argv.webglStub : false;
-  const suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  const failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
+/**
+ * Generates coverage report.
+ *
+ * @param {object} options An object with the following properties:
+ * @param {string} options.outputDirectory The output directory for the generated build artifacts.
+ * @param {string} options.coverageDirectory The path where the coverage reports should be saved to.
+ * @param {string} options.specList The path to the spec list for the package.
+ * @param {RegExp} options.filter The filter for finding which files should be instrumented.
+ * @param {boolean} [options.webglStub=false] True if WebGL stub should be used when running tests.
+ * @param {boolean} [options.suppressPassed=false] True if output should be suppressed for tests that pass.
+ * @param {boolean} [options.failTaskOnError=false] True if the gulp task should fail on errors in the tests.
+ * @param {string} options.workspace The name of the workspace, if any.
+ */
+export async function runCoverage(options) {
+  const webglStub = options.webglStub ?? false;
+  const suppressPassed = options.suppressPassed ?? false;
+  const failTaskOnError = options.failTaskOnError ?? false;
+  const workspace = options.workspace;
 
   const folders = [];
   let browsers = ["Chrome"];
@@ -1140,16 +1308,17 @@ export async function coverage() {
     esModules: true,
   });
 
+  // Setup plugin to use instrumenter on source files.
+
   const instrumentPlugin = {
     name: "instrument",
     setup: (build) => {
       build.onLoad(
         {
-          filter: /Source\/(Core|DataSources|Renderer|Scene|Widgets)(\/\w+)+\.js$/,
+          filter: options.filter,
         },
         async (args) => {
           const source = await readFile(args.path, { encoding: "utf8" });
-
           try {
             const generatedCode = instrumenter.instrumentSync(
               source,
@@ -1169,22 +1338,87 @@ export async function coverage() {
     },
   };
 
-  const outputDirectory = join("Build", "Instrumented");
-
-  const result = await esbuild({
-    entryPoints: ["Source/Cesium.js"],
+  const karmaBundle = join(options.outputDirectory, "karma-main.js");
+  await esbuild({
+    entryPoints: ["Specs/karma-main.js"],
     bundle: true,
     sourcemap: true,
-    format: "iife",
-    globalName: "Cesium",
+    format: "esm",
     target: "es2020",
     external: ["https", "http", "url", "zlib"],
-    outfile: join(outputDirectory, "Cesium.js"),
+    outfile: karmaBundle,
+    logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
+  });
+
+  // Generate instrumented bundle for Specs.
+
+  const specListBundle = join(options.outputDirectory, "SpecList.js");
+  await esbuild({
+    entryPoints: [options.specList],
+    bundle: true,
+    sourcemap: true,
+    format: "esm",
+    target: "es2020",
+    external: ["https", "http", "url", "zlib"],
+    outfile: specListBundle,
     plugins: [instrumentPlugin],
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
 
-  handleBuildWarnings(result);
+  let files = [
+    {
+      pattern: karmaBundle,
+      included: true,
+      type: "module",
+    },
+    {
+      pattern: specListBundle,
+      included: true,
+      type: "module",
+    },
+    // Static assets are always served from the shared/combined folders.
+    { pattern: "Build/CesiumUnminified/**", included: false },
+    { pattern: "Specs/Data/**", included: false },
+    { pattern: "Specs/TestWorkers/**", included: false },
+    { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+  ];
+
+  let proxies;
+  if (workspace) {
+    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+    files = [
+      {
+        pattern: karmaBundle,
+        included: true,
+        type: "module",
+      },
+      {
+        pattern: specListBundle,
+        included: true,
+        type: "module",
+      },
+      { pattern: "Specs/Data/**", included: false },
+      { pattern: "packages/engine/Build/Workers/**", included: false },
+      { pattern: "packages/engine/Source/Assets/**", included: false },
+      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
+      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Specs/TestWorkers/**", included: false },
+    ];
+
+    proxies = {
+      "/base/Build/CesiumUnminified/Assets/":
+        "/base/packages/engine/Source/Assets/",
+      "/base/Build/CesiumUnminified/ThirdParty/":
+        "/base/packages/engine/Source/ThirdParty/",
+      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
+        "/base/packages/engine/Source/Widget/",
+      "/base/Build/CesiumUnminified/Workers/":
+        "/base/packages/engine/Build/Workers/",
+    };
+  }
+
+  // Setup Karma config.
 
   const config = await karma.config.parseConfig(
     karmaConfigFile,
@@ -1197,27 +1431,11 @@ export async function coverage() {
         suppressPassed: suppressPassed,
         suppressSkipped: true,
       },
-      files: [
-        { pattern: "Specs/Data/**", included: false },
-        { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-        { pattern: "Build/Instrumented/Cesium.js", included: true },
-        { pattern: "Build/Instrumented/Cesium.js.map", included: false },
-        { pattern: "Build/CesiumUnminified/**", included: false },
-        {
-          pattern: "Build/Specs/karma-main.js",
-          included: true,
-          type: "module",
-        },
-        {
-          pattern: "Build/Specs/SpecList.js",
-          included: true,
-          type: "module",
-        },
-        { pattern: "Specs/TestWorkers/**", included: false },
-      ],
+      files: files,
+      proxies: proxies,
       reporters: ["spec", "coverage"],
       coverageReporter: {
-        dir: "Build/Coverage",
+        dir: options.coverageDirectory,
         subdir: function (browserName) {
           folders.push(browserName);
           return browserName;
@@ -1249,11 +1467,11 @@ export async function coverage() {
         )}/index.html">${folder}</a></li>`;
       });
       html += "</ul></body></html>";
-      writeFileSync("Build/Coverage/index.html", html);
+      writeFileSync(join(options.coverageDirectory, "index.html"), html);
 
       if (!process.env.TRAVIS) {
         folders.forEach(function (dir) {
-          open(`Build/Coverage/${dir}/index.html`);
+          open(join(options.coverageDirectory, `${dir}/index.html`));
         });
       }
 
@@ -1268,6 +1486,48 @@ export async function coverage() {
   });
 }
 
+export async function coverage() {
+  let workspace = argv.workspace;
+  if (workspace) {
+    workspace = workspace.replaceAll(`@${scope}/`, ``);
+  }
+
+  if (workspace === "engine") {
+    return runCoverage({
+      outputDirectory: "packages/engine/Build/Instrumented",
+      coverageDirectory: "packages/engine/Build/Coverage",
+      specList: "packages/engine/Specs/SpecList.js",
+      filter: /packages(\\|\/)engine(\\|\/)Source((\\|\/)\w+)+\.js$/,
+      webglStub: argv.webglStub,
+      suppressPassed: argv.suppressPassed,
+      failTaskOnError: argv.failTaskOnError,
+      workspace: workspace,
+    });
+  } else if (workspace === "widgets") {
+    return runCoverage({
+      outputDirectory: "packages/widgets/Build/Instrumented",
+      coverageDirectory: "packages/widgets/Build/Coverage",
+      specList: "packages/widgets/Specs/SpecList.js",
+      filter: /packages(\\|\/)widgets(\\|\/)Source((\\|\/)\w+)+\.js$/,
+      webglStub: argv.webglStub,
+      suppressPassed: argv.suppressPassed,
+      failTaskOnError: argv.failTaskOnError,
+      workspace: workspace,
+    });
+  }
+
+  return runCoverage({
+    outputDirectory: "Build/Instrumented",
+    coverageDirectory: "Build/Coverage",
+    specList: "Specs/SpecList.js",
+    filter: /packages(\\|\/)(engine|widgets)(\\|\/)Source((\\|\/)\w+)+\.js$/,
+    webglStub: argv.webglStub,
+    suppressPassed: argv.suppressPassed,
+    failTaskOnError: argv.failTaskOnError,
+  });
+}
+
+// Cache contexts for successive calls to test
 export async function test() {
   const enableAllBrowsers = argv.all ? true : false;
   const includeCategory = argv.include ? argv.include : "";
@@ -1281,6 +1541,19 @@ export async function test() {
   const debugCanvasWidth = argv.debugCanvasWidth;
   const debugCanvasHeight = argv.debugCanvasHeight;
   const includeName = argv.includeName ? argv.includeName : "";
+  const isProduction = argv.production;
+
+  let workspace = argv.workspace;
+  if (workspace) {
+    workspace = workspace.replaceAll(`@${scope}/`, ``);
+  }
+
+  if (!isProduction) {
+    console.log("Building specs...");
+    await buildCesium({
+      iife: true,
+    });
+  }
 
   let browsers = ["Chrome"];
   if (argv.browsers) {
@@ -1297,6 +1570,42 @@ export async function test() {
     { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
     { pattern: "Specs/TestWorkers/**", included: false },
   ];
+
+  let proxies;
+  if (workspace) {
+    // Setup files and proxies for the engine package first, since it is the lowest level dependency.
+
+    files = [
+      {
+        pattern: `packages/${workspace}/Build/Specs/karma-main.js`,
+        included: true,
+        type: "module",
+      },
+      {
+        pattern: `packages/${workspace}/Build/Specs/SpecList.js`,
+        included: true,
+        type: "module",
+      },
+      { pattern: "Specs/Data/**", included: false },
+      { pattern: "packages/engine/Build/Workers/**", included: false },
+      { pattern: "packages/engine/Source/Assets/**", included: false },
+      { pattern: "packages/engine/Source/ThirdParty/**", included: false },
+      { pattern: "packages/engine/Source/Widget/*.css", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+      { pattern: "Specs/TestWorkers/**", included: false },
+    ];
+
+    proxies = {
+      "/base/Build/CesiumUnminified/Assets/":
+        "/base/packages/engine/Source/Assets/",
+      "/base/Build/CesiumUnminified/ThirdParty/":
+        "/base/packages/engine/Source/ThirdParty/",
+      "/base/Build/CesiumUnminified/Widgets/CesiumWidget/":
+        "/base/packages/engine/Source/Widget/",
+      "/base/Build/CesiumUnminified/Workers/":
+        "/base/packages/engine/Build/Workers/",
+    };
+  }
 
   if (release) {
     files = [
@@ -1329,6 +1638,7 @@ export async function test() {
       },
       logLevel: verbose ? karma.constants.LOG_INFO : karma.constants.LOG_ERROR,
       files: files,
+      proxies: proxies,
       client: {
         captureConsole: verbose,
         args: [
@@ -1358,6 +1668,172 @@ export async function test() {
     });
     server.start();
   });
+}
+/**
+ * Generates TypeScript definition file (.d.ts) for a package.
+ *
+ * @param {*} workspaceName
+ * @param {string} definitionsPath The path of the .d.ts file to generate.
+ * @param {*} configurationPath
+ * @param {*} processSourceFunc
+ * @param {*} processModulesFunc
+ * @param {*} importModules
+ * @returns
+ */
+function generateTypeScriptDefinitions(
+  workspaceName,
+  definitionsPath,
+  configurationPath,
+  processSourceFunc,
+  processModulesFunc,
+  importModules
+) {
+  // Run JSDoc with tsd-jsdoc to generate an initial definition file.
+  execSync(`npx jsdoc --configure ${configurationPath}`, {
+    stdio: `inherit`,
+  });
+
+  let source = readFileSync(definitionsPath).toString();
+
+  if (processSourceFunc) {
+    source = processSourceFunc(definitionsPath, source);
+  }
+
+  // The next step is to find the list of Cesium modules exported by the Cesium API
+  // So that we can map these modules with a link back to their original source file.
+
+  const regex = /^declare[ const ]*(function|class|namespace|enum) (.+)/gm;
+  let matches;
+  let publicModules = new Set();
+  //eslint-disable-next-line no-cond-assign
+  while ((matches = regex.exec(source))) {
+    const moduleName = matches[2].match(/([^<\s|\(]+)/);
+    publicModules.add(moduleName[1]);
+  }
+
+  if (processModulesFunc) {
+    publicModules = processModulesFunc(publicModules);
+  }
+
+  // Fix up the output to match what we need
+  // declare => export since we are wrapping everything in a namespace
+  // CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
+  // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
+  source = source
+    .replace(/^declare /gm, "export ")
+    .replace(/module "Math"/gm, "namespace Math")
+    .replace(/CesiumMath/gm, "Math")
+    .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
+    .replace(/String\[]/gm, "string[]")
+    .replace(/Boolean\[]/gm, "boolean[]")
+    .replace(/Object\[]/gm, "object[]")
+    .replace(/<Number>/gm, "<number>")
+    .replace(/<String>/gm, "<string>")
+    .replace(/<Boolean>/gm, "<boolean>")
+    .replace(/<Object>/gm, "<object>")
+    .replace(
+      /= "WebGLConstants\.(.+)"/gm,
+      // eslint-disable-next-line no-unused-vars
+      (match, p1) => `= WebGLConstants.${p1}`
+    )
+    // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
+    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4");
+
+  // Wrap the source to actually be inside of a declared cesium module
+  // and add any workaround and private utility types.
+  //PROPELLER HACK
+  source = `declare module "@${scope}/cesium-${workspaceName}" {
+${source}
+}
+`;
+
+  if (importModules) {
+    let imports = "";
+    Object.keys(importModules).forEach((workspace) => {
+      const workspaceModules = Array.from(importModules[workspace]).filter(
+        (importModule) => source.indexOf(importModule) !== -1
+      );
+      imports += `import { ${workspaceModules.join(
+        ",\n"
+      )} } from "@${scope}/${workspace}";\n`;
+    });
+    source = imports + source;
+  }
+
+  // Write the final source file back out
+  writeFileSync(definitionsPath, source);
+
+  return Promise.resolve(publicModules);
+}
+
+function processEngineModules(modules) {
+  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
+  // It fails the above regex so just add it directly here.
+  modules.add("Math");
+  return modules;
+}
+
+function processEngineSource(definitionsPath, source) {
+  // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
+  // end up as enum strings instead of actually mapping values to WebGLConstants.
+  // We fix this with a simple regex replace later on, but it means the
+  // WebGLConstants constants enum needs to be defined in the file before it can
+  // be used.  This block of code reads in the TS file, finds the WebGLConstants
+  // declaration, and then writes the file back out (in memory to source) with
+  // WebGLConstants being the first module.
+  const node = typeScript.createSourceFile(
+    definitionsPath,
+    source,
+    typeScript.ScriptTarget.Latest
+  );
+  let firstNode;
+  node.forEachChild((child) => {
+    if (
+      typeScript.SyntaxKind[child.kind] === "EnumDeclaration" &&
+      child.name.escapedText === "WebGLConstants"
+    ) {
+      firstNode = child;
+    }
+  });
+
+  const printer = typeScript.createPrinter({
+    removeComments: false,
+    newLine: typeScript.NewLineKind.LineFeed,
+  });
+
+  let newSource = "";
+  newSource += printer.printNode(
+    typeScript.EmitHint.Unspecified,
+    firstNode,
+    node
+  );
+  newSource += "\n\n";
+  node.forEachChild((child) => {
+    if (
+      typeScript.SyntaxKind[child.kind] !== "EnumDeclaration" ||
+      child.name.escapedText !== "WebGLConstants"
+    ) {
+      newSource += printer.printNode(
+        typeScript.EmitHint.Unspecified,
+        child,
+        node
+      );
+      newSource += "\n\n";
+    }
+  });
+
+  // Manually add a type definition from Viewer to avoid circular dependency
+  // with the widgets package. This will no longer be needed past Cesium 1.100.
+  newSource += `
+  /**
+   * @property scene - The scene in the widget.
+   */
+  export type Viewer = {
+      scene: Scene;
+  };
+  `;
+
+  return newSource;
 }
 
 function createTypeScriptDefinitions() {
@@ -1459,28 +1935,12 @@ function createTypeScriptDefinitions() {
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
-  // PROPELLER HACK
+  //PROPELLER HACK
   source = `declare module "@propelleraero/cesium" {
 ${source}
 }
 
 `;
-
-  // Map individual modules back to their source file so that TS still works
-  // when importing individual files instead of the entire cesium module.
-  globbySync(sourceFiles).forEach(function (file) {
-    file = relative("Source", file);
-
-    let moduleId = file;
-    moduleId = filePathToModuleId(moduleId);
-
-    const assignmentName = basename(file, extname(file));
-    if (publicModules.has(assignmentName)) {
-      publicModules.delete(assignmentName);
-      //PROPELLER HACK
-      source += `declare module "@propelleraero/cesium/Source/${moduleId}" { import { ${assignmentName} } from '@propelleraero/cesium'; export default ${assignmentName}; }\n`;
-    }
-  });
 
   // Write the final source file back out
   writeFileSync("Source/Cesium.d.ts", source);
@@ -1495,29 +1955,14 @@ ${source}
     stdio: "inherit",
   });
 
-  // Below is a sanity check to make sure we didn't leave anything out that
-  // we don't already know about
-
-  // Intentionally ignored nested items
-  publicModules.delete("KmlFeatureData");
-  publicModules.delete("MaterialAppearance");
-
-  if (publicModules.size !== 0) {
-    throw new Error(
-      `Unexpected unexposed modules: ${Array.from(publicModules.values()).join(
-        ", "
-      )}`
-    );
-  }
-
   return Promise.resolve();
 }
 
 /**
  * Reads `ThirdParty.extra.json` file
- * @param path {string} Path to `ThirdParty.extra.json`
- * @param discoveredDependencies {Array<string>} List of previously discovered modules
- * @returns {Promise<Array<Object>>} A promise to an array of objects with 'name`, `license`, and `url` strings
+ * @param {string} path Path to `ThirdParty.extra.json`
+ * @param {string[]} discoveredDependencies  List of previously discovered modules
+ * @returns {Promise<object[]>} A promise to an array of objects with 'name`, `license`, and `url` strings
  */
 async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
   if (!existsSync(path)) {
@@ -1527,23 +1972,39 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
   const contents = await readFile(path);
   const thirdPartyExtra = JSON.parse(contents);
   return Promise.all(
-    thirdPartyExtra.map(function (module) {
+    thirdPartyExtra.map(async function (module) {
       if (!discoveredDependencies.includes(module.name)) {
-        // If this is not a npm module, return existing info
-        if (
-          !packageJson.dependencies[module.name] &&
-          !packageJson.devDependencies[module.name]
-        ) {
-          discoveredDependencies.push(module.name);
-          return Promise.resolve(module);
-        }
-
-        return getLicenseDataFromPackage(
+        let result = await getLicenseDataFromPackage(
+          packageJson,
           module.name,
           discoveredDependencies,
           module.license,
           module.notes
         );
+
+        if (result) {
+          return result;
+        }
+
+        // Resursively check the workspaces
+        for (const workspace of packageJson.workspaces) {
+          const workspacePackageJson = require(`./${workspace}/package.json`);
+          result = await getLicenseDataFromPackage(
+            workspacePackageJson,
+            module.name,
+            discoveredDependencies,
+            module.license,
+            module.notes
+          );
+
+          if (result) {
+            return result;
+          }
+        }
+
+        // If this is not a npm module, return existing info
+        discoveredDependencies.push(module.name);
+        return module;
       }
     })
   );
@@ -1552,20 +2013,29 @@ async function getLicenseDataFromThirdPartyExtra(path, discoveredDependencies) {
 /**
  * Extracts name, license, and url from `package.json` file.
  *
- * @param packageName {string} Name of package
- * @param discoveredDependencies {Array<string>} List of previously discovered modules
- * @param licenseOverride {Array<string>} If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
- * @returns {Promise<Object>} A promise to an object with 'name`, `license`, and `url` strings
+ * @param {string} packageName Name of package
+ * @param {string[]} discoveredDependencies List of previously discovered modules
+ * @param {string[]} licenseOverride If specified, override info fetched from package.json. Useful in the case where there are multiple licenses and we might chose a single one.
+ * @returns {Promise<object>} A promise to an object with 'name`, `license`, and `url` strings
  */
 async function getLicenseDataFromPackage(
+  packageJson,
   packageName,
   discoveredDependencies,
   licenseOverride,
   notes
 ) {
+  if (
+    !packageJson.dependencies[packageName] &&
+    (!packageJson.devDependencies || !packageJson.devDependencies[packageName])
+  ) {
+    return;
+  }
+
   if (discoveredDependencies.includes(packageName)) {
     return [];
   }
+
   discoveredDependencies.push(packageName);
 
   const packagePath = join("node_modules", packageName, "package.json");
@@ -1647,7 +2117,6 @@ function buildSandcastle() {
   let appStream = gulp.src([
     "Apps/Sandcastle/**",
     "!Apps/Sandcastle/load-cesium-es6.js",
-    "!Apps/Sandcastle/standalone.html",
     "!Apps/Sandcastle/images/**",
     "!Apps/Sandcastle/gallery/**.jpg",
   ]);
@@ -1659,7 +2128,14 @@ function buildSandcastle() {
         gulpReplace(
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>";'
+            '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>'
+        )
+      )
+      .pipe(
+        gulpReplace(
+          '    <script type="module" src="load-cesium-es6.js"></script>',
+          '    <script src="CesiumUnminified/Cesium.js"></script>\n' +
+            '    <script>window.CESIUM_BASE_URL = "CesiumUnminified/";</script>'
         )
       )
       // Fix relative paths for new location
@@ -1682,7 +2158,14 @@ function buildSandcastle() {
         gulpReplace(
           '    <script type="module" src="../load-cesium-es6.js"></script>',
           '    <script src="../../../Build/CesiumUnminified/Cesium.js"></script>\n' +
-            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>";'
+            '    <script>window.CESIUM_BASE_URL = "../../../Build/CesiumUnminified/";</script>'
+        )
+      )
+      .pipe(
+        gulpReplace(
+          '    <script type="module" src="load-cesium-es6.js"></script>',
+          '    <script src="../../CesiumUnminified/Cesium.js"></script>\n' +
+            '    <script>window.CESIUM_BASE_URL = "../../CesiumUnminified/";</script>'
         )
       )
       // Fix relative paths for new location
@@ -1728,7 +2211,7 @@ function buildSandcastle() {
       gulpReplace(
         '    <script type="module" src="load-cesium-es6.js"></script>',
         '    <script src="../CesiumUnminified/Cesium.js"></script>\n' +
-          '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>";'
+          '    <script>window.CESIUM_BASE_URL = "../CesiumUnminified/";</script>'
       )
     )
     .pipe(gulpReplace("../../Build", "."))
@@ -1744,7 +2227,7 @@ async function buildCesiumViewer() {
     : "Build/Apps/CesiumViewer";
   mkdirp.sync(cesiumViewerOutputDirectory);
 
-  const config = esbuildBaseConfig();
+  const config = defaultESBuildOptions();
   config.entryPoints = [
     "Apps/CesiumViewer/CesiumViewer.js",
     "Apps/CesiumViewer/CesiumViewer.css",
@@ -1756,8 +2239,9 @@ async function buildCesiumViewer() {
     ".png": "text",
   };
   config.format = "iife";
-  config.inject = ["Apps/CesiumViewer/index.js"];
-  config.external = ["https", "http", "zlib"];
+  // Configure Cesium base path to use built
+  config.define = { CESIUM_BASE_URL: `"."` };
+  config.external = ["https", "http", "url", "zlib"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
   config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones
@@ -1766,20 +2250,23 @@ async function buildCesiumViewer() {
   handleBuildWarnings(result);
 
   await esbuild({
-    entryPoints: ["Source/Widgets/InfoBox/InfoBoxDescription.css"],
+    entryPoints: ["packages/widgets/Source/InfoBox/InfoBoxDescription.css"],
     minify: true,
     bundle: true,
     loader: {
       ".gif": "text",
       ".png": "text",
     },
-    outdir: cesiumViewerOutputDirectory,
-    outbase: "Source",
+    outdir: join(cesiumViewerOutputDirectory, "Widgets"),
+    outbase: "packages/widgets/Source/",
   });
 
-  await buildWorkers({
-    minify: true,
-    removePragmas: true,
+  await bundleWorkers({
+    input: [
+      "packages/engine/Source/Workers/**",
+      "packages/engine/Source/ThirdParty/Workers/**",
+    ],
+    inputES6: ["packages/engine/Source/WorkersES6/*.js"],
     path: cesiumViewerOutputDirectory,
   });
 
@@ -1809,8 +2296,4 @@ async function buildCesiumViewer() {
   );
 
   return streamToPromise(stream.pipe(gulp.dest(cesiumViewerOutputDirectory)));
-}
-
-function filePathToModuleId(moduleId) {
-  return moduleId.substring(0, moduleId.lastIndexOf(".")).replace(/\\/g, "/");
 }

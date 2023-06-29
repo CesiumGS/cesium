@@ -22,7 +22,8 @@ import { mkdirp } from "mkdirp";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
-const scope = "cesium";
+//PROPELLER HACK
+const scope = "propelleraero";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("./package.json");
@@ -59,7 +60,7 @@ function constructRegex(pragma, exclusive) {
 }
 
 const pragmas = {
-  debug: false
+  debug: false,
 };
 const stripPragmaPlugin = {
   name: "strip-pragmas",
@@ -78,12 +79,12 @@ const stripPragmaPlugin = {
       } catch (e) {
         return {
           errors: {
-            text: e.message
-          }
+            text: e.message,
+          },
         };
       }
     });
-  }
+  },
 };
 
 // Print an esbuild warning
@@ -120,7 +121,7 @@ export const defaultESBuildOptions = () => {
     color: true,
     legalComments: `inline`,
     logLimit: 0,
-    target: `es2020`
+    target: `es2020`,
   };
 };
 
@@ -172,7 +173,7 @@ export async function bundleCesiumJs(options) {
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
   buildConfig.write = options.write;
   buildConfig.banner = {
-    js: combinedCopyrightHeader
+    js: combinedCopyrightHeader,
   };
   // print errors immediately, and collect warnings so we can filter out known ones
   buildConfig.logLevel = "info";
@@ -188,7 +189,7 @@ export async function bundleCesiumJs(options) {
   const esm = await build({
     ...buildConfig,
     format: "esm",
-    outfile: path.join(options.path, "index.js")
+    outfile: path.join(options.path, "index.js"),
   });
 
   if (incremental) {
@@ -203,7 +204,7 @@ export async function bundleCesiumJs(options) {
       ...buildConfig,
       format: "iife",
       globalName: "Cesium",
-      outfile: path.join(options.path, "Cesium.js")
+      outfile: path.join(options.path, "Cesium.js"),
     });
 
     if (incremental) {
@@ -220,9 +221,9 @@ export async function bundleCesiumJs(options) {
       platform: "node",
       define: {
         // TransformStream is a browser-only implementation depended on by zip.js
-        TransformStream: "null"
+        TransformStream: "null",
       },
-      outfile: path.join(options.path, "index.cjs")
+      outfile: path.join(options.path, "index.cjs"),
     });
 
     if (incremental) {
@@ -248,9 +249,9 @@ const workspaceSourceFiles = {
     "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
     "!packages/engine/Source/ThirdParty/Workers/**",
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
-    "!packages/engine/Source/ThirdParty/_*"
+    "!packages/engine/Source/ThirdParty/_*",
   ],
-  widgets: ["packages/widgets/Source/**/*.js"]
+  widgets: ["packages/widgets/Source/**/*.js"],
 };
 
 /**
@@ -262,7 +263,6 @@ const workspaceSourceFiles = {
  */
 function generateDeclaration(workspace, file) {
   let assignmentName = path.basename(file, path.extname(file));
-
   let moduleId = file;
   moduleId = filePathToModuleId(moduleId);
 
@@ -270,6 +270,11 @@ function generateDeclaration(workspace, file) {
     assignmentName = `_shaders${assignmentName}`;
   }
   assignmentName = assignmentName.replace(/(\.|-)/g, "_");
+  //PROPELLER HACK
+  if (workspace === "engine" || workspace === "widgets") {
+    return `export { ${assignmentName} } from '@${scope}/cesium-${workspace}';`;
+  }
+
   return `export { ${assignmentName} } from '@${scope}/${workspace}';`;
 }
 
@@ -283,6 +288,7 @@ export async function createCesiumJs() {
   // Iterate over each workspace and generate declarations for each file.
   for (const workspace of Object.keys(workspaceSourceFiles)) {
     const files = await globby(workspaceSourceFiles[workspace]);
+    //PROPELLER HACK
     const declarations = files.map((file) =>
       generateDeclaration(workspace, file)
     );
@@ -296,7 +302,7 @@ export async function createCesiumJs() {
 
 const workspaceSpecFiles = {
   engine: ["packages/engine/Specs/**/*Spec.js"],
-  widgets: ["packages/widgets/Specs/**/*Spec.js"]
+  widgets: ["packages/widgets/Specs/**/*Spec.js"],
 };
 
 /**
@@ -314,7 +320,7 @@ export async function createCombinedSpecList() {
   }
 
   await writeFile(path.join("Specs", "SpecList.js"), contents, {
-    encoding: "utf-8"
+    encoding: "utf-8",
   });
 
   return contents;
@@ -342,7 +348,7 @@ export async function bundleCombinedWorkers(options) {
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = false;
   workerConfig.banner = {
-    js: combinedCopyrightHeader
+    js: combinedCopyrightHeader,
   };
   workerConfig.entryPoints = workers;
   workerConfig.outdir = options.path;
@@ -352,7 +358,7 @@ export async function bundleCombinedWorkers(options) {
 
   // Copy ThirdParty workers
   const thirdPartyWorkers = await globby([
-    "packages/engine/Source/ThirdParty/Workers/**"
+    "packages/engine/Source/ThirdParty/Workers/**",
   ]);
 
   const thirdPartyWorkerConfig = defaultESBuildOptions();
@@ -371,7 +377,7 @@ export async function bundleCombinedWorkers(options) {
   if (options.removePragmas) {
     plugins.push(
       rollupPluginStripPragma({
-        pragmas: ["debug"]
+        pragmas: ["debug"],
       })
     );
   }
@@ -383,14 +389,14 @@ export async function bundleCombinedWorkers(options) {
   const bundle = await rollup({
     input: es6Workers,
     plugins: plugins,
-    onwarn: rollupWarning
+    onwarn: rollupWarning,
   });
 
   return bundle.write({
     dir: path.join(options.path, "Workers"),
     format: "amd",
     // Rollup cannot generate a sourcemap when pragmas are removed
-    sourcemap: options.sourcemap && !options.removePragmas
+    sourcemap: options.sourcemap && !options.removePragmas,
     // SAMTODO: Add copyrightBanner
   });
 }
@@ -414,7 +420,7 @@ export async function bundleWorkers(options) {
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = false;
   workerConfig.banner = {
-    js: combinedCopyrightHeader
+    js: combinedCopyrightHeader,
   };
   workerConfig.entryPoints = workers;
   workerConfig.outdir = options.path;
@@ -431,7 +437,7 @@ export async function bundleWorkers(options) {
   if (options.removePragmas) {
     plugins.push(
       rollupPluginStripPragma({
-        pragmas: ["debug"]
+        pragmas: ["debug"],
       })
     );
   }
@@ -443,7 +449,7 @@ export async function bundleWorkers(options) {
   const bundle = await rollup({
     input: files,
     plugins: plugins,
-    onwarn: rollupWarning
+    onwarn: rollupWarning,
   });
 
   return bundle.write({
@@ -451,13 +457,13 @@ export async function bundleWorkers(options) {
     format: "amd",
     // Rollup cannot generate a sourcemap when pragmas are removed
     sourcemap: options.sourcemap && !options.removePragmas,
-    banner: options.copyrightHeader
+    banner: options.copyrightHeader,
   });
 }
 
 const shaderFiles = [
   "packages/engine/Source/Shaders/**/*.glsl",
-  "packages/engine/Source/ThirdParty/Shaders/*.glsl"
+  "packages/engine/Source/ThirdParty/Shaders/*.glsl",
 ];
 export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
   await writeFile(minifyStateFilePath, minify.toString());
@@ -471,7 +477,7 @@ export async function glslToJavaScript(minify, minifyStateFilePath, workspace) {
 
   const files = await globby([
     `packages/${workspace}/Source/Shaders/**/*.js`,
-    `packages/${workspace}/Source/ThirdParty/Shaders/*.js`
+    `packages/${workspace}/Source/ThirdParty/Shaders/*.js`,
   ]);
   files.forEach(function (file) {
     leftOverJsFiles[path.normalize(file)] = true;
@@ -572,7 +578,7 @@ export default "${contents}";\n`;
   //generate the JS file for Built-in GLSL Functions, Structs, and Constants
   const contents = {
     imports: [],
-    builtinLookup: []
+    builtinLookup: [],
   };
   generateBuiltinContents(contents, builtinConstants, "Constants");
   generateBuiltinContents(contents, builtinStructs, "Structs");
@@ -604,30 +610,32 @@ const externalResolvePlugin = {
     build.onResolve({ filter: new RegExp(`index\.js$`) }, () => {
       return {
         path: "Cesium",
-        namespace: "external-cesium"
+        namespace: "external-cesium",
       };
     });
 
     build.onResolve({ filter: /@cesium/ }, () => {
       return {
         path: "Cesium",
-        namespace: "external-cesium"
+        namespace: "external-cesium",
       };
     });
 
     build.onLoad(
       {
         filter: new RegExp(`^Cesium$`),
-        namespace: "external-cesium"
+        namespace: "external-cesium",
       },
       () => {
-        const contents = `module.exports = Cesium`;
+        //PROPELLER HACK
+        const contents = `module.exports = propelleraero/cesium`;
+
         return {
-          contents
+          contents,
         };
       }
     );
-  }
+  },
 };
 
 /**
@@ -677,7 +685,7 @@ export async function createGalleryList(noDevelopmentGallery) {
 
     const demoObject = {
       name: demo,
-      isNew: newDemos.includes(file)
+      isNew: newDemos.includes(file),
     };
 
     if (existsSync(`${file.replace(".html", "")}.jpg`)) {
@@ -718,14 +726,14 @@ const has_new_gallery_demos = ${newDemos.length > 0 ? "true;" : "false;"}\n`;
   // Compile CSS for Sandcastle
   return esbuild.build({
     entryPoints: [
-      path.join("Apps", "Sandcastle", "templates", "bucketRaw.css")
+      path.join("Apps", "Sandcastle", "templates", "bucketRaw.css"),
     ],
     minify: true,
     banner: {
       css:
-        "/* This file is automatically rebuilt by the Cesium build process. */\n"
+        "/* This file is automatically rebuilt by the Cesium build process. */\n",
     },
-    outfile: path.join("Apps", "Sandcastle", "templates", "bucket.css")
+    outfile: path.join("Apps", "Sandcastle", "templates", "bucket.css"),
   });
 }
 
@@ -758,7 +766,7 @@ export async function copyEngineAssets(destination) {
     "!packages/engine/Source/**/*.js",
     "!packages/engine/Source/**/*.glsl",
     "!packages/engine/Source/**/*.css",
-    "!packages/engine/Source/**/*.md"
+    "!packages/engine/Source/**/*.md",
   ];
 
   await copyFiles(engineStaticAssets, destination, "packages/engine/Source");
@@ -785,7 +793,7 @@ export async function copyWidgetsAssets(destination) {
     "!packages/widgets/Source/**/*.js",
     "!packages/widgets/Source/**/*.css",
     "!packages/widgets/Source/**/*.glsl",
-    "!packages/widgets/Source/**/*.md"
+    "!packages/widgets/Source/**/*.md",
   ];
 
   await copyFiles(widgetsStaticAssets, destination, "packages/widgets/Source");
@@ -798,7 +806,7 @@ export async function copyWidgetsAssets(destination) {
 export async function createJsHintOptions() {
   const jshintrc = JSON.parse(
     await readFile(path.join("Apps", "Sandcastle", ".jshintrc"), {
-      encoding: "utf8"
+      encoding: "utf8",
     })
   );
 
@@ -833,7 +841,7 @@ export function bundleCombinedSpecs(options) {
     entryPoints: [
       "Specs/spec-main.js",
       "Specs/SpecList.js",
-      "Specs/karma-main.js"
+      "Specs/karma-main.js",
     ],
     bundle: true,
     format: "esm",
@@ -842,7 +850,7 @@ export function bundleCombinedSpecs(options) {
     outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
     external: [`http`, `https`, `url`, `zlib`],
-    write: options.write
+    write: options.write,
   });
 }
 
@@ -864,6 +872,7 @@ export async function createIndexJs(workspace) {
 
   const files = await globby(workspaceSources);
   files.forEach(function (file) {
+    //PROPELLER HACK
     file = path.relative(`packages/${workspace}`, file);
 
     let moduleId = file;
@@ -879,8 +888,9 @@ export async function createIndexJs(workspace) {
     contents += `export { default as ${assignmentName} } from './${moduleId}.js';${EOL}`;
   });
 
+  //PROPELLER HACK
   await writeFile(`packages/${workspace}/index.js`, contents, {
-    encoding: "utf-8"
+    encoding: "utf-8",
   });
 
   return contents;
@@ -902,7 +912,7 @@ async function createSpecListForWorkspace(files, workspace, outputPath) {
   });
 
   await writeFile(outputPath, contents, {
-    encoding: "utf-8"
+    encoding: "utf-8",
   });
 
   return contents;
@@ -924,7 +934,7 @@ async function bundleCSS(options) {
   esBuildOptions.entryPoints = await globby(options.filePaths);
   esBuildOptions.loader = {
     ".gif": "text",
-    ".png": "text"
+    ".png": "text",
   };
   esBuildOptions.sourcemap = options.sourcemap;
   esBuildOptions.minify = options.minify;
@@ -936,7 +946,7 @@ async function bundleCSS(options) {
 
 const workspaceCssFiles = {
   engine: ["packages/engine/Source/**/*.css"],
-  widgets: ["packages/widgets/Source/**/*.css"]
+  widgets: ["packages/widgets/Source/**/*.css"],
 };
 
 /**
@@ -961,7 +971,7 @@ async function bundleSpecs(options) {
     sourcemap: true,
     external: ["https", "http", "zlib", "url"],
     target: "es2020",
-    write: write
+    write: write,
   };
 
   let build = esbuild.build;
@@ -973,13 +983,13 @@ async function bundleSpecs(options) {
   // are bundled separately since they use a different outbase than the workspace's SpecList.js.
   await build({
     ...buildOptions,
-    entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"]
+    entryPoints: ["Specs/spec-main.js", "Specs/karma-main.js"],
   });
 
   return build({
     ...buildOptions,
     entryPoints: [options.specListFile],
-    outbase: options.outbase
+    outbase: options.outbase,
   });
 }
 
@@ -1015,7 +1025,7 @@ export const buildEngine = async (options) => {
   await bundleWorkers({
     input: ["packages/engine/Source/Workers/**"],
     inputES6: ["packages/engine/Source/WorkersES6/*.js"],
-    path: "packages/engine/Build"
+    path: "packages/engine/Build",
   });
 
   // Create SpecList.js
@@ -1028,7 +1038,7 @@ export const buildEngine = async (options) => {
     outbase: "packages/engine/Specs",
     outdir: "packages/engine/Build/Specs",
     specListFile: specListFile,
-    write: write
+    write: write,
   });
 };
 
@@ -1048,7 +1058,7 @@ export const buildWidgets = async (options) => {
   // Generate Build folder to place build artifacts.
   mkdirp.sync("packages/widgets/Build");
 
-  // Create index.js
+  //PROPELLER HACK
   await createIndexJs("widgets");
 
   // Create SpecList.js
@@ -1061,7 +1071,7 @@ export const buildWidgets = async (options) => {
     outbase: "packages/widgets/Specs",
     outdir: "packages/widgets/Build/Specs",
     specListFile: specListFile,
-    write: write
+    write: write,
   });
 };
 
@@ -1099,7 +1109,7 @@ export async function buildCesium(options) {
   await writeFile(
     "Build/package.json",
     JSON.stringify({
-      type: "commonjs"
+      type: "commonjs",
     }),
     "utf8"
   );
@@ -1113,24 +1123,24 @@ export async function buildCesium(options) {
   // Bundle ThirdParty files.
   await bundleCSS({
     filePaths: [
-      "packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js"
+      "packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     ],
     minify: minify,
     sourcemap: sourcemap,
     outdir: outputDirectory,
-    outbase: "packages/engine/Source"
+    outbase: "packages/engine/Source",
   });
 
   // Bundle CSS files.
   await bundleCSS({
     filePaths: workspaceCssFiles[`engine`],
     outdir: path.join(outputDirectory, "Widgets/CesiumWidget"),
-    outbase: "packages/engine/Source/Widget"
+    outbase: "packages/engine/Source/Widget",
   });
   await bundleCSS({
     filePaths: workspaceCssFiles[`widgets`],
     outdir: path.join(outputDirectory, "Widgets"),
-    outbase: "packages/widgets/Source"
+    outbase: "packages/widgets/Source",
   });
 
   // Generate bundles.
@@ -1142,7 +1152,7 @@ export async function buildCesium(options) {
     removePragmas: removePragmas,
     path: outputDirectory,
     node: node,
-    write: write
+    write: write,
   });
 
   await Promise.all([
@@ -1151,15 +1161,15 @@ export async function buildCesium(options) {
       minify: minify,
       sourcemap: sourcemap,
       path: outputDirectory,
-      removePragmas: removePragmas
+      removePragmas: removePragmas,
     }),
-    createGalleryList(!development)
+    createGalleryList(!development),
   ]);
 
   // Generate Specs bundle.
   const specsContext = await bundleCombinedSpecs({
     incremental: incremental,
-    write: write
+    write: write,
   });
 
   // Copy static assets to the Build folder.
@@ -1168,7 +1178,6 @@ export async function buildCesium(options) {
   await copyWidgetsAssets(path.join(outputDirectory, "Widgets"));
 
   // Copy static assets to Source folder.
-
   await copyEngineAssets("Source");
   await copyFiles(
     ["packages/engine/Source/ThirdParty/**/*.js"],
@@ -1203,6 +1212,6 @@ export async function buildCesium(options) {
     esm: contexts.esm,
     iife: contexts.iife,
     node: contexts.node,
-    specs: specsContext
+    specs: specsContext,
   };
 }

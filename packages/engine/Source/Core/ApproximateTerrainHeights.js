@@ -47,7 +47,7 @@ ApproximateTerrainHeights.initialize = function () {
     buildModuleUrl("Assets/approximateTerrainHeights.json")
   ).then(function (json) {
     // PROPELLER HACK: Allow rendering of ground primitives with negative WGS84 elevation
-    var MAX_HOLE_DEPTH = 250;
+    const MAX_HOLE_DEPTH = 250;
     Object.keys(json).map(function (key) {
       json[key][0] -= MAX_HOLE_DEPTH;
     });
