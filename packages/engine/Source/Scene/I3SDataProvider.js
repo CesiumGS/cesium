@@ -402,7 +402,9 @@ I3SDataProvider.fromUrl = async function (url, options) {
   // Start loading all of the tiles
   const layerPromises = [];
   for (let i = 0; i < provider._layers.length; i++) {
-    layerPromises.push(provider._layers[i].load());
+    layerPromises.push(
+      provider._layers[i].load(options.cesium3dTilesetOptions)
+    );
   }
 
   await Promise.all(layerPromises);
@@ -516,13 +518,9 @@ I3SDataProvider.prototype.getDecoderTaskProcessor = function () {
   return this._taskProcessorReadyPromise;
 };
 
-function getCoveredTiles(terrainProvider, extent) {
-  return getTiles(terrainProvider, extent);
-}
-
 const scratchCartesian2 = new Cartesian2();
 
-function getTiles(terrainProvider, extent) {
+function getCoveredTiles(terrainProvider, extent) {
   const tilingScheme = terrainProvider.tilingScheme;
 
   // Sort points into a set of tiles

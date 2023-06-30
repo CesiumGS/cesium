@@ -282,7 +282,10 @@ describe("Scene/IonImageryProvider", function () {
       crossOrigin,
       deferred
     ) {
-      deferred.resolve({});
+      deferred.resolve({
+        height: 16,
+        width: 16,
+      });
     });
 
     return testExternalImagery(

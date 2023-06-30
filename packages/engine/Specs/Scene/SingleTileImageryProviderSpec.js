@@ -193,6 +193,8 @@ describe("Scene/SingleTileImageryProvider", function () {
   it("raises error event when image cannot be loaded", function () {
     const provider = new SingleTileImageryProvider({
       url: "made/up/url",
+      tileHeight: 16,
+      tileWidth: 16,
     });
 
     const layer = new ImageryLayer(provider);

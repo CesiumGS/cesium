@@ -115,10 +115,25 @@ describe("Scene/I3SDataProvider", function () {
     id: 0,
   };
 
+  const mockLayerDataWithLargeExtent = {
+    href: "layers/0/",
+    attributeStorageInfo: [],
+    store: { rootNode: "mockRootNodeUrl", version: "1.6" },
+    fullExtent: { xmin: -1, ymin: -1, xmax: 2, ymax: 3 },
+    spatialReference: { wkid: 4326 },
+    id: 0,
+  };
+
   const mockProviderData = {
     name: "mockProviderName",
     serviceVersion: "1.6",
     layers: [mockLayerData],
+  };
+
+  const mockProviderDataWithLargeExtent = {
+    name: "mockProviderName",
+    serviceVersion: "1.6",
+    layers: [mockLayerDataWithLargeExtent],
   };
 
   it("constructs I3SDataProvider with options", async function () {
@@ -485,7 +500,7 @@ describe("Scene/I3SDataProvider", function () {
 
   it("loads geoid data", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
+      Promise.resolve(mockProviderDataWithLargeExtent)
     );
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
       const tileset = new Cesium3DTileset();
@@ -496,8 +511,6 @@ describe("Scene/I3SDataProvider", function () {
       name: "testProvider",
       geoidTiledTerrainProvider: mockGeoidProvider,
     });
-
-    testProvider._extent = Rectangle.fromDegrees(-1, 0, 1, 2);
 
     return testProvider.loadGeoidData().then(function () {
       expect(testProvider._geoidDataList.length).toEqual(2);
@@ -527,7 +540,6 @@ describe("Scene/I3SDataProvider", function () {
     const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
-    testProvider._extent = Rectangle.fromDegrees(-1, 0, 1, 2);
 
     return testProvider.loadGeoidData().then(function () {
       expect(testProvider._geoidDataList).toBeUndefined();
