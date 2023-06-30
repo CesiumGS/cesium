@@ -29,10 +29,10 @@ const defaultViewport = { width: 960, height: 540 };
 export default defineConfig({
   testDir: ".",
   outputDir: "../../Build/Specs/e2e/artifacts",
-  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: updateSnapshots ? 0 : 1,
-  workers: process.env.CI ? 1 : undefined,
+  fullyParallel: false,
+  workers: 1,
   reporter: reporter,
   use: {
     baseURL: baseUrl,
