@@ -424,7 +424,7 @@ function VoxelPrimitive(options) {
   initialize(this, provider);
 }
 
-async function initialize(primitive, provider) {
+function initialize(primitive, provider) {
   // Set the bounds
   const {
     shape: shapeType,
