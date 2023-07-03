@@ -2240,13 +2240,7 @@ function updateZoomTarget(viewer) {
   const camera = scene.camera;
   const zoomOptions = defaultValue(viewer._zoomOptions, {});
   let options;
-
-  if (
-    target instanceof Cesium3DTileset ||
-    target instanceof VoxelPrimitive ||
-    target instanceof TimeDynamicPointCloud
-  ) {
-    const boundingSphere = target.boundingSphere;
+  function zoomToBoundingSphere(boundingSphere) {
     // If offset was originally undefined then give it base value instead of empty object
     if (!defined(zoomOptions.offset)) {
       zoomOptions.offset = new HeadingPitchRange(
@@ -2279,6 +2273,27 @@ function updateZoomTarget(viewer) {
     }
 
     clearZoom(viewer);
+  }
+
+  if (target instanceof TimeDynamicPointCloud) {
+    if (defined(target.boundingSphere)) {
+      zoomToBoundingSphere(target.boundingSphere);
+      return;
+    }
+
+    // Otherwise, the first "frame" needs to have been rendered
+    const removeEventListener = target.frameChanged.addEventListener(function (
+      timeDynamicPointCloud
+    ) {
+      zoomToBoundingSphere(timeDynamicPointCloud.boundingSphere);
+      removeEventListener();
+    });
+    return;
+  }
+
+  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
+    zoomToBoundingSphere(target.boundingSphere);
+    return;
   }
 
   // If zoomTarget was an ImageryLayer
@@ -2329,7 +2344,7 @@ function updateZoomTarget(viewer) {
     return;
   }
 
-  //Stop tracking the current entity.
+  // Stop tracking the current entity.
   viewer.trackedEntity = undefined;
 
   const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
