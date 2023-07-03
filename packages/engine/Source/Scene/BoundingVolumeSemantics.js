@@ -41,11 +41,11 @@ BoundingVolumeSemantics.parseAllBoundingVolumeSemantics = function (
         "TILE",
         tileMetadata
       ),
-      minimumHeight: BoundingVolumeSemantics.parseMinimumHeight(
+      minimumHeight: BoundingVolumeSemantics._parseMinimumHeight(
         "TILE",
         tileMetadata
       ),
-      maximumHeight: BoundingVolumeSemantics.parseMaximumHeight(
+      maximumHeight: BoundingVolumeSemantics._parseMaximumHeight(
         "TILE",
         tileMetadata
       ),
@@ -55,11 +55,11 @@ BoundingVolumeSemantics.parseAllBoundingVolumeSemantics = function (
         "CONTENT",
         tileMetadata
       ),
-      minimumHeight: BoundingVolumeSemantics.parseMinimumHeight(
+      minimumHeight: BoundingVolumeSemantics._parseMinimumHeight(
         "CONTENT",
         tileMetadata
       ),
-      maximumHeight: BoundingVolumeSemantics.parseMaximumHeight(
+      maximumHeight: BoundingVolumeSemantics._parseMaximumHeight(
         "CONTENT",
         tileMetadata
       ),
@@ -138,7 +138,7 @@ BoundingVolumeSemantics.parseBoundingVolumeSemantic = function (
  * @return {number} The minimum height
  * @private
  */
-BoundingVolumeSemantics.parseMinimumHeight = function (prefix, tileMetadata) {
+BoundingVolumeSemantics._parseMinimumHeight = function (prefix, tileMetadata) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("prefix", prefix);
   if (prefix !== "TILE" && prefix !== "CONTENT") {
@@ -161,7 +161,7 @@ BoundingVolumeSemantics.parseMinimumHeight = function (prefix, tileMetadata) {
  * @return {number} The maximum height
  * @private
  */
-BoundingVolumeSemantics.parseMaximumHeight = function (prefix, tileMetadata) {
+BoundingVolumeSemantics._parseMaximumHeight = function (prefix, tileMetadata) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("prefix", prefix);
   if (prefix !== "TILE" && prefix !== "CONTENT") {

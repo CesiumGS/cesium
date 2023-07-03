@@ -5,7 +5,7 @@ import {
   BoundingVolumeSemantics,
 } from "../../index.js";
 
-describe("Scene/parseBoundingVolumeSemantics", function () {
+describe("Scene/BoundingVolumeSemantics", function () {
   const boundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
   const boundingRegion = [0, 0, Math.PI_OVER_SIX, Math.PI_OVER_TWO, 0, 50];
   const boundingSphere = [0, 0, 0, 1];
@@ -335,10 +335,10 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
     });
   });
 
-  describe("parseMinimumHeight", function () {
+  describe("_parseMinimumHeight", function () {
     it("throws without prefix", function () {
       expect(function () {
-        return BoundingVolumeSemantics.parseMinimumHeight(
+        return BoundingVolumeSemantics._parseMinimumHeight(
           undefined,
           emptyMetadata
         );
@@ -347,7 +347,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
 
     it("throws if prefix is not TILE or CONTENT", function () {
       expect(function () {
-        return BoundingVolumeSemantics.parseMinimumHeight(
+        return BoundingVolumeSemantics._parseMinimumHeight(
           "TILESET",
           emptyMetadata
         );
@@ -356,12 +356,12 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
 
     it("throws without tileMetadata", function () {
       expect(function () {
-        return BoundingVolumeSemantics.parseMinimumHeight("TILE", undefined);
+        return BoundingVolumeSemantics._parseMinimumHeight("TILE", undefined);
       }).toThrowDeveloperError();
     });
 
     it("returns undefined if minimum height not present", function () {
-      const height = BoundingVolumeSemantics.parseMinimumHeight(
+      const height = BoundingVolumeSemantics._parseMinimumHeight(
         "TILE",
         emptyMetadata
       );
@@ -377,7 +377,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
           },
         },
       });
-      const height = BoundingVolumeSemantics.parseMinimumHeight(
+      const height = BoundingVolumeSemantics._parseMinimumHeight(
         "TILE",
         tileMetadata
       );
@@ -385,10 +385,10 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
     });
   });
 
-  describe("parseMaximumHeight", function () {
+  describe("_parseMaximumHeight", function () {
     it("throws without prefix", function () {
       expect(function () {
-        return BoundingVolumeSemantics.parseMaximumHeight(
+        return BoundingVolumeSemantics._parseMaximumHeight(
           undefined,
           emptyMetadata
         );
@@ -397,7 +397,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
 
     it("throws if prefix is not TILE or CONTENT", function () {
       expect(function () {
-        return BoundingVolumeSemantics.parseMaximumHeight(
+        return BoundingVolumeSemantics._parseMaximumHeight(
           "TILESET",
           emptyMetadata
         );
@@ -406,12 +406,12 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
 
     it("throws without tileMetadata", function () {
       expect(function () {
-        return BoundingVolumeSemantics.parseMaximumHeight("TILE", undefined);
+        return BoundingVolumeSemantics._parseMaximumHeight("TILE", undefined);
       }).toThrowDeveloperError();
     });
 
     it("returns undefined if maximum height not present", function () {
-      const height = BoundingVolumeSemantics.parseMaximumHeight(
+      const height = BoundingVolumeSemantics._parseMaximumHeight(
         "TILE",
         emptyMetadata
       );
@@ -427,7 +427,7 @@ describe("Scene/parseBoundingVolumeSemantics", function () {
           },
         },
       });
-      const height = BoundingVolumeSemantics.parseMaximumHeight(
+      const height = BoundingVolumeSemantics._parseMaximumHeight(
         "CONTENT",
         tileMetadata
       );
