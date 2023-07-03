@@ -103,36 +103,6 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
     );
   });
 
-  it("resolves readyPromise", function () {
-    installMockGetQuadTreePacket();
-
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
-
-    return terrainProvider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(terrainProvider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "made/up/url",
-    });
-
-    installMockGetQuadTreePacket();
-
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: resource,
-    });
-
-    return terrainProvider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(terrainProvider.ready).toBe(true);
-    });
-  });
-
   it("uses geographic tiling scheme by default", async function () {
     installMockGetQuadTreePacket();
 
@@ -189,28 +159,6 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       terrainProvider.getLevelMaximumGeometricError(2) * 2.0,
       CesiumMath.EPSILON10
     );
-  });
-
-  it("readyPromise rejects if there isn't terrain", function () {
-    installMockGetQuadTreePacket();
-
-    const metadata = new GoogleEarthEnterpriseMetadata({
-      url: "made/up/url",
-    });
-
-    metadata.terrainPresent = false;
-
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      metadata: metadata,
-    });
-
-    return terrainProvider.readyPromise
-      .then(function () {
-        fail("Server does not have terrain, so we shouldn't resolve.");
-      })
-      .catch(function (e) {
-        expect(terrainProvider.ready).toBe(false);
-      });
   });
 
   it("credit is undefined if credit is not provided", async function () {

@@ -326,15 +326,6 @@ describe(
       });
     });
 
-    it("resolves ready promise", function () {
-      const pointCloud = createTimeDynamicPointCloud();
-      return loadFrame(pointCloud).then(function () {
-        return pointCloud.readyPromise.then(function (pointCloud) {
-          expect(pointCloud.boundingSphere).toBeDefined();
-        });
-      });
-    });
-
     it("sets show", function () {
       const pointCloud = createTimeDynamicPointCloud();
 

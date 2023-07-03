@@ -628,9 +628,6 @@ describe("Scene/QuadtreePrimitive", function () {
             get: result.getQuadtree,
             set: result.setQuadtree,
           },
-          ready: {
-            get: result.getReady,
-          },
           tilingScheme: {
             get: result.getTilingScheme,
           },

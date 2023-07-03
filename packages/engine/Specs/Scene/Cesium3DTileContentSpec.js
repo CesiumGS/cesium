@@ -25,9 +25,6 @@ describe("Scene/Cesium3DTileContent", function () {
       return content.innerContents;
     }).toThrowDeveloperError();
     expect(function () {
-      return content.readyPromise;
-    }).toThrowDeveloperError();
-    expect(function () {
       return content.tileset;
     }).toThrowDeveloperError();
     expect(function () {

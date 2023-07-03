@@ -56,10 +56,7 @@ import pollToPromise from "../../../../Specs/pollToPromise.js";
 describe(
   "Widgets/Viewer/Viewer",
   function () {
-    const readyPromise = Promise.resolve(true);
     const testProvider = {
-      ready: true,
-      readyPromise: readyPromise,
       tilingScheme: {
         tileXYToRectangle: function () {
           return new Rectangle();
@@ -528,17 +525,6 @@ describe(
       );
       expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(
         testProviderViewModel
-      );
-    });
-
-    it("can set imageryProvider when BaseLayerPicker is disabled", function () {
-      viewer = createViewer(container, {
-        baseLayerPicker: false,
-        imageryProvider: testProvider,
-      });
-      expect(viewer.scene.imageryLayers.length).toEqual(1);
-      expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
-        testProvider
       );
     });
 

@@ -243,18 +243,6 @@ describe(
       }
     }
 
-    it("fromGltf throws with undefined options", function () {
-      expect(function () {
-        Model.fromGltf();
-      }).toThrowDeveloperError();
-    });
-
-    it("fromGltf throws with undefined url", function () {
-      expect(function () {
-        Model.fromGltf({});
-      }).toThrowDeveloperError();
-    });
-
     it("fromGltfAsync throws with undefined options", async function () {
       await expectAsync(Model.fromGltfAsync()).toBeRejectedWithDeveloperError();
     });
@@ -409,45 +397,6 @@ describe(
       });
     });
 
-    it("rejects ready promise when texture fails to load", function () {
-      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
-      return resource.fetchJson().then(function (gltf) {
-        gltf.images[0].uri = "non-existent-path.png";
-        const model = Model.fromGltf({
-          gltf: gltf,
-          basePath: boxTexturedGltfUrl,
-          incrementallyLoadTextures: false,
-        });
-        scene.primitives.add(model);
-        let finished = false;
-        model.readyPromise
-          .then(function (model) {
-            finished = true;
-            fail();
-          })
-          .catch(function (error) {
-            finished = true;
-            expect(error).toBeDefined();
-          });
-
-        let texturesFinished = false;
-        model.texturesLoadedPromise
-          .then(function () {
-            texturesFinished = true;
-            fail();
-          })
-          .catch(function (error) {
-            texturesFinished = true;
-            expect(error).toBeDefined();
-          });
-
-        return pollToPromise(function () {
-          scene.renderForSpecs();
-          return finished && texturesFinished;
-        });
-      });
-    });
-
     it("raises errorEvent when external buffer fails to load", async function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       const gltf = await resource.fetchJson();
@@ -472,36 +421,6 @@ describe(
       return pollToPromise(function () {
         scene.renderForSpecs();
         return finished;
-      });
-    });
-
-    it("rejects ready promise when external buffer fails to load", function () {
-      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
-      return resource.fetchJson().then(function (gltf) {
-        gltf.buffers[0].uri = "non-existent-path.bin";
-        const model = Model.fromGltf({
-          gltf: gltf,
-          basePath: boxTexturedGltfUrl,
-        });
-        scene.primitives.add(model);
-        let finished = false;
-        model.readyPromise
-          .then(function (model) {
-            finished = true;
-            fail();
-          })
-          .catch(function (error) {
-            finished = true;
-            expect(error).toBeDefined();
-          });
-
-        return pollToPromise(
-          function () {
-            scene.renderForSpecs();
-            return finished;
-          },
-          { timeout: 10000 }
-        );
       });
     });
 
@@ -2126,9 +2045,7 @@ describe(
             return 0.0;
           },
           _surface: {
-            tileProvider: {
-              ready: true,
-            },
+            tileProvider: {},
             _tileLoadQueueHigh: [],
             _tileLoadQueueMedium: [],
             _tileLoadQueueLow: [],

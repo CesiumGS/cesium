@@ -4,7 +4,6 @@ import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import deprecationWarning from "./deprecationWarning.js";
 import GoogleEarthEnterpriseTileInformation from "./GoogleEarthEnterpriseTileInformation.js";
 import isBitSet from "./isBitSet.js";
 import loadAndExecuteScript from "./loadAndExecuteScript.js";
@@ -40,8 +39,6 @@ const defaultKey = stringToBuffer(
  *
  * @alias GoogleEarthEnterpriseMetadata
  * @constructor
- *
- * @param {Resource|string} [resourceOrUrl] The url of the Google Earth Enterprise server hosting the imagery. Deprecated.
  *
  * @see GoogleEarthEnterpriseImageryProvider
  * @see GoogleEarthEnterpriseTerrainProvider
@@ -100,39 +97,6 @@ function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
   this._quadPacketVersion = 1;
   this._tileInfo = {};
   this._subtreePromises = {};
-
-  this._readyPromise = Promise.resolve(true);
-  if (defined(resourceOrUrl)) {
-    deprecationWarning(
-      "GoogleEarthEnterpriseMetadata options.url",
-      "GoogleEarthEnterpriseMetadata constructor parmeter resourceOrUrl was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use GoogleEarthEnterpriseMetadata.fromUrl instead."
-    );
-
-    let url = resourceOrUrl;
-
-    if (typeof url !== "string" && !(url instanceof Resource)) {
-      url = resourceOrUrl.url;
-    }
-
-    const resource = Resource.createIfNeeded(url);
-    resource.appendForwardSlash();
-    this._resource = resource;
-
-    const that = this;
-    this._readyPromise = requestDbRoot(this)
-      .then(function () {
-        return that.getQuadTreePacket("", that._quadPacketVersion);
-      })
-      .then(function () {
-        return true;
-      })
-      .catch(function (e) {
-        const message = `An error occurred while accessing ${
-          getMetadataResource(that, "", 1).url
-        }.`;
-        return Promise.reject(new RuntimeError(message));
-      });
-  }
 }
 
 Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
@@ -169,23 +133,6 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
   resource: {
     get: function () {
       return this._resource;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the metadata is ready for use.
-   * @memberof GoogleEarthEnterpriseMetadata.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMetadata.readyPromise",
-        "GoogleEarthEnterpriseMetadata.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use GoogleEarthEnterpriseMetadata.fromUrl instead."
-      );
-      return this._readyPromise;
     },
   },
 });

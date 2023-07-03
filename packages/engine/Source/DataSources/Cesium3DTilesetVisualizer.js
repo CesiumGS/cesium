@@ -79,16 +79,17 @@ Cesium3DTilesetVisualizer.prototype.update = function (time) {
       );
     }
 
+    const tileset = defined(tilesetData)
+      ? tilesetData.tilesetPrimitive
+      : undefined;
+
     if (!show) {
-      if (defined(tilesetData)) {
-        tilesetData.tilesetPrimitive.show = false;
+      if (defined(tileset)) {
+        tileset.show = false;
       }
       continue;
     }
 
-    const tileset = defined(tilesetData)
-      ? tilesetData.tilesetPrimitive
-      : undefined;
     if (!defined(tilesetData) || resource.url !== tilesetData.url) {
       if (defined(tileset)) {
         primitives.removeAndDestroy(tileset);

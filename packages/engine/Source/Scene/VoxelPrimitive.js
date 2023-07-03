@@ -8,7 +8,6 @@ import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -422,28 +421,10 @@ function VoxelPrimitive(options) {
 
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;
-  this._completeLoad = function (primitive, frameState) {};
-  this._readyPromise = initialize(this, provider);
+  initialize(this, provider);
 }
 
-async function initialize(primitive, provider) {
-  const promise = new Promise(function (resolve) {
-    primitive._completeLoad = function (primitive, frameState) {
-      // Set the primitive as ready after the first frame render since the user might set up events subscribed to
-      // the post render event, and the primitive may not be ready for those past the first frame.
-      frameState.afterRender.push(function () {
-        primitive._ready = true;
-        resolve(primitive);
-        return true;
-      });
-    };
-  });
-
-  // This is here for backwards compatibility. It can be removed when readyPromise is removed.
-  if (defined(provider._readyPromise) && !provider._ready) {
-    await provider._readyPromise;
-  }
-
+function initialize(primitive, provider) {
   // Set the bounds
   const {
     shape: shapeType,
@@ -466,8 +447,6 @@ async function initialize(primitive, provider) {
     primitive._shape,
     provider
   );
-
-  return promise;
 }
 
 Object.defineProperties(VoxelPrimitive.prototype, {
@@ -481,24 +460,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the primitive is ready for use.
-   *
-   * @memberof VoxelPrimitive.prototype
-   * @type {Promise<VoxelPrimitive>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "VoxelPrimitive.readyPromise",
-        "VoxelPrimitive.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for VoxelPrimitive.ready to return true instead."
-      );
-      return this._readyPromise;
     },
   },
 
@@ -988,19 +949,18 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Update the custom shader in case it has texture uniforms.
   this._customShader.update(frameState);
 
-  // Exit early if it's not ready yet.
-  // This is here for backward compatibility. It can be removed when readyPromise is removed.
-  if ((defined(provider._ready) && !provider._ready) || !defined(this._shape)) {
-    return;
-  }
-
   // Initialize from the ready provider. This only happens once.
   const context = frameState.context;
   if (!this._ready) {
     initFromProvider(this, provider, context);
-    this._completeLoad(this, frameState);
+    // Set the primitive as ready after the first frame render since the user might set up events subscribed to
+    // the post render event, and the primitive may not be ready for those past the first frame.
+    frameState.afterRender.push(() => {
+      this._ready = true;
+      return true;
+    });
 
-    // Don't render until the next frame after the ready promise is resolved
+    // Don't render until the next frame after ready is set to true
     return;
   }
 

@@ -3,7 +3,6 @@ import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -19,7 +18,6 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *
  * Initialization options for the TileMapServiceImageryProvider constructor
  *
- * @property {Resource|string|Promise<Resource>|Promise<string>} [url] Path to image tiles on server. Deprecated
  * @property {string} [fileExtension='png'] The file extension for images on the server.
  * @property {Credit|string} [credit=''] A credit for the data source, which is displayed on the canvas.
  * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
@@ -52,7 +50,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * @constructor
  * @extends UrlTemplateImageryProvider
  *
- * @param {TileMapServiceImageryProvider.ConstructorOptions} options Object describing initialization options
+ * @param {TileMapServiceImageryProvider.ConstructorOptions} [options] Object describing initialization options
  *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
@@ -76,46 +74,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  * });
  */
 function TileMapServiceImageryProvider(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-  if (defined(options.url)) {
-    deprecationWarning(
-      "TileMapServiceImageryProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use TileMapServiceImageryProvider.fromUrl instead."
-    );
-
-    this._metadataError = undefined;
-    this._ready = false;
-
-    let resource;
-    const that = this;
-    const promise = Promise.resolve(options.url)
-      .then(function (url) {
-        resource = Resource.createIfNeeded(url);
-        resource.appendForwardSlash();
-
-        that._tmsResource = resource;
-        that._xmlResource = resource.getDerivedResource({
-          url: "tilemapresource.xml",
-        });
-
-        return TileMapServiceImageryProvider._requestMetadata(
-          options,
-          that._tmsResource,
-          that._xmlResource,
-          that
-        );
-      })
-      .catch((e) => {
-        return Promise.reject(e);
-      });
-
-    UrlTemplateImageryProvider.call(this, promise);
-    this._promise = promise;
-  }
-
-  // After readyPromise deprecation, this should become just
-  // UrlTemplateImageryProvider.call(this, options);
+  UrlTemplateImageryProvider.call(this, options);
 }
 
 TileMapServiceImageryProvider._requestMetadata = async function (
@@ -187,11 +146,7 @@ TileMapServiceImageryProvider.fromUrl = async function (url, options) {
     xmlResource
   );
 
-  // Once the deprecated behavior is removed, this can become
-  // return new TileMapServiceImageryProvider(metadata);
-  const provider = new TileMapServiceImageryProvider();
-  UrlTemplateImageryProvider.call(provider, metadata);
-  return provider;
+  return new TileMapServiceImageryProvider(metadata);
 };
 
 if (defined(Object.create)) {

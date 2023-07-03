@@ -3,8 +3,6 @@ import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -19,7 +17,6 @@ import ImageryProvider from "./ImageryProvider.js";
  *
  * Initialization options for the GoogleEarthEnterpriseMapsProvider constructor
  *
- * @property {Resource|string} [url] The url of the Google Earth server hosting the imagery. Deprecated.
  * @property {number} channel The channel (id) to be used when requesting data from the server.
  *        The channel number can be found by looking at the json file located at:
  *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
@@ -233,57 +230,6 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   this._maximumLevel = options.maximumLevel;
 
   this._errorEvent = new Event();
-
-  if (defined(options.url) || defined(options.channel)) {
-    //>>includeStart('debug', pragmas.debug);
-    if (!defined(options.url)) {
-      throw new DeveloperError("options.url is required.");
-    }
-    if (!defined(options.channel)) {
-      throw new DeveloperError("options.channel is required.");
-    }
-    //>>includeEnd('debug');
-
-    deprecationWarning(
-      "GoogleEarthEnterpriseMapsProvider.url",
-      "GoogleEarthEnterpriseMapsProvider.url and GoogleEarthEnterpriseMapsProvider.channel were deprecated in CesiumJS 1.104.  They will be in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
-    );
-
-    const url = options.url;
-    const path = defaultValue(options.path, "/default_map");
-
-    const resource = Resource.createIfNeeded(url).getDerivedResource({
-      // We used to just append path to url, so now that we do proper URI resolution, removed the /
-      url: path[0] === "/" ? path.substring(1) : path,
-    });
-
-    resource.appendForwardSlash();
-
-    this._resource = resource;
-    this._url = url;
-    this._path = path;
-
-    this._ready = false;
-    const metadataResource = resource.getDerivedResource({
-      url: "query",
-      queryParameters: {
-        request: "Json",
-        vars: "geeServerDefs",
-        is2d: "t",
-      },
-    });
-
-    const imageryProviderBuilder = new ImageryProviderBuilder(options);
-    this._readyPromise = requestMetadata(
-      metadataResource,
-      imageryProviderBuilder,
-      this
-    ).then(() => {
-      imageryProviderBuilder.build(this);
-      this._ready = true;
-      return true;
-    });
-  }
 }
 
 Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
@@ -459,40 +405,6 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   },
 
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.ready",
-        "GoogleEarthEnterpriseMapsProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
-      );
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.readyPromise",
-        "GoogleEarthEnterpriseMapsProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107. Use GoogleEarthEnterpriseMapsProvider.fromUrl instead."
-      );
-      return this._readyPromise;
-    },
-  },
-
-  /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
    * the source of the imagery.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
@@ -518,242 +430,6 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   hasAlphaChannel: {
     get: function () {
       return true;
-    },
-  },
-
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultAlpha: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
-      );
-      return this._defaultAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
-      );
-      this._defaultAlpha = value;
-    },
-  },
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultNightAlpha: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
-      );
-      return this.defaultNightAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
-      );
-      this.defaultNightAlpha = value;
-    },
-  },
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultDayAlpha: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
-      );
-      return this._defaultDayAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha",
-        "GoogleEarthEnterpriseMapsProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
-      );
-      this._defaultDayAlpha = value;
-    },
-  },
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultBrightness: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultBrightness",
-        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
-      );
-      return this._defaultBrightness;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultBrightness",
-        "GoogleEarthEnterpriseMapsProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
-      );
-      this._defaultBrightness = value;
-    },
-  },
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultContrast: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultContrast",
-        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
-      );
-      return this._defaultContrast;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultContrast",
-        "GoogleEarthEnterpriseMapsProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
-      );
-      this._defaultContrast = value;
-    },
-  },
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultHue: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultHue",
-        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
-      );
-      return this._defaultHue;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultHue",
-        "GoogleEarthEnterpriseMapsProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
-      );
-      this._defaultHue = value;
-    },
-  },
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultSaturation: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultSaturation",
-        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
-      );
-      return this._defaultSaturation;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultSaturation",
-        "GoogleEarthEnterpriseMapsProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
-      );
-      this._defaultSaturation = value;
-    },
-  },
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultGamma: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultGamma",
-        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
-      );
-      return this._defaultGamma;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultGamma",
-        "GoogleEarthEnterpriseMapsProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
-      );
-      this._defaultGamma = value;
-    },
-  },
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {TextureMinificationFilter}
-   * @deprecated
-   */
-  defaultMinificationFilter: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
-      );
-      return this._defaultMinificationFilter;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
-      );
-      this._defaultMinificationFilter = value;
-    },
-  },
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {TextureMagnificationFilter}
-   * @deprecated
-   */
-  defaultMagnificationFilter: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
-      );
-      return this._defaultMagnificationFilter;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter",
-        "GoogleEarthEnterpriseMapsProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
-      );
-      this._defaultMagnificationFilter = value;
     },
   },
 });
@@ -809,8 +485,6 @@ GoogleEarthEnterpriseMapsProvider.fromUrl = async function (
   const provider = new GoogleEarthEnterpriseMapsProvider(options);
   imageryProviderBuilder.build(provider);
 
-  provider._readyPromise = Promise.resolve(true);
-  provider._ready = true;
   provider._resource = resource;
   provider._url = url;
   provider._path = path;

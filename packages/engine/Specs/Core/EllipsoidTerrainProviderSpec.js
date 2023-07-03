@@ -19,15 +19,6 @@ describe(
       expect(EllipsoidTerrainProvider).toConformToInterface(TerrainProvider);
     });
 
-    it("resolves readyPromise", function () {
-      const provider = new EllipsoidTerrainProvider();
-
-      return provider.readyPromise.then(function (result) {
-        expect(result).toBe(true);
-        expect(provider.ready).toBe(true);
-      });
-    });
-
     it("requestTileGeometry creates terrain data.", function () {
       const terrain = new EllipsoidTerrainProvider();
       const terrainData = terrain.requestTileGeometry(0, 0, 0);

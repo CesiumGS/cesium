@@ -242,32 +242,6 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
     ).toBeRejectedWithError("my message");
   });
 
-  it("resolves readyPromise", function () {
-    const provider = new ArcGISTiledElevationTerrainProvider({
-      url: "made/up/url",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "made/up/url",
-    });
-
-    const provider = new ArcGISTiledElevationTerrainProvider({
-      url: resource,
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
   it("has error event", async function () {
     const provider = await ArcGISTiledElevationTerrainProvider.fromUrl(
       "made/up/url"
@@ -314,16 +288,6 @@ describe("Core/ArcGISTiledElevationTerrainProvider", function () {
       "made/up/url"
     );
     expect(provider.hasWaterMask).toBe(false);
-  });
-
-  it("is not ready immediately", function () {
-    const provider = new ArcGISTiledElevationTerrainProvider({
-      url: "made/up/url",
-    });
-    expect(provider.ready).toBe(false);
-    return provider.readyPromise.catch(function (error) {
-      expect(error).toBeInstanceOf(RuntimeError);
-    });
   });
 
   it("detects WebMercator tiling scheme", async function () {

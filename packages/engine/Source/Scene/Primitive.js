@@ -9,7 +9,6 @@ import combine from "../Core/combine.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EncodedCartesian3 from "../Core/EncodedCartesian3.js";
@@ -350,25 +349,6 @@ function Primitive(options) {
   this._createGeometryResults = undefined;
   this._ready = false;
 
-  const primitive = this;
-  // This is here for backwards compatibility. This promise wrapper can be removed once readyPromise is removed.
-  this._readyPromise = new Promise((resolve, reject) => {
-    primitive._completeLoad = (frameState, state, error) => {
-      this._error = error;
-      this._state = state;
-      frameState.afterRender.push(function () {
-        primitive._ready =
-          primitive._state === PrimitiveState.COMPLETE ||
-          primitive._state === PrimitiveState.FAILED;
-        if (!defined(error)) {
-          resolve(primitive);
-          return true;
-        }
-        reject(error);
-      });
-    };
-  });
-
   this._batchTable = undefined;
   this._batchTableAttributeIndices = undefined;
   this._offsetInstanceExtend = undefined;
@@ -505,23 +485,6 @@ Object.defineProperties(Primitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof Primitive.prototype
-   * @type {Promise<Primitive>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "Primitive.readyPromise",
-        "Primitive.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Primitive.ready to return true instead."
-      );
-      return this._readyPromise;
     },
   },
 });
@@ -2542,6 +2505,15 @@ Primitive.prototype.destroy = function () {
 };
 
 function setReady(primitive, frameState, state, error) {
-  primitive._completeLoad(frameState, state, error);
+  primitive._error = error;
+  primitive._state = state;
+  frameState.afterRender.push(function () {
+    primitive._ready =
+      primitive._state === PrimitiveState.COMPLETE ||
+      primitive._state === PrimitiveState.FAILED;
+    if (!defined(error)) {
+      return true;
+    }
+  });
 }
 export default Primitive;

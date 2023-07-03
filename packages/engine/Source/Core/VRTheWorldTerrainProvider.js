@@ -2,7 +2,6 @@ import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import deprecationWarning from "./deprecationWarning.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
@@ -27,7 +26,6 @@ function DataRectangle(rectangle, maxLevel) {
  *
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {Resource|string} [url] The URL of the VR-TheWorld TileMap. Deprecated.
  */
 
 /**
@@ -53,7 +51,6 @@ TerrainProviderBuilder.prototype.build = function (provider) {
   provider._heightmapHeight = this.heightmapHeight;
   provider._levelZeroMaximumGeometricError = this.levelZeroMaximumGeometricError;
   provider._rectangles = this.rectangles;
-  provider._ready = true;
 };
 
 function metadataSuccess(terrainProviderBuilder, xml) {
@@ -160,7 +157,6 @@ function VRTheWorldTerrainProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   this._errorEvent = new Event();
-  this._ready = false;
 
   this._terrainDataStructure = {
     heightScale: 1.0 / 1000.0,
@@ -181,27 +177,6 @@ function VRTheWorldTerrainProvider(options) {
 
   this._tilingScheme = undefined;
   this._rectangles = [];
-
-  if (defined(options.url)) {
-    deprecationWarning(
-      "VRTheWorldTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  VRTheWorldTerrainProvider.fromUrl instead."
-    );
-    const that = this;
-    const terrainProviderBuilder = new TerrainProviderBuilder(options);
-    const resource = Resource.createIfNeeded(options.url);
-
-    this._resource = resource;
-
-    this._readyPromise = requestMetadata(
-      terrainProviderBuilder,
-      resource,
-      that
-    ).then(() => {
-      terrainProviderBuilder.build(that);
-      return true;
-    });
-  }
 }
 
 Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
@@ -241,40 +216,6 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
   tilingScheme: {
     get: function () {
       return this._tilingScheme;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "VRTheWorldTerrainProvider.ready",
-        "VRTheWorldTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use VRTheWorldTerrainProvider.fromUrl instead."
-      );
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "VRTheWorldTerrainProvider.readyPromise",
-        "VRTheWorldTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use VRTheWorldTerrainProvider.fromUrl instead."
-      );
-      return this._readyPromise;
     },
   },
 

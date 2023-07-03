@@ -61,7 +61,7 @@ Cesium3DTilesetSkipTraversal.selectTiles = function (tileset, frameState) {
 
   if (
     root.getScreenSpaceError(frameState, true) <=
-    tileset._maximumScreenSpaceError
+    tileset.memoryAdjustedScreenSpaceError
   ) {
     return;
   }
@@ -267,7 +267,10 @@ function executeTraversal(root, frameState) {
   const { tileset } = root;
   const baseScreenSpaceError = tileset.immediatelyLoadDesiredLevelOfDetail
     ? Number.MAX_VALUE
-    : Math.max(tileset.baseScreenSpaceError, tileset.maximumScreenSpaceError);
+    : Math.max(
+        tileset.baseScreenSpaceError,
+        tileset.memoryAdjustedScreenSpaceError
+      );
   const {
     canTraverse,
     loadTile,

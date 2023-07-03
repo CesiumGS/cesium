@@ -6,8 +6,6 @@ import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import CesiumMath from "../Core/Math.js";
@@ -55,7 +53,6 @@ const pickFeaturesTags = combine(tags, {
  *
  * Initialization options for the UrlTemplateImageryProvider constructor
  *
- * @property {Promise<object>|object} [options] Object with the following properties:
  * @property {Resource|string} url  The URL template to use to request tiles.  It has the following keywords:
  * <ul>
  *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
@@ -194,11 +191,6 @@ function UrlTemplateImageryProvider(options) {
 
   this._errorEvent = new Event();
 
-  if (defined(options.then)) {
-    this._reinitialize(options);
-    return;
-  }
-
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.url", options.url);
   //>>includeEnd('debug');
@@ -253,9 +245,6 @@ function UrlTemplateImageryProvider(options) {
   const allPickFeaturesTags = combine(pickFeaturesTags, customTags);
   this._tags = allTags;
   this._pickFeaturesTags = allPickFeaturesTags;
-
-  this._readyPromise = Promise.resolve(true);
-  this._ready = true;
 
   this._defaultAlpha = undefined;
   this._defaultNightAlpha = undefined;
@@ -483,40 +472,6 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
   },
 
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.ready",
-        "UrlTemplateImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-      );
-      return this._ready && defined(this._resource);
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.readyPromise",
-        "UrlTemplateImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-      );
-      return this._readyPromise;
-    },
-  },
-
-  /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
    * the source of the imagery.
    * @memberof UrlTemplateImageryProvider.prototype
@@ -546,337 +501,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
       return this._hasAlphaChannel;
     },
   },
-
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultAlpha: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultAlpha",
-        "UrlTemplateImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
-      );
-      return this._defaultAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultAlpha",
-        "UrlTemplateImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
-      );
-      this._defaultAlpha = value;
-    },
-  },
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultNightAlpha: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultNightAlpha",
-        "UrlTemplateImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
-      );
-      return this._defaultNightAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultNightAlpha",
-        "UrlTemplateImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
-      );
-      this._defaultNightAlpha = value;
-    },
-  },
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultDayAlpha: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultDayAlpha",
-        "UrlTemplateImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
-      );
-      return this._defaultDayAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultDayAlpha",
-        "UrlTemplateImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
-      );
-      this._defaultDayAlpha = value;
-    },
-  },
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultBrightness: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultBrightness",
-        "UrlTemplateImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
-      );
-      return this._defaultBrightness;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultBrightness",
-        "UrlTemplateImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
-      );
-      this._defaultBrightness = value;
-    },
-  },
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultContrast: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultContrast",
-        "UrlTemplateImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
-      );
-      return this._defaultContrast;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultContrast",
-        "UrlTemplateImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
-      );
-      this._defaultContrast = value;
-    },
-  },
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultHue: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultHue",
-        "UrlTemplateImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
-      );
-      return this._defaultHue;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultHue",
-        "UrlTemplateImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
-      );
-      this._defaultHue = value;
-    },
-  },
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultSaturation: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultSaturation",
-        "UrlTemplateImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
-      );
-      return this._defaultSaturation;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultSaturation",
-        "UrlTemplateImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
-      );
-      this._defaultSaturation = value;
-    },
-  },
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultGamma: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultGamma",
-        "UrlTemplateImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
-      );
-      return this._defaultGamma;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultGamma",
-        "UrlTemplateImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
-      );
-      this._defaultGamma = value;
-    },
-  },
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {TextureMinificationFilter}
-   * @deprecated
-   */
-  defaultMinificationFilter: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultMinificationFilter",
-        "UrlTemplateImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
-      );
-      return this._defaultMinificationFilter;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultMinificationFilter",
-        "UrlTemplateImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
-      );
-      this._defaultMinificationFilter = value;
-    },
-  },
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   * @memberof UrlTemplateImageryProvider.prototype
-   * @type {TextureMagnificationFilter}
-   * @deprecated
-   */
-  defaultMagnificationFilter: {
-    get: function () {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultMagnificationFilter",
-        "UrlTemplateImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
-      );
-      return this._defaultMagnificationFilter;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "UrlTemplateImageryProvider.defaultMagnificationFilter",
-        "UrlTemplateImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
-      );
-      this._defaultMagnificationFilter = value;
-    },
-  },
 });
-
-/**
- * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
- * recommended because existing tiles provided by the imagery provider will not be updated.
- * @deprecated
- *
- * @param {Promise<object>|object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
- */
-UrlTemplateImageryProvider.prototype.reinitialize = function (options) {
-  deprecationWarning(
-    "UrlTemplateImageryProvider.reinitialize",
-    "UrlTemplateImageryProvider.reinitialize was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-  );
-
-  return this._reinitialize(options);
-};
-
-/**
- * @private
- */
-UrlTemplateImageryProvider.prototype._reinitialize = function (options) {
-  const that = this;
-
-  that._readyPromise = Promise.resolve(options).then(function (properties) {
-    //>>includeStart('debug', pragmas.debug);
-    if (!defined(properties)) {
-      throw new DeveloperError("options is required.");
-    }
-    if (!defined(properties.url)) {
-      throw new DeveloperError("options.url is required.");
-    }
-    //>>includeEnd('debug');
-
-    const customTags = properties.customTags;
-    const allTags = combine(tags, customTags);
-    const allPickFeaturesTags = combine(pickFeaturesTags, customTags);
-    const resource = Resource.createIfNeeded(properties.url);
-    const pickFeaturesResource = Resource.createIfNeeded(
-      properties.pickFeaturesUrl
-    );
-
-    that.enablePickFeatures = defaultValue(
-      properties.enablePickFeatures,
-      that.enablePickFeatures
-    );
-    that._urlSchemeZeroPadding = defaultValue(
-      properties.urlSchemeZeroPadding,
-      that.urlSchemeZeroPadding
-    );
-    that._tileDiscardPolicy = properties.tileDiscardPolicy;
-    that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
-
-    that._subdomains = properties.subdomains;
-    if (Array.isArray(that._subdomains)) {
-      that._subdomains = that._subdomains.slice();
-    } else if (defined(that._subdomains) && that._subdomains.length > 0) {
-      that._subdomains = that._subdomains.split("");
-    } else {
-      that._subdomains = ["a", "b", "c"];
-    }
-
-    that._tileWidth = defaultValue(properties.tileWidth, 256);
-    that._tileHeight = defaultValue(properties.tileHeight, 256);
-    that._minimumLevel = defaultValue(properties.minimumLevel, 0);
-    that._maximumLevel = properties.maximumLevel;
-    that._tilingScheme = defaultValue(
-      properties.tilingScheme,
-      new WebMercatorTilingScheme({ ellipsoid: properties.ellipsoid })
-    );
-    that._rectangle = defaultValue(
-      properties.rectangle,
-      that._tilingScheme.rectangle
-    );
-    that._rectangle = Rectangle.intersection(
-      that._rectangle,
-      that._tilingScheme.rectangle
-    );
-    that._hasAlphaChannel = defaultValue(properties.hasAlphaChannel, true);
-
-    let credit = properties.credit;
-    if (typeof credit === "string") {
-      credit = new Credit(credit);
-    }
-    that._credit = credit;
-
-    that._resource = resource;
-    that._tags = allTags;
-    that._pickFeaturesResource = pickFeaturesResource;
-    that._pickFeaturesTags = allPickFeaturesTags;
-    that._ready = true;
-
-    return true;
-  });
-};
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
