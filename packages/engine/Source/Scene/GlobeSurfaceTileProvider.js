@@ -236,6 +236,10 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
    */
   tilingScheme: {
     get: function () {
+      if (!defined(this._terrainProvider)) {
+        return undefined;
+      }
+
       return this._terrainProvider.tilingScheme;
     },
   },
