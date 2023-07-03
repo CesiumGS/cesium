@@ -161,22 +161,6 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the promise that will be resolved when the tile's content is ready to render.
-   *
-   * @memberof Cesium3DTileContent.prototype
-   *
-   * @type {Promise<Cesium3DTileContent>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    // eslint-disable-next-line getter-return
-    get: function () {
-      DeveloperError.throwInstantiationError();
-    },
-  },
-
-  /**
    * Gets the tileset for this tile.
    *
    * @memberof Cesium3DTileContent.prototype

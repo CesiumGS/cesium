@@ -241,7 +241,7 @@ ModelAnimationCollection.prototype.add = function (options) {
  * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for all of the animations.
  * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
  *
- * @exception {DeveloperError} Animations are not loaded. Wait for the {@link Model#readyPromise} to resolve.
+ * @exception {DeveloperError} Animations are not loaded. Wait for the {@link Model#ready} to return true.
  * @exception {DeveloperError} options.multiplier must be greater than zero.
  *
  * @example

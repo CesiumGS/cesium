@@ -2,7 +2,6 @@ import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -70,8 +69,6 @@ function SingleTileImageryProvider(options) {
   this._hasError = false;
   this._errorEvent = new Event();
 
-  this._ready = false;
-
   let credit = options.credit;
   if (typeof credit === "string") {
     credit = new Credit(credit);
@@ -85,36 +82,13 @@ function SingleTileImageryProvider(options) {
   const resource = Resource.createIfNeeded(options.url);
   this._resource = resource;
 
-  // After ready promise and the deprecation warning for these properties are removed,
-  // the if check is not needed, and this can become a top-level block
-  if (defined(options.tileWidth) || defined(options.tileHeight)) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.number("options.tileWidth", options.tileWidth);
-    Check.typeOf.number("options.tileHeight", options.tileHeight);
-    //>>includeEnd('debug');
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("options.tileWidth", options.tileWidth);
+  Check.typeOf.number("options.tileHeight", options.tileHeight);
+  //>>includeEnd('debug');
 
-    this._tileWidth = options.tileWidth;
-    this._tileHeight = options.tileHeight;
-    this._ready = true;
-    this._readyPromise = Promise.resolve(true);
-    return;
-  }
-
-  deprecationWarning(
-    "SingleTileImageryProvider options",
-    "options.tileHeight and options.tileWidth became required in CesiumJS 1.104. Omitting these properties will result in an error in 1.107. Provide options.tileHeight and options.tileWidth, or use SingleTileImageryProvider.fromUrl instead."
-  );
-
-  this._tileWidth = 0;
-  this._tileHeight = 0;
-  this._readyPromise = doRequest(resource, this).then((image) => {
-    TileProviderError.reportSuccess(this._errorEvent);
-    this._image = image;
-    this._tileWidth = image.width;
-    this._tileHeight = image.height;
-    this._ready = true;
-    return true;
-  });
+  this._tileWidth = options.tileWidth;
+  this._tileHeight = options.tileHeight;
 }
 
 Object.defineProperties(SingleTileImageryProvider.prototype, {
@@ -243,40 +217,6 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
   },
 
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.ready",
-        "SingleTileImageryProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107. Use SingleTileImageryProvider.fromUrl instead."
-      );
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.readyPromise",
-        "SingleTileImageryProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107. Use SingleTileImageryProvider.fromUrl instead."
-      );
-      return this._readyPromise;
-    },
-  },
-
-  /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
    * the source of the imagery.
    * @memberof SingleTileImageryProvider.prototype
@@ -302,242 +242,6 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
   hasAlphaChannel: {
     get: function () {
       return true;
-    },
-  },
-
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultAlpha: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultAlpha",
-        "SingleTileImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
-      );
-      return this._defaultAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultAlpha",
-        "SingleTileImageryProvider.defaultAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.alpha instead."
-      );
-      this._defaultAlpha = value;
-    },
-  },
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultNightAlpha: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultNightAlpha",
-        "SingleTileImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
-      );
-      return this._defaultNightAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultNightAlpha",
-        "SingleTileImageryProvider.defaultNightAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.nightAlpha instead."
-      );
-      this._defaultNightAlpha = value;
-    },
-  },
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultDayAlpha: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultDayAlpha",
-        "SingleTileImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
-      );
-      return this._defaultDayAlpha;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultDayAlpha",
-        "SingleTileImageryProvider.defaultDayAlpha was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.dayAlpha instead."
-      );
-      this._defaultDayAlpha = value;
-    },
-  },
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultBrightness: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultBrightness",
-        "SingleTileImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
-      );
-      return this._defaultBrightness;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultBrightness",
-        "SingleTileImageryProvider.defaultBrightness was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.brightness instead."
-      );
-      this._defaultBrightness = value;
-    },
-  },
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultContrast: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultContrast",
-        "SingleTileImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
-      );
-      return this._defaultContrast;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultContrast",
-        "SingleTileImageryProvider.defaultContrast was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.contrast instead."
-      );
-      this._defaultContrast = value;
-    },
-  },
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultHue: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultHue",
-        "SingleTileImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
-      );
-      return this._defaultHue;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultHue",
-        "SingleTileImageryProvider.defaultHue was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.hue instead."
-      );
-      this._defaultHue = value;
-    },
-  },
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultSaturation: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultSaturation",
-        "SingleTileImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
-      );
-      return this._defaultSaturation;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultSaturation",
-        "SingleTileImageryProvider.defaultSaturation was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.saturation instead."
-      );
-      this._defaultSaturation = value;
-    },
-  },
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {Number|undefined}
-   * @deprecated
-   */
-  defaultGamma: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultGamma",
-        "SingleTileImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
-      );
-      return this._defaultGamma;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultGamma",
-        "SingleTileImageryProvider.defaultGamma was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.gamma instead."
-      );
-      this._defaultGamma = value;
-    },
-  },
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {TextureMinificationFilter}
-   * @deprecated
-   */
-  defaultMinificationFilter: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultMinificationFilter",
-        "SingleTileImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
-      );
-      return this._defaultMinificationFilter;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultMinificationFilter",
-        "SingleTileImageryProvider.defaultMinificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.minificationFilter instead."
-      );
-      this._defaultMinificationFilter = value;
-    },
-  },
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   * @memberof SingleTileImageryProvider.prototype
-   * @type {TextureMagnificationFilter}
-   * @deprecated
-   */
-  defaultMagnificationFilter: {
-    get: function () {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultMagnificationFilter",
-        "SingleTileImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
-      );
-      return this._defaultMagnificationFilter;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "SingleTileImageryProvider.defaultMagnificationFilter",
-        "SingleTileImageryProvider.defaultMagnificationFilter was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.magnificationFilter instead."
-      );
-      this._defaultMagnificationFilter = value;
     },
   },
 });

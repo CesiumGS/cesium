@@ -230,43 +230,6 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   },
 
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof GlobeSurfaceTileProvider.prototype
-   * @type {boolean}
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      const terrainProvider = this._terrainProvider;
-      if (
-        !defined(terrainProvider) ||
-        // TerrainProvider.ready is deprecated; This is here for backwards compatibility
-        (defined(terrainProvider._ready)
-          ? !terrainProvider._ready
-          : defined(terrainProvider.ready) && !terrainProvider.ready)
-      ) {
-        return false;
-      }
-
-      if (this._imageryLayers.length === 0) {
-        return true;
-      }
-
-      const imageryLayer = this._imageryLayers.get(0);
-      if (!imageryLayer.ready) {
-        return false;
-      }
-
-      // ImageryProvider.ready is deprecated; This is here for backwards compatibility
-      const imageryProvider = imageryLayer.imageryProvider;
-      const imageryProviderReady = defined(imageryProvider._ready)
-        ? imageryProvider._ready
-        : !defined(imageryProvider.ready) || imageryProvider.ready;
-      return imageryProviderReady;
-    },
-  },
-
-  /**
    * Gets the tiling scheme used by the provider.
    * @memberof GlobeSurfaceTileProvider.prototype
    * @type {TilingScheme}
@@ -364,29 +327,15 @@ GlobeSurfaceTileProvider.prototype.update = function (frameState) {
 function updateCredits(surface, frameState) {
   const creditDisplay = frameState.creditDisplay;
   const terrainProvider = surface._terrainProvider;
-  if (
-    defined(terrainProvider) &&
-    // ready is deprecated; This is here for backwards compatibility
-    (defined(terrainProvider._ready)
-      ? terrainProvider._ready
-      : !defined(terrainProvider.ready) || terrainProvider.ready) &&
-    defined(terrainProvider.credit)
-  ) {
+  if (defined(terrainProvider) && defined(terrainProvider.credit)) {
     creditDisplay.addCreditToNextFrame(terrainProvider.credit);
   }
 
   const imageryLayers = surface._imageryLayers;
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
     const layer = imageryLayers.get(i);
-    if (layer.ready && layer.show) {
-      // ImageryProvider.ready is deprecated; This is here for backwards compatibility
-      const imageryProvider = layer.imageryProvider;
-      const imageryProviderReady = defined(imageryProvider._ready)
-        ? imageryProvider._ready
-        : !defined(imageryProvider.ready) || imageryProvider.ready;
-      if (imageryProviderReady && defined(layer.imageryProvider.credit)) {
-        creditDisplay.addCreditToNextFrame(layer.imageryProvider.credit);
-      }
+    if (layer.ready && layer.show && defined(layer.imageryProvider.credit)) {
+      creditDisplay.addCreditToNextFrame(layer.imageryProvider.credit);
     }
   }
 }
@@ -2168,12 +2117,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
   const terrainProvider = tileProvider.terrainProvider;
   const hasVertexNormals =
-    defined(terrainProvider) &&
-    // ready is deprecated; This is here for backwards compatibility
-    (defined(terrainProvider._ready)
-      ? terrainProvider._ready
-      : !defined(terrainProvider.ready) || terrainProvider.ready) &&
-    tileProvider.terrainProvider.hasVertexNormals;
+    defined(terrainProvider) && tileProvider.terrainProvider.hasVertexNormals;
   const enableFog =
     frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;
   const showGroundAtmosphere =
