@@ -1,8 +1,8 @@
 # Change Log
 
-### 1.107 - 2023-07-01
+### 1.107 - 2023-07-03
 
-### Major Announcements :loudspeaker:
+#### Major Announcements :loudspeaker:
 
 - The `readyPromise` pattern has been removed across the API. This has been done to facilitate better asynchronous flow and error handling. For example:
 
@@ -93,7 +93,7 @@ try {
 - Fixed `PostProcessStage` crash affecting point clouds rendered with attenuation. [#11339](https://github.com/CesiumGS/cesium/issues/11339)
 - Fixed a race condition when loading cut-out terrain. [#11382](https://github.com/CesiumGS/cesium/pull/11382)
 - Fixed debug label rendering in `Cesium3dTilesInspector`. [#11355](https://github.com/CesiumGS/cesium/issues/11355)
-- Fixed credits for imagery layer shows up even when layer is hidden [#11340](https://github.com/CesiumGS/cesium/issues/11340)
+- Fixed credits for imagery layer shows up even when layer is hidden. [#11340](https://github.com/CesiumGS/cesium/issues/11340)
 - Fixed Insufficient buffer size thrown by rendering 3dtiles. [#11358](https://github.com/CesiumGS/cesium/pull/11358)
 
 ##### Deprecated :hourglass_flowing_sand:
