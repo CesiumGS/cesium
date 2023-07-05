@@ -228,13 +228,17 @@ function generateVertexShaderLines(customShader, attributesByName) {
     return { enabled: false };
   }
 
-  const categories = partitionAttributes(
+  const primitiveAttributes = customShader.usedVariablesVertex.attributeSet;
+  const addToShader = getPrimitiveAttributesUsedInShader(
     attributesByName,
-    customShader.usedVariablesVertex.attributeSet,
+    primitiveAttributes,
     false
   );
-  const addToShader = categories.addToShader;
-  const needsDefault = categories.missingAttributes;
+  const needsDefault = getAttributesNeedingDefaults(
+    attributesByName,
+    primitiveAttributes,
+    false
+  );
 
   let vertexInitialization;
   const attributeFields = [];
@@ -321,13 +325,17 @@ function generateFragmentShaderLines(customShader, attributesByName) {
     return { enabled: false };
   }
 
-  const categories = partitionAttributes(
+  const primitiveAttributes = customShader.usedVariablesFragment.attributeSet;
+  const addToShader = getPrimitiveAttributesUsedInShader(
     attributesByName,
-    customShader.usedVariablesFragment.attributeSet,
+    primitiveAttributes,
     true
   );
-  const addToShader = categories.addToShader;
-  const needsDefault = categories.missingAttributes;
+  const needsDefault = getAttributesNeedingDefaults(
+    attributesByName,
+    primitiveAttributes,
+    true
+  );
 
   let fragmentInitialization;
   const attributeFields = [];
@@ -387,21 +395,15 @@ const builtinAttributes = {
 };
 
 /**
- * Partition attributes into three categories:
- * - addToShader = shaderAttributes intersect primitiveAttributes
- * - missingAttributes = shaderAttributes - primitiveAttributes - builtinAttributes
- * - unneededAttributes = (primitiveAttributes - shaderAttributes) U builtinAttributes
- * addToShader are attributes that should be added to the shader.
- * missingAttributes are attributes for which we need to provide a default value
- * unneededAttributes are other attributes that can be skipped.
+ * Get the primitive attributes that are referenced in the shader
  *
  * @private
- * @param {object} primitiveAttributes set of all the primitive's attributes
- * @param {object} shaderAttributeSet set of all attributes used in the shader
+ * @param {Object<string, ModelComponents.Attribute>} primitiveAttributes set of all the primitive's attributes
+ * @param {Object<string, ModelComponents.Attribute>} shaderAttributeSet set of all attributes used in the shader
  * @param {boolean} isFragmentShader
- * @returns {object} An object pointing to an addToShader dictionary and a missingAttributes array
+ * @returns {Object<string, ModelComponents.Attribute>} A dictionary of the primitive attributes used in the shader
  */
-function partitionAttributes(
+function getPrimitiveAttributesUsedInShader(
   primitiveAttributes,
   shaderAttributeSet,
   isFragmentShader
@@ -427,8 +429,26 @@ function partitionAttributes(
       addToShader[renamed] = attribute;
     }
   }
+  return addToShader;
+}
 
-  const missingAttributes = [];
+/**
+ * Get the attributes that will need to have default values defined.
+ * Attributes referenced in the shader which are not already defined
+ * for the primitive and are not built-in will need default values.
+ *
+ * @private
+ * @param {Object<string, ModelComponents.Attribute>} primitiveAttributes set of all the primitive's attributes
+ * @param {Object<string, ModelComponents.Attribute>} shaderAttributeSet set of all attributes used in the shader
+ * @param {boolean} isFragmentShader
+ * @returns {string[]} The names of the attributes needing defaults
+ */
+function getAttributesNeedingDefaults(
+  primitiveAttributes,
+  shaderAttributeSet,
+  isFragmentShader
+) {
+  const needDefaults = [];
   for (const attributeName in shaderAttributeSet) {
     if (!shaderAttributeSet.hasOwnProperty(attributeName)) {
       continue;
@@ -448,14 +468,10 @@ function partitionAttributes(
     }
 
     if (!primitiveAttributes.hasOwnProperty(renamed)) {
-      missingAttributes.push(attributeName);
+      needDefaults.push(attributeName);
     }
   }
-
-  return {
-    addToShader: addToShader,
-    missingAttributes: missingAttributes,
-  };
+  return needDefaults;
 }
 
 /**
@@ -487,8 +503,6 @@ function generateShaderLines(customShader, primitive) {
   return {
     vertexLines: vertexLines,
     fragmentLines: fragmentLines,
-    vertexLinesEnabled: vertexLines.enabled,
-    fragmentLinesEnabled: fragmentLines.enabled,
     customShaderEnabled: vertexLines.enabled || fragmentLines.enabled,
     shouldComputePositionWC: shouldComputePositionWC,
   };
