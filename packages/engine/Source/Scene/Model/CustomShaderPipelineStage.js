@@ -268,7 +268,7 @@ function generateVertexShaderLines(customShader, attributesByName) {
       );
       // This primitive isn't compatible with the shader. Return early
       // to skip the vertex shader
-      return;
+      return { enabled: false };
     }
 
     attributeFields.push(attributeDefaults.attributeField);
@@ -318,7 +318,7 @@ function generatePositionBuiltins(customShader) {
  * @private
  * @param {CustomShader} customShader
  * @param {Object<string, ModelComponents.Attribute>} attributesByName
- * @returns {object|undefined}
+ * @returns {object}
  */
 function generateFragmentShaderLines(customShader, attributesByName) {
   if (!defined(customShader.fragmentShaderText)) {
@@ -367,7 +367,7 @@ function generateFragmentShaderLines(customShader, attributesByName) {
 
       // This primitive isn't compatible with the shader. Return early
       // so the fragment shader is skipped
-      return;
+      return { enabled: false };
     }
 
     attributeFields.push(attributeDefaults.attributeField);
