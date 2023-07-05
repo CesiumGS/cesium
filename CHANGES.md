@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.108 - 2023-08-01
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed the error report "rectanglePromise.then is not a function" that occurred when using `viewer.flyTo` to navigate to an ImageryLayer. [#11392](https://github.com/CesiumGS/cesium/pull/11392)
+
 ### 1.107 - 2023-07-03
 
 #### Major Announcements :loudspeaker:
