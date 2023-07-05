@@ -95,6 +95,7 @@ try {
 - Fixed debug label rendering in `Cesium3dTilesInspector`. [#11355](https://github.com/CesiumGS/cesium/issues/11355)
 - Fixed credits for imagery layer shows up even when layer is hidden. [#11340](https://github.com/CesiumGS/cesium/issues/11340)
 - Fixed Insufficient buffer size thrown by rendering 3dtiles. [#11358](https://github.com/CesiumGS/cesium/pull/11358)
+- Fixed the error report "rectanglePromise.then is not a function" that occurred when using ``viewer.flyTo`` to navigate to an ImageryLayer. [#11392](https://github.com/CesiumGS/cesium/pull/11392)
 
 ##### Deprecated :hourglass_flowing_sand:
 

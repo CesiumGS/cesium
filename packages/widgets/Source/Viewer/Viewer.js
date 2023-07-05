@@ -2137,7 +2137,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
       let rectanglePromise;
 
       if (defined(zoomTarget.imageryProvider)) {
-        rectanglePromise = zoomTarget.getImageryRectangle();
+        rectanglePromise = Promise.resolve(zoomTarget.getImageryRectangle());
       } else {
         rectanglePromise = new Promise((resolve) => {
           const removeListener = zoomTarget.readyEvent.addEventListener(() => {
