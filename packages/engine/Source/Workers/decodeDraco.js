@@ -1,9 +1,9 @@
-/* global require */
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
+import dracoModule from "draco3d/draco_decoder_nodejs.js";
 
 let draco;
 
@@ -351,39 +351,33 @@ function decodePrimitive(parameters) {
   return result;
 }
 
-function decode(parameters) {
+async function decode(parameters, transferableObjects) {
   if (defined(parameters.bufferView)) {
     return decodePrimitive(parameters);
   }
   return decodePointCloud(parameters);
 }
 
-function initWorker(dracoModule) {
-  draco = dracoModule;
-  self.onmessage = createTaskProcessorWorker(decode);
-  self.postMessage(true);
-}
-
-function decodeDraco(event) {
-  const data = event.data;
-
-  // Expect the first message to be to load a web assembly module
-  const wasmConfig = data.webAssemblyConfig;
-  if (defined(wasmConfig)) {
-    // Require and compile WebAssembly module, or use fallback if not supported
-    return require([wasmConfig.modulePath], function (dracoModule) {
-      if (defined(wasmConfig.wasmBinaryFile)) {
-        if (!defined(dracoModule)) {
-          dracoModule = self.DracoDecoderModule;
-        }
-
-        dracoModule(wasmConfig).then(function (compiledModule) {
-          initWorker(compiledModule);
-        });
-      } else {
-        initWorker(dracoModule());
-      }
-    });
+async function initWorker(parameters, transferableObjects) {
+  // Require and compile WebAssembly module, or use fallback if not supported
+  const wasmConfig = parameters.webAssemblyConfig;
+  if (defined(wasmConfig) && defined(wasmConfig.wasmBinaryFile)) {
+    draco = await dracoModule(wasmConfig);
+  } else {
+    draco = await dracoModule();
   }
+
+  return true;
 }
-export default decodeDraco;
+
+async function decodeDraco(parameters, transferableObjects) {
+  // Expect the first message to be to load a web assembly module
+  const wasmConfig = parameters.webAssemblyConfig;
+  if (defined(wasmConfig)) {
+    return initWorker(parameters, transferableObjects);
+  }
+
+  return decode(parameters, transferableObjects);
+}
+
+export default createTaskProcessorWorker(decodeDraco);

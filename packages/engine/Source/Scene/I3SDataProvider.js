@@ -55,7 +55,6 @@ import destroyObject from "../Core/destroyObject.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import TaskProcessor from "../Core/TaskProcessor.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import I3SLayer from "./I3SLayer.js";
 import Lerc from "lerc";
