@@ -7,6 +7,7 @@
 ##### Fixes :wrench:
 
 - Fixed the error report "rectanglePromise.then is not a function" that occurred when using `viewer.flyTo` to navigate to an ImageryLayer. [#11392](https://github.com/CesiumGS/cesium/pull/11392)
+- Fixed a bug where `Model` would not respond to different alpha values in a `Cesium3DTileStyle`. [#11399](https://github.com/CesiumGS/cesium/pull/11399)
 
 ### 1.107 - 2023-07-03
 
