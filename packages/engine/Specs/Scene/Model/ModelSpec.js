@@ -1062,63 +1062,136 @@ describe(
       });
     });
 
-    it("renders model with style", function () {
-      let model;
-      let style;
-      return loadAndZoomToModelAsync({ gltf: buildingsMetadata }, scene).then(
-        function (result) {
-          model = result;
-          // Renders without style.
-          verifyRender(model, true);
+    describe("style", function () {
+      it("applies style to model with feature table", function () {
+        let model;
+        let style;
+        return loadAndZoomToModelAsync({ gltf: buildingsMetadata }, scene).then(
+          function (result) {
+            model = result;
+            // Renders without style.
+            verifyRender(model, true);
 
-          // Renders with opaque style.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red')"]],
-            },
-          });
+            // Renders with opaque style.
+            style = new Cesium3DTileStyle({
+              color: {
+                conditions: [["${height} > 1", "color('red')"]],
+              },
+            });
 
-          model.style = style;
-          verifyRender(model, true);
-          expect(model._styleCommandsNeeded).toBe(
-            StyleCommandsNeeded.ALL_OPAQUE
-          );
+            model.style = style;
+            verifyRender(model, true);
+            expect(model._styleCommandsNeeded).toBe(
+              StyleCommandsNeeded.ALL_OPAQUE
+            );
 
-          // Renders with translucent style.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red', 0.5)"]],
-            },
-          });
+            // Renders with translucent style.
+            style = new Cesium3DTileStyle({
+              color: {
+                conditions: [["${height} > 1", "color('red', 0.5)"]],
+              },
+            });
 
-          model.style = style;
-          verifyRender(model, true);
-          expect(model._styleCommandsNeeded).toBe(
-            StyleCommandsNeeded.ALL_TRANSLUCENT
-          );
+            model.style = style;
+            verifyRender(model, true);
+            expect(model._styleCommandsNeeded).toBe(
+              StyleCommandsNeeded.ALL_TRANSLUCENT
+            );
 
-          // Does not render with invisible color.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red', 0.0)"]],
-            },
-          });
+            // Does not render with invisible color.
+            style = new Cesium3DTileStyle({
+              color: {
+                conditions: [["${height} > 1", "color('red', 0.0)"]],
+              },
+            });
 
-          // Does not render when style disables show.
-          style = new Cesium3DTileStyle({
-            show: {
-              conditions: [["${height} > 1", "false"]],
-            },
-          });
+            // Does not render when style disables show.
+            style = new Cesium3DTileStyle({
+              show: {
+                conditions: [["${height} > 1", "false"]],
+              },
+            });
 
-          model.style = style;
-          verifyRender(model, false);
+            model.style = style;
+            verifyRender(model, false);
 
-          // Render when style is removed.
-          model.style = undefined;
-          verifyRender(model, true);
-        }
-      );
+            // Render when style is removed.
+            model.style = undefined;
+            verifyRender(model, true);
+          }
+        );
+      });
+
+      it("applies style to model without feature table", function () {
+        let model;
+        let style;
+        return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
+          function (result) {
+            const renderOptions = {
+              scene: scene,
+              time: defaultDate,
+            };
+            model = result;
+
+            // Renders without style.
+            let original;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              original = rgba;
+            });
+
+            // Renders with opaque style.
+            style = new Cesium3DTileStyle({
+              color: "color('red')",
+            });
+
+            model.style = style;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toEqual(original[0]);
+              expect(rgba[1]).toBeLessThan(original[1]);
+              expect(rgba[2]).toBeLessThan(original[2]);
+              expect(rgba[3]).toEqual(original[3]);
+            });
+
+            // Renders with translucent style.
+            style = new Cesium3DTileStyle({
+              color: "color('red', 0.5)",
+            });
+
+            model.style = style;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toBeLessThan(original[0]);
+              expect(rgba[1]).toBeLessThan(original[1]);
+              expect(rgba[2]).toBeLessThan(original[2]);
+              expect(rgba[3]).toEqual(original[3]);
+            });
+
+            // Does not render with invisible color.
+            style = new Cesium3DTileStyle({
+              color: "color('red', 0.0)",
+            });
+
+            model.style = style;
+            verifyRender(model, false, { zoomToModel: false });
+
+            // Does not render when style disables show.
+            style = new Cesium3DTileStyle({
+              show: "false",
+            });
+
+            model.style = style;
+            verifyRender(model, false, { zoomToModel: false });
+
+            // Render when style is removed.
+            model.style = undefined;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toEqual(original[0]);
+              expect(rgba[1]).toEqual(original[1]);
+              expect(rgba[2]).toEqual(original[2]);
+              expect(rgba[3]).toEqual(original[3]);
+            });
+          }
+        );
+      });
     });
 
     describe("credits", function () {
