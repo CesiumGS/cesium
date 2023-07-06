@@ -30,9 +30,7 @@ describe(
       scene.globe = {
         ellipsoid: Ellipsoid.WGS84,
         _surface: {
-          tileProvider: {
-            ready: true,
-          },
+          tileProvider: {},
           _tileLoadQueueHigh: [],
           _tileLoadQueueMedium: [],
           _tileLoadQueueLow: [],

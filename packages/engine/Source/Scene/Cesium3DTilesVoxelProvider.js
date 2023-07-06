@@ -2,7 +2,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
@@ -37,7 +36,6 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * @augments VoxelProvider
  *
  * @param {object} options Object with the following properties:
- * @param {Resource|string|Promise<Resource>|Promise<string>} [options.url] The URL to a tileset JSON file. Deprecated.
  *
  * @see Cesium3DTilesVoxelProvider.fromUrl
  * @see VoxelProvider
@@ -48,7 +46,6 @@ import VoxelShapeType from "./VoxelShapeType.js";
  */
 function Cesium3DTilesVoxelProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  this._ready = false;
 
   /** @inheritdoc */
   this.shapeTransform = undefined;
@@ -94,124 +91,7 @@ function Cesium3DTilesVoxelProvider(options) {
 
   this._implicitTileset = undefined;
   this._subtreeCache = new ImplicitSubtreeCache();
-
-  const that = this;
-  let tilesetJson;
-
-  if (defined(options.url)) {
-    deprecationWarning(
-      "Cesium3DTilesVoxelProvider options.url",
-      "Cesium3DTilesVoxelProvider constructor parameter options.url was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use Cesium3DTilesVoxelProvider.fromUrl instead."
-    );
-
-    this._readyPromise = Promise.resolve(options.url).then(function (url) {
-      const resource = Resource.createIfNeeded(url);
-      return resource
-        .fetchJson()
-        .then(function (tileset) {
-          tilesetJson = tileset;
-          validate(tilesetJson);
-          const schemaLoader = getMetadataSchemaLoader(tilesetJson, resource);
-          return schemaLoader.load();
-        })
-        .then(function (schemaLoader) {
-          const root = tilesetJson.root;
-          const voxel = root.content.extensions["3DTILES_content_voxels"];
-          const className = voxel.class;
-
-          const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
-            ? tilesetJson.extensions["3DTILES_metadata"]
-            : tilesetJson;
-
-          const metadataSchema = schemaLoader.schema;
-          const metadata = new Cesium3DTilesetMetadata({
-            metadataJson: metadataJson,
-            schema: metadataSchema,
-          });
-
-          addAttributeInfo(that, metadata, className);
-
-          const implicitTileset = new ImplicitTileset(
-            resource,
-            root,
-            metadataSchema
-          );
-
-          const {
-            shape,
-            minBounds,
-            maxBounds,
-            shapeTransform,
-            globalTransform,
-          } = getShape(root);
-
-          that.shape = shape;
-          that.minBounds = minBounds;
-          that.maxBounds = maxBounds;
-          that.dimensions = Cartesian3.unpack(voxel.dimensions);
-          that.shapeTransform = shapeTransform;
-          that.globalTransform = globalTransform;
-          that.maximumTileCount = getTileCount(metadata);
-
-          let paddingBefore;
-          let paddingAfter;
-
-          if (defined(voxel.padding)) {
-            paddingBefore = Cartesian3.unpack(voxel.padding.before);
-            paddingAfter = Cartesian3.unpack(voxel.padding.after);
-          }
-
-          that.paddingBefore = paddingBefore;
-          that.paddingAfter = paddingAfter;
-
-          that._implicitTileset = implicitTileset;
-
-          ResourceCache.unload(schemaLoader);
-
-          that._ready = true;
-          return that;
-        });
-    });
-  }
 }
-
-Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
-  /**
-   * Gets the promise that will be resolved when the provider is ready for use.
-   *
-   * @memberof Cesium3DTilesVoxelProvider.prototype
-   * @type {Promise<Cesium3DTilesVoxelProvider>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "Cesium3DTilesVoxelProvider.readyPromise",
-        "Cesium3DTilesVoxelProvider.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use Cesium3DTilesVoxelProvider.fromUrl instead."
-      );
-      return this._readyPromise;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   *
-   * @memberof Cesium3DTilesVoxelProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "Cesium3DTilesVoxelProvider.ready",
-        "Cesium3DTilesVoxelProvider.ready was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use Cesium3DTilesVoxelProvider.fromUrl instead."
-      );
-      return this._ready;
-    },
-  },
-});
 
 /**
  * Creates a {@link VoxelProvider} that fetches voxel data from a 3D Tiles tileset.
@@ -288,9 +168,6 @@ Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
   provider._implicitTileset = implicitTileset;
 
   ResourceCache.unload(schemaLoader);
-
-  provider._ready = true;
-  provider._readyPromise = Promise.resolve(provider);
 
   return provider;
 };

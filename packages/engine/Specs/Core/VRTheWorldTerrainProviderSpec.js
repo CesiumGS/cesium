@@ -64,8 +64,10 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     };
   }
 
+  let originalRequestersPerServer;
   beforeEach(function () {
     RequestScheduler.clearForSpecs();
+    originalRequestersPerServer = RequestScheduler.maximumRequestsPerServer;
   });
 
   afterEach(function () {
@@ -73,6 +75,7 @@ describe("Core/VRTheWorldTerrainProvider", function () {
       Resource._DefaultImplementations.createImage;
     Resource._Implementations.loadWithXhr =
       Resource._DefaultImplementations.loadWithXhr;
+    RequestScheduler.maximumRequestsPerServer = originalRequestersPerServer;
   });
 
   function createRequest() {
@@ -110,36 +113,6 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     const provider = await VRTheWorldTerrainProvider.fromUrl(resource);
 
     expect(provider).toBeInstanceOf(VRTheWorldTerrainProvider);
-  });
-
-  it("resolves readyPromise", function () {
-    patchXHRLoad();
-
-    const provider = new VRTheWorldTerrainProvider({
-      url: "made/up/url",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    patchXHRLoad();
-
-    const resource = new Resource({
-      url: "made/up/url",
-    });
-
-    const provider = new VRTheWorldTerrainProvider({
-      url: resource,
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
   });
 
   it("has error event", async function () {
@@ -184,15 +157,6 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     patchXHRLoad();
     const provider = await VRTheWorldTerrainProvider.fromUrl("made/up/url");
     expect(provider.hasWaterMask).toBe(false);
-  });
-
-  it("is not ready immediately", function () {
-    patchXHRLoad();
-    const provider = new VRTheWorldTerrainProvider({
-      url: "made/up/url",
-    });
-    expect(provider.ready).toBe(false);
-    return provider.readyPromise;
   });
 
   it("fromUrl throws if the SRS is not supported", async function () {
@@ -276,47 +240,12 @@ describe("Core/VRTheWorldTerrainProvider", function () {
     it("returns undefined if too many requests are already in progress", async function () {
       patchXHRLoad();
       const baseUrl = "made/up/url";
-
-      const deferreds = [];
-
-      Resource._Implementations.createImage = function (
-        request,
-        crossOrigin,
-        deferred
-      ) {
-        // Do nothing, so requests never complete
-        deferreds.push(deferred);
-      };
-
       const terrainProvider = await VRTheWorldTerrainProvider.fromUrl(baseUrl);
+      RequestScheduler.maximumRequestsPerServer = 0;
 
-      const promises = [];
-      let promise;
-      let i;
-      for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
-        const request = new Request({
-          throttle: true,
-          throttleByServer: true,
-        });
-        promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
-        promises.push(promise);
-      }
-      RequestScheduler.update();
-      expect(promise).toBeDefined();
-
-      promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
-      expect(promise).toBeUndefined();
-
-      for (i = 0; i < deferreds.length; ++i) {
-        const deferred = deferreds[i];
-        Resource._Implementations.loadImageElement(
-          "Data/Images/Red16x16.png",
-          false,
-          deferred
-        );
-      }
-
-      return Promise.all(promises);
+      expect(
+        terrainProvider.requestTileGeometry(0, 0, 0, createRequest())
+      ).toBeUndefined();
     });
   });
 });

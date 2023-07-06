@@ -12,6 +12,7 @@ import {
   Cesium3DTileRefine,
   Cesium3DTilesetHeatmap,
   Math as CesiumMath,
+  MetadataSchema,
   RuntimeError,
   TileBoundingRegion,
   TileOrientedBoundingBox,
@@ -531,6 +532,43 @@ describe(
           newCenter,
           CesiumMath.EPSILON7
         );
+      });
+
+      it("TILE_BOUNDING_XXX metadata semantics override bounding volume", function () {
+        const tileset = clone(mockTileset, true);
+        tileset.schema = MetadataSchema.fromJson({
+          id: "test-schema",
+          classes: {
+            tile: {
+              properties: {
+                tileBoundingBox: {
+                  type: "SCALAR",
+                  componentType: "FLOAT64",
+                  array: true,
+                  count: 12,
+                  semantic: "TILE_BOUNDING_BOX",
+                },
+              },
+            },
+          },
+        });
+
+        const header = clone(tileWithBoundingRegion, true);
+        header.metadata = {
+          class: "tile",
+          properties: {
+            tileBoundingBox: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+          },
+        };
+
+        const tile = new Cesium3DTile(tileset, "/some_url", header, undefined);
+
+        // the TILE_BOUNDING_BOX should override the boundingVolume.region.
+        const boundingBox = tile.boundingVolume.boundingVolume;
+        const expectedCenter = new Cartesian3();
+        const expectedHalfAxes = Matrix3.IDENTITY;
+        expect(boundingBox.center).toEqual(expectedCenter);
+        expect(boundingBox.halfAxes).toEqual(expectedHalfAxes);
       });
     });
 

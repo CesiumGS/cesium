@@ -2,7 +2,6 @@ import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import deprecationWarning from "./deprecationWarning.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import GoogleEarthEnterpriseMetadata from "./GoogleEarthEnterpriseMetadata.js";
@@ -14,10 +13,8 @@ import Rectangle from "./Rectangle.js";
 import Request from "./Request.js";
 import RequestState from "./RequestState.js";
 import RequestType from "./RequestType.js";
-import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 import TaskProcessor from "./TaskProcessor.js";
-import TileProviderError from "./TileProviderError.js";
 
 const TerrainState = {
   UNKNOWN: 0,
@@ -74,8 +71,6 @@ TerrainCache.prototype.tidy = function () {
  *
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {Resource|string} [url] The url of the Google Earth Enterprise server hosting the imagery. Deprecated.
- * @property {GoogleEarthEnterpriseMetadata} [metadata] A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider. Deprecated.
  */
 
 /**
@@ -88,7 +83,7 @@ TerrainCache.prototype.tidy = function () {
  * @alias GoogleEarthEnterpriseTerrainProvider
  * @constructor
  *
- * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} options An object describing initialization options
+ * @param {GoogleEarthEnterpriseTerrainProvider.ConstructorOptions} [options] An object describing initialization options
  *
  * @see GoogleEarthEnterpriseTerrainProvider.fromMetadata
  * @see GoogleEarthEnterpriseMetadata.fromUrl
@@ -130,65 +125,6 @@ function GoogleEarthEnterpriseTerrainProvider(options) {
   this._terrainRequests = {};
 
   this._errorEvent = new Event();
-  this._ready = false;
-
-  if (defined(options.url)) {
-    deprecationWarning(
-      "GoogleEarthEnterpriseTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use GoogleEarthEnterpriseTerrainProvider.fromMetadata instead."
-    );
-    const resource = Resource.createIfNeeded(options.url);
-    const that = this;
-    let metadataError;
-    this._readyPromise = GoogleEarthEnterpriseMetadata.fromUrl(resource)
-      .then((metadata) => {
-        if (!metadata.terrainPresent) {
-          const e = new RuntimeError(
-            `The server ${metadata.url} doesn't have terrain`
-          );
-
-          return Promise.reject(e);
-        }
-
-        TileProviderError.reportSuccess(metadataError);
-        that._metadata = metadata;
-        that._ready = true;
-        return true;
-      })
-      .catch((e) => {
-        metadataError = TileProviderError.reportError(
-          metadataError,
-          that,
-          that._errorEvent,
-          e.message,
-          undefined,
-          undefined,
-          undefined,
-          e
-        );
-
-        throw e;
-      });
-  } else if (defined(options.metadata)) {
-    deprecationWarning(
-      "GoogleEarthEnterpriseTerrainProvider options.metadata",
-      "options.metadata was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use GoogleEarthEnterpriseTerrainProvider.fromMetadata instead."
-    );
-    const metadata = options.metadata;
-    this._metadata = metadata;
-    const that = this;
-    this._readyPromise = Promise.resolve(this._metadata._readyPromise).then(
-      () => {
-        if (!metadata.terrainPresent) {
-          throw new RuntimeError(
-            `The server ${metadata.url} doesn't have terrain`
-          );
-        }
-
-        that._ready = true;
-      }
-    );
-  }
 }
 
 Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
@@ -239,40 +175,6 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   errorEvent: {
     get: function () {
       return this._errorEvent;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseTerrainProvider.ready",
-        "GoogleEarthEnterpriseTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-      );
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "GoogleEarthEnterpriseTerrainProvider.readyPromise",
-        "GoogleEarthEnterpriseTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-      );
-      return this._readyPromise;
     },
   },
 
@@ -359,8 +261,6 @@ GoogleEarthEnterpriseTerrainProvider.fromMetadata = function (
 
   const provider = new GoogleEarthEnterpriseTerrainProvider(options);
   provider._metadata = metadata;
-  provider._readyPromise = Promise.resolve(true);
-  provider._ready = true;
 
   return provider;
 };

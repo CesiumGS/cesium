@@ -22,7 +22,7 @@ describe(
   "Scene/ImageryLayerCollection",
   function () {
     const fakeProvider = {
-      ready: false,
+      tilingScheme: new GeographicTilingScheme(),
     };
 
     it("tracks the base layer on add", function () {
@@ -275,7 +275,6 @@ describe(
         globe._surface._debug.enableDebugOutput = true;
         scene.render();
         return (
-          globe._surface.tileProvider.ready &&
           globe._surface._tileLoadQueueHigh.length === 0 &&
           globe._surface._tileLoadQueueMedium.length === 0 &&
           globe._surface._tileLoadQueueLow.length === 0 &&
@@ -349,8 +348,6 @@ describe(
 
       it("returns imagery from one layer", function () {
         const provider = {
-          ready: true,
-          _ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
           tileHeight: 256,
@@ -384,8 +381,6 @@ describe(
 
       it("returns imagery from two layers", function () {
         const provider1 = {
-          ready: true,
-          _ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
           tileHeight: 256,
@@ -402,8 +397,6 @@ describe(
         const currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
 
         const provider2 = {
-          ready: true,
-          _ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
           tileHeight: 256,
@@ -492,8 +485,6 @@ describe(
 
       it("returns undefined when ImageryProvider does not implement pickFeatures", function () {
         const provider = {
-          ready: true,
-          _ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
           tileHeight: 256,
@@ -528,8 +519,6 @@ describe(
 
       it("returns undefined when ImageryProvider.pickFeatures returns undefined", function () {
         const provider = {
-          ready: true,
-          _ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
           tileHeight: 256,
@@ -568,8 +557,6 @@ describe(
 
       it("returns features from one layer", function () {
         const provider = {
-          ready: true,
-          _ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
           tileHeight: 256,
@@ -624,8 +611,6 @@ describe(
 
       it("returns features from two layers", function () {
         const provider1 = {
-          ready: true,
-          _ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
           tileHeight: 256,
@@ -654,8 +639,6 @@ describe(
         const currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
 
         const provider2 = {
-          ready: true,
-          _ready: true,
           rectangle: Rectangle.MAX_VALUE,
           tileWidth: 256,
           tileHeight: 256,
@@ -713,8 +696,6 @@ describe(
 
       it("correctly picks from a terrain tile that is partially covered by correct-level imagery and partially covered by imagery from an ancestor level", function () {
         const provider = {
-          ready: true,
-          _ready: true,
           rectangle: new Rectangle(
             -Math.PI,
             -WebMercatorProjection.MaximumLatitude,

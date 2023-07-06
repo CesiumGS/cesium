@@ -4,7 +4,6 @@ import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import Uri from "urijs";
 
@@ -424,21 +423,6 @@ function setCredit(creditDisplay, credits, credit, count) {
     creditDisplayElement.count += count;
   }
 }
-/**
- * Adds a credit to the list of current credits to be displayed in the credit container
- * for the next frame
- *
- * @param {Credit} credit The credit to display
- * @deprecated
- */
-CreditDisplay.prototype.addCredit = function (credit) {
-  deprecationWarning(
-    "CreditDisplay.addCredit",
-    "CreditDisplay.addCredit was deprecated in CesiumJS 1.105.  It will be removed in CesiumJS 1.107.  Use CreditDisplay.addCreditToNextFrame instead."
-  );
-
-  this.addCreditToNextFrame(credit);
-};
 
 /**
  * Adds a {@link Credit} that will show on screen or in the lightbox until
@@ -471,30 +455,6 @@ CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
   }
 
   setCredit(this, credits, credit);
-};
-
-/**
- * Adds credits that will persist until they are removed
- *
- * @param {Credit} credit The credit to added to defaults
- *
- * @deprecated
- */
-CreditDisplay.prototype.addDefaultCredit = function (credit) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("credit", credit);
-  //>>includeEnd('debug');
-
-  deprecationWarning(
-    "CreditDisplay.addDefaultCredit",
-    "CreditDisplay.addDefaultCredit was deprecated in CesiumJS 1.105.  It will be removed in CesiumJS 1.107.  Use CreditDisplay.addStaticCredit instead."
-  );
-
-  const defaultCredits = this._staticCredits;
-  if (!contains(defaultCredits, credit)) {
-    credit.showOnScreen = true;
-    defaultCredits.push(credit);
-  }
 };
 
 /**
@@ -538,20 +498,6 @@ CreditDisplay.prototype.removeStaticCredit = function (credit) {
   if (index !== -1) {
     staticCredits.splice(index, 1);
   }
-};
-
-/**
- * Removes a default credit.
- *
- * @param {Credit} credit The credit to be removed from defaults
- */
-CreditDisplay.prototype.removeDefaultCredit = function (credit) {
-  deprecationWarning(
-    "CreditDisplay.removeDefaultCredit",
-    "CreditDisplay.removeDefaultCredit was deprecated in CesiumJS 1.105.  It will be removed in CesiumJS 1.107.  Use CreditDisplay.addStaticCredit instead."
-  );
-
-  this.removeStaticCredit(credit);
 };
 
 /**
