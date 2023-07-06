@@ -1142,7 +1142,6 @@ describe(
           })
           .catch(function (e) {
             expect(e).toBe(primitive._error);
-            // Use toThrow since the error is thrown by RequireJS for the web worker import script
             expect(function () {
               scene.render();
             }).toThrow();

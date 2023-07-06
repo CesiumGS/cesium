@@ -1,29 +1,27 @@
-/* global require */
 import defined from "../Core/defined.js";
 import PrimitivePipeline from "../Scene/PrimitivePipeline.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
 const moduleCache = {};
 
-function getModule(moduleName) {
+async function getModule(moduleName) {
   let module = moduleCache[moduleName];
   if (!defined(module)) {
     if (typeof exports === "object") {
       // Use CommonJS-style require.
+      /* global require */
       moduleCache[module] = module = require(`Workers/${moduleName}`);
     } else {
-      // Use AMD-style require.
-      // in web workers, require is synchronous
-      require([`Workers/${moduleName}`], function (f) {
-        module = f;
-        moduleCache[module] = f;
-      });
+      // Use ESM-style dynamic import
+      const result = await import(`./${moduleName}.js`);
+      module = result.default;
+      moduleCache[module] = module;
     }
   }
   return module;
 }
 
-function createGeometry(parameters, transferableObjects) {
+async function createGeometry(parameters, transferableObjects) {
   const subTasks = parameters.subTasks;
   const length = subTasks.length;
   const resultsOrPromises = new Array(length);
@@ -34,10 +32,11 @@ function createGeometry(parameters, transferableObjects) {
     const moduleName = task.moduleName;
 
     if (defined(moduleName)) {
-      const createFunction = getModule(moduleName);
-      resultsOrPromises[i] = createFunction(geometry, task.offset);
+      resultsOrPromises[i] = getModule(moduleName).then((createFunction) =>
+        createFunction(geometry, task.offset)
+      );
     } else {
-      //Already created geometry
+      // Already created geometry
       resultsOrPromises[i] = geometry;
     }
   }

@@ -36,7 +36,6 @@ const argv = yargs(process.argv)
   .help().argv;
 
 import {
-  bundleWorkers,
   createCesiumJs,
   createJsHintOptions,
   createCombinedSpecList,
@@ -51,9 +50,6 @@ const sourceFiles = [
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
   "!packages/engine/Source/Shaders/**",
-  "!packages/engine/Source/Workers/**",
-  "!packages/engine/Source/WorkersES6/**",
-  "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
   "!packages/engine/Source/ThirdParty/Workers/**",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
   "!packages/engine/Source/ThirdParty/_*",
@@ -68,7 +64,6 @@ const specFiles = [
   "Specs/TestWorkers/*.js",
 ];
 const shaderFiles = ["packages/engine/Source/Shaders/**/*.glsl"];
-const workerSourceFiles = ["packages/engine/Source/WorkersES6/*.js"];
 
 const outputDirectory = path.join("Build", "CesiumDev");
 
@@ -133,7 +128,7 @@ const serveResult = (result, fileName, res, next) => {
 
 (async function () {
   const gzipHeader = Buffer.from("1F8B08", "hex");
-  let esmResult, iifeResult, specResult;
+  let esmResult, iifeResult, workersResult, specResult;
   const production = argv.production;
 
   let contexts;
@@ -209,28 +204,6 @@ const serveResult = (result, fileName, res, next) => {
   app.get(knownTilesetFormats, checkGzipAndNext);
 
   if (!production) {
-    // Set up file watcher for more expensive operations which would block during
-    // "just in time" compilation
-    const workerWatcher = chokidar.watch(workerSourceFiles, {
-      ignoreInitial: true,
-    });
-    workerWatcher.on("all", async () => {
-      try {
-        const start = performance.now();
-        await bundleWorkers({
-          input: ["packages/engine/Source/Workers/**"],
-          inputES6: workerSourceFiles,
-          path: outputDirectory,
-          sourcemap: true,
-        });
-        console.log(
-          `Built Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
-        );
-      } catch (e) {
-        console.error(e);
-      }
-    });
-
     app.get("/Build/CesiumUnminified/Cesium.js", async function (
       //eslint-disable-next-line no-unused-vars
       req,
@@ -340,7 +313,40 @@ const serveResult = (result, fileName, res, next) => {
       if (iifeResult) {
         iifeResult.outputFiles = [];
       }
+      if (workersResult) {
+        workersResult.outputFiles = [];
+      }
       jsHintOptionsCache = undefined;
+    });
+
+    app.get("/Build/CesiumUnminified/Workers/*.js", async function (
+      //eslint-disable-next-line no-unused-vars
+      req,
+      //eslint-disable-next-line no-unused-vars
+      res,
+      next
+    ) {
+      if (
+        !workersResult?.outputFiles ||
+        workersResult.outputFiles.length === 0
+      ) {
+        try {
+          const start = performance.now();
+          workersResult = await contexts.workers.rebuild();
+          console.log(
+            `Built Workers/* in ${formatTimeSinceInSeconds(start)} seconds.`
+          );
+        } catch (e) {
+          next(e);
+        }
+      }
+
+      return serveResult(
+        workersResult,
+        path.basename(req.originalUrl),
+        res,
+        next
+      );
     });
 
     app.get("/Apps/Sandcastle/jsHintOptions.js", async function (
@@ -530,7 +536,7 @@ const serveResult = (result, fileName, res, next) => {
   let isFirstSig = true;
   process.on("SIGINT", function () {
     if (isFirstSig) {
-      console.log("Cesium development server shutting down.");
+      console.log("\nCesium development server shutting down.");
       server.close(function () {
         process.exit(0);
       });
@@ -538,6 +544,7 @@ const serveResult = (result, fileName, res, next) => {
       if (!production) {
         contexts.esm.dispose();
         contexts.iife.dispose();
+        contexts.workers.dispose();
         contexts.specs.dispose();
       }
 
