@@ -62,6 +62,7 @@ describe(
           return new Rectangle();
         },
       },
+      rectangle: Rectangle.MAX_VALUE,
     };
 
     const testProviderViewModel = new ProviderViewModel({
@@ -1867,6 +1868,20 @@ describe(
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
       });
+    });
+
+    it("flyTo flies to imagery layer with default offset when options are not defined", async function () {
+      viewer = createViewer(container);
+
+      const imageryLayer = new ImageryLayer(testProvider);
+
+      const promise = viewer.flyTo(imageryLayer, {
+        duration: 0,
+      });
+
+      viewer._postRender();
+
+      await expectAsync(promise).toBeResolved();
     });
 
     it("flyTo flies to VoxelPrimitive with default offset when options not defined", function () {
