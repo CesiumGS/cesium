@@ -11,10 +11,13 @@ for (const example of gallery) {
 
     await page.waitForLoadState("networkidle");
 
-    await page.evaluate(() => window.__clock.tick(1000));
-    await page.evaluate(() => window.__clock.tick(1000));
-    await page.evaluate(() => window.__clock.tick(1000));
-    await page.evaluate(() => window.__clock.tick(1000));
+    await page.evaluate(() => window.__clock.tickAsync(1000));
+    await page.evaluate(() => window.__clock.tickAsync(1000));
+
+    await page.waitForLoadState("networkidle");
+
+    await page.evaluate(() => window.__clock.tickAsync(1000));
+    await page.evaluate(() => window.__clock.tickAsync(1000));
 
     await expect(page).toHaveScreenshot({
       timeout: 20000,
