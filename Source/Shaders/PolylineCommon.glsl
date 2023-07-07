@@ -85,7 +85,7 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     else {
         lineDir = normalize(nextWindow.xy - positionWindow.xy);
     }
-    angle = atan(lineDir.x, lineDir.y) - 1.570796327; // precomputed atan(1,0)
+    angle = czm_fastApproximateAtan(lineDir.x, lineDir.y) - 1.570796327; // precomputed czm_fastApproximateAtan(1,0)
 
     // Quantize the angle so it doesn't change rapidly between segments.
     angle = floor(angle / czm_piOverFour + 0.5) * czm_piOverFour;
