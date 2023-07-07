@@ -23,8 +23,8 @@ function makeReadyPromise() {
     .initWebAssemblyModule({
       wasmBinaryFile: "ThirdParty/basis_transcoder.wasm",
     })
-    .then(function (message) {
-      if (message.result) {
+    .then(function (result) {
+      if (result) {
         return KTX2Transcoder._transcodeTaskProcessor;
       }
 

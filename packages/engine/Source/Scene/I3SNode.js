@@ -653,7 +653,7 @@ I3SNode.prototype._createContentURL = async function () {
       url,
       geometrySchema,
       geometryData,
-      this._featureData
+      this._featureData[0]
     );
     if (!defined(result)) {
       // Postponed

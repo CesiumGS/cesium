@@ -350,7 +350,6 @@ export async function bundleWorkers(options) {
   workerConfig.banner = {
     js: combinedCopyrightHeader,
   };
-  workerConfig.treeShaking = true; // Tree shaking must be turned on manually for ESM
   workerConfig.entryPoints = workers;
   workerConfig.outdir = path.join(options.path, "Workers");
   workerConfig.minify = options.minify;
@@ -731,7 +730,7 @@ export async function createJsHintOptions() {
  * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise<any>}
  */
-export function bundleCombinedSpecs(options) {
+export async function bundleCombinedSpecs(options) {
   options = options || {};
 
   let build = esbuild.build;
@@ -751,6 +750,33 @@ export function bundleCombinedSpecs(options) {
     outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
     external: [`http`, `https`, `url`, `zlib`],
+    write: options.write,
+  });
+}
+
+/**
+ * Bundles test worker in used specs.
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
+ * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
+ * @returns {Promise<any>}
+ */
+export async function bundleTestWorkers(options) {
+  options = options || {};
+
+  let build = esbuild.build;
+  if (options.incremental) {
+    build = esbuild.context;
+  }
+
+  const workers = await globby(["Specs/TestWorkers/**.js"]);
+  return build({
+    entryPoints: workers,
+    bundle: true,
+    format: "esm",
+    sourcemap: true,
+    outdir: path.join("Build", "Specs", "TestWorkers"),
+    external: ["http", "https", "url", "zlib", "fs", "path"],
     write: options.write,
   });
 }
@@ -1070,6 +1096,11 @@ export async function buildCesium(options) {
     write: write,
   });
 
+  const testWorkersContext = await bundleTestWorkers({
+    incremental: incremental,
+    write: write,
+  });
+
   // Copy static assets to the Build folder.
 
   await copyEngineAssets(outputDirectory);
@@ -1113,5 +1144,6 @@ export async function buildCesium(options) {
     node: contexts.node,
     specs: specsContext,
     workers: workersContext,
+    testWorkers: testWorkersContext,
   };
 }

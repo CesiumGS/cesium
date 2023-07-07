@@ -28,8 +28,8 @@ DracoLoader._getDecoderTaskProcessor = function () {
       .initWebAssemblyModule({
         wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
       })
-      .then(function (message) {
-        if (message.result) {
+      .then(function (result) {
+        if (result) {
           DracoLoader._taskProcessorReady = true;
         } else {
           DracoLoader._error = new RuntimeError(

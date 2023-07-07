@@ -1568,7 +1568,7 @@ export async function test() {
     { pattern: "Build/CesiumUnminified/**", included: false },
     { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
-    { pattern: "Specs/TestWorkers/**", included: false },
+    { pattern: "Build/Specs/TestWorkers/**", included: false },
   ];
 
   let proxies;
@@ -1592,7 +1592,7 @@ export async function test() {
       { pattern: "packages/engine/Source/ThirdParty/**", included: false },
       { pattern: "packages/engine/Source/Widget/*.css", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**", included: false },
     ];
 
     proxies = {
