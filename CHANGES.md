@@ -34,6 +34,11 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- Firefox 114 is now the minimum Firefox version required to run CesiumJS. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
+- `TaskProcessor` now loads worker files as ESM instead of AMD. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
+
 ##### Fixes :wrench:
 
 - Fixed issue where terrain with multiple layers was loading higher LOD tiles inconsistently. [#11312](https://github.com/CesiumGS/cesium/issues/11312)
