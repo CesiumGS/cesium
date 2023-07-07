@@ -83,6 +83,7 @@ RequestScheduler.requestsByServer = {
   "assets.ion.cesium.com:443": 18,
   "ibasemaps-api.arcgis.com:443": 18,
   "tile.googleapis.com:443": 18,
+  "tile.openstreetmap.org:443": 18,
 };
 
 /**
