@@ -117,7 +117,6 @@ async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
     return config;
   }
 
-  config.modulePath = buildModuleUrl(wasmOptions.modulePath);
   config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
 
   const arrayBuffer = await Resource.fetchArrayBuffer({
@@ -147,7 +146,11 @@ function TaskProcessor(workerPath, maximumActiveTasks) {
   const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
   this._workerPath = isUri
     ? workerPath
-    : getWorkerUrl(`${TaskProcessor._workerModulePrefix + workerPath}.js`);
+    : getWorkerUrl(
+        `${
+          TaskProcessor._workerModulePrefix + workerPath.replace(/\.js$/, "")
+        }.js`
+      );
   this._maximumActiveTasks = defaultValue(
     maximumActiveTasks,
     Number.POSITIVE_INFINITY
@@ -170,6 +173,9 @@ const createOnmessageHandler = (worker, id, resolve, reject) => {
         error.stack = data.error.stack;
       } else if (error.name === "DeveloperError") {
         error = new DeveloperError(data.error.message);
+        error.stack = data.error.stack;
+      } else if (error.name === "Error") {
+        error = new Error(data.error.message);
         error.stack = data.error.stack;
       }
       taskCompletedEvent.raiseEvent(error);
@@ -205,6 +211,7 @@ async function runTask(processor, parameters, transferableObjects) {
   processor._worker.postMessage(
     {
       id: id,
+      baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
       parameters: parameters,
       canTransferArrayBuffer: canTransfer,
     },
@@ -277,7 +284,7 @@ TaskProcessor.prototype.scheduleTask = function (
  * @param {string} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
  * @param {string} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
  * @param {string} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
- * @returns {Promise<object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+ * @returns {Promise<*>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
  *
  * @exception {RuntimeError} This browser does not support Web Assembly, and no backup module was provided
  */
@@ -304,7 +311,7 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
     const promise = new Promise((resolve, reject) => {
       worker.onmessage = function ({ data }) {
         if (data) {
-          resolve(data);
+          resolve(data.result);
         } else {
           reject(new RuntimeError("Could not configure wasm module"));
         }

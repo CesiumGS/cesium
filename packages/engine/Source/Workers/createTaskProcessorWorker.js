@@ -34,6 +34,8 @@ function createTaskProcessorWorker(workerFunction) {
       error: undefined,
     };
 
+    self.CESIUM_BASE_URL = data.baseUrl;
+
     try {
       const result = await workerFunction(data.parameters, transferableObjects);
       responseMessage.result = result;

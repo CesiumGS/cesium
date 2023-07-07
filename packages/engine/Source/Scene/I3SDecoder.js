@@ -29,10 +29,10 @@ I3SDecoder._decodeTaskProcessor = new TaskProcessor(
 I3SDecoder._promise = undefined;
 
 async function initializeDecoder() {
-  const message = await I3SDecoder._decodeTaskProcessor.initWebAssemblyModule({
+  const result = await I3SDecoder._decodeTaskProcessor.initWebAssemblyModule({
     wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
   });
-  if (message.result) {
+  if (result) {
     return I3SDecoder._decodeTaskProcessor;
   }
 
@@ -43,7 +43,7 @@ async function initializeDecoder() {
  * Transcodes I3S to glTF in a web worker
  * @param {String} url custom attributes source URL
  * @param {Object} defaultGeometrySchema Schema to use during decoding
- * @param {Object} geometryData The draco encoded geometry data
+ * @param {I3SGeometry} geometryData The draco encoded geometry data
  * @param {Array} [featureData] The draco encoded feature data
  * @returns Promise<undefined|object> Returns a promise which resolves to the glTF result, or undefined if the task cannot be scheduled this frame.
  *

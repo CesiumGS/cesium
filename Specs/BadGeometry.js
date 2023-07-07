@@ -1,7 +1,7 @@
 import { queryToObject, RuntimeError } from "@cesium/engine";
 
 function BadGeometry() {
-  this._workerName = "../../Specs/TestWorkers/createBadGeometry";
+  this._workerName = "../../Build/Specs/TestWorkers/createBadGeometry";
 
   // Make this worker loadable when testing against the built version of Cesium.
   if (
