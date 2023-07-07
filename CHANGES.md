@@ -4510,3 +4510,5 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 ### a0 - 2011-06-17
 
 - Initial Release.
+- 
+-fixed a typo in line 88 of PolylineCommon.glsl 
