@@ -95,7 +95,19 @@ function createWorker(processor) {
       "This browser is not supported. Please update your browser to continue."
     );
   }
-  return new Worker(processor._workerPath, { type: "module" });
+
+  const uri = new Uri(processor._workerPath);
+  const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
+  const workerPath = isUri
+    ? processor._workerPath
+    : getWorkerUrl(
+        `${
+          TaskProcessor._workerModulePrefix +
+          processor._workerPath.replace(/\.js$/, "")
+        }.js`
+      );
+
+  return new Worker(workerPath, { type: "module" });
 }
 
 async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
@@ -142,15 +154,7 @@ async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  *                                        work to be rescheduled in future frames.
  */
 function TaskProcessor(workerPath, maximumActiveTasks) {
-  const uri = new Uri(workerPath);
-  const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
-  this._workerPath = isUri
-    ? workerPath
-    : getWorkerUrl(
-        `${
-          TaskProcessor._workerModulePrefix + workerPath.replace(/\.js$/, "")
-        }.js`
-      );
+  this._workerPath = workerPath;
   this._maximumActiveTasks = defaultValue(
     maximumActiveTasks,
     Number.POSITIVE_INFINITY
