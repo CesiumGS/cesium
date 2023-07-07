@@ -2,6 +2,13 @@
 
 ### 1.108 - 2023-08-01
 
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed dimensions of `tangentEC` in custom shaders [#11394](https://github.com/CesiumGS/cesium/pull/11394).
+- Fixed a bug where `Model` would not respond to different alpha values in a `Cesium3DTileStyle`. [#11399](https://github.com/CesiumGS/cesium/pull/11399)
+
 #### @cesium/widgets
 
 ##### Fixes :wrench:
