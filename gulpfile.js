@@ -1379,7 +1379,7 @@ export async function runCoverage(options) {
     // Static assets are always served from the shared/combined folders.
     { pattern: "Build/CesiumUnminified/**", included: false },
     { pattern: "Specs/Data/**", included: false },
-    { pattern: "Specs/TestWorkers/**", included: false },
+    { pattern: "Build/Specs/TestWorkers/**", included: false },
     { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
   ];
 
@@ -1403,7 +1403,7 @@ export async function runCoverage(options) {
       { pattern: "packages/engine/Source/ThirdParty/**", included: false },
       { pattern: "packages/engine/Source/Widget/*.css", included: false },
       { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**", included: false },
     ];
 
     proxies = {
