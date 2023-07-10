@@ -8,6 +8,7 @@
 
 - Fixed dimensions of `tangentEC` in custom shaders [#11394](https://github.com/CesiumGS/cesium/pull/11394).
 - Fixed a bug where `Model` would not respond to different alpha values in a `Cesium3DTileStyle`. [#11399](https://github.com/CesiumGS/cesium/pull/11399)
+- Fixed issue where terrain with multiple layers was loading higher LOD tiles inconsistently. [#11312](https://github.com/CesiumGS/cesium/issues/11312)
 
 #### @cesium/widgets
 
