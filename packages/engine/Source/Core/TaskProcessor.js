@@ -210,16 +210,6 @@ async function runTask(processor, parameters, transferableObjects) {
       "message",
       createOnmessageHandler(processor._worker, id, resolve, reject)
     );
-
-    processor._worker.addEventListener(
-      "error",
-      createOnmessageHandler((error) => reject(error))
-    );
-
-    processor._worker.addEventListener(
-      "messageerror",
-      createOnmessageHandler((error) => reject(error))
-    );
   });
 
   processor._worker.postMessage(
@@ -324,7 +314,7 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
 
     const promise = new Promise((resolve, reject) => {
       worker.onmessage = function ({ data }) {
-        if (data) {
+        if (defined(data)) {
           resolve(data.result);
         } else {
           reject(new RuntimeError("Could not configure wasm module"));
