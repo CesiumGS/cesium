@@ -13,7 +13,8 @@
 
 ##### Fixes :wrench:
 
-- Fixed the error report "rectanglePromise.then is not a function" that occurred when using `viewer.flyTo` to navigate to an ImageryLayer. [#11392](https://github.com/CesiumGS/cesium/pull/11392)
+- Fixed promise return value when using `viewer.flyTo` to navigate to an ImageryLayer. [#11392](https://github.com/CesiumGS/cesium/pull/11392)
+- Fixed `depthTestAgainstTerrain` value being overridden when using the base layer picker widget. [#11393](https://github.com/CesiumGS/cesium/issues/11393)
 
 ### 1.107 - 2023-07-03
 
