@@ -210,6 +210,16 @@ async function runTask(processor, parameters, transferableObjects) {
       "message",
       createOnmessageHandler(processor._worker, id, resolve, reject)
     );
+
+    processor._worker.addEventListener(
+      "error",
+      createOnmessageHandler((error) => reject(error))
+    );
+
+    processor._worker.addEventListener(
+      "messageerror",
+      createOnmessageHandler((error) => reject(error))
+    );
   });
 
   processor._worker.postMessage(
