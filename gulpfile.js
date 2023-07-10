@@ -1595,7 +1595,7 @@ export async function test() {
       { pattern: "Build/Cesium/**", included: false },
       { pattern: "Build/Specs/karma-main.js", included: true },
       { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
-      { pattern: "Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**", included: false },
     ];
   }
 
