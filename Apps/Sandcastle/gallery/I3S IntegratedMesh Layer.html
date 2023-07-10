@@ -83,7 +83,7 @@
 
           // Center camera on I3S once it's loaded
           const center = Cesium.Rectangle.center(i3sProvider.extent);
-          center.height = 10000.0;
+          center.height = 5000.0;
           viewer.camera.setView({
             destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(center),
           });

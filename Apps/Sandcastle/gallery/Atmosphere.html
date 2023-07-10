@@ -673,6 +673,10 @@
         const globe = scene.globe;
         const skyAtmosphere = scene.skyAtmosphere;
 
+        scene.highDynamicRange = true;
+        globe.enableLighting = true;
+        globe.atmosphereLightIntensity = 20.0;
+
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
           "2022-03-23T11:31:42.34200000000419095Z"
         );
@@ -727,7 +731,7 @@
           // Globe settings
 
           enableTerrain: false,
-          enableLighting: false,
+          enableLighting: true,
           groundTranslucency: false,
 
           // Ground atmosphere settings
@@ -783,7 +787,7 @@
 
           // Scene settings
 
-          hdr: false,
+          hdr: true,
         };
 
         Cesium.knockout.track(viewModel);

@@ -46,7 +46,7 @@
         viewer.scene.primitives.add(tileset);
 
         // Ferry Building – Street Level Enhanced mesh with a resolution of ~6mm per pixel
-        function viewFerryBuilding() {
+        function viewFerryBuilding(duration) {
           viewer.scene.camera.flyTo({
             destination: new Cesium.Cartesian3(
               -2703541.419456986,
@@ -58,6 +58,7 @@
               -0.03131876941215883,
               0.0000033030489428043097
             ),
+            duration: duration,
           });
         }
 
@@ -128,7 +129,7 @@
           },
         ]);
 
-        viewFerryBuilding();
+        viewFerryBuilding(0);
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };

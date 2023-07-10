@@ -91,13 +91,7 @@
           }),
         };
 
-        Sandcastle.addToolbarMenu([
-          {
-            text: "Default View",
-            onselect: function () {
-              tileset.customShader = shaders.NO_TEXTURE;
-            },
-          },
+        Sandcastle.addDefaultToolbarMenu([
           {
             text: "Horizontal Uncertainty",
             onselect: function () {
@@ -116,7 +110,14 @@
               tileset.customShader = shaders.UNCERTAINTY;
             },
           },
+          {
+            text: "No Uncertainty",
+            onselect: function () {
+              tileset.customShader = shaders.NO_TEXTURE;
+            },
+          },
         ]);
+        tileset.customShader = shaders.UNCERTAINTY_CE90;
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

@@ -150,6 +150,8 @@
         subscribeLayerParameter("saturation");
         subscribeLayerParameter("gamma");
 
+        imageryLayers.get(0).saturation = 3.0;
+
         // Make the viewModel react to base layer changes.
         function updateViewModel() {
           if (imageryLayers.length > 0) {
