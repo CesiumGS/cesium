@@ -120,26 +120,32 @@ vec4 intersectFlippedWedge(Ray ray, float minAngle, float maxAngle)
     return vec4(planeIntersectMin, planeIntersectMax);
 }
 
-vec2 intersectUnitSphere(Ray ray)
+RayShapeIntersection intersectUnitSphere(Ray ray)
 {
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
+    vec3 position = ray.pos;
+    vec3 direction = ray.dir;
 
-    float b = dot(d, o);
-    float c = dot(o, o) - 1.0;
-    float det = b * b - c;
+    float a = dot(direction, direction);
+    float b = dot(direction, position);
+    float c = dot(position, position) - 1.0;
+    float determinant = b * b - a * c;
 
-    if (det < 0.0) {
-        return vec2(NO_HIT);
+    if (determinant < 0.0) {
+        vec4 miss = vec4(normalize(direction), NO_HIT);
+        return RayShapeIntersection(miss, miss);
     }
 
-    det = sqrt(det);
-    float t1 = -b - det;
-    float t2 = -b + det;
+    determinant = sqrt(determinant);
+    float t1 = (-b - determinant) / a;
+    float t2 = (-b + determinant) / a;
+
     float tmin = min(t1, t2);
     float tmax = max(t1, t2);
 
-    return vec2(tmin, tmax);
+    vec3 dmin = normalize(position + tmin * direction);
+    vec3 dmax = normalize(position + tmax * direction);
+
+    return RayShapeIntersection(vec4(dmin, tmin), vec4(dmax, tmax));
 }
 
 vec2 intersectUnitSphereUnnormalizedDirection(Ray ray)
@@ -241,11 +247,11 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     #endif
 
     // Outer ellipsoid
-    vec2 outerIntersect = intersectUnitSphereUnnormalizedDirection(outerRay);
-    setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
+    RayShapeIntersection outerIntersect = intersectUnitSphere(outerRay);
+    setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
 
     // Exit early if the outer ellipsoid was missed.
-    if (outerIntersect.x == NO_HIT) {
+    if (outerIntersect.entry.w == NO_HIT) {
         return;
     }
 
@@ -267,31 +273,33 @@ void intersectShape(in Ray ray, inout Intersections ix) {
 
         // Note: If initializeIntersections() changes its sorting function
         // from bubble sort to something else, this code may need to change.
-        setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
-        setIntersection(ix, 1, outerIntersect.x, false, true);  // negative, enter
-        setIntersection(ix, 2, outerIntersect.y, false, false); // negative, exit
-        setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
+        setSurfaceIntersection(ix, 0, outerIntersect.entry, true, true);   // positive, enter
+        setSurfaceIntersection(ix, 1, outerIntersect.entry, false, true);  // negative, enter
+        setSurfaceIntersection(ix, 2, outerIntersect.exit, false, false); // negative, exit
+        setSurfaceIntersection(ix, 3, outerIntersect.exit, true, false);  // positive, exit
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
         Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
-        vec2 innerIntersect = intersectUnitSphereUnnormalizedDirection(innerRay);
+        // TODO: should we flip the normals for the inner sphere?
+        RayShapeIntersection innerIntersect = intersectUnitSphere(innerRay);
 
-        if (innerIntersect == vec2(NO_HIT)) {
-            setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
+        if (innerIntersect.entry.w == NO_HIT) {
+            setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
         } else {
             // When the ellipsoid is very large and thin it's possible for floating
             // point math to cause the ray to intersect the inner ellipsoid before
             // the outer ellipsoid. To prevent this from happening, clamp innerIntersect
-            // to outerIntersect and sandwhich the intersections like described above.
+            // to outerIntersect and sandwich the intersections like described above.
             //
             // In theory a similar fix is needed for cylinders, however it's more
             // complicated to implement because the inner shape is allowed to be
             // intersected first.
-            innerIntersect.x = max(innerIntersect.x, outerIntersect.x);
-            innerIntersect.y = min(innerIntersect.y, outerIntersect.y);
-            setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
-            setIntersection(ix, 1, innerIntersect.x, false, true);  // negative, enter
-            setIntersection(ix, 2, innerIntersect.y, false, false); // negative, exit
-            setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
+            // TODO: use ternary to swap entire intersection, not just the t value
+            innerIntersect.entry.w = max(innerIntersect.entry.w, outerIntersect.entry.w);
+            innerIntersect.exit.w = min(innerIntersect.exit.w, outerIntersect.exit.w);
+            setSurfaceIntersection(ix, 0, outerIntersect.entry, true, true);   // positive, enter
+            setSurfaceIntersection(ix, 1, innerIntersect.entry, false, true);  // negative, enter
+            setSurfaceIntersection(ix, 2, innerIntersect.exit, false, false); // negative, exit
+            setSurfaceIntersection(ix, 3, outerIntersect.exit, true, false);  // positive, exit
         }
     #endif
 
