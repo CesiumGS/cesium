@@ -720,30 +720,27 @@ Object.defineProperties(VoxelInspectorViewModel.prototype, {
         this._voxelPrimitive = voxelPrimitive;
 
         const that = this;
-        // This is here for backwards compatibility. This can be done immediately once readyPromise is removed.
-        that._voxelPrimitive._readyPromise.then(function () {
-          that._customShaderCompilationRemoveCallback = that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
-            function (error) {
-              const shaderString =
-                that._voxelPrimitive.customShader.fragmentShaderText;
-              that.shaderString = formatShaderString(shaderString);
+        that._customShaderCompilationRemoveCallback = that._voxelPrimitive.customShaderCompilationEvent.addEventListener(
+          function (error) {
+            const shaderString =
+              that._voxelPrimitive.customShader.fragmentShaderText;
+            that.shaderString = formatShaderString(shaderString);
 
-              if (!defined(error)) {
-                that.shaderCompilationMessage = "Shader compiled successfully!";
-                that.shaderCompilationSuccess = true;
-              } else {
-                that.shaderCompilationMessage = error.message;
-                that.shaderCompilationSuccess = false;
-              }
+            if (!defined(error)) {
+              that.shaderCompilationMessage = "Shader compiled successfully!";
+              that.shaderCompilationSuccess = true;
+            } else {
+              that.shaderCompilationMessage = error.message;
+              that.shaderCompilationSuccess = false;
             }
-          );
-          that._modelMatrixReady = false;
-          for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
-            that._getPrimitiveFunctions[i]();
           }
-          that._modelMatrixReady = true;
-          setModelMatrix(that);
-        });
+        );
+        that._modelMatrixReady = false;
+        for (let i = 0; i < that._getPrimitiveFunctions.length; i++) {
+          that._getPrimitiveFunctions[i]();
+        }
+        that._modelMatrixReady = true;
+        setModelMatrix(that);
       }
     },
   },

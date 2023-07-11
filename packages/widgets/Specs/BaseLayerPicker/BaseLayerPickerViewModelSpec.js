@@ -1,6 +1,7 @@
 import {
   EllipsoidTerrainProvider,
   Event,
+  GeographicTilingScheme,
   ImageryLayerCollection,
 } from "@cesium/engine";
 
@@ -15,9 +16,15 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
   }
   MockGlobe.prototype.isDestroyed = () => false;
 
-  const testProvider = {};
-  const testProvider2 = {};
-  const testProvider3 = {};
+  const testProvider = {
+    tilingScheme: new GeographicTilingScheme(),
+  };
+  const testProvider2 = {
+    tilingScheme: new GeographicTilingScheme(),
+  };
+  const testProvider3 = {
+    tilingScheme: new GeographicTilingScheme(),
+  };
 
   const testProviderViewModel = new ProviderViewModel({
     name: "name",

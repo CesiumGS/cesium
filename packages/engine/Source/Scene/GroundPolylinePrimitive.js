@@ -4,7 +4,6 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryInstanceAttribute from "../Core/GeometryInstanceAttribute.js";
 import GroundPolylineGeometry from "../Core/GroundPolylineGeometry.js";
@@ -193,25 +192,6 @@ function GroundPolylinePrimitive(options) {
   this._zIndex = undefined;
 
   this._ready = false;
-  const groundPolylinePrimitive = this;
-  // This is here for backwards compatibility. This promise wrapper can be removed once readyPromise is removed.
-  this._readyPromise = new Promise((resolve, reject) => {
-    groundPolylinePrimitive._completeLoad = () => {
-      this._ready = true;
-
-      if (this.releaseGeometryInstances) {
-        this.geometryInstances = undefined;
-      }
-
-      const error = this._error;
-      if (!defined(error)) {
-        resolve(this);
-      } else {
-        reject(error);
-      }
-    };
-  });
-
   this._primitive = undefined;
 
   this._sp = undefined;
@@ -312,23 +292,6 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof GroundPolylinePrimitive.prototype
-   * @type {Promise<GroundPolylinePrimitive>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "GroundPolylinePrimitive.readyPromise",
-        "GroundPolylinePrimitive.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for GroundPolylinePrimitive.ready to return true instead."
-      );
-      return this._readyPromise;
     },
   },
 
@@ -849,7 +812,11 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
   this._primitive.update(frameState);
   frameState.afterRender.push(() => {
     if (!this._ready && defined(this._primitive) && this._primitive.ready) {
-      this._completeLoad();
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
     }
   });
 };

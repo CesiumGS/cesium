@@ -89,6 +89,9 @@
           geocoder: new OpenStreetMapNominatimGeocoder(),
         });
 
+        viewer.geocoder.viewModel.searchText = "Philadelphia";
+        viewer.geocoder.viewModel.search();
+
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

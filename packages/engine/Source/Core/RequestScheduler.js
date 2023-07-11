@@ -65,18 +65,24 @@ RequestScheduler.maximumRequests = 50;
 RequestScheduler.maximumRequestsPerServer = 6;
 
 /**
- * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>
+ * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>.
+ * Useful when streaming data from a known HTTP/2 or HTTP/3 server.
  * @type {object}
  *
  * @example
+ * RequestScheduler.requestsByServer["myserver.com:443"] = 18;
+ *
+ * @example
  * RequestScheduler.requestsByServer = {
- *   'api.cesium.com:443': 18,
- *   'assets.cesium.com:443': 18
+ *   "api.cesium.com:443": 18,
+ *   "assets.cesium.com:443": 18,
  * };
  */
 RequestScheduler.requestsByServer = {
   "api.cesium.com:443": 18,
   "assets.ion.cesium.com:443": 18,
+  "ibasemaps-api.arcgis.com:443": 18,
+  "tile.googleapis.com:443": 18,
 };
 
 /**
@@ -352,7 +358,7 @@ RequestScheduler.getServerKey = function (url) {
 
   let uri = new Uri(url);
   if (uri.scheme() === "") {
-    uri = new Uri(url).absoluteTo(pageUri);
+    uri = uri.absoluteTo(pageUri);
     uri.normalize();
   }
 

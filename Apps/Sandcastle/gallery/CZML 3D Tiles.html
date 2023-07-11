@@ -58,7 +58,7 @@
 
         dataSourcePromise
           .then(function (dataSource) {
-            viewer.flyTo(dataSource.entities.getById("BatchedColors"));
+            viewer.zoomTo(dataSource.entities.getById("BatchedColors"));
           })
           .catch(function (error) {
             window.alert(error);

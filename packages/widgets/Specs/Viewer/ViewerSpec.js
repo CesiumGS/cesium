@@ -7,6 +7,7 @@ import {
   ClockRange,
   ClockStep,
   Color,
+  CreditDisplay,
   defined,
   EllipsoidTerrainProvider,
   HeadingPitchRange,
@@ -47,7 +48,7 @@ import {
   Timeline,
 } from "../../index.js";
 
-import createViewer from "../../../../Specs/createViewer.js";
+import createViewer from "../createViewer.js";
 import DomEventSimulator from "../../../../Specs/DomEventSimulator.js";
 import MockDataSource from "../../../../Specs/MockDataSource.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -55,20 +56,13 @@ import pollToPromise from "../../../../Specs/pollToPromise.js";
 describe(
   "Widgets/Viewer/Viewer",
   function () {
-    const readyPromise = Promise.resolve(true);
     const testProvider = {
-      isReady: function () {
-        return false;
-      },
-      _ready: true,
-      ready: true,
-      _readyPromise: readyPromise,
-      readyPromise: readyPromise,
       tilingScheme: {
         tileXYToRectangle: function () {
           return new Rectangle();
         },
       },
+      rectangle: Rectangle.MAX_VALUE,
     };
 
     const testProviderViewModel = new ProviderViewModel({
@@ -119,6 +113,7 @@ describe(
       expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
       expect(viewer.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
       expect(viewer.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
+      expect(viewer.creditDisplay).toBeInstanceOf(CreditDisplay);
       expect(viewer.camera).toBeInstanceOf(Camera);
       expect(viewer.dataSourceDisplay).toBeInstanceOf(DataSourceDisplay);
       expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
@@ -531,17 +526,6 @@ describe(
       );
       expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(
         testProviderViewModel
-      );
-    });
-
-    it("can set imageryProvider when BaseLayerPicker is disabled", function () {
-      viewer = createViewer(container, {
-        baseLayerPicker: false,
-        imageryProvider: testProvider,
-      });
-      expect(viewer.scene.imageryLayers.length).toEqual(1);
-      expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(
-        testProvider
       );
     });
 
@@ -1551,6 +1535,34 @@ describe(
       });
     });
 
+    it("zoomTo zooms to entity when globe is disabled", async function () {
+      // Create viewer with globe disabled
+      const viewer = createViewer(container, {
+        globe: false,
+        infoBox: false,
+        selectionIndicator: false,
+        shadows: true,
+        shouldAnimate: true,
+      });
+
+      // Create position variable
+      const position = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1000.0);
+
+      // Add entity to viewer
+      const entity = viewer.entities.add({
+        position: position,
+        model: {
+          uri: "../SampleData/models/CesiumAir/Cesium_Air.glb",
+        },
+      });
+
+      await viewer.zoomTo(entity);
+
+      // Verify that no errors occurred
+      expect(viewer.scene).toBeDefined();
+      expect(viewer.scene.errorEvent).toBeUndefined();
+    });
+
     it("flyTo throws if target is not defined", function () {
       viewer = createViewer(container);
 
@@ -1856,6 +1868,20 @@ describe(
       return promise.then(function () {
         expect(wasCompleted).toEqual(true);
       });
+    });
+
+    it("flyTo flies to imagery layer with default offset when options are not defined", async function () {
+      viewer = createViewer(container);
+
+      const imageryLayer = new ImageryLayer(testProvider);
+
+      const promise = viewer.flyTo(imageryLayer, {
+        duration: 0,
+      });
+
+      viewer._postRender();
+
+      await expectAsync(promise).toBeResolved();
     });
 
     it("flyTo flies to VoxelPrimitive with default offset when options not defined", function () {

@@ -19,30 +19,6 @@ function VoxelProvider() {
 
 Object.defineProperties(VoxelProvider.prototype, {
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   *
-   * @memberof VoxelProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: DeveloperError.throwInstantiationError,
-  },
-
-  /**
-   * Gets the promise that will be resolved when the provider is ready for use.
-   *
-   * @memberof VoxelProvider.prototype
-   * @type {Promise<VoxelProvider>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: DeveloperError.throwInstantiationError,
-  },
-
-  /**
    * A transform from local space to global space. If undefined, the identity matrix will be used instead.
    *
    * @memberof VoxelProvider.prototype

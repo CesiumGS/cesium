@@ -401,7 +401,14 @@
             2000
           );
 
-          flyCameraTo(cameraTransforms.tileset);
+          viewer.camera.flyTo({
+            duration: 0,
+            destination: cameraTransforms.tileset.destination,
+            orientation: {
+              direction: cameraTransforms.tileset.direction,
+              up: cameraTransforms.tileset.up,
+            },
+          });
 
           const modes = [
             {

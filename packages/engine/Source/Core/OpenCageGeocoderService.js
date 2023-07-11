@@ -1,6 +1,7 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import combine from "./combine.js";
+import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import Rectangle from "./Rectangle.js";
@@ -48,6 +49,10 @@ function OpenCageGeocoderService(url, apiKey, params) {
   url.setQueryParameters({ key: apiKey });
   this._url = url;
   this._params = defaultValue(params, {});
+  this._credit = new Credit(
+    `Geodata copyright <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors`,
+    false
+  );
 }
 
 Object.defineProperties(OpenCageGeocoderService.prototype, {
@@ -73,6 +78,18 @@ Object.defineProperties(OpenCageGeocoderService.prototype, {
       return this._params;
     },
   },
+  /**
+   * Gets the credit to display after a geocode is performed. Typically this is used to credit
+   * the geocoder service.
+   * @memberof OpenCageGeocoderService.prototype
+   * @type {Credit|undefined}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return this._credit;
+    },
+  },
 });
 
 /**
@@ -81,7 +98,7 @@ Object.defineProperties(OpenCageGeocoderService.prototype, {
  * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
  */
-OpenCageGeocoderService.prototype.geocode = function (query) {
+OpenCageGeocoderService.prototype.geocode = async function (query) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("query", query);
   //>>includeEnd('debug');

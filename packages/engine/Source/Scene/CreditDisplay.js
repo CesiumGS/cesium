@@ -303,7 +303,14 @@ function appendCss(container) {
  * @constructor
  *
  * @example
- * const creditDisplay = new Cesium.CreditDisplay(creditContainer);
+ * // Add a credit with a tooltip, image and link to display onscreen
+ * const credit = new Cesium.Credit(`<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>`, true);
+ * viewer.creditDisplay.addStaticCredit(credit);
+ *
+ * @example
+ * // Add a credit with a plaintext link to display in the lightbox
+ * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank">Cesium</a>');
+ * viewer.creditDisplay.addStaticCredit(credit);
  */
 function CreditDisplay(container, delimiter, viewport) {
   //>>includeStart('debug', pragmas.debug);
@@ -373,7 +380,7 @@ function CreditDisplay(container, delimiter, viewport) {
   this._hideLightbox = hideLightbox;
   this._expandLink = expandLink;
   this._expanded = false;
-  this._defaultCredits = [];
+  this._staticCredits = [];
   this._cesiumCredit = cesiumCredit;
   this._previousCesiumCredit = undefined;
   this._currentCesiumCredit = cesiumCredit;
@@ -416,19 +423,23 @@ function setCredit(creditDisplay, credits, credit, count) {
     creditDisplayElement.count += count;
   }
 }
+
 /**
- * Adds a credit to the list of current credits to be displayed in the credit container
+ * Adds a {@link Credit} that will show on screen or in the lightbox until
+ * the next frame. This is mostly for internal use. Use {@link CreditDisplay.addStaticCredit} to add a persistent credit to the screen.
  *
- * @param {Credit} credit The credit to display
+ * @see CreditDisplay.addStaticCredit
+ *
+ * @param {Credit} credit The credit to display in the next frame.
  */
-CreditDisplay.prototype.addCredit = function (credit) {
+CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("credit", credit);
   //>>includeEnd('debug');
 
   if (credit._isIon) {
     // If this is the an ion logo credit from the ion server
-    // Juse use the default credit (which is identical) to avoid blinking
+    // Just use the default credit (which is identical) to avoid blinking
     if (!defined(this._defaultCredit)) {
       this._defaultCredit = Credit.clone(getDefaultCredit());
     }
@@ -447,43 +458,59 @@ CreditDisplay.prototype.addCredit = function (credit) {
 };
 
 /**
- * Adds credits that will persist until they are removed
+ * Adds a {@link Credit} that will show on screen or in the lightbox until removed with {@link CreditDisplay.removeStaticCredit}.
  *
- * @param {Credit} credit The credit to added to defaults
+ * @param {Credit} credit The credit to added
+ *
+ * @example
+ * // Add a credit with a tooltip, image and link to display onscreen
+ * const credit = new Cesium.Credit(`<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>`, true);
+ * viewer.creditDisplay.addStaticCredit(credit);
+ *
+ * @example
+ * // Add a credit with a plaintext link to display in the lightbox
+ * const credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank">Cesium</a>');
+ * viewer.creditDisplay.addStaticCredit(credit);
  */
-CreditDisplay.prototype.addDefaultCredit = function (credit) {
+CreditDisplay.prototype.addStaticCredit = function (credit) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("credit", credit);
   //>>includeEnd('debug');
 
-  const defaultCredits = this._defaultCredits;
-  if (!contains(defaultCredits, credit)) {
-    defaultCredits.push(credit);
+  const staticCredits = this._staticCredits;
+  if (!contains(staticCredits, credit)) {
+    staticCredits.push(credit);
   }
 };
 
 /**
- * Removes a default credit
+ * Removes a static credit shown on screen or in the lightbox.
  *
- * @param {Credit} credit The credit to be removed from defaults
+ * @param {Credit} credit The credit to be removed.
  */
-CreditDisplay.prototype.removeDefaultCredit = function (credit) {
+CreditDisplay.prototype.removeStaticCredit = function (credit) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("credit", credit);
   //>>includeEnd('debug');
 
-  const defaultCredits = this._defaultCredits;
-  const index = defaultCredits.indexOf(credit);
+  const staticCredits = this._staticCredits;
+  const index = staticCredits.indexOf(credit);
   if (index !== -1) {
-    defaultCredits.splice(index, 1);
+    staticCredits.splice(index, 1);
   }
 };
 
+/**
+ * @private
+ */
 CreditDisplay.prototype.showLightbox = function () {
   this._lightbox.style.display = "block";
   this._expanded = true;
 };
 
+/**
+ * @private
+ */
 CreditDisplay.prototype.hideLightbox = function () {
   this._lightbox.style.display = "none";
   this._expanded = false;
@@ -506,14 +533,29 @@ CreditDisplay.prototype.beginFrame = function () {
   this._creditDisplayElementPoolIndex = 0;
 
   const screenCredits = currentFrameCredits.screenCredits;
-  screenCredits.removeAll();
-  const defaultCredits = this._defaultCredits;
-  for (let i = 0; i < defaultCredits.length; ++i) {
-    const defaultCredit = defaultCredits[i];
-    setCredit(this, screenCredits, defaultCredit, Number.MAX_VALUE);
-  }
+  const lightboxCredits = currentFrameCredits.lightboxCredits;
 
-  currentFrameCredits.lightboxCredits.removeAll();
+  screenCredits.removeAll();
+  lightboxCredits.removeAll();
+
+  const staticCredits = this._staticCredits;
+  for (let i = 0; i < staticCredits.length; ++i) {
+    const staticCredit = staticCredits[i];
+    const creditCollection = staticCredit.showOnScreen
+      ? screenCredits
+      : lightboxCredits;
+
+    if (
+      staticCredit._isIon &&
+      Credit.equals(CreditDisplay.cesiumCredit, this._cesiumCredit)
+    ) {
+      // If this is an ion logo credit from the ion server,
+      // make sure to de-duplicate with the default ion credit
+      continue;
+    }
+
+    setCredit(this, creditCollection, staticCredit, Number.MAX_VALUE);
+  }
 
   if (!Credit.equals(CreditDisplay.cesiumCredit, this._cesiumCredit)) {
     this._cesiumCredit = Credit.clone(CreditDisplay.cesiumCredit);

@@ -4,7 +4,6 @@ import clone from "../Core/clone.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
@@ -15,7 +14,7 @@ import S2Cell from "../Core/S2Cell.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import hasExtension from "./hasExtension.js";
 import MetadataSemantic from "./MetadataSemantic.js";
-import parseBoundingVolumeSemantics from "./parseBoundingVolumeSemantics.js";
+import BoundingVolumeSemantics from "./BoundingVolumeSemantics.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -74,7 +73,6 @@ function Implicit3DTileContent(tileset, tile, resource) {
   this._url = subtreeResource.getUrlComponent(true);
 
   this._ready = false;
-  this._readyPromise = undefined;
 }
 
 Object.defineProperties(Implicit3DTileContent.prototype, {
@@ -132,26 +130,6 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the tile's content is ready to render.
-   *
-   * @memberof Implicit3DTileContent.prototype
-   *
-   * @type {Promise<Implicit3DTileContent>}
-   * @readonly
-   * @deprecated
-   * @private
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "Implicit3DTileContent.readyPromise",
-        "Implicit3DTileContent.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for Implicit3DTileContent.ready to return true instead."
-      );
-      return this._readyPromise;
     },
   },
 
@@ -260,7 +238,6 @@ Implicit3DTileContent.fromSubtreeJson = async function (
   content._implicitSubtree = subtree;
   expandSubtree(content, subtree);
   content._ready = true;
-  content._readyPromise = Promise.resolve(content);
 
   return content;
 };
@@ -488,7 +465,9 @@ function deriveChildTile(
   if (defined(subtree.tilePropertyTableJson)) {
     tileMetadata = subtree.getTileMetadataView(implicitCoordinates);
 
-    const boundingVolumeSemantics = parseBoundingVolumeSemantics(tileMetadata);
+    const boundingVolumeSemantics = BoundingVolumeSemantics.parseAllBoundingVolumeSemantics(
+      tileMetadata
+    );
     tileBounds = boundingVolumeSemantics.tile;
     contentBounds = boundingVolumeSemantics.content;
   }

@@ -43,16 +43,6 @@ Object.defineProperties(QuadtreeTileProvider.prototype, {
   },
 
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof QuadtreeTileProvider.prototype
-   * @type {boolean}
-   * @deprecated
-   */
-  ready: {
-    get: DeveloperError.throwInstantiationError,
-  },
-
-  /**
    * Gets the tiling scheme used by the provider.
    * @memberof QuadtreeTileProvider.prototype
    * @type {TilingScheme}

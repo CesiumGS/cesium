@@ -13,7 +13,6 @@ import {
   DataSourceDisplay,
   defaultValue,
   defined,
-  deprecationWarning,
   destroyObject,
   DeveloperError,
   Entity,
@@ -314,10 +313,9 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
- * @property {ImageryProvider|false} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false. Deprecated.
  * @property {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added. This value is only valid if `baseLayerPicker` is set to false.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
- * @property {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
+ * @property {Terrain} [terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
  * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @property {Element|string} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
@@ -681,19 +679,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
   }
 
   // These need to be set after the BaseLayerPicker is created in order to take effect
-  if (defined(options.imageryProvider) && options.imageryProvider !== false) {
-    deprecationWarning(
-      "Viewer options.imageryProvider",
-      "options.imageryProvider was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use options.baseLayer instead."
-    );
-
-    if (createBaseLayerPicker) {
-      baseLayerPicker.viewModel.selectedImagery = undefined;
-    }
-    scene.imageryLayers.removeAll();
-    scene.imageryLayers.addImageryProvider(options.imageryProvider);
-  }
-
   if (defined(options.baseLayer) && options.baseLayer !== false) {
     if (createBaseLayerPicker) {
       baseLayerPicker.viewModel.selectedImagery = undefined;
@@ -983,6 +968,18 @@ Object.defineProperties(Viewer.prototype, {
   container: {
     get: function () {
       return this._container;
+    },
+  },
+
+  /**
+   * Manages the list of credits to display on screen and in the lightbox.
+   * @memberof Viewer.prototype
+   *
+   * @type {CreditDisplay}
+   */
+  creditDisplay: {
+    get: function () {
+      return this._cesiumWidget.creditDisplay;
     },
   },
 
@@ -2140,10 +2137,7 @@ function zoomToOrFly(that, zoomTarget, options, isFlight) {
       let rectanglePromise;
 
       if (defined(zoomTarget.imageryProvider)) {
-        // This is here for backward compatibility. It can be removed when readyPromise is removed.
-        rectanglePromise = zoomTarget.imageryProvider._readyPromise.then(() => {
-          return zoomTarget.getImageryRectangle();
-        });
+        rectanglePromise = Promise.resolve(zoomTarget.getImageryRectangle());
       } else {
         rectanglePromise = new Promise((resolve) => {
           const removeListener = zoomTarget.readyEvent.addEventListener(() => {
@@ -2246,89 +2240,60 @@ function updateZoomTarget(viewer) {
   const camera = scene.camera;
   const zoomOptions = defaultValue(viewer._zoomOptions, {});
   let options;
+  function zoomToBoundingSphere(boundingSphere) {
+    // If offset was originally undefined then give it base value instead of empty object
+    if (!defined(zoomOptions.offset)) {
+      zoomOptions.offset = new HeadingPitchRange(
+        0.0,
+        -0.5,
+        boundingSphere.radius
+      );
+    }
 
-  // If zoomTarget was Cesium3DTileset
-  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
-    // This is here for backwards compatibility and can be removed once Cesium3DTileset.readyPromise and VoxelPrimitive.readyPromise is removed.
-    return target._readyPromise
-      .then(function () {
-        const boundingSphere = target.boundingSphere;
-        // If offset was originally undefined then give it base value instead of empty object
-        if (!defined(zoomOptions.offset)) {
-          zoomOptions.offset = new HeadingPitchRange(
-            0.0,
-            -0.5,
-            boundingSphere.radius
-          );
-        }
+    options = {
+      offset: zoomOptions.offset,
+      duration: zoomOptions.duration,
+      maximumHeight: zoomOptions.maximumHeight,
+      complete: function () {
+        viewer._completeZoom(true);
+      },
+      cancel: function () {
+        viewer._completeZoom(false);
+      },
+    };
 
-        options = {
-          offset: zoomOptions.offset,
-          duration: zoomOptions.duration,
-          maximumHeight: zoomOptions.maximumHeight,
-          complete: function () {
-            viewer._completeZoom(true);
-          },
-          cancel: function () {
-            viewer._completeZoom(false);
-          },
-        };
+    if (viewer._zoomIsFlight) {
+      camera.flyToBoundingSphere(target.boundingSphere, options);
+    } else {
+      camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+      camera.lookAtTransform(Matrix4.IDENTITY);
 
-        if (viewer._zoomIsFlight) {
-          camera.flyToBoundingSphere(target.boundingSphere, options);
-        } else {
-          camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-          camera.lookAtTransform(Matrix4.IDENTITY);
+      // Finish the promise
+      viewer._completeZoom(true);
+    }
 
-          // Finish the promise
-          viewer._completeZoom(true);
-        }
-
-        clearZoom(viewer);
-      })
-      .catch(() => {
-        cancelZoom(viewer);
-      });
+    clearZoom(viewer);
   }
 
-  // If zoomTarget was TimeDynamicPointCloud
   if (target instanceof TimeDynamicPointCloud) {
-    // This is here for backwards compatibility and can be removed once TimeDynamicPointCloud.readyPromise is removed.
-    return target._readyPromise.then(function () {
-      const boundingSphere = target.boundingSphere;
-      // If offset was originally undefined then give it base value instead of empty object
-      if (!defined(zoomOptions.offset)) {
-        zoomOptions.offset = new HeadingPitchRange(
-          0.0,
-          -0.5,
-          boundingSphere.radius
-        );
-      }
+    if (defined(target.boundingSphere)) {
+      zoomToBoundingSphere(target.boundingSphere);
+      return;
+    }
 
-      options = {
-        offset: zoomOptions.offset,
-        duration: zoomOptions.duration,
-        maximumHeight: zoomOptions.maximumHeight,
-        complete: function () {
-          viewer._completeZoom(true);
-        },
-        cancel: function () {
-          viewer._completeZoom(false);
-        },
-      };
-
-      if (viewer._zoomIsFlight) {
-        camera.flyToBoundingSphere(boundingSphere, options);
-      } else {
-        camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
-        camera.lookAtTransform(Matrix4.IDENTITY);
-
-        // Finish the promise
-        viewer._completeZoom(true);
-      }
-
-      clearZoom(viewer);
+    // Otherwise, the first "frame" needs to have been rendered
+    const removeEventListener = target.frameChanged.addEventListener(function (
+      timeDynamicPointCloud
+    ) {
+      zoomToBoundingSphere(timeDynamicPointCloud.boundingSphere);
+      removeEventListener();
     });
+    return;
+  }
+
+  if (target instanceof Cesium3DTileset || target instanceof VoxelPrimitive) {
+    zoomToBoundingSphere(target.boundingSphere);
+    return;
   }
 
   // If zoomTarget was an ImageryLayer
@@ -2379,7 +2344,7 @@ function updateZoomTarget(viewer) {
     return;
   }
 
-  //Stop tracking the current entity.
+  // Stop tracking the current entity.
   viewer.trackedEntity = undefined;
 
   const boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);

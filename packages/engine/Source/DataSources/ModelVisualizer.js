@@ -63,6 +63,7 @@ function ModelVisualizer(scene, entityCollection) {
   this._entityCollection = entityCollection;
   this._modelHash = {};
   this._entitiesToVisualize = new AssociativeArray();
+
   this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
 }
 
@@ -444,18 +445,12 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
 
   const scene = this._scene;
   const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
-  const terrainProvider = globe.terrainProvider;
 
+  // cannot access a terrain provider if there is no globe; formally set to undefined
+  const terrainProvider = defined(globe) ? globe.terrainProvider : undefined;
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
-  if (hasHeightReference) {
-    // We cannot query the availability of the terrain provider till its ready, so the
-    // bounding sphere state will remain pending till the terrain provider is ready.
-    // ready is deprecated. This is here for backwards compatibility
-    if (!terrainProvider._ready) {
-      return BoundingSphereState.PENDING;
-    }
-
+  if (defined(globe) && hasHeightReference) {
+    const ellipsoid = globe.ellipsoid;
     const modelMatrix = model.modelMatrix;
     scratchPosition.x = modelMatrix[12];
     scratchPosition.y = modelMatrix[13];

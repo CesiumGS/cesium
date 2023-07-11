@@ -67,10 +67,6 @@
           console.log(`Error loading tileset: ${error}`);
         }
 
-        Sandcastle.addToolbarButton("Sample heights", function () {
-          sampleHeights();
-        });
-
         async function sampleHeights() {
           viewer.entities.removeAll();
 
@@ -125,6 +121,8 @@
             },
           });
         }
+
+        sampleHeights();
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

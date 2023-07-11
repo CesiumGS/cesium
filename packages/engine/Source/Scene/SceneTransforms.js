@@ -432,8 +432,9 @@ SceneTransforms.drawingBufferToWgs84Coordinates = function (
   let worldCoords;
   let frustum = scene.camera.frustum;
   if (!defined(frustum.fovy)) {
-    if (defined(frustum._offCenterFrustum)) {
-      frustum = frustum._offCenterFrustum;
+    const offCenterFrustum = frustum.offCenterFrustum;
+    if (defined(offCenterFrustum)) {
+      frustum = offCenterFrustum;
     }
     worldCoords = scratchWorldCoords;
     worldCoords.x =

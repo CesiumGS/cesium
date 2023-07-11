@@ -1169,13 +1169,6 @@ Billboard.prototype._loadImage = function () {
   }
 
   if (defined(image)) {
-    // No need to wait on imageIndexPromise since these have already been added to the atlas
-    const index = atlas.getImageIndex(imageId);
-    if (defined(index)) {
-      completeImageLoad(index);
-      return;
-    }
-
     imageIndexPromise = atlas.addImage(imageId, image);
   }
   if (defined(imageSubRegion)) {
@@ -1185,6 +1178,13 @@ Billboard.prototype._loadImage = function () {
   this._imageIndexPromise = imageIndexPromise;
 
   if (!defined(imageIndexPromise)) {
+    return;
+  }
+
+  // If the promise has already successfully resolved, we can return immediately without waiting a frame
+  const index = atlas.getImageIndex(imageId);
+  if (defined(index) && !defined(imageSubRegion)) {
+    completeImageLoad(index);
     return;
   }
 

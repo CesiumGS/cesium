@@ -41,21 +41,24 @@ function demodernizeShader(input, isFragmentShader) {
       output = output.replaceAll(/out_FragData_(\d+)/g, `gl_FragData[$1]`);
     }
 
+    // Remove all layout declarations for out_FragColor.
+    output = output.replaceAll(
+      /layout\s+\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor;/g,
+      ``
+    );
+
     // Replace out_FragColor with gl_FragColor.
     output = output.replaceAll(/out_FragColor/g, `gl_FragColor`);
     output = output.replaceAll(/out_FragColor\[(\d+)\]/g, `gl_FragColor[$1]`);
-
-    // Remove all layout declarations for out_FragColor.
-    output = output.replaceAll(
-      /layout\s+\(location\s*=\s*0\)\s*out\s+vec4\s+out_FragColor/g,
-      ``
-    );
 
     if (/gl_FragDepth/.test(output)) {
       output = `#extension GL_EXT_frag_depth : enable\n${output}`;
       // Replace gl_FragDepth with gl_FragDepthEXT.
       output = output.replaceAll(/gl_FragDepth/g, `gl_FragDepthEXT`);
     }
+
+    // Enable the OES_standard_derivatives extension
+    output = `#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n${output}`;
   } else {
     // Replace the in with attribute.
     output = output.replaceAll(/(in)\s+(vec\d|mat\d|float)/g, `attribute $2`);

@@ -31,11 +31,11 @@ describe(
     let primitive;
     let traversal;
 
-    beforeEach(function () {
+    beforeEach(async function () {
       scene = createScene();
-      provider = new Cesium3DTilesVoxelProvider({
-        url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-      });
+      provider = await Cesium3DTilesVoxelProvider.fromUrl(
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+      );
 
       camera = scene.camera;
       camera.position = Cartesian3.fromElements(-10, -10, -10);
@@ -46,17 +46,15 @@ describe(
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      return provider.readyPromise.then(function () {
-        traversal = new VoxelTraversal(
-          primitive,
-          scene.context,
-          provider.dimensions,
-          provider.types,
-          provider.componentTypes,
-          keyframeCount,
-          textureMemory
-        );
-      });
+      traversal = new VoxelTraversal(
+        primitive,
+        scene.context,
+        provider.dimensions,
+        provider.types,
+        provider.componentTypes,
+        keyframeCount,
+        textureMemory
+      );
     });
 
     afterEach(function () {

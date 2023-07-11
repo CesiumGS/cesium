@@ -58,8 +58,6 @@ Cesium3DTilesetCache.prototype.unloadTiles = function (
 
   const list = this._list;
 
-  const maximumMemoryUsageInBytes = tileset.maximumMemoryUsage * 1024 * 1024;
-
   // Traverse the list only to the sentinel since tiles/nodes to the
   // right of the sentinel were used this frame.
   //
@@ -68,7 +66,7 @@ Cesium3DTilesetCache.prototype.unloadTiles = function (
   let node = list.head;
   while (
     node !== sentinel &&
-    (tileset.totalMemoryUsageInBytes > maximumMemoryUsageInBytes || trimTiles)
+    (tileset.totalMemoryUsageInBytes > tileset.cacheBytes || trimTiles)
   ) {
     const tile = node.item;
     node = node.next;

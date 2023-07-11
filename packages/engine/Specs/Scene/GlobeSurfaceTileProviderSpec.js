@@ -465,6 +465,58 @@ describe(
       expect(scene).notToRender([0, 0, 0, 255]);
     });
 
+    it("renders imagery layers according to show property", async function () {
+      await updateUntilDone(scene.globe);
+      let renderedRed;
+      expect(scene).toRenderAndCall((rgba) => (renderedRed = rgba[0]));
+
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png"
+      );
+      const layer = scene.imageryLayers.addImageryProvider(provider);
+
+      await updateUntilDone(scene.globe);
+      expect(scene).toRenderAndCall((rgba) =>
+        expect(rgba[0]).toBeGreaterThan(renderedRed)
+      );
+
+      layer.show = false;
+
+      await updateUntilDone(scene.globe);
+      expect(scene).toRenderAndCall((rgba) =>
+        expect(rgba[0]).toEqual(renderedRed)
+      );
+    });
+
+    it("adds imagery credits to the CreditDisplay based on show property", async function () {
+      const CreditDisplayElement = CreditDisplay.CreditDisplayElement;
+      const imageryCredit = new Credit("imagery credit");
+
+      const provider = await SingleTileImageryProvider.fromUrl(
+        "Data/Images/Red16x16.png",
+        {
+          credit: imageryCredit,
+        }
+      );
+      const layer = scene.imageryLayers.addImageryProvider(provider);
+
+      await updateUntilDone(scene.globe);
+
+      const creditDisplay = scene.frameState.creditDisplay;
+      creditDisplay.showLightbox();
+      expect(
+        creditDisplay._currentFrameCredits.lightboxCredits.values
+      ).toContain(new CreditDisplayElement(imageryCredit));
+
+      layer.show = false;
+      await updateUntilDone(scene.globe);
+      expect(
+        creditDisplay._currentFrameCredits.lightboxCredits.values
+      ).not.toContain(new CreditDisplayElement(imageryCredit));
+
+      creditDisplay.hideLightbox();
+    });
+
     describe("fog", function () {
       it("culls tiles in full fog", async function () {
         expect(scene).toRender([0, 0, 0, 255]);
