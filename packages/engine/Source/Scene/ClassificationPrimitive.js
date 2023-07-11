@@ -2,7 +2,6 @@ import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribu
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
@@ -163,30 +162,6 @@ function ClassificationPrimitive(options) {
   this._commandsIgnoreShow = [];
 
   this._ready = false;
-
-  const classificationPrimitive = this;
-  // This is here for backwards compatibility. This promise wrapper can be removed once readyPromise is removed.
-  this._readyPromise = new Promise((resolve, reject) => {
-    classificationPrimitive._completeLoad = () => {
-      if (this._ready) {
-        return;
-      }
-
-      this._ready = true;
-
-      if (this.releaseGeometryInstances) {
-        this.geometryInstances = undefined;
-      }
-
-      const error = this._error;
-      if (!defined(error)) {
-        resolve(this);
-      } else {
-        reject(error);
-      }
-    };
-  });
-
   this._primitive = undefined;
   this._pickPrimitive = options._pickPrimitive;
 
@@ -334,23 +309,6 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof ClassificationPrimitive.prototype
-   * @type {Promise<ClassificationPrimitive>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "ClassificationPrimitive.readyPromise",
-        "ClassificationPrimitive.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Wait for ClassificationPrimitive.ready to return true instead."
-      );
-      return this._readyPromise;
     },
   },
 
@@ -1359,7 +1317,11 @@ ClassificationPrimitive.prototype.update = function (frameState) {
 
   frameState.afterRender.push(() => {
     if (defined(this._primitive) && this._primitive.ready) {
-      this._completeLoad();
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
     }
   });
 };

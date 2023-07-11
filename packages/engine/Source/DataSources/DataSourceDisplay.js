@@ -313,7 +313,7 @@ DataSourceDisplay.prototype._postRender = function () {
 
     const credit = dataSource.credit;
     if (defined(credit)) {
-      frameState.creditDisplay.addCredit(credit);
+      frameState.creditDisplay.addCreditToNextFrame(credit);
     }
 
     // Credits from the resource that the user can't remove
@@ -321,7 +321,7 @@ DataSourceDisplay.prototype._postRender = function () {
     if (defined(credits)) {
       const creditCount = credits.length;
       for (let c = 0; c < creditCount; c++) {
-        frameState.creditDisplay.addCredit(credits[c]);
+        frameState.creditDisplay.addCreditToNextFrame(credits[c]);
       }
     }
   }
@@ -499,12 +499,13 @@ DataSourceDisplay.prototype._onDataSourceMoved = function (
  * @callback DataSourceDisplay.VisualizersCallback
  *
  * @param {Scene} scene The scene to create visualizers for.
+ * @param {EntityCluster} entityCluster The entity cluster to create visualizers for.
  * @param {DataSource} dataSource The data source to create visualizers for.
  * @returns {Visualizer[]} An array of visualizers used for visualization.
  *
  * @example
- * function createVisualizers(scene, dataSource) {
- *     return [new Cesium.BillboardVisualizer(scene, dataSource.entities)];
+ * function createVisualizers(scene, entityCluster, dataSource) {
+ *     return [new Cesium.BillboardVisualizer(entityCluster, dataSource.entities)];
  * }
  */
 export default DataSourceDisplay;

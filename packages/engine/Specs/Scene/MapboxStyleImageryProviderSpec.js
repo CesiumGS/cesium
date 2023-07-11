@@ -34,36 +34,6 @@ describe("Scene/MapboxStyleImageryProvider", function () {
     }).toThrowDeveloperError("styleId is required");
   });
 
-  it("resolves readyPromise", function () {
-    const provider = new MapboxStyleImageryProvider({
-      accessToken: "test-token",
-      url: "made/up/mapbox/server/",
-      styleId: "test-id",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "made/up/mapbox/server/",
-    });
-
-    const provider = new MapboxStyleImageryProvider({
-      accessToken: "test-token",
-      url: resource,
-      styleId: "test-id",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
   it("returns valid value for hasAlphaChannel", function () {
     const provider = new MapboxStyleImageryProvider({
       accessToken: "test-token",
@@ -71,11 +41,7 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       styleId: "test-id",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(typeof provider.hasAlphaChannel).toBe("boolean");
-    });
+    expect(typeof provider.hasAlphaChannel).toBe("boolean");
   });
 
   it("supports a slash at the end of the URL", function () {
@@ -85,28 +51,24 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       styleId: "test-id",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).not.toContain("//");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).not.toContain("//");
+      );
+    });
 
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -117,28 +79,24 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       styleId: "test-id",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain("made/up/mapbox/server/");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).toContain("made/up/mapbox/server/");
+      );
+    });
 
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -149,37 +107,31 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       styleId: "test-id",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.url).toEqual(
-        "made/up/mapbox/server/mapbox/test-id/tiles/512/{z}/{x}/{y}?access_token=test-token"
-      );
-      expect(provider.tileWidth).toEqual(256);
-      expect(provider.tileHeight).toEqual(256);
-      expect(provider.maximumLevel).toBeUndefined();
-      expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-      expect(provider.rectangle).toEqual(
-        new WebMercatorTilingScheme().rectangle
-      );
+    expect(provider.url).toEqual(
+      "made/up/mapbox/server/mapbox/test-id/tiles/512/{z}/{x}/{y}?access_token=test-token"
+    );
+    expect(provider.tileWidth).toEqual(256);
+    expect(provider.tileHeight).toEqual(256);
+    expect(provider.maximumLevel).toBeUndefined();
+    expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+    expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
+      );
+    });
 
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -192,38 +144,31 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       rectangle: rectangle,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.tileWidth).toEqual(256);
-      expect(provider.tileHeight).toEqual(256);
-      expect(provider.maximumLevel).toBeUndefined();
-      expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-      expect(provider.rectangle).toEqualEpsilon(
-        rectangle,
-        CesiumMath.EPSILON14
-      );
-      expect(provider.tileDiscardPolicy).toBeUndefined();
+    expect(provider.tileWidth).toEqual(256);
+    expect(provider.tileHeight).toEqual(256);
+    expect(provider.maximumLevel).toBeUndefined();
+    expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+    expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
+    expect(provider.tileDiscardPolicy).toBeUndefined();
 
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain("/0/0/0");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).toContain("/0/0/0");
+      );
+    });
 
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -308,21 +253,17 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      const imagery = new Imagery(layer, 0, 0, 0);
-      imagery.addReference();
-      layer._requestImagery(imagery);
-      RequestScheduler.update();
+    const imagery = new Imagery(layer, 0, 0, 0);
+    imagery.addReference();
+    layer._requestImagery(imagery);
+    RequestScheduler.update();
 
-      return pollToPromise(function () {
-        return imagery.state === ImageryState.RECEIVED;
-      }).then(function () {
-        expect(imagery.image).toBeImageOrImageBitmap();
-        expect(tries).toEqual(2);
-        imagery.releaseReference();
-      });
+    return pollToPromise(function () {
+      return imagery.state === ImageryState.RECEIVED;
+    }).then(function () {
+      expect(imagery.image).toBeImageOrImageBitmap();
+      expect(tries).toEqual(2);
+      imagery.releaseReference();
     });
   });
 
@@ -333,26 +274,22 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       styleId: "test-id",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain("http://fake.map.com");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).toContain("http://fake.map.com");
-
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0);
+      );
     });
+
+    return provider.requestImage(0, 0, 0);
   });
 
   it("contains specified username", function () {
@@ -362,28 +299,24 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       username: "fakeUsername",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain(
+        "https://api.mapbox.com/styles/v1/fakeUsername"
+      );
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).toContain(
-          "https://api.mapbox.com/styles/v1/fakeUsername"
-        );
-
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0);
+      );
     });
+
+    return provider.requestImage(0, 0, 0);
   });
 
   it("contains specified tilesize", function () {
@@ -393,28 +326,24 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       tilesize: 256,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain(
+        "https://api.mapbox.com/styles/v1/mapbox/test-id/tiles/256"
+      );
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).toContain(
-          "https://api.mapbox.com/styles/v1/mapbox/test-id/tiles/256"
-        );
-
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0);
+      );
     });
+
+    return provider.requestImage(0, 0, 0);
   });
 
   it("enables @2x scale factor", function () {
@@ -424,27 +353,23 @@ describe("Scene/MapboxStyleImageryProvider", function () {
       scaleFactor: true,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain(
+        "https://api.mapbox.com/styles/v1/mapbox/test-id/tiles/512/0/0/0@2x"
+      );
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).toContain(
-          "https://api.mapbox.com/styles/v1/mapbox/test-id/tiles/512/0/0/0@2x"
-        );
-
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0);
+      );
     });
+
+    return provider.requestImage(0, 0, 0);
   });
 });

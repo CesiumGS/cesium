@@ -3,7 +3,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Clock from "../Core/Clock.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -124,8 +123,7 @@ function configureCameraFrustum(widget) {
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {object} [options] Object with the following properties:
  * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
- * @param {ImageryProvider | false} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added. Deprecated.
- * @param {ImageryLayer|false} [baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
+ * @param {ImageryLayer|false} [options.baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
  * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
  * @param {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
  * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
@@ -343,24 +341,9 @@ function CesiumWidget(container, options) {
       scene.skyAtmosphere = skyAtmosphere;
     }
 
-    if (defined(options.imageryProvider)) {
-      deprecationWarning(
-        "CesiumWidget options.imageryProvider",
-        "options.imageryProvider was deprecated in CesiumJS 1.104.  It will be in CesiumJS 1.107.  Use options.baseLayer instead."
-      );
-    }
-
     // Set the base imagery layer
     let baseLayer = options.baseLayer;
-    if (
-      options.globe !== false &&
-      baseLayer !== false &&
-      options.imageryProvider !== false
-    ) {
-      if (defined(options.imageryProvider) && !defined(baseLayer)) {
-        baseLayer = new ImageryLayer(options.imageryProvider);
-      }
-
+    if (options.globe !== false && baseLayer !== false) {
       if (!defined(baseLayer)) {
         baseLayer = ImageryLayer.fromWorldImagery();
       }
@@ -517,6 +500,18 @@ Object.defineProperties(CesiumWidget.prototype, {
     },
     set: function (terrainProvider) {
       this._scene.terrainProvider = terrainProvider;
+    },
+  },
+
+  /**
+   * Manages the list of credits to display on screen and in the lightbox.
+   * @memberof CesiumWidget.prototype
+   *
+   * @type {CreditDisplay}
+   */
+  creditDisplay: {
+    get: function () {
+      return this._scene.frameState.creditDisplay;
     },
   },
 

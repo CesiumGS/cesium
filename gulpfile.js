@@ -16,8 +16,8 @@ import gulpRename from "gulp-rename";
 import gulpReplace from "gulp-replace";
 import { globby } from "globby";
 import open from "open";
-import rimraf from "rimraf";
-import mkdirp from "mkdirp";
+import { rimraf } from "rimraf";
+import { mkdirp } from "mkdirp";
 import mergeStream from "merge-stream";
 import streamToPromise from "stream-to-promise";
 import karma from "karma";
@@ -587,7 +587,7 @@ export const postversion = async function () {
       return;
     }
     // Update the version for the updated workspace.
-    packageJson.dependencies[workspace] = version;
+    packageJson.dependencies[workspace] = `^${version}`;
     await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
   });
   return Promise.all(promises);

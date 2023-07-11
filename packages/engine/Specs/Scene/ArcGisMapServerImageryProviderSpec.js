@@ -9,11 +9,8 @@ import {
   DiscardMissingTileImagePolicy,
   GeographicTilingScheme,
   getAbsoluteUri,
-  Imagery,
-  ImageryLayer,
   ImageryLayerFeatureInfo,
   ImageryProvider,
-  ImageryState,
   objectToQuery,
   queryToObject,
   Rectangle,
@@ -24,8 +21,6 @@ import {
   WebMercatorProjection,
   WebMercatorTilingScheme,
 } from "../../index.js";
-
-import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe("Scene/ArcGisMapServerImageryProvider", function () {
   let supportsImageBitmapOptions;
@@ -102,57 +97,6 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
       ],
     },
   };
-
-  it("resolves readyPromise", function () {
-    const baseUrl = "//tiledArcGisMapServer.invalid";
-
-    stubJSONCall(baseUrl, webMercatorResult);
-
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const baseUrl = "//tiledArcGisMapServer.invalid";
-
-    stubJSONCall(baseUrl, webMercatorResult);
-
-    const resource = new Resource({
-      url: baseUrl,
-    });
-
-    const provider = new ArcGisMapServerImageryProvider({
-      url: resource,
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("rejects readyPromise on error", function () {
-    const baseUrl = "//tiledArcGisMapServer.invalid";
-
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail("should not resolve");
-      })
-      .catch(function (e) {
-        expect(e.message).toContain(baseUrl);
-        expect(provider.ready).toBe(false);
-      });
-  });
 
   it("fromUrl throws if url is not provided", async function () {
     await expectAsync(
@@ -715,14 +659,13 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     });
   });
 
-  it("includes security token in requests if one is specified", function () {
+  it("includes security token in requests if one is specified", async function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/",
       token = "5e(u|2!7Y";
 
     stubJSONCall(baseUrl, webMercatorResult, false, token);
 
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
+    const provider = await ArcGisMapServerImageryProvider.fromUrl(baseUrl, {
       token: token,
     });
 
@@ -735,226 +678,73 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
     expect(provider.url).toEqual(baseUrl);
     expect(provider.token).toEqual(token);
 
-    return provider.readyPromise.then(function () {
-      expect(provider.tileWidth).toEqual(128);
-      expect(provider.tileHeight).toEqual(256);
-      expect(provider.maximumLevel).toEqual(2);
-      expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-      expect(provider.credit).toBeDefined();
-      expect(provider.tileDiscardPolicy).toBeInstanceOf(
-        DiscardMissingTileImagePolicy
-      );
-      expect(provider.rectangle).toEqual(
-        new WebMercatorTilingScheme().rectangle
-      );
-      expect(provider.usingPrecachedTiles).toEqual(true);
-      expect(provider.hasAlphaChannel).toBeDefined();
-
-      Resource._Implementations.createImage = function (
-        request,
-        crossOrigin,
-        deferred
-      ) {
-        const url = request.url;
-        if (/^blob:/.test(url) || supportsImageBitmapOptions) {
-          // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-          Resource._DefaultImplementations.createImage(
-            request,
-            crossOrigin,
-            deferred,
-            true,
-            false,
-            true
-          );
-        } else {
-          expect(url).toEqual(expectedTileUrl);
-
-          // Just return any old image.
-          Resource._DefaultImplementations.createImage(
-            new Request({ url: "Data/Images/Red16x16.png" }),
-            crossOrigin,
-            deferred
-          );
-        }
-      };
-
-      Resource._Implementations.loadWithXhr = function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        expect(url).toEqual(expectedTileUrl);
-
-        // Just return any old image.
-        Resource._DefaultImplementations.loadWithXhr(
-          "Data/Images/Red16x16.png",
-          responseType,
-          method,
-          data,
-          headers,
-          deferred
-        );
-      };
-
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(image).toBeImageOrImageBitmap();
-      });
-    });
-  });
-
-  it("raises error on unsupported WKID", function () {
-    const baseUrl = "//tiledArcGisMapServer.invalid/";
-
-    const unsupportedWKIDResult = {
-      currentVersion: 10.01,
-      copyrightText: "Test copyright text",
-      tileInfo: {
-        rows: 128,
-        cols: 256,
-        origin: {
-          x: -180,
-          y: 90,
-        },
-        spatialReference: {
-          wkid: 1234,
-        },
-        lods: [
-          {
-            level: 0,
-            resolution: 0.3515625,
-            scale: 147748799.285417,
-          },
-          {
-            level: 1,
-            resolution: 0.17578125,
-            scale: 73874399.6427087,
-          },
-          {
-            level: 2,
-            resolution: 0.087890625,
-            scale: 36937199.8213544,
-          },
-        ],
-      },
-    };
-
-    stubJSONCall(baseUrl, unsupportedWKIDResult);
-
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
-
-    expect(provider.url).toEqual(baseUrl);
-
-    let tries = 0;
-    provider.errorEvent.addEventListener(function (error) {
-      const isWKIDError = error.message.indexOf("WKID") >= 0;
-      expect(isWKIDError).toBeTrue();
-      tries++;
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail();
-      })
-      .catch(function () {
-        expect(provider.ready).toEqual(false);
-        expect(tries).toEqual(1);
-      });
-  });
-
-  it("raises error on invalid URL", function () {
-    const baseUrl = "//tiledArcGisMapServer.invalid/";
-
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
-
-    expect(provider.url).toEqual(baseUrl);
-
-    let errorEventRaised = false;
-    provider.errorEvent.addEventListener(function (error) {
-      expect(error.message.indexOf(baseUrl) >= 0).toEqual(true);
-      errorEventRaised = true;
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail();
-      })
-      .catch(function () {
-        expect(provider.ready).toEqual(false);
-        expect(errorEventRaised).toEqual(true);
-      });
-  });
-
-  it("raises error event when image cannot be loaded", function () {
-    const baseUrl = "//tiledArcGisMapServer.invalid/";
-
-    stubJSONCall(baseUrl, {
-      currentVersion: 10.01,
-      copyrightText: "Test copyright text",
-    });
-
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
-
-    const layer = new ImageryLayer(provider);
-
-    let tries = 0;
-    provider.errorEvent.addEventListener(function (error) {
-      expect(error.timesRetried).toEqual(tries);
-      ++tries;
-      if (tries < 3) {
-        error.retry = true;
-      }
-      setTimeout(function () {
-        RequestScheduler.update();
-      }, 1);
-    });
+    expect(provider.tileWidth).toEqual(128);
+    expect(provider.tileHeight).toEqual(256);
+    expect(provider.maximumLevel).toEqual(2);
+    expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+    expect(provider.credit).toBeDefined();
+    expect(provider.tileDiscardPolicy).toBeInstanceOf(
+      DiscardMissingTileImagePolicy
+    );
+    expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
+    expect(provider.usingPrecachedTiles).toEqual(true);
+    expect(provider.hasAlphaChannel).toBeDefined();
 
     Resource._Implementations.createImage = function (
       request,
       crossOrigin,
       deferred
     ) {
-      if (tries === 2) {
-        // Succeed after 2 tries
+      const url = request.url;
+      if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+        // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+        Resource._DefaultImplementations.createImage(
+          request,
+          crossOrigin,
+          deferred,
+          true,
+          false,
+          true
+        );
+      } else {
+        expect(url).toEqual(expectedTileUrl);
+
+        // Just return any old image.
         Resource._DefaultImplementations.createImage(
           new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
           deferred
         );
-      } else {
-        // fail
-        setTimeout(function () {
-          deferred.reject();
-        }, 1);
       }
     };
 
-    return provider.readyPromise.then(function () {
-      const imagery = new Imagery(layer, 0, 0, 0);
-      imagery.addReference();
-      layer._requestImagery(imagery);
-      RequestScheduler.update();
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      expect(url).toEqual(expectedTileUrl);
 
-      return pollToPromise(function () {
-        return imagery.state === ImageryState.RECEIVED;
-      }).then(function () {
-        expect(imagery.image).toBeImageOrImageBitmap();
-        expect(tries).toEqual(2);
-        imagery.releaseReference();
-      });
-    });
+      // Just return any old image.
+      Resource._DefaultImplementations.loadWithXhr(
+        "Data/Images/Red16x16.png",
+        responseType,
+        method,
+        data,
+        headers,
+        deferred
+      );
+    };
+
+    const image = await provider.requestImage(0, 0, 0);
+    expect(image).toBeImageOrImageBitmap();
   });
 
-  it("honors fullExtent of tiled server with web mercator projection", function () {
+  it("honors fullExtent of tiled server with web mercator projection", async function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
     const webMercatorFullExtentResult = {
@@ -1001,31 +791,27 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     stubJSONCall(baseUrl, webMercatorFullExtentResult);
 
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
+    const provider = await ArcGisMapServerImageryProvider.fromUrl(baseUrl);
 
     expect(provider.url).toEqual(baseUrl);
 
-    return provider.readyPromise.then(function () {
-      const projection = new WebMercatorProjection();
-      const sw = projection.unproject(
-        new Cartesian2(1.1148026611962173e7, -6443518.758206591)
-      );
-      const ne = projection.unproject(
-        new Cartesian2(1.8830976498143446e7, -265936.19697360107)
-      );
-      const rectangle = new Rectangle(
-        sw.longitude,
-        sw.latitude,
-        ne.longitude,
-        ne.latitude
-      );
-      expect(provider.rectangle).toEqual(rectangle);
-    });
+    const projection = new WebMercatorProjection();
+    const sw = projection.unproject(
+      new Cartesian2(1.1148026611962173e7, -6443518.758206591)
+    );
+    const ne = projection.unproject(
+      new Cartesian2(1.8830976498143446e7, -265936.19697360107)
+    );
+    const rectangle = new Rectangle(
+      sw.longitude,
+      sw.latitude,
+      ne.longitude,
+      ne.latitude
+    );
+    expect(provider.rectangle).toEqual(rectangle);
   });
 
-  it("constrains extent to the tiling scheme's rectangle", function () {
+  it("constrains extent to the tiling scheme's rectangle", async function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
     const webMercatorOutsideBoundsResult = {
@@ -1072,25 +858,21 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     stubJSONCall(baseUrl, webMercatorOutsideBoundsResult);
 
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
+    const provider = await ArcGisMapServerImageryProvider.fromUrl(baseUrl);
 
     expect(provider.url).toEqual(baseUrl);
 
-    return provider.readyPromise.then(function () {
-      expect(provider.rectangle.west).toBeGreaterThanOrEqual(-Math.PI);
-      expect(provider.rectangle.east).toBeLessThanOrEqual(Math.PI);
-      expect(provider.rectangle.south).toBeGreaterThanOrEqual(
-        -WebMercatorProjection.MaximumLatitude
-      );
-      expect(provider.rectangle.north).toBeLessThanOrEqual(
-        WebMercatorProjection.MaximumLatitude
-      );
-    });
+    expect(provider.rectangle.west).toBeGreaterThanOrEqual(-Math.PI);
+    expect(provider.rectangle.east).toBeLessThanOrEqual(Math.PI);
+    expect(provider.rectangle.south).toBeGreaterThanOrEqual(
+      -WebMercatorProjection.MaximumLatitude
+    );
+    expect(provider.rectangle.north).toBeLessThanOrEqual(
+      WebMercatorProjection.MaximumLatitude
+    );
   });
 
-  it("honors fullExtent of tiled server with geographic projection", function () {
+  it("honors fullExtent of tiled server with geographic projection", async function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
     const geographicFullExtentResult = {
@@ -1137,20 +919,15 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     stubJSONCall(baseUrl, geographicFullExtentResult);
 
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
+    const provider = await ArcGisMapServerImageryProvider.fromUrl(baseUrl);
 
     expect(provider.url).toEqual(baseUrl);
-
-    return provider.readyPromise.then(function () {
-      expect(provider.rectangle).toEqual(
-        Rectangle.fromDegrees(-123.4, -23.2, 100.7, 45.2)
-      );
-    });
+    expect(provider.rectangle).toEqual(
+      Rectangle.fromDegrees(-123.4, -23.2, 100.7, 45.2)
+    );
   });
 
-  it("raises error if the spatialReference of the fullExtent is unknown", function () {
+  it("throws if the spatialReference of the fullExtent is unknown", async function () {
     const baseUrl = "//tiledArcGisMapServer.invalid/";
 
     const unknownSpatialReferenceResult = {
@@ -1197,27 +974,12 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
 
     stubJSONCall(baseUrl, unknownSpatialReferenceResult);
 
-    const provider = new ArcGisMapServerImageryProvider({
-      url: baseUrl,
-    });
-
-    expect(provider.url).toEqual(baseUrl);
-
-    let tries = 0;
-    provider.errorEvent.addEventListener(function (error) {
-      const isWKIDError = error.message.indexOf("WKID") >= 0;
-      expect(isWKIDError).toBeTrue();
-      ++tries;
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail();
-      })
-      .catch(function () {
-        expect(provider.ready).toEqual(false);
-        expect(tries).toEqual(1);
-      });
+    await expectAsync(
+      ArcGisMapServerImageryProvider.fromUrl(baseUrl)
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "An error occurred while accessing //tiledArcGisMapServer.invalid/: Tile spatial reference WKID 1234 is not supported."
+    );
   });
 
   describe("pickFeatures", function () {

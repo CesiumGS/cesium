@@ -637,13 +637,12 @@ const positionScratch = new Cartesian3();
 const orientationScratch = new Quaternion();
 
 /**
- * Computes the model matrix for the entity's transform at specified time. Returns undefined if orientation or position
- * are undefined.
+ * Computes the model matrix for the entity's transform at specified time. Returns undefined if position is undefined
  *
  * @param {JulianDate} time The time to retrieve model matrix for.
  * @param {Matrix4} [result] The object onto which to store the result.
  *
- * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position or orientation are undefined.
+ * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position is undefined.
  */
 Entity.prototype.computeModelMatrix = function (time, result) {
   //>>includeStart('debug', pragmas.debug);

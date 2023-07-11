@@ -1,0 +1,28 @@
+{
+    "root": true,
+    "extends": "cesium",
+    "globals": {
+        "Cesium": true
+    },
+    "env": {
+        "browser": true,
+        "node": true
+    },
+    "plugins": [
+        "html",
+        "es"
+    ],
+    "rules": {
+        "no-unused-vars": "off"
+    },
+    "parserOptions": {
+        "sourceType": "module"
+    },
+    "overrides": [
+        {
+            "files": [
+                "playwright.config.js"
+            ]
+        }
+    ]
+}

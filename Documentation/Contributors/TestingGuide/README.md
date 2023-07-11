@@ -26,6 +26,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Run Only Non-WebGL Category Tests](#run-only-non-webgl-category-tests)
       - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
     - [Run Coverage](#run-coverage)
+    - [Run End to End Tests](#run-end-to-end-tests)
   - [`testfailure` Label for Issues](#testfailure-label-for-issues)
   - [Writing Tests](#writing-tests)
     - [Directory Organization](#directory-organization)
@@ -238,6 +239,60 @@ if (b) {
 It is possible to have 100% code coverage with two tests: one test where `a` and `b` are both `true`, and another where both are `false`; however, this only takes into account the case when `// Code block a.1` and `// Code block b.1` run together or when `// Code block a.2` and `// Code block b.2` run. There could be an issue when, for example, `// Code block a.1` and `// Code block b.2` run together.
 
 The number of linearly independent paths (four in this case) is called the **cyclomatic complexity**. Be mindful of this when writing tests. On one extreme, 100% code coverage is the least amount of testing, on the other extreme is covering the cyclomatic complexity, which quickly becomes unreasonable. Use your knowledge of the implementation to devise the best strategy.
+
+### Run End to End Tests
+
+End to end (E2E) testing is a type of testing that tests the entire stack from the user's perspective. This is different to unit testing, which validates a small isolated piece of functionality at the class or function level. In CesiumJS, this testing consists mainly of screenshot comparisons.
+
+[Playwright](https://playwright.dev/) is used to conduct end to end testing. The Playwright tests run in Node and drive instances of the browsers. It is recommended that your read through the [Playwright documentation](https://playwright.dev/docs/intro) to get up to speed before writing or reviewing tests.
+
+Since CesiumJS often takes the current time into consideration for things like lighting, animation, and the position of the skybox corresponding to the earth's rotation, we use [Sinon](https://sinonjs.org/) to mock system time, ensuring consistency for all end to end tests.
+
+#### End to End Test Tasks
+
+To generate initial screenshots, checkout the `main` branch (or a previous release tag), and run `npm run test-e2e-update`. Subsequently, you can test against the generated screenshots with `npm run test-e2e`.
+
+Common end to end workflows have been captured in the following tasks:
+
+- `npm run test-e2e` - Tests only in Chromium against the development build of CesiumJS.
+- `npm run test-e2e-all` - Tests in Chromium, Firefox, and Webkit against the development build of CesiumJS.
+- `npm run test-e2e-release` - Tests only in Chromium against the release build of CesiumJS.
+- `npm run test-e2e-release-all` - Tests in Chromium, Firefox, and Webkit against the release build of CesiumJS.
+- `npm run test-e2e-report` - Launch a server to view the HTML results of the last test.
+- `npm run test-e2e-update` - Tests in Chromium, Firefox, and Webkit against the development build of CesiumJS, updating the screenshots used for comparison. Use this if a feature has deliberately changed rendering.
+
+For further info and options, see the [Playwright documentation on running tests](https://playwright.dev/docs/running-tests).
+
+#### Debugging End to End Tests
+
+`test-e2e`, `test-e2e-all`, `test-e2e-release`, and `test-e2e-release-all` can all have [command line options for playwright test](https://playwright.dev/docs/test-cli) appended. The most useful are:
+
+- `--debug` - Launch a headed browser with developer tools for stepping through the tests.
+- `--project="webkit"` - Test only webkit. Can also use `chromium` or `firefox` to test against those browsers.
+- `-g <grep>` or `--grep <grep>` - Run only tests that match a regular expression.
+- `--grep-invert <grep>` - Run only tests that don't match a regular expression.
+
+For example:
+
+```bash
+npm run test-e2e -- -g "3D Tiles Clipping Planes"
+```
+
+Tests can also be isolated by appending `.only`.
+
+```js
+test.only("focus this test", async ({ page }) => {
+  // Run only focused tests in the entire project.
+});
+```
+
+#### Updating End to End Tests
+
+When new Sandcastle is added, or behavior is intentionally changed, the screenshots will need to be updated. Use `test-e2e-update` to run the relevant E2E tests and generate any new screenshots.
+
+```bash
+npm run test-e2e-update -- -g "3D Tiles Clipping Planes"
+```
 
 ## `testfailure` Label for Issues
 

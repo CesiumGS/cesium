@@ -19,9 +19,9 @@ import I3SNode from "./I3SNode.js";
 function I3SLayer(dataProvider, layerData, index) {
   this._dataProvider = dataProvider;
 
-  if (!defined(layerData.href)) {
+  if (!defined(layerData.href) && defined(index)) {
     // assign a default layer
-    layerData.href = `./layers/${index}`;
+    layerData.href = `layers/${index}`;
   }
 
   const dataProviderUrl = this._dataProvider.resource.getUrlComponent();
@@ -165,10 +165,11 @@ Object.defineProperties(I3SLayer.prototype, {
 
 /**
  * Loads the content, including the root node definition and its children
+ * @param {Cesium3DTileset.ConstructorOptions} [cesium3dTilesetOptions] options for Cesium3dTileset constructor
  * @returns {Promise} A promise that is resolved when the layer data is loaded
  * @private
  */
-I3SLayer.prototype.load = async function () {
+I3SLayer.prototype.load = async function (cesium3dTilesetOptions) {
   if (this._data.spatialReference.wkid !== 4326) {
     throw new RuntimeError(
       `Unsupported spatial reference: ${this._data.spatialReference.wkid}`
@@ -176,8 +177,8 @@ I3SLayer.prototype.load = async function () {
   }
 
   await this._dataProvider.loadGeoidData();
-  await this._loadRootNode();
-  await this._create3DTileset();
+  await this._loadRootNode(cesium3dTilesetOptions);
+  await this._create3DTileset(cesium3dTilesetOptions);
 
   this._rootNode._tile = this._tileset._root;
   this._tileset._root._i3sNode = this._rootNode;
@@ -288,7 +289,7 @@ I3SLayer.prototype._findBestGeometryBuffers = function (
 /**
  * @private
  */
-I3SLayer.prototype._loadRootNode = function () {
+I3SLayer.prototype._loadRootNode = function (cesium3dTilesetOptions) {
   if (defined(this._data.nodePages)) {
     let rootIndex = 0;
     if (defined(this._data.nodePages.rootIndex)) {
@@ -299,7 +300,7 @@ I3SLayer.prototype._loadRootNode = function () {
     this._rootNode = new I3SNode(this, this._data.store.rootNode, true);
   }
 
-  return this._rootNode.load();
+  return this._rootNode.load(cesium3dTilesetOptions);
 };
 
 /**
@@ -308,9 +309,8 @@ I3SLayer.prototype._loadRootNode = function () {
 I3SLayer.prototype._getNodeInNodePages = function (nodeIndex) {
   const index = Math.floor(nodeIndex / this._data.nodePages.nodesPerPage);
   const offsetInPage = nodeIndex % this._data.nodePages.nodesPerPage;
-  const that = this;
-  return this._loadNodePage(index).then(function () {
-    return that._nodePages[index][offsetInPage];
+  return this._loadNodePage(index).then(function (data) {
+    return data.nodes[offsetInPage];
   });
 };
 
@@ -373,7 +373,7 @@ I3SLayer.prototype._computeExtent = function () {
 /**
  * @private
  */
-I3SLayer.prototype._create3DTileset = async function () {
+I3SLayer.prototype._create3DTileset = async function (cesium3dTilesetOptions) {
   const inPlaceTileset = {
     asset: {
       version: "1.0",
@@ -387,17 +387,10 @@ I3SLayer.prototype._create3DTileset = async function () {
   });
 
   const tilesetUrl = URL.createObjectURL(tilesetBlob);
-
-  const tilesetOptions = {};
-  if (defined(this._dataProvider._cesium3dTilesetOptions)) {
-    for (const x in this._dataProvider._cesium3dTilesetOptions) {
-      if (this._dataProvider._cesium3dTilesetOptions.hasOwnProperty(x)) {
-        tilesetOptions[x] = this._dataProvider._cesium3dTilesetOptions[x];
-      }
-    }
-  }
-
-  this._tileset = await Cesium3DTileset.fromUrl(tilesetUrl, tilesetOptions);
+  this._tileset = await Cesium3DTileset.fromUrl(
+    tilesetUrl,
+    cesium3dTilesetOptions
+  );
   this._tileset.show = this._dataProvider.show;
   this._tileset._isI3STileSet = true;
   this._tileset.tileUnload.addEventListener(function (tile) {

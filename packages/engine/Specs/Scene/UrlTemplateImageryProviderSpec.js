@@ -40,32 +40,6 @@ describe("Scene/UrlTemplateImageryProvider", function () {
     expect(createWithoutUrl).toThrowDeveloperError();
   });
 
-  it("resolves readyPromise", function () {
-    const provider = new UrlTemplateImageryProvider({
-      url: "made/up/tms/server/",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "made/up/tms/server/",
-    });
-
-    const provider = new UrlTemplateImageryProvider({
-      url: resource,
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
   it("returns valid value for hasAlphaChannel", function () {
     const provider = new UrlTemplateImageryProvider({
       url: "made/up/tms/server/",

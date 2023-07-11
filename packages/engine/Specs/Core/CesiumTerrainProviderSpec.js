@@ -133,6 +133,45 @@ describe("Core/CesiumTerrainProvider", function () {
     );
   }
 
+  function returnParentUrlTileJsonWithMetadataAvailability() {
+    const paths = [
+      "Data/CesiumTerrainTileJson/ParentUrlAvailability.tile.json",
+      "Data/CesiumTerrainTileJson/ParentAvailability.tile.json",
+    ];
+    let i = 0;
+    const oldLoad = Resource._Implementations.loadWithXhr;
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      if (url.indexOf("layer.json") >= 0) {
+        Resource._DefaultImplementations.loadWithXhr(
+          paths[i++],
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      } else {
+        return oldLoad(
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        );
+      }
+    };
+  }
+
   async function waitForTile(level, x, y, requestNormals, requestWaterMask, f) {
     const terrainProvider = await CesiumTerrainProvider.fromUrl("made/up/url", {
       requestVertexNormals: requestNormals,
@@ -193,57 +232,6 @@ describe("Core/CesiumTerrainProvider", function () {
     await expectAsync(
       CesiumTerrainProvider.fromUrl(Promise.reject(new Error("my message")))
     ).toBeRejectedWithError("my message");
-  });
-
-  it("resolves readyPromise", function () {
-    const provider = new CesiumTerrainProvider({
-      url: "made/up/url",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise when url promise is used", function () {
-    const provider = new CesiumTerrainProvider({
-      url: Promise.resolve("made/up/url"),
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "made/up/url",
-    });
-
-    const provider = new CesiumTerrainProvider({
-      url: resource,
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("rejects readyPromise when url rejects", function () {
-    const provider = new CesiumTerrainProvider({
-      url: Promise.reject(new Error("my message")),
-    });
-    return provider.readyPromise
-      .then(function () {
-        fail("should not resolve");
-      })
-      .catch(function (result) {
-        expect(result.message).toBe("my message");
-        expect(provider.ready).toBe(false);
-      });
   });
 
   it("uses geographic tiling scheme by default", async function () {
@@ -895,6 +883,43 @@ describe("Core/CesiumTerrainProvider", function () {
       expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(false);
 
       const loadedData = await terrainProvider.requestTileGeometry(0, 0, 0);
+      expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+      expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(true);
+    });
+
+    it("provides QuantizedMeshTerrainData with multiple layers and with Metadata availability ", async function () {
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/CesiumTerrainTileJson/tile.metadataavailability.terrain",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      };
+
+      returnParentUrlTileJsonWithMetadataAvailability();
+
+      const terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "made/up/url"
+      );
+
+      expect(terrainProvider.hasMetadata).toBe(true);
+      const layers = terrainProvider._layers;
+      expect(layers.length).toBe(2);
+
+      expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(false);
+
+      const loadedData = await terrainProvider.requestTileGeometry(0, 0, 1);
       expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
       expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(true);
     });

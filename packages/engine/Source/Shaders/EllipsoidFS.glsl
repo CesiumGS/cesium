@@ -10,7 +10,7 @@ vec4 computeEllipsoidColor(czm_ray ray, float intersection, float side)
     vec3 geodeticNormal = normalize(czm_geodeticSurfaceNormal(positionMC, vec3(0.0), u_oneOverEllipsoidRadiiSquared));
     vec3 sphericalNormal = normalize(positionMC / u_radii);
     vec3 normalMC = geodeticNormal * side;              // normalized surface normal (always facing the viewer) in model coordinates
-    vec3 normalEC = normalize(czm_normal * normalMC);   // normalized surface normal in eye coordiantes
+    vec3 normalEC = normalize(czm_normal * normalMC);   // normalized surface normal in eye coordinates
 
     vec2 st = czm_ellipsoidWgs84TextureCoordinates(sphericalNormal);
     vec3 positionToEyeEC = -positionEC;

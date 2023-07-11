@@ -76,14 +76,6 @@ function EntityCluster(options) {
   this.show = defaultValue(options.show, true);
 }
 
-function getX(point) {
-  return point.coord.x;
-}
-
-function getY(point) {
-  return point.coord.y;
-}
-
 function expandBoundingBox(bbox, pixelRange) {
   bbox.x -= pixelRange;
   bbox.y -= pixelRange;
@@ -335,153 +327,159 @@ function createDeclutterCallback(entityCluster) {
     let collection;
     let collectionIndex;
 
-    const index = new KDBush(points, getX, getY, 64, Int32Array);
+    if (points.length > 0) {
+      const index = new KDBush(points.length, 64, Uint32Array);
+      for (let p = 0; p < points.length; ++p) {
+        index.add(points[p].coord.x, points[p].coord.y);
+      }
+      index.finish();
 
-    if (currentHeight < previousHeight) {
-      length = clusters.length;
+      if (currentHeight < previousHeight) {
+        length = clusters.length;
+        for (i = 0; i < length; ++i) {
+          const cluster = clusters[i];
+
+          if (!occluder.isPointVisible(cluster.position)) {
+            continue;
+          }
+
+          const coord = Billboard._computeScreenSpacePosition(
+            Matrix4.IDENTITY,
+            cluster.position,
+            Cartesian3.ZERO,
+            Cartesian2.ZERO,
+            scene
+          );
+          if (!defined(coord)) {
+            continue;
+          }
+
+          const factor = 1.0 - currentHeight / previousHeight;
+          let width = (cluster.width = cluster.width * factor);
+          let height = (cluster.height = cluster.height * factor);
+
+          width = Math.max(width, cluster.minimumWidth);
+          height = Math.max(height, cluster.minimumHeight);
+
+          const minX = coord.x - width * 0.5;
+          const minY = coord.y - height * 0.5;
+          const maxX = coord.x + width;
+          const maxY = coord.y + height;
+
+          neighbors = index.range(minX, minY, maxX, maxY);
+          neighborLength = neighbors.length;
+          numPoints = 0;
+          ids = [];
+
+          for (j = 0; j < neighborLength; ++j) {
+            neighborIndex = neighbors[j];
+            neighborPoint = points[neighborIndex];
+            if (!neighborPoint.clustered) {
+              ++numPoints;
+
+              collection = neighborPoint.collection;
+              collectionIndex = neighborPoint.index;
+              ids.push(collection.get(collectionIndex).id);
+            }
+          }
+
+          if (numPoints >= minimumClusterSize) {
+            addCluster(cluster.position, numPoints, ids, entityCluster);
+            newClusters.push(cluster);
+
+            for (j = 0; j < neighborLength; ++j) {
+              points[neighbors[j]].clustered = true;
+            }
+          }
+        }
+      }
+
+      length = points.length;
       for (i = 0; i < length; ++i) {
-        const cluster = clusters[i];
-
-        if (!occluder.isPointVisible(cluster.position)) {
+        const point = points[i];
+        if (point.clustered) {
           continue;
         }
 
-        const coord = Billboard._computeScreenSpacePosition(
-          Matrix4.IDENTITY,
-          cluster.position,
-          Cartesian3.ZERO,
-          Cartesian2.ZERO,
-          scene
+        point.clustered = true;
+
+        collection = point.collection;
+        collectionIndex = point.index;
+
+        const item = collection.get(collectionIndex);
+        bbox = getBoundingBox(
+          item,
+          point.coord,
+          pixelRange,
+          entityCluster,
+          pointBoundinRectangleScratch
         );
-        if (!defined(coord)) {
-          continue;
-        }
+        const totalBBox = BoundingRectangle.clone(
+          bbox,
+          totalBoundingRectangleScratch
+        );
 
-        const factor = 1.0 - currentHeight / previousHeight;
-        let width = (cluster.width = cluster.width * factor);
-        let height = (cluster.height = cluster.height * factor);
-
-        width = Math.max(width, cluster.minimumWidth);
-        height = Math.max(height, cluster.minimumHeight);
-
-        const minX = coord.x - width * 0.5;
-        const minY = coord.y - height * 0.5;
-        const maxX = coord.x + width;
-        const maxY = coord.y + height;
-
-        neighbors = index.range(minX, minY, maxX, maxY);
+        neighbors = index.range(
+          bbox.x,
+          bbox.y,
+          bbox.x + bbox.width,
+          bbox.y + bbox.height
+        );
         neighborLength = neighbors.length;
-        numPoints = 0;
-        ids = [];
+
+        const clusterPosition = Cartesian3.clone(item.position);
+        numPoints = 1;
+        ids = [item.id];
 
         for (j = 0; j < neighborLength; ++j) {
           neighborIndex = neighbors[j];
           neighborPoint = points[neighborIndex];
           if (!neighborPoint.clustered) {
+            const neighborItem = neighborPoint.collection.get(
+              neighborPoint.index
+            );
+            const neighborBBox = getBoundingBox(
+              neighborItem,
+              neighborPoint.coord,
+              pixelRange,
+              entityCluster,
+              neighborBoundingRectangleScratch
+            );
+
+            Cartesian3.add(
+              neighborItem.position,
+              clusterPosition,
+              clusterPosition
+            );
+
+            BoundingRectangle.union(totalBBox, neighborBBox, totalBBox);
             ++numPoints;
 
-            collection = neighborPoint.collection;
-            collectionIndex = neighborPoint.index;
-            ids.push(collection.get(collectionIndex).id);
+            ids.push(neighborItem.id);
           }
         }
 
         if (numPoints >= minimumClusterSize) {
-          addCluster(cluster.position, numPoints, ids, entityCluster);
-          newClusters.push(cluster);
+          const position = Cartesian3.multiplyByScalar(
+            clusterPosition,
+            1.0 / numPoints,
+            clusterPosition
+          );
+          addCluster(position, numPoints, ids, entityCluster);
+          newClusters.push({
+            position: position,
+            width: totalBBox.width,
+            height: totalBBox.height,
+            minimumWidth: bbox.width,
+            minimumHeight: bbox.height,
+          });
 
           for (j = 0; j < neighborLength; ++j) {
             points[neighbors[j]].clustered = true;
           }
+        } else {
+          addNonClusteredItem(item, entityCluster);
         }
-      }
-    }
-
-    length = points.length;
-    for (i = 0; i < length; ++i) {
-      const point = points[i];
-      if (point.clustered) {
-        continue;
-      }
-
-      point.clustered = true;
-
-      collection = point.collection;
-      collectionIndex = point.index;
-
-      const item = collection.get(collectionIndex);
-      bbox = getBoundingBox(
-        item,
-        point.coord,
-        pixelRange,
-        entityCluster,
-        pointBoundinRectangleScratch
-      );
-      const totalBBox = BoundingRectangle.clone(
-        bbox,
-        totalBoundingRectangleScratch
-      );
-
-      neighbors = index.range(
-        bbox.x,
-        bbox.y,
-        bbox.x + bbox.width,
-        bbox.y + bbox.height
-      );
-      neighborLength = neighbors.length;
-
-      const clusterPosition = Cartesian3.clone(item.position);
-      numPoints = 1;
-      ids = [item.id];
-
-      for (j = 0; j < neighborLength; ++j) {
-        neighborIndex = neighbors[j];
-        neighborPoint = points[neighborIndex];
-        if (!neighborPoint.clustered) {
-          const neighborItem = neighborPoint.collection.get(
-            neighborPoint.index
-          );
-          const neighborBBox = getBoundingBox(
-            neighborItem,
-            neighborPoint.coord,
-            pixelRange,
-            entityCluster,
-            neighborBoundingRectangleScratch
-          );
-
-          Cartesian3.add(
-            neighborItem.position,
-            clusterPosition,
-            clusterPosition
-          );
-
-          BoundingRectangle.union(totalBBox, neighborBBox, totalBBox);
-          ++numPoints;
-
-          ids.push(neighborItem.id);
-        }
-      }
-
-      if (numPoints >= minimumClusterSize) {
-        const position = Cartesian3.multiplyByScalar(
-          clusterPosition,
-          1.0 / numPoints,
-          clusterPosition
-        );
-        addCluster(position, numPoints, ids, entityCluster);
-        newClusters.push({
-          position: position,
-          width: totalBBox.width,
-          height: totalBBox.height,
-          minimumWidth: bbox.width,
-          minimumHeight: bbox.height,
-        });
-
-        for (j = 0; j < neighborLength; ++j) {
-          points[neighbors[j]].clustered = true;
-        }
-      } else {
-        addNonClusteredItem(item, entityCluster);
       }
     }
 

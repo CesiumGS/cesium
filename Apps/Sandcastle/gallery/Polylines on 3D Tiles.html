@@ -43,8 +43,21 @@
           "2022-08-01T00:00:00Z"
         );
 
+        scene.camera.setView({
+          destination: new Cesium.Cartesian3(
+            1234151.4883992162,
+            -5086036.79436967,
+            3633328.4278331124
+          ),
+          orientation: {
+            heading: 5.593695742186853,
+            pitch: -1.0786797635545216,
+            roll: 6.27892466154778,
+          },
+        });
+
         let powerPlant;
-        let powerPlantShow = false;
+        let powerPlantShow = true;
         try {
           powerPlant = await Cesium.Cesium3DTileset.fromIonAssetId(1240402);
           powerPlant.show = powerPlantShow;
@@ -107,7 +120,7 @@
               color: Cesium.Color.YELLOW,
               dashLength: 20.0,
             }),
-            show: false,
+            show: true,
             clampToGround: true,
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
           },
@@ -146,7 +159,7 @@
           },
         });
 
-        Sandcastle.addToolbarMenu([
+        Sandcastle.addDefaultToolbarMenu([
           {
             text: "BIM",
             onselect: function () {

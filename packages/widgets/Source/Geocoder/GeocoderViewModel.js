@@ -4,7 +4,9 @@ import {
   defaultValue,
   defined,
   DeveloperError,
+  destroyObject,
   Event,
+  GeocoderService,
   GeocodeType,
   getElement,
   IonGeocoderService,
@@ -53,7 +55,8 @@ function GeocoderViewModel(options) {
   this._flightDuration = options.flightDuration;
   this._searchText = "";
   this._isSearchInProgress = false;
-  this._geocodePromise = undefined;
+  this._wasGeocodeCancelled = false;
+  this._previousCredits = [];
   this._complete = new Event();
   this._suggestions = [];
   this._selectedSuggestion = undefined;
@@ -82,7 +85,7 @@ function GeocoderViewModel(options) {
     if (that.isSearchInProgress) {
       cancelGeocode(that);
     } else {
-      geocode(that, that._geocoderServices, geocodeType);
+      return geocode(that, that._geocoderServices, geocodeType);
     }
   });
 
@@ -418,29 +421,20 @@ function flyToDestination(viewModel, destination) {
     });
 }
 
-function chainPromise(promise, geocoderService, query, geocodeType) {
-  return promise.then(function (result) {
-    if (
-      defined(result) &&
-      result.state === "fulfilled" &&
-      result.value.length > 0
-    ) {
-      return result;
-    }
-    const nextPromise = geocoderService
-      .geocode(query, geocodeType)
-      .then(function (result) {
-        return { state: "fulfilled", value: result };
-      })
-      .catch(function (err) {
-        return { state: "rejected", reason: err };
-      });
-
-    return nextPromise;
-  });
+async function attemptGeocode(geocoderService, query, geocodeType) {
+  try {
+    const result = await geocoderService.geocode(query, geocodeType);
+    return {
+      state: "fulfilled",
+      value: result,
+      credits: geocoderService.credit,
+    };
+  } catch (error) {
+    return { state: "rejected", reason: error };
+  }
 }
 
-function geocode(viewModel, geocoderServices, geocodeType) {
+async function geocode(viewModel, geocoderServices, geocodeType) {
   const query = viewModel._searchText;
 
   if (hasOnlyWhitespace(query)) {
@@ -449,31 +443,84 @@ function geocode(viewModel, geocoderServices, geocodeType) {
   }
 
   viewModel._isSearchInProgress = true;
+  viewModel._wasGeocodeCancelled = false;
 
-  let promise = Promise.resolve();
-  for (let i = 0; i < geocoderServices.length; i++) {
-    promise = chainPromise(promise, geocoderServices[i], query, geocodeType);
+  let i;
+  let result;
+  for (i = 0; i < geocoderServices.length; i++) {
+    if (viewModel._wasGeocodeCancelled) {
+      return;
+    }
+
+    result = await attemptGeocode(geocoderServices[i], query, geocodeType);
+    if (
+      defined(result) &&
+      result.state === "fulfilled" &&
+      result.value.length > 0
+    ) {
+      break;
+    }
   }
 
-  viewModel._geocodePromise = promise;
-  promise.then(function (result) {
-    if (promise.cancel) {
-      return;
-    }
-    viewModel._isSearchInProgress = false;
+  if (viewModel._wasGeocodeCancelled) {
+    return;
+  }
 
-    const geocoderResults = result.value;
-    if (
-      result.state === "fulfilled" &&
-      defined(geocoderResults) &&
-      geocoderResults.length > 0
-    ) {
-      viewModel._searchText = geocoderResults[0].displayName;
-      viewModel.destinationFound(viewModel, geocoderResults[0].destination);
-      return;
+  viewModel._isSearchInProgress = false;
+  clearCredits(viewModel);
+
+  const geocoderResults = result.value;
+  if (
+    result.state === "fulfilled" &&
+    defined(geocoderResults) &&
+    geocoderResults.length > 0
+  ) {
+    viewModel._searchText = geocoderResults[0].displayName;
+    viewModel.destinationFound(viewModel, geocoderResults[0].destination);
+    const credits = updateCredits(
+      viewModel,
+      GeocoderService.getCreditsFromResult(geocoderResults[0])
+    );
+    // If the result does not contain any credits, default to the service credit.
+    if (!defined(credits)) {
+      updateCredit(viewModel, geocoderServices[i].credit);
     }
-    viewModel._searchText = `${query} (not found)`;
-  });
+    return;
+  }
+
+  viewModel._searchText = `${query} (not found)`;
+}
+
+function updateCredit(viewModel, credit) {
+  if (
+    defined(credit) &&
+    !viewModel._scene.isDestroyed() &&
+    !viewModel._scene.frameState.creditDisplay.isDestroyed()
+  ) {
+    viewModel._scene.frameState.creditDisplay.addStaticCredit(credit);
+    viewModel._previousCredits.push(credit);
+  }
+}
+
+function updateCredits(viewModel, credits) {
+  if (defined(credits)) {
+    credits.forEach((credit) => updateCredit(viewModel, credit));
+  }
+
+  return credits;
+}
+
+function clearCredits(viewModel) {
+  if (
+    !viewModel._scene.isDestroyed() &&
+    !viewModel._scene.frameState.creditDisplay.isDestroyed()
+  ) {
+    viewModel._previousCredits.forEach((credit) => {
+      viewModel._scene.frameState.creditDisplay.removeStaticCredit(credit);
+    });
+  }
+
+  viewModel._previousCredits.length = 0;
 }
 
 function adjustSuggestionsScroll(viewModel, focusedItemIndex) {
@@ -496,10 +543,9 @@ function adjustSuggestionsScroll(viewModel, focusedItemIndex) {
 }
 
 function cancelGeocode(viewModel) {
-  viewModel._isSearchInProgress = false;
-  if (defined(viewModel._geocodePromise)) {
-    viewModel._geocodePromise.cancel = true;
-    viewModel._geocodePromise = undefined;
+  if (viewModel._isSearchInProgress) {
+    viewModel._isSearchInProgress = false;
+    viewModel._wasGeocodeCancelled = true;
   }
 }
 
@@ -511,7 +557,7 @@ function clearSuggestions(viewModel) {
   knockout.getObservable(viewModel, "_suggestions").removeAll();
 }
 
-function updateSearchSuggestions(viewModel) {
+async function updateSearchSuggestions(viewModel) {
   if (!viewModel.autoComplete) {
     return;
   }
@@ -519,30 +565,33 @@ function updateSearchSuggestions(viewModel) {
   const query = viewModel._searchText;
 
   clearSuggestions(viewModel);
+  clearCredits(viewModel);
+
   if (hasOnlyWhitespace(query)) {
     return;
   }
 
-  let promise = Promise.resolve([]);
-  viewModel._geocoderServices.forEach(function (service) {
-    promise = promise.then(function (results) {
-      if (results.length >= 5) {
-        return results;
+  for (const service of viewModel._geocoderServices) {
+    const newResults = await service.geocode(query, GeocodeType.AUTOCOMPLETE);
+    viewModel._suggestions = viewModel._suggestions.concat(newResults);
+    if (newResults.length > 0) {
+      let useDefaultCredit = true;
+      newResults.forEach((result) => {
+        const credits = GeocoderService.getCreditsFromResult(result);
+        useDefaultCredit = useDefaultCredit && !defined(credits);
+        updateCredits(viewModel, credits);
+      });
+
+      // Use the service credit if there were no attributions in the results
+      if (useDefaultCredit) {
+        updateCredit(viewModel, service.credit);
       }
-      return service
-        .geocode(query, GeocodeType.AUTOCOMPLETE)
-        .then(function (newResults) {
-          results = results.concat(newResults);
-          return results;
-        });
-    });
-  });
-  return promise.then(function (results) {
-    const suggestions = viewModel._suggestions;
-    for (let i = 0; i < results.length; i++) {
-      suggestions.push(results[i]);
     }
-  });
+
+    if (viewModel._suggestions.length >= 5) {
+      return;
+    }
+  }
 }
 
 /**
@@ -554,4 +603,20 @@ GeocoderViewModel.flyToDestination = flyToDestination;
 //exposed for testing
 GeocoderViewModel._updateSearchSuggestions = updateSearchSuggestions;
 GeocoderViewModel._adjustSuggestionsScroll = adjustSuggestionsScroll;
+
+/**
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
+ */
+GeocoderViewModel.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
+ * Destroys the widget.  Should be called if permanently
+ * removing the widget from layout.
+ */
+GeocoderViewModel.prototype.destroy = function () {
+  clearCredits(this);
+  return destroyObject(this);
+};
 export default GeocoderViewModel;

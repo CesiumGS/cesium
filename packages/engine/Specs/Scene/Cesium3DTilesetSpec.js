@@ -264,30 +264,6 @@ describe(
       return tileset._selectedTiles.indexOf(tile) > -1;
     }
 
-    it("rejects readyPromise with invalid tileset JSON file", function () {
-      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        deferred.reject();
-      });
-
-      options.url = "invalid.json";
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
-    });
-
     it("loads json with static loadJson method", async function () {
       const tilesetJson = {
         asset: {
@@ -299,111 +275,6 @@ describe(
       await expectAsync(Cesium3DTileset.loadJson(uri)).toBeResolvedTo(
         tilesetJson
       );
-    });
-
-    it("static method loadJson is used in Cesium3DTileset constructor", function () {
-      const path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-
-      const originalLoadJson = Cesium3DTileset.loadJson;
-
-      // override loadJson and replace incorrect url with correct url
-      Cesium3DTileset.loadJson = function (tilesetUrl) {
-        return originalLoadJson(path);
-      };
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: "invalid.json",
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-          Cesium3DTileset.loadJson = originalLoadJson;
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
-    });
-
-    it("Constructor works with promise to resource", function () {
-      const resource = new Resource({
-        url: "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json",
-      });
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: Promise.resolve(resource),
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
-    });
-
-    it("Constructor works with file resource", function () {
-      const resource = new Resource({
-        url: "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json",
-      });
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: resource,
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
-    });
-
-    it("rejects readyPromise with invalid tileset version", function () {
-      const tilesetJson = {
-        asset: {
-          version: "2.0",
-        },
-      };
-
-      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
-
-      options.url = uri;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
-    });
-
-    it("rejects readyPromise with unsupported extension", function () {
-      const tilesetJson = {
-        asset: {
-          version: "1.0",
-        },
-        extensionsUsed: ["unsupported_extension"],
-        extensionsRequired: ["unsupported_extension"],
-      };
-
-      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
-
-      options.url = uri;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
     });
 
     it("fromUrl throws without url", async function () {
@@ -476,16 +347,6 @@ describe(
       ).toBeRejectedWithDeveloperError(
         "assetId is required, actual value was undefined"
       );
-    });
-
-    it("resolves readyPromise", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
-        return tileset.readyPromise.then(function (tileset) {
-          expect(tileset.ready).toEqual(true);
-        });
-      });
     });
 
     it("loads tileset JSON file", function () {
@@ -2493,7 +2354,7 @@ describe(
       ) {
         const spyUpdate = jasmine.createSpy("listener");
         tileset.tileLoad.addEventListener(spyUpdate);
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
         viewRootOnly();
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
           function () {
@@ -2539,7 +2400,7 @@ describe(
             }
           );
           tileset.tileFailed.addEventListener(spyUpdate);
-          tileset.maximumMemoryUsage = 0;
+          tileset.cacheBytes = 0;
           viewRootOnly();
           return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
         })
@@ -3505,11 +3366,112 @@ describe(
       });
     });
 
-    it("Unloads cached tiles outside of the view frustum using maximumMemoryUsage", function () {
+    it("Unload all cached tiles not required to meet SSE using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
+
+        // Render parent and four children (using additive refinement)
+        viewAllTiles();
+        scene.renderForSpecs();
+
+        const statistics = tileset._statistics;
+        expect(statistics.numberOfCommands).toEqual(5);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
+        expect(tileset.totalMemoryUsageInBytes).toEqual(37200); // Specific to this tileset
+
+        // Zoom out so only root tile is needed to meet SSE.  This unloads
+        // the four children since the maximum memory usage is zero.
+        viewRootOnly();
+        scene.renderForSpecs();
+
+        expect(statistics.numberOfCommands).toEqual(1);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(1);
+        expect(tileset.totalMemoryUsageInBytes).toEqual(7440); // Specific to this tileset
+
+        // Zoom back in so all four children are re-requested.
+        viewAllTiles();
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            expect(statistics.numberOfCommands).toEqual(5);
+            expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
+            expect(tileset.totalMemoryUsageInBytes).toEqual(37200); // Specific to this tileset
+          }
+        );
+      });
+    });
+
+    it("Unload some cached tiles not required to meet SSE using cacheBytes", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.cacheBytes = 0.025 * 1024 * 1024; // Just enough memory to allow 3 tiles to remain
+        // Render parent and four children (using additive refinement)
+        viewAllTiles();
+        scene.renderForSpecs();
+
+        const statistics = tileset._statistics;
+        expect(statistics.numberOfCommands).toEqual(5);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
+
+        // Zoom out so only root tile is needed to meet SSE.  This unloads
+        // two of the four children so three tiles are still loaded (the
+        // root and two children) since the maximum memory usage is sufficient.
+        viewRootOnly();
+        scene.renderForSpecs();
+
+        expect(statistics.numberOfCommands).toEqual(1);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(3);
+
+        // Zoom back in so the two children are re-requested.
+        viewAllTiles();
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            expect(statistics.numberOfCommands).toEqual(5);
+            expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
+          }
+        );
+      });
+    });
+
+    it("Restrict tileset memory usage with maximumCacheOverflowBytes", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.cacheBytes = 0.025 * 1024 * 1024; // Just enough memory to allow 3 tiles to remain
+        tileset.maximumCacheOverflowBytes = 0;
+        expect(tileset.memoryAdjustedScreenSpaceError).toEqual(16);
+
+        // Zoom out so only root tile is needed to meet SSE.
+        viewRootOnly();
+        scene.renderForSpecs();
+        const statistics = tileset._statistics;
+        expect(statistics.numberOfCommands).toEqual(1);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(3);
+
+        // Zoom back in and attempt to render all tiles
+        viewAllTiles();
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            // Only 3 tiles should have been actually loaded
+            expect(statistics.numberOfCommands).toEqual(3);
+            expect(statistics.numberOfTilesWithContentReady).toEqual(3); // Three loaded tiles
+            // SSE should have been adjusted higher
+            expect(tileset.memoryAdjustedScreenSpaceError).toBeGreaterThan(16);
+          }
+        );
+      });
+    });
+
+    it("Unloads cached tiles outside of the view frustum using cacheBytes", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.cacheBytes = 0;
 
         scene.renderForSpecs();
         const statistics = tileset._statistics;
@@ -3535,13 +3497,13 @@ describe(
       });
     });
 
-    it("Unloads cached tiles in a tileset with external tileset JSON file using maximumMemoryUsage", function () {
+    it("Unloads cached tiles in a tileset with external tileset JSON file using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(
         function (tileset) {
           const statistics = tileset._statistics;
           const cacheList = tileset._cache._list;
 
-          tileset.maximumMemoryUsage = 0.02;
+          tileset.cacheBytes = 0.02 * 1024 * 1024;
 
           scene.renderForSpecs();
           expect(statistics.numberOfCommands).toEqual(5);
@@ -3572,12 +3534,12 @@ describe(
       );
     });
 
-    it("Unloads cached tiles in a tileset with empty tiles using maximumMemoryUsage", function () {
+    it("Unloads cached tiles in a tileset with empty tiles using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetEmptyRootUrl).then(
         function (tileset) {
           const statistics = tileset._statistics;
 
-          tileset.maximumMemoryUsage = 0.02;
+          tileset.cacheBytes = 0.02 * 1024 * 1024;
 
           scene.renderForSpecs();
           expect(statistics.numberOfCommands).toEqual(4);
@@ -3603,7 +3565,7 @@ describe(
       );
     });
 
-    it("Unload cached tiles when a tileset uses replacement refinement using maximumMemoryUsage", function () {
+    it("Unload cached tiles when a tileset uses replacement refinement using cacheBytes", function () {
       // No children have content, but all grandchildren have content
       //
       //          C
@@ -3614,7 +3576,7 @@ describe(
         scene,
         tilesetReplacement1Url
       ).then(function (tileset) {
-        tileset.maximumMemoryUsage = 0; // Only root needs to be visible
+        tileset.cacheBytes = 0; // Only root needs to be visible
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3648,7 +3610,7 @@ describe(
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0.05;
+        tileset.cacheBytes = 0.05 * 1024 * 1024;
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3678,7 +3640,7 @@ describe(
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3713,6 +3675,20 @@ describe(
       const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       expect(function () {
         tileset.maximumMemoryUsage = -1;
+      }).toThrowDeveloperError();
+    });
+
+    it("cacheBytes throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(function () {
+        tileset.cacheBytes = -1;
+      }).toThrowDeveloperError();
+    });
+
+    it("maximumCacheOverflowBytes throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(function () {
+        tileset.maximumCacheOverflowBytes = -1;
       }).toThrowDeveloperError();
     });
 
@@ -4856,7 +4832,7 @@ describe(
         const cartographics = [centerCartographic];
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(
           function (tileset) {
-            tileset.maximumMemoryUsage = 0;
+            tileset.cacheBytes = 0;
             return sampleHeightMostDetailed(cartographics).then(function () {
               expect(centerCartographic.height).toEqualEpsilon(
                 2.47,

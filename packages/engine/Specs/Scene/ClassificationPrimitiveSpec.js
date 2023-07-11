@@ -228,9 +228,7 @@ describe(
       expect(primitive.geometryInstances).toBeDefined();
       scene.primitives.add(primitive);
       scene.renderForSpecs();
-      return primitive.readyPromise.then(function () {
-        expect(primitive.geometryInstances).not.toBeDefined();
-      });
+      expect(primitive.geometryInstances).not.toBeDefined();
     });
 
     it("does not release geometry instances when releaseGeometryInstances is false", function () {
@@ -248,25 +246,6 @@ describe(
       scene.primitives.add(primitive);
       scene.renderForSpecs();
       expect(primitive.geometryInstances).toBeDefined();
-    });
-
-    it("adds afterRender promise to frame state", function () {
-      if (!ClassificationPrimitive.isSupported(scene)) {
-        return;
-      }
-
-      primitive = new ClassificationPrimitive({
-        geometryInstances: boxInstance,
-        releaseGeometryInstances: false,
-        asynchronous: false,
-      });
-
-      scene.primitives.add(primitive);
-      scene.renderForSpecs();
-
-      return primitive.readyPromise.then(function (param) {
-        expect(param.ready).toBe(true);
-      });
     });
 
     it("does not render when geometryInstances is undefined", function () {
@@ -316,16 +295,11 @@ describe(
       );
       primitive.show = false;
 
-      let ready = false;
-      primitive.readyPromise.then(function () {
-        ready = true;
-      });
-
       return pollToPromise(function () {
         scene.renderForSpecs();
-        return ready;
+        return primitive.ready;
       }).then(function () {
-        expect(ready).toEqual(true);
+        expect(primitive.ready).toEqual(true);
       });
     });
 
@@ -792,7 +766,7 @@ describe(
       expect(scene).notToPick();
     });
 
-    it("internally invalid asynchronous geometry resolves promise and sets ready", function () {
+    it("internally invalid asynchronous geometry resolves promise and sets ready", async function () {
       if (!ClassificationPrimitive.isSupported(scene)) {
         return;
       }
@@ -811,18 +785,15 @@ describe(
 
       scene.primitives.add(primitive);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         scene.renderForSpecs();
         return primitive.ready;
-      }).then(function () {
-        return primitive.readyPromise.then(function (arg) {
-          expect(arg).toBe(primitive);
-          expect(primitive.ready).toBe(true);
-        });
       });
+
+      expect(primitive.ready).toBe(true);
     });
 
-    it("internally invalid synchronous geometry resolves promise and sets ready", function () {
+    it("internally invalid synchronous geometry resolves promise and sets ready", async function () {
       if (!ClassificationPrimitive.isSupported(scene)) {
         return;
       }
@@ -841,11 +812,12 @@ describe(
       });
 
       scene.primitives.add(primitive);
-      scene.renderForSpecs();
-      return primitive.readyPromise.then(function (arg) {
-        expect(arg).toBe(primitive);
-        expect(primitive.ready).toBe(true);
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return primitive.ready;
       });
+
+      expect(primitive.ready).toBe(true);
     });
 
     it("update throws when batched instance colors are different and no culling attributes are provided", function () {

@@ -77,7 +77,6 @@
           this.names = ["color"];
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
-          this.ready = true;
         }
 
         const scratchColor = new Cesium.Color();
@@ -141,8 +140,6 @@
           this.names = ["color"];
           this.types = [Cesium.MetadataType.VEC4];
           this.componentTypes = [Cesium.MetadataComponentType.FLOAT32];
-          this.ready = true;
-          this.readyPromise = Promise.resolve(this);
 
           this._levelCount = 2;
           this._allVoxelData = new Array(this._levelCount);
