@@ -62,91 +62,16 @@ function MapboxImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
-  /**
-   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultNightAlpha = undefined;
-
-  /**
-   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultDayAlpha = undefined;
-
-  /**
-   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
-   * makes the imagery darker while greater than 1.0 makes it brighter.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultBrightness = undefined;
-
-  /**
-   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
-   * the contrast while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultContrast = undefined;
-
-  /**
-   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultHue = undefined;
-
-  /**
-   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
-   * saturation while greater than 1.0 increases it.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultSaturation = undefined;
-
-  /**
-   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
-   *
-   * @type {number|undefined}
-   * @default undefined
-   */
-  this.defaultGamma = undefined;
-
-  /**
-   * The default texture minification filter to apply to this provider.
-   *
-   * @type {TextureMinificationFilter}
-   * @default undefined
-   */
-  this.defaultMinificationFilter = undefined;
-
-  /**
-   * The default texture magnification filter to apply to this provider.
-   *
-   * @type {TextureMagnificationFilter}
-   * @default undefined
-   */
-  this.defaultMagnificationFilter = undefined;
+  this._defaultAlpha = undefined;
+  this._defaultNightAlpha = undefined;
+  this._defaultDayAlpha = undefined;
+  this._defaultBrightness = undefined;
+  this._defaultContrast = undefined;
+  this._defaultHue = undefined;
+  this._defaultSaturation = undefined;
+  this._defaultGamma = undefined;
+  this._defaultMinificationFilter = undefined;
+  this._defaultMagnificationFilter = undefined;
 
   const resource = Resource.createIfNeeded(
     defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/")
@@ -207,32 +132,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   },
 
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  ready: {
-    get: function () {
-      return this._imageryProvider.ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof MapboxImageryProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._imageryProvider.readyPromise;
-    },
-  },
-
-  /**
-   * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
-   * not be called before {@link MapboxImageryProvider#ready} returns true.
+   * Gets the rectangle, in radians, of the imagery provided by the instance.
    * @memberof MapboxImageryProvider.prototype
    * @type {Rectangle}
    * @readonly
@@ -244,8 +144,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   },
 
   /**
-   * Gets the width of each tile, in pixels.  This function should
-   * not be called before {@link MapboxImageryProvider#ready} returns true.
+   * Gets the width of each tile, in pixels.
    * @memberof MapboxImageryProvider.prototype
    * @type {number}
    * @readonly
@@ -257,8 +156,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   },
 
   /**
-   * Gets the height of each tile, in pixels.  This function should
-   * not be called before {@link MapboxImageryProvider#ready} returns true.
+   * Gets the height of each tile, in pixels.
    * @memberof MapboxImageryProvider.prototype
    * @type {number}
    * @readonly
@@ -270,8 +168,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   },
 
   /**
-   * Gets the maximum level-of-detail that can be requested.  This function should
-   * not be called before {@link MapboxImageryProvider#ready} returns true.
+   * Gets the maximum level-of-detail that can be requested.
    * @memberof MapboxImageryProvider.prototype
    * @type {number|undefined}
    * @readonly
@@ -283,8 +180,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   },
 
   /**
-   * Gets the minimum level-of-detail that can be requested.  This function should
-   * not be called before {@link MapboxImageryProvider#ready} returns true. Generally,
+   * Gets the minimum level-of-detail that can be requested. Generally,
    * a minimum level should only be used when the rectangle of the imagery is small
    * enough that the number of tiles at the minimum level is small.  An imagery
    * provider with more than a few tiles at the minimum level will lead to
@@ -300,8 +196,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by the provider.  This function should
-   * not be called before {@link MapboxImageryProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof MapboxImageryProvider.prototype
    * @type {TilingScheme}
    * @readonly
@@ -315,8 +210,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
   /**
    * Gets the tile discard policy.  If not undefined, the discard policy is responsible
    * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-   * returns undefined, no tiles are filtered.  This function should
-   * not be called before {@link MapboxImageryProvider#ready} returns true.
+   * returns undefined, no tiles are filtered.
    * @memberof MapboxImageryProvider.prototype
    * @type {TileDiscardPolicy}
    * @readonly
@@ -343,8 +237,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
 
   /**
    * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-   * the source of the imagery. This function should
-   * not be called before {@link MapboxImageryProvider#ready} returns true.
+   * the source of the imagery.
    * @memberof MapboxImageryProvider.prototype
    * @type {Credit}
    * @readonly
@@ -391,16 +284,13 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
  * @param {number} y The tile Y coordinate.
  * @param {number} level The tile level;
  * @returns {Credit[]} The credits to be displayed when the tile is displayed.
- *
- * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 MapboxImageryProvider.prototype.getTileCredits = function (x, y, level) {
   return undefined;
 };
 
 /**
- * Requests the image for a given tile.  This function should
- * not be called before {@link MapboxImageryProvider#ready} returns true.
+ * Requests the image for a given tile.
  *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
@@ -408,8 +298,6 @@ MapboxImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Request} [request] The request object. Intended for internal use only.
  * @returns {Promise<ImageryTypes>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request should be retried later.
- *
- * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
 MapboxImageryProvider.prototype.requestImage = function (x, y, level, request) {
   return this._imageryProvider.requestImage(x, y, level, request);
@@ -417,9 +305,7 @@ MapboxImageryProvider.prototype.requestImage = function (x, y, level, request) {
 
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
- * a tile.  This function should not be called before {@link MapboxImageryProvider#ready} returns true.
- * This function is optional, so it may not exist on all ImageryProviders.
- *
+ * a tile. This function is optional, so it may not exist on all ImageryProviders.
  *
  * @param {number} x The tile X coordinate.
  * @param {number} y The tile Y coordinate.
@@ -430,8 +316,6 @@ MapboxImageryProvider.prototype.requestImage = function (x, y, level, request) {
  *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
  *                   instances.  The array may be empty if no features are found at the given location.
  *                   It may also be undefined if picking is not supported.
- *
- * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
  */
 MapboxImageryProvider.prototype.pickFeatures = function (
   x,

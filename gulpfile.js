@@ -16,8 +16,8 @@ import gulpRename from "gulp-rename";
 import gulpReplace from "gulp-replace";
 import { globby } from "globby";
 import open from "open";
-import rimraf from "rimraf";
-import mkdirp from "mkdirp";
+import { rimraf } from "rimraf";
+import { mkdirp } from "mkdirp";
 import mergeStream from "merge-stream";
 import streamToPromise from "stream-to-promise";
 import karma from "karma";
@@ -587,7 +587,7 @@ export const postversion = async function () {
       return;
     }
     // Update the version for the updated workspace.
-    packageJson.dependencies[workspace] = version;
+    packageJson.dependencies[workspace] = `^${version}`;
     await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
   });
   return Promise.all(promises);
@@ -2230,7 +2230,8 @@ async function buildCesiumViewer() {
     ".png": "text",
   };
   config.format = "iife";
-  config.inject = ["Apps/CesiumViewer/index.js"];
+  // Configure Cesium base path to use built
+  config.define = { CESIUM_BASE_URL: `"."` };
   config.external = ["https", "http", "url", "zlib"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
@@ -2247,7 +2248,7 @@ async function buildCesiumViewer() {
       ".gif": "text",
       ".png": "text",
     },
-    outdir: cesiumViewerOutputDirectory,
+    outdir: join(cesiumViewerOutputDirectory, "Widgets"),
     outbase: "packages/widgets/Source/",
   });
 

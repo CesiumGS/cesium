@@ -345,7 +345,7 @@ GlobeSurfaceTile.prototype.processImagery = function (
 
     if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
       const imageryLayer = tileImagery.loadingImagery.imageryLayer;
-      if (imageryLayer.imageryProvider.ready) {
+      if (imageryLayer.ready) {
         // Remove the placeholder and add the actual skeletons (if any)
         // at the same position.  Then continue the loop at the same index.
         tileImagery.freeResources();
@@ -679,6 +679,11 @@ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
 
   Promise.resolve(terrainDataPromise)
     .then(function (terrainData) {
+      if (!defined(terrainData)) {
+        // The upsample request has been deferred - try again later.
+        return;
+      }
+
       surfaceTile.terrainData = terrainData;
       surfaceTile.terrainState = TerrainState.RECEIVED;
     })
@@ -689,6 +694,13 @@ function upsample(surfaceTile, tile, frameState, terrainProvider, x, y, level) {
 
 function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
   function success(terrainData) {
+    if (!defined(terrainData)) {
+      // Throttled due to low priority - try again later.
+      surfaceTile.terrainState = TerrainState.UNLOADED;
+      surfaceTile.request = undefined;
+      return;
+    }
+
     surfaceTile.terrainData = terrainData;
     surfaceTile.terrainState = TerrainState.RECEIVED;
     surfaceTile.request = undefined;

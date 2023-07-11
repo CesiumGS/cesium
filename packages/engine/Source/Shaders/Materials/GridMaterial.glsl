@@ -1,7 +1,3 @@
-#ifdef GL_OES_standard_derivatives
-    #extension GL_OES_standard_derivatives : enable
-#endif
-
 uniform vec4 color;
 uniform float cellAlpha;
 uniform vec2 lineCount;

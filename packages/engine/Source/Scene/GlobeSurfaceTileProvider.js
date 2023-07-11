@@ -127,19 +127,19 @@ function GlobeSurfaceTileProvider(options) {
 
   this._errorEvent = new Event();
 
-  this._imageryLayers.layerAdded.addEventListener(
+  this._removeLayerAddedListener = this._imageryLayers.layerAdded.addEventListener(
     GlobeSurfaceTileProvider.prototype._onLayerAdded,
     this
   );
-  this._imageryLayers.layerRemoved.addEventListener(
+  this._removeLayerRemovedListener = this._imageryLayers.layerRemoved.addEventListener(
     GlobeSurfaceTileProvider.prototype._onLayerRemoved,
     this
   );
-  this._imageryLayers.layerMoved.addEventListener(
+  this._removeLayerMovedListener = this._imageryLayers.layerMoved.addEventListener(
     GlobeSurfaceTileProvider.prototype._onLayerMoved,
     this
   );
-  this._imageryLayers.layerShownOrHidden.addEventListener(
+  this._removeLayerShownListener = this._imageryLayers.layerShownOrHidden.addEventListener(
     GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden,
     this
   );
@@ -230,28 +230,16 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
   },
 
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof GlobeSurfaceTileProvider.prototype
-   * @type {boolean}
-   */
-  ready: {
-    get: function () {
-      return (
-        this._terrainProvider.ready &&
-        (this._imageryLayers.length === 0 ||
-          this._imageryLayers.get(0).imageryProvider.ready)
-      );
-    },
-  },
-
-  /**
-   * Gets the tiling scheme used by the provider.  This property should
-   * not be accessed before {@link GlobeSurfaceTileProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof GlobeSurfaceTileProvider.prototype
    * @type {TilingScheme}
    */
   tilingScheme: {
     get: function () {
+      if (!defined(this._terrainProvider)) {
+        return undefined;
+      }
+
       return this._terrainProvider.tilingScheme;
     },
   },
@@ -293,12 +281,6 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
       if (this._terrainProvider === terrainProvider) {
         return;
       }
-
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(terrainProvider)) {
-        throw new DeveloperError("terrainProvider is required.");
-      }
-      //>>includeEnd('debug');
 
       this._terrainProvider = terrainProvider;
 
@@ -348,18 +330,16 @@ GlobeSurfaceTileProvider.prototype.update = function (frameState) {
 
 function updateCredits(surface, frameState) {
   const creditDisplay = frameState.creditDisplay;
-  if (
-    surface._terrainProvider.ready &&
-    defined(surface._terrainProvider.credit)
-  ) {
-    creditDisplay.addCredit(surface._terrainProvider.credit);
+  const terrainProvider = surface._terrainProvider;
+  if (defined(terrainProvider) && defined(terrainProvider.credit)) {
+    creditDisplay.addCreditToNextFrame(terrainProvider.credit);
   }
 
   const imageryLayers = surface._imageryLayers;
   for (let i = 0, len = imageryLayers.length; i < len; ++i) {
-    const imageryProvider = imageryLayers.get(i).imageryProvider;
-    if (imageryProvider.ready && defined(imageryProvider.credit)) {
-      creditDisplay.addCredit(imageryProvider.credit);
+    const layer = imageryLayers.get(i);
+    if (layer.ready && layer.show && defined(layer.imageryProvider.credit)) {
+      creditDisplay.addCreditToNextFrame(layer.imageryProvider.credit);
     }
   }
 }
@@ -562,8 +542,7 @@ GlobeSurfaceTileProvider.prototype.cancelReprojections = function () {
 };
 
 /**
- * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
- * called before {@link GlobeSurfaceTileProvider#ready} returns true.
+ * Gets the maximum geometric error allowed in a tile at a given level, in meters.
  *
  * @param {number} level The tile level for which to get the maximum geometric error.
  * @returns {number} The maximum geometric error in meters.
@@ -571,18 +550,19 @@ GlobeSurfaceTileProvider.prototype.cancelReprojections = function () {
 GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function (
   level
 ) {
+  if (!defined(this._terrainProvider)) {
+    return 0;
+  }
+
   return this._terrainProvider.getLevelMaximumGeometricError(level);
 };
 
 /**
  * Loads, or continues loading, a given tile.  This function will continue to be called
- * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
- * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
+ * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.
  *
  * @param {FrameState} frameState The frame state.
  * @param {QuadtreeTile} tile The tile to load.
- *
- * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
  */
 GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
   // We don't want to load imagery until we're certain that the terrain tiles are actually visible.
@@ -1384,6 +1364,14 @@ GlobeSurfaceTileProvider.prototype.isDestroyed = function () {
 GlobeSurfaceTileProvider.prototype.destroy = function () {
   this._tileProvider = this._tileProvider && this._tileProvider.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+  this._removeLayerAddedListener =
+    this._removeLayerAddedListener && this._removeLayerAddedListener();
+  this._removeLayerRemovedListener =
+    this._removeLayerRemovedListener && this._removeLayerRemovedListener();
+  this._removeLayerMovedListener =
+    this._removeLayerMovedListener && this._removeLayerMovedListener();
+  this._removeLayerShownListener =
+    this._removeLayerShownListener && this._removeLayerShownListener();
 
   return destroyObject(this);
 };
@@ -1436,13 +1424,16 @@ function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
 }
 
 GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
+  if (this.isDestroyed()) {
+    return;
+  }
+
   if (layer.show) {
     const terrainProvider = this._terrainProvider;
 
     const that = this;
-    const imageryProvider = layer.imageryProvider;
     const tileImageryUpdatedEvent = this._imageryLayersUpdatedEvent;
-    imageryProvider._reload = function () {
+    const reloadFunction = function () {
       // Clear the layer's cache
       layer._imageryCache = {};
 
@@ -1503,6 +1494,11 @@ GlobeSurfaceTileProvider.prototype._onLayerAdded = function (layer, index) {
         }
       });
     };
+
+    if (layer.ready) {
+      const imageryProvider = layer.imageryProvider;
+      imageryProvider._reload = reloadFunction;
+    }
 
     // create TileImageries for this layer for all previously loaded tiles
     this._quadtree.forEachLoadedTile(function (tile) {
@@ -2077,7 +2073,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       tileCreditIndex < tileCreditLength;
       ++tileCreditIndex
     ) {
-      creditDisplay.addCredit(tileCredits[tileCreditIndex]);
+      creditDisplay.addCreditToNextFrame(tileCredits[tileCreditIndex]);
     }
   }
 
@@ -2123,9 +2119,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     tileProvider.hasWaterMask && defined(waterMaskTexture);
   const oceanNormalMap = tileProvider.oceanNormalMap;
   const showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
+  const terrainProvider = tileProvider.terrainProvider;
   const hasVertexNormals =
-    tileProvider.terrainProvider.ready &&
-    tileProvider.terrainProvider.hasVertexNormals;
+    defined(terrainProvider) && tileProvider.terrainProvider.hasVertexNormals;
   const enableFog =
     frameState.fog.enabled && frameState.fog.renderable && !cameraUnderground;
   const showGroundAtmosphere =
@@ -2696,7 +2692,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
           creditIndex < creditLength;
           ++creditIndex
         ) {
-          creditDisplay.addCredit(credits[creditIndex]);
+          creditDisplay.addCreditToNextFrame(credits[creditIndex]);
         }
       }
 

@@ -39,6 +39,7 @@ import {
   RequestScheduler,
   Resource,
   ResourceCache,
+  RuntimeError,
   Transforms,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -263,37 +264,7 @@ describe(
       return tileset._selectedTiles.indexOf(tile) > -1;
     }
 
-    it("throws with undefined url", function () {
-      expect(function () {
-        return new Cesium3DTileset();
-      }).toThrowDeveloperError();
-    });
-
-    it("rejects readyPromise with invalid tileset JSON file", function () {
-      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        deferred.reject();
-      });
-
-      options.url = "invalid.json";
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
-    });
-
-    it("loads json with static loadJson method", function () {
+    it("loads json with static loadJson method", async function () {
       const tilesetJson = {
         asset: {
           version: 2.0,
@@ -301,153 +272,81 @@ describe(
       };
 
       const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
-
-      Cesium3DTileset.loadJson(uri)
-        .then(function (result) {
-          expect(result).toEqual(tilesetJson);
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
+      await expectAsync(Cesium3DTileset.loadJson(uri)).toBeResolvedTo(
+        tilesetJson
+      );
     });
 
-    it("static method loadJson is used in Cesium3DTileset constructor", function () {
-      const path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-
-      const originalLoadJson = Cesium3DTileset.loadJson;
-
-      // override loadJson and replace incorrect url with correct url
-      Cesium3DTileset.loadJson = function (tilesetUrl) {
-        return originalLoadJson(path);
-      };
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: "invalid.json",
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-          // restore original version
-          Cesium3DTileset.loadJson = originalLoadJson;
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
+    it("fromUrl throws without url", async function () {
+      await expectAsync(
+        Cesium3DTileset.fromUrl()
+      ).toBeRejectedWithDeveloperError(
+        "url is required, actual value was undefined"
+      );
     });
 
-    it("Constructor works with promise to resource", function () {
-      const resource = new Resource({
-        url: "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json",
-      });
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: Promise.resolve(resource),
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
-    });
-
-    it("Constructor works with file resource", function () {
-      const resource = new Resource({
-        url: "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json",
-      });
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: resource,
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
-    });
-
-    it("rejects readyPromise with invalid tileset version", function () {
+    it("fromUrl throws with unsupported version", async function () {
       const tilesetJson = {
         asset: {
-          version: 2.0,
+          version: "2.0",
         },
       };
 
       const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
-
-      options.url = uri;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
+      await expectAsync(Cesium3DTileset.fromUrl(uri)).toBeRejectedWithError(
+        RuntimeError,
+        "The tileset must be 3D Tiles version 0.0, 1.0, or 1.1"
+      );
     });
 
-    it("rejects readyPromise with unsupported extension", function () {
+    it("fromUrl throws with unsupported extension", async function () {
       const tilesetJson = {
         asset: {
-          version: 1.0,
+          version: "1.0",
         },
         extensionsUsed: ["unsupported_extension"],
         extensionsRequired: ["unsupported_extension"],
       };
 
       const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
-
-      options.url = uri;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
+      await expectAsync(Cesium3DTileset.fromUrl(uri)).toBeRejectedWithError(
+        RuntimeError,
+        "Unsupported 3D Tiles Extension: unsupported_extension"
+      );
     });
 
-    it("url and tilesetUrl set up correctly given tileset JSON filepath", function () {
+    it("fromUrl throws with invalid tileset JSON file", async function () {
+      await expectAsync(Cesium3DTileset.fromUrl("invalid.json")).toBeRejected();
+    });
+
+    it("fromUrl resolves with file resource", async function () {
+      const resource = new Resource({
+        url: "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json",
+      });
+
+      const tileset = await Cesium3DTileset.fromUrl(resource);
+      expect(tileset).toBeInstanceOf(Cesium3DTileset);
+    });
+
+    it("url and tilesetUrl set up correctly given tileset JSON filepath", async function () {
       const path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-      const tileset = new Cesium3DTileset({
-        url: path,
-      });
-      return Promise.resolve(tileset).then(function () {
-        expect(tileset.resource.url).toEqual(path);
-        return tileset.readyPromise;
-      });
+      const tileset = await Cesium3DTileset.fromUrl(path);
+      expect(tileset.resource.url).toEqual(path);
     });
 
-    it("url and tilesetUrl set up correctly given path with query string", function () {
+    it("url and tilesetUrl set up correctly given path with query string", async function () {
       const path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
       const param = "?param1=1&param2=2";
-      const tileset = new Cesium3DTileset({
-        url: path + param,
-      });
-      return Promise.resolve(tileset).then(function () {
-        expect(tileset.resource.url).toEqual(path + param);
-        return tileset.readyPromise;
-      });
+      const tileset = await Cesium3DTileset.fromUrl(path + param);
+      expect(tileset.resource.url).toEqual(path + param);
     });
 
-    it("resolves readyPromise", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
-        return tileset.readyPromise.then(function (tileset) {
-          expect(tileset.ready).toEqual(true);
-        });
-      });
+    it("fromIonAssetId throws without assetId", async function () {
+      await expectAsync(
+        Cesium3DTileset.fromIonAssetId()
+      ).toBeRejectedWithDeveloperError(
+        "assetId is required, actual value was undefined"
+      );
     });
 
     it("loads tileset JSON file", function () {
@@ -493,15 +392,9 @@ describe(
       });
     });
 
-    it("gets root tile", function () {
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      expect(function () {
-        return tileset.root;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise.then(function () {
-        expect(tileset.root).toBeDefined();
-      });
+    it("gets root tile", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(tileset.root).toBeDefined();
     });
 
     it("hasExtension returns true if the tileset JSON file uses the specified extension", function () {
@@ -557,148 +450,102 @@ describe(
       });
     });
 
-    it("throws when getting asset and tileset is not ready", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
-      expect(function () {
-        return tileset.asset;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise;
-    });
-
-    it("throws when getting extensions and tileset is not ready", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
-      expect(function () {
-        return tileset.extensions;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise;
-    });
-
-    it("throws when getting properties and tileset is not ready", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
-      expect(function () {
-        return tileset.properties;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise;
-    });
-
-    it("throws when getting extras and tileset is not ready", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
-      expect(function () {
-        return tileset.extras;
-      }).toThrowDeveloperError();
-      return tileset.readyPromise;
-    });
-
-    it("requests tile with invalid magic", function () {
+    it("requests tile with invalid magic", async function () {
       const invalidMagicBuffer = Cesium3DTilesTester.generateBatchedTileBuffer({
         magic: [120, 120, 120, 120],
       });
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise.then(function (tileset) {
-        // Start spying after the tileset json has been loaded
-        spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType
-        ) {
-          deferred.resolve(invalidMagicBuffer);
-        });
-        scene.renderForSpecs(); // Request root
-        const root = tileset.root;
-        return root.contentReadyPromise
-          .then(function () {
-            fail("should not resolve");
-          })
-          .catch(function (error) {
-            expect(error.message).toBe("Invalid tile content.");
-            expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
-          });
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
+
+      const failedSpy = jasmine.createSpy("listenerSpy");
+      tileset.tileFailed.addEventListener(failedSpy);
+
+      // Start spying after the tileset json has been loaded
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(invalidMagicBuffer)
+      );
+
+      scene.renderForSpecs(); // Request root
+      const root = tileset.root;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return root.contentFailed || root.contentReady;
       });
+
+      expect(failedSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          message: "Invalid tile content.",
+        })
+      );
+      expect(root.contentFailed).toBeTrue();
     });
 
-    it("handles failed tile requests", function () {
+    it("handles failed tile requests", async function () {
       viewRootOnly();
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise.then(function (tileset) {
-        // Start spying after the tileset json has been loaded
-        spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType
-        ) {
-          deferred.reject(new Error());
-        });
-        scene.renderForSpecs(); // Request root
-        const root = tileset.root;
-        return root.contentReadyPromise
-          .then(function () {
-            fail("should not resolve");
-          })
-          .catch(function (error) {
-            expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
-            const statistics = tileset.statistics;
-            expect(statistics.numberOfAttemptedRequests).toBe(0);
-            expect(statistics.numberOfPendingRequests).toBe(0);
-            expect(statistics.numberOfTilesProcessing).toBe(0);
-            expect(statistics.numberOfTilesWithContentReady).toBe(0);
-          });
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
+
+      const failedSpy = jasmine.createSpy("listenerSpy");
+      tileset.tileFailed.addEventListener(failedSpy);
+
+      // Start spying after the tileset json has been loaded
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() => {
+        return Promise.reject(new Error("404"));
       });
+      scene.renderForSpecs(); // Request root
+      const root = tileset.root;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return root.contentFailed || root.contentReady;
+      });
+
+      expect(root.contentFailed).toBeTrue();
+      expect(failedSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          message: "404",
+        })
+      );
+      const statistics = tileset.statistics;
+      expect(statistics.numberOfAttemptedRequests).toBe(0);
+      expect(statistics.numberOfPendingRequests).toBe(0);
+      expect(statistics.numberOfTilesProcessing).toBe(0);
+      expect(statistics.numberOfTilesWithContentReady).toBe(0);
     });
 
-    it("handles failed tile processing", function () {
+    it("handles failed tile processing", async function () {
       viewRootOnly();
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise.then(function (tileset) {
-        // Start spying after the tileset json has been loaded
-        spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-          url,
-          responseType,
-          method,
-          data,
-          headers,
-          deferred,
-          overrideMimeType
-        ) {
-          deferred.resolve(
-            Cesium3DTilesTester.generateBatchedTileBuffer({
-              version: 0, // Invalid version
-            })
-          );
-        });
-        scene.renderForSpecs(); // Request root
-        const root = tileset.root;
-        return root.contentReadyPromise
-          .then(function () {
-            fail("should not resolve");
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
+
+      const failedSpy = jasmine.createSpy("listenerSpy");
+      tileset.tileFailed.addEventListener(failedSpy);
+
+      // Start spying after the tileset json has been loaded
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+        Promise.resolve(
+          Cesium3DTilesTester.generateBatchedTileBuffer({
+            version: 0, // Invalid version
           })
-          .catch(function (error) {
-            expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
-            const statistics = tileset.statistics;
-            expect(statistics.numberOfAttemptedRequests).toBe(0);
-            expect(statistics.numberOfPendingRequests).toBe(0);
-            expect(statistics.numberOfTilesProcessing).toBe(0);
-            expect(statistics.numberOfTilesWithContentReady).toBe(0);
-          });
+        )
+      );
+      scene.renderForSpecs(); // Request root
+      const root = tileset.root;
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return root.contentFailed || root.contentReady;
       });
+      expect(root.contentFailed).toBeTrue();
+      expect(failedSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          message:
+            "Only Batched 3D Model version 1 is supported.  Version 0 is not.",
+        })
+      );
+      const statistics = tileset.statistics;
+      expect(statistics.numberOfAttemptedRequests).toBe(0);
+      expect(statistics.numberOfPendingRequests).toBe(0);
+      expect(statistics.numberOfTilesProcessing).toBe(0);
+      expect(statistics.numberOfTilesWithContentReady).toBe(0);
     });
 
     it("renders tileset", function () {
@@ -876,34 +723,23 @@ describe(
       });
     });
 
-    it("verify statistics", function () {
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
-      // Verify initial values
+      // Verify initial values after root and children are requested
       const statistics = tileset._statistics;
       expect(statistics.visited).toEqual(0);
       expect(statistics.numberOfCommands).toEqual(0);
       expect(statistics.numberOfPendingRequests).toEqual(0);
       expect(statistics.numberOfTilesProcessing).toEqual(0);
 
-      return Cesium3DTilesTester.waitForReady(scene, tileset).then(function () {
-        // Check that root and children are requested
-        expect(statistics.visited).toEqual(5);
-        expect(statistics.numberOfCommands).toEqual(0);
-        expect(statistics.numberOfPendingRequests).toEqual(5);
-        expect(statistics.numberOfTilesProcessing).toEqual(0);
-
-        // Wait for all tiles to load and check that they are all visited and rendered
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-          function () {
-            expect(statistics.visited).toEqual(5);
-            expect(statistics.numberOfCommands).toEqual(5);
-            expect(statistics.numberOfPendingRequests).toEqual(0);
-            expect(statistics.numberOfTilesProcessing).toEqual(0);
-          }
-        );
-      });
+      scene.primitives.add(tileset);
+      // Wait for all tiles to load and check that they are all visited and rendered
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      expect(statistics.visited).toEqual(5);
+      expect(statistics.numberOfCommands).toEqual(5);
+      expect(statistics.numberOfPendingRequests).toEqual(0);
+      expect(statistics.numberOfTilesProcessing).toEqual(0);
     });
 
     function checkPointAndFeatureCounts(tileset, features, points, triangles) {
@@ -944,62 +780,74 @@ describe(
       );
     }
 
-    it("verify batched features statistics", function () {
-      options.url = withBatchTableUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify batched features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(withBatchTableUrl, options);
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 10, 0, 120);
     });
 
-    it("verify no batch table features statistics", function () {
-      options.url = noBatchIdsUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify no batch table features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(noBatchIdsUrl, options);
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 0, 0, 120);
     });
 
-    it("verify instanced features statistics", function () {
-      options.url = instancedRedMaterialUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify instanced features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        instancedRedMaterialUrl,
+        options
+      );
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 25, 0, 12);
     });
 
-    it("verify composite features statistics", function () {
-      options.url = compositeUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify composite features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(compositeUrl, options);
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 35, 0, 132);
     });
 
-    it("verify tileset of tilesets features statistics", function () {
-      options.url = tilesetOfTilesetsUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify tileset of tilesets features statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        tilesetOfTilesetsUrl,
+        options
+      );
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 50, 0, 600);
     });
 
-    it("verify points statistics", function () {
+    it("verify points statistics", async function () {
       viewPointCloud();
 
-      options.url = pointCloudUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      const tileset = await Cesium3DTileset.fromUrl(pointCloudUrl, options);
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 0, 1000, 0);
     });
 
-    it("verify triangle statistics", function () {
-      options.url = tilesetEmptyRootUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("verify triangle statistics", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        tilesetEmptyRootUrl,
+        options
+      );
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 40, 0, 480);
     });
 
-    it("verify batched points statistics", function () {
+    it("verify batched points statistics", async function () {
       viewPointCloud();
 
-      options.url = pointCloudBatchedUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      const tileset = await Cesium3DTileset.fromUrl(
+        pointCloudBatchedUrl,
+        options
+      );
+      scene.primitives.add(tileset);
 
       return checkPointAndFeatureCounts(tileset, 8, 1000, 0);
     });
@@ -1544,7 +1392,7 @@ describe(
       });
     });
 
-    it("replacement refinement - selects root when sse is not met and subtree is not refinable (3)", function () {
+    it("replacement refinement - selects root when sse is not met and subtree is not refinable (3)", async function () {
       // Check that the root is refinable once its child is loaded
       //
       //          C
@@ -1554,31 +1402,30 @@ describe(
       //
 
       viewRootOnly();
-      return Cesium3DTilesTester.loadTileset(
+      const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetReplacement3Url
-      ).then(function (tileset) {
-        tileset.skipLevelOfDetail = false;
-        const statistics = tileset._statistics;
-        const root = tileset.root;
-        expect(statistics.numberOfCommands).toEqual(1);
+      );
+      tileset.skipLevelOfDetail = false;
+      const statistics = tileset._statistics;
+      const root = tileset.root;
+      expect(statistics.numberOfCommands).toEqual(1);
 
-        viewAllTiles();
+      viewAllTiles();
+      scene.renderForSpecs();
+      await pollToPromise(() => {
         scene.renderForSpecs();
-        return root.children[0].contentReadyPromise.then(function () {
-          // The external tileset json is loaded, but the external tileset isn't.
-          scene.renderForSpecs();
-          expect(statistics.numberOfCommands).toEqual(1); // root
-          expect(statistics.numberOfPendingRequests).toEqual(4); // Loading child content tiles
-
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              expect(isSelected(tileset, root)).toEqual(false);
-              expect(statistics.numberOfCommands).toEqual(4); // Render child content tiles
-            }
-          );
-        });
+        return root.children[0].contentFailed || root.children[0].contentReady;
       });
+      // The external tileset json is loaded, but the external tileset isn't.
+      scene.renderForSpecs();
+      expect(statistics.numberOfCommands).toEqual(1); // root
+      expect(statistics.numberOfPendingRequests).toEqual(4); // Loading child content tiles
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+      expect(isSelected(tileset, root)).toEqual(false);
+      expect(statistics.numberOfCommands).toEqual(4); // Render child content tiles
     });
 
     it("replacement refinement - refines if descendant is empty leaf tile", function () {
@@ -1906,41 +1753,44 @@ describe(
       });
     });
 
-    it("loads tileset with external tileset JSON file", function () {
+    it("loads tileset with external tileset JSON file", async function () {
       // Set view so that no tiles are loaded initially
       viewNothing();
 
-      return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(
-        function (tileset) {
-          // Root points to an external tileset JSON file and has no children until it is requested
-          const root = tileset.root;
-          expect(root.children.length).toEqual(0);
-
-          // Set view so that root's content is requested
-          viewRootOnly();
-          scene.renderForSpecs();
-          return root.contentReadyPromise.then(function () {
-            expect(root.hasTilesetContent).toEqual(true);
-
-            // Root has one child now, the root of the external tileset
-            expect(root.children.length).toEqual(1);
-
-            // Check that headers are equal
-            const subtreeRoot = root.children[0];
-            expect(root.refine).toEqual(subtreeRoot.refine);
-            expect(root.contentBoundingVolume.boundingVolume).toEqual(
-              subtreeRoot.contentBoundingVolume.boundingVolume
-            );
-
-            // Check that subtree root has 4 children
-            expect(subtreeRoot.hasTilesetContent).toEqual(false);
-            expect(subtreeRoot.children.length).toEqual(4);
-          });
-        }
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetOfTilesetsUrl
       );
+      // Root points to an external tileset JSON file and has no children until it is requested
+      const root = tileset.root;
+      expect(root.children.length).toEqual(0);
+
+      // Set view so that root's content is requested
+      viewRootOnly();
+      scene.renderForSpecs();
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return root.contentFailed || root.contentReady;
+      });
+      expect(root.contentReady).toEqual(true);
+      expect(root.hasTilesetContent).toEqual(true);
+
+      // Root has one child now, the root of the external tileset
+      expect(root.children.length).toEqual(1);
+
+      // Check that headers are equal
+      const subtreeRoot = root.children[0];
+      expect(root.refine).toEqual(subtreeRoot.refine);
+      expect(root.contentBoundingVolume.boundingVolume).toEqual(
+        subtreeRoot.contentBoundingVolume.boundingVolume
+      );
+
+      // Check that subtree root has 4 children
+      expect(subtreeRoot.hasTilesetContent).toEqual(false);
+      expect(subtreeRoot.children.length).toEqual(4);
     });
 
-    it("preserves query string with external tileset JSON file", function () {
+    it("preserves query string with external tileset JSON file", async function () {
       // Set view so that no tiles are loaded initially
       viewNothing();
 
@@ -1949,33 +1799,32 @@ describe(
 
       const queryParams = "a=1&b=boy";
       let expectedUrl = `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?${queryParams}`;
-      return Cesium3DTilesTester.loadTileset(
+      const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         `${tilesetOfTilesetsUrl}?${queryParams}`
-      )
-        .then(function (tileset) {
-          //Make sure tileset JSON file was requested with query parameters
-          expect(
-            Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]
-          ).toEqual(expectedUrl);
+      );
+      //Make sure tileset JSON file was requested with query parameters
+      expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(
+        expectedUrl
+      );
 
-          Resource._Implementations.loadWithXhr.calls.reset();
+      Resource._Implementations.loadWithXhr.calls.reset();
 
-          // Set view so that root's content is requested
-          viewRootOnly();
-          scene.renderForSpecs();
+      // Set view so that root's content is requested
+      viewRootOnly();
+      scene.renderForSpecs();
 
-          return tileset.root.contentReadyPromise;
-        })
-        .then(function () {
-          //Make sure tileset2.json was requested with query parameters and does not use parent tilesetVersion
-          expectedUrl = getAbsoluteUri(
-            `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&${queryParams}`
-          );
-          expect(
-            Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]
-          ).toEqual(expectedUrl);
-        });
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return tileset.tilesLoaded;
+      });
+      //Make sure tileset2.json was requested with query parameters and does not use parent tilesetVersion
+      expectedUrl = getAbsoluteUri(
+        `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&${queryParams}`
+      );
+      expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(
+        expectedUrl
+      );
     });
 
     it("renders tileset with external tileset JSON file", function () {
@@ -2052,7 +1901,6 @@ describe(
           expect(rgba).not.toEqual(color);
         });
 
-        // Check for original color
         tileset.debugColorizeTiles = false;
         Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
           expect(rgba).toEqual(color);
@@ -2385,24 +2233,25 @@ describe(
       });
     });
 
-    it("does not process tiles when picking", function () {
-      const spy = spyOn(Cesium3DTile.prototype, "process").and.callThrough();
-
+    it("does not process tiles when picking", async function () {
       viewNothing();
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
-        viewRootOnly();
-        scene.renderForSpecs(); // Request root
-        expect(tileset._statistics.numberOfPendingRequests).toEqual(1);
-        return tileset.root.contentReadyToProcessPromise.then(function () {
-          scene.pickForSpecs();
-          expect(spy).not.toHaveBeenCalled();
-          scene.renderForSpecs();
-          expect(spy).toHaveBeenCalled();
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-        });
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl);
+      viewRootOnly();
+      scene.renderForSpecs(); // Request root
+      expect(tileset._statistics.numberOfPendingRequests).toEqual(1);
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return (
+          tileset.root._contentState === Cesium3DTileContentState.PROCESSING
+        );
       });
+
+      const spy = spyOn(Cesium3DTile.prototype, "process").and.callThrough();
+      scene.pickForSpecs();
+      expect(spy).not.toHaveBeenCalled();
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      expect(spy).toHaveBeenCalled();
     });
 
     // https://github.com/CesiumGS/cesium/issues/6482
@@ -2451,41 +2300,31 @@ describe(
       });
     });
 
-    it("tilesLoaded", function () {
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+    it("tilesLoaded", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
       expect(tileset.tilesLoaded).toBe(false);
-      return tileset.readyPromise.then(function () {
-        expect(tileset.tilesLoaded).toBe(false);
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-          function () {
-            expect(tileset.tilesLoaded).toBe(true);
-          }
-        );
-      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      expect(tileset.tilesLoaded).toBe(true);
     });
 
-    it("all tiles loaded event is raised", function () {
+    it("all tiles loaded event is raised", async function () {
       // Called first when only the root is visible and it becomes loaded, and then again when
       // the rest of the tileset is visible and all tiles are loaded.
       const spyUpdate1 = jasmine.createSpy("listener");
       const spyUpdate2 = jasmine.createSpy("listener");
       viewRootOnly();
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       tileset.allTilesLoaded.addEventListener(spyUpdate1);
       tileset.initialTilesLoaded.addEventListener(spyUpdate2);
-      return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-        function () {
-          viewAllTiles();
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              expect(spyUpdate1.calls.count()).toEqual(2);
-              expect(spyUpdate2.calls.count()).toEqual(1);
-            }
-          );
-        }
-      );
+      scene.primitives.add(tileset);
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      viewAllTiles();
+
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      expect(spyUpdate1.calls.count()).toEqual(2);
+      expect(spyUpdate2.calls.count()).toEqual(1);
     });
 
     it("tile visible event is raised", function () {
@@ -2515,7 +2354,7 @@ describe(
       ) {
         const spyUpdate = jasmine.createSpy("listener");
         tileset.tileLoad.addEventListener(spyUpdate);
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
         viewRootOnly();
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
           function () {
@@ -2561,7 +2400,7 @@ describe(
             }
           );
           tileset.tileFailed.addEventListener(spyUpdate);
-          tileset.maximumMemoryUsage = 0;
+          tileset.cacheBytes = 0;
           viewRootOnly();
           return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
         })
@@ -2593,43 +2432,46 @@ describe(
       });
     });
 
-    it("destroys before external tileset JSON file finishes loading", function () {
+    it("destroys before external tileset JSON file finishes loading", async function () {
       viewNothing();
-      return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(
-        function (tileset) {
-          const root = tileset.root;
-
-          viewRootOnly();
-          scene.renderForSpecs(); // Request external tileset JSON file
-
-          const statistics = tileset._statistics;
-          expect(statistics.numberOfPendingRequests).toEqual(1);
-          scene.primitives.remove(tileset);
-
-          return root.contentReadyPromise.then(function (content) {
-            expect(content).toBeUndefined();
-
-            // Expect the root to not have added any children from the external tileset JSON file
-            expect(root.children.length).toEqual(0);
-          });
-        }
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetOfTilesetsUrl
       );
+      const root = tileset.root;
+
+      viewRootOnly();
+      scene.renderForSpecs(); // Request external tileset JSON file
+
+      const statistics = tileset._statistics;
+      expect(statistics.numberOfPendingRequests).toEqual(1);
+      scene.primitives.remove(tileset);
+
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return statistics.numberOfPendingRequests === 0;
+      });
+
+      expect(root.content).toBeUndefined();
+
+      // Expect the root to not have added any children from the external tileset JSON file
+      expect(root.children.length).toEqual(0);
     });
 
-    it("destroys before tile finishes loading", function () {
+    it("destroys before tile finishes loading", async function () {
       viewRootOnly();
-      options.url = tilesetUrl;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise.then(function (tileset) {
-        const root = tileset.root;
-        scene.renderForSpecs(); // Request root
-        scene.primitives.remove(tileset);
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
+      const root = tileset.root;
+      scene.renderForSpecs(); // Request root
+      scene.primitives.remove(tileset);
 
-        return root.contentReadyPromise.then(function (content) {
-          expect(content).toBeUndefined();
-          expect(root._contentState).toBe(Cesium3DTileContentState.FAILED);
-        });
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return tileset._statistics.numberOfPendingRequests === 0;
       });
+
+      expect(root.content).toBeUndefined();
     });
 
     it("renders with imageBaseLightingFactor", function () {
@@ -3524,11 +3366,112 @@ describe(
       });
     });
 
-    it("Unloads cached tiles outside of the view frustum using maximumMemoryUsage", function () {
+    it("Unload all cached tiles not required to meet SSE using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
+
+        // Render parent and four children (using additive refinement)
+        viewAllTiles();
+        scene.renderForSpecs();
+
+        const statistics = tileset._statistics;
+        expect(statistics.numberOfCommands).toEqual(5);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
+        expect(tileset.totalMemoryUsageInBytes).toEqual(37200); // Specific to this tileset
+
+        // Zoom out so only root tile is needed to meet SSE.  This unloads
+        // the four children since the maximum memory usage is zero.
+        viewRootOnly();
+        scene.renderForSpecs();
+
+        expect(statistics.numberOfCommands).toEqual(1);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(1);
+        expect(tileset.totalMemoryUsageInBytes).toEqual(7440); // Specific to this tileset
+
+        // Zoom back in so all four children are re-requested.
+        viewAllTiles();
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            expect(statistics.numberOfCommands).toEqual(5);
+            expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
+            expect(tileset.totalMemoryUsageInBytes).toEqual(37200); // Specific to this tileset
+          }
+        );
+      });
+    });
+
+    it("Unload some cached tiles not required to meet SSE using cacheBytes", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.cacheBytes = 0.025 * 1024 * 1024; // Just enough memory to allow 3 tiles to remain
+        // Render parent and four children (using additive refinement)
+        viewAllTiles();
+        scene.renderForSpecs();
+
+        const statistics = tileset._statistics;
+        expect(statistics.numberOfCommands).toEqual(5);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
+
+        // Zoom out so only root tile is needed to meet SSE.  This unloads
+        // two of the four children so three tiles are still loaded (the
+        // root and two children) since the maximum memory usage is sufficient.
+        viewRootOnly();
+        scene.renderForSpecs();
+
+        expect(statistics.numberOfCommands).toEqual(1);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(3);
+
+        // Zoom back in so the two children are re-requested.
+        viewAllTiles();
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            expect(statistics.numberOfCommands).toEqual(5);
+            expect(statistics.numberOfTilesWithContentReady).toEqual(5); // Five loaded tiles
+          }
+        );
+      });
+    });
+
+    it("Restrict tileset memory usage with maximumCacheOverflowBytes", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.cacheBytes = 0.025 * 1024 * 1024; // Just enough memory to allow 3 tiles to remain
+        tileset.maximumCacheOverflowBytes = 0;
+        expect(tileset.memoryAdjustedScreenSpaceError).toEqual(16);
+
+        // Zoom out so only root tile is needed to meet SSE.
+        viewRootOnly();
+        scene.renderForSpecs();
+        const statistics = tileset._statistics;
+        expect(statistics.numberOfCommands).toEqual(1);
+        expect(statistics.numberOfTilesWithContentReady).toEqual(3);
+
+        // Zoom back in and attempt to render all tiles
+        viewAllTiles();
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            // Only 3 tiles should have been actually loaded
+            expect(statistics.numberOfCommands).toEqual(3);
+            expect(statistics.numberOfTilesWithContentReady).toEqual(3); // Three loaded tiles
+            // SSE should have been adjusted higher
+            expect(tileset.memoryAdjustedScreenSpaceError).toBeGreaterThan(16);
+          }
+        );
+      });
+    });
+
+    it("Unloads cached tiles outside of the view frustum using cacheBytes", function () {
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.cacheBytes = 0;
 
         scene.renderForSpecs();
         const statistics = tileset._statistics;
@@ -3554,13 +3497,13 @@ describe(
       });
     });
 
-    it("Unloads cached tiles in a tileset with external tileset JSON file using maximumMemoryUsage", function () {
+    it("Unloads cached tiles in a tileset with external tileset JSON file using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(
         function (tileset) {
           const statistics = tileset._statistics;
           const cacheList = tileset._cache._list;
 
-          tileset.maximumMemoryUsage = 0.02;
+          tileset.cacheBytes = 0.02 * 1024 * 1024;
 
           scene.renderForSpecs();
           expect(statistics.numberOfCommands).toEqual(5);
@@ -3591,12 +3534,12 @@ describe(
       );
     });
 
-    it("Unloads cached tiles in a tileset with empty tiles using maximumMemoryUsage", function () {
+    it("Unloads cached tiles in a tileset with empty tiles using cacheBytes", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetEmptyRootUrl).then(
         function (tileset) {
           const statistics = tileset._statistics;
 
-          tileset.maximumMemoryUsage = 0.02;
+          tileset.cacheBytes = 0.02 * 1024 * 1024;
 
           scene.renderForSpecs();
           expect(statistics.numberOfCommands).toEqual(4);
@@ -3622,7 +3565,7 @@ describe(
       );
     });
 
-    it("Unload cached tiles when a tileset uses replacement refinement using maximumMemoryUsage", function () {
+    it("Unload cached tiles when a tileset uses replacement refinement using cacheBytes", function () {
       // No children have content, but all grandchildren have content
       //
       //          C
@@ -3633,7 +3576,7 @@ describe(
         scene,
         tilesetReplacement1Url
       ).then(function (tileset) {
-        tileset.maximumMemoryUsage = 0; // Only root needs to be visible
+        tileset.cacheBytes = 0; // Only root needs to be visible
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3667,7 +3610,7 @@ describe(
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0.05;
+        tileset.cacheBytes = 0.05 * 1024 * 1024;
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3697,7 +3640,7 @@ describe(
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
       ) {
-        tileset.maximumMemoryUsage = 0;
+        tileset.cacheBytes = 0;
 
         // Render parent and four children (using additive refinement)
         viewAllTiles();
@@ -3728,24 +3671,32 @@ describe(
       });
     });
 
-    it("maximumMemoryUsage throws when negative", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
+    it("maximumMemoryUsage throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       expect(function () {
         tileset.maximumMemoryUsage = -1;
       }).toThrowDeveloperError();
-      return tileset.readyPromise;
     });
 
-    it("maximumScreenSpaceError throws when negative", function () {
-      const tileset = new Cesium3DTileset({
-        url: tilesetUrl,
-      });
+    it("cacheBytes throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(function () {
+        tileset.cacheBytes = -1;
+      }).toThrowDeveloperError();
+    });
+
+    it("maximumCacheOverflowBytes throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      expect(function () {
+        tileset.maximumCacheOverflowBytes = -1;
+      }).toThrowDeveloperError();
+    });
+
+    it("maximumScreenSpaceError throws when negative", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
       expect(function () {
         tileset.maximumScreenSpaceError = -1;
       }).toThrowDeveloperError();
-      return tileset.readyPromise;
     });
 
     it("propagates tile transform down the tree", function () {
@@ -3827,12 +3778,12 @@ describe(
         const statistics = tileset._statistics;
         expect(statistics.numberOfTilesWithContentReady).toEqual(1);
         expect(tileset._selectedTiles[0]._selectionDepth).toEqual(0);
-        expect(tileset._hasMixedContent).toBe(false);
+        expect(tileset.hasMixedContent).toBe(false);
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
           function (tileset) {
             expect(statistics.numberOfTilesWithContentReady).toEqual(5);
-            expect(tileset._hasMixedContent).toBe(false);
+            expect(tileset.hasMixedContent).toBe(false);
           }
         );
       });
@@ -3853,7 +3804,7 @@ describe(
 
         scene.renderForSpecs();
 
-        expect(tileset._hasMixedContent).toBe(true);
+        expect(tileset.hasMixedContent).toBe(true);
         expect(statistics.numberOfTilesWithContentReady).toEqual(2);
         expect(
           tileset.root.children[0].children[0].children[3]._selectionDepth
@@ -3863,7 +3814,7 @@ describe(
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
           function (tileset) {
             expect(statistics.numberOfTilesWithContentReady).toEqual(5);
-            expect(tileset._hasMixedContent).toBe(false);
+            expect(tileset.hasMixedContent).toBe(false);
           }
         );
       });
@@ -3914,7 +3865,7 @@ describe(
         expect(root.children[0].children[0].children[3]._finalResolution).toBe(
           true
         );
-        expect(tileset._hasMixedContent).toBe(true);
+        expect(tileset.hasMixedContent).toBe(true);
 
         const commandList = scene.frameState.commandList;
         const rs = commandList[1].renderState;
@@ -3958,16 +3909,16 @@ describe(
         expect(
           isSelected(tileset, root.children[0].children[0].children[3])
         ).toBe(false);
-        expect(tileset._hasMixedContent).toBe(false);
+        expect(tileset.hasMixedContent).toBe(false);
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       });
     });
 
-    it("does not add commands or stencil clear command with no selected tiles", function () {
-      options.url = tilesetUrl;
+    it("does not add commands or stencil clear command with no selected tiles", async function () {
       options.skipLevelOfDetail = true;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
+      scene.primitives.add(tileset);
       scene.renderForSpecs();
       const statistics = tileset._statistics;
       expect(tileset._selectedTiles.length).toEqual(0);
@@ -4075,7 +4026,6 @@ describe(
     it("tile expires", function () {
       return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(
         function (tileset) {
-          // Intercept the request and load content that produces more draw commands, to simulate fetching new content after the original expires
           spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
             function (
               url,
@@ -4193,7 +4143,7 @@ describe(
       return Cesium3DTilesTester.loadTileset(
         scene,
         tilesetSubtreeExpirationUrl
-      ).then(function (tileset) {
+      ).then(async function (tileset) {
         // Intercept the request and load a subtree with one less child. Still want to make an actual request to simulate
         // real use cases instead of immediately returning a pre-created array buffer.
         spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
@@ -4267,52 +4217,42 @@ describe(
       });
     });
 
-    it("tile expires and request fails", function () {
-      return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(
-        function (tileset) {
-          spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-            function (
-              url,
-              responseType,
-              method,
-              data,
-              headers,
-              deferred,
-              overrideMimeType
-            ) {
-              deferred.reject(new Error());
-            }
-          );
-          const tile = tileset.root;
-          const statistics = tileset._statistics;
-
-          // Trigger expiration to happen next frame
-          tile.expireDate = JulianDate.addSeconds(
-            JulianDate.now(),
-            -1.0,
-            new JulianDate()
-          );
-
-          // After update the tile is expired
-          scene.renderForSpecs();
-
-          // Make request (it will fail)
-          scene.renderForSpecs();
-
-          return tile.contentReadyPromise
-            .then(function () {
-              fail();
-            })
-            .catch(function () {
-              // Render scene
-              scene.renderForSpecs();
-
-              expect(tile._contentState).toBe(Cesium3DTileContentState.FAILED);
-              expect(statistics.numberOfCommands).toBe(0);
-              expect(statistics.numberOfTilesTotal).toBe(1);
-            });
-        }
+    it("tile expires and request fails", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        batchedExpirationUrl
       );
+      spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(() => {
+        return Promise.reject(new Error("404"));
+      });
+      const tile = tileset.root;
+      const statistics = tileset._statistics;
+
+      // Trigger expiration to happen next frame
+      tile.expireDate = JulianDate.addSeconds(
+        JulianDate.now(),
+        -1.0,
+        new JulianDate()
+      );
+
+      const failedSpy = jasmine.createSpy("listenerSpy");
+      tileset.tileFailed.addEventListener(failedSpy);
+
+      // After update the tile is expired
+      scene.renderForSpecs();
+
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return tileset.tilesLoaded;
+      });
+
+      expect(failedSpy).toHaveBeenCalledWith(
+        jasmine.objectContaining({
+          message: "404",
+        })
+      );
+      expect(statistics.numberOfCommands).toBe(0);
+      expect(statistics.numberOfTilesTotal).toBe(1);
     });
 
     it("tile expiration date", function () {
@@ -4549,7 +4489,6 @@ describe(
         function (tileset) {
           // The bounding volume of this tileset puts it under the surface, so no
           // east-north-up should be applied. Check that it matches the orientation
-          // of the original transform.
           let offsetMatrix = tileset.clippingPlanesOriginMatrix;
 
           expect(
@@ -4561,7 +4500,6 @@ describe(
               // The bounding volume of this tileset puts it on the surface,
               //  so we want to apply east-north-up as our best guess.
               offsetMatrix = tileset.clippingPlanesOriginMatrix;
-              // The clipping plane matrix is not the same as the original because we applied east-north-up.
               expect(
                 Matrix4.equals(offsetMatrix, tileset.root.computedTransform)
               ).toBe(false);
@@ -4672,28 +4610,20 @@ describe(
         );
       });
 
-      it("throws if frameState is undefined", function () {
-        const tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
+      it("throws if frameState is undefined", async function () {
+        const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
         expect(function () {
           tileset.updateForPass();
         }).toThrowDeveloperError();
-
-        return tileset.readyPromise;
       });
 
-      it("throws if tilesetPassState is undefined", function () {
-        const tileset = new Cesium3DTileset({
-          url: tilesetUrl,
-        });
+      it("throws if tilesetPassState is undefined", async function () {
+        const tileset = await Cesium3DTileset.fromUrl(tilesetUrl, options);
 
         expect(function () {
           tileset.updateForPass(scene.frameState);
         }).toThrowDeveloperError();
-
-        return tileset.readyPromise;
       });
     });
 
@@ -4902,7 +4832,7 @@ describe(
         const cartographics = [centerCartographic];
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(
           function (tileset) {
-            tileset.maximumMemoryUsage = 0;
+            tileset.cacheBytes = 0;
             return sampleHeightMostDetailed(cartographics).then(function () {
               expect(centerCartographic.height).toEqualEpsilon(
                 2.47,
@@ -5586,7 +5516,7 @@ describe(
         );
       });
 
-      it("request statistics are updated for partial success", function () {
+      it("request statistics are updated for partial success", async function () {
         const originalLoadJson = Cesium3DTileset.loadJson;
         spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
           return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
@@ -5601,41 +5531,35 @@ describe(
         });
 
         viewNothing();
-        let statistics;
 
-        const tileset = scene.primitives.add(
-          new Cesium3DTileset({
-            url: multipleContentsUrl,
-          })
-        );
-        return tileset.readyPromise
-          .then(function (tileset) {
-            viewAllTiles();
-            scene.renderForSpecs();
+        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
+        scene.primitives.add(tileset);
+        viewAllTiles();
+        scene.renderForSpecs();
 
-            statistics = tileset.statistics;
-            expect(statistics.numberOfAttemptedRequests).toBe(0);
-            expect(statistics.numberOfPendingRequests).toBe(3);
-            expect(statistics.numberOfTilesProcessing).toBe(0);
-            expect(statistics.numberOfTilesWithContentReady).toBe(0);
+        const statistics = tileset.statistics;
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(3);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
-            return tileset.root.contentReadyToProcessPromise;
-          })
-          .then(function () {
-            expect(statistics.numberOfAttemptedRequests).toBe(0);
-            expect(statistics.numberOfPendingRequests).toBe(0);
-            expect(statistics.numberOfTilesProcessing).toBe(1);
-            expect(statistics.numberOfTilesWithContentReady).toBe(0);
+        await pollToPromise(() => {
+          scene.renderForSpecs();
+          return (
+            tileset.root._contentState === Cesium3DTileContentState.PROCESSING
+          );
+        });
 
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-              function () {
-                expect(statistics.numberOfAttemptedRequests).toBe(0);
-                expect(statistics.numberOfPendingRequests).toBe(0);
-                expect(statistics.numberOfTilesProcessing).toBe(0);
-                expect(statistics.numberOfTilesWithContentReady).toBe(1);
-              }
-            );
-          });
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(0);
+        expect(statistics.numberOfTilesProcessing).toBe(1);
+        expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(0);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(1);
       });
 
       it("request statistics are updated correctly if requests are not scheduled", function () {
@@ -5660,55 +5584,58 @@ describe(
         );
       });
 
-      it("statistics update correctly if tile is canceled", function () {
+      it("statistics update correctly if tile is canceled", async function () {
         viewNothing();
-        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
-          function (tileset) {
-            let callCount = 0;
-            tileset.tileFailed.addEventListener(function (event) {
-              callCount++;
-            });
-
-            viewAllTiles();
-            scene.renderForSpecs();
-
-            const statistics = tileset.statistics;
-            expect(statistics.numberOfAttemptedRequests).toBe(0);
-            expect(statistics.numberOfPendingRequests).toBe(2);
-            expect(statistics.numberOfTilesProcessing).toBe(0);
-            expect(statistics.numberOfTilesWithContentReady).toBe(0);
-
-            const multipleContents = tileset.root.content;
-            multipleContents.cancelRequests();
-
-            tileset.root.contentReadyToProcessPromise
-              .then(function () {
-                expect(statistics.numberOfAttemptedRequests).toBe(2);
-                expect(statistics.numberOfPendingRequests).toBe(0);
-                expect(statistics.numberOfTilesProcessing).toBe(1);
-                expect(statistics.numberOfTilesWithContentReady).toBe(0);
-              })
-              .catch(fail);
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-              function () {
-                // Resetting content should be handled gracefully; it should
-                // not trigger the tileFailed event
-                expect(callCount).toBe(0);
-
-                expect(statistics.numberOfAttemptedRequests).toBe(0);
-                expect(statistics.numberOfPendingRequests).toBe(0);
-                expect(statistics.numberOfTilesProcessing).toBe(0);
-                expect(statistics.numberOfTilesWithContentReady).toBe(1);
-              }
-            );
-          }
+        const tileset = await Cesium3DTilesTester.loadTileset(
+          scene,
+          multipleContentsUrl
         );
+        let callCount = 0;
+        tileset.tileFailed.addEventListener(function (event) {
+          callCount++;
+        });
+
+        viewAllTiles();
+        scene.renderForSpecs();
+
+        const statistics = tileset.statistics;
+
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(2);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+        const multipleContents = tileset.root.content;
+        multipleContents.cancelRequests();
+
+        await pollToPromise(() => {
+          return (
+            tileset.root._contentState !== Cesium3DTileContentState.LOADING
+          );
+        });
+
+        expect(statistics.numberOfAttemptedRequests).toBe(2);
+        expect(statistics.numberOfPendingRequests).toBe(0);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        // Resetting content should be handled gracefully; it should
+        // not trigger the tileFailed event
+        expect(callCount).toBe(0);
+
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(0);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(1);
       });
 
-      it("verify multiple content statistics", function () {
-        options.url = multipleContentsUrl;
-        const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      it("verify multiple content statistics", async function () {
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsUrl,
+          options
+        );
+        scene.primitives.add(tileset);
 
         return checkPointAndFeatureCounts(tileset, 35, 0, 132);
       });
@@ -5762,7 +5689,7 @@ describe(
         );
       });
 
-      it("raises tileFailed for external tileset inside multiple contents", function () {
+      it("raises tileFailed for external tileset inside multiple contents", async function () {
         const originalLoadJson = Cesium3DTileset.loadJson;
         spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
           return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
@@ -5780,6 +5707,19 @@ describe(
           });
         });
 
+        viewNothing();
+        let errorCount = 0;
+
+        const tileset = await Cesium3DTileset.fromUrl(multipleContentsUrl);
+        tileset.tileFailed.addEventListener(function (event) {
+          errorCount++;
+          expect(endsWith(event.url, ".json")).toBe(true);
+          expect(event.message).toEqual(
+            "External tilesets are disallowed inside multiple contents"
+          );
+        });
+        scene.primitives.add(tileset);
+
         spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
           const externalTileset = {
             asset: {
@@ -5790,31 +5730,10 @@ describe(
           const buffer = generateJsonBuffer(externalTileset).buffer;
           return Promise.resolve(buffer);
         });
+        viewAllTiles();
 
-        viewNothing();
-        let errorCount = 0;
-        const tileset = scene.primitives.add(
-          new Cesium3DTileset({
-            url: multipleContentsUrl,
-          })
-        );
-        tileset.tileFailed.addEventListener(function (event) {
-          errorCount++;
-          expect(endsWith(event.url, ".json")).toBe(true);
-          expect(event.message).toEqual(
-            "External tilesets are disallowed inside multiple contents"
-          );
-        });
-        return tileset.readyPromise.then(function (tileset) {
-          viewAllTiles();
-          scene.renderForSpecs();
-
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              expect(errorCount).toBe(2);
-            }
-          );
-        });
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        expect(errorCount).toBe(2);
       });
 
       it("debugColorizeTiles for multiple contents", function () {
@@ -5893,7 +5812,7 @@ describe(
         });
       });
 
-      it("request statistics are updated for partial success (legacy)", function () {
+      it("request statistics are updated for partial success (legacy)", async function () {
         const originalLoadJson = Cesium3DTileset.loadJson;
         spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
           return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
@@ -5909,37 +5828,36 @@ describe(
         });
 
         viewNothing();
-        return Cesium3DTilesTester.loadTileset(
+        const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           multipleContentsLegacyUrl
-        ).then(function (tileset) {
-          viewAllTiles();
+        );
+        viewAllTiles();
+        scene.renderForSpecs();
+
+        const statistics = tileset.statistics;
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(3);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+        await pollToPromise(() => {
           scene.renderForSpecs();
-
-          const statistics = tileset.statistics;
-          expect(statistics.numberOfAttemptedRequests).toBe(0);
-          expect(statistics.numberOfPendingRequests).toBe(3);
-          expect(statistics.numberOfTilesProcessing).toBe(0);
-          expect(statistics.numberOfTilesWithContentReady).toBe(0);
-
-          tileset.root.contentReadyToProcessPromise
-            .then(function () {
-              expect(statistics.numberOfAttemptedRequests).toBe(0);
-              expect(statistics.numberOfPendingRequests).toBe(0);
-              expect(statistics.numberOfTilesProcessing).toBe(1);
-              expect(statistics.numberOfTilesWithContentReady).toBe(0);
-            })
-            .catch(fail);
-
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              expect(statistics.numberOfAttemptedRequests).toBe(0);
-              expect(statistics.numberOfPendingRequests).toBe(0);
-              expect(statistics.numberOfTilesProcessing).toBe(0);
-              expect(statistics.numberOfTilesWithContentReady).toBe(1);
-            }
+          return (
+            tileset.root._contentState === Cesium3DTileContentState.PROCESSING
           );
         });
+
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(0);
+        expect(statistics.numberOfTilesProcessing).toBe(1);
+        expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(0);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(1);
       });
 
       it("request statistics are updated correctly if requests are not scheduled (legacy)", function () {
@@ -5965,56 +5883,57 @@ describe(
         });
       });
 
-      it("statistics update correctly if tile is canceled (legacy)", function () {
+      it("statistics update correctly if tile is canceled (legacy)", async function () {
         viewNothing();
-        return Cesium3DTilesTester.loadTileset(
+        const tileset = await Cesium3DTilesTester.loadTileset(
           scene,
           multipleContentsLegacyUrl
-        ).then(function (tileset) {
-          let callCount = 0;
-          tileset.tileFailed.addEventListener(function (event) {
-            callCount++;
-          });
+        );
+        let callCount = 0;
+        tileset.tileFailed.addEventListener(function (event) {
+          callCount++;
+        });
 
-          viewAllTiles();
-          scene.renderForSpecs();
+        viewAllTiles();
+        scene.renderForSpecs();
 
-          const statistics = tileset.statistics;
-          expect(statistics.numberOfAttemptedRequests).toBe(0);
-          expect(statistics.numberOfPendingRequests).toBe(2);
-          expect(statistics.numberOfTilesProcessing).toBe(0);
-          expect(statistics.numberOfTilesWithContentReady).toBe(0);
+        const statistics = tileset.statistics;
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(2);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
-          const multipleContents = tileset.root.content;
-          multipleContents.cancelRequests();
+        const multipleContents = tileset.root.content;
+        multipleContents.cancelRequests();
 
-          tileset.root.contentReadyToProcessPromise
-            .then(function () {
-              expect(statistics.numberOfAttemptedRequests).toBe(2);
-              expect(statistics.numberOfPendingRequests).toBe(0);
-              expect(statistics.numberOfTilesProcessing).toBe(1);
-              expect(statistics.numberOfTilesWithContentReady).toBe(0);
-            })
-            .catch(fail);
-
-          return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
-            function () {
-              // Resetting content should be handled gracefully; it should
-              // not trigger the tileFailed event
-              expect(callCount).toBe(0);
-
-              expect(statistics.numberOfAttemptedRequests).toBe(0);
-              expect(statistics.numberOfPendingRequests).toBe(0);
-              expect(statistics.numberOfTilesProcessing).toBe(0);
-              expect(statistics.numberOfTilesWithContentReady).toBe(1);
-            }
+        await pollToPromise(() => {
+          return (
+            tileset.root._contentState !== Cesium3DTileContentState.LOADING
           );
         });
+
+        expect(statistics.numberOfAttemptedRequests).toBe(2);
+        expect(statistics.numberOfPendingRequests).toBe(0);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+        await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+        // Resetting content should be handled gracefully; it should
+        // not trigger the tileFailed event
+        expect(callCount).toBe(0);
+
+        expect(statistics.numberOfAttemptedRequests).toBe(0);
+        expect(statistics.numberOfPendingRequests).toBe(0);
+        expect(statistics.numberOfTilesProcessing).toBe(0);
+        expect(statistics.numberOfTilesWithContentReady).toBe(1);
       });
 
-      it("verify multiple content statistics (legacy)", function () {
-        options.url = multipleContentsLegacyUrl;
-        const tileset = scene.primitives.add(new Cesium3DTileset(options));
+      it("verify multiple content statistics (legacy)", async function () {
+        const tileset = await Cesium3DTileset.fromUrl(
+          multipleContentsLegacyUrl,
+          options
+        );
+        scene.primitives.add(tileset);
 
         return checkPointAndFeatureCounts(tileset, 35, 0, 132);
       });

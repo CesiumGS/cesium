@@ -896,8 +896,8 @@ Cesium3DTileBatchTable.prototype.addDerivedCommands = function (
   const finalResolution = tile._finalResolution;
   const tileset = tile.tileset;
   const bivariateVisibilityTest =
-    tileset._skipLevelOfDetail &&
-    tileset._hasMixedContent &&
+    tileset.isSkippingLevelOfDetail &&
+    tileset.hasMixedContent &&
     frameState.context.stencilBuffer;
   const styleCommandsNeeded = getStyleCommandsNeeded(this);
 
@@ -1050,9 +1050,6 @@ function getLogDepthPolygonOffsetFragmentShaderProgram(context, shaderProgram) {
     fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
     fs.defines.push("POLYGON_OFFSET");
 
-    fs.sources.unshift(
-      "#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n"
-    );
     shader = context.shaderCache.createDerivedShaderProgram(
       shaderProgram,
       "zBackfaceLogDepth",

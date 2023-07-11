@@ -9,7 +9,6 @@ import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import JulianDate from "../Core/JulianDate.js";
 import Matrix3 from "../Core/Matrix3.js";
@@ -422,26 +421,32 @@ function VoxelPrimitive(options) {
 
   // If the provider fails to initialize the primitive will fail too.
   const provider = this._provider;
-  this._completeLoad = function (primitive, frameState) {};
-  this._readyPromise = initialize(this, provider);
+  initialize(this, provider);
 }
 
 function initialize(primitive, provider) {
-  const promise = new Promise(function (resolve) {
-    primitive._completeLoad = function (primitive, frameState) {
-      // Set the primitive as ready after the first frame render since the user might set up events subscribed to
-      // the post render event, and the primitive may not be ready for those past the first frame.
-      frameState.afterRender.push(function () {
-        primitive._ready = true;
-        resolve(primitive);
-        return true;
-      });
-    };
-  });
+  // Set the bounds
+  const {
+    shape: shapeType,
+    minBounds = VoxelShapeType.getMinBounds(shapeType),
+    maxBounds = VoxelShapeType.getMaxBounds(shapeType),
+  } = provider;
 
-  return provider.readyPromise.then(function () {
-    return promise;
-  });
+  primitive.minBounds = minBounds;
+  primitive.maxBounds = maxBounds;
+  primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
+  primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
+
+  checkTransformAndBounds(primitive, provider);
+
+  // Create the shape object, and update it so it is valid for VoxelTraversal
+  const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
+  primitive._shape = new ShapeConstructor();
+  primitive._shapeVisible = updateShapeAndTransforms(
+    primitive,
+    primitive._shape,
+    provider
+  );
 }
 
 Object.defineProperties(VoxelPrimitive.prototype, {
@@ -455,19 +460,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the primitive is ready for use.
-   *
-   * @memberof VoxelPrimitive.prototype
-   * @type {Promise<VoxelPrimitive>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 
@@ -490,19 +482,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {BoundingSphere}
    * @readonly
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   boundingSphere: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "boundingSphere must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._shape.boundingSphere;
     },
   },
@@ -513,20 +495,10 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {OrientedBoundingBox}
    * @readonly
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   orientedBoundingBox: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "orientedBoundingBox must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
-      return this._shape.orientedBoundingBox;
+      return this.shape.orientedBoundingBox;
     },
   },
 
@@ -556,19 +528,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {VoxelShapeType}
    * @readonly
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   shape: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "shape must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._provider.shape;
     },
   },
@@ -579,19 +541,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {Cartesian3}
    * @readonly
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   dimensions: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "dimensions must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._provider.dimensions;
     },
   },
@@ -602,19 +554,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {number[][]}
    * @readonly
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   minimumValues: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "minimumValues must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._provider.minimumValues;
     },
   },
@@ -625,19 +567,9 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    * @memberof VoxelPrimitive.prototype
    * @type {number[][]}
    * @readonly
-   *
-   * @exception {DeveloperError} If the primitive is not ready.
    */
   maximumValues: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this._ready) {
-        throw new DeveloperError(
-          "maximumValues must not be called before the primitive is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._provider.maximumValues;
     },
   },
@@ -1017,18 +949,18 @@ VoxelPrimitive.prototype.update = function (frameState) {
   // Update the custom shader in case it has texture uniforms.
   this._customShader.update(frameState);
 
-  // Exit early if it's not ready yet.
-  if (!this._ready && !provider.ready) {
-    return;
-  }
-
   // Initialize from the ready provider. This only happens once.
   const context = frameState.context;
   if (!this._ready) {
     initFromProvider(this, provider, context);
-    this._completeLoad(this, frameState);
+    // Set the primitive as ready after the first frame render since the user might set up events subscribed to
+    // the post render event, and the primitive may not be ready for those past the first frame.
+    frameState.afterRender.push(() => {
+      this._ready = true;
+      return true;
+    });
 
-    // Don't render until the next frame after the ready promise is resolved
+    // Don't render until the next frame after ready is set to true
     return;
   }
 
@@ -1187,29 +1119,6 @@ function initFromProvider(primitive, provider, context) {
 
   primitive._pickId = context.createPickId({ primitive });
   uniforms.pickColor = Color.clone(primitive._pickId.color, uniforms.pickColor);
-
-  // Set the bounds
-  const {
-    shape: shapeType,
-    minBounds = VoxelShapeType.getMinBounds(shapeType),
-    maxBounds = VoxelShapeType.getMaxBounds(shapeType),
-  } = provider;
-
-  primitive.minBounds = minBounds;
-  primitive.maxBounds = maxBounds;
-  primitive.minClippingBounds = VoxelShapeType.getMinBounds(shapeType);
-  primitive.maxClippingBounds = VoxelShapeType.getMaxBounds(shapeType);
-
-  checkTransformAndBounds(primitive, provider);
-
-  // Create the shape object, and update it so it is valid for VoxelTraversal
-  const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
-  primitive._shape = new ShapeConstructor();
-  primitive._shapeVisible = updateShapeAndTransforms(
-    primitive,
-    primitive._shape,
-    provider
-  );
 
   const { shaderDefines, shaderUniforms: shapeUniforms } = primitive._shape;
   primitive._shapeDefinesOld = clone(shaderDefines, true);
@@ -1896,7 +1805,6 @@ VoxelPrimitive.DefaultCustomShader = new CustomShader({
 
 function DefaultVoxelProvider() {
   this.ready = true;
-  this.readyPromise = Promise.resolve(this);
   this.shape = VoxelShapeType.BOX;
   this.dimensions = new Cartesian3(1, 1, 1);
   this.names = ["data"];

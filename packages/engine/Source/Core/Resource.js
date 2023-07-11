@@ -37,184 +37,6 @@ const xhrBlobSupported = (function () {
 })();
 
 /**
- * Parses a query string and returns the object equivalent.
- *
- * @param {Uri} uri The Uri with a query object.
- * @param {Resource} resource The Resource that will be assigned queryParameters.
- * @param {boolean} merge If true, we'll merge with the resource's existing queryParameters. Otherwise they will be replaced.
- * @param {boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in uri will take precedence.
- *
- * @private
- */
-function parseQuery(uri, resource, merge, preserveQueryParameters) {
-  const queryString = uri.query();
-  if (queryString.length === 0) {
-    return {};
-  }
-
-  let query;
-  // Special case we run into where the querystring is just a string, not key/value pairs
-  if (queryString.indexOf("=") === -1) {
-    const result = {};
-    result[queryString] = undefined;
-    query = result;
-  } else {
-    query = queryToObject(queryString);
-  }
-
-  if (merge) {
-    resource._queryParameters = combineQueryParameters(
-      query,
-      resource._queryParameters,
-      preserveQueryParameters
-    );
-  } else {
-    resource._queryParameters = query;
-  }
-  uri.search("");
-}
-
-/**
- * Converts a query object into a string.
- *
- * @param {Uri} uri The Uri object that will have the query object set.
- * @param {Resource} resource The resource that has queryParameters
- *
- * @private
- */
-function stringifyQuery(uri, resource) {
-  const queryObject = resource._queryParameters;
-
-  const keys = Object.keys(queryObject);
-
-  // We have 1 key with an undefined value, so this is just a string, not key/value pairs
-  if (keys.length === 1 && !defined(queryObject[keys[0]])) {
-    uri.search(keys[0]);
-  } else {
-    uri.search(objectToQuery(queryObject));
-  }
-}
-
-/**
- * Clones a value if it is defined, otherwise returns the default value
- *
- * @param {*} [val] The value to clone.
- * @param {*} [defaultVal] The default value.
- *
- * @returns {*} A clone of val or the defaultVal.
- *
- * @private
- */
-function defaultClone(val, defaultVal) {
-  if (!defined(val)) {
-    return defaultVal;
-  }
-
-  return defined(val.clone) ? val.clone() : clone(val);
-}
-
-/**
- * Checks to make sure the Resource isn't already being requested.
- *
- * @param {Request} request The request to check.
- *
- * @private
- */
-function checkAndResetRequest(request) {
-  if (
-    request.state === RequestState.ISSUED ||
-    request.state === RequestState.ACTIVE
-  ) {
-    throw new RuntimeError("The Resource is already being fetched.");
-  }
-
-  request.state = RequestState.UNISSUED;
-  request.deferred = undefined;
-}
-
-/**
- * This combines a map of query parameters.
- *
- * @param {object} q1 The first map of query parameters. Values in this map will take precedence if preserveQueryParameters is false.
- * @param {object} q2 The second map of query parameters.
- * @param {boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in q1 will take precedence.
- *
- * @returns {object} The combined map of query parameters.
- *
- * @example
- * const q1 = {
- *   a: 1,
- *   b: 2
- * };
- * const q2 = {
- *   a: 3,
- *   c: 4
- * };
- * const q3 = {
- *   b: [5, 6],
- *   d: 7
- * }
- *
- * // Returns
- * // {
- * //   a: [1, 3],
- * //   b: 2,
- * //   c: 4
- * // };
- * combineQueryParameters(q1, q2, true);
- *
- * // Returns
- * // {
- * //   a: 1,
- * //   b: 2,
- * //   c: 4
- * // };
- * combineQueryParameters(q1, q2, false);
- *
- * // Returns
- * // {
- * //   a: 1,
- * //   b: [2, 5, 6],
- * //   d: 7
- * // };
- * combineQueryParameters(q1, q3, true);
- *
- * // Returns
- * // {
- * //   a: 1,
- * //   b: 2,
- * //   d: 7
- * // };
- * combineQueryParameters(q1, q3, false);
- *
- * @private
- */
-function combineQueryParameters(q1, q2, preserveQueryParameters) {
-  if (!preserveQueryParameters) {
-    return combine(q1, q2);
-  }
-
-  const result = clone(q1, true);
-  for (const param in q2) {
-    if (q2.hasOwnProperty(param)) {
-      let value = result[param];
-      const q2Value = q2[param];
-      if (defined(value)) {
-        if (!Array.isArray(value)) {
-          value = result[param] = [value];
-        }
-
-        result[param] = value.concat(q2Value);
-      } else {
-        result[param] = Array.isArray(q2Value) ? q2Value.slice() : q2Value;
-      }
-    }
-  }
-
-  return result;
-}
-
-/**
  * @typedef {object} Resource.ConstructorOptions
  *
  * Initialization options for the Resource constructor
@@ -227,6 +49,7 @@ function combineQueryParameters(q1, q2, preserveQueryParameters) {
  * @property {Resource.RetryCallback} [retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @property {number} [retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @property {Request} [request] A Request object that will be used. Intended for internal use only.
+ * @property {boolean} [parseUrl=true] If true, parse the url for query parameters; otherwise store the url without change
  */
 
 /**
@@ -319,13 +142,28 @@ function Resource(options) {
   this.retryAttempts = defaultValue(options.retryAttempts, 0);
   this._retryCount = 0;
 
-  const uri = new Uri(options.url);
-  parseQuery(uri, this, true, true);
+  const parseUrl = defaultValue(options.parseUrl, true);
+  if (parseUrl) {
+    this.parseUrl(options.url, true, true);
+  } else {
+    this._url = options.url;
+  }
 
-  // Remove the fragment as it's not sent with a request
-  uri.fragment("");
+  this._credits = options.credits;
+}
 
-  this._url = uri.toString();
+/**
+ * Clones a value if it is defined, otherwise returns the default value
+ *
+ * @param {object} [value] The value to clone.
+ * @param {object} [defaultValue] The default value.
+ *
+ * @returns {object} A clone of value or the defaultValue.
+ *
+ * @private
+ */
+function defaultClone(value, defaultValue) {
+  return defined(value) ? clone(value) : defaultValue;
 }
 
 /**
@@ -471,14 +309,7 @@ Object.defineProperties(Resource.prototype, {
       return this.getUrlComponent(true, true);
     },
     set: function (value) {
-      const uri = new Uri(value);
-
-      parseQuery(uri, this, false);
-
-      // Remove the fragment as it's not sent with a request
-      uri.fragment("");
-
-      this._url = uri.toString();
+      this.parseUrl(value, false, false);
     },
   },
 
@@ -543,6 +374,16 @@ Object.defineProperties(Resource.prototype, {
       return Object.keys(this.headers).length > 0;
     },
   },
+
+  /**
+   * Gets the credits required for attribution of an asset.
+   * @private
+   */
+  credits: {
+    get: function () {
+      return this._credits;
+    },
+  },
 });
 
 /**
@@ -554,6 +395,138 @@ Object.defineProperties(Resource.prototype, {
 Resource.prototype.toString = function () {
   return this.getUrlComponent(true, true);
 };
+
+/**
+ * Parse a url string, and store its info
+ *
+ * @param {string} url The input url string.
+ * @param {boolean} merge If true, we'll merge with the resource's existing queryParameters. Otherwise they will be replaced.
+ * @param {boolean} preserveQuery If true duplicate parameters will be concatenated into an array. If false, keys in url will take precedence.
+ * @param {string} [baseUrl] If supplied, and input url is a relative url, it will be made absolute relative to baseUrl
+ *
+ * @private
+ */
+Resource.prototype.parseUrl = function (url, merge, preserveQuery, baseUrl) {
+  let uri = new Uri(url);
+  const query = parseQueryString(uri.query());
+
+  this._queryParameters = merge
+    ? combineQueryParameters(query, this.queryParameters, preserveQuery)
+    : query;
+
+  // Remove unneeded info from the Uri
+  uri.search("");
+  uri.fragment("");
+
+  if (defined(baseUrl) && uri.scheme() === "") {
+    uri = uri.absoluteTo(getAbsoluteUri(baseUrl));
+  }
+
+  this._url = uri.toString();
+};
+
+/**
+ * Parses a query string and returns the object equivalent.
+ *
+ * @param {string} queryString The query string
+ * @returns {object}
+ *
+ * @private
+ */
+function parseQueryString(queryString) {
+  if (queryString.length === 0) {
+    return {};
+  }
+
+  // Special case where the querystring is just a string, not key/value pairs
+  if (queryString.indexOf("=") === -1) {
+    return { [queryString]: undefined };
+  }
+
+  return queryToObject(queryString);
+}
+
+/**
+ * This combines a map of query parameters.
+ *
+ * @param {object} q1 The first map of query parameters. Values in this map will take precedence if preserveQueryParameters is false.
+ * @param {object} q2 The second map of query parameters.
+ * @param {boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in q1 will take precedence.
+ *
+ * @returns {object} The combined map of query parameters.
+ *
+ * @example
+ * const q1 = {
+ *   a: 1,
+ *   b: 2
+ * };
+ * const q2 = {
+ *   a: 3,
+ *   c: 4
+ * };
+ * const q3 = {
+ *   b: [5, 6],
+ *   d: 7
+ * }
+ *
+ * // Returns
+ * // {
+ * //   a: [1, 3],
+ * //   b: 2,
+ * //   c: 4
+ * // };
+ * combineQueryParameters(q1, q2, true);
+ *
+ * // Returns
+ * // {
+ * //   a: 1,
+ * //   b: 2,
+ * //   c: 4
+ * // };
+ * combineQueryParameters(q1, q2, false);
+ *
+ * // Returns
+ * // {
+ * //   a: 1,
+ * //   b: [2, 5, 6],
+ * //   d: 7
+ * // };
+ * combineQueryParameters(q1, q3, true);
+ *
+ * // Returns
+ * // {
+ * //   a: 1,
+ * //   b: 2,
+ * //   d: 7
+ * // };
+ * combineQueryParameters(q1, q3, false);
+ *
+ * @private
+ */
+function combineQueryParameters(q1, q2, preserveQueryParameters) {
+  if (!preserveQueryParameters) {
+    return combine(q1, q2);
+  }
+
+  const result = clone(q1, true);
+  for (const param in q2) {
+    if (q2.hasOwnProperty(param)) {
+      let value = result[param];
+      const q2Value = q2[param];
+      if (defined(value)) {
+        if (!Array.isArray(value)) {
+          value = result[param] = [value];
+        }
+
+        result[param] = value.concat(q2Value);
+      } else {
+        result[param] = Array.isArray(q2Value) ? q2Value.slice() : q2Value;
+      }
+    }
+  }
+
+  return result;
+}
 
 /**
  * Returns the url, optional with the query string and processed by a proxy.
@@ -568,31 +541,55 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
     return this._url;
   }
 
-  const uri = new Uri(this._url);
-
+  let url = this._url;
   if (query) {
-    stringifyQuery(uri, this);
+    url = `${url}${stringifyQuery(this.queryParameters)}`;
   }
 
-  // objectToQuery escapes the placeholders.  Undo that.
-  let url = uri.toString().replace(/%7B/g, "{").replace(/%7D/g, "}");
+  // Restore the placeholders, which may have been escaped in objectToQuery or elsewhere
+  url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
 
   const templateValues = this._templateValues;
-  url = url.replace(/{(.*?)}/g, function (match, key) {
-    const replacement = templateValues[key];
-    if (defined(replacement)) {
-      // use the replacement value from templateValues if there is one...
-      return encodeURIComponent(replacement);
-    }
-    // otherwise leave it unchanged
-    return match;
-  });
+  if (Object.keys(templateValues).length > 0) {
+    url = url.replace(/{(.*?)}/g, function (match, key) {
+      const replacement = templateValues[key];
+      if (defined(replacement)) {
+        // use the replacement value from templateValues if there is one...
+        return encodeURIComponent(replacement);
+      }
+      // otherwise leave it unchanged
+      return match;
+    });
+  }
 
   if (proxy && defined(this.proxy)) {
     url = this.proxy.getURL(url);
   }
+
   return url;
 };
+
+/**
+ * Converts a query object into a string.
+ *
+ * @param {object} queryObject The object with query parameters
+ * @returns {string}
+ *
+ * @private
+ */
+function stringifyQuery(queryObject) {
+  const keys = Object.keys(queryObject);
+
+  if (keys.length === 0) {
+    return "";
+  }
+  if (keys.length === 1 && !defined(queryObject[keys[0]])) {
+    // We have 1 key with an undefined value, so this is just a string, not key/value pairs
+    return `?${keys[0]}`;
+  }
+
+  return `?${objectToQuery(queryObject)}`;
+}
 
 /**
  * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
@@ -667,30 +664,14 @@ Resource.prototype.getDerivedResource = function (options) {
   resource._retryCount = 0;
 
   if (defined(options.url)) {
-    const uri = new Uri(options.url);
-
-    const preserveQueryParameters = defaultValue(
-      options.preserveQueryParameters,
-      false
-    );
-    parseQuery(uri, resource, true, preserveQueryParameters);
-
-    // Remove the fragment as it's not sent with a request
-    uri.fragment("");
-
-    if (uri.scheme() !== "") {
-      resource._url = uri.toString();
-    } else {
-      resource._url = uri
-        .absoluteTo(new Uri(getAbsoluteUri(this._url)))
-        .toString();
-    }
+    const preserveQuery = defaultValue(options.preserveQueryParameters, false);
+    resource.parseUrl(options.url, true, preserveQuery, this._url);
   }
 
   if (defined(options.queryParameters)) {
     resource._queryParameters = combine(
       options.queryParameters,
-      resource._queryParameters
+      resource.queryParameters
     );
   }
   if (defined(options.templateValues)) {
@@ -753,8 +734,17 @@ Resource.prototype.retryOnError = function (error) {
  */
 Resource.prototype.clone = function (result) {
   if (!defined(result)) {
-    result = new Resource({
+    return new Resource({
       url: this._url,
+      queryParameters: this.queryParameters,
+      templateValues: this.templateValues,
+      headers: this.headers,
+      proxy: this.proxy,
+      retryCallback: this.retryCallback,
+      retryAttempts: this.retryAttempts,
+      request: this.request.clone(),
+      parseUrl: false,
+      credits: defined(this.credits) ? this.credits.slice() : undefined,
     });
   }
 
@@ -1301,7 +1291,8 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
   resource.setQueryParameters(callbackQuery);
 
   const request = resource.request;
-  request.url = resource.url;
+  const url = resource.url;
+  request.url = url;
   request.requestFunction = function () {
     const deferred = defer();
 
@@ -1316,11 +1307,7 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
       }
     };
 
-    Resource._Implementations.loadAndExecuteScript(
-      resource.url,
-      functionName,
-      deferred
-    );
+    Resource._Implementations.loadAndExecuteScript(url, functionName, deferred);
     return deferred.promise;
   };
 
@@ -1376,7 +1363,8 @@ Resource.prototype._makeRequest = function (options) {
   checkAndResetRequest(resource.request);
 
   const request = resource.request;
-  request.url = resource.url;
+  const url = resource.url;
+  request.url = url;
 
   request.requestFunction = function () {
     const responseType = options.responseType;
@@ -1386,7 +1374,7 @@ Resource.prototype._makeRequest = function (options) {
     const data = options.data;
     const deferred = defer();
     const xhr = Resource._Implementations.loadWithXhr(
-      resource.url,
+      url,
       responseType,
       method,
       data,
@@ -1432,6 +1420,25 @@ Resource.prototype._makeRequest = function (options) {
       });
     });
 };
+
+/**
+ * Checks to make sure the Resource isn't already being requested.
+ *
+ * @param {Request} request The request to check.
+ *
+ * @private
+ */
+function checkAndResetRequest(request) {
+  if (
+    request.state === RequestState.ISSUED ||
+    request.state === RequestState.ACTIVE
+  ) {
+    throw new RuntimeError("The Resource is already being fetched.");
+  }
+
+  request.state = RequestState.UNISSUED;
+  request.deferred = undefined;
+}
 
 const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 

@@ -32,23 +32,21 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         // Aerometrex San Francisco High Resolution 3D Model with Street Level Enhanced 3D
-        const tileset = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(1415196),
-            maximumScreenSpaceError: 4,
-          })
-        );
+        const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1415196, {
+          maximumScreenSpaceError: 4,
+        });
+        viewer.scene.primitives.add(tileset);
 
         // Ferry Building – Street Level Enhanced mesh with a resolution of ~6mm per pixel
-        function viewFerryBuilding() {
+        function viewFerryBuilding(duration) {
           viewer.scene.camera.flyTo({
             destination: new Cesium.Cartesian3(
               -2703541.419456986,
@@ -60,6 +58,7 @@
               -0.03131876941215883,
               0.0000033030489428043097
             ),
+            duration: duration,
           });
         }
 
@@ -130,13 +129,17 @@
           },
         ]);
 
-        viewFerryBuilding();
+        viewFerryBuilding(0);
         //Sandcastle_End
         Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

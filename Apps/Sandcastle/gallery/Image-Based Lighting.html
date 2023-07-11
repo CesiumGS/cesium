@@ -54,7 +54,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -137,16 +137,16 @@
           hpr
         );
 
-        const model = viewer.scene.primitives.add(
-          Cesium.Model.fromGltf({
-            url: modelURL,
-            modelMatrix: modelMatrix,
-            minimumPixelSize: 128,
-          })
-        );
+        try {
+          const model = viewer.scene.primitives.add(
+            await Cesium.Model.fromGltfAsync({
+              url: modelURL,
+              modelMatrix: modelMatrix,
+              minimumPixelSize: 128,
+            })
+          );
 
-        model.readyPromise
-          .then(function (model) {
+          model.readyEvent.addEventListener(() => {
             const camera = viewer.camera;
 
             // Zoom to model
@@ -202,16 +202,19 @@
                 }
               }
             );
-          })
-          .catch(function (error) {
-            window.alert(error);
           });
+        } catch (error) {
+          window.alert(`Error loading model: ${error}`);
+        }
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

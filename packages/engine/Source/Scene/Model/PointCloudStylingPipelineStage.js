@@ -161,7 +161,7 @@ PointCloudStylingPipelineStage.process = function (
     if (is3DTiles) {
       defaultPointSize = usesAddRefinement
         ? 5.0
-        : content.tileset.maximumScreenSpaceError;
+        : content.tileset.memoryAdjustedScreenSpaceError;
     }
     vec4.x = defaultValue(
       pointCloudShading.maximumAttenuation,

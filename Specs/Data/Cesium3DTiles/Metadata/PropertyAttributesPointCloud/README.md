@@ -4,7 +4,7 @@ An example that shows how to combine different features of the `EXT_structural_m
 
 ## Sharing a metadata schema between glTF assets and a 3D Tiles tileset
 
-The example uses a single metadata schema, as defined in the [3D Metadata Specification](https://github.com/CesiumGS/3d-tiles/tree/draft-1.1/specification/Metadata). The schema is stored in a `MetadataSchema.json` file, and defines a metadata class with two properties:
+The example uses a single metadata schema, as defined in the [3D Metadata Specification](https://github.com/CesiumGS/3d-tiles/tree/main/specification/Metadata). The schema is stored in a `MetadataSchema.json` file, and defines a metadata class with two properties:
 
 - an `intensity` property, which is a single floating point value
 - a `classification` property, which is an enum with `MediumVegetation` and `Buildings` as its values
@@ -17,7 +17,7 @@ The glTF assets are simple point clouds, with [property attributes](https://gith
 
 ## Defining statistics for the metadata values
 
-The 3D Tiles tileset contains [metadata statistics](https://github.com/CesiumGS/3d-tiles/tree/draft-1.1/specification#metadata-statistics) for the metadata from the glTF assets. These statistics contain, for example, the minimum and maximum `intensity` value, and the number of occurences for each `classification` value.
+The 3D Tiles tileset contains [metadata statistics](https://github.com/CesiumGS/3d-tiles/tree/main/specification#metadata-statistics) for the metadata from the glTF assets. These statistics contain, for example, the minimum and maximum `intensity` value, and the number of occurences for each `classification` value.
 
 ## More information
 

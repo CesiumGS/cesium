@@ -349,24 +349,6 @@ function Primitive(options) {
   this._createGeometryResults = undefined;
   this._ready = false;
 
-  const primitive = this;
-  this._readyPromise = new Promise((resolve, reject) => {
-    primitive._completeLoad = (frameState, state, error) => {
-      this._error = error;
-      this._state = state;
-      frameState.afterRender.push(function () {
-        primitive._ready =
-          primitive._state === PrimitiveState.COMPLETE ||
-          primitive._state === PrimitiveState.FAILED;
-        if (!defined(error)) {
-          resolve(primitive);
-          return true;
-        }
-        reject(error);
-      });
-    };
-  });
-
   this._batchTable = undefined;
   this._batchTableAttributeIndices = undefined;
   this._offsetInstanceExtend = undefined;
@@ -486,22 +468,23 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @type {boolean}
    * @readonly
+   *
+   * @example
+   * // Wait for a primitive to become ready before accessing attributes
+   * const removeListener = scene.postRender.addEventListener(() => {
+   *   if (!frustumPrimitive.ready) {
+   *     return;
+   *   }
+   *
+   *   const attributes = primitive.getGeometryInstanceAttributes('an id');
+   *   attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
+   *
+   *   removeListener();
+   * });
    */
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof Primitive.prototype
-   * @type {Promise<Primitive>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 });
@@ -2522,6 +2505,15 @@ Primitive.prototype.destroy = function () {
 };
 
 function setReady(primitive, frameState, state, error) {
-  primitive._completeLoad(frameState, state, error);
+  primitive._error = error;
+  primitive._state = state;
+  frameState.afterRender.push(function () {
+    primitive._ready =
+      primitive._state === PrimitiveState.COMPLETE ||
+      primitive._state === PrimitiveState.FAILED;
+    if (!defined(error)) {
+      return true;
+    }
+  });
 }
 export default Primitive;

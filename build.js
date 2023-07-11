@@ -10,7 +10,7 @@ import esbuild from "esbuild";
 import { globby } from "globby";
 import glslStripComments from "glsl-strip-comments";
 import gulp from "gulp";
-import rimraf from "rimraf";
+import { rimraf } from "rimraf";
 import { rollup } from "rollup";
 import rollupPluginStripPragma from "rollup-plugin-strip-pragma";
 import terser from "@rollup/plugin-terser";
@@ -18,7 +18,7 @@ import rollupCommonjs from "@rollup/plugin-commonjs";
 import rollupResolve from "@rollup/plugin-node-resolve";
 import streamToPromise from "stream-to-promise";
 
-import mkdirp from "mkdirp";
+import { mkdirp } from "mkdirp";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -853,7 +853,7 @@ export function bundleCombinedSpecs(options) {
  * @returns
  */
 export async function createIndexJs(workspace) {
-  let contents = "";
+  let contents = `globalThis.CESIUM_VERSION = "${version}";\n`;
 
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
   const workspaceSources = workspaceSourceFiles[workspace];

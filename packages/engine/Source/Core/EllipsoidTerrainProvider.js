@@ -42,7 +42,6 @@ function EllipsoidTerrainProvider(options) {
   );
 
   this._errorEvent = new Event();
-  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(EllipsoidTerrainProvider.prototype, {
@@ -62,7 +61,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
 
   /**
    * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-   * the source of the terrain.  This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
+   * the source of the terrain.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {Credit}
    * @readonly
@@ -74,8 +73,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link EllipsoidTerrainProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {GeographicTilingScheme}
    * @readonly
@@ -87,34 +85,9 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   },
 
   /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof EllipsoidTerrainProvider.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  ready: {
-    get: function () {
-      return true;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof EllipsoidTerrainProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
-    },
-  },
-
-  /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
    * indicates which areas of the globe are water rather than land, so they can be rendered
-   * as a reflective surface with animated waves.  This function should not be
-   * called before {@link EllipsoidTerrainProvider#ready} returns true.
+   * as a reflective surface with animated waves.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {boolean}
    * @readonly
@@ -127,7 +100,6 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
 
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
-   * This function should not be called before {@link EllipsoidTerrainProvider#ready} returns true.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {boolean}
    * @readonly
@@ -139,8 +111,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   },
   /**
    * Gets an object that can be used to determine availability of terrain from this provider, such as
-   * at points and in rectangles.  This function should not be called before
-   * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
+   * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof EllipsoidTerrainProvider.prototype
    * @type {TileAvailability}
@@ -154,8 +125,7 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
 });
 
 /**
- * Requests the geometry for a given tile.  This function should not be called before
- * {@link TerrainProvider#ready} returns true.  The result includes terrain
+ * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
  *
  * @param {number} x The X coordinate of the tile for which to request geometry.

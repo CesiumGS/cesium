@@ -87,25 +87,6 @@ describe("Core/CustomHeightmapTerrainProvider", function () {
     expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
   });
 
-  it("resolves readyPromise", function () {
-    const width = 2;
-    const height = 2;
-    const callback = function (x, y, level) {
-      return new Float32Array(width * height);
-    };
-
-    const provider = new CustomHeightmapTerrainProvider({
-      callback: callback,
-      width: width,
-      height: height,
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
   it("has error event", function () {
     const width = 2;
     const height = 2;

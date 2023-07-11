@@ -88,8 +88,6 @@ function CustomHeightmapTerrainProvider(options) {
     credit = new Credit(credit);
   }
   this._credit = credit;
-
-  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
@@ -129,30 +127,6 @@ Object.defineProperties(CustomHeightmapTerrainProvider.prototype, {
   tilingScheme: {
     get: function () {
       return this._tilingScheme;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof CustomHeightmapTerrainProvider.prototype
-   * @type {boolean}
-   * @readonly
-   */
-  ready: {
-    get: function () {
-      return true;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof CustomHeightmapTerrainProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 

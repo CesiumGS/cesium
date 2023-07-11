@@ -211,29 +211,6 @@ function GroundPrimitive(options) {
   this._boundingVolumes2D = [];
 
   this._ready = false;
-
-  const groundPrimitive = this;
-  this._readyPromise = new Promise((resolve, reject) => {
-    groundPrimitive._completeLoad = () => {
-      if (this._ready) {
-        return;
-      }
-
-      this._ready = true;
-
-      if (this.releaseGeometryInstances) {
-        this.geometryInstances = undefined;
-      }
-
-      const error = this._error;
-      if (!defined(error)) {
-        resolve(this);
-      } else {
-        reject(error);
-      }
-    };
-  });
-
   this._primitive = undefined;
 
   this._maxHeight = undefined;
@@ -380,18 +357,6 @@ Object.defineProperties(GroundPrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof GroundPrimitive.prototype
-   * @type {Promise<GroundPrimitive>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 });
@@ -934,8 +899,12 @@ GroundPrimitive.prototype.update = function (frameState) {
   this._primitive.update(frameState);
 
   frameState.afterRender.push(() => {
-    if (defined(this._primitive) && this._primitive.ready) {
-      this._completeLoad();
+    if (!this._ready && defined(this._primitive) && this._primitive.ready) {
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
     }
   });
 };

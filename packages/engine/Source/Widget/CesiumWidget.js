@@ -1,5 +1,4 @@
 import buildModuleUrl from "../Core/buildModuleUrl.js";
-import createWorldImagery from "../Scene/createWorldImagery.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Clock from "../Core/Clock.js";
 import defaultValue from "../Core/defaultValue.js";
@@ -11,6 +10,7 @@ import FeatureDetection from "../Core/FeatureDetection.js";
 import formatError from "../Core/formatError.js";
 import getElement from "../DataSources/getElement.js";
 import Globe from "../Scene/Globe.js";
+import ImageryLayer from "../Scene/ImageryLayer.js";
 import Moon from "../Scene/Moon.js";
 import Scene from "../Scene/Scene.js";
 import SceneMode from "../Scene/SceneMode.js";
@@ -123,8 +123,9 @@ function configureCameraFrustum(widget) {
  * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {object} [options] Object with the following properties:
  * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
- * @param {ImageryProvider | false} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
+ * @param {ImageryLayer|false} [options.baseLayer=ImageryLayer.fromWorldImagery()] The bottommost imagery layer applied to the globe. If set to <code>false</code>, no imagery provider will be added.
  * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+ * @param {Terrain} [options.terrain] A terrain object which handles asynchronous terrain provider. Can only specify if options.terrainProvider is undefined.
  * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
  * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
@@ -156,26 +157,26 @@ function configureCameraFrustum(widget) {
  * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
  * // and in the body, include: <div id="cesiumContainer"></div>
  *
- * //Widget with no terrain and default Bing Maps imagery provider.
- * const widget = new Cesium.CesiumWidget('cesiumContainer');
+ * // Widget with no terrain and default Bing Maps imagery provider.
+ * const widget = new Cesium.CesiumWidget("cesiumContainer");
  *
- * //Widget with ion imagery and Cesium World Terrain.
- * const widget2 = new Cesium.CesiumWidget('cesiumContainer', {
- *     imageryProvider : Cesium.createWorldImagery(),
- *     terrainProvider : Cesium.createWorldTerrain(),
- *     skyBox : new Cesium.SkyBox({
- *         sources : {
- *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
- *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
- *           positiveY : 'stars/TychoSkymapII.t3_08192x04096_80_py.jpg',
- *           negativeY : 'stars/TychoSkymapII.t3_08192x04096_80_my.jpg',
- *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
- *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
- *         }
+ * // Widget with ion imagery and Cesium World Terrain.
+ * const widget2 = new Cesium.CesiumWidget("cesiumContainer", {
+ *     baseLayer: Cesium.ImageryLayer.fromWorldTerrain(),
+ *     terrain: Cesium.Terrain.fromWorldTerrain()
+ *     skyBox: new Cesium.SkyBox({
+ *       sources: {
+ *         positiveX: "stars/TychoSkymapII.t3_08192x04096_80_px.jpg",
+ *         negativeX: "stars/TychoSkymapII.t3_08192x04096_80_mx.jpg",
+ *         positiveY: "stars/TychoSkymapII.t3_08192x04096_80_py.jpg",
+ *         negativeY: "stars/TychoSkymapII.t3_08192x04096_80_my.jpg",
+ *         positiveZ: "stars/TychoSkymapII.t3_08192x04096_80_pz.jpg",
+ *         negativeZ: "stars/TychoSkymapII.t3_08192x04096_80_mz.jpg"
+ *       }
  *     }),
  *     // Show Columbus View map with Web Mercator projection
- *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
- *     mapProjection : new Cesium.WebMercatorProjection()
+ *     sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+ *     mapProjection: new Cesium.WebMercatorProjection()
  * });
  */
 function CesiumWidget(container, options) {
@@ -340,20 +341,30 @@ function CesiumWidget(container, options) {
       scene.skyAtmosphere = skyAtmosphere;
     }
 
-    //Set the base imagery layer
-    let imageryProvider =
-      options.globe === false ? false : options.imageryProvider;
-    if (!defined(imageryProvider)) {
-      imageryProvider = createWorldImagery();
+    // Set the base imagery layer
+    let baseLayer = options.baseLayer;
+    if (options.globe !== false && baseLayer !== false) {
+      if (!defined(baseLayer)) {
+        baseLayer = ImageryLayer.fromWorldImagery();
+      }
+      scene.imageryLayers.add(baseLayer);
     }
 
-    if (imageryProvider !== false) {
-      scene.imageryLayers.addImageryProvider(imageryProvider);
-    }
-
-    //Set the terrain provider if one is provided.
+    // Set the terrain provider if one is provided.
     if (defined(options.terrainProvider) && options.globe !== false) {
       scene.terrainProvider = options.terrainProvider;
+    }
+
+    if (defined(options.terrain) && options.globe !== false) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(options.terrainProvider)) {
+        throw new DeveloperError(
+          "Specify either options.terrainProvider or options.terrain."
+        );
+      }
+      //>>includeEnd('debug')
+
+      scene.setTerrain(options.terrain);
     }
 
     this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
@@ -489,6 +500,18 @@ Object.defineProperties(CesiumWidget.prototype, {
     },
     set: function (terrainProvider) {
       this._scene.terrainProvider = terrainProvider;
+    },
+  },
+
+  /**
+   * Manages the list of credits to display on screen and in the lightbox.
+   * @memberof CesiumWidget.prototype
+   *
+   * @type {CreditDisplay}
+   */
+  creditDisplay: {
+    get: function () {
+      return this._scene.frameState.creditDisplay;
     },
   },
 

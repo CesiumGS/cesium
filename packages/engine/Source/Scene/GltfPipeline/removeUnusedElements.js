@@ -106,6 +106,15 @@ Remove.accessor = function (gltf, accessorId) {
       if (defined(indices) && indices > accessorId) {
         primitive.indices--;
       }
+
+      const ext = primitive.extensions;
+      if (
+        defined(ext) &&
+        defined(ext.CESIUM_primitive_outline) &&
+        ext.CESIUM_primitive_outline.indices > accessorId
+      ) {
+        --ext.CESIUM_primitive_outline.indices;
+      }
     });
   });
 
@@ -543,6 +552,24 @@ getListOfElementsIdsInUse.accessor = function (gltf) {
           }
         );
       }
+    });
+  }
+
+  if (usesExtension(gltf, "CESIUM_primitive_outline")) {
+    ForEach.mesh(gltf, function (mesh) {
+      ForEach.meshPrimitive(mesh, function (primitive) {
+        const extensions = primitive.extensions;
+        if (
+          defined(extensions) &&
+          defined(extensions.CESIUM_primitive_outline)
+        ) {
+          const extension = extensions.CESIUM_primitive_outline;
+          const indicesAccessorId = extension.indices;
+          if (defined(indicesAccessorId)) {
+            usedAccessorIds[indicesAccessorId] = true;
+          }
+        }
+      });
     });
   }
 

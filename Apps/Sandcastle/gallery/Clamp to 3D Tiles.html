@@ -32,11 +32,11 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         const scene = viewer.scene;
         const clock = viewer.clock;
@@ -50,12 +50,6 @@
           entity = dataSource.entities.getById("CesiumMilkTruck");
           positionProperty = entity.position;
         });
-
-        const tileset = scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          })
-        );
 
         viewer.camera.setView({
           destination: new Cesium.Cartesian3(
@@ -71,10 +65,17 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        if (scene.clampToHeightSupported) {
-          tileset.initialTilesLoaded.addEventListener(start);
-        } else {
-          window.alert("This browser does not support clampToHeight.");
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+          viewer.scene.primitives.add(tileset);
+
+          if (scene.clampToHeightSupported) {
+            tileset.initialTilesLoaded.addEventListener(start);
+          } else {
+            window.alert("This browser does not support clampToHeight.");
+          }
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
         }
 
         function start() {
@@ -84,13 +85,15 @@
             const position = positionProperty.getValue(clock.currentTime);
             entity.position = scene.clampToHeight(position, objectsToExclude);
           });
-        }
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
+        } //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

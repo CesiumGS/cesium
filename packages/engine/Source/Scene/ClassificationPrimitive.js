@@ -162,29 +162,6 @@ function ClassificationPrimitive(options) {
   this._commandsIgnoreShow = [];
 
   this._ready = false;
-
-  const classificationPrimitive = this;
-  this._readyPromise = new Promise((resolve, reject) => {
-    classificationPrimitive._completeLoad = () => {
-      if (this._ready) {
-        return;
-      }
-
-      this._ready = true;
-
-      if (this.releaseGeometryInstances) {
-        this.geometryInstances = undefined;
-      }
-
-      const error = this._error;
-      if (!defined(error)) {
-        resolve(this);
-      } else {
-        reject(error);
-      }
-    };
-  });
-
   this._primitive = undefined;
   this._pickPrimitive = options._pickPrimitive;
 
@@ -332,18 +309,6 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof ClassificationPrimitive.prototype
-   * @type {Promise<ClassificationPrimitive>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 
@@ -1352,7 +1317,11 @@ ClassificationPrimitive.prototype.update = function (frameState) {
 
   frameState.afterRender.push(() => {
     if (defined(this._primitive) && this._primitive.ready) {
-      this._completeLoad();
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
     }
   });
 };

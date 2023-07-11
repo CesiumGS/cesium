@@ -2,7 +2,6 @@ import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Matrix4 from "../Core/Matrix4.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
@@ -28,14 +27,17 @@ import VoxelShapeType from "./VoxelShapeType.js";
  * <p>
  * Implements the {@link VoxelProvider} interface.
  * </p>
+ * <div class="notice">
+ * This object is normally not instantiated directly, use {@link Cesium3DTilesVoxelProvider.fromUrl}.
+ * </div>
  *
  * @alias Cesium3DTilesVoxelProvider
  * @constructor
  * @augments VoxelProvider
  *
  * @param {object} options Object with the following properties:
- * @param {Resource|string|Promise<Resource>|Promise<string>} options.url The URL to a tileset JSON file.
  *
+ * @see Cesium3DTilesVoxelProvider.fromUrl
  * @see VoxelProvider
  * @see VoxelPrimitive
  * @see VoxelShapeType
@@ -44,12 +46,6 @@ import VoxelShapeType from "./VoxelShapeType.js";
  */
 function Cesium3DTilesVoxelProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  //>>includeStart('debug', pragmas.debug)
-  Check.defined("options.url", options.url);
-  //>>includeEnd('debug');
-
-  /** @inheritdoc */
-  this.ready = false;
 
   /** @inheritdoc */
   this.shapeTransform = undefined;
@@ -95,87 +91,86 @@ function Cesium3DTilesVoxelProvider(options) {
 
   this._implicitTileset = undefined;
   this._subtreeCache = new ImplicitSubtreeCache();
-
-  const that = this;
-  let tilesetJson;
-
-  this._readyPromise = Promise.resolve(options.url).then(function (url) {
-    const resource = Resource.createIfNeeded(url);
-    return resource
-      .fetchJson()
-      .then(function (tileset) {
-        tilesetJson = tileset;
-        validate(tilesetJson);
-        return getMetadataSchemaLoader(tilesetJson, resource).promise;
-      })
-      .then(function (schemaLoader) {
-        const root = tilesetJson.root;
-        const voxel = root.content.extensions["3DTILES_content_voxels"];
-        const className = voxel.class;
-
-        const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
-          ? tilesetJson.extensions["3DTILES_metadata"]
-          : tilesetJson;
-
-        const metadataSchema = schemaLoader.schema;
-        const metadata = new Cesium3DTilesetMetadata({
-          metadataJson: metadataJson,
-          schema: metadataSchema,
-        });
-
-        addAttributeInfo(that, metadata, className);
-
-        const implicitTileset = new ImplicitTileset(
-          resource,
-          root,
-          metadataSchema
-        );
-
-        const {
-          shape,
-          minBounds,
-          maxBounds,
-          shapeTransform,
-          globalTransform,
-        } = getShape(root);
-
-        that.shape = shape;
-        that.minBounds = minBounds;
-        that.maxBounds = maxBounds;
-        that.dimensions = Cartesian3.unpack(voxel.dimensions);
-        that.shapeTransform = shapeTransform;
-        that.globalTransform = globalTransform;
-        that.maximumTileCount = getTileCount(metadata);
-
-        let paddingBefore;
-        let paddingAfter;
-
-        if (defined(voxel.padding)) {
-          paddingBefore = Cartesian3.unpack(voxel.padding.before);
-          paddingAfter = Cartesian3.unpack(voxel.padding.after);
-        }
-
-        that.paddingBefore = paddingBefore;
-        that.paddingAfter = paddingAfter;
-
-        that._implicitTileset = implicitTileset;
-
-        ResourceCache.unload(schemaLoader);
-
-        that.ready = true;
-        return that;
-      });
-  });
 }
 
-Object.defineProperties(Cesium3DTilesVoxelProvider.prototype, {
-  /** @inheritdoc */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
-    },
-  },
-});
+/**
+ * Creates a {@link VoxelProvider} that fetches voxel data from a 3D Tiles tileset.
+ *
+ * @param {Resource|string} url The URL to a tileset JSON file
+ * @returns {Promise<Cesium3DTilesVoxelProvider>} The created provider
+ *
+ * @exception {RuntimeException} Root must have content
+ * @exception {RuntimeException} Root tile content must have 3DTILES_content_voxels extension
+ * @exception {RuntimeException} Root tile must have implicit tiling
+ * @exception {RuntimeException} Tileset must have a metadata schema
+ * @exception {RuntimeException} Only box, region and 3DTILES_bounding_volume_cylinder are supported in Cesium3DTilesVoxelProvider
+ */
+Cesium3DTilesVoxelProvider.fromUrl = async function (url) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  const resource = Resource.createIfNeeded(url);
+  const tilesetJson = await resource.fetchJson();
+
+  validate(tilesetJson);
+
+  const schemaLoader = getMetadataSchemaLoader(tilesetJson, resource);
+  await schemaLoader.load();
+
+  const root = tilesetJson.root;
+  const voxel = root.content.extensions["3DTILES_content_voxels"];
+  const className = voxel.class;
+
+  const metadataJson = hasExtension(tilesetJson, "3DTILES_metadata")
+    ? tilesetJson.extensions["3DTILES_metadata"]
+    : tilesetJson;
+
+  const metadataSchema = schemaLoader.schema;
+  const metadata = new Cesium3DTilesetMetadata({
+    metadataJson: metadataJson,
+    schema: metadataSchema,
+  });
+
+  const provider = new Cesium3DTilesVoxelProvider();
+
+  addAttributeInfo(provider, metadata, className);
+
+  const implicitTileset = new ImplicitTileset(resource, root, metadataSchema);
+
+  const {
+    shape,
+    minBounds,
+    maxBounds,
+    shapeTransform,
+    globalTransform,
+  } = getShape(root);
+
+  provider.shape = shape;
+  provider.minBounds = minBounds;
+  provider.maxBounds = maxBounds;
+  provider.dimensions = Cartesian3.unpack(voxel.dimensions);
+  provider.shapeTransform = shapeTransform;
+  provider.globalTransform = globalTransform;
+  provider.maximumTileCount = getTileCount(metadata);
+
+  let paddingBefore;
+  let paddingAfter;
+
+  if (defined(voxel.padding)) {
+    paddingBefore = Cartesian3.unpack(voxel.padding.before);
+    paddingAfter = Cartesian3.unpack(voxel.padding.after);
+  }
+
+  provider.paddingBefore = paddingBefore;
+  provider.paddingAfter = paddingAfter;
+
+  provider._implicitTileset = implicitTileset;
+
+  ResourceCache.unload(schemaLoader);
+
+  return provider;
+};
 
 function getTileCount(metadata) {
   if (!defined(metadata.tileset)) {
@@ -306,9 +301,9 @@ function getCylinderShape(cylinder, tileTransform) {
 function getMetadataSchemaLoader(tilesetJson, resource) {
   const { schemaUri, schema } = tilesetJson;
   if (!defined(schemaUri)) {
-    return ResourceCache.loadSchema({ schema });
+    return ResourceCache.getSchemaLoader({ schema });
   }
-  return ResourceCache.loadSchema({
+  return ResourceCache.getSchemaLoader({
     resource: resource.getDerivedResource({
       url: schemaUri,
     }),
@@ -356,7 +351,7 @@ function copyArray(values, length) {
   return Array.from({ length }, (v, i) => valuesArray[i]);
 }
 
-function getVoxelPromise(implicitTileset, tileCoordinates) {
+async function getVoxelContent(implicitTileset, tileCoordinates) {
   const voxelRelative = implicitTileset.contentUriTemplates[0].getDerivedResource(
     {
       templateValues: tileCoordinates.getTemplateValues(),
@@ -366,29 +361,28 @@ function getVoxelPromise(implicitTileset, tileCoordinates) {
     url: voxelRelative.url,
   });
 
-  return voxelResource.fetchArrayBuffer().then(function (arrayBuffer) {
-    const preprocessed = preprocess3DTileContent(arrayBuffer);
+  const arrayBuffer = await voxelResource.fetchArrayBuffer();
+  const preprocessed = preprocess3DTileContent(arrayBuffer);
 
-    const voxelContent = new VoxelContent(
-      voxelResource,
-      preprocessed.jsonPayload,
-      preprocessed.binaryPayload,
-      implicitTileset.metadataSchema
-    );
+  const voxelContent = await VoxelContent.fromJson(
+    voxelResource,
+    preprocessed.jsonPayload,
+    preprocessed.binaryPayload,
+    implicitTileset.metadataSchema
+  );
 
-    return voxelContent.readyPromise;
-  });
+  return voxelContent;
 }
 
-function getSubtreePromise(provider, subtreeCoord) {
+async function getSubtreePromise(provider, subtreeCoord) {
   const implicitTileset = provider._implicitTileset;
   const subtreeCache = provider._subtreeCache;
 
   // First load the subtree to check if the tile is available.
   // If the subtree has been requested previously it might still be in the cache
-  const subtree = subtreeCache.find(subtreeCoord);
+  let subtree = subtreeCache.find(subtreeCoord);
   if (defined(subtree)) {
-    return subtree.readyPromise;
+    return subtree;
   }
 
   const subtreeRelative = implicitTileset.subtreeUriTemplate.getDerivedResource(
@@ -400,38 +394,29 @@ function getSubtreePromise(provider, subtreeCoord) {
     url: subtreeRelative.url,
   });
 
-  return subtreeResource.fetchArrayBuffer().then(function (arrayBuffer) {
-    // Check one more time if the subtree is in the cache.
-    // This could happen if there are two in-flight tile requests from the same
-    // subtree and one finishes before the other.
-    let subtree = subtreeCache.find(subtreeCoord);
-    if (defined(subtree)) {
-      return subtree.readyPromise;
-    }
+  const arrayBuffer = await subtreeResource.fetchArrayBuffer();
+  // Check one more time if the subtree is in the cache.
+  // This could happen if there are two in-flight tile requests from the same
+  // subtree and one finishes before the other.
+  subtree = subtreeCache.find(subtreeCoord);
+  if (defined(subtree)) {
+    return subtree;
+  }
 
-    const preprocessed = preprocess3DTileContent(arrayBuffer);
-    subtree = new ImplicitSubtree(
-      subtreeResource,
-      preprocessed.jsonPayload,
-      preprocessed.binaryPayload,
-      implicitTileset,
-      subtreeCoord
-    );
-    subtreeCache.addSubtree(subtree);
-    return subtree.readyPromise;
-  });
+  const preprocessed = preprocess3DTileContent(arrayBuffer);
+  subtree = await ImplicitSubtree.fromSubtreeJson(
+    subtreeResource,
+    preprocessed.jsonPayload,
+    preprocessed.binaryPayload,
+    implicitTileset,
+    subtreeCoord
+  );
+  subtreeCache.addSubtree(subtree);
+  return subtree;
 }
 
 /** @inheritdoc */
 Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this.ready) {
-    throw new DeveloperError(
-      "The provider is not ready. Use Cesium3DTilesVoxelProvider.readyPromise or wait for Cesium3DTilesVoxelProvider.ready to be true."
-    );
-  }
-  //>>includeEnd('debug');
-
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const tileLevel = defaultValue(options.tileLevel, 0);
   const tileX = defaultValue(options.tileX, 0);
@@ -482,7 +467,7 @@ Cesium3DTilesVoxelProvider.prototype.requestData = function (options) {
         return Promise.reject("Tile is not available");
       }
 
-      return getVoxelPromise(implicitTileset, tileCoordinates);
+      return getVoxelContent(implicitTileset, tileCoordinates);
     })
     .then(function (voxelContent) {
       return names.map(function (name) {

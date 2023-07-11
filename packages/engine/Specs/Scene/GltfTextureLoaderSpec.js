@@ -6,6 +6,7 @@ import {
   JobScheduler,
   Resource,
   ResourceCache,
+  RuntimeError,
   SupportedImageFormats,
   Texture,
   TextureMinificationFilter,
@@ -232,10 +233,9 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("rejects promise if image fails to load", function () {
-      const error = new Error("404 Not Found");
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(
-        Promise.reject(error)
+    it("load throws if image fails to load", async function () {
+      spyOn(Resource.prototype, "fetchImage").and.callFake(() =>
+        Promise.reject(new Error("404 Not Found"))
       );
 
       const textureLoader = new GltfTextureLoader({
@@ -247,20 +247,13 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      textureLoader.load();
-
-      return textureLoader.promise
-        .then(function (textureLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load texture\nFailed to load image: image.png\n404 Not Found"
-          );
-        });
+      await expectAsync(textureLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load texture\nFailed to load image: image.png\n404 Not Found"
+      );
     });
 
-    it("loads texture", function () {
+    it("loads texture", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(image)
       );
@@ -289,20 +282,20 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      loaderProcess(textureLoader, scene); // Check that calling process before load doesn't break anything
+      expect(() => loaderProcess(textureLoader, scene)).not.toThrowError();
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        loaderProcess(textureLoader, scene); // Check that calling process after load doesn't break anything
-        expect(textureLoader.texture.width).toBe(1);
-        expect(textureLoader.texture.height).toBe(1);
-      });
+      expect(() => loaderProcess(textureLoader, scene)).not.toThrowError();
+      expect(textureLoader.texture.width).toBe(1);
+      expect(textureLoader.texture.height).toBe(1);
+      expect(ResourceCache.statistics.texturesByteLength).toBe(
+        textureLoader.texture.sizeInBytes
+      );
     });
 
-    it("creates texture synchronously", function () {
+    it("creates texture synchronously", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(image)
       );
@@ -317,18 +310,15 @@ describe(
         asynchronous: false,
       });
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        loaderProcess(textureLoader, scene); // Check that calling process after load doesn't break anything
-        expect(textureLoader.texture.width).toBe(1);
-        expect(textureLoader.texture.height).toBe(1);
-      });
+      expect(() => loaderProcess(textureLoader, scene)).not.toThrowError();
+      expect(textureLoader.texture.width).toBe(1);
+      expect(textureLoader.texture.height).toBe(1);
     });
 
-    it("loads KTX2/Basis texture", function () {
+    it("loads KTX2/Basis texture", async function () {
       if (!scene.context.supportsBasis) {
         return;
       }
@@ -347,18 +337,15 @@ describe(
         }),
       });
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        expect(textureLoader.texture.width).toBe(4);
-        expect(textureLoader.texture.height).toBe(4);
-        expect(gl.compressedTexImage2D.calls.count()).toEqual(1);
-      });
+      expect(textureLoader.texture.width).toBe(4);
+      expect(textureLoader.texture.height).toBe(4);
+      expect(gl.compressedTexImage2D.calls.count()).toEqual(1);
     });
 
-    it("loads KTX2/Basis texture with mipmap", function () {
+    it("loads KTX2/Basis texture with mipmap", async function () {
       if (!scene.context.supportsBasis) {
         return;
       }
@@ -377,18 +364,15 @@ describe(
         }),
       });
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        expect(textureLoader.texture.width).toBe(4);
-        expect(textureLoader.texture.height).toBe(4);
-        expect(gl.compressedTexImage2D.calls.count()).toEqual(3);
-      });
+      expect(textureLoader.texture.width).toBe(4);
+      expect(textureLoader.texture.height).toBe(4);
+      expect(gl.compressedTexImage2D.calls.count()).toEqual(3);
     });
 
-    it("loads KTX2/Basis texture with incompatible mipmap sampler", function () {
+    it("loads KTX2/Basis texture with incompatible mipmap sampler", async function () {
       if (!scene.context.supportsBasis) {
         return;
       }
@@ -411,23 +395,20 @@ describe(
         asynchronous: false,
       });
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        expect(GltfLoaderUtil.createSampler).toHaveBeenCalledWith({
-          gltf: gltfKtx2MissingMipmap,
-          textureInfo: gltf.materials[0].emissiveTexture,
-          compressedTextureNoMipmap: true,
-        });
-        expect(textureLoader.texture.sampler.minificationFilter).toBe(
-          TextureMinificationFilter.NEAREST
-        );
+      expect(GltfLoaderUtil.createSampler).toHaveBeenCalledWith({
+        gltf: gltfKtx2MissingMipmap,
+        textureInfo: gltf.materials[0].emissiveTexture,
+        compressedTextureNoMipmap: true,
       });
+      expect(textureLoader.texture.sampler.minificationFilter).toBe(
+        TextureMinificationFilter.NEAREST
+      );
     });
 
-    it("generates mipmap if sampler requires it", function () {
+    it("generates mipmap if sampler requires it", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(image)
       );
@@ -446,18 +427,15 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        expect(textureLoader.texture.width).toBe(1);
-        expect(textureLoader.texture.height).toBe(1);
-        expect(generateMipmap).toHaveBeenCalled();
-      });
+      expect(textureLoader.texture.width).toBe(1);
+      expect(textureLoader.texture.height).toBe(1);
+      expect(generateMipmap).toHaveBeenCalled();
     });
 
-    it("generates power-of-two texture if sampler requires it", function () {
+    it("generates power-of-two texture if sampler requires it", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(imageNpot)
       );
@@ -471,17 +449,14 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        expect(textureLoader.texture.width).toBe(4);
-        expect(textureLoader.texture.height).toBe(2);
-      });
+      expect(textureLoader.texture.width).toBe(4);
+      expect(textureLoader.texture.height).toBe(2);
     });
 
-    it("does not generate power-of-two texture if sampler does not require it", function () {
+    it("does not generate power-of-two texture if sampler does not require it", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(imageNpot)
       );
@@ -495,17 +470,14 @@ describe(
         supportedImageFormats: new SupportedImageFormats(),
       });
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        expect(textureLoader.texture.width).toBe(3);
-        expect(textureLoader.texture.height).toBe(2);
-      });
+      expect(textureLoader.texture.width).toBe(3);
+      expect(textureLoader.texture.height).toBe(2);
     });
 
-    it("destroys texture loader", function () {
+    it("destroys texture loader", async function () {
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(image)
       );
@@ -531,41 +503,30 @@ describe(
 
       expect(textureLoader.texture).not.toBeDefined();
 
-      textureLoader.load();
+      await textureLoader.load();
+      await waitForLoaderProcess(textureLoader, scene);
+      expect(textureLoader.texture).toBeDefined();
+      expect(textureLoader.isDestroyed()).toBe(false);
 
-      return waitForLoaderProcess(textureLoader, scene).then(function (
-        textureLoader
-      ) {
-        expect(textureLoader.texture).toBeDefined();
-        expect(textureLoader.isDestroyed()).toBe(false);
+      textureLoader.destroy();
 
-        textureLoader.destroy();
-
-        expect(textureLoader.texture).not.toBeDefined();
-        expect(textureLoader.isDestroyed()).toBe(true);
-        expect(unloadImage).toHaveBeenCalled();
-        expect(destroyTexture).toHaveBeenCalled();
-      });
+      expect(textureLoader.texture).not.toBeDefined();
+      expect(textureLoader.isDestroyed()).toBe(true);
+      expect(unloadImage).toHaveBeenCalled();
+      expect(destroyTexture).toHaveBeenCalled();
     });
 
-    function resolveImageAfterDestroy(rejectPromise) {
-      const promise = new Promise(function (resolve, reject) {
-        if (rejectPromise) {
-          reject(new Error());
-        } else {
-          resolve(image);
-        }
-      });
-      spyOn(Resource.prototype, "fetchImage").and.returnValue(promise);
-
-      // Load a copy of the image into the cache so that the image
-      // promise resolves even if the texture loader is destroyed
-      const imageLoaderCopy = ResourceCache.loadImage({
-        gltf: gltf,
-        imageId: 0,
-        gltfResource: gltfResource,
-        baseResource: gltfResource,
-      });
+    async function resolveImageAfterDestroy(rejectPromise) {
+      spyOn(Resource.prototype, "fetchImage").and.callFake(
+        () =>
+          new Promise(function (resolve, reject) {
+            if (rejectPromise) {
+              reject(new Error());
+            } else {
+              resolve(image);
+            }
+          })
+      );
 
       const textureLoader = new GltfTextureLoader({
         resourceCache: ResourceCache,
@@ -578,15 +539,12 @@ describe(
 
       expect(textureLoader.texture).not.toBeDefined();
 
-      textureLoader.load();
+      const promise = textureLoader.load();
       textureLoader.destroy();
 
-      return textureLoader.promise.then(function () {
-        expect(textureLoader.texture).not.toBeDefined();
-        expect(textureLoader.isDestroyed()).toBe(true);
-
-        ResourceCache.unload(imageLoaderCopy);
-      });
+      await expectAsync(promise).toBeResolved();
+      expect(textureLoader.texture).not.toBeDefined();
+      expect(textureLoader.isDestroyed()).toBe(true);
     }
 
     it("handles resolving image after destroy", function () {

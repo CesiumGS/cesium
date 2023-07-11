@@ -10,7 +10,7 @@ import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 import ViewportPrimitive from "../../../../Specs/ViewportPrimitive.js";
-import loadAndZoomToModel from "./Model/loadAndZoomToModel.js";
+import loadAndZoomToModelAsync from "./Model/loadAndZoomToModelAsync.js";
 
 describe(
   "Scene/PostProcessStageLibrary",
@@ -87,7 +87,7 @@ describe(
     });
 
     it("per-feature black and white", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: boxTexturedUrl,
         },
@@ -305,7 +305,7 @@ describe(
         new HeadingPitchRoll()
       );
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: boxTexturedUrl,
           // Ensure the texture loads every time
@@ -426,7 +426,7 @@ describe(
         new HeadingPitchRoll()
       );
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: boxTexturedUrl,
           // Ensure the texture loads every time

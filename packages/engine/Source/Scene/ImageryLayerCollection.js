@@ -76,6 +76,14 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
  *                         be added on top of all existing layers.
  *
  * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
+ *
+ * @example
+ * const imageryLayer = Cesium.ImageryLayer.fromWorldImagery();
+ * scene.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
+ * scene.imageryLayers.add(imageryLayer);
  */
 ImageryLayerCollection.prototype.add = function (layer, index) {
   const hasIndex = defined(index);
@@ -104,6 +112,10 @@ ImageryLayerCollection.prototype.add = function (layer, index) {
 
   this._update();
   this.layerAdded.raiseEvent(layer, index);
+  const removeReadyEventListener = layer.readyEvent.addEventListener(() => {
+    this.layerShownOrHidden.raiseEvent(layer, layer._layerIndex, layer.show);
+    removeReadyEventListener();
+  });
 };
 
 /**
@@ -113,6 +125,14 @@ ImageryLayerCollection.prototype.add = function (layer, index) {
  * @param {number} [index] the index to add the layer at.  If omitted, the layer will
  *                         added on top of all existing layers.
  * @returns {ImageryLayer} The newly created layer.
+ *
+ * @example
+ * try {
+ *    const provider = await Cesium.IonImageryProvider.fromAssetId(3812);
+ *    scene.imageryLayers.addImageryProvider(provider);
+ * } catch (error) {
+ *   console.log(`There was an error creating the imagery layer. ${error}`)
+ * }
  */
 ImageryLayerCollection.prototype.addImageryProvider = function (
   imageryProvider,
@@ -353,6 +373,9 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
     if (!defined(imagery)) {
       continue;
     }
+    if (!imagery.imageryLayer.ready) {
+      continue;
+    }
     const provider = imagery.imageryLayer.imageryProvider;
     if (pickFeatures && !defined(provider.pickFeatures)) {
       continue;
@@ -476,6 +499,9 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   const imageryLayers = [];
 
   pickImageryHelper(scene, pickedLocation, true, function (imagery) {
+    if (!imagery.imageryLayer.ready) {
+      return undefined;
+    }
     const provider = imagery.imageryLayer.imageryProvider;
     const promise = provider.pickFeatures(
       imagery.x,

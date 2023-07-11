@@ -181,11 +181,6 @@ function TimeDynamicPointCloud(options) {
   this._nextInterval = undefined;
   this._lastRenderedFrame = undefined;
   this._clockMultiplier = 0.0;
-  this._resolveReadyPromise = undefined;
-  const that = this;
-  this._readyPromise = new Promise(function (resolve) {
-    that._resolveReadyPromise = resolve;
-  });
 
   // For calculating average load time of the last N frames
   this._runningSum = 0.0;
@@ -242,20 +237,6 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
         return this._lastRenderedFrame.pointCloud.boundingSphere;
       }
       return undefined;
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the point cloud renders a frame for the first time.
-   *
-   * @memberof TimeDynamicPointCloud.prototype
-   *
-   * @type {Promise<TimeDynamicPointCloud>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 });
@@ -395,6 +376,7 @@ function requestFrame(that, interval, frameState) {
       sequential: true,
       ready: false,
       touchedFrameNumber: frameState.frameNumber,
+      uri: uri,
     };
     frames[index] = frame;
     Resource.fetchArrayBuffer({
@@ -410,7 +392,6 @@ function requestFrame(that, interval, frameState) {
           uniformMapLoaded: getUniformMapLoaded(that),
           pickIdLoaded: getPickIdLoaded,
         });
-        return frame.pointCloud.readyPromise;
       })
       .catch(handleFrameFailure(that, uri));
   }
@@ -507,7 +488,12 @@ function renderFrame(that, frame, updateState, frameState) {
   pointCloud.geometricErrorScale = shading.geometricErrorScale;
   pointCloud.maximumAttenuation = getMaximumAttenuation(that);
 
-  pointCloud.update(frameState);
+  try {
+    pointCloud.update(frameState);
+  } catch (error) {
+    handleFrameFailure(that, frame.uri)(error);
+  }
+
   frame.touchedFrameNumber = frameState.frameNumber;
 }
 
@@ -738,7 +724,6 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   const that = this;
   if (defined(frame) && !defined(this._lastRenderedFrame)) {
     frameState.afterRender.push(function () {
-      that._resolveReadyPromise(that);
       return true;
     });
   }

@@ -44,6 +44,18 @@ Object.defineProperties(PeliasGeocoderService.prototype, {
       return this._url;
     },
   },
+  /**
+   * Gets the credit to display after a geocode is performed. Typically this is used to credit
+   * the geocoder service.
+   * @memberof PeliasGeocoderService.prototype
+   * @type {Credit|undefined}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return undefined;
+    },
+  },
 });
 
 /**
@@ -53,7 +65,7 @@ Object.defineProperties(PeliasGeocoderService.prototype, {
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
  * @returns {Promise<GeocoderService.Result[]>}
  */
-PeliasGeocoderService.prototype.geocode = function (query, type) {
+PeliasGeocoderService.prototype.geocode = async function (query, type) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("query", query);
   //>>includeEnd('debug');
@@ -86,6 +98,7 @@ PeliasGeocoderService.prototype.geocode = function (query, type) {
       return {
         displayName: resultObject.properties.label,
         destination: destination,
+        attributions: results.attributions,
       };
     });
   });

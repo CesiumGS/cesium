@@ -436,7 +436,6 @@ Object.defineProperties(Globe.prototype, {
         return true;
       }
       return (
-        this._surface.tileProvider.ready &&
         this._surface._tileLoadQueueHigh.length === 0 &&
         this._surface._tileLoadQueueMedium.length === 0 &&
         this._surface._tileLoadQueueLow.length === 0
@@ -984,7 +983,8 @@ Globe.prototype.beginFrame = function (frameState) {
   const terrainProvider = this.terrainProvider;
   const hasWaterMask =
     this.showWaterEffect &&
-    terrainProvider.ready &&
+    defined(terrainProvider) &&
+    terrainProvider.hasWaterMask &&
     terrainProvider.hasWaterMask;
 
   if (hasWaterMask && this._oceanNormalMapResourceDirty) {

@@ -12,6 +12,7 @@ import {
   ModelAlphaOptions,
   ModelStatistics,
   ModelLightingOptions,
+  ModelComponents,
   Pass,
   RenderState,
   Resource,
@@ -67,12 +68,12 @@ describe(
       });
     }
 
-    function loadGltf(gltfPath, options) {
+    async function loadGltf(gltfPath, options) {
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
-      gltfLoader.load();
-
-      return waitForLoaderProcess(gltfLoader, scene);
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+      return gltfLoader;
     }
 
     const boomBox = "./Data/Models/glTF-2.0/BoomBox/glTF/BoomBox.gltf";
@@ -252,6 +253,59 @@ describe(
             metallicRoughness.metallicRoughnessTexture.texture,
           u_metallicFactor: metallicRoughness.metallicFactor,
           u_roughnessFactor: metallicRoughness.roughnessFactor,
+        };
+        expectUniformMap(uniformMap, expectedUniforms);
+      });
+    });
+
+    it("doesn't add emissive uniforms when emissive factor is default", function () {
+      return loadGltf(boomBox).then(function (gltfLoader) {
+        const components = gltfLoader.components;
+        const primitive = components.nodes[0].primitives[0];
+
+        const material = primitive.material;
+        material.emissiveFactor = Cartesian3.clone(
+          ModelComponents.Material.DEFAULT_EMISSIVE_FACTOR
+        );
+        const metallicRoughness = material.metallicRoughness;
+
+        const renderResources = mockRenderResources();
+        const shaderBuilder = renderResources.shaderBuilder;
+        const uniformMap = renderResources.uniformMap;
+
+        MaterialPipelineStage.process(
+          renderResources,
+          primitive,
+          mockFrameState
+        );
+
+        ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
+          "uniform sampler2D u_baseColorTexture;",
+          "uniform sampler2D u_metallicRoughnessTexture;",
+          "uniform sampler2D u_normalTexture;",
+          "uniform sampler2D u_occlusionTexture;",
+        ]);
+
+        ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, []);
+        ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
+          "HAS_BASE_COLOR_TEXTURE",
+          "HAS_METALLIC_ROUGHNESS_TEXTURE",
+          "HAS_NORMAL_TEXTURE",
+          "HAS_OCCLUSION_TEXTURE",
+          "TEXCOORD_BASE_COLOR v_texCoord_0",
+          "TEXCOORD_METALLIC_ROUGHNESS v_texCoord_0",
+          "TEXCOORD_NORMAL v_texCoord_0",
+          "TEXCOORD_OCCLUSION v_texCoord_0",
+          "USE_METALLIC_ROUGHNESS",
+        ]);
+
+        const expectedUniforms = {
+          u_normalTexture: material.normalTexture.texture,
+          u_occlusionTexture: material.occlusionTexture.texture,
+          u_baseColorTexture: metallicRoughness.baseColorTexture.texture,
+          u_metallicRoughnessTexture:
+            metallicRoughness.metallicRoughnessTexture.texture,
         };
         expectUniformMap(uniformMap, expectedUniforms);
       });

@@ -79,7 +79,7 @@
         "name": "topojson-client"
     },
     {
-        "name": "tween.js"
+        "name": "@tweenjs/tween.js"
     },
     {
         "name": "urijs"

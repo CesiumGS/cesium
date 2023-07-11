@@ -52,15 +52,29 @@ function Vector3DTilePoints(options) {
   this._polylineCollection = new PolylineCollection();
   this._polylineCollection._useHighlightColor = true;
 
-  this._verticesPromise = undefined;
   this._packedBuffer = undefined;
 
   this._ready = false;
-  this._update = function (points, frameState) {};
-  this._readyPromise = initialize(this);
+  this._promise = undefined;
+  this._error = undefined;
 }
 
 Object.defineProperties(Vector3DTilePoints.prototype, {
+  /**
+   * Returns true if the points are ready to render
+   *
+   * @memberof Vector3DTilePoints.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
+    get: function () {
+      return this._ready;
+    },
+  },
+
   /**
    * Gets the number of points.
    *
@@ -68,6 +82,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   pointsLength: {
     get: function () {
@@ -82,6 +97,7 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
    *
    * @type {number}
    * @readonly
+   * @private
    */
   texturesByteLength: {
     get: function () {
@@ -89,18 +105,6 @@ Object.defineProperties(Vector3DTilePoints.prototype, {
         .sizeInBytes;
       const labelSize = this._labelCollection._textureAtlas.texture.sizeInBytes;
       return billboardSize + labelSize;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof Vector3DTilePoints.prototype
-   * @type {Promise<void>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 });
@@ -132,35 +136,38 @@ const createVerticesTaskProcessor = new TaskProcessor(
 const scratchPosition = new Cartesian3();
 
 function createPoints(points, ellipsoid) {
-  let positions;
-  if (!defined(points._verticesPromise)) {
-    positions = points._positions;
-    let packedBuffer = points._packedBuffer;
+  let positions = points._positions;
+  let packedBuffer = points._packedBuffer;
 
-    if (!defined(packedBuffer)) {
-      // Copy because they may be the views on the same buffer.
-      positions = points._positions = positions.slice();
-      points._batchIds = points._batchIds.slice();
+  if (!defined(packedBuffer)) {
+    // Copy because they may be the views on the same buffer.
+    positions = points._positions = positions.slice();
+    points._batchIds = points._batchIds.slice();
 
-      packedBuffer = points._packedBuffer = packBuffer(points, ellipsoid);
-    }
+    packedBuffer = points._packedBuffer = packBuffer(points, ellipsoid);
+  }
 
-    const transferrableObjects = [positions.buffer, packedBuffer.buffer];
-    const parameters = {
-      positions: positions.buffer,
-      packedBuffer: packedBuffer.buffer,
-    };
+  const transferrableObjects = [positions.buffer, packedBuffer.buffer];
+  const parameters = {
+    positions: positions.buffer,
+    packedBuffer: packedBuffer.buffer,
+  };
 
-    const verticesPromise = (points._verticesPromise = createVerticesTaskProcessor.scheduleTask(
-      parameters,
-      transferrableObjects
-    ));
-    if (!defined(verticesPromise)) {
-      // Postponed
-      return;
-    }
+  const verticesPromise = createVerticesTaskProcessor.scheduleTask(
+    parameters,
+    transferrableObjects
+  );
+  if (!defined(verticesPromise)) {
+    // Postponed
+    return;
+  }
 
-    return verticesPromise.then(function (result) {
+  return verticesPromise
+    .then((result) => {
+      if (points.isDestroyed()) {
+        return;
+      }
+
       points._positions = new Float64Array(result.positions);
       const billboardCollection = points._billboardCollection;
       const labelCollection = points._labelCollection;
@@ -190,8 +197,15 @@ function createPoints(points, ellipsoid) {
       points._positions = undefined;
       points._packedBuffer = undefined;
       points._ready = true;
+    })
+    .catch((error) => {
+      if (points.isDestroyed()) {
+        return;
+      }
+
+      // Throw the error next frame
+      points._error = error;
     });
-  }
 }
 
 /**
@@ -380,11 +394,15 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
 
     if (defined(style.scaleByDistance)) {
       const scaleByDistanceCart4 = style.scaleByDistance.evaluate(feature);
-      scratchScaleByDistance.near = scaleByDistanceCart4.x;
-      scratchScaleByDistance.nearValue = scaleByDistanceCart4.y;
-      scratchScaleByDistance.far = scaleByDistanceCart4.z;
-      scratchScaleByDistance.farValue = scaleByDistanceCart4.w;
-      feature.scaleByDistance = scratchScaleByDistance;
+      if (defined(scaleByDistanceCart4)) {
+        scratchScaleByDistance.near = scaleByDistanceCart4.x;
+        scratchScaleByDistance.nearValue = scaleByDistanceCart4.y;
+        scratchScaleByDistance.far = scaleByDistanceCart4.z;
+        scratchScaleByDistance.farValue = scaleByDistanceCart4.w;
+        feature.scaleByDistance = scratchScaleByDistance;
+      } else {
+        feature.scaleByDistance = undefined;
+      }
     } else {
       feature.scaleByDistance = undefined;
     }
@@ -393,11 +411,15 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
       const translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(
         feature
       );
-      scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
-      scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
-      scratchTranslucencyByDistance.far = translucencyByDistanceCart4.z;
-      scratchTranslucencyByDistance.farValue = translucencyByDistanceCart4.w;
-      feature.translucencyByDistance = scratchTranslucencyByDistance;
+      if (defined(translucencyByDistanceCart4)) {
+        scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
+        scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
+        scratchTranslucencyByDistance.far = translucencyByDistanceCart4.z;
+        scratchTranslucencyByDistance.farValue = translucencyByDistanceCart4.w;
+        feature.translucencyByDistance = scratchTranslucencyByDistance;
+      } else {
+        feature.translucencyByDistance = undefined;
+      }
     } else {
       feature.translucencyByDistance = undefined;
     }
@@ -406,9 +428,13 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
       const distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(
         feature
       );
-      scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
-      scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
-      feature.distanceDisplayCondition = scratchDistanceDisplayCondition;
+      if (defined(distanceDisplayConditionCart2)) {
+        scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
+        scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
+        feature.distanceDisplayCondition = scratchDistanceDisplayCondition;
+      } else {
+        feature.distanceDisplayCondition = undefined;
+      }
     } else {
       feature.distanceDisplayCondition = undefined;
     }
@@ -460,37 +486,27 @@ Vector3DTilePoints.prototype.applyStyle = function (style, features) {
   }
 };
 
-function initialize(points) {
-  return new Promise(function (resolve, reject) {
-    points._update = function (points, frameState) {
-      const promise = createPoints(points, frameState.mapProjection.ellipsoid);
-
-      if (points._ready) {
-        points._polylineCollection.update(frameState);
-        points._billboardCollection.update(frameState);
-        points._labelCollection.update(frameState);
-      }
-
-      if (!defined(promise)) {
-        return;
-      }
-
-      promise
-        .then(function () {
-          resolve();
-        })
-        .catch(function (e) {
-          reject(e);
-        });
-    };
-  });
-}
-
 /**
  * @private
  */
 Vector3DTilePoints.prototype.update = function (frameState) {
-  this._update(this, frameState);
+  if (!this._ready) {
+    if (!defined(this._promise)) {
+      this._promise = createPoints(this, frameState.mapProjection.ellipsoid);
+    }
+
+    if (defined(this._error)) {
+      const error = this._error;
+      this._error = undefined;
+      throw error;
+    }
+
+    return;
+  }
+
+  this._polylineCollection.update(frameState);
+  this._billboardCollection.update(frameState);
+  this._labelCollection.update(frameState);
 };
 
 /**

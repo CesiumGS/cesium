@@ -192,24 +192,6 @@ function GroundPolylinePrimitive(options) {
   this._zIndex = undefined;
 
   this._ready = false;
-  const groundPolylinePrimitive = this;
-  this._readyPromise = new Promise((resolve, reject) => {
-    groundPolylinePrimitive._completeLoad = () => {
-      this._ready = true;
-
-      if (this.releaseGeometryInstances) {
-        this.geometryInstances = undefined;
-      }
-
-      const error = this._error;
-      if (!defined(error)) {
-        resolve(this);
-      } else {
-        reject(error);
-      }
-    };
-  });
-
   this._primitive = undefined;
 
   this._sp = undefined;
@@ -310,18 +292,6 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof GroundPolylinePrimitive.prototype
-   * @type {Promise<GroundPolylinePrimitive>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 
@@ -825,7 +795,6 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
     };
 
     this._primitive = new Primitive(primitiveOptions);
-    this._primitive.readyPromise.then(this._completeLoad);
   }
 
   if (
@@ -841,6 +810,15 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
   this._primitive.show = this.show;
   this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
   this._primitive.update(frameState);
+  frameState.afterRender.push(() => {
+    if (!this._ready && defined(this._primitive) && this._primitive.ready) {
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
+    }
+  });
 };
 
 /**

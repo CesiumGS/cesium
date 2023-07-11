@@ -1,4 +1,5 @@
 import Check from "./Check.js";
+import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
@@ -39,6 +40,11 @@ function BingMapsGeocoderService(options) {
     url: url,
     queryParameters: queryParameters,
   });
+
+  this._credit = new Credit(
+    `<img src="http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png"\/>`,
+    false
+  );
 }
 
 Object.defineProperties(BingMapsGeocoderService.prototype, {
@@ -65,6 +71,18 @@ Object.defineProperties(BingMapsGeocoderService.prototype, {
       return this._key;
     },
   },
+  /**
+   * Gets the credit to display after a geocode is performed. Typically this is used to credit
+   * the geocoder service.
+   * @memberof BingMapsGeocoderService.prototype
+   * @type {Credit|undefined}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return this._credit;
+    },
+  },
 });
 
 /**
@@ -73,7 +91,7 @@ Object.defineProperties(BingMapsGeocoderService.prototype, {
  * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
  */
-BingMapsGeocoderService.prototype.geocode = function (query) {
+BingMapsGeocoderService.prototype.geocode = async function (query) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("query", query);
   //>>includeEnd('debug');

@@ -4,6 +4,7 @@ import {
   GltfJsonLoader,
   Resource,
   ResourceCache,
+  RuntimeError,
 } from "../../index.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 
@@ -579,7 +580,7 @@ describe("Scene/GltfJsonLoader", function () {
     }).toThrowDeveloperError();
   });
 
-  it("rejects promise if resource fails to load", function () {
+  it("load throws if resource fails to load", async function () {
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.callFake(function () {
       const error = new Error("404 Not Found");
       return Promise.reject(error);
@@ -591,20 +592,39 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
-
-    return gltfJsonLoader.promise
-      .then(function (gltfJsonLoader) {
-        fail();
-      })
-      .catch(function (runtimeError) {
-        expect(runtimeError.message).toBe(
-          "Failed to load glTF: https://example.com/model.glb\n404 Not Found"
-        );
-      });
+    await expectAsync(gltfJsonLoader.load()).toBeRejectedWithError(
+      RuntimeError,
+      "Failed to load glTF: https://example.com/model.glb\n404 Not Found"
+    );
   });
 
-  it("rejects promise if glTF fails to process", function () {
+  it("load throws if an unsupported extension is required", async function () {
+    const arrayBuffer = generateJsonBuffer({
+      ...gltf1,
+      extensionsRequired: ["NOT_supported_extension"],
+    }).buffer;
+
+    spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
+      Promise.resolve(arrayBuffer)
+    );
+
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      Promise.resolve(new Float32Array([0.0, 0.0, 0.0]).buffer)
+    );
+
+    const gltfJsonLoader = new GltfJsonLoader({
+      resourceCache: ResourceCache,
+      gltfResource: gltfResource,
+      baseResource: gltfResource,
+    });
+
+    await expectAsync(gltfJsonLoader.load()).toBeRejectedWithError(
+      RuntimeError,
+      "Failed to load glTF: https://example.com/model.glb\nUnsupported glTF Extension: NOT_supported_extension"
+    );
+  });
+
+  it("load throws if glTF fails to process", async function () {
     const arrayBuffer = generateJsonBuffer(gltf1).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
@@ -622,20 +642,13 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
-
-    return gltfJsonLoader.promise
-      .then(function (gltfJsonLoader) {
-        fail();
-      })
-      .catch(function (runtimeError) {
-        expect(runtimeError.message).toBe(
-          "Failed to load glTF: https://example.com/model.glb\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
-        );
-      });
+    await expectAsync(gltfJsonLoader.load()).toBeRejectedWithError(
+      RuntimeError,
+      "Failed to load glTF: https://example.com/model.glb\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+    );
   });
 
-  it("rejects promise if glTF fails to process from typed array", function () {
+  it("load throws if glTF fails to process from typed array", async function () {
     const typedArray = createGlb1(gltf1);
 
     spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
@@ -650,20 +663,13 @@ describe("Scene/GltfJsonLoader", function () {
       typedArray: typedArray,
     });
 
-    gltfJsonLoader.load();
-
-    return gltfJsonLoader.promise
-      .then(function (gltfJsonLoader) {
-        fail();
-      })
-      .catch(function (runtimeError) {
-        expect(runtimeError.message).toBe(
-          "Failed to load glTF: https://example.com/model.glb\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
-        );
-      });
+    await expectAsync(gltfJsonLoader.load()).toBeRejectedWithError(
+      RuntimeError,
+      "Failed to load glTF: https://example.com/model.glb\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+    );
   });
 
-  it("loads glTF 1.0", function () {
+  it("loads glTF 1.0", async function () {
     const arrayBuffer = generateJsonBuffer(gltf1).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
@@ -680,15 +686,13 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2Updated);
-    });
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf2Updated);
   });
 
-  it("loads glTF 1.0 with KHR_materials_common", function () {
+  it("loads glTF 1.0 with KHR_materials_common", async function () {
     const arrayBuffer = generateJsonBuffer(gltf1MaterialsCommon).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
@@ -705,15 +709,13 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2Updated);
-    });
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf2Updated);
   });
 
-  it("loads glTF 1.0 binary", function () {
+  it("loads glTF 1.0 binary", async function () {
     const gltf1Binary = clone(gltf1, true);
     gltf1Binary.buffers = {
       binary_glTF: {
@@ -741,15 +743,13 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf1BinaryUpdated);
-    });
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf1BinaryUpdated);
   });
 
-  it("loads glTF 1.0 with data uri", function () {
+  it("loads glTF 1.0 with data uri", async function () {
     const gltf1DataUri = clone(gltf1, true);
     gltf1DataUri.buffers.buffer = {
       uri: "data:application/octet-stream;base64,AAAAAAAAAAAAAAAA",
@@ -770,15 +770,12 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
-
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf1DataUriUpdated);
-    });
+    await gltfJsonLoader.load();
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf1DataUriUpdated);
   });
 
-  it("loads glTF 2.0", function () {
+  it("loads glTF 2.0", async function () {
     const arrayBuffer = generateJsonBuffer(gltf2).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
@@ -795,15 +792,13 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2Updated);
-    });
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf2Updated);
   });
 
-  it("loads glTF 2.0 with KHR_techniques_webgl", function () {
+  it("loads glTF 2.0 with KHR_techniques_webgl", async function () {
     const arrayBuffer = generateJsonBuffer(gltf2TechniquesWebgl).buffer;
 
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
@@ -820,15 +815,12 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
-
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2Updated);
-    });
+    await gltfJsonLoader.load();
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf2Updated);
   });
 
-  it("loads glTF 2.0 binary", function () {
+  it("loads glTF 2.0 binary", async function () {
     const gltf2Binary = clone(gltf2, true);
     delete gltf2Binary.buffers[0].uri;
 
@@ -847,15 +839,13 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2BinaryUpdated);
-    });
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf2BinaryUpdated);
   });
 
-  it("loads glTF 2.0 with data uri", function () {
+  it("loads glTF 2.0 with data uri", async function () {
     const gltf2DataUri = clone(gltf2, true);
     gltf2DataUri.buffers[0].uri =
       "data:application/octet-stream;base64,AAAAAAAAAAAAAAAA";
@@ -875,15 +865,13 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2DataUriUpdated);
-    });
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf2DataUriUpdated);
   });
 
-  it("loads typed array", function () {
+  it("loads typed array", async function () {
     const gltf2Binary = clone(gltf2, true);
     delete gltf2Binary.buffers[0].uri;
 
@@ -899,15 +887,13 @@ describe("Scene/GltfJsonLoader", function () {
       typedArray: typedArray,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2BinaryUpdated);
-    });
+    const gltf = gltfJsonLoader.gltf;
+    expect(gltf).toEqual(gltf2BinaryUpdated);
   });
 
-  it("loads JSON directly", function () {
+  it("loads JSON directly", async function () {
     const gltf = clone(gltf2, true);
 
     spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
@@ -921,15 +907,13 @@ describe("Scene/GltfJsonLoader", function () {
       gltfJson: gltf,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      const gltf = gltfJsonLoader.gltf;
-      expect(gltf).toEqual(gltf2Updated);
-    });
+    const loadedGltf = gltfJsonLoader.gltf;
+    expect(loadedGltf).toEqual(gltf2Updated);
   });
 
-  it("destroys", function () {
+  it("destroys", async function () {
     const gltf2Binary = clone(gltf2, true);
     delete gltf2Binary.buffers[0].uri;
 
@@ -950,32 +934,23 @@ describe("Scene/GltfJsonLoader", function () {
       baseResource: gltfResource,
     });
 
-    gltfJsonLoader.load();
+    await gltfJsonLoader.load();
 
-    return gltfJsonLoader.promise.then(function (gltfJsonLoader) {
-      expect(gltfJsonLoader.gltf).toBeDefined();
-      expect(gltfJsonLoader.isDestroyed()).toBe(false);
+    expect(gltfJsonLoader.gltf).toBeDefined();
+    expect(gltfJsonLoader.isDestroyed()).toBe(false);
 
-      gltfJsonLoader.destroy();
+    gltfJsonLoader.destroy();
 
-      expect(gltfJsonLoader.gltf).not.toBeDefined();
-      expect(gltfJsonLoader.isDestroyed()).toBe(true);
-      expect(unloadBuffer).toHaveBeenCalled();
-    });
+    expect(gltfJsonLoader.gltf).not.toBeDefined();
+    expect(gltfJsonLoader.isDestroyed()).toBe(true);
+    expect(unloadBuffer).toHaveBeenCalled();
   });
 
-  function resolvesGltfAfterDestroy(rejectPromise) {
+  async function resolvesGltfAfterDestroy(rejectPromise) {
     const arrayBuffer = generateJsonBuffer(gltf2).buffer;
-    const promise = new Promise(function (resolve, reject) {
-      if (rejectPromise) {
-        reject(new Error());
-        return;
-      }
-
-      resolve(arrayBuffer);
-    });
-
-    spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(promise);
+    spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.callFake(() =>
+      rejectPromise ? Promise.reject(new Error()) : Promise.resolve(arrayBuffer)
+    );
 
     const gltfJsonLoader = new GltfJsonLoader({
       resourceCache: ResourceCache,
@@ -985,12 +960,11 @@ describe("Scene/GltfJsonLoader", function () {
 
     expect(gltfJsonLoader.gltf).not.toBeDefined();
 
-    gltfJsonLoader.load();
+    const promise = gltfJsonLoader.load();
     gltfJsonLoader.destroy();
-    return gltfJsonLoader.promise.then(function () {
-      expect(gltfJsonLoader.gltf).not.toBeDefined();
-      expect(gltfJsonLoader.isDestroyed()).toBe(true);
-    });
+    await expectAsync(promise).toBeResolved();
+    expect(gltfJsonLoader.gltf).not.toBeDefined();
+    expect(gltfJsonLoader.isDestroyed()).toBe(true);
   }
 
   it("handles resolving glTF after destroy", function () {
@@ -1001,7 +975,7 @@ describe("Scene/GltfJsonLoader", function () {
     return resolvesGltfAfterDestroy(true);
   });
 
-  function resolvesProcessedGltfAfterDestroy(rejectPromise) {
+  async function resolvesProcessedGltfAfterDestroy(rejectPromise) {
     spyOn(GltfJsonLoader.prototype, "_fetchGltf").and.returnValue(
       Promise.resolve(generateJsonBuffer(gltf2).buffer)
     );
@@ -1027,10 +1001,9 @@ describe("Scene/GltfJsonLoader", function () {
 
     const promise = gltfJsonLoader.load();
     gltfJsonLoader.destroy();
-    return promise.finally(function () {
-      expect(gltfJsonLoader.gltf).not.toBeDefined();
-      expect(gltfJsonLoader.isDestroyed()).toBe(true);
-    });
+    await expectAsync(promise).toBeResolved();
+    expect(gltfJsonLoader.gltf).not.toBeDefined();
+    expect(gltfJsonLoader.isDestroyed()).toBe(true);
   }
 
   it("handles resolving processed glTF after destroy", function () {
@@ -1041,7 +1014,7 @@ describe("Scene/GltfJsonLoader", function () {
     return resolvesProcessedGltfAfterDestroy(true);
   });
 
-  function resolvesTypedArrayAfterDestroy(rejectPromise) {
+  async function resolvesTypedArrayAfterDestroy(rejectPromise) {
     const typedArray = generateJsonBuffer(gltf1);
 
     const gltfJsonLoader = new GltfJsonLoader({
@@ -1064,12 +1037,11 @@ describe("Scene/GltfJsonLoader", function () {
     });
     expect(gltfJsonLoader.gltf).not.toBeDefined();
 
-    gltfJsonLoader.load();
+    const promise = gltfJsonLoader.load();
     gltfJsonLoader.destroy();
-    return gltfJsonLoader.promise.then(function () {
-      expect(gltfJsonLoader.gltf).not.toBeDefined();
-      expect(gltfJsonLoader.isDestroyed()).toBe(true);
-    });
+    await expectAsync(promise).toBeResolved();
+    expect(gltfJsonLoader.gltf).not.toBeDefined();
+    expect(gltfJsonLoader.isDestroyed()).toBe(true);
   }
 
   it("handles resolving typed array after destroy", function () {

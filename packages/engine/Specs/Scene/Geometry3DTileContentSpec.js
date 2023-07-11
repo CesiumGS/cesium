@@ -17,6 +17,7 @@ import {
   Rectangle,
   RectangleGeometry,
   RenderState,
+  RuntimeError,
   StencilConstants,
 } from "../../index.js";
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
@@ -827,21 +828,31 @@ describe(
       });
     });
 
-    it("throws with invalid version", function () {
+    it("throws with invalid version", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateGeometryTileBuffer({
         version: 2,
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "geom");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Only Geometry tile version 1 is supported.  Version 2 is not."
+      );
     });
 
-    it("throws with empty feature table", function () {
+    it("throws with empty async feature table", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateGeometryTileBuffer({
         defineFeatureTable: false,
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "geom");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Feature table must have a byte length greater than zero"
+      );
     });
 
-    it("throws without all batch ids", function () {
+    it("throws without all batch ids", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateGeometryTileBuffer({
         boxesLength: 1,
         cylindersLength: 1,
@@ -851,7 +862,12 @@ describe(
         cylinderBatchIds: [0],
         ellipsoidBatchIds: [2],
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "geom");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "geom")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "If one group of batch ids is defined, then all batch ids must be defined"
+      );
     });
 
     it("destroys", function () {

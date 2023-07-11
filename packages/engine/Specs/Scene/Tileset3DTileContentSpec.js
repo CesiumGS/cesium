@@ -35,11 +35,13 @@ describe(
       scene.primitives.removeAll();
     });
 
-    it("resolves readyPromise", function () {
-      return Cesium3DTilesTester.resolvesReadyPromise(
+    it("becomes ready", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         tilesetOfTilesetsUrl
       );
+      expect(tileset.root.contentReady).toBeTrue();
+      expect(tileset.root.content).toBeDefined();
     });
 
     it("destroys", function () {
@@ -58,7 +60,6 @@ describe(
           expect(content.texturesByteLength).toBe(0);
           expect(content.batchTableByteLength).toBe(0);
           expect(content.innerContents).toBeUndefined();
-          expect(content.readyPromise).toBeDefined();
           expect(content.tileset).toBe(tileset);
           expect(content.tile).toBe(tile);
           expect(content.url).toBeDefined();

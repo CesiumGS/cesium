@@ -36,6 +36,9 @@ const modelMatrixScratch = new Matrix4();
 const nodeMatrixScratch = new Matrix4();
 
 const scratchColor = new Color();
+const scratchArray = new Array(4);
+const scratchCartesian = new Cartesian3();
+
 /**
  * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
  * @alias ModelVisualizer
@@ -60,7 +63,54 @@ function ModelVisualizer(scene, entityCollection) {
   this._entityCollection = entityCollection;
   this._modelHash = {};
   this._entitiesToVisualize = new AssociativeArray();
+
   this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
+}
+
+async function createModelPrimitive(
+  visualizer,
+  entity,
+  resource,
+  incrementallyLoadTextures
+) {
+  const primitives = visualizer._primitives;
+  const modelHash = visualizer._modelHash;
+
+  try {
+    const model = await Model.fromGltfAsync({
+      url: resource,
+      incrementallyLoadTextures: incrementallyLoadTextures,
+      scene: visualizer._scene,
+    });
+
+    if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
+      return;
+    }
+
+    model.id = entity;
+    primitives.add(model);
+    modelHash[entity.id].modelPrimitive = model;
+    model.errorEvent.addEventListener((error) => {
+      if (!defined(modelHash[entity.id])) {
+        return;
+      }
+
+      console.log(error);
+
+      // Texture failures when incrementallyLoadTextures
+      // will not affect the ability to compute the bounding sphere
+      if (error.name !== "TextureError" && model.incrementallyLoadTextures) {
+        modelHash[entity.id].loadFailed = true;
+      }
+    });
+  } catch (error) {
+    if (visualizer.isDestroyed() || !defined(modelHash[entity.id])) {
+      return;
+    }
+
+    console.log(error);
+    modelHash[entity.id].loadFailed = true;
+  }
 }
 
 /**
@@ -102,45 +152,44 @@ ModelVisualizer.prototype.update = function (time) {
     }
 
     if (!show) {
-      if (defined(modelData)) {
+      if (defined(modelData) && modelData.modelPrimitive) {
         modelData.modelPrimitive.show = false;
       }
       continue;
     }
 
-    let model = defined(modelData) ? modelData.modelPrimitive : undefined;
-    if (!defined(model) || resource.url !== modelData.url) {
-      if (defined(model)) {
-        primitives.removeAndDestroy(model);
+    if (!defined(modelData) || resource.url !== modelData.url) {
+      if (defined(modelData?.modelPrimitive)) {
+        primitives.removeAndDestroy(modelData.modelPrimitive);
         delete modelHash[entity.id];
       }
 
-      model = Model.fromGltf({
-        url: resource,
-        incrementallyLoadTextures: Property.getValueOrDefault(
-          modelGraphics._incrementallyLoadTextures,
-          time,
-          defaultIncrementallyLoadTextures
-        ),
-        scene: this._scene,
-      });
-      model.id = entity;
-      primitives.add(model);
-
       modelData = {
-        modelPrimitive: model,
+        modelPrimitive: undefined,
         url: resource.url,
         animationsRunning: false,
         nodeTransformationsScratch: {},
         articulationsScratch: {},
-        loadFail: false,
+        loadFailed: false,
+        modelUpdated: false,
         awaitingSampleTerrain: false,
         clampedBoundingSphere: undefined,
         sampleTerrainFailed: false,
       };
       modelHash[entity.id] = modelData;
 
-      checkModelLoad(model, entity, modelHash);
+      const incrementallyLoadTextures = Property.getValueOrDefault(
+        modelGraphics._incrementallyLoadTextures,
+        time,
+        defaultIncrementallyLoadTextures
+      );
+
+      createModelPrimitive(this, entity, resource, incrementallyLoadTextures);
+    }
+
+    const model = modelData.modelPrimitive;
+    if (!defined(model)) {
+      continue;
     }
 
     model.show = true;
@@ -214,14 +263,26 @@ ModelVisualizer.prototype.update = function (time) {
       time,
       defaultImageBasedLightingFactor
     );
-    model.lightColor = Property.getValueOrUndefined(
+    let lightColor = Property.getValueOrUndefined(
       modelGraphics._lightColor,
       time
     );
+
+    // Convert from Color to Cartesian3
+    if (defined(lightColor)) {
+      Color.pack(lightColor, scratchArray, 0);
+      lightColor = Cartesian3.unpack(scratchArray, 0, scratchCartesian);
+    }
+
+    model.lightColor = lightColor;
     model.customShader = Property.getValueOrUndefined(
       modelGraphics._customShader,
       time
     );
+
+    // It's possible for getBoundingSphere to run before
+    // model becomes ready and these properties are updated
+    modelHash[entity.id].modelUpdated = true;
 
     if (model.ready) {
       const runAnimations = Property.getValueOrDefault(
@@ -365,31 +426,31 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   //>>includeEnd('debug');
 
   const modelData = this._modelHash[entity.id];
-  if (!defined(modelData) || modelData.loadFail) {
+  if (!defined(modelData)) {
+    return BoundingSphereState.FAILED;
+  }
+
+  if (modelData.loadFailed) {
     return BoundingSphereState.FAILED;
   }
 
   const model = modelData.modelPrimitive;
   if (!defined(model) || !model.show) {
-    return BoundingSphereState.FAILED;
-  }
-
-  if (!model.ready) {
     return BoundingSphereState.PENDING;
   }
+
+  if (!model.ready || !modelData.modelUpdated) {
+    return BoundingSphereState.PENDING;
+  }
+
   const scene = this._scene;
   const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
-  const terrainProvider = globe.terrainProvider;
 
+  // cannot access a terrain provider if there is no globe; formally set to undefined
+  const terrainProvider = defined(globe) ? globe.terrainProvider : undefined;
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
-  if (hasHeightReference) {
-    // We cannot query the availability of the terrain provider till its ready, so the
-    // bounding sphere state will remain pending till the terrain provider is ready.
-    if (!terrainProvider.ready) {
-      return BoundingSphereState.PENDING;
-    }
-
+  if (defined(globe) && hasHeightReference) {
+    const ellipsoid = globe.ellipsoid;
     const modelMatrix = model.modelMatrix;
     scratchPosition.x = modelMatrix[12];
     scratchPosition.y = modelMatrix[13];
@@ -441,6 +502,10 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
           scratchCartographic,
         ])
           .then((result) => {
+            if (this.isDestroyed()) {
+              return;
+            }
+
             this._modelHash[entity.id].awaitingSampleTerrain = false;
 
             const updatedCartographic = result[0];
@@ -463,6 +528,10 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
             );
           })
           .catch((e) => {
+            if (this.isDestroyed()) {
+              return;
+            }
+
             this._modelHash[entity.id].sampleTerrainFailed = true;
             this._modelHash[entity.id].awaitingSampleTerrain = false;
           });
@@ -539,10 +608,4 @@ function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
   }
 }
 
-function checkModelLoad(model, entity, modelHash) {
-  model.readyPromise.catch(function (error) {
-    console.error(error);
-    modelHash[entity.id].loadFail = true;
-  });
-}
 export default ModelVisualizer;

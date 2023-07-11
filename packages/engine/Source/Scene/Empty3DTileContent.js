@@ -64,9 +64,18 @@ Object.defineProperties(Empty3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Empty3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
     get: function () {
-      return undefined;
+      return true;
     },
   },
 

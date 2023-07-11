@@ -665,13 +665,17 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
         const scene = viewer.scene;
         const globe = scene.globe;
         const skyAtmosphere = scene.skyAtmosphere;
+
+        scene.highDynamicRange = true;
+        globe.enableLighting = true;
+        globe.atmosphereLightIntensity = 20.0;
 
         viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
           "2022-03-23T11:31:42.34200000000419095Z"
@@ -727,7 +731,7 @@
           // Globe settings
 
           enableTerrain: false,
-          enableLighting: false,
+          enableLighting: true,
           groundTranslucency: false,
 
           // Ground atmosphere settings
@@ -783,7 +787,7 @@
 
           // Scene settings
 
-          hdr: false,
+          hdr: true,
         };
 
         Cesium.knockout.track(viewModel);
@@ -792,11 +796,11 @@
 
         Cesium.knockout
           .getObservable(viewModel, "enableTerrain")
-          .subscribe(function (newValue) {
+          .subscribe(async function (newValue) {
             if (newValue) {
-              globe.terrainProvider = Cesium.createWorldTerrain();
+              scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
             } else {
-              globe.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+              scene.terrainProvider = new Cesium.EllipsoidTerrainProvider();
             }
           });
         Cesium.knockout
@@ -1025,11 +1029,14 @@
         };
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

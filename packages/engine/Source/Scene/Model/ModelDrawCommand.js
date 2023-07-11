@@ -437,9 +437,8 @@ function updateShadows(drawCommand) {
   const receiveShadows = ShadowMode.receiveShadows(shadows);
 
   const derivedCommands = drawCommand._derivedCommands;
-  const length = derivedCommands.length;
 
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < derivedCommands.length; ++i) {
     const derivedCommand = derivedCommands[i];
     if (derivedCommand.updateShadows) {
       const command = derivedCommand.command;
@@ -451,11 +450,9 @@ function updateShadows(drawCommand) {
 
 function updateBackFaceCulling(drawCommand) {
   const backFaceCulling = drawCommand.backFaceCulling;
-
   const derivedCommands = drawCommand._derivedCommands;
-  const length = derivedCommands.length;
 
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < derivedCommands.length; ++i) {
     const derivedCommand = derivedCommands[i];
     if (derivedCommand.updateBackFaceCulling) {
       const command = derivedCommand.command;
@@ -468,11 +465,9 @@ function updateBackFaceCulling(drawCommand) {
 
 function updateCullFace(drawCommand) {
   const cullFace = drawCommand.cullFace;
-
   const derivedCommands = drawCommand._derivedCommands;
-  const length = derivedCommands.length;
 
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < derivedCommands.length; ++i) {
     const derivedCommand = derivedCommands[i];
     if (derivedCommand.updateCullFace) {
       const command = derivedCommand.command;
@@ -485,11 +480,9 @@ function updateCullFace(drawCommand) {
 
 function updateDebugShowBoundingVolume(drawCommand) {
   const debugShowBoundingVolume = drawCommand.debugShowBoundingVolume;
-
   const derivedCommands = drawCommand._derivedCommands;
-  const length = derivedCommands.length;
 
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < derivedCommands.length; ++i) {
     const derivedCommand = derivedCommands[i];
     if (derivedCommand.updateDebugShowBoundingVolume) {
       const command = derivedCommand.command;
@@ -537,15 +530,10 @@ ModelDrawCommand.prototype.pushCommands = function (frameState, result) {
   }
 
   if (this._needsSkipLevelOfDetailCommands) {
-    const content = this._model.content;
-    const tileset = content.tileset;
-    const tile = content.tile;
+    const { tileset, tile } = this._model.content;
 
-    const hasMixedContent = tileset._hasMixedContent;
-    const finalResolution = tile._finalResolution;
-
-    if (hasMixedContent) {
-      if (!finalResolution) {
+    if (tileset.hasMixedContent) {
+      if (!tile._finalResolution) {
         pushCommand(
           tileset._backfaceCommands,
           this._skipLodBackfaceCommand,
@@ -846,13 +834,14 @@ function deriveSkipLodStencilCommand(command) {
   const stencilCommand = DrawCommand.shallowClone(command);
   const renderState = clone(command.renderState, true);
   // The stencil reference is updated dynamically; see updateSkipLodStencilCommand().
-  renderState.stencilTest.enabled = true;
-  renderState.stencilTest.mask = StencilConstants.SKIP_LOD_MASK;
-  renderState.stencilTest.reference = StencilConstants.CESIUM_3D_TILE_MASK;
-  renderState.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
-  renderState.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
-  renderState.stencilTest.backFunction = StencilFunction.GREATER_OR_EQUAL;
-  renderState.stencilTest.backOperation.zPass = StencilOperation.REPLACE;
+  const { stencilTest } = renderState;
+  stencilTest.enabled = true;
+  stencilTest.mask = StencilConstants.SKIP_LOD_MASK;
+  stencilTest.reference = StencilConstants.CESIUM_3D_TILE_MASK;
+  stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
+  stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
+  stencilTest.backFunction = StencilFunction.GREATER_OR_EQUAL;
+  stencilTest.backOperation.zPass = StencilOperation.REPLACE;
   renderState.stencilMask =
     StencilConstants.CESIUM_3D_TILE_MASK | StencilConstants.SKIP_LOD_MASK;
 

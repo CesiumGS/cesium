@@ -1,11 +1,12 @@
 import {
   ArcGisMapServerImageryProvider,
   buildModuleUrl,
-  createWorldImagery,
+  createWorldImageryAsync,
   IonImageryProvider,
   IonWorldImageryStyle,
   OpenStreetMapImageryProvider,
   TileMapServiceImageryProvider,
+  ArcGisBaseMapType,
 } from "@cesium/engine";
 import ProviderViewModel from "./ProviderViewModel.js";
 
@@ -21,7 +22,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps aerial imagery, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.AERIAL,
         });
       },
@@ -37,7 +38,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps aerial imagery with labels, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.AERIAL_WITH_LABELS,
         });
       },
@@ -51,7 +52,7 @@ function createDefaultImageryProviderViewModels() {
       tooltip: "Bing Maps standard road maps, provided by Cesium ion",
       category: "Cesium ion",
       creationFunction: function () {
-        return createWorldImagery({
+        return createWorldImageryAsync({
           style: IonWorldImageryStyle.ROAD,
         });
       },
@@ -60,71 +61,81 @@ function createDefaultImageryProviderViewModels() {
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "ESRI World Imagery",
+      name: "ArcGIS World Imagery",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/esriWorldImagery.png"
+        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldImagery.png"
       ),
       tooltip:
         "\
-World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower resolution \
-satellite imagery worldwide.  The map includes NASA Blue Marble: Next Generation 500m resolution imagery at small scales \
-(above 1:1,000,000), i-cubed 15m eSAT imagery at medium-to-large scales (down to 1:70,000) for the world, and USGS 15m Landsat \
-imagery for Antarctica. The map features 0.3m resolution imagery in the continental United States and 0.6m resolution imagery in \
-parts of Western Europe from DigitalGlobe. In other parts of the world, 1 meter resolution imagery is available from GeoEye IKONOS, \
-i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Additionally, imagery at different resolutions has been \
-contributed by the GIS User Community.\nhttp://www.esri.com",
+ArcGIS World Imagery provides one meter or better satellite and aerial imagery in many parts of the world and lower \
+resolution satellite imagery worldwide. The map includes 15m TerraColor imagery at small and mid-scales (~1:591M down to ~1:288k) \
+for the world. The map features Maxar imagery at 0.3m resolution for select metropolitan areas around the world, 0.5m \
+resolution across the United States and parts of Western Europe, and 1m resolution imagery across the rest of the world. \
+In addition to commercial sources, the World Imagery map features high-resolution aerial photography contributed by the \
+GIS User Community. This imagery ranges from 0.3m to 0.03m resolution (down to ~1:280 nin select communities). \
+For more information on this map, including the terms of use, visit us online at \n\
+https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
-          url:
-            "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromBasemapType(
+          ArcGisBaseMapType.SATELLITE,
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "ESRI World Street Map",
+      name: "ArcGIS World Hillshade",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/esriWorldStreetMap.png"
+        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldHillshade.png"
       ),
       tooltip:
         "\
-This worldwide street map presents highway-level data for the world. Street-level data includes the United States; much of \
-Canada; Japan; most countries in Europe; Australia and New Zealand; India; parts of South America including Argentina, Brazil, \
-Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Botswana, Lesotho, Namibia, South Africa, and Swaziland.\n\
-http://www.esri.com",
+ArcGIS World Hillshade map portrays elevation as an artistic hillshade. This map is designed to be used as a backdrop for topographical, soil, hydro, \
+landcover or other outdoor recreational maps. The map was compiled from a variety of sources from several data providers. \
+The basemap has global coverage down to a scale of ~1:72k. In select areas of the United States and Europe, coverage is available \
+down to ~1:9k. For more information on this map, including the terms of use, visit us online at \n\
+https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
-          url:
-            "https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromBasemapType(
+          ArcGisBaseMapType.HILLSHADE,
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "ESRI National Geographic",
+      name: "Esri World Ocean",
       iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/esriNationalGeographic.png"
+        "Widgets/Images/ImageryProviders/ArcGisMapServiceWorldOcean.png"
       ),
       tooltip:
         "\
-This web map contains the National Geographic World Map service. This map service is designed to be used as a general reference map \
-for informational and educational purposes as well as a basemap by GIS professionals and other users for creating web maps and web \
-mapping applications.\nhttp://www.esri.com",
+ArcGIS World Ocean map is designed to be used as a base map by marine GIS professionals and as a reference map by anyone interested in ocean data.  \
+The base map features marine bathymetry. Land features include inland waters and roads overlaid on land cover and shaded relief imagery. \
+The map was compiled from a variety of best available sources from several data providers, including General Bathymetric Chart of the Oceans GEBCO_08 Grid, \
+National Oceanic and Atmospheric Administration (NOAA), and National Geographic, Garmin, HERE, Geonames.org, and Esri, and various other contributors. \
+The base map currently provides coverage for the world down to a scale of ~1:577k, and coverage down to 1:72k in US coastal areas, and various other areas. \
+Coverage down to ~ 1:9k is available limited areas based on regional hydrographic survey data. The base map was designed and developed by Esri. \
+For more information on this map, including our terms of use, visit us online at \n\
+https://www.arcgis.com/home/item.html?id=1e126e7520f9466c9ca28b8f28b5e500",
       category: "Other",
       creationFunction: function () {
-        return new ArcGisMapServerImageryProvider({
-          url:
-            "https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/",
-          enablePickFeatures: false,
-        });
+        return ArcGisMapServerImageryProvider.fromBasemapType(
+          ArcGisBaseMapType.OCEANS,
+          {
+            enablePickFeatures: false,
+          }
+        );
       },
     })
   );
@@ -193,7 +204,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "Sentinel-2 cloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 and 2017).",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3954 });
+        return IonImageryProvider.fromAssetId(3954);
       },
     })
   );
@@ -205,7 +216,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
       tooltip: "Blue Marble Next Generation July, 2004 imagery from NASA.",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3845 });
+        return IonImageryProvider.fromAssetId(3845);
       },
     })
   );
@@ -220,7 +231,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "The Earth at night, also known as The Black Marble, is a 500 meter resolution global composite imagery layer released by NASA.",
       category: "Cesium ion",
       creationFunction: function () {
-        return new IonImageryProvider({ assetId: 3812 });
+        return IonImageryProvider.fromAssetId(3812);
       },
     })
   );
@@ -235,9 +246,9 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         "Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/",
       category: "Cesium ion",
       creationFunction: function () {
-        return new TileMapServiceImageryProvider({
-          url: buildModuleUrl("Assets/Textures/NaturalEarthII"),
-        });
+        return TileMapServiceImageryProvider.fromUrl(
+          buildModuleUrl("Assets/Textures/NaturalEarthII")
+        );
       },
     })
   );

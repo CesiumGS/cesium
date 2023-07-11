@@ -74,7 +74,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // this can be changed to any glTF model
@@ -107,16 +107,16 @@
           new Cesium.HeadingPitchRoll()
         );
 
-        const model = scene.primitives.add(
-          Cesium.Model.fromGltf({
-            url: modelUrl,
-            modelMatrix: modelMatrix,
-            minimumPixelSize: 128,
-          })
-        );
+        try {
+          const model = scene.primitives.add(
+            await Cesium.Model.fromGltfAsync({
+              url: modelUrl,
+              modelMatrix: modelMatrix,
+              minimumPixelSize: 128,
+            })
+          );
 
-        model.readyPromise
-          .then(function (model) {
+          model.readyEvent.addEventListener(() => {
             const camera = viewer.camera;
 
             // Zoom to model
@@ -176,17 +176,20 @@
               };
             });
             viewModel.selectedArticulation = viewModel.articulations[0];
-          })
-          .catch(function (error) {
-            console.error(error);
           });
+        } catch (error) {
+          console.log(`Error loading model: ${error}`);
+        }
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

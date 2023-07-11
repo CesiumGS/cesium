@@ -6,13 +6,13 @@ import {
   GoogleEarthEnterpriseTerrainData,
   GoogleEarthEnterpriseTerrainProvider,
   GoogleEarthEnterpriseTileInformation,
+  Math as CesiumMath,
   Request,
   RequestScheduler,
   Resource,
+  RuntimeError,
   TerrainProvider,
 } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
 
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
@@ -45,16 +45,13 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
 
   let terrainProvider;
 
-  function waitForTile(level, x, y, f) {
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
-
+  async function waitForTile(level, x, y, f) {
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata
+    );
     return pollToPromise(function () {
-      return (
-        terrainProvider.ready &&
-        terrainProvider.getTileDataAvailable(x, y, level)
-      );
+      return terrainProvider.getTileDataAvailable(x, y, level);
     }).then(function () {
       const promise = terrainProvider.requestTileGeometry(level, x, y);
 
@@ -85,96 +82,71 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
     );
   });
 
-  it("constructor throws if url is not provided", function () {
-    expect(function () {
-      return new GoogleEarthEnterpriseTerrainProvider();
-    }).toThrowDeveloperError();
-
-    expect(function () {
-      return new GoogleEarthEnterpriseTerrainProvider({});
-    }).toThrowDeveloperError();
+  it("fromMetadata throws without metadata", function () {
+    installMockGetQuadTreePacket();
+    expect(() =>
+      GoogleEarthEnterpriseTerrainProvider.fromMetadata()
+    ).toThrowDeveloperError("metadata is required, actual value was undefined");
   });
 
-  it("resolves readyPromise", function () {
+  it("fromMetadata throws if there isn't terrain", async function () {
     installMockGetQuadTreePacket();
 
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    metadata.terrainPresent = false;
 
-    return terrainProvider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(terrainProvider.ready).toBe(true);
-    });
+    expect(() =>
+      GoogleEarthEnterpriseTerrainProvider.fromMetadata(metadata)
+    ).toThrowError(
+      RuntimeError,
+      "The server made/up/url/ doesn't have terrain"
+    );
   });
 
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "made/up/url",
-    });
-
+  it("uses geographic tiling scheme by default", async function () {
     installMockGetQuadTreePacket();
 
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: resource,
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata
+    );
 
-    return terrainProvider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(terrainProvider.ready).toBe(true);
-    });
+    expect(terrainProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
   });
 
-  it("uses geographic tiling scheme by default", function () {
-    installMockGetQuadTreePacket();
-
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
-
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider.tilingScheme).toBeInstanceOf(
-        GeographicTilingScheme
-      );
-    });
-  });
-
-  it("can use a custom ellipsoid", function () {
+  it("can use a custom ellipsoid", async function () {
     installMockGetQuadTreePacket();
 
     const ellipsoid = new Ellipsoid(1, 2, 3);
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-      ellipsoid: ellipsoid,
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata,
+      {
+        ellipsoid: ellipsoid,
+      }
+    );
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider.tilingScheme.ellipsoid).toEqual(ellipsoid);
-    });
+    expect(terrainProvider.tilingScheme.ellipsoid).toEqual(ellipsoid);
   });
 
-  it("has error event", function () {
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
-    expect(terrainProvider.errorEvent).toBeDefined();
-    expect(terrainProvider.errorEvent).toBe(terrainProvider.errorEvent);
-
-    return terrainProvider.readyPromise.catch(function (e) {
-      expect(terrainProvider.ready).toBe(false);
-    });
-  });
-
-  it("returns reasonable geometric error for various levels", function () {
+  it("has error event", async function () {
     installMockGetQuadTreePacket();
 
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata
+    );
+    expect(terrainProvider.errorEvent).toBeDefined();
+    expect(terrainProvider.errorEvent).toBe(terrainProvider.errorEvent);
+  });
+
+  it("returns reasonable geometric error for various levels", async function () {
+    installMockGetQuadTreePacket();
+
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata
+    );
 
     expect(terrainProvider.getLevelMaximumGeometricError(0)).toBeGreaterThan(
       0.0
@@ -187,87 +159,53 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       terrainProvider.getLevelMaximumGeometricError(2) * 2.0,
       CesiumMath.EPSILON10
     );
-
-    return terrainProvider.readyPromise;
   });
 
-  it("readyPromise rejects if there isn't terrain", function () {
+  it("credit is undefined if credit is not provided", async function () {
     installMockGetQuadTreePacket();
 
-    const metadata = new GoogleEarthEnterpriseMetadata({
-      url: "made/up/url",
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata
+    );
 
-    metadata.terrainPresent = false;
-
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      metadata: metadata,
-    });
-
-    return terrainProvider.readyPromise
-      .then(function () {
-        fail("Server does not have terrain, so we shouldn't resolve.");
-      })
-      .catch(function (e) {
-        expect(terrainProvider.ready).toBe(false);
-      });
+    expect(terrainProvider.credit).toBeUndefined();
   });
 
-  it("logo is undefined if credit is not provided", function () {
+  it("logo is defined if credit is provided", async function () {
     installMockGetQuadTreePacket();
 
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata,
+      {
+        credit: "thanks to our awesome made up contributors!",
+      }
+    );
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider.credit).toBeUndefined();
-    });
+    expect(terrainProvider.credit).toBeDefined();
   });
 
-  it("logo is defined if credit is provided", function () {
+  it("has a water mask is false", async function () {
     installMockGetQuadTreePacket();
 
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-      credit: "thanks to our awesome made up contributors!",
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata
+    );
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider.credit).toBeDefined();
-    });
+    expect(terrainProvider.hasWaterMask).toBe(false);
   });
 
-  it("has a water mask is false", function () {
+  it("has vertex normals is false", async function () {
     installMockGetQuadTreePacket();
 
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
+    const metadata = await GoogleEarthEnterpriseMetadata.fromUrl("made/up/url");
+    terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+      metadata
+    );
 
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider.hasWaterMask).toBe(false);
-    });
-  });
-
-  it("has vertex normals is false", function () {
-    installMockGetQuadTreePacket();
-
-    terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-      url: "made/up/url",
-    });
-
-    return pollToPromise(function () {
-      return terrainProvider.ready;
-    }).then(function () {
-      expect(terrainProvider.hasVertexNormals).toBe(false);
-    });
+    expect(terrainProvider.hasVertexNormals).toBe(false);
   });
 
   describe("requestTileGeometry", function () {
@@ -297,7 +235,44 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       });
     });
 
-    it("returns undefined if too many requests are already in progress", function () {
+    it("provides GoogleEarthEnterpriseTerrainData with fromMetadata", async function () {
+      installMockGetQuadTreePacket();
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/GoogleEarthEnterprise/gee.terrain",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      };
+
+      const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(
+        "made/up/url"
+      );
+      terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+        metadata
+      );
+
+      await pollToPromise(function () {
+        return terrainProvider.getTileDataAvailable(0, 0, 0);
+      });
+
+      const loadedData = await terrainProvider.requestTileGeometry(0, 0, 0);
+
+      expect(loadedData).toBeInstanceOf(GoogleEarthEnterpriseTerrainData);
+    });
+
+    it("returns undefined if too many requests are already in progress", async function () {
       installMockGetQuadTreePacket();
       const baseUrl = "made/up/url";
 
@@ -331,23 +306,19 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         deferreds.push(deferred);
       };
 
-      terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-        url: baseUrl,
-      });
+      const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(baseUrl);
+      terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+        metadata
+      );
 
       const promises = [];
       return pollToPromise(function () {
-        return terrainProvider.ready;
+        let b = true;
+        for (let i = 0; i < 10; ++i) {
+          b = b && terrainProvider.getTileDataAvailable(i, i, i);
+        }
+        return b && terrainProvider.getTileDataAvailable(1, 2, 3);
       })
-        .then(function () {
-          return pollToPromise(function () {
-            let b = true;
-            for (let i = 0; i < 10; ++i) {
-              b = b && terrainProvider.getTileDataAvailable(i, i, i);
-            }
-            return b && terrainProvider.getTileDataAvailable(1, 2, 3);
-          });
-        })
         .then(function () {
           let promise;
           for (let i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
@@ -380,7 +351,7 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         });
     });
 
-    it("supports getTileDataAvailable()", function () {
+    it("supports getTileDataAvailable()", async function () {
       installMockGetQuadTreePacket();
       const baseUrl = "made/up/url";
 
@@ -403,26 +374,23 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
         );
       };
 
-      terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-        url: baseUrl,
-      });
+      const metadata = await GoogleEarthEnterpriseMetadata.fromUrl(baseUrl);
+      terrainProvider = GoogleEarthEnterpriseTerrainProvider.fromMetadata(
+        metadata
+      );
 
-      return pollToPromise(function () {
-        return terrainProvider.ready;
-      }).then(function () {
-        const tileInfo = terrainProvider._metadata._tileInfo;
-        const info =
-          tileInfo[GoogleEarthEnterpriseMetadata.tileXYToQuadKey(0, 1, 0)];
-        info._bits = 0x7f; // Remove terrain bit from 0,1,0 tile
-        info.terrainState = 1; // NONE
-        info.ancestorHasTerrain = true;
+      const tileInfo = terrainProvider._metadata._tileInfo;
+      const info =
+        tileInfo[GoogleEarthEnterpriseMetadata.tileXYToQuadKey(0, 1, 0)];
+      info._bits = 0x7f; // Remove terrain bit from 0,1,0 tile
+      info.terrainState = 1; // NONE
+      info.ancestorHasTerrain = true;
 
-        expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
-        expect(terrainProvider.getTileDataAvailable(0, 1, 0)).toBe(false);
-        expect(terrainProvider.getTileDataAvailable(1, 0, 0)).toBe(true);
-        expect(terrainProvider.getTileDataAvailable(1, 1, 0)).toBe(true);
-        expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBe(false);
-      });
+      expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
+      expect(terrainProvider.getTileDataAvailable(0, 1, 0)).toBe(false);
+      expect(terrainProvider.getTileDataAvailable(1, 0, 0)).toBe(true);
+      expect(terrainProvider.getTileDataAvailable(1, 1, 0)).toBe(true);
+      expect(terrainProvider.getTileDataAvailable(0, 0, 2)).toBe(false);
     });
   });
 });

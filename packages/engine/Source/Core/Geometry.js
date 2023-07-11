@@ -260,7 +260,7 @@ Geometry._textureCoordinateRotationPoints = function (
 
   // Create a local east-north-up coordinate system centered on the polygon's bounding rectangle.
   // Project the southwest, northwest, and southeast corners of the bounding rectangle into the plane of ENU as 2D points.
-  // These are the equivalents of (0,0), (0,1), and (1,0) in the texture coordiante system computed in ShadowVolumeAppearanceFS,
+  // These are the equivalents of (0,0), (0,1), and (1,0) in the texture coordinate system computed in ShadowVolumeAppearanceFS,
   // aka "ENU texture space."
   const rectangleCenter = Rectangle.center(
     boundingRectangle,
