@@ -149,6 +149,13 @@ RayShapeIntersection intersectUnitSphere(Ray ray, bool convex)
     return RayShapeIntersection(vec4(dmin, tmin), vec4(dmax, tmax));
 }
 
+/**
+ * Given a circular cone around the z-axis, with apex at the origin,
+ * find the parametric distance(s) along a ray where that ray intersects
+ * the cone.
+ * The cone opening angle is described by the squared cosine of
+ * its half-angle (the angle between the Z-axis and the surface)
+ */
 vec2 intersectDoubleEndedCone(Ray ray, float cosSqrHalfAngle)
 {
     vec3 o = ray.pos;
@@ -163,6 +170,10 @@ vec2 intersectDoubleEndedCone(Ray ray, float cosSqrHalfAngle)
     }
 
     det = sqrt(det);
+    // TODO: ignores the case a = 0, where the ray is parallel to
+    // the cone surface. There may still be useful intersections, but
+    // we will just get infinities. See
+    // https://www.geometrictools.com/Documentation/IntersectionLineCone.pdf
     float t1 = (-b - det) / a;
     float t2 = (-b + det) / a;
     float tmin = min(t1, t2);
@@ -192,24 +203,39 @@ vec4 intersectFlippedCone(Ray ray, float cosSqrHalfAngle) {
     else return vec4(-INF_HIT, tmin, tmax, +INF_HIT);
 }
 
-vec2 intersectRegularCone(Ray ray, float cosSqrHalfAngle) {
+RayShapeIntersection intersectRegularCone(Ray ray, float cosSqrHalfAngle) {
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
+    vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
+
     if (intersect.x == NO_HIT) {
-        return vec2(NO_HIT);
+        return RayShapeIntersection(miss, miss);
     }
 
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
+    // Find the points of intersection
     float tmin = intersect.x;
     float tmax = intersect.y;
-    float zmin = o.z + tmin * d.z;
-    float zmax = o.z + tmax * d.z;
+    vec3 p0 = ray.pos + tmin * ray.dir;
+    vec3 p1 = ray.pos + tmax * ray.dir;
 
-    if (zmin < 0.0 && zmax < 0.0) return vec2(NO_HIT);
-    else if (zmin < 0.0) return vec2(tmax, +INF_HIT);
-    else if (zmax < 0.0) return vec2(-INF_HIT, tmin);
-    else return vec2(tmin, tmax);
+    // Find the surface normals at the intersection points (directed inside the cone)
+    vec3 n0 = vec3(-p0.z * normalize(p0.xy), length(p0.xy));
+    vec3 n1 = vec3(-p1.z * normalize(p1.xy), length(p1.xy));
+
+    vec4 intersect0 = vec4(normalize(n0), tmin);
+    vec4 intersect1 = vec4(normalize(n1), tmax);
+
+    // Discard intersections with the shadow cone (below z == 0)
+    if (p0.z < 0.0 && p1.z < 0.0) {
+        return RayShapeIntersection(miss, miss);
+    } else if (p0.z < 0.0) {
+        return RayShapeIntersection(intersect1, farSide);
+    } else if (p1.z < 0.0) {
+        return RayShapeIntersection(-1.0 * farSide, intersect0);
+    } else {
+        return RayShapeIntersection(intersect0, intersect1);
+    }
 }
 
 void intersectShape(in Ray ray, inout Intersections ix) {
@@ -290,8 +316,8 @@ void intersectShape(in Ray ray, inout Intersections ix) {
 
     // Bottom cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF)
-        vec2 bottomConeIntersection = intersectRegularCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.x);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
+        RayShapeIntersection bottomConeIntersection = intersectRegularCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.x);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF)
         vec2 bottomConeIntersection = intersectZPlane(flippedRay);
         setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
@@ -310,8 +336,8 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         vec2 topConeIntersection = intersectZPlane(ray);
         setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF)
-        vec2 topConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
+        RayShapeIntersection topConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
     #endif
 
     // Wedge
