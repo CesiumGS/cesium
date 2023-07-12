@@ -37,8 +37,10 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float dt = (exit - entry.w) * RAY_SCALE;
     return vec4(normalize(entry.xyz), dt);
 #else
+    // TODO: this may not work for cylinders?
+    vec3 normal = normalize(shapeIntersection.entry.xyz);
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    return vec4(viewRay.dir, u_stepSize / dimAtLevel);
+    return vec4(normal, u_stepSize / dimAtLevel);
 #endif
 }
 
