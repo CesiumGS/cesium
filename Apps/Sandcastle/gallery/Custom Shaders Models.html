@@ -411,7 +411,7 @@
 
             const removeListener = model.readyEvent.addEventListener(() => {
               viewer.camera.flyToBoundingSphere(model.boundingSphere, {
-                duration: 0.5,
+                duration: 0.0,
               });
 
               removeListener();

@@ -1,5 +1,21 @@
 # Change Log
 
+### 1.107.1 - 2023-07-13
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug where `Model` would not respond to different alpha values in a `Cesium3DTileStyle`. [#11399](https://github.com/CesiumGS/cesium/pull/11399)
+- Fixed dimensions of `tangentEC` in custom shaders. [#11394](https://github.com/CesiumGS/cesium/pull/11394)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed promise return value when using `viewer.flyTo` to navigate to an ImageryLayer. [#11392](https://github.com/CesiumGS/cesium/pull/11392)
+- Fixed `depthTestAgainstTerrain` value being overridden when using the base layer picker widget. [#11393](https://github.com/CesiumGS/cesium/issues/11393)
+
 ### 1.107 - 2023-07-03
 
 #### Major Announcements :loudspeaker:

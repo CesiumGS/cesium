@@ -44,6 +44,7 @@
         if (!scene.msaaSupported) {
           window.alert("This browser does not support MSAA.");
         }
+        scene.msaaSamples = 8;
 
         function createModel(url, height) {
           const position = Cesium.Cartesian3.fromDegrees(
@@ -157,15 +158,9 @@
 
         const samplingOptions = [
           {
-            text: "MSAA off",
+            text: "MSAA 8x",
             onselect: function () {
-              scene.msaaSamples = 1;
-            },
-          },
-          {
-            text: "MSAA 2x",
-            onselect: function () {
-              scene.msaaSamples = 2;
+              scene.msaaSamples = 8;
             },
           },
           {
@@ -175,13 +170,18 @@
             },
           },
           {
-            text: "MSAA 8x",
+            text: "MSAA 2x",
             onselect: function () {
-              scene.msaaSamples = 8;
+              scene.msaaSamples = 2;
+            },
+          },
+          {
+            text: "MSAA off",
+            onselect: function () {
+              scene.msaaSamples = 1;
             },
           },
         ];
-
         Sandcastle.addToolbarMenu(options);
         Sandcastle.addToolbarMenu(samplingOptions);
         //Sandcastle_End

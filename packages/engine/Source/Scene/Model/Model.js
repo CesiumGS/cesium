@@ -2902,11 +2902,13 @@ Model.fromGeoJson = async function (options) {
   return model;
 };
 
+const scratchColor = new Color();
+
 /**
  * @private
  */
 Model.prototype.applyColorAndShow = function (style) {
-  const previousColor = this._color;
+  const previousColor = Color.clone(this._color, scratchColor);
   const hasColorStyle = defined(style) && defined(style.color);
   const hasShowStyle = defined(style) && defined(style.show);
 

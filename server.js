@@ -65,6 +65,7 @@ const specFiles = [
   "!packages/widgets/Specs/SpecList.js",
   "Specs/*.js",
   "!Specs/SpecList.js",
+  "!Specs/e2e/**",
   "Specs/TestWorkers/*.js",
 ];
 const shaderFiles = ["packages/engine/Source/Shaders/**/*.glsl"];
