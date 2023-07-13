@@ -37,7 +37,7 @@
     uniform float u_ellipsoidInverseInnerScaleUv;
 #endif
 
-RayShapeIntersection intersectZPlane(Ray ray)
+RayShapeIntersection intersectZPlane(in Ray ray)
 {
     float o = ray.pos.z;
     float d = ray.dir.z;
@@ -55,7 +55,7 @@ RayShapeIntersection intersectZPlane(Ray ray)
     }
 }
 
-vec4 intersectHalfPlane(Ray ray, float angle) {
+vec4 intersectHalfPlane(in Ray ray, in float angle) {
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
     vec2 planeDirection = vec2(cos(angle), sin(angle));
@@ -72,7 +72,7 @@ vec4 intersectHalfPlane(Ray ray, float angle) {
     return vec4(-INF_HIT, t, t, +INF_HIT);
 }
 
-vec2 intersectHalfSpace(Ray ray, float angle)
+RayShapeIntersection intersectHalfSpace(in Ray ray, in float angle)
 {
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
@@ -81,10 +81,15 @@ vec2 intersectHalfSpace(Ray ray, float angle)
     float a = dot(o, n);
     float b = dot(d, n);
     float t = -a / b;
-    float s = sign(a);
 
-    if (t >= 0.0 != s >= 0.0) return vec2(t, +INF_HIT);
-    else return vec2(-INF_HIT, t);
+    vec4 intersection = vec4(n, 0.0, t);
+    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
+
+    if (t >= 0.0 != a >= 0.0) {
+        return RayShapeIntersection(intersection, farSide);
+    } else {
+        return RayShapeIntersection(-1.0 * farSide, intersection);
+    }
 }
 
 vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
@@ -120,14 +125,13 @@ vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
     else return vec2(NO_HIT);
 }
 
-vec4 intersectFlippedWedge(Ray ray, float minAngle, float maxAngle)
+void intersectFlippedWedge(in Ray ray, in float minAngle, in float maxAngle, out RayShapeIntersection intersections[2])
 {
-    vec2 planeIntersectMin = intersectHalfSpace(ray, minAngle);
-    vec2 planeIntersectMax = intersectHalfSpace(ray, maxAngle + czm_pi);
-    return vec4(planeIntersectMin, planeIntersectMax);
+    intersections[0] = intersectHalfSpace(ray, minAngle);
+    intersections[1] = intersectHalfSpace(ray, maxAngle + czm_pi);
 }
 
-RayShapeIntersection intersectUnitSphere(Ray ray, bool convex)
+RayShapeIntersection intersectUnitSphere(in Ray ray, in bool convex)
 {
     vec3 position = ray.pos;
     vec3 direction = ray.dir;
@@ -163,7 +167,7 @@ RayShapeIntersection intersectUnitSphere(Ray ray, bool convex)
  * The cone opening angle is described by the squared cosine of
  * its half-angle (the angle between the Z-axis and the surface)
  */
-vec2 intersectDoubleEndedCone(Ray ray, float cosSqrHalfAngle)
+vec2 intersectDoubleEndedCone(in Ray ray, in float cosSqrHalfAngle)
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
@@ -243,7 +247,7 @@ void intersectFlippedCone(in Ray ray, in float cosSqrHalfAngle, out RayShapeInte
     }
 }
 
-RayShapeIntersection intersectRegularCone(Ray ray, float cosSqrHalfAngle) {
+RayShapeIntersection intersectRegularCone(in Ray ray, in float cosSqrHalfAngle) {
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
     vec4 miss = vec4(normalize(ray.dir), NO_HIT);
@@ -391,11 +395,12 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         vec2 wedgeIntersect = intersectRegularWedge(ray, u_ellipsoidRenderLongitudeMinMax.x, u_ellipsoidRenderLongitudeMinMax.y);
         setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF)
-        vec2 wedgeIntersect = intersectHalfSpace(ray, u_ellipsoidRenderLongitudeMinMax.x);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
+        RayShapeIntersection wedgeIntersect = intersectHalfSpace(ray, u_ellipsoidRenderLongitudeMinMax.x);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF)
-        vec4 wedgeIntersect = intersectFlippedWedge(ray, u_ellipsoidRenderLongitudeMinMax.x, u_ellipsoidRenderLongitudeMinMax.y);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 0, wedgeIntersect.xy);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersect.zw);
+        RayShapeIntersection wedgeIntersects[2];
+        intersectFlippedWedge(ray, u_ellipsoidRenderLongitudeMinMax.x, u_ellipsoidRenderLongitudeMinMax.y, wedgeIntersects);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 0, wedgeIntersects[0]);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersects[1]);
     #endif
 }
