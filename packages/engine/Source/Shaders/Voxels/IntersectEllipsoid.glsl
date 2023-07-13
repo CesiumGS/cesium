@@ -160,20 +160,33 @@ vec2 intersectDoubleEndedCone(Ray ray, float cosSqrHalfAngle)
 {
     vec3 o = ray.pos;
     vec3 d = ray.dir;
-    float a = d.z * d.z - dot(d, d) * cosSqrHalfAngle;
-    float b = d.z * o.z - dot(o, d) * cosSqrHalfAngle;
-    float c = o.z * o.z - dot(o, o) * cosSqrHalfAngle;
-    float det = b * b - a * c;
+    float sinSqrHalfAngle = 1.0 - cosSqrHalfAngle;
+    // a = d.z * d.z - dot(d, d) * cosSqrHalfAngle;
+    float aSin = d.z * d.z * sinSqrHalfAngle;
+    float aCos = -dot(d.xy, d.xy) * cosSqrHalfAngle;
+    float a = aSin + aCos;
+    // b = d.z * o.z - dot(o, d) * cosSqrHalfAngle;
+    float bSin = d.z * o.z * sinSqrHalfAngle;
+    float bCos = -dot(o.xy, d.xy) * cosSqrHalfAngle;
+    float b = bSin + bCos;
+    // c = o.z * o.z - dot(o, o) * cosSqrHalfAngle;
+    float cSin = o.z * o.z * sinSqrHalfAngle;
+    float cCos = -dot(o.xy, o.xy) * cosSqrHalfAngle;
+    float c = cSin + cCos;
+    // determinant = b * b - a * c. But bSin * bSin = aSin * cSin.
+    // Avoid subtractive cancellation by expanding to eliminate these terms
+    float det = 2.0 * bSin * bCos + bCos * bCos - aSin * cCos - aCos * cSin - aCos * cCos;
 
     if (det < 0.0) {
         return vec2(NO_HIT);
+    } else if (a == 0.0) {
+        // Ray is parallel to cone surface
+        return (b == 0.0)
+            ? vec2(NO_HIT) // Ray is on cone surface
+            : vec2(-0.5 * c / b, NO_HIT);
     }
 
     det = sqrt(det);
-    // TODO: ignores the case a = 0, where the ray is parallel to
-    // the cone surface. There may still be useful intersections, but
-    // we will just get infinities. See
-    // https://www.geometrictools.com/Documentation/IntersectionLineCone.pdf
     float t1 = (-b - det) / a;
     float t2 = (-b + det) / a;
     float tmin = min(t1, t2);
