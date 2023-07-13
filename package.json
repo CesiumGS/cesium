@@ -120,7 +120,7 @@
     "yargs": "^17.0.1"
   },
   "scripts": {
-    "prepare": "gulp prepare && husky install",
+    "prepare": "gulp prepare && husky install && playwright install --with-deps",
     "start": "node server.js",
     "start-public": "node server.js --public",
     "build": "gulp build",
@@ -156,8 +156,7 @@
     "deploy-status": "gulp deployStatus",
     "deploy-set-version": "gulp deploySetVersion",
     "prettier": "prettier --write --no-config \"**/*\"",
-    "prettier-check": "prettier --check --no-config \"**/*\"",
-    "postinstall": "playwright install --with-deps"
+    "prettier-check": "prettier --check --no-config \"**/*\""
   },
   "engines": {
     "node": ">=14.0.0"
