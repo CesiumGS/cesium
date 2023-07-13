@@ -201,26 +201,46 @@ vec2 intersectDoubleEndedCone(Ray ray, float cosSqrHalfAngle)
     return vec2(tmin, tmax);
 }
 
-vec4 intersectFlippedCone(Ray ray, float cosSqrHalfAngle) {
+void intersectFlippedCone(in Ray ray, in float cosSqrHalfAngle, out RayShapeIntersection intersections[2]) {
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
+    vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
+
+    // Initialize output with no hits
+    intersections[0].entry = -1.0 * farSide;
+    intersections[0].exit = farSide;
+    intersections[1].entry = miss;
+    intersections[1].exit = miss;
+
     if (intersect.x == NO_HIT) {
-        return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
+        return;
     }
 
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
+    // Find the points of intersection
     float tmin = intersect.x;
     float tmax = intersect.y;
-    float zmin = o.z + tmin * d.z;
-    float zmax = o.z + tmax * d.z;
+    vec3 p0 = ray.pos + tmin * ray.dir;
+    vec3 p1 = ray.pos + tmax * ray.dir;
 
-    // One interval
-    if (zmin < 0.0 && zmax < 0.0) return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
-    else if (zmin < 0.0) return vec4(-INF_HIT, tmax, NO_HIT, NO_HIT);
-    else if (zmax < 0.0) return vec4(tmin, +INF_HIT, NO_HIT, NO_HIT);
-    // Two intervals
-    else return vec4(-INF_HIT, tmin, tmax, +INF_HIT);
+    // Find the surface normals at the intersection points (directed outside the cone)
+    vec3 n0 = vec3(p0.z * normalize(p0.xy), length(p0.xy));
+    vec3 n1 = vec3(p1.z * normalize(p1.xy), length(p1.xy));
+
+    vec4 intersect0 = vec4(normalize(n0), tmin);
+    vec4 intersect1 = vec4(normalize(n1), tmax);
+
+    if (p0.z < 0.0 && p1.z < 0.0) {
+        // both hits were in the shadow cone
+    } else if (p0.z < 0.0) {
+        intersections[0].exit = intersect1;
+    } else if (p1.z < 0.0) {
+        intersections[0].entry = intersect0;
+    } else {
+        intersections[0].exit = intersect0;
+        intersections[1].entry = intersect1;
+        intersections[1].exit = farSide;
+    }
 }
 
 RayShapeIntersection intersectRegularCone(Ray ray, float cosSqrHalfAngle) {
@@ -342,16 +362,18 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         RayShapeIntersection bottomConeIntersection = intersectZPlane(flippedRay);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF)
-        vec4 bottomConeIntersection = intersectFlippedCone(ray, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.x);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 0, bottomConeIntersection.xy);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 1, bottomConeIntersection.zw);
+        RayShapeIntersection bottomConeIntersections[2];
+        intersectFlippedCone(ray, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.x, bottomConeIntersections);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 0, bottomConeIntersections[0]);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 1, bottomConeIntersections[1]);
     #endif
 
     // Top cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
-        vec4 topConeIntersection = intersectFlippedCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 0, topConeIntersection.xy);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 1, topConeIntersection.zw);
+        RayShapeIntersection topConeIntersections[2];
+        intersectFlippedCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y, topConeIntersections);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 0, topConeIntersections[0]);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 1, topConeIntersections[1]);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF)
         RayShapeIntersection topConeIntersection = intersectZPlane(ray);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
