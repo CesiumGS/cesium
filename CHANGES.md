@@ -1,5 +1,17 @@
 # Change Log
 
+### 1.108 - 2023-08-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed `OpenStreetMapImageryProvider` usage in comments, change default url and add `tile.openstreetmap.org` to `RequestScheduler.requestsByServer`. [#11407](https://github.com/CesiumGS/cesium/pull/11407)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
 ### 1.107.2 - 2023-07-13
 
 This is an npm-only release to fix a dependency issue published in 1.107.1
