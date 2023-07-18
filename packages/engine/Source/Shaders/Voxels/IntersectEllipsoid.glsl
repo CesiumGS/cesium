@@ -1,5 +1,5 @@
 // See IntersectionUtils.glsl for the definitions of Ray, Intersections,
-// setIntersection, setIntersectionPair, INF_HIT, NO_HIT
+// RayShapeIntersection, setShapeIntersection, INF_HIT, NO_HIT
 
 /* Ellipsoid defines (set in Scene/VoxelEllipsoidShape.js)
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE
@@ -55,7 +55,7 @@ RayShapeIntersection intersectZPlane(in Ray ray)
     }
 }
 
-vec4 intersectHalfPlane(in Ray ray, in float angle) {
+void intersectHalfPlane(in Ray ray, in float angle, out RayShapeIntersection intersections[2]) {
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
     vec2 planeDirection = vec2(cos(angle), sin(angle));
@@ -65,11 +65,22 @@ vec4 intersectHalfPlane(in Ray ray, in float angle) {
     float b = dot(d, planeNormal);
     float t = -a / b;
 
+    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
+
     vec2 p = o + t * d;
     bool outside = dot(p, planeDirection) < 0.0;
-    if (outside) return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
-
-    return vec4(-INF_HIT, t, t, +INF_HIT);
+    if (outside) {
+        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+        intersections[0].entry = -1.0 * farSide;
+        intersections[0].exit = farSide;
+        intersections[1].entry = miss;
+        intersections[1].exit = miss;
+    } else {
+        intersections[0].entry = -1.0 * farSide;
+        intersections[0].exit = vec4(planeNormal, 0.0, t);
+        intersections[1].entry = vec4(-1.0 * planeNormal, 0.0, t);
+        intersections[1].exit = farSide;
+    }
 }
 
 RayShapeIntersection intersectHalfSpace(in Ray ray, in float angle)
@@ -92,7 +103,7 @@ RayShapeIntersection intersectHalfSpace(in Ray ray, in float angle)
     }
 }
 
-vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
+RayShapeIntersection intersectRegularWedge(in Ray ray, in float minAngle, in float maxAngle)
 {
     vec2 o = ray.pos.xy;
     vec2 d = ray.dir.xy;
@@ -106,23 +117,31 @@ vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
 
     float t1 = -a1 / b1;
     float t2 = -a2 / b2;
-    float s1 = sign(a1);
-    float s2 = sign(a2);
 
-    float tmin = min(t1, t2);
-    float tmax = max(t1, t2);
-    float smin = tmin == t1 ? s1 : s2;
-    float smax = tmin == t1 ? s2 : s1;
+    vec4 intersect1 = vec4(n1, 0.0, t1);
+    vec4 intersect2 = vec4(n2, 0.0, t2);
+    vec4 entry = t1 <= t2 ? intersect1 : intersect2;
+    vec4 exit = t1 <= t2 ? intersect2 : intersect1;
+    float amin = entry.w == intersect1.w ? a1 : a2;
+    float amax = entry.w == intersect1.w ? a2 : a1;
 
-    bool e = tmin >= 0.0;
-    bool f = tmax >= 0.0;
-    bool g = smin >= 0.0;
-    bool h = smax >= 0.0;
+    bool e = entry.w >= 0.0;
+    bool f = exit.w >= 0.0;
+    bool g = amin >= 0.0;
+    bool h = amax >= 0.0;
 
-    if (e != g && f == h) return vec2(tmin, tmax);
-    else if (e == g && f == h) return vec2(-INF_HIT, tmin);
-    else if (e != g && f != h) return vec2(tmax, +INF_HIT);
-    else return vec2(NO_HIT);
+    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
+    vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+
+    if (e != g && f == h) {
+        return RayShapeIntersection(entry, exit);
+    } else if (e == g && f == h) {
+        return RayShapeIntersection(-1.0 * farSide, entry);
+    } else if (e != g && f != h) {
+        return RayShapeIntersection(exit, farSide);
+    } else {
+        return RayShapeIntersection(miss, miss);
+    }
 }
 
 void intersectFlippedWedge(in Ray ray, in float minAngle, in float maxAngle, out RayShapeIntersection intersections[2])
@@ -388,12 +407,13 @@ void intersectShape(in Ray ray, inout Intersections ix) {
 
     // Wedge
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO)
-        vec4 wedgeIntersect = intersectHalfPlane(ray, u_ellipsoidRenderLongitudeMinMax.x);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 0, wedgeIntersect.xy);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersect.zw);
+        RayShapeIntersection wedgeIntersects[2];
+        intersectHalfPlane(ray, u_ellipsoidRenderLongitudeMinMax.x, wedgeIntersects);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 0, wedgeIntersects[0]);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersects[1]);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF)
-        vec2 wedgeIntersect = intersectRegularWedge(ray, u_ellipsoidRenderLongitudeMinMax.x, u_ellipsoidRenderLongitudeMinMax.y);
-        setIntersectionPair(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
+        RayShapeIntersection wedgeIntersect = intersectRegularWedge(ray, u_ellipsoidRenderLongitudeMinMax.x, u_ellipsoidRenderLongitudeMinMax.y);
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF)
         RayShapeIntersection wedgeIntersect = intersectHalfSpace(ray, u_ellipsoidRenderLongitudeMinMax.x);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
