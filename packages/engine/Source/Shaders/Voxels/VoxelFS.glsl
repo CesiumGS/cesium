@@ -50,7 +50,7 @@ void main()
     vec2 screenCoord = (fragCoord.xy - czm_viewport.xy) / czm_viewport.zw; // [0,1]
     vec3 eyeDirection = normalize(czm_windowToEyeCoordinates(fragCoord).xyz);
     vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
-    vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
+    vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection);
     vec3 viewPosUv = u_cameraPositionUv;
     #if defined(SHAPE_BOX)
         vec3 dInv = 1.0 / viewDirUv;
