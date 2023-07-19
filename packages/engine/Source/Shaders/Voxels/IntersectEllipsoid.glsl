@@ -16,7 +16,6 @@
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX
 #define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN
-#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_INTERSECTION_INDEX_LONGITUDE
 #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX
 #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN
@@ -323,41 +322,32 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     }
 
     // Inner ellipsoid
-    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
-        // When the ellipsoid is perfectly thin it's necessary to sandwich the
-        // inner ellipsoid intersection inside the outer ellipsoid intersection.
-
-        // Without this special case,
-        // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
-        // [outerMin, innerMin, outerMax, innerMax] which will cause the back
-        // side of the ellipsoid to be invisible because it will think the ray
-        // is still inside the inner (negative) ellipsoid after exiting the
-        // outer (positive) ellipsoid.
-
-        // With this special case,
-        // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
-        // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
-
-        // Note: If initializeIntersections() changes its sorting function
-        // from bubble sort to something else, this code may need to change.
-        vec4 innerEntry = vec4(-1.0 * outerIntersect.entry.xyz, outerIntersect.entry.w);
-        vec4 innerExit = vec4(-1.0 * outerIntersect.exit.xyz, outerIntersect.exit.w);
-        setSurfaceIntersection(ix, 0, outerIntersect.entry, true, true);   // positive, enter
-        setSurfaceIntersection(ix, 1, innerEntry, false, true);  // negative, enter
-        setSurfaceIntersection(ix, 2, innerExit, false, false); // negative, exit
-        setSurfaceIntersection(ix, 3, outerIntersect.exit, true, false);  // positive, exit
-    #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
         Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
         RayShapeIntersection innerIntersect = intersectUnitSphere(innerRay, false);
 
         if (innerIntersect.entry.w == NO_HIT) {
             setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
         } else {
-            // When the ellipsoid is very large and thin it's possible for floating
-            // point math to cause the ray to intersect the inner ellipsoid before
-            // the outer ellipsoid. To prevent this from happening, clamp innerIntersect
-            // to outerIntersect and sandwich the intersections like described above.
-            //
+            // When the ellipsoid is large and thin it's possible for floating point math
+            // to cause the ray to intersect the inner ellipsoid before the outer ellipsoid. 
+            // To prevent this from happening, clamp innerIntersect to outerIntersect and
+            // sandwich the inner ellipsoid intersection inside the outer ellipsoid intersection.
+
+            // Without this special case,
+            // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
+            // [outerMin, innerMin, outerMax, innerMax] which will cause the back
+            // side of the ellipsoid to be invisible because it will think the ray
+            // is still inside the inner (negative) ellipsoid after exiting the
+            // outer (positive) ellipsoid.
+
+            // With this special case,
+            // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
+            // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
+
+            // Note: If initializeIntersections() changes its sorting function
+            // from bubble sort to something else, this code may need to change.
+
             // In theory a similar fix is needed for cylinders, however it's more
             // complicated to implement because the inner shape is allowed to be
             // intersected first.
