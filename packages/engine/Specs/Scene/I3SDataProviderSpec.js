@@ -28,7 +28,6 @@ describe("Scene/I3SDataProvider", function () {
     prePassesUpdate: function (frameState) {},
     postPassesUpdate: function (frameState) {},
     updateForPass: function (frameState, passState) {},
-    ready: true,
   };
 
   const mockLayers = [
@@ -80,7 +79,6 @@ describe("Scene/I3SDataProvider", function () {
   ];
 
   const mockGeoidProvider = {
-    readyPromise: Promise.resolve(),
     _lodCount: 0,
     tilingScheme: new GeographicTilingScheme(),
     requestTileGeometry: function (x, y, level) {
@@ -117,25 +115,28 @@ describe("Scene/I3SDataProvider", function () {
     id: 0,
   };
 
+  const mockLayerDataWithLargeExtent = {
+    href: "layers/0/",
+    attributeStorageInfo: [],
+    store: { rootNode: "mockRootNodeUrl", version: "1.6" },
+    fullExtent: { xmin: -1, ymin: -1, xmax: 2, ymax: 3 },
+    spatialReference: { wkid: 4326 },
+    id: 0,
+  };
+
   const mockProviderData = {
     name: "mockProviderName",
     serviceVersion: "1.6",
     layers: [mockLayerData],
   };
 
-  it("constructs default I3SDataProvider", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
-      name: "testProvider",
-    });
+  const mockProviderDataWithLargeExtent = {
+    name: "mockProviderName",
+    serviceVersion: "1.6",
+    layers: [mockLayerDataWithLargeExtent],
+  };
 
-    expect(testProvider.name).toEqual("testProvider");
-    expect(testProvider.traceFetches).toEqual(false);
-    expect(testProvider.geoidTiledServiceProvider).toBeUndefined();
-  });
-
-  it("constructs I3SDataProvider with options", function () {
+  it("constructs I3SDataProvider with options", async function () {
     const geoidService = {};
     const cesium3dTilesetOptions = {
       skipLevelOfDetail: true,
@@ -143,25 +144,40 @@ describe("Scene/I3SDataProvider", function () {
       maximumScreenSpaceError: 16,
     };
     const i3sOptions = {
-      url: "mockProviderUrl",
       name: "testProvider",
       traceFetches: true, // for tracing I3S fetches
       geoidTiledTerrainProvider: geoidService, // pass the geoid service
       cesium3dTilesetOptions: cesium3dTilesetOptions,
     };
 
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider(i3sOptions);
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl(
+      "mockProviderUrl",
+      i3sOptions
+    );
 
     expect(testProvider.name).toEqual("testProvider");
     expect(testProvider.traceFetches).toEqual(true);
     expect(testProvider.geoidTiledTerrainProvider).toEqual(geoidService);
   });
 
-  it("sets properties", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("sets properties", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
 
@@ -170,10 +186,16 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider.traceFetches).toEqual(true);
   });
 
-  it("wraps update", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("wraps update", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
     testProvider._layers = mockLayers;
@@ -192,10 +214,16 @@ describe("Scene/I3SDataProvider", function () {
     );
   });
 
-  it("wraps prePassesUpdate", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("wraps prePassesUpdate", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
     testProvider._layers = mockLayers;
@@ -214,10 +242,16 @@ describe("Scene/I3SDataProvider", function () {
     ).toHaveBeenCalledWith(frameState);
   });
 
-  it("wraps postPassesUpdate", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("wraps postPassesUpdate", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
     testProvider._layers = mockLayers;
@@ -236,10 +270,16 @@ describe("Scene/I3SDataProvider", function () {
     ).toHaveBeenCalledWith(frameState);
   });
 
-  it("wraps updateForPass", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("wraps updateForPass", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
     testProvider._layers = mockLayers;
@@ -261,10 +301,16 @@ describe("Scene/I3SDataProvider", function () {
     );
   });
 
-  it("wraps show property", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("wraps show property", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
     testProvider._layers = mockLayers;
@@ -279,10 +325,16 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider._layers[1]._tileset.show).toEqual(false);
   });
 
-  it("isDestroyed returns false for new provider", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("isDestroyed returns false for new provider", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
     testProvider._layers = mockLayers;
@@ -290,10 +342,16 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider.isDestroyed()).toEqual(false);
   });
 
-  it("destroys provider", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("destroys provider", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
     testProvider._layers = mockLayers;
@@ -309,12 +367,18 @@ describe("Scene/I3SDataProvider", function () {
     expect(testProvider.isDestroyed()).toEqual(true);
   });
 
-  it("loads binary", function () {
+  it("loads binary", async function () {
     const mockBinaryResponse = new ArrayBuffer(1);
 
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
 
@@ -329,12 +393,18 @@ describe("Scene/I3SDataProvider", function () {
     });
   });
 
-  it("loads binary with traceFetches", function () {
+  it("loads binary with traceFetches", async function () {
     const mockBinaryResponse = new ArrayBuffer(1);
 
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
       traceFetches: true,
     });
@@ -350,10 +420,16 @@ describe("Scene/I3SDataProvider", function () {
     });
   });
 
-  it("loads binary with invalid uri", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("loads binary with invalid uri", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
 
@@ -422,15 +498,19 @@ describe("Scene/I3SDataProvider", function () {
     );
   });
 
-  it("loads geoid data", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("loads geoid data", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderDataWithLargeExtent)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
       geoidTiledTerrainProvider: mockGeoidProvider,
     });
-
-    testProvider._extent = Rectangle.fromDegrees(-1, 0, 1, 2);
 
     return testProvider.loadGeoidData().then(function () {
       expect(testProvider._geoidDataList.length).toEqual(2);
@@ -448,20 +528,25 @@ describe("Scene/I3SDataProvider", function () {
     });
   });
 
-  it("loadGeoidData resolves when no geoid provider is given", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+  it("loadGeoidData resolves when no geoid provider is given", async function () {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
-    testProvider._extent = Rectangle.fromDegrees(-1, 0, 1, 2);
 
     return testProvider.loadGeoidData().then(function () {
       expect(testProvider._geoidDataList).toBeUndefined();
     });
   });
 
-  it("computes extent from layers", function () {
+  it("computes extent from layers", async function () {
     const mockLayer1 = {
       _extent: Rectangle.fromDegrees(-1, 0, 1, 2),
     };
@@ -469,9 +554,15 @@ describe("Scene/I3SDataProvider", function () {
       _extent: Rectangle.fromDegrees(3, 1, 4, 3),
     };
 
-    spyOn(I3SDataProvider.prototype, "_load");
-    const testProvider = new I3SDataProvider({
-      url: "mockProviderUrl",
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(mockProviderData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      return tileset;
+    });
+    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       name: "testProvider",
     });
     testProvider._layers = [mockLayer1, mockLayer2, {}];
@@ -498,8 +589,6 @@ describe("Scene/I3SDataProvider", function () {
       name: "testProvider",
       geoidTiledTerrainProvider: mockGeoidProvider,
     });
-
-    expect(testProvider.ready).toBe(true);
 
     // Layers have been populated and root node is loaded
     expect(testProvider.layers.length).toEqual(1);
@@ -535,8 +624,6 @@ describe("Scene/I3SDataProvider", function () {
         geoidTiledTerrainProvider: mockGeoidProvider,
       }
     );
-
-    expect(testProvider.ready).toBe(true);
 
     // Layers have been populated and root node is loaded
     expect(testProvider.layers.length).toEqual(1);

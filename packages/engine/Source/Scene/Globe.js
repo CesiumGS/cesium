@@ -436,8 +436,6 @@ Object.defineProperties(Globe.prototype, {
         return true;
       }
       return (
-        // ready is deprecated. This is here for backwards compatibility
-        this._surface.tileProvider.ready &&
         this._surface._tileLoadQueueHigh.length === 0 &&
         this._surface._tileLoadQueueMedium.length === 0 &&
         this._surface._tileLoadQueueLow.length === 0
@@ -983,15 +981,9 @@ Globe.prototype.beginFrame = function (frameState) {
   const surface = this._surface;
   const tileProvider = surface.tileProvider;
   const terrainProvider = this.terrainProvider;
-  // ready is deprecated; This is here for backwards compatibility
-  const terrainReady =
-    defined(terrainProvider) &&
-    (defined(terrainProvider._ready)
-      ? terrainProvider._ready
-      : !defined(terrainProvider.ready) || terrainProvider.ready);
   const hasWaterMask =
     this.showWaterEffect &&
-    terrainReady &&
+    defined(terrainProvider) &&
     terrainProvider.hasWaterMask &&
     terrainProvider.hasWaterMask;
 

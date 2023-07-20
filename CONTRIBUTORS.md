@@ -360,4 +360,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Alexander Popoff](https://github.com/aerialist7)
 - [IKangXu](https://github.com/IKangXu)
 - [e3dio](https://github.com/e3dio)
+- [Dphalos](https://github.com/Dphalos)
+- [hongfaqiu](https://github.com/hongfaqiu)
 - [Arturo Espinosa Aldama](https://github.com/pupitetris)

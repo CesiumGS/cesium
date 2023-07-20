@@ -1,6 +1,7 @@
 import {
   EllipsoidTerrainProvider,
   Event,
+  GeographicTilingScheme,
   ImageryLayerCollection,
 } from "@cesium/engine";
 
@@ -12,18 +13,28 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     this.imageryLayers = new ImageryLayerCollection();
     this.terrainProvider = new EllipsoidTerrainProvider();
     this.terrainProviderChanged = new Event();
+    this.depthTestAgainstTerrain = false;
   }
   MockGlobe.prototype.isDestroyed = () => false;
 
   const testProvider = {
-    ready: false,
+    tilingScheme: new GeographicTilingScheme(),
   };
   const testProvider2 = {
-    ready: false,
+    tilingScheme: new GeographicTilingScheme(),
   };
   const testProvider3 = {
-    ready: false,
+    tilingScheme: new GeographicTilingScheme(),
   };
+
+  const testEllipsoidProviderViewModel = new ProviderViewModel({
+    name: "name",
+    tooltip: "tooltip",
+    iconUrl: "url",
+    creationFunction: function () {
+      return new EllipsoidTerrainProvider();
+    },
+  });
 
   const testProviderViewModel = new ProviderViewModel({
     name: "name",
@@ -267,13 +278,41 @@ describe("Widgets/BaseLayerPicker/BaseLayerPickerViewModel", function () {
     viewModel.selectedTerrain = testProviderViewModelAsync;
     await testProviderViewModelAsync.creationCommand();
     expect(globe.terrainProvider).toBe(testProvider);
+    expect(globe.depthTestAgainstTerrain).toBeTrue();
+  });
+
+  it("selectedTerrain sets ellipsoid terrain provider", async function () {
+    const terrainProviderViewModels = [testEllipsoidProviderViewModel];
+    const globe = new MockGlobe();
+    const viewModel = new BaseLayerPickerViewModel({
+      globe: globe,
+      terrainProviderViewModels: terrainProviderViewModels,
+    });
+
+    viewModel.selectedTerrain = testEllipsoidProviderViewModel;
+    await testProviderViewModelAsync.creationCommand();
+    expect(globe.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
+    expect(globe.depthTestAgainstTerrain).toBeFalse();
+  });
+
+  it("default does not override default value of depthTestAgainstTerrain", async function () {
+    const terrainProviderViewModels = [testEllipsoidProviderViewModel];
+    const globe = new MockGlobe();
+    // eslint-disable-next-line no-unused-vars
+    const viewModel = new BaseLayerPickerViewModel({
+      globe: globe,
+      terrainProviderViewModels: terrainProviderViewModels,
+    });
+
+    globe.depthTestAgainstTerrain = true;
+
+    await testEllipsoidProviderViewModel.creationCommand();
+    expect(globe.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
+    expect(globe.depthTestAgainstTerrain).toBeTrue();
   });
 
   it("selectedTerrain cancels update if terrainProvider is set externally", async function () {
-    const terrainProviderViewModels = [
-      testProviderViewModel,
-      testProviderViewModelAsync,
-    ];
+    const terrainProviderViewModels = [testProviderViewModel3];
     const globe = new MockGlobe();
     const viewModel = new BaseLayerPickerViewModel({
       globe: globe,

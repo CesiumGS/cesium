@@ -5,7 +5,6 @@ import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import deprecationWarning from "./deprecationWarning.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
@@ -48,7 +47,6 @@ function LayerInformation(layer) {
  * @property {boolean} [requestMetadata=true] Flag that indicates if the client should request per tile metadata from the server, if available.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
- * @property {Resource|string|Promise<Resource>|Promise<string>} [url] The URL of the Cesium terrain server. Deprecated.
  */
 
 /**
@@ -112,8 +110,6 @@ TerrainProviderBuilder.prototype.build = function (provider) {
   provider._hasWaterMask = this.hasWaterMask;
   provider._hasVertexNormals = this.hasVertexNormals;
   provider._hasMetadata = this.hasMetadata;
-
-  provider._ready = true;
 };
 
 async function parseMetadataSuccess(terrainProviderBuilder, data, provider) {
@@ -527,45 +523,8 @@ function CesiumTerrainProvider(options) {
   this._tilingScheme = undefined;
   this._levelZeroMaximumGeometricError = undefined;
   this._layers = undefined;
-
-  this._ready = false;
   this._tileCredits = undefined;
-
-  this._readyPromise = Promise.resolve(true);
-  if (defined(options.url)) {
-    deprecationWarning(
-      "CesiumTerrainProvider options.url",
-      "options.url was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
-    );
-    this._readyPromise = CesiumTerrainProvider._initializeReadyPromise(
-      options,
-      this
-    );
-  }
 }
-
-// Exposed for deprecation
-CesiumTerrainProvider._initializeReadyPromise = async function (
-  options,
-  provider
-) {
-  const url = await Promise.resolve(options.url);
-
-  const terrainProviderBuilder = new TerrainProviderBuilder(options);
-  const resource = Resource.createIfNeeded(url);
-  resource.appendForwardSlash();
-  terrainProviderBuilder.lastResource = resource;
-  terrainProviderBuilder.layerJsonResource = terrainProviderBuilder.lastResource.getDerivedResource(
-    {
-      url: "layer.json",
-    }
-  );
-
-  await requestLayerJson(terrainProviderBuilder, provider);
-  terrainProviderBuilder.build(provider);
-
-  return true;
-};
 
 /**
  * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
@@ -908,7 +867,8 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
     // Optimized path for single layers
     layerToUse = layers[0];
   } else {
-    for (let i = 0; i < layerCount; ++i) {
+    // Use the last layer where terrain data is available as it should be the most up-to-date
+    for (let i = layerCount - 1; i >= 0; --i) {
       const layer = layers[i];
       if (
         !defined(layer.availability) ||
@@ -1073,40 +1033,6 @@ Object.defineProperties(CesiumTerrainProvider.prototype, {
   tilingScheme: {
     get: function () {
       return this._tilingScheme;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof CesiumTerrainProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "CesiumTerrainProvider.ready",
-        "CesiumTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
-      );
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof CesiumTerrainProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "CesiumTerrainProvider.readyPromise",
-        "CesiumTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use CesiumTerrainProvider.fromIonAssetId or CesiumTerrainProvider.fromUrl instead."
-      );
-      return this._readyPromise;
     },
   },
 

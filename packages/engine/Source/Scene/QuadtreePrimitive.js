@@ -520,8 +520,8 @@ function selectTilesForRendering(primitive, frameState) {
   let i;
   const tileProvider = primitive._tileProvider;
   if (!defined(primitive._levelZeroTiles)) {
-    // ready is deprecated. This is here for backwards compatibility
-    if (tileProvider.ready) {
+    const tilingScheme = tileProvider.tilingScheme;
+    if (defined(tilingScheme)) {
       const tilingScheme = tileProvider.tilingScheme;
       primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(
         tilingScheme
@@ -536,7 +536,6 @@ function selectTilesForRendering(primitive, frameState) {
         }
       }
     } else {
-      // Nothing to do until the provider is ready.
       return;
     }
   }
@@ -1389,8 +1388,7 @@ const scratchPosition = new Cartesian3();
 const scratchArray = [];
 
 function updateHeights(primitive, frameState) {
-  // ready is deprecated. This is here for backwards compatibility.
-  if (!primitive.tileProvider.ready) {
+  if (!defined(primitive.tileProvider.tilingScheme)) {
     return;
   }
 

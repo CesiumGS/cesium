@@ -1,5 +1,13 @@
 [
   {
+    "name": "@tweenjs/tween.js",
+    "license": [
+      "MIT"
+    ],
+    "version": "21.0.0",
+    "url": "https://www.npmjs.com/package/@tweenjs/tween.js"
+  },
+  {
     "name": "@zip.js/zip.js",
     "license": [
       "BSD-3-Clause"
@@ -176,9 +184,6 @@
     ],
     "version": "3.1.0",
     "url": "https://www.npmjs.com/package/topojson-client"
-  },
-  {
-    "name": "tween.js"
   },
   {
     "name": "urijs",

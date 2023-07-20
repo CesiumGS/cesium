@@ -219,22 +219,6 @@ describe(
       expect(primitive.geometryInstances).toBeDefined();
     });
 
-    it("adds afterRender promise to frame state", function () {
-      primitive = new Primitive({
-        geometryInstances: [rectangleInstance1, rectangleInstance2],
-        appearance: new PerInstanceColorAppearance(),
-        releaseGeometryInstances: false,
-        asynchronous: false,
-      });
-
-      scene.primitives.add(primitive);
-      scene.renderForSpecs();
-
-      return primitive.readyPromise.then(function (param) {
-        expect(param.ready).toBe(true);
-      });
-    });
-
     it("does not render when geometryInstances is an empty array", function () {
       primitive = new Primitive({
         geometryInstances: [],
@@ -1111,7 +1095,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("failed geometry rejects promise and throws on next update", function () {
+    it("failed geometry throws on next update", async function () {
       primitive = new Primitive({
         geometryInstances: [
           new GeometryInstance({
@@ -1127,7 +1111,7 @@ describe(
       scene.frameState.afterRender.length = 0;
       scene.primitives.add(primitive);
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         for (let i = 0; i < frameState.afterRender.length; ++i) {
           frameState.afterRender[i]();
           return true;
@@ -1135,22 +1119,14 @@ describe(
 
         primitive.update(frameState);
         return false;
-      }).then(function () {
-        return primitive.readyPromise
-          .then(function () {
-            fail("should not be called");
-          })
-          .catch(function (e) {
-            expect(e).toBe(primitive._error);
-            // Use toThrow since the error is thrown by RequireJS for the web worker import script
-            expect(function () {
-              scene.render();
-            }).toThrow();
-          });
       });
+
+      expect(function () {
+        scene.render();
+      }).toThrow();
     });
 
-    it("internally invalid asynchronous geometry resolves promise and sets ready", function () {
+    it("internally invalid asynchronous geometry becomes ready", async function () {
       primitive = new Primitive({
         geometryInstances: [
           new GeometryInstance({
@@ -1167,7 +1143,7 @@ describe(
 
       scene.frameState.afterRender.length = 0;
 
-      return pollToPromise(function () {
+      await pollToPromise(function () {
         for (let i = 0; i < frameState.afterRender.length; ++i) {
           frameState.afterRender[i]();
           return true;
@@ -1175,12 +1151,9 @@ describe(
 
         primitive.update(frameState);
         return false;
-      }).then(function () {
-        return primitive.readyPromise.then(function (arg) {
-          expect(arg).toBe(primitive);
-          expect(primitive.ready).toBe(true);
-        });
       });
+
+      expect(primitive.ready).toBe(true);
     });
 
     it("internally invalid synchronous geometry resolves promise and sets ready", function () {
@@ -1209,10 +1182,7 @@ describe(
         primitive.update(scene.frameState);
         return false;
       }).then(function () {
-        return primitive.readyPromise.then(function (arg) {
-          expect(arg).toBe(primitive);
-          expect(primitive.ready).toBe(true);
-        });
+        expect(primitive.ready).toBe(true);
       });
     });
 

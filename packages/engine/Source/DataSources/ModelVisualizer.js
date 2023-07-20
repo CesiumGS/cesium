@@ -451,18 +451,6 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
   const hasHeightReference = model.heightReference !== HeightReference.NONE;
   if (defined(globe) && hasHeightReference) {
     const ellipsoid = globe.ellipsoid;
-    // We cannot query the availability of the terrain provider till its ready, so the
-    // bounding sphere state will remain pending till the terrain provider is ready.
-    // ready is deprecated. This is here for backwards compatibility
-    if (
-      defined(terrainProvider) &&
-      (defined(terrainProvider._ready)
-        ? !terrainProvider._ready
-        : defined(terrainProvider.ready) && !terrainProvider.ready)
-    ) {
-      return BoundingSphereState.PENDING;
-    }
-
     const modelMatrix = model.modelMatrix;
     scratchPosition.x = modelMatrix[12];
     scratchPosition.y = modelMatrix[13];

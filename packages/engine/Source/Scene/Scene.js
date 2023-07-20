@@ -756,13 +756,13 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * The drawingBufferHeight of the underlying GL context.
+   * The drawingBufferWidth of the underlying GL context.
    * @memberof Scene.prototype
    *
    * @type {number}
    * @readonly
    *
-   * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
+   * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
    */
   drawingBufferWidth: {
     get: function () {
@@ -4011,7 +4011,7 @@ Scene.prototype.render = function (time) {
   updateDebugShowFramesPerSecond(this, shouldRender);
   tryAndCatchError(this, postPassesUpdate);
 
-  // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, ready promises, etc.
+  // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, promises, etc.
   // We don't want those events to resolve during the render loop because the events might add new primitives
   callAfterRenderFunctions(this);
 

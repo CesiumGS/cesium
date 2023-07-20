@@ -3,7 +3,6 @@ import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import Event from "../Core/Event.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import JulianDate from "../Core/JulianDate.js";
@@ -182,12 +181,6 @@ function TimeDynamicPointCloud(options) {
   this._nextInterval = undefined;
   this._lastRenderedFrame = undefined;
   this._clockMultiplier = 0.0;
-  this._resolveReadyPromise = undefined;
-  const that = this;
-  // This is here for backwards compatibility and can be removed when readyPromise is removed.
-  this._readyPromise = new Promise(function (resolve) {
-    that._resolveReadyPromise = resolve;
-  });
 
   // For calculating average load time of the last N frames
   this._runningSum = 0.0;
@@ -244,25 +237,6 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
         return this._lastRenderedFrame.pointCloud.boundingSphere;
       }
       return undefined;
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the point cloud renders a frame for the first time.
-   *
-   * @memberof TimeDynamicPointCloud.prototype
-   *
-   * @type {Promise<TimeDynamicPointCloud>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "TimeDynamicPointCloud.readyPromise",
-        "TimeDynamicPointCloud.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use TimeDynamicPointCloud.frameFailed instead."
-      );
-      return this._readyPromise;
     },
   },
 });
@@ -750,8 +724,6 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   const that = this;
   if (defined(frame) && !defined(this._lastRenderedFrame)) {
     frameState.afterRender.push(function () {
-      // This is here for backwards compatibility and can be removed when readyPromise is removed.
-      that._resolveReadyPromise(that);
       return true;
     });
   }

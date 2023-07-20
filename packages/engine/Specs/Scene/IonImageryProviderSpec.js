@@ -18,37 +18,6 @@ import {
 } from "../../index.js";
 
 describe("Scene/IonImageryProvider", function () {
-  function createTestProvider(endpointData) {
-    endpointData = defaultValue(endpointData, {
-      type: "IMAGERY",
-      url: "http://test.invalid/layer",
-      accessToken: "not_really_a_refresh_token",
-      attributions: [],
-    });
-
-    const assetId = 12335;
-    const options = { assetId: assetId };
-    const endpointResource = IonResource._createEndpointResource(
-      assetId,
-      options
-    );
-    spyOn(IonResource, "_createEndpointResource").and.returnValue(
-      endpointResource
-    );
-
-    spyOn(endpointResource, "fetchJson").and.returnValue(
-      Promise.resolve(endpointData)
-    );
-
-    const provider = new IonImageryProvider(options);
-
-    expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
-      assetId,
-      options
-    );
-    return provider;
-  }
-
   async function createTestProviderAsync(endpointData) {
     endpointData = defaultValue(endpointData, {
       type: "IMAGERY",
@@ -89,53 +58,6 @@ describe("Scene/IonImageryProvider", function () {
     expect(IonImageryProvider).toConformToInterface(ImageryProvider);
   });
 
-  it("readyPromise rejects with non-imagery asset", function () {
-    const provider = createTestProvider({
-      type: "3DTILES",
-      url: "http://test.invalid/layer",
-      accessToken: "not_really_a_refresh_token",
-      attributions: [],
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail("should not be called");
-      })
-      .catch(function (error) {
-        expect(error).toBeInstanceOf(RuntimeError);
-        expect(provider.ready).toBe(false);
-      });
-  });
-
-  it("readyPromise rejects with unknown external asset type", function () {
-    const provider = createTestProvider({
-      type: "IMAGERY",
-      externalType: "TUBELCANE",
-      options: { url: "http://test.invalid/layer" },
-      attributions: [],
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail("should not be called");
-      })
-      .catch(function (error) {
-        expect(error).toBeInstanceOf(RuntimeError);
-        expect(provider.ready).toBe(false);
-      });
-  });
-
-  it("readyPromise resolves when ready", function () {
-    const provider = createTestProvider();
-    return provider.readyPromise.then(function () {
-      expect(provider.errorEvent).toBeDefined();
-      expect(provider.ready).toBe(true);
-      expect(provider._imageryProvider).toBeInstanceOf(
-        UrlTemplateImageryProvider
-      );
-    });
-  });
-
   it("fromAssetId throws without assetId", async function () {
     await expectAsync(
       IonImageryProvider.fromAssetId()
@@ -174,7 +96,6 @@ describe("Scene/IonImageryProvider", function () {
     const provider = await createTestProviderAsync();
     expect(provider).toBeInstanceOf(IonImageryProvider);
     expect(provider.errorEvent).toBeDefined();
-    expect(provider.ready).toBe(true);
     expect(provider._imageryProvider).toBeInstanceOf(
       UrlTemplateImageryProvider
     );
@@ -205,8 +126,7 @@ describe("Scene/IonImageryProvider", function () {
     );
 
     expect(endpointResource.fetchJson.calls.count()).toBe(0);
-    const provider = await IonImageryProvider.fromAssetId(assetId, options);
-    expect(provider.ready).toBe(true);
+    await IonImageryProvider.fromAssetId(assetId, options);
     expect(endpointResource.fetchJson.calls.count()).toBe(1);
 
     // Same as options but in a different order to verify cache is order independant.
@@ -214,10 +134,9 @@ describe("Scene/IonImageryProvider", function () {
       accessToken: "token",
       server: "http://test.invalid",
     };
-    const provider2 = await IonImageryProvider.fromAssetId(assetId, options2);
+    await IonImageryProvider.fromAssetId(assetId, options2);
     //Since the data is cached, fetchJson is not called again.
     expect(endpointResource.fetchJson.calls.count()).toBe(1);
-    expect(provider2.ready).toBe(true);
   });
 
   it("propagates called to underlying imagery provider resolves when ready", async function () {
@@ -363,7 +282,10 @@ describe("Scene/IonImageryProvider", function () {
       crossOrigin,
       deferred
     ) {
-      deferred.resolve({});
+      deferred.resolve({
+        height: 16,
+        width: 16,
+      });
     });
 
     return testExternalImagery(

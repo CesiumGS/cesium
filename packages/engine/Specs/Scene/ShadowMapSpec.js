@@ -303,7 +303,6 @@ describe(
         scene.render();
         const globe = scene.globe;
         return (
-          globe._surface.tileProvider.ready &&
           globe._surface._tileLoadQueueHigh.length === 0 &&
           globe._surface._tileLoadQueueMedium.length === 0 &&
           globe._surface._tileLoadQueueLow.length === 0 &&

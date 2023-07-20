@@ -61,7 +61,6 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  *
  * Initialization options for the Cesium3DTileset constructor
  *
- * @property {Resource|string|Promise<Resource>|Promise<string>} [.url] The url to a tileset JSON file. Deprecated.
  * @property {boolean} [show=true] Determines if the tileset will be shown.
  * @property {Matrix4} [modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
  * @property {Axis} [modelUpAxis=Axis.Y] Which axis is considered up when loading models for tile contents.
@@ -1018,124 +1017,6 @@ function Cesium3DTileset(options) {
     instanceFeatureIdLabel = `instanceFeatureId_${instanceFeatureIdLabel}`;
   }
   this._instanceFeatureIdLabel = instanceFeatureIdLabel;
-
-  if (defined(options.url)) {
-    deprecationWarning(
-      "Cesium3DTileset options.url",
-      "Cesium3DTileset constructor parameter options.url was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use Cesium3DTileset.fromUrl instead."
-    );
-    const that = this;
-    let resource;
-    this._readyPromise = Promise.resolve(options.url)
-      .then(function (url) {
-        let basePath;
-        resource = Resource.createIfNeeded(url);
-        that._resource = resource;
-
-        // ion resources have a credits property we can use for additional attribution.
-        that._credits = resource.credits;
-
-        if (resource.extension === "json") {
-          basePath = resource.getBaseUri(true);
-        } else if (resource.isDataUri) {
-          basePath = "";
-        }
-
-        that._url = resource.url;
-        that._basePath = basePath;
-
-        return Cesium3DTileset.loadJson(resource);
-      })
-      .then(function (tilesetJson) {
-        if (that.isDestroyed()) {
-          return;
-        }
-
-        // This needs to be called before loadTileset() so tile metadata
-        // can be initialized synchronously in the Cesium3DTile constructor
-        return processMetadataExtension(resource, tilesetJson).then(
-          (metadata) => {
-            that._metadataExtension = metadata;
-            return tilesetJson;
-          }
-        );
-      })
-      .then(function (tilesetJson) {
-        if (that.isDestroyed()) {
-          return;
-        }
-
-        // Set these before loading the tileset since _geometricError
-        // and _scaledGeometricError get accessed during tile creation
-        that._geometricError = tilesetJson.geometricError;
-        that._scaledGeometricError = tilesetJson.geometricError;
-
-        that._root = that.loadTileset(resource, tilesetJson);
-
-        // Handle legacy gltfUpAxis option
-        const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
-          ? Axis.fromName(tilesetJson.asset.gltfUpAxis)
-          : Axis.Y;
-        const modelUpAxis = defaultValue(options.modelUpAxis, gltfUpAxis);
-        const modelForwardAxis = defaultValue(options.modelForwardAxis, Axis.X);
-
-        const asset = tilesetJson.asset;
-        that._asset = asset;
-        that._properties = tilesetJson.properties;
-        that._extensionsUsed = tilesetJson.extensionsUsed;
-        that._extensions = tilesetJson.extensions;
-        that._modelUpAxis = modelUpAxis;
-        that._modelForwardAxis = modelForwardAxis;
-        that._extras = tilesetJson.extras;
-
-        const extras = asset.extras;
-        if (
-          defined(extras) &&
-          defined(extras.cesium) &&
-          defined(extras.cesium.credits)
-        ) {
-          const extraCredits = extras.cesium.credits;
-          let credits = that._credits;
-          if (!defined(credits)) {
-            credits = [];
-            that._credits = credits;
-          }
-          for (let i = 0; i < extraCredits.length; ++i) {
-            const credit = extraCredits[i];
-            credits.push(new Credit(credit.html, that._showCreditsOnScreen));
-          }
-        }
-
-        // Save the original, untransformed bounding volume position so we can apply
-        // the tile transform and model matrix at run time
-        const boundingVolume = that._root.createBoundingVolume(
-          tilesetJson.root.boundingVolume,
-          Matrix4.IDENTITY
-        );
-        const clippingPlanesOrigin = boundingVolume.boundingSphere.center;
-        // If this origin is above the surface of the earth
-        // we want to apply an ENU orientation as our best guess of orientation.
-        // Otherwise, we assume it gets its position/orientation completely from the
-        // root tile transform and the tileset's model matrix
-        const originCartographic = that._ellipsoid.cartesianToCartographic(
-          clippingPlanesOrigin
-        );
-        if (
-          defined(originCartographic) &&
-          originCartographic.height >
-            ApproximateTerrainHeights._defaultMinTerrainHeight
-        ) {
-          that._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(
-            clippingPlanesOrigin
-          );
-        }
-        that._clippingPlanesOriginMatrix = Matrix4.clone(
-          that._initialClippingPlanesOriginMatrix
-        );
-
-        return that;
-      });
-  }
 }
 
 Object.defineProperties(Cesium3DTileset.prototype, {
@@ -1221,59 +1102,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   properties: {
     get: function () {
       return this._properties;
-    },
-  },
-
-  /**
-   * When <code>true</code>, the tileset's root tile is loaded and the tileset is ready to render.
-   *
-   * @memberof Cesium3DTileset.prototype
-   *
-   * @type {boolean}
-   * @readonly
-   *
-   * @default false
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "Cesium3DTileset.ready",
-        "Cesium3DTileset.ready was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use Cesium3DTileset.fromUrl instead."
-      );
-      return defined(this._root);
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the tileset's root tile is loaded and the tileset is ready to render.
-   * <p>
-   * This promise is resolved at the end of the frame before the first frame the tileset is rendered in.
-   * </p>
-   *
-   * @memberof Cesium3DTileset.prototype
-   *
-   * @type {Promise<Cesium3DTileset>}
-   * @readonly
-   * @deprecated
-   *
-   * @example
-   * tileset.readyPromise.then(function(tileset) {
-   *     // tile.properties is not defined until readyPromise resolves.
-   *     const properties = tileset.properties;
-   *     if (Cesium.defined(properties)) {
-   *         for (const name in properties) {
-   *             console.log(properties[name]);
-   *         }
-   *     }
-   * });
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "Cesium3DTileset.readyPromise",
-        "Cesium3DTileset.readyPromise was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use Cesium3DTileset.fromUrl instead."
-      );
-      return this._readyPromise;
     },
   },
 
@@ -2301,8 +2129,6 @@ Cesium3DTileset.fromUrl = async function (url, options) {
     tileset._initialClippingPlanesOriginMatrix
   );
 
-  tileset._readyPromise = Promise.resolve(tileset);
-  tileset._ready = true;
   return tileset;
 };
 

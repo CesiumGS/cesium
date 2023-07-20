@@ -587,7 +587,7 @@ export const postversion = async function () {
       return;
     }
     // Update the version for the updated workspace.
-    packageJson.dependencies[workspace] = version;
+    packageJson.dependencies[workspace] = `^${version}`;
     await writeFile(packageJsonPath, JSON.stringify(packageJson, undefined, 2));
   });
   return Promise.all(promises);
@@ -612,6 +612,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/CesiumUnminified/**",
       "Build/Documentation/**",
       "Build/Specs/**",
+      "!Build/Specs/e2e/**",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",
@@ -647,6 +648,7 @@ export const makeZip = gulp.series(release, async function () {
       "Source/**",
       "Source/**/.eslintrc.json",
       "Specs/**",
+      "!Specs/e2e/*-snapshots/**",
       "Specs/**/.eslintrc.json",
       "ThirdParty/**",
       "favicon.ico",

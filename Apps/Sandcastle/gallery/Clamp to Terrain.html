@@ -41,12 +41,6 @@
         viewer.scene.globe.depthTestAgainstTerrain = true;
 
         let worldTerrain;
-        try {
-          worldTerrain = await Cesium.createWorldTerrainAsync();
-          viewer.scene.terrainProvider = worldTerrain;
-        } catch (error) {
-          window.alert(`There was an error creating world terrain. ${error}`);
-        }
 
         Sandcastle.addDefaultToolbarMenu(
           [
@@ -364,6 +358,13 @@
           ],
           "zoomButtons"
         );
+
+        try {
+          worldTerrain = await Cesium.createWorldTerrainAsync();
+          viewer.scene.terrainProvider = worldTerrain;
+        } catch (error) {
+          window.alert(`There was an error creating world terrain. ${error}`);
+        }
 
         Sandcastle.reset = function () {
           viewer.entities.removeAll();

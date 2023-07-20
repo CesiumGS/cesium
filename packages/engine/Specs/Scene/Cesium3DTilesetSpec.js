@@ -264,30 +264,6 @@ describe(
       return tileset._selectedTiles.indexOf(tile) > -1;
     }
 
-    it("rejects readyPromise with invalid tileset JSON file", function () {
-      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
-        url,
-        responseType,
-        method,
-        data,
-        headers,
-        deferred,
-        overrideMimeType
-      ) {
-        deferred.reject();
-      });
-
-      options.url = "invalid.json";
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
-    });
-
     it("loads json with static loadJson method", async function () {
       const tilesetJson = {
         asset: {
@@ -299,111 +275,6 @@ describe(
       await expectAsync(Cesium3DTileset.loadJson(uri)).toBeResolvedTo(
         tilesetJson
       );
-    });
-
-    it("static method loadJson is used in Cesium3DTileset constructor", function () {
-      const path = "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json";
-
-      const originalLoadJson = Cesium3DTileset.loadJson;
-
-      // override loadJson and replace incorrect url with correct url
-      Cesium3DTileset.loadJson = function (tilesetUrl) {
-        return originalLoadJson(path);
-      };
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: "invalid.json",
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-          Cesium3DTileset.loadJson = originalLoadJson;
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
-    });
-
-    it("Constructor works with promise to resource", function () {
-      const resource = new Resource({
-        url: "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json",
-      });
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: Promise.resolve(resource),
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
-    });
-
-    it("Constructor works with file resource", function () {
-      const resource = new Resource({
-        url: "Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json",
-      });
-
-      // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
-      const tileset = new Cesium3DTileset({
-        url: resource,
-      });
-
-      return tileset.readyPromise
-        .then(function () {
-          expect(tileset.ready).toEqual(true);
-        })
-        .catch(function (error) {
-          fail("should not fail");
-        });
-    });
-
-    it("rejects readyPromise with invalid tileset version", function () {
-      const tilesetJson = {
-        asset: {
-          version: "2.0",
-        },
-      };
-
-      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
-
-      options.url = uri;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
-    });
-
-    it("rejects readyPromise with unsupported extension", function () {
-      const tilesetJson = {
-        asset: {
-          version: "1.0",
-        },
-        extensionsUsed: ["unsupported_extension"],
-        extensionsRequired: ["unsupported_extension"],
-      };
-
-      const uri = `data:text/plain;base64,${btoa(JSON.stringify(tilesetJson))}`;
-
-      options.url = uri;
-      const tileset = scene.primitives.add(new Cesium3DTileset(options));
-      return tileset.readyPromise
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(tileset.ready).toEqual(false);
-        });
     });
 
     it("fromUrl throws without url", async function () {
@@ -476,16 +347,6 @@ describe(
       ).toBeRejectedWithDeveloperError(
         "assetId is required, actual value was undefined"
       );
-    });
-
-    it("resolves readyPromise", function () {
-      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
-        tileset
-      ) {
-        return tileset.readyPromise.then(function (tileset) {
-          expect(tileset.ready).toEqual(true);
-        });
-      });
     });
 
     it("loads tileset JSON file", function () {

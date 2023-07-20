@@ -1,6 +1,5 @@
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import deprecationWarning from "./deprecationWarning.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
@@ -43,8 +42,6 @@ function EllipsoidTerrainProvider(options) {
   );
 
   this._errorEvent = new Event();
-  this._ready = true;
-  this._readyPromise = Promise.resolve(true);
 }
 
 Object.defineProperties(EllipsoidTerrainProvider.prototype, {
@@ -84,40 +81,6 @@ Object.defineProperties(EllipsoidTerrainProvider.prototype, {
   tilingScheme: {
     get: function () {
       return this._tilingScheme;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof EllipsoidTerrainProvider.prototype
-   * @type {boolean}
-   * @readonly
-   * @deprecated
-   */
-  ready: {
-    get: function () {
-      deprecationWarning(
-        "EllipsoidTerrainProvider.ready",
-        "EllipsoidTerrainProvider.ready was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-      );
-      return true;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof EllipsoidTerrainProvider.prototype
-   * @type {Promise<boolean>}
-   * @readonly
-   * @deprecated
-   */
-  readyPromise: {
-    get: function () {
-      deprecationWarning(
-        "EllipsoidTerrainProvider.readyPromise",
-        "EllipsoidTerrainProvider.readyPromise was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107."
-      );
-      return this._readyPromise;
     },
   },
 

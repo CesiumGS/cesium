@@ -50,9 +50,7 @@ describe("Scene/ScreenSpaceCameraController", function () {
       return new Cartesian3(0.0, 0.0, 1.0);
     };
     this._surface = {
-      tileProvider: {
-        ready: true,
-      },
+      tileProvider: {},
       _tileLoadQueueHigh: [],
       _tileLoadQueueMedium: [],
       _tileLoadQueueLow: [],

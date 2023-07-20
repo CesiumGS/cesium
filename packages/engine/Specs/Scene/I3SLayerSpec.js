@@ -1,7 +1,9 @@
 import {
+  Cesium3DTileset,
   I3SLayer,
   I3SDataProvider,
   Math as CesiumMath,
+  Resource,
   RuntimeError,
 } from "../../index.js";
 
@@ -26,19 +28,7 @@ describe("Scene/I3SLayer", function () {
     lodThreshold: 500,
     parentIndex: 0,
   };
-  const childNodePageEntry2 = {
-    index: 2,
-    children: [],
-    obb: {
-      center: [-90, 45, 0],
-      halfSize: [10000, 10000, 250],
-      quaternion: [1, 0, 0, 0],
-    },
-    lodThreshold: 500,
-    parentIndex: 0,
-  };
   const nodePageResult = { nodes: [rootNodePageEntry, childNodePageEntry] };
-  const nodePageResult2 = { nodes: [childNodePageEntry2] };
 
   const geometryDefinitions = [
     {
@@ -102,21 +92,35 @@ describe("Scene/I3SLayer", function () {
     spatialReference: { wkid: 4326 },
   };
 
-  function createMockI3SProvider() {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const mockI3SProvider = new I3SDataProvider({
-      url: "mockProviderUrl?testQuery=test",
+  async function createMockI3SProvider(layerData, options) {
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+      Promise.resolve(layerData)
+    );
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
+      const tileset = new Cesium3DTileset();
+      tileset._root = {}; // Mock the root tile so that i3s property can be appended
+      tileset._isI3STileSet = true;
+      return tileset;
     });
+    const mockI3SProvider = await I3SDataProvider.fromUrl(
+      "mockProviderUrl?testQuery=test",
+      options
+    );
     spyOn(I3SDataProvider.prototype, "loadGeoidData").and.returnValue(
       Promise.resolve()
     );
     return mockI3SProvider;
   }
 
-  it("constructs I3SLayer from url", function () {
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, layerData);
+  it("constructs I3SLayer from url", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodePageResult)
+    );
 
+    const mockI3SProvider = await createMockI3SProvider(layerData);
+    const testLayer = mockI3SProvider.layers[0];
+
+    expect(testLayer).toBeInstanceOf(I3SLayer);
     expect(testLayer.resource.url).toContain("mockProviderUrl/mockLayerUrl/");
     expect(testLayer.resource.queryParameters.testQuery).toEqual("test");
 
@@ -174,12 +178,17 @@ describe("Scene/I3SLayer", function () {
       "uv1",
     ]);
   });
-  it("constructs I3SLayer from index", function () {
-    const mockI3SProvider = createMockI3SProvider();
+
+  it("constructs I3SLayer from index", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodePageResult)
+    );
+
+    const mockI3SProvider = await createMockI3SProvider(layerData2);
     const testLayer = new I3SLayer(mockI3SProvider, layerData2, 0);
     expect(testLayer.data).toEqual(layerData2);
 
-    expect(testLayer.resource.url).toContain("mockProviderUrl/./layers/0/");
+    expect(testLayer.resource.url).toContain("mockProviderUrl/layers/0/");
     expect(testLayer.resource.queryParameters.testQuery).toEqual("test");
 
     expect(testLayer._extent.west).toEqual(CesiumMath.toRadians(0));
@@ -188,15 +197,15 @@ describe("Scene/I3SLayer", function () {
     expect(testLayer._extent.north).toEqual(CesiumMath.toRadians(3));
   });
 
-  it("constructs I3SLayer from single layer url", function () {
-    spyOn(I3SDataProvider.prototype, "_load");
-    const mockI3SProviderSingleLayer = new I3SDataProvider({
-      url: "mockProviderUrl/layers/1/",
-    });
+  it("constructs I3SLayer from single layer url", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodePageResult)
+    );
 
-    const testLayer = new I3SLayer(mockI3SProviderSingleLayer, layerData2);
+    const mockI3SProvider = await createMockI3SProvider(layerData2);
+    const testLayer = mockI3SProvider.layers[0];
 
-    expect(testLayer.resource.url).toContain("mockProviderUrl/layers/1/");
+    expect(testLayer.resource.url).toContain("mockProviderUrl/layers/0/");
 
     expect(testLayer._extent.west).toEqual(CesiumMath.toRadians(0));
     expect(testLayer._extent.south).toEqual(CesiumMath.toRadians(1));
@@ -204,108 +213,31 @@ describe("Scene/I3SLayer", function () {
     expect(testLayer._extent.north).toEqual(CesiumMath.toRadians(3));
   });
 
-  it("loads node page", function () {
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, layerData);
-
-    spyOn(I3SLayer, "_fetchJson").and.returnValue(
+  it("loads root node", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
       Promise.resolve(nodePageResult)
     );
 
-    return testLayer._loadNodePage(0).then(function (result) {
-      expect(I3SLayer._fetchJson).toHaveBeenCalled();
-      expect(I3SLayer._fetchJson.calls.mostRecent().args[0].url).toContain(
-        "mockProviderUrl/mockLayerUrl/nodepages/0/"
-      );
-    });
-  });
-
-  it("load node page rejects invalid url", function () {
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, layerData);
-
-    return testLayer
-      ._loadNodePage(0)
-      .then(function () {
-        fail("Promise should not be resolved for invalid uri");
-      })
-      .catch(function (error) {
-        expect(error.statusCode).toEqual(404);
-      });
-  });
-
-  it("gets node for unloaded node page", function () {
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, layerData);
-
-    spyOn(I3SLayer, "_fetchJson").and.returnValue(
-      Promise.resolve(nodePageResult2)
-    );
-
-    return testLayer._getNodeInNodePages(2).then(function (result) {
-      expect(I3SLayer._fetchJson).toHaveBeenCalled();
-      expect(I3SLayer._fetchJson.calls.mostRecent().args[0].url).toContain(
-        "mockProviderUrl/mockLayerUrl/nodepages/1/"
-      );
-      expect(result.index).toEqual(2);
-    });
-  });
-
-  it("gets node for preloaded node page", function () {
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, layerData);
-
-    spyOn(I3SLayer, "_fetchJson").and.returnValue(
-      Promise.resolve(nodePageResult2)
-    );
-
-    return testLayer
-      ._loadNodePage(1)
-      .then(function () {
-        expect(I3SLayer._fetchJson).toHaveBeenCalled();
-        expect(I3SLayer._fetchJson.calls.mostRecent().args[0].url).toContain(
-          "mockProviderUrl/mockLayerUrl/nodepages/1/"
-        );
-
-        return testLayer._getNodeInNodePages(2);
-      })
-      .then(function (result) {
-        //Json was not fetched again
-        expect(I3SLayer._fetchJson).toHaveBeenCalledTimes(1);
-        expect(result.index).toEqual(2);
-      });
-  });
-
-  it("loads root node", function () {
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, layerData);
-    testLayer._nodePages = [
-      [rootNodePageEntry, childNodePageEntry],
-      [childNodePageEntry2],
-    ];
-    testLayer._nodePageFetches = [Promise.resolve()];
-
-    return testLayer._loadRootNode().then(function (result) {
-      expect(testLayer.rootNode).toBeDefined();
-      expect(testLayer.rootNode.data.index).toEqual(0);
-    });
+    const mockI3SProvider = await createMockI3SProvider(layerData);
+    const testLayer = mockI3SProvider.layers[0];
+    expect(testLayer.rootNode).toBeDefined();
+    expect(testLayer.rootNode.data.index).toEqual(0);
   });
 
   it("creates 3d tileset", async function () {
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, layerData);
-    testLayer._nodePages = [
-      [rootNodePageEntry, childNodePageEntry],
-      [childNodePageEntry2],
-    ];
-    testLayer._nodePageFetches = [Promise.resolve()];
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodePageResult)
+    );
 
-    await testLayer._loadRootNode();
-    await testLayer._create3DTileset();
+    const mockI3SProvider = await createMockI3SProvider(layerData);
+    const testLayer = mockI3SProvider.layers[0];
 
     expect(testLayer.tileset).toBeDefined();
     expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
     expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
+
+    expect(testLayer._rootNode).toBeDefined();
+    expect(testLayer._rootNode._tile).toBe(testLayer.tileset._root);
   });
 
   it("creates 3d tileset with options", async function () {
@@ -313,47 +245,23 @@ describe("Scene/I3SLayer", function () {
       debugShowBoundingVolume: true,
       maximumScreenSpaceError: 8,
     };
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodePageResult)
+    );
 
-    spyOn(I3SDataProvider.prototype, "_load");
-    const mockI3SProviderWithOptions = new I3SDataProvider({
-      url: "mockProviderUrl?testQuery=test",
+    await createMockI3SProvider(layerData, {
       cesium3dTilesetOptions: cesium3dTilesetOptions,
     });
-
-    const testLayer = new I3SLayer(mockI3SProviderWithOptions, layerData);
-    testLayer._nodePages = [
-      [rootNodePageEntry, childNodePageEntry],
-      [childNodePageEntry2],
-    ];
-    testLayer._nodePageFetches = [Promise.resolve()];
-
-    await testLayer._loadRootNode();
-    await testLayer._create3DTileset();
-    expect(testLayer.tileset).toBeDefined();
-    expect(testLayer.tileset.debugShowBoundingVolume).toEqual(true);
-    expect(testLayer.tileset.maximumScreenSpaceError).toEqual(8);
-
-    expect(testLayer.tileset.tileUnload._listeners.length).toEqual(1);
-    expect(testLayer.tileset.tileVisible._listeners.length).toEqual(1);
-  });
-
-  it("loads i3s layer", async function () {
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, layerData);
-    testLayer._nodePages = [
-      [rootNodePageEntry, childNodePageEntry],
-      [childNodePageEntry2],
-    ];
-    testLayer._nodePageFetches = [Promise.resolve()];
-
-    await testLayer.load();
-    expect(testLayer.tileset).toBeDefined();
-    expect(testLayer._rootNode).toBeDefined();
-    expect(testLayer._rootNode._tile).toBe(testLayer.tileset._root);
-    expect(testLayer._rootNode).toBe(testLayer.tileset._root.i3sNode);
+    expect(Cesium3DTileset.fromUrl).toHaveBeenCalledWith(
+      jasmine.any(String),
+      cesium3dTilesetOptions
+    );
   });
 
   it("load i3s layer rejects unsupported spatial reference", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodePageResult)
+    );
     const invalidLayerData = {
       nodePages: {
         lodSelectionMetricType: "maxScreenThresholdSQ",
@@ -367,15 +275,9 @@ describe("Scene/I3SLayer", function () {
       },
       spatialReference: { wkid: 3857 },
     };
-    const mockI3SProvider = createMockI3SProvider();
-    const testLayer = new I3SLayer(mockI3SProvider, invalidLayerData);
-    testLayer._nodePages = [
-      [rootNodePageEntry, childNodePageEntry],
-      [childNodePageEntry2],
-    ];
-    testLayer._nodePageFetches = [Promise.resolve()];
-
-    await expectAsync(testLayer.load()).toBeRejectedWithError(
+    await expectAsync(
+      createMockI3SProvider(invalidLayerData)
+    ).toBeRejectedWithError(
       RuntimeError,
       `Unsupported spatial reference: ${invalidLayerData.spatialReference.wkid}`
     );

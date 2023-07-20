@@ -5,7 +5,6 @@ import createWorldImageryAsync from "../Scene/createWorldImageryAsync.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
@@ -141,8 +140,8 @@ import TileImagery from "./TileImagery.js";
  *
  * @example
  * // Add an OpenStreetMaps layer
- * const imageryLayer = new Cesium.ImageryLayer(OpenStreetMapImageryProvider({
- *   url: "https://a.tile.openstreetmap.org/"
+ * const imageryLayer = new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
+ *   url: "https://tile.openstreetmap.org/"
  * })),
  * scene.imageryLayers.add(imageryLayer);
  *
@@ -671,38 +670,6 @@ const terrainRectangleScratch = new Rectangle();
  * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
  * producing the overall bounds of imagery that can be produced by this layer.
  *
- * @returns {Promise<Rectangle>} A promise to a rectangle which defines the overall bounds of imagery that can be produced by this layer.
- *
- * @example
- * // Zoom to an imagery layer.
- * imageryLayer.getViewableRectangle().then(function (rectangle) {
- *     return camera.flyTo({
- *         destination: rectangle
- *     });
- * });
- */
-ImageryLayer.prototype.getViewableRectangle = async function () {
-  deprecationWarning(
-    "ImageryLayer.getViewableRectangle",
-    "ImageryLayer.getViewableRectangle was deprecated in CesiumJS 1.104.  It will be removed in CesiumJS 1.107.  Use ImageryLayer.getImageryRectangle instead."
-  );
-
-  const imageryProvider = this._imageryProvider;
-  const rectangle = this._rectangle;
-  // readyPromise has been deprecated. This is here for backward compatibility and can be removed with readyPromise.
-  if (defined(imageryProvider._readyPromise)) {
-    await imageryProvider._readyPromise;
-  } else if (defined(imageryProvider.readyPromise)) {
-    await imageryProvider.readyPromise;
-  }
-
-  return Rectangle.intersection(imageryProvider.rectangle, rectangle);
-};
-
-/**
- * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
- * producing the overall bounds of imagery that can be produced by this layer.
- *
  * @returns {Rectangle} A rectangle which defines the overall bounds of imagery that can be produced by this layer.
  *
  * @example
@@ -756,13 +723,7 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
   }
 
   const imageryProvider = this._imageryProvider;
-  if (
-    !this.ready ||
-    // ready is deprecated. This is here for backwards compatibility
-    (defined(imageryProvider._ready)
-      ? !imageryProvider._ready
-      : defined(imageryProvider.ready) && !imageryProvider.ready)
-  ) {
+  if (!this.ready) {
     // The imagery provider is not ready, so we can't create skeletons, yet.
     // Instead, add a placeholder so that we'll know to create
     // the skeletons once the provider is ready.

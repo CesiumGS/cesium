@@ -152,7 +152,7 @@ of the world.\nhttp://www.openstreetmap.org",
       category: "Other",
       creationFunction: function () {
         return new OpenStreetMapImageryProvider({
-          url: "https://a.tile.openstreetmap.org/",
+          url: "https://tile.openstreetmap.org/",
         });
       },
     })
