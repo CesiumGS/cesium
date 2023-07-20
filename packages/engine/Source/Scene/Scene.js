@@ -3021,16 +3021,32 @@ function executeWebVRCommands(scene, passState, backgroundColor) {
 
     camera.frustum.aspectRatio = viewport.width / viewport.height;
 
-    if (eye === "left") {
-      Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
-      camera.frustum.xOffset = offset;
-    } else if (eye === "right") {
-      Cartesian3.subtract(
-        savedCamera.position,
-        eyeTranslation,
-        camera.position
-      );
-      camera.frustum.xOffset = -offset;
+    // eye can be "left", "right" or "none" (for monoscopic).
+    // https://developer.mozilla.org/en-US/docs/Web/API/XRView#instance_properties
+    switch (eye) {
+      case "left":
+        Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+        camera.frustum.xOffset = offset;
+        break;
+      case "right":
+        Cartesian3.subtract(
+          savedCamera.position,
+          eyeTranslation,
+          camera.position
+        );
+        camera.frustum.xOffset = -offset;
+        break;
+      case "none":
+        if (
+          defined(pose.viewports["left"]) ||
+          defined(pose.viewports["right"])
+        ) {
+          // don't execute commands for a monoscopic view if binocular views are present.
+          continue;
+        }
+        break;
+      default:
+        console.warn(`Unrecognized eye ${eye}`);
     }
 
     executeCommands(scene, passState);
