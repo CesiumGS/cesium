@@ -2945,6 +2945,15 @@ function prepareWebVRPose(scene, viewport) {
     }
 
     for (const xrView of xrPose.views) {
+      // Try to dynamically do viewport scaling based on the browser's
+      // recommendation. This allows the browser to designate a smaller
+      // framebuffer area for the render, degrading quality of the image
+      // but maintaining refresh rate in cases such as high system load.
+      // https://developer.mozilla.org/en-US/docs/Web/API/XRView/requestViewportScale
+      if (defined(xrView.requestViewPortScale)) {
+        xrView.requestViewportScale(xrView.recommendedViewportScale);
+      }
+
       const xrViewport = xrLayer.getViewport(xrView);
       const eyeViewport = pose.viewports[xrView.eye];
       eyeViewport.x = xrViewport.x;
