@@ -49,6 +49,11 @@
         // set lighting to true
         viewer.scene.globe.enableLighting = true;
 
+        // adjust time so scene is lit by sun
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(
+          "2023-01-01T00:00:00"
+        );
+
         // setup alternative terrain providers
         const ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 

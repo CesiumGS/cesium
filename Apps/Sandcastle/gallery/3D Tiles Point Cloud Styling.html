@@ -62,16 +62,6 @@
           });
         }
 
-        addStyle("No Style", {});
-
-        addStyle("Red", {
-          color: "color('#ff0000')",
-        });
-
-        addStyle("Color Gradient", {
-          color: "color() * ${temperature}",
-        });
-
         addStyle("Step Red/Blue", {
           color: "${temperature} > 0.5 ? color('red') : color('blue')",
         });
@@ -79,6 +69,14 @@
         addStyle("Interpolate Red/Blue", {
           color:
             "color('red') * ${temperature} + color('blue') * (1.0 - ${temperature})",
+        });
+
+        addStyle("Red", {
+          color: "color('#ff0000')",
+        });
+
+        addStyle("Color Gradient", {
+          color: "color() * ${temperature}",
         });
 
         addStyle("Color Ramp", {
@@ -220,6 +218,8 @@
           pointSize: "5.0 - ${length} * 2.0",
           show: "${length} < 2.0",
         });
+
+        addStyle("No Style", {});
 
         function setStyle(style) {
           return function () {

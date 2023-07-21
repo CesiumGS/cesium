@@ -48,7 +48,7 @@
         }
 
         // Add Alaskan locations
-        Sandcastle.addDefaultToolbarMenu(
+        Sandcastle.addToolbarMenu(
           [
             {
               text: "Denali",
@@ -121,6 +121,20 @@
           ],
           "toolbar"
         );
+
+        viewer.scene.camera.flyTo({
+          destination: Cesium.Cartesian3.fromRadians(
+            -2.6399828792482234,
+            1.0993550795541742,
+            5795
+          ),
+          orientation: {
+            heading: 3.8455,
+            pitch: -0.4535,
+            roll: 0.0,
+          },
+          duration: 0.0,
+        });
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

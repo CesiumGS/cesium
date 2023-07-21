@@ -60,6 +60,7 @@
             -0.2624145362506527,
             0.000006972977223185239
           ),
+          duration: 0,
         });
 
         let tileset;
@@ -324,10 +325,6 @@
 
         const demos = [
           {
-            text: "Photogrammetry",
-            onselect: showPhotogrammetry,
-          },
-          {
             text: "Show Classification",
             onselect: showClassification,
           },
@@ -351,8 +348,13 @@
             text: "Multiple Feature ID Sets",
             onselect: multipleFeatureIds,
           },
+          {
+            text: "No Classification",
+            onselect: showPhotogrammetry,
+          },
         ];
-        Sandcastle.addToolbarMenu(demos);
+        Sandcastle.addDefaultToolbarMenu(demos);
+        showClassification();
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

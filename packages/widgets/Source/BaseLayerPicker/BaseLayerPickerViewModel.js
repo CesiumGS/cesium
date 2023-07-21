@@ -260,28 +260,38 @@ function BaseLayerPickerViewModel(options) {
         newProvider = value.creationCommand();
       }
 
-      let cancelUpdate = false;
-      const removeCancelListener = this._globe.terrainProviderChanged.addEventListener(
-        () => {
-          cancelUpdate = true;
-          removeCancelListener();
-        }
-      );
-      const terrain = new Terrain(Promise.resolve(newProvider));
-      const removeEventListener = terrain.readyEvent.addEventListener(
-        (terrainProvider) => {
-          if (cancelUpdate) {
-            // Early return in case something has outside of the picker.
-            return;
+      // If this is not a promise, we must set this synchronously to avoid overriding depthTestAgainstTerrain
+      // See https://github.com/CesiumGS/cesium/issues/6991
+      if (defined(newProvider) && !defined(newProvider.then)) {
+        this._globe.depthTestAgainstTerrain = !(
+          newProvider instanceof EllipsoidTerrainProvider
+        );
+        this._globe.terrainProvider = newProvider;
+      } else if (defined(newProvider)) {
+        let cancelUpdate = false;
+        const removeCancelListener = this._globe.terrainProviderChanged.addEventListener(
+          () => {
+            cancelUpdate = true;
+            removeCancelListener();
           }
+        );
 
-          this._globe.depthTestAgainstTerrain = !(
-            terrainProvider instanceof EllipsoidTerrainProvider
-          );
-          this._globe.terrainProvider = terrainProvider;
-          removeEventListener();
-        }
-      );
+        const terrain = new Terrain(newProvider);
+        const removeEventListener = terrain.readyEvent.addEventListener(
+          (terrainProvider) => {
+            if (cancelUpdate) {
+              // Early return in case something has changed outside of the picker.
+              return;
+            }
+
+            this._globe.depthTestAgainstTerrain = !(
+              terrainProvider instanceof EllipsoidTerrainProvider
+            );
+            this._globe.terrainProvider = terrainProvider;
+            removeEventListener();
+          }
+        );
+      }
 
       selectedTerrainViewModel(value);
       this.dropDownVisible = false;
