@@ -50,7 +50,7 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  * map of the world.\nhttp://www.openstreetmap.org",
  *      creationFunction: function() {
  *          return new Cesium.OpenStreetMapImageryProvider({
- *              url: "https://a.tile.openstreetmap.org/"
+ *              url: "https://tile.openstreetmap.org/"
  *          });
  *      }
  *  }));
