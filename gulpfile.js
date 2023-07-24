@@ -1377,10 +1377,10 @@ export async function runCoverage(options) {
       type: "module",
     },
     // Static assets are always served from the shared/combined folders.
-    { pattern: "Build/CesiumUnminified/**", included: false },
     { pattern: "Specs/Data/**", included: false },
-    { pattern: "Build/Specs/TestWorkers/**", included: false },
     { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+    { pattern: "Build/CesiumUnminified/**", included: false },
+    { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
   let proxies;
@@ -1398,12 +1398,12 @@ export async function runCoverage(options) {
         type: "module",
       },
       { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
       { pattern: "packages/engine/Build/Workers/**", included: false },
       { pattern: "packages/engine/Source/Assets/**", included: false },
       { pattern: "packages/engine/Source/ThirdParty/**", included: false },
       { pattern: "packages/engine/Source/Widget/*.css", included: false },
-      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "Build/Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
 
     proxies = {
@@ -1568,7 +1568,7 @@ export async function test() {
     { pattern: "Build/CesiumUnminified/**", included: false },
     { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
-    { pattern: "Build/Specs/TestWorkers/**", included: false },
+    { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
   let proxies;
@@ -1587,12 +1587,12 @@ export async function test() {
         type: "module",
       },
       { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
       { pattern: "packages/engine/Build/Workers/**", included: false },
       { pattern: "packages/engine/Source/Assets/**", included: false },
       { pattern: "packages/engine/Source/ThirdParty/**", included: false },
       { pattern: "packages/engine/Source/Widget/*.css", included: false },
-      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "Build/Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
 
     proxies = {
@@ -1617,7 +1617,7 @@ export async function test() {
       { pattern: "Build/Cesium/**", included: false },
       { pattern: "Build/Specs/karma-main.js", included: true },
       { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
-      { pattern: "Build/Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
   }
 
