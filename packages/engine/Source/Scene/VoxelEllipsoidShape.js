@@ -115,7 +115,6 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_UNDER_HALF: undefined,
-    ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY: undefined,
@@ -364,18 +363,14 @@ VoxelEllipsoidShape.prototype.update = function (
     renderIsLongitudeReversed * defaultLongitudeRange;
   const renderIsLongitudeRangeZero = renderLongitudeRange <= epsilonLongitude;
   const renderIsLongitudeRangeUnderHalf =
-    renderLongitudeRange > defaultLongitudeRangeHalf + epsilonLongitude &&
-    renderLongitudeRange < defaultLongitudeRange - epsilonLongitude;
-  const renderIsLongitudeRangeHalf =
     renderLongitudeRange >= defaultLongitudeRangeHalf - epsilonLongitude &&
-    renderLongitudeRange <= defaultLongitudeRangeHalf + epsilonLongitude;
+    renderLongitudeRange < defaultLongitudeRange - epsilonLongitude;
   const renderIsLongitudeRangeOverHalf =
     renderLongitudeRange > epsilonLongitude &&
     renderLongitudeRange < defaultLongitudeRangeHalf - epsilonLongitude;
   const renderHasLongitude =
     renderIsLongitudeRangeZero ||
     renderIsLongitudeRangeUnderHalf ||
-    renderIsLongitudeRangeHalf ||
     renderIsLongitudeRangeOverHalf;
 
   const shapeIsLongitudeReversed = shapeMaxLongitude < shapeMinLongitude;
@@ -541,11 +536,6 @@ VoxelEllipsoidShape.prototype.update = function (
         "ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF"
       ] = true;
       intersectionCount += 2;
-    } else if (renderIsLongitudeRangeHalf) {
-      shaderDefines[
-        "ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_HALF"
-      ] = true;
-      intersectionCount += 1;
     } else if (renderIsLongitudeRangeZero) {
       shaderDefines[
         "ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_EQUAL_ZERO"
