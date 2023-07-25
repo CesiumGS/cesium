@@ -120,7 +120,6 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED: undefined,
-    ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF: undefined,
@@ -632,8 +631,6 @@ VoxelEllipsoidShape.prototype.update = function (
   }
 
   if (renderHasLatitude) {
-    shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE"] = true;
-
     // Intersects a cone for min latitude
     if (renderHasLatitudeMin) {
       shaderDefines["ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN"] = true;
