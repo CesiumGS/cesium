@@ -210,6 +210,18 @@ vec2 intersectDoubleEndedCone(in Ray ray, in float cosSqrHalfAngle)
     return vec2(tmin, tmax);
 }
 
+/**
+ * Given a point on a conical surface, find the surface normal
+ * at that point. Choose the one pointing toward the z-axis
+ * (toward the inside of the cone)
+ */
+vec3 getConeNormal(in vec3 p) {
+    vec2 radial = -p.z * normalize(p.xy);
+    float z = length(p.xy);
+    float flip = (p.z < 0.0) ? -1.0 : 1.0;
+    return normalize(vec3(radial, z) * flip);
+}
+
 void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeIntersection intersections[2]) {
     float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
@@ -217,7 +229,7 @@ void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeInterse
     vec4 miss = vec4(normalize(ray.dir), NO_HIT);
     vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
 
-    // Initialize output with no hits
+    // Initialize output with no intersections
     intersections[0].entry = -1.0 * farSide;
     intersections[0].exit = farSide;
     intersections[1].entry = miss;
@@ -233,18 +245,18 @@ void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeInterse
     vec3 p0 = ray.pos + tmin * ray.dir;
     vec3 p1 = ray.pos + tmax * ray.dir;
 
-    // Find the surface normals at the intersection points (directed outside the cone)
-    vec3 n0 = vec3(p0.z * normalize(p0.xy), length(p0.xy));
-    vec3 n1 = vec3(p1.z * normalize(p1.xy), length(p1.xy));
+    // Flip normals to face outside the cone
+    vec4 intersect0 = vec4(-getConeNormal(p0), tmin);
+    vec4 intersect1 = vec4(-getConeNormal(p1), tmax);
 
-    vec4 intersect0 = vec4(normalize(n0), tmin);
-    vec4 intersect1 = vec4(normalize(n1), tmax);
+    bool p0InShadowCone = sign(p0.z) != sign(cosHalfAngle);
+    bool p1InShadowCone = sign(p1.z) != sign(cosHalfAngle);
 
-    if (p0.z < 0.0 && p1.z < 0.0) {
-        // both hits were in the shadow cone
-    } else if (p0.z < 0.0) {
+    if (p0InShadowCone && p1InShadowCone) {
+        // no valid intersections
+    } else if (p0InShadowCone) {
         intersections[0].exit = intersect1;
-    } else if (p1.z < 0.0) {
+    } else if (p1InShadowCone) {
         intersections[0].entry = intersect0;
     } else {
         intersections[0].exit = intersect0;
@@ -270,19 +282,17 @@ RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle) {
     vec3 p0 = ray.pos + tmin * ray.dir;
     vec3 p1 = ray.pos + tmax * ray.dir;
 
-    // Find the surface normals at the intersection points (directed inside the cone)
-    vec3 n0 = vec3(-p0.z * normalize(p0.xy), length(p0.xy));
-    vec3 n1 = vec3(-p1.z * normalize(p1.xy), length(p1.xy));
+    vec4 intersect0 = vec4(getConeNormal(p0), tmin);
+    vec4 intersect1 = vec4(getConeNormal(p1), tmax);
 
-    vec4 intersect0 = vec4(normalize(n0), tmin);
-    vec4 intersect1 = vec4(normalize(n1), tmax);
+    bool p0InShadowCone = sign(p0.z) != sign(cosHalfAngle);
+    bool p1InShadowCone = sign(p1.z) != sign(cosHalfAngle);
 
-    // Discard intersections with the shadow cone (below z == 0)
-    if (p0.z < 0.0 && p1.z < 0.0) {
+    if (p0InShadowCone && p1InShadowCone) {
         return RayShapeIntersection(miss, miss);
-    } else if (p0.z < 0.0) {
+    } else if (p0InShadowCone) {
         return RayShapeIntersection(intersect1, farSide);
-    } else if (p1.z < 0.0) {
+    } else if (p1InShadowCone) {
         return RayShapeIntersection(-1.0 * farSide, intersect0);
     } else {
         return RayShapeIntersection(intersect0, intersect1);
@@ -350,7 +360,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     #endif
 
     // Flip the ray because the intersection function expects a cone growing towards +Z.
-    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF)
         Ray flippedRay = outerRay;
         flippedRay.dir.z *= -1.0;
         flippedRay.pos.z *= -1.0;
@@ -358,7 +368,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
 
     // Bottom cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF)
-        RayShapeIntersection bottomConeIntersection = intersectRegularCone(flippedRay, u_ellipsoidRenderLatitudeCosHalfMinMax.x);
+        RayShapeIntersection bottomConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeCosHalfMinMax.x);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF)
         RayShapeIntersection bottomConeIntersection = intersectZPlane(flippedRay);
@@ -373,7 +383,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     // Top cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
         RayShapeIntersection topConeIntersections[2];
-        intersectFlippedCone(flippedRay, u_ellipsoidRenderLatitudeCosHalfMinMax.y, topConeIntersections);
+        intersectFlippedCone(ray, u_ellipsoidRenderLatitudeCosHalfMinMax.y, topConeIntersections);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 0, topConeIntersections[0]);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 1, topConeIntersections[1]);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF)
