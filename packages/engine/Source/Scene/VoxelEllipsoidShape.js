@@ -100,7 +100,7 @@ function VoxelEllipsoidShape() {
     ellipsoidShapeUvLongitudeMinMaxMid: new Cartesian3(),
     ellipsoidUvToShapeUvLongitude: new Cartesian2(),
     ellipsoidUvToShapeUvLatitude: new Cartesian2(),
-    ellipsoidRenderLatitudeCosSqrHalfMinMax: new Cartesian2(),
+    ellipsoidRenderLatitudeCosHalfMinMax: new Cartesian2(),
     ellipsoidInverseHeightDifferenceUv: 0.0,
     ellipseInnerRadiiUv: new Cartesian2(),
     ellipsoidInverseInnerScaleUv: 0.0,
@@ -681,18 +681,16 @@ VoxelEllipsoidShape.prototype.update = function (
       }
     }
 
-    const minCosHalfAngleSqr = Math.pow(
-      Math.cos(CesiumMath.PI_OVER_TWO - Math.abs(renderMinLatitude)),
-      2.0
+    const minCosHalfAngle = Math.cos(
+      CesiumMath.PI_OVER_TWO - renderMinLatitude
     );
-    const maxCosHalfAngleSqr = Math.pow(
-      Math.cos(CesiumMath.PI_OVER_TWO - Math.abs(renderMaxLatitude)),
-      2.0
+    const maxCosHalfAngle = Math.cos(
+      CesiumMath.PI_OVER_TWO - renderMaxLatitude
     );
-    shaderUniforms.ellipsoidRenderLatitudeCosSqrHalfMinMax = Cartesian2.fromElements(
-      minCosHalfAngleSqr,
-      maxCosHalfAngleSqr,
-      shaderUniforms.ellipsoidRenderLatitudeCosSqrHalfMinMax
+    shaderUniforms.ellipsoidRenderLatitudeCosHalfMinMax = Cartesian2.fromElements(
+      minCosHalfAngle,
+      maxCosHalfAngle,
+      shaderUniforms.ellipsoidRenderLatitudeCosHalfMinMax
     );
   }
 

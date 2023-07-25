@@ -24,9 +24,7 @@
 #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE)
     uniform vec2 u_ellipsoidRenderLongitudeMinMax;
 #endif
-#if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF) || defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF)
-    uniform vec2 u_ellipsoidRenderLatitudeCosSqrHalfMinMax;
-#endif
+uniform vec2 u_ellipsoidRenderLatitudeCosHalfMinMax;
 #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX)
     uniform float u_ellipsoidInverseOuterScaleUv;
 #endif
@@ -212,7 +210,8 @@ vec2 intersectDoubleEndedCone(in Ray ray, in float cosSqrHalfAngle)
     return vec2(tmin, tmax);
 }
 
-void intersectFlippedCone(in Ray ray, in float cosSqrHalfAngle, out RayShapeIntersection intersections[2]) {
+void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeIntersection intersections[2]) {
+    float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
     vec4 miss = vec4(normalize(ray.dir), NO_HIT);
@@ -254,7 +253,8 @@ void intersectFlippedCone(in Ray ray, in float cosSqrHalfAngle, out RayShapeInte
     }
 }
 
-RayShapeIntersection intersectRegularCone(in Ray ray, in float cosSqrHalfAngle) {
+RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle) {
+    float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
     vec4 miss = vec4(normalize(ray.dir), NO_HIT);
@@ -358,14 +358,14 @@ void intersectShape(in Ray ray, inout Intersections ix) {
 
     // Bottom cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF)
-        RayShapeIntersection bottomConeIntersection = intersectRegularCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.x);
+        RayShapeIntersection bottomConeIntersection = intersectRegularCone(flippedRay, u_ellipsoidRenderLatitudeCosHalfMinMax.x);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF)
         RayShapeIntersection bottomConeIntersection = intersectZPlane(flippedRay);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN, bottomConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF)
         RayShapeIntersection bottomConeIntersections[2];
-        intersectFlippedCone(ray, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.x, bottomConeIntersections);
+        intersectFlippedCone(ray, u_ellipsoidRenderLatitudeCosHalfMinMax.x, bottomConeIntersections);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 0, bottomConeIntersections[0]);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN + 1, bottomConeIntersections[1]);
     #endif
@@ -373,14 +373,14 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     // Top cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_UNDER_HALF)
         RayShapeIntersection topConeIntersections[2];
-        intersectFlippedCone(flippedRay, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y, topConeIntersections);
+        intersectFlippedCone(flippedRay, u_ellipsoidRenderLatitudeCosHalfMinMax.y, topConeIntersections);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 0, topConeIntersections[0]);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX + 1, topConeIntersections[1]);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_EQUAL_HALF)
         RayShapeIntersection topConeIntersection = intersectZPlane(ray);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MAX_OVER_HALF)
-        RayShapeIntersection topConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeCosSqrHalfMinMax.y);
+        RayShapeIntersection topConeIntersection = intersectRegularCone(ray, u_ellipsoidRenderLatitudeCosHalfMinMax.y);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX, topConeIntersection);
     #endif
 
