@@ -54,7 +54,7 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     vec3 posEllipsoid = positionLocal * u_ellipsoidRadiiUv;
     vec3 normal = normalize(posEllipsoid * u_ellipsoidInverseRadiiSquaredUv); // geodetic surface normal
 
-    // Compute longitude
+    // Compute longitude, shifted and scaled to the range [0, 1]
     float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi;
 
     // Correct the angle when max < min
@@ -75,7 +75,7 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
         longitude = longitude * u_ellipsoidUvToShapeUvLongitude.x + u_ellipsoidUvToShapeUvLongitude.y;
     #endif
 
-    // Compute latitude
+    // Compute latitude, shifted and scaled to the range [0, 1]
     float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi;
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
         latitude = latitude * u_ellipsoidUvToShapeUvLatitude.x + u_ellipsoidUvToShapeUvLatitude.y;

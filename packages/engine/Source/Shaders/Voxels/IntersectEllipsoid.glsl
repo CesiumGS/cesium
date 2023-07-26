@@ -12,8 +12,6 @@
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_EQUAL_HALF
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_OVER_HALF
-#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX
-#define ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN
 #define ELLIPSOID_INTERSECTION_INDEX_LONGITUDE
 #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MAX
 #define ELLIPSOID_INTERSECTION_INDEX_LATITUDE_MIN
@@ -25,14 +23,9 @@
     uniform vec2 u_ellipsoidRenderLongitudeMinMax;
 #endif
 uniform vec2 u_ellipsoidRenderLatitudeCosHalfMinMax;
-#if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX)
-    uniform float u_ellipsoidInverseOuterScaleUv;
-#endif
-#if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
-    uniform float u_ellipsoidInverseInnerScaleUv;
-#endif
+uniform vec2 u_relativeMinMaxDepth;
 
-RayShapeIntersection intersectZPlane(in Ray ray, float z) {
+RayShapeIntersection intersectZPlane(in Ray ray, in float z) {
     float t = -ray.pos.z / ray.dir.z;
 
     bool startsOutside = sign(ray.pos.z) == sign(z);
@@ -134,15 +127,19 @@ void intersectFlippedWedge(in Ray ray, in float minAngle, in float maxAngle, out
     intersections[1] = intersectHalfSpace(ray, maxAngle);
 }
 
-RayShapeIntersection intersectUnitSphere(in Ray ray, in bool convex)
+/**
+ * relativeDepth is below max, i.e., (shapeMaxHeight - height) / shapeMaxExtent
+ */
+RayShapeIntersection intersectSphere(in Ray ray, in float relativeDepth, in bool convex)
 {
     vec3 position = ray.pos;
     vec3 direction = ray.dir;
 
+    float radius = 1.0 - relativeDepth; // Cancellation! (for small relativeDepth)
     float a = dot(direction, direction);
     float b = dot(direction, position);
-    float c = dot(position, position) - 1.0;
-    float determinant = b * b - a * c;
+    float c = dot(position, position) - radius * radius; // Cancellation! (if 1.0 - length(ray.pos) ~ relativeDepth)
+    float determinant = b * b - a * c; // Possible cancellation!
 
     if (determinant < 0.0) {
         vec4 miss = vec4(normalize(direction), NO_HIT);
@@ -150,7 +147,7 @@ RayShapeIntersection intersectUnitSphere(in Ray ray, in bool convex)
     }
 
     determinant = sqrt(determinant);
-    float t1 = (-b - determinant) / a;
+    float t1 = (-b - determinant) / a; // Possible cancellation for small relativeDepth?
     float t2 = (-b + determinant) / a;
 
     float tmin = min(t1, t2);
@@ -303,14 +300,8 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     ray.pos = ray.pos * 2.0 - 1.0;
     ray.dir *= 2.0;
 
-    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX)
-        Ray outerRay = Ray(ray.pos * u_ellipsoidInverseOuterScaleUv, ray.dir * u_ellipsoidInverseOuterScaleUv);
-    #else
-        Ray outerRay = ray;
-    #endif
-
     // Outer ellipsoid
-    RayShapeIntersection outerIntersect = intersectUnitSphere(outerRay, true);
+    RayShapeIntersection outerIntersect = intersectSphere(ray, u_relativeMinMaxDepth.y, true);
     setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
 
     // Exit early if the outer ellipsoid was missed.
@@ -319,43 +310,40 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     }
 
     // Inner ellipsoid
-    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN)
-        Ray innerRay = Ray(ray.pos * u_ellipsoidInverseInnerScaleUv, ray.dir * u_ellipsoidInverseInnerScaleUv);
-        RayShapeIntersection innerIntersect = intersectUnitSphere(innerRay, false);
+    RayShapeIntersection innerIntersect = intersectSphere(ray, u_relativeMinMaxDepth.x, false);
 
-        if (innerIntersect.entry.w == NO_HIT) {
-            setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
-        } else {
-            // When the ellipsoid is large and thin it's possible for floating point math
-            // to cause the ray to intersect the inner ellipsoid before the outer ellipsoid. 
-            // To prevent this from happening, clamp innerIntersect to outerIntersect and
-            // sandwich the inner ellipsoid intersection inside the outer ellipsoid intersection.
+    if (innerIntersect.entry.w == NO_HIT) {
+        setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
+    } else {
+        // When the ellipsoid is large and thin it's possible for floating point math
+        // to cause the ray to intersect the inner ellipsoid before the outer ellipsoid. 
+        // To prevent this from happening, clamp innerIntersect to outerIntersect and
+        // sandwich the inner ellipsoid intersection inside the outer ellipsoid intersection.
 
-            // Without this special case,
-            // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
-            // [outerMin, innerMin, outerMax, innerMax] which will cause the back
-            // side of the ellipsoid to be invisible because it will think the ray
-            // is still inside the inner (negative) ellipsoid after exiting the
-            // outer (positive) ellipsoid.
+        // Without this special case,
+        // [outerMin, outerMax, innerMin, innerMax] will bubble sort to
+        // [outerMin, innerMin, outerMax, innerMax] which will cause the back
+        // side of the ellipsoid to be invisible because it will think the ray
+        // is still inside the inner (negative) ellipsoid after exiting the
+        // outer (positive) ellipsoid.
 
-            // With this special case,
-            // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
-            // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
+        // With this special case,
+        // [outerMin, innerMin, innerMax, outerMax] will bubble sort to
+        // [outerMin, innerMin, innerMax, outerMax] which will work correctly.
 
-            // Note: If initializeIntersections() changes its sorting function
-            // from bubble sort to something else, this code may need to change.
+        // Note: If initializeIntersections() changes its sorting function
+        // from bubble sort to something else, this code may need to change.
 
-            // In theory a similar fix is needed for cylinders, however it's more
-            // complicated to implement because the inner shape is allowed to be
-            // intersected first.
-            innerIntersect.entry.w = max(innerIntersect.entry.w, outerIntersect.entry.w);
-            innerIntersect.exit.w = min(innerIntersect.exit.w, outerIntersect.exit.w);
-            setSurfaceIntersection(ix, 0, outerIntersect.entry, true, true);   // positive, enter
-            setSurfaceIntersection(ix, 1, innerIntersect.entry, false, true);  // negative, enter
-            setSurfaceIntersection(ix, 2, innerIntersect.exit, false, false); // negative, exit
-            setSurfaceIntersection(ix, 3, outerIntersect.exit, true, false);  // positive, exit
-        }
-    #endif
+        // In theory a similar fix is needed for cylinders, however it's more
+        // complicated to implement because the inner shape is allowed to be
+        // intersected first.
+        innerIntersect.entry.w = max(innerIntersect.entry.w, outerIntersect.entry.w);
+        innerIntersect.exit.w = min(innerIntersect.exit.w, outerIntersect.exit.w);
+        setSurfaceIntersection(ix, 0, outerIntersect.entry, true, true);   // positive, enter
+        setSurfaceIntersection(ix, 1, innerIntersect.entry, false, true);  // negative, enter
+        setSurfaceIntersection(ix, 2, innerIntersect.exit, false, false); // negative, exit
+        setSurfaceIntersection(ix, 3, outerIntersect.exit, true, false);  // positive, exit
+    }
 
     // Bottom cone
     #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LATITUDE_MIN_UNDER_HALF)
