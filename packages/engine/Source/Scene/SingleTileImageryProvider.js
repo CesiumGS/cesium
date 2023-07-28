@@ -24,8 +24,9 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 
 /**
- * Provides a single, top-level imagery tile.  The single image is assumed to use a
- * {@link GeographicTilingScheme}.
+ * Provides a single, top-level imagery tile.  The single image is assumed to be in 
+ * the Geographic projection (i.e. WGS84 / EPSG:4326), 
+ * and will be rendered using a {@link GeographicTilingScheme}.
  *
  * @alias SingleTileImageryProvider
  * @constructor
