@@ -14,6 +14,8 @@
 
 ##### Fixes :wrench:
 
+- Fixed conflicting geocoder suggestions for latitude and longitude pairs by removing `CartographicGeocoderService` from the default geocoder services in `GeocoderViewModel`. [#11433](https://github.com/CesiumGS/cesium/issues/11433).
+
 ### 1.107.2 - 2023-07-13
 
 This is an npm-only release to fix a dependency issue published in 1.107.1
