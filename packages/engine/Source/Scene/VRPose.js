@@ -101,6 +101,18 @@ function prepareViewportsXR(pose, xrPose) {
 }
 
 function arrayEquals(a, b) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(a) || !(a instanceof Float32Array) || a.length !== 16) {
+    throw new DeveloperError(
+      "a array must be a 16 element valid Float32Array."
+    );
+  }
+  if (!defined(b) || !(b instanceof Float32Array) || b.length !== 16) {
+    throw new DeveloperError(
+      "b array must be a 16 element valid Float32Array."
+    );
+  }
+  //>>includeEnd('debug');
   const differs = (value, idx) => value !== b[idx];
   return !a.some(differs);
 }
@@ -311,9 +323,15 @@ function VRPose(scene) {
 
 Object.defineProperties(VRPose.prototype, {
   /**
-   * The viewport of the PassState for the commands that will be executed for the render.
+   * The viewport of the PassState for the commands that will be executed for
+   * the render.
    * <p>
-   * Not required for WebXR.
+   * On <code>prepare</code> for WebVR, it determines each eye's view
+   * geometry.
+   * </p>
+   * <p>
+   * On <code>apply</code>, it is set to each eye viewport before the
+   * corresponding render.
    * </p>
    *
    * @memberof VRPose.prototype
@@ -343,7 +361,8 @@ Object.defineProperties(VRPose.prototype, {
 
   /**
    * The main scene camera from where the VR camera parameters will be derived.
-   * On apply, this is the camera that will be modified before each VR view render.
+   * On <code>apply</code>, this is the camera that will be modified before
+   * each VR view render.
    *
    * @memberof VRPose.prototype
    * @type {Camera}
@@ -369,6 +388,17 @@ Object.defineProperties(VRPose.prototype, {
   },
 });
 
+/**
+ * Perform calculations of the relative translation and frustum for
+ * each of the VR views. As little calculations as possible are performed, by
+ * detecting if there are changes in the basic parameters.
+ *
+ * @memberof VRPose.prototype
+ *
+ * @param {Camera} camera The main camera used as a base for the VR view parameters.
+ * @param {BoundingRectangle} passStateViewport Viewport of the passState that will be set to determine where the render will be performed when <code>apply</code> is called. Used also for WebVR (Legacy) calculations.
+ * @returns {boolean} Whether calculations were successfully done. In case of WebXR, depends if a VR session is running and a pose was successfully obtained. WebVR (Legacy) always succeeds.
+ */
 VRPose.prototype.prepare = function (camera, passStateViewport) {
   // These two will be used for apply
   this.camera = camera;
@@ -391,6 +421,16 @@ VRPose.prototype.prepare = function (camera, passStateViewport) {
   return validPose;
 };
 
+/**
+ * For each of the views present for the VR session (typically one for the left
+ * and one for the right eye), apply the prepared parameters to the camera and
+ * passState viewport that were provided to the <code>prepare</code> method and
+ * call the provided callback (so typically, the callback is called twice).
+ *
+ * @memberof VRPose.prototype
+ *
+ * @param {function} execute_cb Execution callback. Receives no parameters.
+ */
 VRPose.prototype.apply = function (execute_cb) {
   const camera = this._camera;
   const savedCamera = Camera.clone(camera, this._savedCamera);
