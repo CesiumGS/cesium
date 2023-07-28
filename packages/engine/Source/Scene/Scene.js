@@ -2920,8 +2920,6 @@ Scene.prototype.updateAndExecuteCommands = function (
   }
 };
 
-//VR
-
 function executeWebVRCommands(scene, passState, backgroundColor) {
   const view = scene._view;
   const environmentState = scene._environmentState;
