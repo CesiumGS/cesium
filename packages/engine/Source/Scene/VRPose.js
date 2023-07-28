@@ -7,6 +7,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PerspectiveFrustum from "../Core/PerspectiveFrustum.js";
 import PerspectiveOffCenterFrustum from "../Core/PerspectiveOffCenterFrustum.js";
+import Scene from "./Scene.js";
 
 function prepareViewportLegacy(pose, eye) {
   const viewport = pose.viewports[eye];
@@ -295,12 +296,17 @@ function applyPoseToCamera(pose, eye, camera) {
  * each viewpoint required by the VR session (typically side-by-side
  * stereographic)
  * @private
- * @alias VRPose
  * @constructor
  *
  * @param {Scene} scene The scene for which the pose will perform computations.
  */
 function VRPose(scene) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(scene) || !(scene instanceof Scene)) {
+    throw new DeveloperError("scene must be a valid Scene.");
+  }
+  //>>includeEnd('debug');
+
   this.isWebXR = scene.useWebXR && defined(scene.webXRContext);
   this.scene = scene;
   this.xrLayer = null;
