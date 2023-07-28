@@ -834,11 +834,6 @@
             viewer.scene.fog.density = 2.0e-4 * newValue;
           });
         Cesium.knockout
-          .getObservable(viewModel, "density")
-          .subscribe(function (newValue) {
-            viewer.scene.fog.density = 2.0e-4 * newValue;
-          });
-        Cesium.knockout
           .getObservable(viewModel, "minimumBrightness")
           .subscribe(function (newValue) {
             viewer.scene.fog.minimumBrightness = newValue;
