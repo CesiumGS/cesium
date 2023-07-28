@@ -372,7 +372,7 @@ describe(
         geocoder: true,
       });
       expect(viewer.geocoder).toBeDefined();
-      expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(2);
+      expect(viewer.geocoder.viewModel._geocoderServices.length).toBe(1);
     });
 
     it("constructs geocoder with geocoder service option", function () {
