@@ -69,6 +69,7 @@ import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
 import TweenCollection from "./TweenCollection.js";
 import View from "./View.js";
+import VRPose from "./VRPose.js";
 import DebugInspector from "./DebugInspector.js";
 
 const requestRenderAfterFrame = function (scene) {
@@ -594,8 +595,6 @@ function Scene(options) {
 
   this._useWebVR = false;
   this._useWebXR = true;
-  this._cameraVR = undefined;
-  this._aspectRatioVR = undefined;
   this._webXR = undefined;
   this._poseVR = undefined;
 
@@ -1402,24 +1401,19 @@ Object.defineProperties(Scene.prototype, {
       this._useWebVR = value;
       if (this._useWebVR) {
         this._frameState.creditDisplay.container.style.visibility = "hidden";
-        this._cameraVR = new Camera(this);
+        this._poseVR = new VRPose(this);
         if (!defined(this._deviceOrientationCameraController)) {
           this._deviceOrientationCameraController = new DeviceOrientationCameraController(
             this
           );
         }
-
-        this._aspectRatioVR = this.camera.frustum.aspectRatio;
       } else {
         this._frameState.creditDisplay.container.style.visibility = "visible";
-        this._cameraVR = undefined;
+        this._poseVR = undefined;
         this._deviceOrientationCameraController =
           this._deviceOrientationCameraController &&
           !this._deviceOrientationCameraController.isDestroyed() &&
           this._deviceOrientationCameraController.destroy();
-
-        this.camera.frustum.aspectRatio = this._aspectRatioVR;
-        this.camera.frustum.xOffset = 0.0;
       }
     },
   },
@@ -2926,312 +2920,15 @@ Scene.prototype.updateAndExecuteCommands = function (
   }
 };
 
-// frustum is a PerspectiveOffCenterFrustum
-function projectionMatrix2Frustum(projMatrix, frustum) {
-  const near =
-    projMatrix[Matrix4.COLUMN3ROW2] / (projMatrix[Matrix4.COLUMN2ROW2] - 1);
-
-  frustum.near = near;
-
-  frustum.far =
-    projMatrix[Matrix4.COLUMN3ROW2] / (1 + projMatrix[Matrix4.COLUMN2ROW2]);
-
-  frustum.right =
-    (near * (1 + projMatrix[Matrix4.COLUMN2ROW0])) /
-    projMatrix[Matrix4.COLUMN0ROW0];
-
-  frustum.left =
-    (near * (projMatrix[Matrix4.COLUMN2ROW0] - 1)) /
-    projMatrix[Matrix4.COLUMN0ROW0];
-
-  frustum.top =
-    (near * (1 + projMatrix[Matrix4.COLUMN2ROW1])) /
-    projMatrix[Matrix4.COLUMN1ROW1];
-
-  frustum.bottom =
-    (near * (projMatrix[Matrix4.COLUMN2ROW1] - 1)) /
-    projMatrix[Matrix4.COLUMN1ROW1];
-
-  return frustum;
-}
-
-// convert to a PerspectiveFrustum
-function convertPerspectiveOffCenterFrustum(pocFrustum, frustum) {
-  if (!defined(frustum)) {
-    frustum = new PerspectiveFrustum();
-  }
-
-  // Calculate the half width and half height of the frustum at the near plane
-  const halfNearWidth = (pocFrustum.right - pocFrustum.left) / 2;
-  const halfNearHeight = (pocFrustum.top - pocFrustum.bottom) / 2;
-
-  // Calculate the center position of the frustum's base at the near plane
-  const centerX = (pocFrustum.right + pocFrustum.left) / 2;
-  const centerY = (pocFrustum.top + pocFrustum.bottom) / 2;
-
-  // Calculate the field of view (FOV) using the half height at the near plane
-  const fov = 2 * Math.atan(halfNearHeight / pocFrustum.near);
-
-  const aspectRatio = halfNearWidth / halfNearHeight;
-
-  frustum.aspectRatio = aspectRatio;
-  frustum.fov = fov;
-  frustum.near = pocFrustum.near;
-  frustum.far = pocFrustum.far;
-  frustum.xOffset = centerX;
-  frustum.yOffset = centerY;
-
-  return frustum;
-}
-
-function prepareWebXRPoseViewports(pose, xrPose) {
-  for (const xrView of xrPose.views) {
-    // Try to dynamically do viewport scaling based on the browser's
-    // recommendation. This allows the browser to designate a smaller
-    // framebuffer area for the render, degrading quality of the image
-    // but maintaining refresh rate in cases such as high system load.
-    // https://developer.mozilla.org/en-US/docs/Web/API/XRView/requestViewportScale
-    if (defined(xrView.requestViewPortScale)) {
-      xrView.requestViewportScale(xrView.recommendedViewportScale);
-    }
-
-    const xrViewport = pose.xrLayer.getViewport(xrView);
-    const eyeViewport = pose.viewports[xrView.eye];
-    eyeViewport.x = xrViewport.x;
-    eyeViewport.y = xrViewport.y;
-    eyeViewport.width = xrViewport.width;
-    eyeViewport.height = xrViewport.height;
-  }
-}
-
-function prepareWebXRPoseCameraParams(pose, camera, xrPose) {
-  pose.cameraParams._frustumNear = camera.frustum.near;
-  pose.cameraParams._frustumFar = camera.frustum.far;
-
-  for (const xrView of xrPose.views) {
-    prepareWebXRCameraParams(
-      camera,
-      xrPose,
-      xrView,
-      pose.cameraParams[xrView.eye]
-    );
-  }
-}
-
-function prepareWebXRCameraParams(camera, xrPose, xrView, params) {
-  // Get the delta of Pose - View transformations (delta(A,B) = A_inv * B)
-  const xrPoseTransform = Matrix4.fromArray(
-    xrPose.transform.inverse.matrix,
-    0,
-    params.xrPoseTransform
-  );
-  const xrViewInvTransform = Matrix4.fromArray(
-    xrView.transform.inverse.matrix,
-    0,
-    params.xrViewInvTransform
-  );
-  const deltaTransform = Matrix4.multiply(
-    xrPoseTransform,
-    xrViewInvTransform,
-    params.deltaTransform
-  );
-
-  Matrix4.multiply(camera.viewMatrix, deltaTransform, params.viewTransform);
-
-  projectionMatrix2Frustum(
-    Matrix4.fromArray(xrView.projectionMatrix, 0, params.projectionTransform),
-    params.frustum
-  );
-}
-
-// WebXR provides the viewports indicating where to render for each display.
-// https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API/Rendering#frames_poses_views_and_framebuffers
-function prepareWebXRPose(pose, camera) {
-  const xr = pose.scene._webXR;
-  if (!defined(xr)) {
-    // scene.webXRContext not set yet
-    return null;
-  }
-
-  const xrFrame = xr.frame;
-  if (!defined(xrFrame)) {
-    // XR session is not yet ready.
-    return null;
-  }
-
-  const xrPose = xrFrame.getViewerPose(xr.refSpace);
-  if (!defined(xrPose)) {
-    // Getting the pose may fail if, for example, tracking is lost.
-    // TODO: we should handle this gracefully.
-    return null;
-  }
-
-  const xrLayer = xrFrame.session.renderState.baseLayer;
-  pose.xrLayer = xrLayer; // Used after command execution for bitblit.
-
-  if (!pose._initialized) {
-    // Can't do this earlier because we need a valid xrPose
-    // to know how many views the XR session has.
-    pose._initialized = true;
-    for (const xrView of xrPose.views) {
-      const eye = xrView.eye;
-      pose.viewports[eye] = new BoundingRectangle();
-      pose.cameraParams[eye] = {
-        xrPoseTransform: new Matrix4(),
-        xrViewInvTransform: new Matrix4(),
-        deltaTransform: new Matrix4(),
-        viewTransform: new Matrix4(),
-        projectionTransform: new Matrix4(),
-        frustum: new PerspectiveOffCenterFrustum(),
-      };
-    }
-  }
-
-  prepareWebXRPoseViewports(pose, xrPose);
-  prepareWebXRPoseCameraParams(pose, camera, xrPose);
-}
-
-function prepareWebVRPoseViewport(pose, eye) {
-  const poseViewport = pose.viewports[eye];
-  const width = pose.viewport.width * 0.5;
-
-  poseViewport.x = eye === "right" ? width : 0;
-  poseViewport.y = 0;
-  poseViewport.width = width;
-  poseViewport.height = pose.viewport.height;
-}
-
-function prepareWebVRPoseViewports(pose) {
-  prepareWebVRPoseViewport(pose, "left");
-  prepareWebVRPoseViewport(pose, "right");
-}
-
-// Based on Calculating Stereo pairs by Paul Bourke
-// http://paulbourke.net/stereographics/stereorender/
-function prepareWebVRPoseCameraParams(pose, camera) {
-  const cameraParams = pose.cameraParams;
-
-  const near = camera.frustum.near;
-  const fo = near * defaultValue(pose.scene.focalLength, 5.0);
-  const eyeSeparation = defaultValue(pose.scene.eyeSeparation, fo / 30.0);
-  const frustumXOffset = (0.5 * eyeSeparation * near) / fo;
-
-  const left = cameraParams.left;
-  left.translationOp = Cartesian3.add;
-  left.frustumXOffset = frustumXOffset;
-  left.frustumAspectRatio =
-    pose.viewports.left.width / pose.viewports.left.height;
-
-  const right = cameraParams.right;
-  right.translationOp = Cartesian3.subtract;
-  right.frustumXOffset = -frustumXOffset;
-  right.frustumAspectRatio =
-    pose.viewports.right.width / pose.viewports.right.height;
-
-  Cartesian3.multiplyByScalar(
-    camera.right,
-    eyeSeparation * 0.5,
-    cameraParams._eyeTranslation
-  );
-  cameraParams._savedPosition = Cartesian3.clone(camera.position);
-}
-
-function prepareWebVRPose(scene, camera, viewport) {
-  let pose = scene._poseVR;
-
-  if (!defined(pose)) {
-    pose = {
-      isWebXR: scene._useWebXR && defined(scene._webXR),
-      scene,
-      viewport,
-      xrLayer: null,
-      viewports: {},
-      cameraParams: {},
-    };
-
-    if (pose.isWebXR) {
-      // Initialization is postponed until we get a valid xrPose.
-      pose._initialized = false;
-    } else {
-      pose.viewports.left = new BoundingRectangle();
-      pose.viewports.right = new BoundingRectangle();
-      pose.cameraParams.left = {};
-      pose.cameraParams.right = {};
-      pose.cameraParams._eyeTranslation = new Cartesian3();
-    }
-
-    scene._poseVR = pose;
-  }
-
-  if (pose.isWebXR) {
-    prepareWebXRPose(pose, camera);
-    return pose;
-  }
-
-  // Plain old WebVR.
-  prepareWebVRPoseViewports(pose);
-  prepareWebVRPoseCameraParams(pose, camera);
-  return pose;
-}
-
-function applyWebXRPoseParamsToCamera(pose, params, camera) {
-  camera.lookAtTransform(params.viewTransform);
-
-  convertPerspectiveOffCenterFrustum(params.frustum, camera.frustum);
-  camera.frustum.near = pose.cameraParams._frustumNear;
-  camera.frustum.far = pose.cameraParams._frustumFar;
-
-  return true;
-}
-
-function applyWebVRPoseParamsToCamera(pose, params, camera) {
-  params.translationOp(
-    pose.cameraParams._savedPosition,
-    pose.cameraParams._eyeTranslation,
-    camera.position
-  );
-
-  camera.frustum.xOffset = params.frustumXOffset;
-  camera.frustum.aspectRatio = params.frustumAspectRatio;
-
-  return true;
-}
-
-// eye can be "left", "right" or "none" (for monoscopic).
-// https://developer.mozilla.org/en-US/docs/Web/API/XRView#instance_properties
-//
-// return value indicates to caller whether commands are to be executed for
-// this view or not.
-function applyWebVRPoseToCamera(pose, eye, camera) {
-  const params = pose.cameraParams[eye];
-  if (!defined(params)) {
-    console.warn(`Unrecognized eye ${eye}`);
-    return false;
-  }
-
-  if (
-    eye === "none" &&
-    (defined(pose.viewports["left"]) || defined(pose.viewports["right"]))
-  ) {
-    // don't execute commands for a monoscopic view if binocular views are present.
-    return false;
-  }
-
-  if (pose.isWebXR) {
-    return applyWebXRPoseParamsToCamera(pose, params, camera);
-  }
-
-  // Plain old WebVR.
-  return applyWebVRPoseParamsToCamera(pose, params, camera);
-}
+//VR
 
 function executeWebVRCommands(scene, passState, backgroundColor) {
   const view = scene._view;
   const environmentState = scene._environmentState;
 
   const camera = view.camera;
-  const pose = prepareWebVRPose(scene, camera, passState.viewport);
-  if (!defined(pose)) {
+  const pose = scene._poseVR;
+  if (!pose.prepare(camera, passState.viewport)) {
     // TODO: we should handle this gracefully.
     // No need to do any further processing if a pose was not obtained.
     return;
@@ -3245,19 +2942,9 @@ function executeWebVRCommands(scene, passState, backgroundColor) {
     executeShadowMapCastCommands(scene);
   }
 
-  const savedCamera = Camera.clone(camera, scene._cameraVR);
-  const savedViewport = passState.viewport;
-
-  for (const eye of Object.keys(pose.viewports)) {
-    if (applyWebVRPoseToCamera(pose, eye, camera)) {
-      passState.viewport = pose.viewports[eye];
-      executeCommands(scene, passState);
-    }
-  }
-
-  passState.viewport = savedViewport;
-  savedCamera.frustum = camera.frustum;
-  Camera.clone(savedCamera, camera);
+  pose.apply(() => {
+    executeCommands(scene, passState);
+  });
 
   // Now manually blit into the framebuffer provided by WebXR, which
   // is the framebuffer for the HMD's displays.
