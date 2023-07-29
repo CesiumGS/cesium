@@ -96,3 +96,33 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
 
     return vec3(longitude, latitude, height);
 }
+
+vec3 convertShapeUvToShapeSpace(in vec3 shapeUv) {
+    float longitude = shapeUv.x;
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
+        longitude = (longitude - u_ellipsoidUvToShapeUvLongitude.y) / u_ellipsoidUvToShapeUvLongitude.x;
+    #endif
+    // Correct the angle when max < min. TODO: confirm this
+    // Technically this should compare against min longitude - but it has precision problems so compare against the middle of empty space.
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
+        longitude -= float(longitude >= u_ellipsoidShapeUvLongitudeMinMaxMid.z);
+    #endif
+    // Convert from [0, 1] to radians [-pi, pi]
+    longitude = longitude * czm_twoPi - czm_pi;
+
+    float latitude = shapeUv.y;
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
+        latitude = (latitude - u_ellipsoidUvToShapeUvLatitude.y) / u_ellipsoidUvToShapeUvLatitude.x;
+    #endif
+    // Convert from [0, 1] to radians [-pi/2, pi/2]
+    latitude = latitude * czm_pi - czm_piOverTwo;
+
+    float height = shapeUv.z;
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
+        height = 0.0;
+    #else
+        height = (height - 1.0) / u_ellipsoidInverseHeightDifferenceUv;
+    #endif
+
+    return vec3(longitude, latitude, height);
+}

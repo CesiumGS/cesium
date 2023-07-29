@@ -23,7 +23,7 @@
     uniform vec2 u_ellipsoidRenderLongitudeMinMax;
 #endif
 uniform vec2 u_ellipsoidRenderLatitudeCosHalfMinMax;
-uniform vec2 u_relativeMinMaxDepth;
+uniform vec2 u_clipMinMaxHeight;
 
 RayShapeIntersection intersectZPlane(in Ray ray, in float z) {
     float t = -ray.pos.z / ray.dir.z;
@@ -128,17 +128,17 @@ void intersectFlippedWedge(in Ray ray, in float minAngle, in float maxAngle, out
 }
 
 /**
- * relativeDepth is below max, i.e., (shapeMaxHeight - height) / shapeMaxExtent
+ * relativeHeight is a ratio relative to ellipsoid radius, i.e.,  height / shapeMaxExtent
  */
-RayShapeIntersection intersectSphere(in Ray ray, in float relativeDepth, in bool convex)
+RayShapeIntersection intersectSphere(in Ray ray, in float relativeHeight, in bool convex)
 {
     vec3 position = ray.pos;
     vec3 direction = ray.dir;
 
-    float radius = 1.0 - relativeDepth; // Cancellation! (for small relativeDepth)
+    float radius = 1.0 + relativeHeight; // Cancellation! (for small relativeHeight)
     float a = dot(direction, direction);
     float b = dot(direction, position);
-    float c = dot(position, position) - radius * radius; // Cancellation! (if 1.0 - length(ray.pos) ~ relativeDepth)
+    float c = dot(position, position) - radius * radius; // Cancellation! (if length(ray.pos) - 1.0 ~ relativeHeight)
     float determinant = b * b - a * c; // Possible cancellation!
 
     if (determinant < 0.0) {
@@ -147,7 +147,7 @@ RayShapeIntersection intersectSphere(in Ray ray, in float relativeDepth, in bool
     }
 
     determinant = sqrt(determinant);
-    float t1 = (-b - determinant) / a; // Possible cancellation for small relativeDepth?
+    float t1 = (-b - determinant) / a; // Possible cancellation for small relativeHeight?
     float t2 = (-b + determinant) / a;
 
     float tmin = min(t1, t2);
@@ -301,7 +301,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     ray.dir *= 2.0;
 
     // Outer ellipsoid
-    RayShapeIntersection outerIntersect = intersectSphere(ray, u_relativeMinMaxDepth.y, true);
+    RayShapeIntersection outerIntersect = intersectSphere(ray, u_clipMinMaxHeight.y, true);
     setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
 
     // Exit early if the outer ellipsoid was missed.
@@ -310,7 +310,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     }
 
     // Inner ellipsoid
-    RayShapeIntersection innerIntersect = intersectSphere(ray, u_relativeMinMaxDepth.x, false);
+    RayShapeIntersection innerIntersect = intersectSphere(ray, u_clipMinMaxHeight.x, false);
 
     if (innerIntersect.entry.w == NO_HIT) {
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);

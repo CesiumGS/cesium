@@ -103,7 +103,7 @@ function VoxelEllipsoidShape() {
     ellipsoidRenderLatitudeCosHalfMinMax: new Cartesian2(),
     ellipsoidInverseHeightDifferenceUv: 0.0,
     ellipseInnerRadiiUv: new Cartesian2(),
-    relativeMinMaxDepth: new Cartesian2(),
+    clipMinMaxHeight: new Cartesian2(),
   };
 
   /**
@@ -464,10 +464,10 @@ VoxelEllipsoidShape.prototype.update = function (
   shaderDefines["ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN"] = intersectionCount;
   intersectionCount += 1;
 
-  shaderUniforms.relativeMinMaxDepth = Cartesian2.fromElements(
-    (shapeMaxHeight - renderMinHeight) / shapeMaxExtent,
-    (shapeMaxHeight - renderMaxHeight) / shapeMaxExtent,
-    shaderUniforms.relativeMinMaxDepth
+  shaderUniforms.clipMinMaxHeight = Cartesian2.fromElements(
+    (renderMinHeight - shapeMaxHeight) / shapeMaxExtent,
+    (renderMaxHeight - shapeMaxHeight) / shapeMaxExtent,
+    shaderUniforms.clipMinMaxHeight
   );
 
   // The percent of space that is between the inner and outer ellipsoid.

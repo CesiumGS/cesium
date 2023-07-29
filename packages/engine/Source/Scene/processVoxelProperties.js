@@ -147,6 +147,7 @@ function processVoxelProperties(renderResources, primitive) {
   }
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionEC");
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionUv");
+  shaderBuilder.addStructField(voxelStructId, "vec3", "positionShape");
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionShapeUv");
   shaderBuilder.addStructField(voxelStructId, "vec3", "positionUvLocal");
   shaderBuilder.addStructField(voxelStructId, "vec3", "viewDirUv");
