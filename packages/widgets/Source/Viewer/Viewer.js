@@ -380,8 +380,8 @@ function enableVRUI(viewer, enabled) {
  *     // Hide the base layer picker
  *     baseLayerPicker: false,
  *     // Use OpenStreetMaps
- *     baseLayer: new Cesium.ImageryLayer(OpenStreetMapImageryProvider({
- *       url: "https://a.tile.openstreetmap.org/"
+ *     baseLayer: new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
+ *       url: "https://tile.openstreetmap.org/"
  *     })),
  *     skyBox: new Cesium.SkyBox({
  *       sources: {
