@@ -2,6 +2,10 @@
 
 ### 1.108 - 2023-08-01
 
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.109, CesiumJS will require Firefox version 114 or higher for rendering. This is to [facilitate web worker loading and remove outdated dependencies](https://github.com/CesiumGS/cesium/pull/11400). Other browsers and node will be unaffected.
+
 #### @cesium/engine
 
 ##### Fixes :wrench:
