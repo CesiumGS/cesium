@@ -10,7 +10,6 @@
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF
-#define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO
 
 #define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS
@@ -283,9 +282,6 @@ void intersectShape(in Ray ray, inout Intersections ix)
         intersectFlippedWedge(ray, u_cylinderRenderAngleMinMax, wedgeIntersects);
         setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersects[0]);
         setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersects[1]);
-    #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF)
-        RayShapeIntersection wedgeIntersect = intersectHalfSpace(ray, u_cylinderRenderAngleMinMax.x, false);
-        setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE, wedgeIntersect);
     #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO)
         RayShapeIntersection wedgeIntersects[2];
         intersectHalfPlane(ray, u_cylinderRenderAngleMinMax.x, wedgeIntersects);

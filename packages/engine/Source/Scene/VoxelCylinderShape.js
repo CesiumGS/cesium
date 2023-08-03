@@ -120,7 +120,6 @@ function VoxelCylinderShape() {
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF: undefined,
-    CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF: undefined,
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF: undefined,
 
     CYLINDER_HAS_SHAPE_BOUNDS_RADIUS: undefined,
@@ -357,20 +356,14 @@ VoxelCylinderShape.prototype.update = function (
   const renderAngleRange =
     renderMaxAngle - renderMinAngle + renderIsAngleReversed * defaultAngleRange;
   const renderIsAngleRegular =
-    renderAngleRange > defaultAngleRangeHalf + epsilonAngle &&
+    renderAngleRange >= defaultAngleRangeHalf - epsilonAngle &&
     renderAngleRange < defaultAngleRange - epsilonAngle;
   const renderIsAngleFlipped =
     renderAngleRange > epsilonAngle &&
     renderAngleRange < defaultAngleRangeHalf - epsilonAngle;
-  const renderIsAngleRangeHalf =
-    renderAngleRange >= defaultAngleRangeHalf - epsilonAngle &&
-    renderAngleRange <= defaultAngleRangeHalf + epsilonAngle;
   const renderIsAngleRangeZero = renderAngleRange <= epsilonAngle;
   const renderHasAngle =
-    renderIsAngleRegular ||
-    renderIsAngleFlipped ||
-    renderIsAngleRangeHalf ||
-    renderIsAngleRangeZero;
+    renderIsAngleRegular || renderIsAngleFlipped || renderIsAngleRangeZero;
 
   const shaderUniforms = this.shaderUniforms;
   const shaderDefines = this.shaderDefines;
@@ -504,9 +497,6 @@ VoxelCylinderShape.prototype.update = function (
     } else if (renderIsAngleFlipped) {
       shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF"] = true;
       intersectionCount += 2;
-    } else if (renderIsAngleRangeHalf) {
-      shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF"] = true;
-      intersectionCount += 1;
     } else if (renderIsAngleRangeZero) {
       shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO"] = true;
       intersectionCount += 2;
