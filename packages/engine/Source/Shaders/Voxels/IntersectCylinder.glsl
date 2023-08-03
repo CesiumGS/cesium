@@ -1,5 +1,5 @@
-// See IntersectionUtils.glsl for the definitions of Ray, setIntersection,
-// setIntersectionPair
+// See IntersectionUtils.glsl for the definitions of Ray, NO_HIT
+// setSurfaceIntersection, setShapeIntersection
 
 /* Cylinder defines (set in Scene/VoxelCylinderShape.js)
 #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN
@@ -34,150 +34,167 @@
     uniform vec3 u_cylinderUvToRenderBoundsTranslate;
 #endif
 #if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN) && !defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT)
-    uniform float u_cylinderUvToRenderRadiusMin;
+    uniform float u_cylinderRenderRadiusMin;
 #endif
 #if defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE)
     uniform vec2 u_cylinderRenderAngleMinMax;
 #endif
 
-vec4 intersectHalfPlane(Ray ray, float angle) {
-    vec2 o = ray.pos.xy;
-    vec2 d = ray.dir.xy;
-    vec2 planeDirection = vec2(cos(angle), sin(angle));
-    vec2 planeNormal = vec2(planeDirection.y, -planeDirection.x);
+vec4 intersectLongitude(in Ray ray, in float angle, in bool positiveNormal) {
+    float normalSign = positiveNormal ? 1.0 : -1.0;
+    vec2 planeNormal = vec2(-sin(angle), cos(angle)) * normalSign;
 
-    float a = dot(o, planeNormal);
-    float b = dot(d, planeNormal);
-    float t = -a / b;
+    vec2 position = ray.pos.xy;
+    vec2 direction = ray.dir.xy;
+    float approachRate = dot(direction, planeNormal);
+    float distance = -dot(position, planeNormal);
+    
+    float t = (approachRate == 0.0)
+        ? NO_HIT
+        : distance / approachRate;
 
-    vec2 p = o + t * d;
-    bool outside = dot(p, planeDirection) < 0.0;
-    if (outside) return vec4(-INF_HIT, +INF_HIT, NO_HIT, NO_HIT);
-
-    return vec4(-INF_HIT, t, t, +INF_HIT);
+    return vec4(planeNormal, 0.0, t);
 }
 
-#define POSITIVE_HIT vec2(t, +INF_HIT);
-#define NEGATIVE_HIT vec2(-INF_HIT, t);
-
-vec2 intersectHalfSpace(Ray ray, float angle)
+RayShapeIntersection intersectHalfSpace(in Ray ray, in float angle, in bool positiveNormal)
 {
-    vec2 o = ray.pos.xy;
-    vec2 d = ray.dir.xy;
-    vec2 n = vec2(sin(angle), -cos(angle));
-
-    float a = dot(o, n);
-    float b = dot(d, n);
-    float t = -a / b;
-    float s = sign(a);
-
-    // Half space cuts right through the camera, pick the side to intersect
-    if (a == 0.0) {
-        if (b >= 0.0) {
-            return POSITIVE_HIT;
-        } else {
-            return NEGATIVE_HIT;
-        }
-    }
-
-    if (t >= 0.0 != s >= 0.0) {
-        return POSITIVE_HIT;
+    vec4 intersection = intersectLongitude(ray, angle, positiveNormal);
+    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
+    
+    bool hitFront = (intersection.w > 0.0) == (dot(ray.pos.xy, intersection.xy) > 0.0);
+    if (!hitFront) {
+        return RayShapeIntersection(intersection, farSide);
     } else {
-        return NEGATIVE_HIT;
+        return RayShapeIntersection(-1.0 * farSide, intersection);
     }
 }
 
-vec2 intersectRegularWedge(Ray ray, float minAngle, float maxAngle)
+void intersectFlippedWedge(in Ray ray, in vec2 minMaxAngle, out RayShapeIntersection intersections[2])
 {
-    vec2 o = ray.pos.xy;
-    vec2 d = ray.dir.xy;
-    vec2 n1 = vec2(sin(minAngle), -cos(minAngle));
-    vec2 n2 = vec2(-sin(maxAngle), cos(maxAngle));
-
-    float a1 = dot(o, n1);
-    float a2 = dot(o, n2);
-    float b1 = dot(d, n1);
-    float b2 = dot(d, n2);
-
-    float t1 = -a1 / b1;
-    float t2 = -a2 / b2;
-    float s1 = sign(a1);
-    float s2 = sign(a2);
-
-    float tmin = min(t1, t2);
-    float tmax = max(t1, t2);
-    float smin = tmin == t1 ? s1 : s2;
-    float smax = tmin == t1 ? s2 : s1;
-
-    bool e = tmin >= 0.0;
-    bool f = tmax >= 0.0;
-    bool g = smin >= 0.0;
-    bool h = smax >= 0.0;
-
-    if (e != g && f == h) return vec2(tmin, tmax);
-    else if (e == g && f == h) return vec2(-INF_HIT, tmin);
-    else if (e != g && f != h) return vec2(tmax, +INF_HIT);
-    else return vec2(NO_HIT);
+    intersections[0] = intersectHalfSpace(ray, minMaxAngle.x, false);
+    intersections[1] = intersectHalfSpace(ray, minMaxAngle.y, true);
 }
 
-vec4 intersectFlippedWedge(Ray ray, float minAngle, float maxAngle)
+bool hitPositiveHalfPlane(in Ray ray, in vec4 intersection, in bool positiveNormal) {
+    float normalSign = positiveNormal ? 1.0 : -1.0;
+    vec2 planeDirection = vec2(intersection.y, -intersection.x) * normalSign;
+    vec2 hit = ray.pos.xy + intersection.w * ray.dir.xy;
+    return dot(hit, planeDirection) > 0.0;
+}
+
+void intersectHalfPlane(in Ray ray, in float angle, out RayShapeIntersection intersections[2]) {
+    vec4 intersection = intersectLongitude(ray, angle, true);
+    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
+
+    if (hitPositiveHalfPlane(ray, intersection, true)) {
+        intersections[0].entry = -1.0 * farSide;
+        intersections[0].exit = vec4(-1.0 * intersection.xy, 0.0, intersection.w);
+        intersections[1].entry = intersection;
+        intersections[1].exit = farSide;
+    } else {
+        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+        intersections[0].entry = -1.0 * farSide;
+        intersections[0].exit = farSide;
+        intersections[1].entry = miss;
+        intersections[1].exit = miss;
+    }
+}
+
+RayShapeIntersection intersectRegularWedge(in Ray ray, in vec2 minMaxAngle, in bool convex)
 {
-    vec2 planeIntersectMin = intersectHalfSpace(ray, minAngle);
-    vec2 planeIntersectMax = intersectHalfSpace(ray, maxAngle + czm_pi);
-    return vec4(planeIntersectMin, planeIntersectMax);
+    // Compute intersections with the two planes
+    vec4 intersect1 = intersectLongitude(ray, minMaxAngle.x, convex);
+    vec4 intersect2 = intersectLongitude(ray, minMaxAngle.y, !convex);
+
+    // Choose intersection with smallest T as the "entry", the other as "exit"
+    // Note: entry or exit could be in the "shadow" wedge, beyond the tip
+    bool inOrder = intersect1.w <= intersect2.w;
+    vec4 entry = inOrder ? intersect1 : intersect2;
+    vec4 exit = inOrder ? intersect2 : intersect1;
+
+    bool enterFromOutside = (entry.w >= 0.0) == (dot(ray.pos.xy, entry.xy) < 0.0);
+    bool exitFromInside = (exit.w > 0.0) == (dot(ray.pos.xy, exit.xy) >= 0.0);
+
+    float farSideDirection = (convex) ? -1.0 : 1.0;
+    vec4 farSide = vec4(normalize(ray.dir) * farSideDirection, INF_HIT);
+    vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+
+    if (enterFromOutside && exitFromInside) {
+        // Ray crosses both faces of wedge
+        return RayShapeIntersection(entry, exit);
+    } else if (!enterFromOutside && exitFromInside) {
+        // Ray starts inside wedge. exit is in shadow wedge, and entry is actually the exit
+        return RayShapeIntersection(-1.0 * farSide, entry);
+    } else if (enterFromOutside && !exitFromInside) {
+        // First intersection was in the shadow wedge, so exit is actually the entry
+        return RayShapeIntersection(exit, farSide);
+    } else { // !enterFromOutside && !exitFromInside
+        // Both intersections were in the shadow wedge
+        return RayShapeIntersection(miss, miss);
+    }
 }
 
-vec2 intersectUnitCylinder(Ray ray)
+/**
+ * Find the intersection of a ray with the volume defined by two planes of constant z
+ */
+RayShapeIntersection intersectHeightBounds(in Ray ray, in vec2 minMaxHeight, in bool convex)
 {
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
+    float zPosition = ray.pos.z;
+    float zDirection = ray.dir.z;
 
-    float a = dot(d.xy, d.xy);
-    float b = dot(o.xy, d.xy);
-    float c = dot(o.xy, o.xy) - 1.0;
-    float det = b * b - a * c;
+    float tmin = (minMaxHeight.x - zPosition) / zDirection;
+    float tmax = (minMaxHeight.y - zPosition) / zDirection;
 
-    if (det < 0.0) {
-        return vec2(NO_HIT);
-    }
+    // Normals point outside the volume
+    float signFlip = convex ? 1.0 : -1.0;
+    vec4 intersectMin = vec4(0.0, 0.0, -1.0 * signFlip, tmin);
+    vec4 intersectMax = vec4(0.0, 0.0, 1.0 * signFlip, tmax);
 
-    det = sqrt(det);
-    float ta = (-b - det) / a;
-    float tb = (-b + det) / a;
-    float t1 = min(ta, tb);
-    float t2 = max(ta, tb);
+    bool topEntry = zDirection < 0.0;
+    vec4 entry = topEntry ? intersectMax : intersectMin;
+    vec4 exit = topEntry ? intersectMin : intersectMax;
 
-    float z1 = o.z + t1 * d.z;
-    float z2 = o.z + t2 * d.z;
-
-    if (abs(z1) >= 1.0)
-    {
-        float tCap = (sign(z1) - o.z) / d.z;
-        t1 = abs(b + a * tCap) < det ? tCap : NO_HIT;
-    }
-
-    if (abs(z2) >= 1.0)
-    {
-        float tCap = (sign(z2) - o.z) / d.z;
-        t2 = abs(b + a * tCap) < det ? tCap : NO_HIT;
-    }
-
-    return vec2(t1, t2);
+    return RayShapeIntersection(entry, exit);
 }
 
-vec2 intersectUnitCircle(Ray ray) {
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
+/**
+ * Find the intersection of a ray with a right cylindrical surface of a given radius
+ * about the z-axis.
+ */
+RayShapeIntersection intersectCylinder(in Ray ray, in float radius, in bool convex)
+{
+    vec2 position = ray.pos.xy;
+    vec2 direction = ray.dir.xy;
 
-    float t = -o.z / d.z;
-    vec2 zPlanePos = o.xy + d.xy * t;
-    float distSqr = dot(zPlanePos, zPlanePos);
+    float a = dot(direction, direction);
+    float b = dot(position, direction);
+    float c = dot(position, position) - radius * radius;
+    float determinant = b * b - a * c;
 
-    if (distSqr > 1.0) {
-        return vec2(NO_HIT);
+    if (determinant < 0.0) {
+        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+        return RayShapeIntersection(miss, miss);
     }
 
-    return vec2(t, t);
+    determinant = sqrt(determinant);
+    float t1 = (-b - determinant) / a;
+    float t2 = (-b + determinant) / a;
+    float signFlip = convex ? 1.0 : -1.0;
+    vec4 intersect1 = vec4(normalize(position + t1 * direction) * signFlip, 0.0, t1);
+    vec4 intersect2 = vec4(normalize(position + t2 * direction) * signFlip, 0.0, t2);
+
+    return RayShapeIntersection(intersect1, intersect2);
+}
+
+/**
+ * Find the intersection of a ray with a right cylindrical solid of given
+ * radius and height bounds. NOTE: The shape is assumed to be convex.
+ */
+RayShapeIntersection intersectBoundedCylinder(in Ray ray, in float radius, in vec2 minMaxHeight)
+{
+    RayShapeIntersection cylinderIntersection = intersectCylinder(ray, radius, true);
+    RayShapeIntersection heightBoundsIntersection = intersectHeightBounds(ray, minMaxHeight, true);
+    return intersectIntersections(ray, cylinderIntersection, heightBoundsIntersection);
 }
 
 vec2 intersectInfiniteUnitCylinder(Ray ray)
@@ -203,7 +220,7 @@ vec2 intersectInfiniteUnitCylinder(Ray ray)
     return vec2(tmin, tmax);
 }
 
-void intersectShape(Ray ray, inout Intersections ix)
+void intersectShape(in Ray ray, inout Intersections ix)
 {
     #if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX) || defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT)
         ray.pos = ray.pos * u_cylinderUvToRenderBoundsScale + u_cylinderUvToRenderBoundsTranslate;
@@ -216,14 +233,14 @@ void intersectShape(Ray ray, inout Intersections ix)
     #endif
 
     #if defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
-        vec2 outerIntersect = intersectUnitCircle(ray);
+        RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, 1.0, vec2(0.0, 0.0));
     #else
-        vec2 outerIntersect = intersectUnitCylinder(ray);
+        RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, 1.0, vec2(-1.0, 1.0));
     #endif
 
-    setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MAX, outerIntersect);
+    setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MAX, outerIntersect);
 
-    if (outerIntersect.x == NO_HIT) {
+    if (outerIntersect.entry.w == NO_HIT) {
         return;
     }
 
@@ -244,30 +261,35 @@ void intersectShape(Ray ray, inout Intersections ix)
 
         // Note: If initializeIntersections() changes its sorting function
         // from bubble sort to something else, this code may need to change.
-        vec2 innerIntersect = intersectInfiniteUnitCylinder(ray);
-        setIntersection(ix, 0, outerIntersect.x, true, true);   // positive, enter
-        setIntersection(ix, 1, innerIntersect.x, false, true);  // negative, enter
-        setIntersection(ix, 2, innerIntersect.y, false, false); // negative, exit
-        setIntersection(ix, 3, outerIntersect.y, true, false);  // positive, exit
+
+        // In theory a similar fix is needed for cylinders with small non-zero
+        // thickness. But it's more complicated to implement because the inner
+        // shape is allowed to be intersected first.
+        RayShapeIntersection innerIntersect = intersectCylinder(ray, 1.0, false);
+        setSurfaceIntersection(ix, 0, outerIntersect.entry, true, true);   // positive, enter
+        setSurfaceIntersection(ix, 1, innerIntersect.entry, false, true);  // negative, enter
+        setSurfaceIntersection(ix, 2, innerIntersect.exit, false, false); // negative, exit
+        setSurfaceIntersection(ix, 3, outerIntersect.exit, true, false);  // positive, exit
     #elif defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN)
-        Ray innerRay = Ray(ray.pos * u_cylinderUvToRenderRadiusMin, ray.dir * u_cylinderUvToRenderRadiusMin);
-        vec2 innerIntersect = intersectInfiniteUnitCylinder(innerRay);
-        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MIN, innerIntersect);
+        RayShapeIntersection innerIntersect = intersectCylinder(ray, u_cylinderRenderRadiusMin, false);
+        setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MIN, innerIntersect);
     #endif
 
     #if defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF)
-        vec2 wedgeIntersect = intersectRegularWedge(ray, u_cylinderRenderAngleMinMax.x, u_cylinderRenderAngleMinMax.y);
-        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE, wedgeIntersect);
+        RayShapeIntersection wedgeIntersect = intersectRegularWedge(ray, u_cylinderRenderAngleMinMax, false);
+        setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE, wedgeIntersect);
     #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF)
-        vec4 wedgeIntersect = intersectFlippedWedge(ray, u_cylinderRenderAngleMinMax.x, u_cylinderRenderAngleMinMax.y);
-        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersect.xy);
-        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersect.zw);
+        RayShapeIntersection wedgeIntersects[2];
+        intersectFlippedWedge(ray, u_cylinderRenderAngleMinMax, wedgeIntersects);
+        setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersects[0]);
+        setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersects[1]);
     #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_HALF)
-        vec2 wedgeIntersect = intersectHalfSpace(ray, u_cylinderRenderAngleMinMax.x);
-        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE, wedgeIntersect);
+        RayShapeIntersection wedgeIntersect = intersectHalfSpace(ray, u_cylinderRenderAngleMinMax.x, false);
+        setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE, wedgeIntersect);
     #elif defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO)
-        vec4 wedgeIntersect = intersectHalfPlane(ray, u_cylinderRenderAngleMinMax.x);
-        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersect.xy);
-        setIntersectionPair(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersect.zw);
+        RayShapeIntersection wedgeIntersects[2];
+        intersectHalfPlane(ray, u_cylinderRenderAngleMinMax.x, wedgeIntersects);
+        setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 0, wedgeIntersects[0]);
+        setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_ANGLE + 1, wedgeIntersects[1]);
     #endif
 }

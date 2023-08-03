@@ -98,7 +98,7 @@ void main()
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionShape = convertShapeUvToShapeSpace(positionUvShapeSpace);
+        fragmentInput.voxel.positionShape = positionUv; //convertShapeUvToShapeSpace(positionUvShapeSpace);
         fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;

@@ -98,7 +98,7 @@ function VoxelCylinderShape() {
   this.shaderUniforms = {
     cylinderUvToRenderBoundsScale: new Cartesian3(),
     cylinderUvToRenderBoundsTranslate: new Cartesian3(),
-    cylinderUvToRenderRadiusMin: 0.0,
+    cylinderRenderRadiusMin: 0.0,
     cylinderRenderAngleMinMax: new Cartesian2(),
     cylinderUvToShapeUvRadius: new Cartesian2(),
     cylinderUvToShapeUvHeight: new Cartesian2(),
@@ -393,8 +393,7 @@ VoxelCylinderShape.prototype.update = function (
     shaderDefines["CYLINDER_INTERSECTION_INDEX_RADIUS_MIN"] = intersectionCount;
     intersectionCount += 1;
 
-    shaderUniforms.cylinderUvToRenderRadiusMin =
-      renderMaxRadius / renderMinRadius;
+    shaderUniforms.cylinderRenderRadiusMin = renderMinRadius / renderMaxRadius;
   }
   if (!renderIsDefaultMaxRadius) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX"] = true;
@@ -516,7 +515,7 @@ VoxelCylinderShape.prototype.update = function (
     shaderUniforms.cylinderRenderAngleMinMax = Cartesian2.fromElements(
       renderMinAngle,
       renderMaxAngle,
-      shaderUniforms.cylinderAngleMinMax
+      shaderUniforms.cylinderRenderAngleMinMax
     );
   }
 

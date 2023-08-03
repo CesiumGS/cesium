@@ -337,10 +337,6 @@ void intersectShape(in Ray ray, inout Intersections ix) {
 
         // Note: If initializeIntersections() changes its sorting function
         // from bubble sort to something else, this code may need to change.
-
-        // In theory a similar fix is needed for cylinders, however it's more
-        // complicated to implement because the inner shape is allowed to be
-        // intersected first.
         innerIntersect.entry.w = max(innerIntersect.entry.w, outerIntersect.entry.w);
         innerIntersect.exit.w = min(innerIntersect.exit.w, outerIntersect.exit.w);
         setSurfaceIntersection(ix, 0, outerIntersect.entry, true, true);   // positive, enter
