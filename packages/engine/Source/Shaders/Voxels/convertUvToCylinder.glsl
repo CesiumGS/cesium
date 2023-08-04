@@ -23,6 +23,9 @@
     uniform float u_cylinderShapeUvAngleRangeZeroMid;
 #endif
 
+/**
+ * Composition of convertUvToShapeSpace and convertShapeToShapeUvSpace
+ */
 vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     vec3 positionLocal = positionUv * 2.0 - 1.0; // [-1,+1]
 
@@ -54,6 +57,37 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
 
         angle = angle * u_cylinderUvToShapeUvAngle.x + u_cylinderUvToShapeUvAngle.y; // x = scale, y = offset
     #endif
+
+    return vec3(radius, height, angle);
+}
+
+vec3 convertShapeUvToShapeSpace(in vec3 shapeUv) {
+    float radius = shapeUv.x;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
+        // TODO: what if u_cylinderUvToShapeUvRadius.x == 0.0 ?
+        radius = (radius - u_cylinderUvToShapeUvRadius.y) / u_cylinderUvToShapeUvRadius.x;
+    #endif
+
+    float height = shapeUv.y;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        // TODO: what if u_cylinderUvToShapeUvHeight.x == 0.0 ?
+        height = (height - u_cylinderUvToShapUvHeight.y) / u_cylinderUvToShapeUvHeight.x;
+    #endif
+    // Convert from [0, 1] to [-1, 1]
+    height = height * 2.0 - 1.0;
+
+    float angle = shapeUv.z;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
+        // TODO: what if u_cylinderUvToShapeUvAngle.x == 0.0 ?
+        angle = (angle - u_cylinderUvToShapeUvAngle.y) / u_cylinderUvToShapeUvAngle.x;
+
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
+            // Comparing against u_cylinderShapeUvAngleMinMax has precision problems. u_cylinderShapeUvAngleRangeZeroMid is more conservative.
+            angle -= float(angle < u_cylinderShapeUvAngleRangeZeroMid);
+        #endif
+    #endif
+    // Convert from [0, 1] to radians [-pi, pi]
+    angle = angle * czm_twoPi - czm_pi;
 
     return vec3(radius, height, angle);
 }

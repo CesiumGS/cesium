@@ -29,19 +29,12 @@ float hash(vec2 p)
 #endif
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection) {
-#if defined(SHAPE_BOX)
-    Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
-    RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
-    vec4 entry = shapeIntersection.entry.w >= voxelIntersection.entry.w ? shapeIntersection.entry : voxelIntersection.entry;
+    VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
+    RayShapeIntersection voxelIntersection = intersectVoxel(viewRay, voxel);
+    vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    float dt = (exit - entry.w) * RAY_SCALE;
+    float dt = (exit - entry.w) * RAY_SCALE / 10.0;
     return vec4(normalize(entry.xyz), dt);
-#else
-    // TODO: this may not work for cylinders?
-    vec3 normal = normalize(shapeIntersection.entry.xyz);
-    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    return vec4(normal, u_stepSize / dimAtLevel);
-#endif
 }
 
 void main()
@@ -98,7 +91,7 @@ void main()
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
         fragmentInput.voxel.positionUv = positionUv;
-        fragmentInput.voxel.positionShape = positionUv; //convertShapeUvToShapeSpace(positionUvShapeSpace);
+        fragmentInput.voxel.positionShape = convertShapeUvToShapeSpace(positionUvShapeSpace);
         fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;

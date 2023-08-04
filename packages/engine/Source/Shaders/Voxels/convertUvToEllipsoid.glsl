@@ -46,6 +46,9 @@ float ellipseDistanceIterative (vec2 pos, vec2 radii) {
     return length(v * sign(pos) - pos) * sign(p.y - v.y);
 }
 
+/**
+ * Composition of convertUvToShapeSpace and convertShapeToShapeUvSpace
+ */
 vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     // Compute position and normal.
     // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).

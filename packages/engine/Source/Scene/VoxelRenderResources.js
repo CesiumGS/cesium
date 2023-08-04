@@ -88,8 +88,8 @@ function VoxelRenderResources(primitive) {
     customShader.fragmentShaderText,
     "#line 0",
     Octree,
-    IntersectionUtils,
     Megatexture,
+    IntersectionUtils,
   ]);
 
   if (clippingPlanesLength > 0) {
@@ -131,9 +131,9 @@ function VoxelRenderResources(primitive) {
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
+      convertUvToCylinder,
       IntersectCylinder,
       Intersection,
-      convertUvToCylinder,
     ]);
   } else if (shapeType === "ELLIPSOID") {
     shaderBuilder.addFragmentLines([

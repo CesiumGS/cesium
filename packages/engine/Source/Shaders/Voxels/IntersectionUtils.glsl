@@ -50,6 +50,37 @@ RayShapeIntersection intersectIntersections(in Ray ray, in RayShapeIntersection 
     return RayShapeIntersection(entry, exit);
 }
 
+RayShapeIntersection removeNegativeIntersection(in Ray ray, in RayShapeIntersection positive, in RayShapeIntersection negative)
+{
+    vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+    if (positive.entry.w == NO_HIT) {
+        return RayShapeIntersection(miss, miss);
+    }
+    if (negative.entry.w == NO_HIT) {
+        return positive;
+    }
+
+    // Assume entry < exit for both intersections.
+
+    if (positive.entry.w < negative.entry.w) {
+        // TODO: if positive.entry < negative.entry < negative.exit < positive.exit,
+        // we have 2 possible intersections, and we want to choose the first one AFTER
+        // the current ray T. This code always returns the first one, regardless of T.
+        vec4 exit = intersectionMin(positive.exit, negative.entry);
+        return RayShapeIntersection(positive.entry, exit);
+    }
+
+    if (positive.exit.w < negative.exit.w) {
+        // Positive shape is entirely inside the negative volume
+        return RayShapeIntersection(miss, miss);
+    }
+
+    // case: negative.entry < positive.entry < negative.exit < positive.exit
+    // case: negative.entry < negative.exit < positive.entry < positive.exit
+    vec4 entry = intersectionMax(positive.entry, negative.exit);
+    return RayShapeIntersection(entry, positive.exit);
+}
+
 /**
  * Convert an intersection with a positive (convex) volume
  * into an intersection with a negative volume (or hole)
@@ -181,5 +212,24 @@ RayShapeIntersection nextIntersection(inout Intersections ix) {
     return shapeIntersection;
 }
 #endif
+
+struct VoxelBounds {
+    vec3 p0;
+    vec3 p1;
+};
+
+VoxelBounds constructVoxelBounds(in ivec4 octreeCoords, in vec3 tileUv) {
+    // Find the min/max cornerpoints of the voxel in tile coordinates
+    vec3 tileOrigin = vec3(octreeCoords.xyz);
+    vec3 numSamples = vec3(u_dimensions);
+    vec3 voxelSize = 1.0 / numSamples;
+    vec3 coordP0 = floor(tileUv * numSamples) * voxelSize + tileOrigin;
+    vec3 coordP1 = coordP0 + voxelSize;
+    // Transform to the UV coordinates of the tileset
+    float tileSize = 1.0 / pow(2.0, float(octreeCoords.w));
+    vec3 p0 = coordP0 * tileSize;
+    vec3 p1 = coordP1 * tileSize;
+    return VoxelBounds(p0, p1);
+}
 
 // NOTE: initializeIntersections, nextIntersection aren't even declared unless INTERSECTION_COUNT > 1

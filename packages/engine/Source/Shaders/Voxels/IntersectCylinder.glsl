@@ -92,6 +92,7 @@ void intersectHalfPlane(in Ray ray, in float angle, out RayShapeIntersection int
 RayShapeIntersection intersectRegularWedge(in Ray ray, in vec2 minMaxAngle, in bool convex)
 {
     // Compute intersections with the two planes
+    // TODO: the sign of the normals looks backwards?? But it works for convex == false
     vec4 intersect1 = intersectLongitude(ray, minMaxAngle.x, convex);
     vec4 intersect2 = intersectLongitude(ray, minMaxAngle.y, !convex);
 
@@ -184,6 +185,31 @@ RayShapeIntersection intersectBoundedCylinder(in Ray ray, in float radius, in ve
     RayShapeIntersection cylinderIntersection = intersectCylinder(ray, radius, true);
     RayShapeIntersection heightBoundsIntersection = intersectHeightBounds(ray, minMaxHeight, true);
     return intersectIntersections(ray, cylinderIntersection, heightBoundsIntersection);
+}
+
+RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
+{
+    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+    // Direction is scaled as well to be in sync with position.
+    ray.pos = ray.pos * 2.0 - 1.0;
+    ray.dir *= 2.0;
+
+    // VoxelBounds for a cylinder is vec3(radius, height, angle)
+    vec3 p0 = convertShapeUvToShapeSpace(voxel.p0);
+    vec3 p1 = convertShapeUvToShapeSpace(voxel.p1);
+
+    // Intersect with outer height and radius bounds
+    RayShapeIntersection cylinderIntersect = intersectBoundedCylinder(ray, p1.x, vec2(p0.y, p1.y));
+    // Intersect with angle bounds
+    RayShapeIntersection wedgeIntersect = intersectRegularWedge(ray, vec2(p0.z, p1.z), true);
+    // TODO: why is this necessary??
+    RayShapeIntersection flippedWedge = invertVolume(wedgeIntersect);
+    // Intersection of the two is the pie slice
+    RayShapeIntersection pieSlice = intersectIntersections(ray, cylinderIntersect, flippedWedge);
+
+    // Remove the intersection with the inner radius bound
+    RayShapeIntersection hole = intersectCylinder(ray, p0.x, false);
+    return removeNegativeIntersection(ray, pieSlice, hole);
 }
 
 void intersectShape(in Ray ray, inout Intersections ix)
