@@ -1,4 +1,4 @@
-// See IntersectionUtils.glsl for the definitions of Ray, NO_HIT
+// See IntersectionUtils.glsl for the definitions of Ray, NO_HIT, INF_HIT,
 // setSurfaceIntersection, setShapeIntersection
 
 /* Cylinder defines (set in Scene/VoxelCylinderShape.js)
@@ -11,16 +11,6 @@
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO
-
-#define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS
-#define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT
-#define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT
-#define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_EQUAL_ZERO
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED
 
 #define CYLINDER_INTERSECTION_INDEX_RADIUS_MAX
 #define CYLINDER_INTERSECTION_INDEX_RADIUS_MIN
@@ -194,29 +184,6 @@ RayShapeIntersection intersectBoundedCylinder(in Ray ray, in float radius, in ve
     RayShapeIntersection cylinderIntersection = intersectCylinder(ray, radius, true);
     RayShapeIntersection heightBoundsIntersection = intersectHeightBounds(ray, minMaxHeight, true);
     return intersectIntersections(ray, cylinderIntersection, heightBoundsIntersection);
-}
-
-vec2 intersectInfiniteUnitCylinder(Ray ray)
-{
-    vec3 o = ray.pos;
-    vec3 d = ray.dir;
-
-    float a = dot(d.xy, d.xy);
-    float b = dot(o.xy, d.xy);
-    float c = dot(o.xy, o.xy) - 1.0;
-    float det = b * b - a * c;
-
-    if (det < 0.0) {
-        return vec2(NO_HIT);
-    }
-
-    det = sqrt(det);
-    float t1 = (-b - det) / a;
-    float t2 = (-b + det) / a;
-    float tmin = min(t1, t2);
-    float tmax = max(t1, t2);
-
-    return vec2(tmin, tmax);
 }
 
 void intersectShape(in Ray ray, inout Intersections ix)
