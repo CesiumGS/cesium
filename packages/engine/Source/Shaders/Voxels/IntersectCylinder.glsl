@@ -3,10 +3,7 @@
 
 /* Cylinder defines (set in Scene/VoxelCylinderShape.js)
 #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN
-#define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX
 #define CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT
-#define CYLINDER_HAS_RENDER_BOUNDS_HEIGHT
-#define CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF
@@ -18,13 +15,8 @@
 */
 
 // Cylinder uniforms
-#if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX) || defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT)
-    uniform vec3 u_cylinderUvToRenderBoundsScale;
-    uniform vec3 u_cylinderUvToRenderBoundsTranslate;
-#endif
-#if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN) && !defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_FLAT)
-    uniform float u_cylinderRenderRadiusMin;
-#endif
+uniform vec2 u_cylinderRenderRadiusMinMax;
+uniform vec2 u_cylinderRenderHeightMinMax;
 #if defined(CYLINDER_HAS_RENDER_BOUNDS_ANGLE)
     uniform vec2 u_cylinderRenderAngleMinMax;
 #endif
@@ -214,21 +206,12 @@ RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
 
 void intersectShape(in Ray ray, inout Intersections ix)
 {
-    #if defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MAX) || defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT)
-        ray.pos = ray.pos * u_cylinderUvToRenderBoundsScale + u_cylinderUvToRenderBoundsTranslate;
-        ray.dir *= u_cylinderUvToRenderBoundsScale;
-    #else
-        // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
-        // Direction is scaled as well to be in sync with position.
-        ray.pos = ray.pos * 2.0 - 1.0;
-        ray.dir *= 2.0;
-    #endif
+    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+    // Direction is scaled as well to be in sync with position.
+    ray.pos = ray.pos * 2.0 - 1.0;
+    ray.dir *= 2.0;
 
-    #if defined(CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT)
-        RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, 1.0, vec2(0.0, 0.0));
-    #else
-        RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, 1.0, vec2(-1.0, 1.0));
-    #endif
+    RayShapeIntersection outerIntersect = intersectBoundedCylinder(ray, u_cylinderRenderRadiusMinMax.y, u_cylinderRenderHeightMinMax);
 
     setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MAX, outerIntersect);
 
@@ -263,7 +246,7 @@ void intersectShape(in Ray ray, inout Intersections ix)
         setSurfaceIntersection(ix, 2, innerIntersect.exit, false, false); // negative, exit
         setSurfaceIntersection(ix, 3, outerIntersect.exit, true, false);  // positive, exit
     #elif defined(CYLINDER_HAS_RENDER_BOUNDS_RADIUS_MIN)
-        RayShapeIntersection innerIntersect = intersectCylinder(ray, u_cylinderRenderRadiusMin, false);
+        RayShapeIntersection innerIntersect = intersectCylinder(ray, u_cylinderRenderRadiusMinMax.x, false);
         setShapeIntersection(ix, CYLINDER_INTERSECTION_INDEX_RADIUS_MIN, innerIntersect);
     #endif
 

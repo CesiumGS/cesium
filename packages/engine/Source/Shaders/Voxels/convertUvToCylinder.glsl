@@ -71,7 +71,7 @@ vec3 convertShapeUvToShapeSpace(in vec3 shapeUv) {
     float height = shapeUv.y;
     #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
         // TODO: what if u_cylinderUvToShapeUvHeight.x == 0.0 ?
-        height = (height - u_cylinderUvToShapUvHeight.y) / u_cylinderUvToShapeUvHeight.x;
+        height = (height - u_cylinderUvToShapeUvHeight.y) / u_cylinderUvToShapeUvHeight.x;
     #endif
     // Convert from [0, 1] to [-1, 1]
     height = height * 2.0 - 1.0;
