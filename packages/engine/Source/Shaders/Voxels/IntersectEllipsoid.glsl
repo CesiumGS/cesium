@@ -1,5 +1,7 @@
-// See IntersectionUtils.glsl for the definitions of Ray, Intersections,
-// RayShapeIntersection, setShapeIntersection, INF_HIT, NO_HIT
+// See IntersectionUtils.glsl for the definitions of Ray, NO_HIT, INF_HIT,
+// RayShapeIntersection, setSurfaceIntersection, setShapeIntersection, VoxelBounds
+// See IntersectLongitude.glsl for the definitions of interesectHalfPlane,
+// intersectFlippedWedge, intersectRegularWedge
 
 /* Ellipsoid defines (set in Scene/VoxelEllipsoidShape.js)
 #define ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE
@@ -41,95 +43,6 @@ RayShapeIntersection intersectZPlane(in Ray ray, in float z) {
     }
 }
 
-vec4 intersectLongitude(in Ray ray, in float angle) {
-    vec2 planeNormal = vec2(-sin(angle), cos(angle));
-
-    vec2 position = ray.pos.xy;
-    vec2 direction = ray.dir.xy;
-    float t = -dot(position, planeNormal) / dot(direction, planeNormal);
-
-    return vec4(planeNormal, 0.0, t);
-}
-
-bool hitPositiveHalfPlane(in Ray ray, in vec4 intersection) {
-    vec2 planeDirection = vec2(intersection.y, -intersection.x);
-    vec2 hit = ray.pos.xy + intersection.w * ray.dir.xy;
-    return dot(hit, planeDirection) >= 0.0;
-}
-
-void intersectHalfPlane(in Ray ray, in float angle, out RayShapeIntersection intersections[2]) {
-    vec4 intersection = intersectLongitude(ray, angle);
-    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
-
-    if (hitPositiveHalfPlane(ray, intersection)) {
-        intersections[0].entry = -1.0 * farSide;
-        intersections[0].exit = vec4(-1.0 * intersection.xy, 0.0, intersection.w);
-        intersections[1].entry = intersection;
-        intersections[1].exit = farSide;
-    } else {
-        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
-        intersections[0].entry = -1.0 * farSide;
-        intersections[0].exit = farSide;
-        intersections[1].entry = miss;
-        intersections[1].exit = miss;
-    }
-}
-
-RayShapeIntersection intersectHalfSpace(in Ray ray, in float angle)
-{
-    vec4 intersection = intersectLongitude(ray, angle);
-    vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
-    
-    bool hitFront = (intersection.w > 0.0) == (dot(ray.pos.xy, intersection.xy) >= 0.0);
-    if (!hitFront) {
-        return RayShapeIntersection(intersection, farSide);
-    } else {
-        return RayShapeIntersection(-1.0 * farSide, intersection);
-    }
-}
-
-RayShapeIntersection intersectRegularWedge(in Ray ray, in vec2 minMaxAngle, in bool convex)
-{
-    // Compute intersections with the two planes
-    float minAngle = (convex) ? minMaxAngle.x : minMaxAngle.x + czm_pi;
-    float maxAngle = (convex) ? minMaxAngle.y + czm_pi : minMaxAngle.y;
-    vec4 intersect1 = intersectLongitude(ray, minAngle);
-    vec4 intersect2 = intersectLongitude(ray, maxAngle);
-
-    // Choose intersection with smallest T as the "entry", the other as "exit"
-    // Note: entry or exit could be in the "shadow" wedge, beyond the tip
-    bool inOrder = intersect1.w <= intersect2.w;
-    vec4 entry = inOrder ? intersect1 : intersect2;
-    vec4 exit = inOrder ? intersect2 : intersect1;
-
-    bool enterFromOutside = (entry.w >= 0.0) == (dot(ray.pos.xy, entry.xy) < 0.0);
-    bool exitFromInside = (exit.w >= 0.0) == (dot(ray.pos.xy, exit.xy) >= 0.0);
-
-    float farSideDirection = (convex) ? -1.0 : 1.0;
-    vec4 farSide = vec4(normalize(ray.dir) * farSideDirection, INF_HIT);
-    vec4 miss = vec4(normalize(ray.dir), NO_HIT);
-
-    if (enterFromOutside && exitFromInside) {
-        // Ray crosses both faces of wedge
-        return RayShapeIntersection(entry, exit);
-    } else if (!enterFromOutside && exitFromInside) {
-        // Ray starts inside wedge. exit is in shadow wedge, and entry is actually the exit
-        return RayShapeIntersection(-1.0 * farSide, entry);
-    } else if (enterFromOutside && !exitFromInside) {
-        // First intersection was in the shadow wedge, so exit is actually the entry
-        return RayShapeIntersection(exit, farSide);
-    } else { // !enterFromOutside && !exitFromInside
-        // Both intersections were in the shadow wedge
-        return RayShapeIntersection(miss, miss);
-    }
-}
-
-void intersectFlippedWedge(in Ray ray, in float minAngle, in float maxAngle, out RayShapeIntersection intersections[2])
-{
-    intersections[0] = intersectHalfSpace(ray, minAngle + czm_pi);
-    intersections[1] = intersectHalfSpace(ray, maxAngle);
-}
-
 /**
  * relativeHeight is a ratio relative to ellipsoid radius, i.e.,  height / shapeMaxExtent
  */
@@ -153,14 +66,11 @@ RayShapeIntersection intersectSphere(in Ray ray, in float relativeHeight, in boo
     float t1 = (-b - determinant) / a; // Possible cancellation for small relativeHeight?
     float t2 = (-b + determinant) / a;
 
-    float tmin = min(t1, t2);
-    float tmax = max(t1, t2);
-
     float directionScale = convex ? 1.0 : -1.0;
-    vec3 dmin = directionScale * normalize(position + tmin * direction);
-    vec3 dmax = directionScale * normalize(position + tmax * direction);
+    vec3 d1 = directionScale * normalize(position + t1 * direction);
+    vec3 d2 = directionScale * normalize(position + t2 * direction);
 
-    return RayShapeIntersection(vec4(dmin, tmin), vec4(dmax, tmax));
+    return RayShapeIntersection(vec4(d1, t1), vec4(d2, t2));
 }
 
 /**
@@ -298,6 +208,58 @@ RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in 
     }
 }
 
+RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
+{
+    // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
+    // Direction is scaled as well to be in sync with position.
+    ray.pos = ray.pos * 2.0 - 1.0;
+    ray.dir *= 2.0;
+
+    // VoxelBounds for an ellipsoid is vec3(longitude, latitude, height)
+    vec3 p0 = convertShapeUvToShapeSpace(voxel.p0);
+    vec3 p1 = convertShapeUvToShapeSpace(voxel.p1);
+
+    // Intersect with outer ellipsoid.
+    // The ray is already scaled by the ellipsoid axes, so we can simply intersect with a sphere
+    RayShapeIntersection outerSphereIntersect = intersectSphere(ray, p1.z, true);
+
+    // Intersect with longitude bounds
+    RayShapeIntersection wedgeIntersect = intersectRegularWedge(ray, vec2(p0.x, p1.x), true);
+    // TODO: why is this necessary??
+    RayShapeIntersection flippedWedge = invertVolume(wedgeIntersect);
+
+    // Intersect outer ellipsoid with longitude bounds to get an orange slice
+    RayShapeIntersection orangeSlice = intersectIntersections(ray, outerSphereIntersect, flippedWedge);
+
+    // Remove inner ellipsoid to get the orange peel
+    RayShapeIntersection innerSphereIntersect = intersectSphere(ray, p0.z, false);
+    RayShapeIntersection orangePeel = removeNegativeIntersection(ray, orangeSlice, innerSphereIntersect);
+    //return orangePeel;
+
+    // The latitude bound nearest to a pole defines a negative volume
+    bool minLatitudeIsNegative = p0.y < 0.0;
+    float negativeConeAngle = minLatitudeIsNegative ? p0.y : p1.y;
+    // NOTE: we ASSUME the two latitude bounds do not straddle the Equator, so
+    // one of the latitudes defines a positive boundary
+    float positiveConeAngle = minLatitudeIsNegative ? p1.y : p0.y;
+
+    float cosNegativeConeAngle = cos(czm_piOverTwo - negativeConeAngle);
+    RayShapeIntersection negativeCone = intersectRegularCone(ray, cosNegativeConeAngle, false);
+
+    RayShapeIntersection positiveCone;
+    if (positiveConeAngle == 0.0) {
+        // TODO: zDirection looks flipped here? But it works
+        float zDirection = minLatitudeIsNegative ? -1.0 : 1.0;
+        positiveCone = intersectZPlane(ray, zDirection);
+    } else {
+        float cosPositiveConeAngle = cos(czm_piOverTwo - positiveConeAngle);
+        positiveCone = intersectRegularCone(ray, cosPositiveConeAngle, true);
+    }
+
+    RayShapeIntersection tearDrop = intersectIntersections(ray, orangePeel, positiveCone);
+    return removeNegativeIntersection(ray, tearDrop, negativeCone); // THIS MAKES BIG HOLES
+}
+
 void intersectShape(in Ray ray, inout Intersections ix) {
     // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
     // Direction is scaled as well to be in sync with position.
@@ -384,7 +346,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE, wedgeIntersect);
     #elif defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_RANGE_OVER_HALF)
         RayShapeIntersection wedgeIntersects[2];
-        intersectFlippedWedge(ray, u_ellipsoidRenderLongitudeMinMax.x, u_ellipsoidRenderLongitudeMinMax.y, wedgeIntersects);
+        intersectFlippedWedge(ray, u_ellipsoidRenderLongitudeMinMax, wedgeIntersects);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 0, wedgeIntersects[0]);
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_LONGITUDE + 1, wedgeIntersects[1]);
     #endif
