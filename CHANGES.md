@@ -16,6 +16,12 @@
 
 - The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
 
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed types for `ProviderViewModel.CreationFunction`. [#11452](https://github.com/CesiumGS/cesium/issues/11452)
+
 ### 1.108 - 2023-08-01
 
 #### Major Announcements :loudspeaker:
