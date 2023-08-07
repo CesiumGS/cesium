@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.109 - 2023-09-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
+
 ### 1.108 - 2023-08-01
 
 #### Major Announcements :loudspeaker:
@@ -81,7 +89,7 @@ try {
 - `GoogleEarthEnterpriseMapsProvider` constructor parameters `options.url` and `options.channel`, `GoogleEarthEnterpriseMapsProvider.ready`, and `GoogleEarthEnterpriseMapsProvider.readyPromise` have been removed. Use `GoogleEarthEnterpriseMapsProvider.fromUrl` instead.
 - `GridImageryProvider.ready` and `GridImageryProvider.readyPromise` have been removed.
 - `IonImageryProvider` constructor parameter `assetId`,`BIonImageryProvider.ready`, and `IonImageryProvider.readyPromise` have been removed. Use `IonImageryProvider.fromAssetId` instead.
-- `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` have been removed.
+- `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` have been removed.``
 - `MapboxStyleImageryProvider.ready` and `MapboxStyleImageryProvider.readyPromise` have been removed.
 - `OpenStreetMapImageryProvider.ready` and `OpenStreetMapImageryProvider.readyPromise` have been removed.
 - `SingleTileImageryProvider` constructor parameters `options.tileHeight` and `options.tileWidth` became required in CesiumJS 1.104. Omitting these properties will result in an error in 1.107. Provide `options.tileHeight` and `options.tileWidth`, or use `SingleTileImageryProvider.fromUrl` instead.
