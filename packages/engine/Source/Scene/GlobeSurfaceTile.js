@@ -168,7 +168,22 @@ GlobeSurfaceTile.prototype.pick = function (
   const vertices = mesh.vertices;
   const indices = mesh.indices;
   const encoding = mesh.encoding;
-  const indicesLength = indices.length;
+  let indicesLength = indices.length;
+
+  // do not consider skirts pixels for finding terrain interceptions
+  const edgeVertexCount =
+    mesh.westIndicesSouthToNorth.length +
+    mesh.eastIndicesNorthToSouth.length +
+    mesh.southIndicesEastToWest.length +
+    mesh.northIndicesWestToEast.length;
+  const edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
+  let skirtsIndexBufferLength = edgeTriangleCount * 3;
+  if (this.level >= 3) {
+    // 2 more triangles for bottom skirts plane
+    skirtsIndexBufferLength += 2 * 3;
+  }
+
+  indicesLength -= skirtsIndexBufferLength;
 
   let minT = Number.MAX_VALUE;
 
