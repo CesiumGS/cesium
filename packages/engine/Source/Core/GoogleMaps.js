@@ -3,7 +3,7 @@ import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 let defaultKeyCredit;
-const defaultKey = "AIzaSyCUMejKrafNiN2PiqvWNPxQJBuDRg-VqKQ";
+const defaultKey = "AIzaSyDG4malBzpWiOoWpAm9q2OXvt_plH-NxcM";
 
 /**
  * Default settings for accessing the Google Maps API.

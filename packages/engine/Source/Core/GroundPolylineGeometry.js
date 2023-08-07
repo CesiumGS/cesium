@@ -1477,8 +1477,9 @@ function generateGeometryAttributes(
     const minHeight = minMaxHeights.minimumTerrainHeight;
     const maxHeight = minMaxHeights.maximumTerrainHeight;
 
-    sumHeights += minHeight;
-    sumHeights += maxHeight;
+    // Sum using abs() to properly account for negative eleavtions in calculating bounding sphere radius
+    sumHeights += Math.abs(minHeight);
+    sumHeights += Math.abs(maxHeight);
 
     adjustHeights(
       startBottom,

@@ -1822,11 +1822,13 @@ function processPositionArrayPacketData(
       packetData.array = Cartesian3.unpackArray(packetData.cartesian);
     } else if (defined(packetData.cartographicRadians)) {
       packetData.array = Cartesian3.fromRadiansArrayHeights(
-        packetData.cartographicRadians
+        packetData.cartographicRadians,
+        Ellipsoid.WGS84
       );
     } else if (defined(packetData.cartographicDegrees)) {
       packetData.array = Cartesian3.fromDegreesArrayHeights(
-        packetData.cartographicDegrees
+        packetData.cartographicDegrees,
+        Ellipsoid.WGS84
       );
     }
 
@@ -1878,11 +1880,11 @@ function unpackCartesianArray(array) {
 }
 
 function unpackCartographicRadiansArray(array) {
-  return Cartesian3.fromRadiansArrayHeights(array);
+  return Cartesian3.fromRadiansArrayHeights(array, Ellipsoid.WGS84);
 }
 
 function unpackCartographicDegreesArray(array) {
-  return Cartesian3.fromDegreesArrayHeights(array);
+  return Cartesian3.fromDegreesArrayHeights(array, Ellipsoid.WGS84);
 }
 
 function processPositionArrayOfArraysPacketData(
