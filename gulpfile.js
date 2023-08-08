@@ -612,6 +612,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/CesiumUnminified/**",
       "Build/Documentation/**",
       "Build/Specs/**",
+      "!Build/Specs/e2e/**",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",
@@ -647,6 +648,7 @@ export const makeZip = gulp.series(release, async function () {
       "Source/**",
       "Source/**/.eslintrc.json",
       "Specs/**",
+      "!Specs/e2e/*-snapshots/**",
       "Specs/**/.eslintrc.json",
       "ThirdParty/**",
       "favicon.ico",
@@ -1923,7 +1925,12 @@ function createTypeScriptDefinitions() {
       (match, p1) => `= WebGLConstants.${p1}`
     )
     // Strip const enums which can cause errors - https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls
-    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4");
+    .replace(/^(\s*)(export )?const enum (\S+) {(\s*)$/gm, "$1$2enum $3 {$4")
+    // Replace JSDoc generation version of defined with an improved version using TS type predicates
+    .replace(
+      /defined\(value: any\): boolean/gm,
+      "defined<Type>(value: Type | undefined | null): value is Type"
+    );
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
