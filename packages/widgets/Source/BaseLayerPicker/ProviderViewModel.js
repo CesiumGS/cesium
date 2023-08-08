@@ -97,7 +97,7 @@ Object.defineProperties(ProviderViewModel.prototype, {
 /**
  * A function which creates one or more providers.
  * @callback ProviderViewModel.CreationFunction
- * @returns {ImageryProvider|TerrainProvider|ImageryProvider[]|TerrainProvider[]|Promise<TerrainProvider>|Promise<TerrainProvider[]>}
+ * @returns {ImageryProvider|TerrainProvider|ImageryProvider[]|TerrainProvider[]|Promise<TerrainProvider>|Promise<ImageryProvider>|Promise<TerrainProvider[]>|Promise<ImageryProvider[]>}
  *          The ImageryProvider or TerrainProvider, or array of providers, to be added
  *          to the globe.
  */
