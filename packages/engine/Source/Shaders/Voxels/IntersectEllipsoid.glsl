@@ -49,12 +49,18 @@ RayShapeIntersection intersectZPlane(in Ray ray, in float z) {
 RayShapeIntersection intersectSphere(in Ray ray, in float relativeHeight, in bool convex)
 {
     vec3 position = ray.pos;
+    vec3 deltaPosition = position - normalize(position);
+    float rayHeight = length(deltaPosition);
     vec3 direction = ray.dir;
 
-    float radius = 1.0 + relativeHeight; // Cancellation! (for small relativeHeight)
     float a = dot(direction, direction);
     float b = dot(direction, position);
-    float c = dot(position, position) - radius * radius; // Cancellation! (if length(ray.pos) - 1.0 ~ relativeHeight)
+    //float radius = 1.0 + relativeHeight;
+    //float c = dot(position, position) - radius * radius;
+    // To avoid subtractive cancellation when relativeHeight and rayHeight are small, note that
+    //   dot(position, position) = 1.0 + 2 * rayHeight + rayHeight ^ 2, and
+    //   radius * radius = 1.0 + 2 * relativeHeight + relativeHeight ^ 2. 
+    float c = 2.0 * rayHeight + rayHeight * rayHeight - 2.0 * relativeHeight - relativeHeight * relativeHeight;
     float determinant = b * b - a * c; // Possible cancellation!
 
     if (determinant < 0.0) {
