@@ -64,7 +64,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   // in some cases (see https://github.com/CesiumGS/cesium/pull/11365)
   // it's important that this bounding volume is computed from the tile JSON
   // (which is the original, possibly loose bounding volume) rather than
-  // tile.boundingVolume which is the tigher one.
+  // tile.boundingVolume which is the tighter one.
   const boundingVolume = tileJson.boundingVolume;
   if (
     !defined(boundingVolume.box) &&
