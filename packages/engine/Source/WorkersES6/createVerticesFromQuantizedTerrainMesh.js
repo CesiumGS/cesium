@@ -542,6 +542,11 @@ function addSkirtVertex(
       oneOverMercatorHeight;
   }
 
+  let geodeticSurfaceNormal;
+  if (encoding.hasGeodeticSurfaceNormals) {
+    geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(position);
+  }
+
   vertexBufferIndex = encoding.encode(
     vertexBuffer,
     vertexBufferIndex,
@@ -549,7 +554,8 @@ function addSkirtVertex(
     uv,
     cartographicScratch.height,
     toPack,
-    webMercatorT
+    webMercatorT,
+    geodeticSurfaceNormal
   );
 
   return vertexBufferIndex;
