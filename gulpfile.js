@@ -1929,7 +1929,7 @@ function createTypeScriptDefinitions() {
     // Replace JSDoc generation version of defined with an improved version using TS type predicates
     .replace(
       /defined\(value: any\): boolean/gm,
-      "defined<Type>(value: Type | undefined | null): value is Type"
+      "defined<Type>(value: Type): value is NonNullable<Type>"
     );
 
   // Wrap the source to actually be inside of a declared cesium module
