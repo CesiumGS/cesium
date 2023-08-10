@@ -12,9 +12,9 @@ out float v_translucent;
 void main(void)
 {
     vec4 positionWC = czm_model * position;
-    vec3 lightDirection = getLightDirection(positionWC.xyz);
 
     #ifndef PER_FRAGMENT_ATMOSPHERE
+        vec3 lightDirection = getLightDirection(positionWC.xyz);
         computeAtmosphereScattering(
             positionWC.xyz,
             lightDirection,
