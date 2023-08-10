@@ -144,6 +144,7 @@ function UniformState() {
   this._frustum2DWidth = 0.0;
   this._eyeHeight = 0.0;
   this._eyeHeight2D = new Cartesian2();
+  this._eyeEllipsoidNormalEC = new Cartesian3();
   this._pixelRatio = 1.0;
   this._orthographicIn3D = false;
   this._backgroundColor = new Color();
@@ -697,6 +698,17 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The ellipsoid surface normal at the camera position, in model coordinates.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  eyeEllipsoidNormalEC: {
+    get: function () {
+      return this._eyeEllipsoidNormalEC;
+    },
+  },
+
+  /**
    * The sun position in 3D world coordinates at the current scene time.
    * @memberof UniformState.prototype
    * @type {Cartesian3}
@@ -1074,12 +1086,27 @@ function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.rightWC, uniformState._cameraRight);
   Cartesian3.clone(camera.upWC, uniformState._cameraUp);
 
+  const ellipsoid = uniformState._ellipsoid;
+
   const positionCartographic = camera.positionCartographic;
   if (!defined(positionCartographic)) {
-    uniformState._eyeHeight = -uniformState._ellipsoid.maximumRadius;
+    uniformState._eyeHeight = -ellipsoid.maximumRadius;
+    uniformState._eyeEllipsoidNormalEC = Cartesian3.normalize(
+      camera.positionWC,
+      uniformState._eyeEllipsoidNormalEC
+    );
   } else {
     uniformState._eyeHeight = positionCartographic.height;
+    uniformState._eyeEllipsoidNormalEC = ellipsoid.geodeticSurfaceNormalCartographic(
+      positionCartographic,
+      uniformState._eyeEllipsoidNormalEC
+    );
   }
+  uniformState._eyeEllipsoidNormalEC = Matrix3.multiplyByVector(
+    uniformState._viewRotation,
+    uniformState._eyeEllipsoidNormalEC,
+    uniformState._eyeEllipsoidNormalEC
+  );
 
   uniformState._encodedCameraPositionMCDirty = true;
 }

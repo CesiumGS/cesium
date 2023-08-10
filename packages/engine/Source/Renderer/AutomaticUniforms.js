@@ -940,6 +940,19 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform containing the ellipsoid surface normal
+   * at the position below the eye (camera), in eye coordinates.
+   * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
+   */
+  czm_eyeEllipsoidNormalEC: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC3,
+    getValue: function (uniformState) {
+      return uniformState.eyeEllipsoidNormalEC;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
    * of the frustum defined by the camera.  This is the largest possible frustum, not an individual
    * frustum used for multi-frustum rendering.
