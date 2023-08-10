@@ -13,6 +13,7 @@
 ##### Fixes :wrench:
 
 - Fixed types for `ProviderViewModel.CreationFunction`. [#11452](https://github.com/CesiumGS/cesium/issues/11452)
+- Fixed I3dmLoader manually compute positions when RTC_CENTER is ZERO [#11466](https://github.com/CesiumGS/cesium/pull/11466)
 
 ### 1.108 - 2023-08-01
 
