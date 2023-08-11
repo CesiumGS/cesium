@@ -295,7 +295,7 @@ async function doRequest(resource, provider, previousError) {
  * Creates a provider for a single, top-level imagery tile.  The single image is assumed to use a
  * @param {Resource|String} url The url for the tile
  * @param {SingleTileImageryProvider.fromUrlOptions} [options] Object describing initialization options.
- *
+ * @returns {Promise<SingleTileImageryProvider>}
  * @example
  * const provider = await SingleTileImageryProvider.fromUrl("https://yoururl.com/image.png");
  */
