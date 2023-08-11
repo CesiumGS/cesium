@@ -8,6 +8,10 @@
 
 - The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
 
+##### Fixes :wrench:
+
+- The return type of `SingleTileImageryProvider.fromUrl` has been fixed to be `Promise.<SingleTileImageryProvider>` (was `void`). [#11432](https://github.com/CesiumGS/cesium/pull/11432)
+
 #### @cesium/widgets
 
 ##### Fixes :wrench:
