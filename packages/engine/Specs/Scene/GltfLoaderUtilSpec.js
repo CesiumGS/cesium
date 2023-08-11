@@ -288,36 +288,6 @@ describe(
       );
     });
 
-    it("createSampler creates non-mipmap sampler for KHR_texture_transform", function () {
-      let sampler = createSampler({
-        minFilter: TextureMinificationFilter.NEAREST_MIPMAP_NEAREST,
-        useTextureTransform: true,
-      });
-      expect(sampler.minificationFilter).toBe(
-        TextureMinificationFilter.NEAREST
-      );
-
-      sampler = createSampler({
-        minFilter: TextureMinificationFilter.NEAREST_MIPMAP_LINEAR,
-        useTextureTransform: true,
-      });
-      expect(sampler.minificationFilter).toBe(
-        TextureMinificationFilter.NEAREST
-      );
-
-      sampler = createSampler({
-        minFilter: TextureMinificationFilter.LINEAR_MIPMAP_NEAREST,
-        useTextureTransform: true,
-      });
-      expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
-
-      sampler = createSampler({
-        minFilter: TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-        useTextureTransform: true,
-      });
-      expect(sampler.minificationFilter).toBe(TextureMinificationFilter.LINEAR);
-    });
-
     it("createModelTextureReader creates texture with default values", function () {
       const textureInfo = {
         index: 0,

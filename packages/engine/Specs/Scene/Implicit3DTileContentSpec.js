@@ -158,6 +158,13 @@ describe(
           box: [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256],
         },
         transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 0, 1],
+        // For testing that tile metadata is ignored by transcoded children
+        metadata: {
+          class: "tile",
+          properties: {
+            tightBoundingVolume: [0, 0, 0, 64, 0, 0, 0, 64, 0, 0, 0, 64],
+          },
+        },
       });
       mockPlaceholderTile.implicitCoordinates = rootCoordinates;
       mockPlaceholderTile.implicitTileset = implicitTileset;
@@ -318,6 +325,23 @@ describe(
         0
       );
       expect(mockPlaceholderTile.children.length).toEqual(1);
+    });
+
+    it("does not propagate explicit tile metadata", async function () {
+      await Implicit3DTileContent.fromSubtreeJson(
+        mockTileset,
+        mockPlaceholderTile,
+        tilesetResource,
+        undefined,
+        quadtreeBuffer,
+        0
+      );
+      const tiles = [];
+      const subtreeRootTile = mockPlaceholderTile.children[0];
+      gatherTilesPreorder(subtreeRootTile, 0, 4, tiles);
+      for (let i = 0; i < tiles.length; i++) {
+        expect(tiles[i].metadata).not.toBeDefined();
+      }
     });
 
     it("preserves tile extras", async function () {
