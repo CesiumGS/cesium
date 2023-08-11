@@ -1,5 +1,13 @@
 # Change Log
 
+### Unreleased
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- The return type of `SingleTileImageryProvider.fromUrl` has been fixed to be `Promise.<SingleTileImageryProvider>` (was `void`). [#11432](https://github.com/CesiumGS/cesium/pull/11432)
+
 ### 1.109 - 2023-09-01
 
 #### @cesium/engine
