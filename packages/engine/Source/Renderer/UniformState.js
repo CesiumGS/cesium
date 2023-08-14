@@ -145,6 +145,9 @@ function UniformState() {
   this._eyeHeight = 0.0;
   this._eyeHeight2D = new Cartesian2();
   this._eyeEllipsoidNormalEC = new Cartesian3();
+  this._eyeEllipsoidCurvature = new Cartesian2();
+  this._modelToEnu = new Matrix4();
+  this._enuToModel = new Matrix4();
   this._pixelRatio = 1.0;
   this._orthographicIn3D = false;
   this._backgroundColor = new Color();
@@ -709,6 +712,41 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * The ellipsoid radii of curvature at the camera position.
+   * The .x component is the prime vertical radius, .y is the meridional.
+   * @memberof UniformState.prototype
+   * @type {Cartesian2}
+   */
+  eyeEllipsoidCurvature: {
+    get: function () {
+      return this._eyeEllipsoidCurvature;
+    },
+  },
+
+  /**
+   * A transform from model coordinates to an east-north-up coordinate system
+   * centered at the position on the ellipsoid below the camera
+   * @memberof UniformState.prototype
+   * @type {Matrix4}
+   */
+  modelToEnu: {
+    get: function () {
+      return this._modelToEnu;
+    },
+  },
+
+  /**
+   * The inverse of {@link UniformState.prototype.modelToEnu}
+   * @memberof UniformState.prototype
+   * @type {Matrix4}
+   */
+  enuToModel: {
+    get: function () {
+      return this._enuToModel;
+    },
+  },
+
+  /**
    * The sun position in 3D world coordinates at the current scene time.
    * @memberof UniformState.prototype
    * @type {Cartesian3}
@@ -1080,6 +1118,10 @@ function setInfiniteProjection(uniformState, matrix) {
   uniformState._modelViewInfiniteProjectionDirty = true;
 }
 
+const surfacePositionScratch = new Cartesian3();
+const primeVerticalScratch = new Cartesian3();
+const enuTransformScratch = new Matrix4();
+
 function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.positionWC, uniformState._cameraPosition);
   Cartesian3.clone(camera.directionWC, uniformState._cameraDirection);
@@ -1087,6 +1129,7 @@ function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.upWC, uniformState._cameraUp);
 
   const ellipsoid = uniformState._ellipsoid;
+  let surfacePosition;
 
   const positionCartographic = camera.positionCartographic;
   if (!defined(positionCartographic)) {
@@ -1095,17 +1138,67 @@ function setCamera(uniformState, camera) {
       camera.positionWC,
       uniformState._eyeEllipsoidNormalEC
     );
+    surfacePosition = ellipsoid.scaleToGeodeticSurface(
+      camera.positionWC,
+      surfacePositionScratch
+    );
   } else {
     uniformState._eyeHeight = positionCartographic.height;
     uniformState._eyeEllipsoidNormalEC = ellipsoid.geodeticSurfaceNormalCartographic(
       positionCartographic,
       uniformState._eyeEllipsoidNormalEC
     );
+    surfacePosition = Cartesian3.fromRadians(
+      positionCartographic.longitude,
+      positionCartographic.latitude,
+      0.0,
+      ellipsoid,
+      surfacePositionScratch
+    );
   }
+
   uniformState._eyeEllipsoidNormalEC = Matrix3.multiplyByVector(
     uniformState._viewRotation,
     uniformState._eyeEllipsoidNormalEC,
     uniformState._eyeEllipsoidNormalEC
+  );
+
+  const primeVerticalEndpoint = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
+    surfacePosition,
+    0.0,
+    primeVerticalScratch
+  );
+  const primeVerticalRadius = Cartesian3.distance(
+    surfacePosition,
+    primeVerticalEndpoint
+  );
+  // meridional radius = (1 - e^2) * primeVerticalRadius^3 / a^2
+  // where 1 - e^2 = b^2 / a^2,
+  // so meridional = b^2 * primeVerticalRadius^3 / a^4
+  //   = (b * primeVerticalRadius / a^2)^2 * primeVertical
+  const radiusRatio =
+    (ellipsoid.minimumRadius * primeVerticalRadius) /
+    ellipsoid.maximumRadius ** 2;
+  const meridionalRadius = primeVerticalRadius * radiusRatio ** 2;
+  uniformState._eyeEllipsoidCurvature = Cartesian2.fromElements(
+    1.0 / primeVerticalRadius,
+    1.0 / meridionalRadius,
+    uniformState._eyeEllipsoidCurvature
+  );
+
+  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+    surfacePosition,
+    ellipsoid,
+    enuTransformScratch
+  );
+  uniformState._enuToModel = Matrix4.multiplyTransformation(
+    uniformState.inverseModel,
+    enuToWorld,
+    uniformState._enuToModel
+  );
+  uniformState._modelToEnu = Matrix4.inverseTransformation(
+    uniformState._enuToModel,
+    uniformState._modelToEnu
   );
 
   uniformState._encodedCameraPositionMCDirty = true;
