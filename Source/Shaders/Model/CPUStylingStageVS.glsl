@@ -22,7 +22,8 @@ void filterByPassType(inout vec3 positionMC, vec4 featureColor)
 void cpuStylingStage(inout vec3 positionMC, inout SelectedFeature feature)
 {
     float show = ceil(feature.color.a);
-    positionMC *= show;
+    // PROPELLER HACK
+    // positionMC *= show;
 
     #if defined(HAS_SELECTED_FEATURE_ID_ATTRIBUTE) && !defined(HAS_CLASSIFICATION)
     filterByPassType(positionMC, feature.color);
