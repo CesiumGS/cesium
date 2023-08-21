@@ -14,10 +14,10 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  * @constructor
  * @augments ResourceLoader
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents. Mutually exclusive with options.resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer. Mutually exclusive with options.typedArray.
- * @param {String} [options.cacheKey] The cache key of the resource.
+ * @param {string} [options.cacheKey] The cache key of the resource.
  *
  * @exception {DeveloperError} One of options.typedArray and options.resource must be defined.
  *
@@ -51,25 +51,13 @@ if (defined(Object.create)) {
 
 Object.defineProperties(BufferLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof BufferLoader.prototype
-   *
-   * @type {Promise.<BufferLoader>|undefined}
-   * @readonly
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
-  /**
    * The cache key of the resource.
    *
    * @memberof BufferLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
+   * @private
    */
   cacheKey: {
     get: function () {
@@ -83,6 +71,7 @@ Object.defineProperties(BufferLoader.prototype, {
    *
    * @type {Uint8Array}
    * @readonly
+   * @private
    */
   typedArray: {
     get: function () {
@@ -93,38 +82,44 @@ Object.defineProperties(BufferLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<BufferLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<BufferLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
-BufferLoader.prototype.load = function () {
+BufferLoader.prototype.load = async function () {
+  if (defined(this._promise)) {
+    return this._promise;
+  }
+
   if (defined(this._typedArray)) {
     this._promise = Promise.resolve(this);
-  } else {
-    this._promise = loadExternalBuffer(this);
+    return this._promise;
   }
+
+  this._promise = loadExternalBuffer(this);
   return this._promise;
 };
 
-function loadExternalBuffer(bufferLoader) {
+async function loadExternalBuffer(bufferLoader) {
   const resource = bufferLoader._resource;
   bufferLoader._state = ResourceLoaderState.LOADING;
-  return BufferLoader._fetchArrayBuffer(resource)
-    .then(function (arrayBuffer) {
-      if (bufferLoader.isDestroyed()) {
-        return;
-      }
-      bufferLoader._typedArray = new Uint8Array(arrayBuffer);
-      bufferLoader._state = ResourceLoaderState.READY;
-      return bufferLoader;
-    })
-    .catch(function (error) {
-      if (bufferLoader.isDestroyed()) {
-        return;
-      }
-      bufferLoader._state = ResourceLoaderState.FAILED;
-      const errorMessage = `Failed to load external buffer: ${resource.url}`;
-      return Promise.reject(bufferLoader.getError(errorMessage, error));
-    });
+  try {
+    const arrayBuffer = await BufferLoader._fetchArrayBuffer(resource);
+    if (bufferLoader.isDestroyed()) {
+      return;
+    }
+
+    bufferLoader._typedArray = new Uint8Array(arrayBuffer);
+    bufferLoader._state = ResourceLoaderState.READY;
+    return bufferLoader;
+  } catch (error) {
+    if (bufferLoader.isDestroyed()) {
+      return;
+    }
+
+    bufferLoader._state = ResourceLoaderState.FAILED;
+    const errorMessage = `Failed to load external buffer: ${resource.url}`;
+    throw bufferLoader.getError(errorMessage, error);
+  }
 }
 
 /**

@@ -56,7 +56,7 @@ function ModelAnimationCollection(model) {
    * to the model's animations. By default, this is based on scene time, so models using
    * the default will not animate regardless of this setting.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.animateWhilePaused = false;
@@ -72,7 +72,7 @@ Object.defineProperties(ModelAnimationCollection.prototype, {
    *
    * @memberof ModelAnimationCollection.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   length: {
@@ -110,20 +110,20 @@ function addAnimation(collection, animation, options) {
  * This raises the {@link ModelAnimationCollection#animationAdded} event so, for example, a UI can stay in sync.
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {String} [options.name] The glTF animation name that identifies the animation. Must be defined if <code>options.index</code> is <code>undefined</code>.
- * @param {Number} [options.index] The glTF animation index that identifies the animation. Must be defined if <code>options.name</code> is <code>undefined</code>.
+ * @param {object} options Object with the following properties:
+ * @param {string} [options.name] The glTF animation name that identifies the animation. Must be defined if <code>options.index</code> is <code>undefined</code>.
+ * @param {number} [options.index] The glTF animation index that identifies the animation. Must be defined if <code>options.name</code> is <code>undefined</code>.
  * @param {JulianDate} [options.startTime] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
- * @param {Number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
+ * @param {number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
  * @param {JulianDate} [options.stopTime] The scene time to stop playing the animation.  When this is <code>undefined</code>, the animation is played for its full duration.
- * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animation is removed after it stops playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
- * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
- * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
+ * @param {boolean} [options.removeOnStop=false] When <code>true</code>, the animation is removed after it stops playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
+ * @param {number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
+ * @param {boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
  * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for this animation.
  * @returns {ModelAnimation} The animation that was added to the collection.
  *
- * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
+ * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#ready} to return trues.
  * @exception {DeveloperError} options.name must be a valid animation name.
  * @exception {DeveloperError} options.index must be a valid animation index.
  * @exception {DeveloperError} Either options.name or options.index must be defined.
@@ -174,7 +174,7 @@ ModelAnimationCollection.prototype.add = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!model.ready) {
     throw new DeveloperError(
-      "Animations are not loaded.  Wait for Model.readyPromise to resolve."
+      "Animations are not loaded.  Wait for Model.ready to be true."
     );
   }
   //>>includeEnd('debug');
@@ -230,18 +230,18 @@ ModelAnimationCollection.prototype.add = function (options) {
  * This raises the {@link ModelAnimationCollection#animationAdded} event for each model so, for example, a UI can stay in sync.
  * </p>
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {JulianDate} [options.startTime] The scene time to start playing the animations. When this is <code>undefined</code>, the animations starts at the next frame.
- * @param {Number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
+ * @param {number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
  * @param {JulianDate} [options.stopTime] The scene time to stop playing the animations. When this is <code>undefined</code>, the animations are played for its full duration.
- * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animations are removed after they stop playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
- * @param {Number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
- * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
+ * @param {boolean} [options.removeOnStop=false] When <code>true</code>, the animations are removed after they stop playing. This will only affect the animation if <code>options.loop</code> is ModelAnimationLoop.NONE.
+ * @param {number} [options.multiplier=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
+ * @param {boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
  * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
  * @param {ModelAnimation.AnimationTimeCallback} [options.animationTime=undefined] If defined, computes the local animation time for all of the animations.
  * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
  *
- * @exception {DeveloperError} Animations are not loaded. Wait for the {@link Model#readyPromise} to resolve.
+ * @exception {DeveloperError} Animations are not loaded. Wait for the {@link Model#ready} to return true.
  * @exception {DeveloperError} options.multiplier must be greater than zero.
  *
  * @example
@@ -258,7 +258,7 @@ ModelAnimationCollection.prototype.addAll = function (options) {
   //>>includeStart('debug', pragmas.debug);
   if (!model.ready) {
     throw new DeveloperError(
-      "Animations are not loaded.  Wait for Model.readyPromise to resolve."
+      "Animations are not loaded.  Wait for Model.ready to be true."
     );
   }
 
@@ -289,7 +289,7 @@ ModelAnimationCollection.prototype.addAll = function (options) {
  * </p>
  *
  * @param {ModelAnimation} runtimeAnimation The runtime animation to remove.
- * @returns {Boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
+ * @returns {boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
  *
  * @example
  * const a = model.activeAnimations.add({
@@ -336,7 +336,7 @@ ModelAnimationCollection.prototype.removeAll = function () {
  * Determines whether this collection contains a given animation.
  *
  * @param {ModelAnimation} runtimeAnimation The runtime animation to check for.
- * @returns {Boolean} <code>true</code> if this collection contains the animation, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if this collection contains the animation, <code>false</code> otherwise.
  */
 ModelAnimationCollection.prototype.contains = function (runtimeAnimation) {
   if (defined(runtimeAnimation)) {
@@ -352,7 +352,7 @@ ModelAnimationCollection.prototype.contains = function (runtimeAnimation) {
  * it to the left, changing their indices.  This function is commonly used to iterate over
  * all the animations in the collection.
  *
- * @param {Number} index The zero-based index of the animation.
+ * @param {number} index The zero-based index of the animation.
  * @returns {ModelAnimation} The runtime animation at the specified index.
  *
  * @example
@@ -396,7 +396,7 @@ function createAnimationRemovedFunction(
  * that have stopped.
  *
  * @param {FrameState} frameState The current frame state.
- * @returns {Boolean} <code>true</code> if an animation played during this update, <code>false</code> otherwise.
+ * @returns {boolean} <code>true</code> if an animation played during this update, <code>false</code> otherwise.
  *
  * @private
  */

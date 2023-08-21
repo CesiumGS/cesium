@@ -126,19 +126,18 @@ const rsDefault = {
 };
 
 const translucentFS =
-  "#extension GL_EXT_frag_depth : enable\n" +
   "uniform sampler2D colorTexture;\n" +
   "uniform sampler2D depthTexture;\n" +
   "uniform sampler2D classifiedTexture;\n" +
-  "varying vec2 v_textureCoordinates;\n" +
+  "in vec2 v_textureCoordinates;\n" +
   "void main()\n" +
   "{\n" +
-  "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
+  "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
   "    if (color.a == 0.0)\n" +
   "    {\n" +
   "        discard;\n" +
   "    }\n" +
-  "    bool isClassified = all(equal(texture2D(classifiedTexture, v_textureCoordinates), vec4(0.0)));\n" +
+  "    bool isClassified = all(equal(texture(classifiedTexture, v_textureCoordinates), vec4(0.0)));\n" +
   "#ifdef UNCLASSIFIED\n" +
   "    vec4 highlightColor = czm_invertClassificationColor;\n" +
   "    if (isClassified)\n" +
@@ -152,24 +151,24 @@ const translucentFS =
   "        discard;\n" +
   "    }\n" +
   "#endif\n" +
-  "    gl_FragColor = color * highlightColor;\n" +
-  "    gl_FragDepthEXT = texture2D(depthTexture, v_textureCoordinates).r;\n" +
+  "    out_FragColor = color * highlightColor;\n" +
+  "    gl_FragDepth = texture(depthTexture, v_textureCoordinates).r;\n" +
   "}\n";
 
 const opaqueFS =
   "uniform sampler2D colorTexture;\n" +
-  "varying vec2 v_textureCoordinates;\n" +
+  "in vec2 v_textureCoordinates;\n" +
   "void main()\n" +
   "{\n" +
-  "    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n" +
+  "    vec4 color = texture(colorTexture, v_textureCoordinates);\n" +
   "    if (color.a == 0.0)\n" +
   "    {\n" +
   "        discard;\n" +
   "    }\n" +
   "#ifdef UNCLASSIFIED\n" +
-  "    gl_FragColor = color * czm_invertClassificationColor;\n" +
+  "    out_FragColor = color * czm_invertClassificationColor;\n" +
   "#else\n" +
-  "    gl_FragColor = color;\n" +
+  "    out_FragColor = color;\n" +
   "#endif\n" +
   "}\n";
 

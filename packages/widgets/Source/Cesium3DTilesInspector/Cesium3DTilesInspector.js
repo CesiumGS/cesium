@@ -9,7 +9,7 @@ import Cesium3DTilesInspectorViewModel from "./Cesium3DTilesInspectorViewModel.j
  * @alias Cesium3DTilesInspector
  * @constructor
  *
- * @param {Element|String} container The DOM element or ID that will contain the widget.
+ * @param {Element|string} container The DOM element or ID that will contain the widget.
  * @param {Scene} scene the Scene instance to use.
  */
 function Cesium3DTilesInspector(container, scene) {
@@ -360,7 +360,7 @@ Object.defineProperties(Cesium3DTilesInspector.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 Cesium3DTilesInspector.prototype.isDestroyed = function () {
   return false;

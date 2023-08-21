@@ -11,17 +11,17 @@ import TextureWrap from "../../Renderer/TextureWrap.js";
  * A simple struct that serves as a value of a <code>sampler2D</code>-valued
  * uniform. This is used with {@link CustomShader} and {@link TextureManager}
  *
- * @param {Object} options An object with the following properties:
+ * @param {object} options An object with the following properties:
  * @param {Uint8Array} [options.typedArray] A typed array storing the contents of a texture. Values are stored in row-major order. Since WebGL uses a y-up convention for textures, rows are listed from bottom to top.
- * @param {Number} [options.width] The width of the image. Required when options.typedArray is present
- * @param {Number} [options.height] The height of the image. Required when options.typedArray is present.
- * @param {String|Resource} [options.url] A URL string or resource pointing to a texture image.
- * @param {Boolean} [options.repeat=true] When defined, the texture sampler will be set to wrap in both directions
+ * @param {number} [options.width] The width of the image. Required when options.typedArray is present
+ * @param {number} [options.height] The height of the image. Required when options.typedArray is present.
+ * @param {string|Resource} [options.url] A URL string or resource pointing to a texture image.
+ * @param {boolean} [options.repeat=true] When defined, the texture sampler will be set to wrap in both directions
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] When options.typedArray is defined, this is used to determine the pixel format of the texture
  * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] When options.typedArray is defined, this is the data type of pixel values in the typed array.
  * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The minification filter of the texture sampler.
  * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The magnification filter of the texture sampler.
- * @param {Number} [options.maximumAnisotropy=1.0] The maximum anisotropy of the texture sampler
+ * @param {number} [options.maximumAnisotropy=1.0] The maximum anisotropy of the texture sampler
  *
  * @alias TextureUniform
  * @constructor

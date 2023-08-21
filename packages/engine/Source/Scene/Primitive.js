@@ -63,20 +63,20 @@ import ShadowMode from "./ShadowMode.js";
  * @alias Primitive
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
  * @param {Appearance} [options.appearance] The appearance used to render the primitive.
  * @param {Appearance} [options.depthFailAppearance] The appearance used to shade this primitive when it fails the depth test.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
- * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
- * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
- * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
- * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
- * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
- * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+ * @param {boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+ * @param {boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
+ * @param {boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+ * @param {boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+ * @param {boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
+ * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
  *
  * @example
@@ -233,7 +233,7 @@ function Primitive(options) {
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
    *
-   * @type Boolean
+   * @type {boolean}
    *
    * @default true
    */
@@ -254,7 +254,7 @@ function Primitive(options) {
    * based on their bounding volume.  Set this to <code>false</code> for a small performance gain
    * if you are manually culling the primitive.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -266,7 +266,7 @@ function Primitive(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -314,7 +314,7 @@ function Primitive(options) {
   this._boundingSphereCV = [];
   this._boundingSphere2D = [];
   this._boundingSphereMorph = [];
-  this._perInstanceAttributeCache = [];
+  this._perInstanceAttributeCache = new Map();
   this._instanceIds = [];
   this._lastPerInstanceAttributeIndex = 0;
 
@@ -349,24 +349,6 @@ function Primitive(options) {
   this._createGeometryResults = undefined;
   this._ready = false;
 
-  const primitive = this;
-  this._readyPromise = new Promise((resolve, reject) => {
-    primitive._completeLoad = (frameState, state, error) => {
-      this._error = error;
-      this._state = state;
-      frameState.afterRender.push(function () {
-        primitive._ready =
-          primitive._state === PrimitiveState.COMPLETE ||
-          primitive._state === PrimitiveState.FAILED;
-        if (!defined(error)) {
-          resolve(primitive);
-          return true;
-        }
-        reject(error);
-      });
-    };
-  });
-
   this._batchTable = undefined;
   this._batchTableAttributeIndices = undefined;
   this._offsetInstanceExtend = undefined;
@@ -386,7 +368,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -402,7 +384,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -418,7 +400,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -434,7 +416,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -450,7 +432,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -466,7 +448,7 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -484,24 +466,25 @@ Object.defineProperties(Primitive.prototype, {
    *
    * @memberof Primitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
+   *
+   * @example
+   * // Wait for a primitive to become ready before accessing attributes
+   * const removeListener = scene.postRender.addEventListener(() => {
+   *   if (!frustumPrimitive.ready) {
+   *     return;
+   *   }
+   *
+   *   const attributes = primitive.getGeometryInstanceAttributes('an id');
+   *   attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
+   *
+   *   removeListener();
+   * });
    */
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof Primitive.prototype
-   * @type {Promise.<Primitive>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 });
@@ -743,7 +726,7 @@ function cloneInstance(instance, geometry) {
   };
 }
 
-const positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
+const positionRegex = /in\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
 Primitive._modifyShaderPosition = function (
   primitive,
@@ -771,8 +754,7 @@ Primitive._modifyShaderPosition = function (
     if (!defined(primitive.rtcCenter)) {
       // Use GPU RTE
       if (!scene3DOnly) {
-        attributes +=
-          `attribute vec3 ${name}2DHigh;\n` + `attribute vec3 ${name}2DLow;\n`;
+        attributes += `in vec3 ${name}2DHigh;\nin vec3 ${name}2DLow;\n`;
 
         computeFunctions +=
           `${functionName}\n` +
@@ -805,16 +787,16 @@ Primitive._modifyShaderPosition = function (
     } else {
       // Use RTC
       vertexShaderSource = vertexShaderSource.replace(
-        /attribute\s+vec(?:3|4)\s+position3DHigh;/g,
+        /in\s+vec(?:3|4)\s+position3DHigh;/g,
         ""
       );
       vertexShaderSource = vertexShaderSource.replace(
-        /attribute\s+vec(?:3|4)\s+position3DLow;/g,
+        /in\s+vec(?:3|4)\s+position3DLow;/g,
         ""
       );
 
       forwardDecl += "uniform mat4 u_modifiedModelView;\n";
-      attributes += "attribute vec4 position;\n";
+      attributes += "in vec4 position;\n";
 
       computeFunctions +=
         `${functionName}\n` +
@@ -871,7 +853,7 @@ Primitive._updateColorAttribute = function (
     return vertexShaderSource;
   }
 
-  if (vertexShaderSource.search(/attribute\s+vec4\s+color;/g) === -1) {
+  if (vertexShaderSource.search(/in\s+vec4\s+color;/g) === -1) {
     return vertexShaderSource;
   }
 
@@ -887,7 +869,7 @@ Primitive._updateColorAttribute = function (
   //>>includeEnd('debug');
 
   let modifiedVS = vertexShaderSource;
-  modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec4\s+color;/g, "");
   if (!isDepthFail) {
     modifiedVS = modifiedVS.replace(
       /(\b)color(\b)/g,
@@ -905,7 +887,7 @@ Primitive._updateColorAttribute = function (
 function appendPickToVertexShader(source) {
   const renamedVS = ShaderSource.replaceMain(source, "czm_non_pick_main");
   const pickMain =
-    "varying vec4 v_pickColor; \n" +
+    "out vec4 v_pickColor; \n" +
     "void main() \n" +
     "{ \n" +
     "    czm_non_pick_main(); \n" +
@@ -916,11 +898,11 @@ function appendPickToVertexShader(source) {
 }
 
 function appendPickToFragmentShader(source) {
-  return `varying vec4 v_pickColor;\n${source}`;
+  return `in vec4 v_pickColor;\n${source}`;
 }
 
 Primitive._updatePickColorAttribute = function (source) {
-  let vsPick = source.replace(/attribute\s+vec4\s+pickColor;/g, "");
+  let vsPick = source.replace(/in\s+vec4\s+pickColor;/g, "");
   vsPick = vsPick.replace(
     /(\b)pickColor(\b)/g,
     "$1czm_batchTable_pickColor(batchId)$2"
@@ -933,10 +915,10 @@ Primitive._appendOffsetToShader = function (primitive, vertexShaderSource) {
     return vertexShaderSource;
   }
 
-  let attr = "attribute float batchId;\n";
-  attr += "attribute float applyOffset;";
+  let attr = "in float batchId;\n";
+  attr += "in float applyOffset;";
   let modifiedShader = vertexShaderSource.replace(
-    /attribute\s+float\s+batchId;/g,
+    /in\s+float\s+batchId;/g,
     attr
   );
 
@@ -1033,17 +1015,16 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   }
 
   const containsNormal =
-    vertexShaderSource.search(/attribute\s+vec3\s+normal;/g) !== -1;
-  const containsSt =
-    vertexShaderSource.search(/attribute\s+vec2\s+st;/g) !== -1;
+    vertexShaderSource.search(/in\s+vec3\s+normal;/g) !== -1;
+  const containsSt = vertexShaderSource.search(/in\s+vec2\s+st;/g) !== -1;
   if (!containsNormal && !containsSt) {
     return vertexShaderSource;
   }
 
   const containsTangent =
-    vertexShaderSource.search(/attribute\s+vec3\s+tangent;/g) !== -1;
+    vertexShaderSource.search(/in\s+vec3\s+tangent;/g) !== -1;
   const containsBitangent =
-    vertexShaderSource.search(/attribute\s+vec3\s+bitangent;/g) !== -1;
+    vertexShaderSource.search(/in\s+vec3\s+bitangent;/g) !== -1;
 
   let numComponents = containsSt && containsNormal ? 2.0 : 1.0;
   numComponents += containsTangent || containsBitangent ? 1 : 0;
@@ -1051,7 +1032,7 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   const type = numComponents > 1 ? `vec${numComponents}` : "float";
 
   const attributeName = "compressedAttributes";
-  const attributeDecl = `attribute ${type} ${attributeName};`;
+  const attributeDecl = `in ${type} ${attributeName};`;
 
   let globalDecl = "";
   let decode = "";
@@ -1092,10 +1073,10 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
   }
 
   let modifiedVS = vertexShaderSource;
-  modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, "");
-  modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, "");
-  modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, "");
-  modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+bitangent;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec3\s+normal;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec2\s+st;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec3\s+tangent;/g, "");
+  modifiedVS = modifiedVS.replace(/in\s+vec3\s+bitangent;/g, "");
   modifiedVS = ShaderSource.replaceMain(modifiedVS, "czm_non_compressed_main");
   const compressedMain =
     `${"void main() \n" + "{ \n"}${decode}    czm_non_compressed_main(); \n` +
@@ -1125,19 +1106,12 @@ function depthClampFS(fragmentShaderSource) {
   modifiedFS +=
     "void main() {\n" +
     "    czm_non_depth_clamp_main();\n" +
-    "#if defined(GL_EXT_frag_depth)\n" +
     "    #if defined(LOG_DEPTH)\n" +
     "        czm_writeLogDepth();\n" +
     "    #else\n" +
     "        czm_writeDepthClamp();\n" +
     "    #endif\n" +
-    "#endif\n" +
     "}\n";
-  modifiedFS = `${
-    "#ifdef GL_EXT_frag_depth\n" +
-    "#extension GL_EXT_frag_depth : enable\n" +
-    "#endif\n"
-  }${modifiedFS}`;
   return modifiedFS;
 }
 
@@ -2397,7 +2371,7 @@ function createPickIdProperty(primitive, properties, index) {
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
  *
  * @param {*} id The id of the {@link GeometryInstance}.
- * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
+ * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
  *
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
@@ -2420,6 +2394,11 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
   }
   //>>includeEnd('debug');
 
+  let attributes = this._perInstanceAttributeCache.get(id);
+  if (defined(attributes)) {
+    return attributes;
+  }
+
   let index = -1;
   const lastIndex = this._lastPerInstanceAttributeIndex;
   const ids = this._instanceIds;
@@ -2434,11 +2413,6 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
 
   if (index === -1) {
     return undefined;
-  }
-
-  let attributes = this._perInstanceAttributeCache[index];
-  if (defined(attributes)) {
-    return attributes;
   }
 
   const batchTable = this._batchTable;
@@ -2461,7 +2435,7 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
   Object.defineProperties(attributes, properties);
 
   this._lastPerInstanceAttributeIndex = index;
-  this._perInstanceAttributeCache[index] = attributes;
+  this._perInstanceAttributeCache.set(id, attributes);
   return attributes;
 };
 
@@ -2472,7 +2446,7 @@ Primitive.prototype.getGeometryInstanceAttributes = function (id) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see Primitive#destroy
  */
@@ -2531,6 +2505,15 @@ Primitive.prototype.destroy = function () {
 };
 
 function setReady(primitive, frameState, state, error) {
-  primitive._completeLoad(frameState, state, error);
+  primitive._error = error;
+  primitive._state = state;
+  frameState.afterRender.push(function () {
+    primitive._ready =
+      primitive._state === PrimitiveState.COMPLETE ||
+      primitive._state === PrimitiveState.FAILED;
+    if (!defined(error)) {
+      return true;
+    }
+  });
 }
 export default Primitive;

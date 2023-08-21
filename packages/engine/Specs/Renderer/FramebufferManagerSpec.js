@@ -20,7 +20,7 @@ describe(
     let fbm;
 
     beforeAll(function () {
-      context = createContext({ requestWebgl1: false });
+      context = createContext();
     });
 
     afterAll(function () {
@@ -467,7 +467,7 @@ describe(
       fbm.clear(context, clearCommand);
 
       const fs =
-        "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
+        "uniform sampler2D u_texture; void main() { out_FragColor = texture(u_texture, vec2(0.0)); }";
       const uniformMap = {
         u_texture: function () {
           return fbm.getColorTexture();
@@ -500,7 +500,7 @@ describe(
       expect(clearCommand.framebuffer).toBe(fb);
 
       const fs =
-        "uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }";
+        "uniform sampler2D u_texture; void main() { out_FragColor = texture(u_texture, vec2(0.0)); }";
       const uniformMap = {
         u_texture: function () {
           return fbm.getColorTexture();

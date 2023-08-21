@@ -26,6 +26,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
       - [Run Only Non-WebGL Category Tests](#run-only-non-webgl-category-tests)
       - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
     - [Run Coverage](#run-coverage)
+    - [Run End to End Tests](#run-end-to-end-tests)
   - [`testfailure` Label for Issues](#testfailure-label-for-issues)
   - [Writing Tests](#writing-tests)
     - [Directory Organization](#directory-organization)
@@ -239,6 +240,60 @@ It is possible to have 100% code coverage with two tests: one test where `a` and
 
 The number of linearly independent paths (four in this case) is called the **cyclomatic complexity**. Be mindful of this when writing tests. On one extreme, 100% code coverage is the least amount of testing, on the other extreme is covering the cyclomatic complexity, which quickly becomes unreasonable. Use your knowledge of the implementation to devise the best strategy.
 
+### Run End to End Tests
+
+End to end (E2E) testing is a type of testing that tests the entire stack from the user's perspective. This is different to unit testing, which validates a small isolated piece of functionality at the class or function level. In CesiumJS, this testing consists mainly of screenshot comparisons.
+
+[Playwright](https://playwright.dev/) is used to conduct end to end testing. The Playwright tests run in Node and drive instances of the browsers. It is recommended that your read through the [Playwright documentation](https://playwright.dev/docs/intro) to get up to speed before writing or reviewing tests.
+
+Since CesiumJS often takes the current time into consideration for things like lighting, animation, and the position of the skybox corresponding to the earth's rotation, we use [Sinon](https://sinonjs.org/) to mock system time, ensuring consistency for all end to end tests.
+
+#### End to End Test Tasks
+
+To generate initial screenshots, checkout the `main` branch (or a previous release tag), and run `npm run test-e2e-update`. Subsequently, you can test against the generated screenshots with `npm run test-e2e`.
+
+Common end to end workflows have been captured in the following tasks:
+
+- `npm run test-e2e` - Tests only in Chromium against the development build of CesiumJS.
+- `npm run test-e2e-all` - Tests in Chromium, Firefox, and Webkit against the development build of CesiumJS.
+- `npm run test-e2e-release` - Tests only in Chromium against the release build of CesiumJS.
+- `npm run test-e2e-release-all` - Tests in Chromium, Firefox, and Webkit against the release build of CesiumJS.
+- `npm run test-e2e-report` - Launch a server to view the HTML results of the last test.
+- `npm run test-e2e-update` - Tests in Chromium, Firefox, and Webkit against the development build of CesiumJS, updating the screenshots used for comparison. Use this if a feature has deliberately changed rendering.
+
+For further info and options, see the [Playwright documentation on running tests](https://playwright.dev/docs/running-tests).
+
+#### Debugging End to End Tests
+
+`test-e2e`, `test-e2e-all`, `test-e2e-release`, and `test-e2e-release-all` can all have [command line options for playwright test](https://playwright.dev/docs/test-cli) appended. The most useful are:
+
+- `--debug` - Launch a headed browser with developer tools for stepping through the tests.
+- `--project="webkit"` - Test only webkit. Can also use `chromium` or `firefox` to test against those browsers.
+- `-g <grep>` or `--grep <grep>` - Run only tests that match a regular expression.
+- `--grep-invert <grep>` - Run only tests that don't match a regular expression.
+
+For example:
+
+```bash
+npm run test-e2e -- -g "3D Tiles Clipping Planes"
+```
+
+Tests can also be isolated by appending `.only`.
+
+```js
+test.only("focus this test", async ({ page }) => {
+  // Run only focused tests in the entire project.
+});
+```
+
+#### Updating End to End Tests
+
+When new Sandcastle is added, or behavior is intentionally changed, the screenshots will need to be updated. Use `test-e2e-update` to run the relevant E2E tests and generate any new screenshots.
+
+```bash
+npm run test-e2e-update -- -g "3D Tiles Clipping Planes"
+```
+
 ## `testfailure` Label for Issues
 
 Despite our best efforts, sometimes tests fail. This is often due to a new browser, OS, or driver bug that breaks a test that previously passed. If this indicates a bug in CesiumJS, we strive to quickly fix it. Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/CesiumGS/cesium/issues/2989)), we also strive to quickly fix it.
@@ -383,6 +438,8 @@ We strive to write isolated isolated tests so that a test can be run individuall
 
 The tests in the `'WebGL'` category do not strictly follow this pattern. Creating a WebGL context (which is implicit, for example, in `createScene`) is slow. Because it creates a lot of contexts, e.g., one per test, it is not well supported in browsers. So the tests use the pattern in the code example below where a `scene` (or `viewer` or `context`) has the lifetime of the suite using `beforeAll` and `afterAll`.
 
+Due to side-effects, a WebGL context should never be created in the global scope, that is, outside of a `it`, `beforeAll`, `afterAll`, `beforeEach`, or `afterEach` block. Since they create a context, this applies to helper functions `createContext`, `createScene`, and `createViewer`.
+
 ### Rendering Tests
 
 Unlike the `Cartesian3` tests we first saw, many tests need to construct the main CesiumJS `Viewer` widget or one of its major components. Low-level renderer tests construct just `Context` (which, itself, has a canvas and WebGL context), and primitive tests construct a `Scene` (which contains a `Context`).
@@ -494,13 +551,47 @@ Uniforms, the model matrix, and various depth options can be provided. In additi
 it("can declare automatic uniforms", function () {
   const fs =
     "void main() { " +
-    "  gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); " +
+    "  out_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); " +
     "}";
   expect({
     context: context,
     fragmentShader: fs,
   }).contextToRender();
 });
+```
+
+#### Test in WebGL 1 and WebGL 2
+
+Sometimes, it's helpful to run rendering test in both WebGL 1 and WebGL 2 contexts to verify code works in either case. `createWebglVersionHelper` is a helper function that duplicates a block of specs in each context, and only runs WebGL 2 if supported by the environment.
+
+For example, the following code will execute the spec `"can create a vertex buffer from a size in bytes"` twice, once in a WebGL 1 context and once in a WebGL 2 context.
+
+```js
+createWebglVersionHelper(createBufferSpecs);
+
+function createBufferSpecs(contextOptions) {
+  let buffer;
+  let buffer2;
+  let context;
+
+  beforeAll(function () {
+    context = createContext(contextOptions);
+  });
+
+  afterAll(function () {
+    context.destroyForSpecs();
+  });
+
+  it("can create a vertex buffer from a size in bytes", function () {
+    buffer = Buffer.createVertexBuffer({
+      context: context,
+      sizeInBytes: 4,
+      usage: BufferUsage.STATIC_DRAW,
+    });
+    expect(buffer.sizeInBytes).toEqual(4);
+    expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
+  });
+}
 ```
 
 #### Debugging Rendering Tests
@@ -573,7 +664,7 @@ it("has czm_transpose (2x2)", function () {
     "void main() { " +
     "  mat2 m = mat2(1.0, 2.0, 3.0, 4.0); " +
     "  mat2 mt = mat2(1.0, 3.0, 2.0, 4.0); " +
-    "  gl_FragColor = vec4(czm_transpose(m) == mt); " +
+    "  out_FragColor = vec4(czm_transpose(m) == mt); " +
     "}";
 
   context.verifyDrawForSpecs(fs);
@@ -586,7 +677,7 @@ it("has czm_transpose (2x2)", function () {
 expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 ```
 
-In the test above, the expectation is implicit in the GLSL string for the fragment shader, `fs`, which assigns white to `gl_FragColor` if `czm_transpose` correctly transposes the matrix.
+In the test above, the expectation is implicit in the GLSL string for the fragment shader, `fs`, which assigns white to `out_FragColor` if `czm_transpose` correctly transposes the matrix.
 
 ### Spies
 
@@ -678,9 +769,18 @@ Make external requests that assume the tests are being used with an Internet con
 
 (For an introduction to promises, see [JavaScript Promises - There and back again](http://www.html5rocks.com/en/tutorials/es6/promises/)).
 
-For asynchronous testing, Jasmine's `it` function uses a `done` callback. For better integration with CesiumJS's asynchronous patterns, CesiumJS replaces `it` with a function that can return promises.
+Jasmine also has support for running specs that require testing asynchronous operations. The functions that you pass to `beforeAll`, `afterAll`, `beforeEach`, `afterEach`, and `it` can be declared `async`. These functions can also return promises. There are also cases where asynchronous functions that explicitly return promises should be tested. See the [Asynchronous Work tutorial](https://jasmine.github.io/tutorials/async) for more information.
 
-Here is a simplified example of a test from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/Model/ModelSpec.js):
+Here is a simplified example of `beforeAll` from [sampleTerrainSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Core/sampleTerrainSpec.js):
+
+```javascript
+let worldTerrain;
+beforeAll(async function () {
+  worldTerrain = await createWorldTerrainAsync();
+});
+```
+
+Here is a simplified example of a test from [ModelSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/Model/ModelSpec.js):
 
 ```javascript
 const modelUrl = "./Data/Models/glTF-2.0/Box/glTF/Box.gltf";
@@ -694,59 +794,60 @@ afterAll(function () {
   scene.destroyForSpecs();
 });
 
-it("renders glTF model", function () {
-  return loadAndZoomToModel({ gltf: modelUrl }, scene).then(function (model) {
-    expect(scene).toRenderAndCall(function (rgba) {
-      expect(rgba[0]).toBeGreaterThan(0);
-      expect(rgba[1]).toBeGreaterThan(0);
-      expect(rgba[2]).toBeGreaterThan(0);
-      expect(rgba[3]).toBe(255);
-    });
+it("renders glTF model", async function () {
+  const model = await loadAndZoomToModelAsync({ gltf: modelUrl }, scene);
+  expect(scene).toRenderAndCall(function (rgba) {
+    expect(rgba[0]).toBeGreaterThan(0);
+    expect(rgba[1]).toBeGreaterThan(0);
+    expect(rgba[2]).toBeGreaterThan(0);
+    expect(rgba[3]).toBe(255);
   });
 });
 ```
 
-Given a model's url and other options, [`loadAndZoomToModel`](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/Model/loadAndZoomToModel.js) loads a model, configures the camera, and returns a promise that resolves when a model's `readyPromise` resolves.
+Given a model's url and other options, [`loadAndZoomToModelAsync`](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/Model/loadAndZoomToModelAsync.js) loads a model, configures the camera, and returns a promise that resolves when a model is ready for rendering.
 
-Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's [`pollToPromise`](https://github.com/CesiumGS/cesium/blob/main/Specs/pollToPromise.js) is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.readyPromise` resolves or the `timeout` is reached. `loadAndZoomToModel` uses `pollToPromise` to wait until the model is finished loading.
+Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's [`pollToPromise`](https://github.com/CesiumGS/cesium/blob/main/Specs/pollToPromise.js) is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.ready` is `true` or the `timeout` is reached.
 
-`pollToPromise` is also used in many places where a test needs to wait for an asynchronous event before testing its expectations. Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/BillboardCollectionSpec.js):
+`pollToPromise` is also used in many places where a test needs to wait for an asynchronous event before testing its expectations. Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/BillboardCollectionSpec.js):
 
 ```javascript
-it("can create a billboard using a URL", function () {
+it("can create a billboard using a URL", async function () {
   const b = billboards.add({
     image: "./Data/Images/Green.png",
   });
   expect(b.ready).toEqual(false);
 
-  return pollToPromise(function () {
+  await pollToPromise(function () {
     return b.ready;
-  }).then(function () {
-    expect(scene).toRender([0, 255, 0, 255]);
   });
+
+  expect(scene).toRender([0, 255, 0, 255]);
 });
 ```
 
-Here a billboard is loaded using a url to image. Internally, `Billboard` makes an asynchronous request for the image and then sets its `ready` property to `true`. The function passed to `pollToPromise` just returns the value of `ready`; it does not need to render the scene to progressively complete the request like `Model`. Finally, the resolve function (passed to `then`) verifies that the billboard is green.
+Here a billboard is loaded using a url to image. Internally, `Billboard` makes an asynchronous request for the image and then sets its `ready` property to `true`. The function passed to `pollToPromise` just returns the value of `ready`; it does not need to render the scene to progressively complete the request like `Model`. Finally, the test verifies that the billboard is green.
 
-To test if a promises rejects, we call `fail` in the resolve function and put the expectation in the reject function. Here is an excerpt from [ArcGisMapServerImageryProviderSpec.js](https://github.com/CesiumGS/cesium/blob/main/Specs/Scene/ArcGisMapServerImageryProviderSpec.js):
+To test if a promise rejects, we use `expectAsync` and provide the expected error type and message. Here is an excerpt from [ArcGISTiledElevationTerrainProviderSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Core/ArcGISTiledElevationTerrainProviderSpec.js):
 
 ```javascript
-it("rejects readyPromise on error", function () {
-  const baseUrl = "//tiledArcGisMapServer.invalid";
+it("fromUrl throws if the SRS is not supported", async function () {
+  const baseUrl = "made/up/url";
+  metadata.spatialReference.latestWkid = 1234;
 
-  const provider = new ArcGisMapServerImageryProvider({
-    url: baseUrl,
-  });
+  await expectAsync(
+    ArcGISTiledElevationTerrainProvider.fromUrl(baseUrl)
+  ).toBeRejectedWithError(RuntimeError, "Invalid spatial reference");
+});
+```
 
-  return provider.readyPromise
-    .then(function () {
-      fail("should not resolve");
-    })
-    .catch(function (e) {
-      expect(e.message).toContain(baseUrl);
-      expect(provider.ready).toBe(false);
-    });
+Since developer errors are removed for release builds, CesiumJS's `toBeRejectedWithDeveloperError` matcher is used to verify asynchronous Developer Errors. Here is an excerpt from [Cesium3DTilesetSpec.js](https://github.com/CesiumGS/cesium/blob/main/packages/engine/Specs/Scene/Cesium3DTilesetSpec.js):
+
+```javascript
+it("fromUrl throws without url", async function () {
+  await expectAsync(Cesium3DTileset.fromUrl()).toBeRejectedWithDeveloperError(
+    "url is required, actual value was undefined"
+  );
 });
 ```
 

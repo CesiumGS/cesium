@@ -133,25 +133,23 @@ describe(
       });
     }
 
-    function loadGltf(gltfPath, options) {
+    async function loadGltf(gltfPath, options) {
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
-      gltfLoader.load();
-
-      return waitForLoaderProcess(gltfLoader, scene);
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+      return gltfLoader;
     }
 
-    function loadI3dm(i3dmPath) {
-      const result = Resource.fetchArrayBuffer(i3dmPath);
-
-      return result.then(function (arrayBuffer) {
-        const i3dmLoader = new I3dmLoader(
-          getI3dmOptions(i3dmPath, { arrayBuffer: arrayBuffer })
-        );
-        gltfLoaders.push(i3dmLoader);
-        i3dmLoader.load();
-        return waitForLoaderProcess(i3dmLoader, scene);
-      });
+    async function loadI3dm(i3dmPath) {
+      const arrayBuffer = await Resource.fetchArrayBuffer(i3dmPath);
+      const i3dmLoader = new I3dmLoader(
+        getI3dmOptions(i3dmPath, { arrayBuffer: arrayBuffer })
+      );
+      gltfLoaders.push(i3dmLoader);
+      await i3dmLoader.load();
+      await waitForLoaderProcess(i3dmLoader, scene);
+      return i3dmLoader;
     }
 
     function verifyTypedArraysUnloaded(instances) {
@@ -269,10 +267,10 @@ describe(
           "HAS_INSTANCE_MATRICES",
         ]);
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec4 a_instancingTransformRow0;",
-          "attribute vec4 a_instancingTransformRow1;",
-          "attribute vec4 a_instancingTransformRow2;",
-          "attribute float a_instanceFeatureId_0;",
+          "in vec4 a_instancingTransformRow0;",
+          "in vec4 a_instancingTransformRow1;",
+          "in vec4 a_instancingTransformRow2;",
+          "in float a_instanceFeatureId_0;",
         ]);
 
         expect(runtimeNode.instancingTransformsBuffer).toBeDefined();
@@ -314,13 +312,13 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec4 a_instancingTransformRow0;",
-          "attribute vec4 a_instancingTransformRow1;",
-          "attribute vec4 a_instancingTransformRow2;",
-          "attribute vec4 a_instancingTransform2DRow0;",
-          "attribute vec4 a_instancingTransform2DRow1;",
-          "attribute vec4 a_instancingTransform2DRow2;",
-          "attribute float a_instanceFeatureId_0;",
+          "in vec4 a_instancingTransformRow0;",
+          "in vec4 a_instancingTransformRow1;",
+          "in vec4 a_instancingTransformRow2;",
+          "in vec4 a_instancingTransform2DRow0;",
+          "in vec4 a_instancingTransform2DRow1;",
+          "in vec4 a_instancingTransform2DRow2;",
+          "in float a_instanceFeatureId_0;",
         ]);
 
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
@@ -514,7 +512,7 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_instanceTranslation;",
+          "in vec3 a_instanceTranslation;",
         ]);
 
         // No additional buffer was created.
@@ -561,7 +559,7 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_instanceTranslation;",
+          "in vec3 a_instanceTranslation;",
         ]);
 
         // No additional buffer was created.
@@ -617,8 +615,8 @@ describe(
         ]);
 
         ShaderBuilderTester.expectHasAttributes(shaderBuilder, undefined, [
-          "attribute vec3 a_instanceTranslation;",
-          "attribute vec3 a_instanceTranslation2D;",
+          "in vec3 a_instanceTranslation;",
+          "in vec3 a_instanceTranslation2D;",
         ]);
 
         ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [

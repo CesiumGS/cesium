@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Power Plant design model provided by Bentley Systems
@@ -43,12 +43,31 @@
           "2022-08-01T00:00:00Z"
         );
 
-        const powerplant = scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(1240402),
-            show: false,
-          })
-        );
+        scene.camera.setView({
+          destination: new Cesium.Cartesian3(
+            1234151.4883992162,
+            -5086036.79436967,
+            3633328.4278331124
+          ),
+          orientation: {
+            heading: 5.593695742186853,
+            pitch: -1.0786797635545216,
+            roll: 6.27892466154778,
+          },
+        });
+
+        let powerPlant;
+        let powerPlantShow = true;
+        try {
+          powerPlant = await Cesium.Cesium3DTileset.fromIonAssetId(1240402);
+          powerPlant.show = powerPlantShow;
+          scene.primitives.add(powerPlant);
+          powerPlant.tileLoad.addEventListener(function (tile) {
+            processTileFeatures(tile, hideDuplicateFloor);
+          });
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // Hide duplicate floor geometry to avoid
         // z-fighting artifacts.
@@ -86,9 +105,6 @@
           }
         }
 
-        powerplant.tileLoad.addEventListener(function (tile) {
-          processTileFeatures(tile, hideDuplicateFloor);
-        });
         const pipes = viewer.entities.add({
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArray([
@@ -104,17 +120,21 @@
               color: Cesium.Color.YELLOW,
               dashLength: 20.0,
             }),
-            show: false,
+            show: true,
             clampToGround: true,
             classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
           },
         });
 
-        const building = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          })
-        );
+        let building;
+        try {
+          building = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+          building.show = !powerPlantShow;
+          scene.primitives.add(building);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
+
         const route = viewer.entities.add({
           polyline: {
             positions: Cesium.Cartesian3.fromDegreesArray([
@@ -139,14 +159,21 @@
           },
         });
 
-        Sandcastle.addToolbarMenu([
+        Sandcastle.addDefaultToolbarMenu([
           {
             text: "BIM",
             onselect: function () {
-              building.show = false;
-              route.polyline.show = false;
-              powerplant.show = true;
-              pipes.polyline.show = true;
+              powerPlantShow = true;
+
+              pipes.polyline.show = powerPlantShow;
+              route.polyline.show = !powerPlantShow;
+              if (Cesium.defined(powerPlant)) {
+                powerPlant.show = powerPlantShow;
+              }
+              if (Cesium.defined(building)) {
+                building.show = !powerPlantShow;
+              }
+
               scene.camera.setView({
                 destination: new Cesium.Cartesian3(
                   1234151.4883992162,
@@ -164,10 +191,17 @@
           {
             text: "Photogrammetry",
             onselect: function () {
-              building.show = true;
-              route.polyline.show = true;
-              powerplant.show = false;
-              pipes.polyline.show = false;
+              powerPlantShow = false;
+
+              pipes.polyline.show = powerPlantShow;
+              route.polyline.show = !powerPlantShow;
+              if (Cesium.defined(powerPlant)) {
+                powerPlant.show = powerPlantShow;
+              }
+              if (Cesium.defined(building)) {
+                building.show = !powerPlantShow;
+              }
+
               scene.camera.setView({
                 destination: new Cesium.Cartesian3(
                   1216596.5376729995,
@@ -183,11 +217,14 @@
             },
           },
         ]); //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

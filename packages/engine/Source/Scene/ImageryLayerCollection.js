@@ -59,7 +59,7 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
   /**
    * Gets the number of layers in this collection.
    * @memberof ImageryLayerCollection.prototype
-   * @type {Number}
+   * @type {number}
    */
   length: {
     get: function () {
@@ -72,10 +72,18 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
  * Adds a layer to the collection.
  *
  * @param {ImageryLayer} layer the layer to add.
- * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
+ * @param {number} [index] the index to add the layer at.  If omitted, the layer will
  *                         be added on top of all existing layers.
  *
  * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
+ *
+ * @example
+ * const imageryLayer = Cesium.ImageryLayer.fromWorldImagery();
+ * scene.imageryLayers.add(imageryLayer);
+ *
+ * @example
+ * const imageryLayer = Cesium.ImageryLayer.fromProviderAsync(Cesium.IonImageryProvider.fromAssetId(3812));
+ * scene.imageryLayers.add(imageryLayer);
  */
 ImageryLayerCollection.prototype.add = function (layer, index) {
   const hasIndex = defined(index);
@@ -104,15 +112,27 @@ ImageryLayerCollection.prototype.add = function (layer, index) {
 
   this._update();
   this.layerAdded.raiseEvent(layer, index);
+  const removeReadyEventListener = layer.readyEvent.addEventListener(() => {
+    this.layerShownOrHidden.raiseEvent(layer, layer._layerIndex, layer.show);
+    removeReadyEventListener();
+  });
 };
 
 /**
  * Creates a new layer using the given ImageryProvider and adds it to the collection.
  *
  * @param {ImageryProvider} imageryProvider the imagery provider to create a new layer for.
- * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
+ * @param {number} [index] the index to add the layer at.  If omitted, the layer will
  *                         added on top of all existing layers.
  * @returns {ImageryLayer} The newly created layer.
+ *
+ * @example
+ * try {
+ *    const provider = await Cesium.IonImageryProvider.fromAssetId(3812);
+ *    scene.imageryLayers.addImageryProvider(provider);
+ * } catch (error) {
+ *   console.log(`There was an error creating the imagery layer. ${error}`)
+ * }
  */
 ImageryLayerCollection.prototype.addImageryProvider = function (
   imageryProvider,
@@ -133,8 +153,8 @@ ImageryLayerCollection.prototype.addImageryProvider = function (
  * Removes a layer from this collection, if present.
  *
  * @param {ImageryLayer} layer The layer to remove.
- * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
- * @returns {Boolean} true if the layer was in the collection and was removed,
+ * @param {boolean} [destroy=true] whether to destroy the layers in addition to removing them.
+ * @returns {boolean} true if the layer was in the collection and was removed,
  *                    false if the layer was not in the collection.
  */
 ImageryLayerCollection.prototype.remove = function (layer, destroy) {
@@ -161,7 +181,7 @@ ImageryLayerCollection.prototype.remove = function (layer, destroy) {
 /**
  * Removes all layers from this collection.
  *
- * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
+ * @param {boolean} [destroy=true] whether to destroy the layers in addition to removing them.
  */
 ImageryLayerCollection.prototype.removeAll = function (destroy) {
   destroy = defaultValue(destroy, true);
@@ -184,7 +204,7 @@ ImageryLayerCollection.prototype.removeAll = function (destroy) {
  *
  * @param {ImageryLayer} layer the layer to check for.
  *
- * @returns {Boolean} true if the collection contains the layer, false otherwise.
+ * @returns {boolean} true if the collection contains the layer, false otherwise.
  */
 ImageryLayerCollection.prototype.contains = function (layer) {
   return this.indexOf(layer) !== -1;
@@ -195,7 +215,7 @@ ImageryLayerCollection.prototype.contains = function (layer) {
  *
  * @param {ImageryLayer} layer The layer to find the index of.
  *
- * @returns {Number} The index of the layer in the collection, or -1 if the layer does not exist in the collection.
+ * @returns {number} The index of the layer in the collection, or -1 if the layer does not exist in the collection.
  */
 ImageryLayerCollection.prototype.indexOf = function (layer) {
   return this._layers.indexOf(layer);
@@ -204,7 +224,7 @@ ImageryLayerCollection.prototype.indexOf = function (layer) {
 /**
  * Gets a layer by index from the collection.
  *
- * @param {Number} index the index to retrieve.
+ * @param {number} index the index to retrieve.
  *
  * @returns {ImageryLayer} The imagery layer at the given index.
  */
@@ -353,6 +373,9 @@ function pickImageryHelper(scene, pickedLocation, pickFeatures, callback) {
     if (!defined(imagery)) {
       continue;
     }
+    if (!imagery.imageryLayer.ready) {
+      continue;
+    }
     const provider = imagery.imageryLayer.imageryProvider;
     if (pickFeatures && !defined(provider.pickFeatures)) {
       continue;
@@ -437,7 +460,7 @@ ImageryLayerCollection.prototype.pickImageryLayers = function (ray, scene) {
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
- * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
+ * @return {Promise<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
  *                                             If it can be quickly determined that no features are intersected (for example,
  *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
  *                                             or because the pick ray does not intersect the surface), this function will
@@ -476,6 +499,9 @@ ImageryLayerCollection.prototype.pickImageryLayerFeatures = function (
   const imageryLayers = [];
 
   pickImageryHelper(scene, pickedLocation, true, function (imagery) {
+    if (!imagery.imageryLayer.ready) {
+      return undefined;
+    }
     const provider = imagery.imageryLayer.imageryProvider;
     const promise = provider.pickFeatures(
       imagery.x,
@@ -552,7 +578,7 @@ ImageryLayerCollection.prototype.cancelReprojections = function () {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} true if this object was destroyed; otherwise, false.
+ * @returns {boolean} true if this object was destroyed; otherwise, false.
  *
  * @see ImageryLayerCollection#destroy
  */

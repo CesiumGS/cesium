@@ -195,8 +195,8 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  * @alias TaskProcessor
  * @constructor
  *
- * @param {String} workerPath The Url to the worker. This can either be an absolute path or relative to the Cesium Workers folder.
- * @param {Number} [maximumActiveTasks=Number.POSITIVE_INFINITY] The maximum number of active tasks.  Once exceeded,
+ * @param {string} workerPath The Url to the worker. This can either be an absolute path or relative to the Cesium Workers folder.
+ * @param {number} [maximumActiveTasks=Number.POSITIVE_INFINITY] The maximum number of active tasks.  Once exceeded,
  *                                        scheduleTask will not queue any more tasks, allowing
  *                                        work to be rescheduled in future frames.
  */
@@ -223,10 +223,10 @@ const emptyTransferableObjectArray = [];
  * Otherwise, returns a promise that will resolve to the result posted back by the worker when
  * finished.
  *
- * @param {Object} parameters Any input data that will be posted to the worker.
+ * @param {object} parameters Any input data that will be posted to the worker.
  * @param {Object[]} [transferableObjects] An array of objects contained in parameters that should be
  *                                      transferred to the worker instead of copied.
- * @returns {Promise.<Object>|undefined} Either a promise that will resolve to the result when available, or undefined
+ * @returns {Promise<object>|undefined} Either a promise that will resolve to the result when available, or undefined
  *                    if there are too many active tasks,
  *
  * @example
@@ -289,11 +289,11 @@ TaskProcessor.prototype.scheduleTask = function (
  * and compiling a web assembly module asychronously, as well as an optional
  * fallback JavaScript module to use if Web Assembly is not supported.
  *
- * @param {Object} [webAssemblyOptions] An object with the following properties:
- * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
- * @param {String} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
- * @param {String} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
- * @returns {Promise.<Object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+ * @param {object} [webAssemblyOptions] An object with the following properties:
+ * @param {string} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
+ * @param {string} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
+ * @param {string} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
+ * @returns {Promise<object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
  */
 TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
   if (!defined(this._worker)) {
@@ -339,7 +339,7 @@ TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see TaskProcessor#destroy
  */

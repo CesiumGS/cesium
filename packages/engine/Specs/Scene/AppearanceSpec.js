@@ -9,18 +9,18 @@ describe("Scene/Appearance", function () {
   it("constructor", function () {
     const material = Material.fromType("Color");
     const vs =
-      "attribute vec3 position3DHigh;\n" +
-      "attribute vec3 position3DLow;\n" +
-      "attribute vec4 color;\n" +
-      "varying vec4 v_color;\n" +
+      "in vec3 position3DHigh;\n" +
+      "in vec3 position3DLow;\n" +
+      "in vec4 color;\n" +
+      "out vec4 v_color;\n" +
       "void main() {\n" +
       "    gl_Position = czm_modelViewProjectionRelativeToEye * czm_computePosition();\n" +
       "    v_color = color;\n" +
       "}\n";
     const fs =
-      "varying vec4 v_color;\n" +
+      "in vec4 v_color;\n" +
       "void main() {\n" +
-      "    gl_FragColor = v_color;\n" +
+      "    out_FragColor = v_color;\n" +
       "}\n";
     const renderState = {
       depthTest: {
@@ -46,9 +46,9 @@ describe("Scene/Appearance", function () {
 
   it("getFragmentShaderSource", function () {
     const fs =
-      "varying vec4 v_color;\n" +
+      "out vec4 v_color;\n" +
       "void main() {\n" +
-      "    gl_FragColor = v_color;\n" +
+      "    out_FragColor = v_color;\n" +
       "}\n";
     const appearance = new Appearance({
       fragmentShaderSource: fs,
@@ -62,9 +62,9 @@ describe("Scene/Appearance", function () {
   it("getFragmentShaderSource with material", function () {
     const material = Material.fromType("Color");
     const fs =
-      "varying vec4 v_color;\n" +
+      "in vec4 v_color;\n" +
       "void main() {\n" +
-      "    gl_FragColor = v_color;\n" +
+      "    out_FragColor = v_color;\n" +
       "}\n";
     const appearance = new Appearance({
       material: material,

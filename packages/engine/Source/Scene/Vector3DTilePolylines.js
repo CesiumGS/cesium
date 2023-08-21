@@ -29,18 +29,18 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
  * @alias Vector3DTilePolylines
  * @constructor
  *
- * @param {Object} options An object with following properties:
+ * @param {object} options An object with following properties:
  * @param {Uint16Array} options.positions The positions of the polylines
  * @param {Uint32Array} options.counts The number or positions in the each polyline.
  * @param {Uint16Array} options.widths The width of each polyline.
- * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
- * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+ * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
+ * @param {number} options.maximumHeight The maximum height of the terrain covered by the tile.
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
  * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
  * @param {Uint16Array} options.batchIds The batch ids for each polyline.
  * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
- * @param {Boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
+ * @param {boolean} options.keepDecodedPositions Whether to keep decoded positions in memory.
  *
  * @private
  */
@@ -87,10 +87,8 @@ function Vector3DTilePolylines(options) {
   this._geometryByteLength = 0;
 
   this._ready = false;
-  this._update = function (polylines, frameState) {};
-  this._readyPromise = initialize(this);
-
-  this._verticesPromise = undefined;
+  this._promise = undefined;
+  this._error = undefined;
 }
 
 Object.defineProperties(Vector3DTilePolylines.prototype, {
@@ -99,8 +97,9 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    *
    * @memberof Vector3DTilePolylines.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
+   * @private
    */
   trianglesLength: {
     get: function () {
@@ -113,8 +112,9 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
    *
    * @memberof Vector3DTilePolylines.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
+   * @private
    */
   geometryByteLength: {
     get: function () {
@@ -123,14 +123,15 @@ Object.defineProperties(Vector3DTilePolylines.prototype, {
   },
 
   /**
-   * Gets a promise that resolves when the primitive is ready to render.
+   * Returns true when the primitive is ready to render.
    * @memberof Vector3DTilePolylines.prototype
-   * @type {Promise<void>}
+   * @type {boolean}
    * @readonly
+   * @private
    */
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 });
@@ -181,51 +182,55 @@ function createVertexArray(polylines, context) {
     return;
   }
 
-  if (!defined(polylines._verticesPromise)) {
-    let positions = polylines._positions;
-    let widths = polylines._widths;
-    let counts = polylines._counts;
-    let batchIds = polylines._transferrableBatchIds;
+  let positions = polylines._positions;
+  let widths = polylines._widths;
+  let counts = polylines._counts;
+  let batchIds = polylines._transferrableBatchIds;
 
-    let packedBuffer = polylines._packedBuffer;
+  let packedBuffer = polylines._packedBuffer;
 
-    if (!defined(packedBuffer)) {
-      // Copy because they may be the views on the same buffer.
-      positions = polylines._positions = positions.slice();
-      widths = polylines._widths = widths.slice();
-      counts = polylines._counts = counts.slice();
+  if (!defined(packedBuffer)) {
+    // Copy because they may be the views on the same buffer.
+    positions = polylines._positions = positions.slice();
+    widths = polylines._widths = widths.slice();
+    counts = polylines._counts = counts.slice();
 
-      batchIds = polylines._transferrableBatchIds = polylines._batchIds.slice();
+    batchIds = polylines._transferrableBatchIds = polylines._batchIds.slice();
 
-      packedBuffer = polylines._packedBuffer = packBuffer(polylines);
-    }
+    packedBuffer = polylines._packedBuffer = packBuffer(polylines);
+  }
 
-    const transferrableObjects = [
-      positions.buffer,
-      widths.buffer,
-      counts.buffer,
-      batchIds.buffer,
-      packedBuffer.buffer,
-    ];
-    const parameters = {
-      positions: positions.buffer,
-      widths: widths.buffer,
-      counts: counts.buffer,
-      batchIds: batchIds.buffer,
-      packedBuffer: packedBuffer.buffer,
-      keepDecodedPositions: polylines._keepDecodedPositions,
-    };
+  const transferrableObjects = [
+    positions.buffer,
+    widths.buffer,
+    counts.buffer,
+    batchIds.buffer,
+    packedBuffer.buffer,
+  ];
+  const parameters = {
+    positions: positions.buffer,
+    widths: widths.buffer,
+    counts: counts.buffer,
+    batchIds: batchIds.buffer,
+    packedBuffer: packedBuffer.buffer,
+    keepDecodedPositions: polylines._keepDecodedPositions,
+  };
 
-    const verticesPromise = (polylines._verticesPromise = createVerticesTaskProcessor.scheduleTask(
-      parameters,
-      transferrableObjects
-    ));
-    if (!defined(verticesPromise)) {
-      // Postponed
-      return;
-    }
+  const verticesPromise = createVerticesTaskProcessor.scheduleTask(
+    parameters,
+    transferrableObjects
+  );
+  if (!defined(verticesPromise)) {
+    // Postponed
+    return;
+  }
 
-    return verticesPromise.then(function (result) {
+  return verticesPromise
+    .then(function (result) {
+      if (polylines.isDestroyed()) {
+        return;
+      }
+
       if (polylines._keepDecodedPositions) {
         polylines._decodedPositions = new Float64Array(result.decodedPositions);
         polylines._decodedPositionOffsets = new Uint32Array(
@@ -245,13 +250,22 @@ function createVertexArray(polylines, context) {
           ? new Uint16Array(result.indices)
           : new Uint32Array(result.indices);
 
+      finishVertexArray(polylines, context);
+
       polylines._ready = true;
+    })
+    .catch((error) => {
+      if (polylines.isDestroyed()) {
+        return;
+      }
+
+      // Throw the error next frame
+      polylines._error = error;
     });
-  }
 }
 
 function finishVertexArray(polylines, context) {
-  if (polylines._ready && !defined(polylines._va)) {
+  if (!defined(polylines._va)) {
     const curPositions = polylines._currentPositions;
     const prevPositions = polylines._previousPositions;
     const nextPositions = polylines._nextPositions;
@@ -421,7 +435,7 @@ const PolylineFS =
   "uniform vec4 u_highlightColor; \n" +
   "void main()\n" +
   "{\n" +
-  "    gl_FragColor = u_highlightColor;\n" +
+  "    out_FragColor = u_highlightColor;\n" +
   "}\n";
 
 function createShaders(primitive, context) {
@@ -528,7 +542,7 @@ Vector3DTilePolylines.getPolylinePositions = function (polylines, batchId) {
 /**
  * Get the polyline positions for the given feature.
  *
- * @param {Number} batchId The batch ID of the feature.
+ * @param {number} batchId The batch ID of the feature.
  */
 Vector3DTilePolylines.prototype.getPositions = function (batchId) {
   return Vector3DTilePolylines.getPolylinePositions(this, batchId);
@@ -552,7 +566,7 @@ Vector3DTilePolylines.prototype.createFeatures = function (content, features) {
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (polyline batch table color * color).
  *
- * @param {Boolean} enabled Whether to enable debug coloring.
+ * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
 Vector3DTilePolylines.prototype.applyDebugSettings = function (enabled, color) {
@@ -603,45 +617,35 @@ Vector3DTilePolylines.prototype.applyStyle = function (style, features) {
   }
 };
 
-function initialize(polylines) {
-  return new Promise(function (resolve, reject) {
-    polylines._update = function (polylines, frameState) {
-      const context = frameState.context;
-      const promise = createVertexArray(polylines, context);
-      createUniformMap(polylines, context);
-      createShaders(polylines, context);
-      createRenderStates(polylines);
-
-      if (polylines._ready) {
-        const passes = frameState.passes;
-        if (passes.render || passes.pick) {
-          queueCommands(polylines, frameState);
-        }
-      }
-
-      if (!defined(promise)) {
-        return;
-      }
-
-      promise
-        .then(function () {
-          finishVertexArray(polylines, context);
-          resolve();
-        })
-        .catch(function (e) {
-          reject(e);
-        });
-    };
-  });
-}
-
 /**
  * Updates the batches and queues the commands for rendering.
  *
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTilePolylines.prototype.update = function (frameState) {
-  this._update(this, frameState);
+  const context = frameState.context;
+  if (!this._ready) {
+    if (!defined(this._promise)) {
+      this._promise = createVertexArray(this, context);
+    }
+
+    if (defined(this._error)) {
+      const error = this._error;
+      this._error = undefined;
+      throw error;
+    }
+
+    return;
+  }
+
+  createUniformMap(this, context);
+  createShaders(this, context);
+  createRenderStates(this);
+
+  const passes = frameState.passes;
+  if (passes.render || passes.pick) {
+    queueCommands(this, frameState);
+  }
 };
 
 /**
@@ -651,7 +655,7 @@ Vector3DTilePolylines.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePolylines.prototype.isDestroyed = function () {
   return false;

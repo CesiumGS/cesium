@@ -19,6 +19,7 @@ import {
   Rectangle,
   RectangleGeometry,
   RenderState,
+  RuntimeError,
   StencilConstants,
 } from "../../index.js";
 
@@ -2165,29 +2166,44 @@ describe(
       });
     });
 
-    it("throws with invalid version", function () {
+    it("throws with invalid version", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
         version: 2,
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "vctr");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Only Vector tile version 1 is supported.  Version 2 is not."
+      );
     });
 
-    it("throws with empty feature table", function () {
+    it("throws with empty feature table", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
         defineFeatureTable: false,
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "vctr");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Feature table must have a byte length greater than zero"
+      );
     });
 
-    it("throws without region", function () {
+    it("throws without region", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
         defineRegion: false,
         polygonsLength: 1,
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "vctr");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "Feature table global property: REGION must be defined"
+      );
     });
 
-    it("throws without all batch ids", function () {
+    it("throws without all batch ids", async function () {
       const arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
         polygonsLength: 1,
         pointsLength: 1,
@@ -2195,13 +2211,18 @@ describe(
         polygonBatchIds: [1],
         pointBatchIds: [0],
       });
-      Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, "vctr");
+      await expectAsync(
+        Cesium3DTilesTester.createContentForMockTile(arrayBuffer, "vctr")
+      ).toBeRejectedWithError(
+        RuntimeError,
+        "If one group of batch ids is defined, then all batch ids must be defined"
+      );
     });
 
-    it("destroys", function () {
-      const tileset = new Cesium3DTileset({
-        url: vectorTilePolygonsWithBatchTableTileset,
-      });
+    it("destroys", async function () {
+      const tileset = await Cesium3DTileset.fromUrl(
+        vectorTilePolygonsWithBatchTableTileset
+      );
       expect(tileset.isDestroyed()).toEqual(false);
       tileset.destroy();
       expect(tileset.isDestroyed()).toEqual(true);

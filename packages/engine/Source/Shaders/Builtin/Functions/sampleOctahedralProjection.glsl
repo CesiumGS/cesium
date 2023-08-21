@@ -32,10 +32,10 @@ vec3 czm_sampleOctahedralProjectionWithFiltering(sampler2D projectedMap, vec2 te
 
     // Do bilinear filtering
     #ifndef OES_texture_float_linear
-        vec3 color1 = texture2D(projectedMap, coord + vec2(0.0, pixel.y)).rgb;
-        vec3 color2 = texture2D(projectedMap, coord + vec2(pixel.x, 0.0)).rgb;
-        vec3 color3 = texture2D(projectedMap, coord + pixel).rgb;
-        vec3 color4 = texture2D(projectedMap, coord).rgb;
+        vec3 color1 = texture(projectedMap, coord + vec2(0.0, pixel.y)).rgb;
+        vec3 color2 = texture(projectedMap, coord + vec2(pixel.x, 0.0)).rgb;
+        vec3 color3 = texture(projectedMap, coord + pixel).rgb;
+        vec3 color4 = texture(projectedMap, coord).rgb;
 
         vec2 texturePosition = coord * textureSize;
 
@@ -47,7 +47,7 @@ vec3 czm_sampleOctahedralProjectionWithFiltering(sampler2D projectedMap, vec2 te
 
         vec3 color = mix(average1, average2, fv);
     #else
-        vec3 color = texture2D(projectedMap, coord).rgb;
+        vec3 color = texture(projectedMap, coord).rgb;
     #endif
 
     return color;

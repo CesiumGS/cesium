@@ -24,12 +24,12 @@ describe(
     let scene;
     let sceneWithWebgl2;
     beforeAll(function () {
-      scene = createScene();
-      sceneWithWebgl2 = createScene({
+      scene = createScene({
         contextOptions: {
-          requestWebgl1: false,
+          sceneWithWebgl1: true,
         },
       });
+      sceneWithWebgl2 = createScene();
     });
 
     afterAll(function () {
@@ -64,12 +64,12 @@ describe(
       });
     }
 
-    function loadGltf(gltfPath, scene, options) {
+    async function loadGltf(gltfPath, scene, options) {
       const gltfLoader = new GltfLoader(getOptions(gltfPath, options));
       gltfLoaders.push(gltfLoader);
-      gltfLoader.load();
-
-      return waitForLoaderProcess(gltfLoader, scene);
+      await gltfLoader.load();
+      await waitForLoaderProcess(gltfLoader, scene);
+      return gltfLoader;
     }
 
     function mockRenderResources(primitive) {

@@ -11,21 +11,19 @@ describe("Scene/processVoxelProperties", function () {
   let scene;
   let provider;
 
-  beforeAll(function () {
+  beforeAll(async function () {
     scene = createScene();
 
-    provider = new Cesium3DTilesVoxelProvider({
-      url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-    });
-
-    return provider.readyPromise;
+    provider = await Cesium3DTilesVoxelProvider.fromUrl(
+      "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+    );
   });
 
   afterAll(function () {
     scene.destroyForSpecs();
   });
 
-  it("adds shader defines and structs", function () {
+  it("adds shader defines and structs", async function () {
     const primitive = new VoxelPrimitive({ provider });
     primitive.update(scene.frameState);
 
@@ -90,6 +88,7 @@ describe("Scene/processVoxelProperties", function () {
       "    vec3 positionUv;",
       "    vec3 positionShapeUv;",
       "    vec3 positionUvLocal;",
+      "    vec3 surfaceNormal;",
       "    vec3 viewDirUv;",
       "    vec3 viewDirWorld;",
       "    float travelDistance;",

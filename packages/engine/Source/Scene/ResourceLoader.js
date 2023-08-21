@@ -21,26 +21,11 @@ function ResourceLoader() {}
 
 Object.defineProperties(ResourceLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof ResourceLoader.prototype
-   *
-   * @type {Promise.<ResourceLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    // eslint-disable-next-line getter-return
-    get: function () {
-      DeveloperError.throwInstantiationError();
-    },
-  },
-  /**
    * The cache key of the resource.
    *
    * @memberof ResourceLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -54,7 +39,7 @@ Object.defineProperties(ResourceLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<ResourceLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<ResourceLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 ResourceLoader.prototype.load = function () {
@@ -71,14 +56,17 @@ ResourceLoader.prototype.unload = function () {};
  * Processes the resource until it becomes ready.
  *
  * @param {FrameState} frameState The frame state.
+ * @returns {boolean} true once all resourced are ready.
  * @private
  */
-ResourceLoader.prototype.process = function (frameState) {};
+ResourceLoader.prototype.process = function (frameState) {
+  return false;
+};
 
 /**
  * Constructs a {@link RuntimeError} from an errorMessage and an error.
  *
- * @param {String} errorMessage The error message.
+ * @param {string} errorMessage The error message.
  * @param {Error} [error] The error.
  *
  * @returns {RuntimeError} The runtime error.
@@ -89,7 +77,7 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
   Check.typeOf.string("errorMessage", errorMessage);
   //>>includeEnd('debug');
 
-  if (defined(error)) {
+  if (defined(error) && defined(error.message)) {
     errorMessage += `\n${error.message}`;
   }
 
@@ -107,7 +95,7 @@ ResourceLoader.prototype.getError = function (errorMessage, error) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see ResourceLoader#destroy
  * @private

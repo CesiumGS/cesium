@@ -90,9 +90,9 @@ let scratchThirdCartesian = new Cartesian3();
 /**
  * Generates a function that computes a 4x4 transformation matrix from a reference frame
  * centered at the provided origin to the provided ellipsoid's fixed reference frame.
- * @param  {String} firstAxis  name of the first axis of the local reference frame. Must be
+ * @param  {string} firstAxis  name of the first axis of the local reference frame. Must be
  *  'east', 'north', 'up', 'west', 'south' or 'down'.
- * @param  {String} secondAxis  name of the second axis of the local reference frame. Must be
+ * @param  {string} secondAxis  name of the second axis of the local reference frame. Must be
  *  'east', 'north', 'up', 'west', 'south' or 'down'.
  * @return {Transforms.LocalFrameToFixedFrame} The function that will computes a
  * 4x4 transformation matrix from a reference frame, with first axis and second axis compliant with the parameters,
@@ -749,10 +749,10 @@ const rotation2Scratch = new Matrix3();
  *
  *
  * @example
- * // Transform a point from the ICRF axes to the Fixed axes.
+ * // Transform a point from the Fixed axes to the ICRF axes.
  * const now = Cesium.JulianDate.now();
  * const pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * const fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
+ * const fixedToIcrf = Cesium.Transforms.computeFixedToIcrfMatrix(now);
  * let pointInInertial = new Cesium.Cartesian3();
  * if (Cesium.defined(fixedToIcrf)) {
  *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed, pointInInertial);

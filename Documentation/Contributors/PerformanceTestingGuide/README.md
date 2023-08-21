@@ -127,37 +127,29 @@ class Timer {
 
 To time how long it takes for the tileset.json to be fetched and the
 `Cesium3DTileset` to be initialized (not including the tile content), start
-the timer just before creating the tileset, and stop it in the `readyPromise`
+the timer just before creating the tileset with `Cesium3DTileset.fromUrl`, and
+stop it after the asynchronous function has completed.
 
 ```js
 tilesetTimer.start();
-const tileset = new Cesium.Cesium3DTileset({
-  url,
-});
-tileset.maximumScreenSpaceError = 4;
-// and any other initialization code
-
-viewer.scene.primitives.add(tileset);
-
-tileset.readyPromise.then(() => {
-  tilesetTimer.stop();
-  tilesetTimer.print();
-});
+const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+tilesetTimer.stop();
+tilesetTimer.print();
 ```
 
 ### How to measure tile load time
 
 To time how long it takes for all the tiles in the current camera view to load
-(not including the tileset load time), start the timer in the ready promise
-and stop it in the `initialTilesLoaded` event handler. This event is used
+(not including the tileset load time), start the timer after the tileset has
+been created with `Cesium3DTileset.fromUrl` and stop it in the `initialTilesLoaded`
+event handler. This event is used
 because we only care about our initial fixed camera view. `allTilesLoaded`, in
 contrast, may trigger multiple times if the camera moves, which is undesireable
 here.
 
 ```js
-tileset.readyPromise.then(() => {
-  tileTimer.start();
-});
+const tileset = await Cesium.Cesium3DTileset.fromUrl(url);
+tileTimer.start();
 
 // This callback is fired the first time that all the visible tiles are loaded.
 // It indicates the end of the test.
@@ -167,17 +159,24 @@ tileset.initialTilesLoaded.addEventListener(() => {
 });
 ```
 
-### Caching vs throttling
+### Separating network time from code execution time
 
-Depending on the scenario you are trying to test for, you may want to enable
-caching of network requests or throttling network speed.
+Depending on the scenario you are trying to test for, you may want to distinguish between the time used for network requests and code execution.
 
-- If you want to simulate slow network connections, consider throttling the
-  connection. For example, in Chrome, see [these instructions](https://developer.chrome.com/docs/devtools/network/#throttle)
-- If you want to eliminate network latency and focus on measuring how long the
-  initialization code takes to run, enable caching. In Chrome, this option
-  can be done by _unchecking_ the `Disable Cache` option in the Network tab.
-  You will also need to enable caching on the server.
+#### Quantifying network request time
+
+For repeatability, you can throttle your connection speed to a fixed value, to eliminate network variations from time to time and from user to user. For example, in Chrome, see [these instructions](https://developer.chrome.com/docs/devtools/network/#throttle).
+
+The speed you throttle to can be adjusted based on your target user base. For example, for tests targeting US users, you can throttle to the [US median internet speed](https://www.speedtest.net/global-index/united-states). Note that these speeds will change over time, so you will want to report the exact throttling speed as part of your test results.
+
+Before throttling the connection, make sure to verify that your unthrottled network speed is at least as fast as the speed you are throttling to.
+
+#### Quantifying code execution time
+
+If you want to eliminate network latency and focus on measuring how long the
+initialization code takes to run, enable caching. In Chrome, this option
+can be done by _unchecking_ the `Disable Cache` option in the Network tab.
+You will also need to enable caching on the server.
 
 ![Uncheck disable cache](no-disable-cache.png)
 

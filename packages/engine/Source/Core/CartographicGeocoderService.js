@@ -10,10 +10,25 @@ import Check from "./Check.js";
  */
 function CartographicGeocoderService() {}
 
+Object.defineProperties(CartographicGeocoderService.prototype, {
+  /**
+   * Gets the credit to display after a geocode is performed. Typically this is used to credit
+   * the geocoder service.
+   * @memberof CartographicGeocoderService.prototype
+   * @type {Credit|undefined}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return undefined;
+    },
+  },
+});
+
 /**
  * @function
  *
- * @param {String} query The query to be sent to the geocoder service
+ * @param {string} query The query to be sent to the geocoder service
  * @returns {Promise<GeocoderService.Result[]>}
  */
 CartographicGeocoderService.prototype.geocode = function (query) {

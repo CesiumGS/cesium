@@ -1,7 +1,3 @@
-#ifdef GL_OES_standard_derivatives
-    #extension GL_OES_standard_derivatives : enable
-#endif
-
 uniform vec4 color;
 uniform float spacing;
 uniform float width;
@@ -12,12 +8,13 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
     float distanceToContour = mod(materialInput.height, spacing);
 
-#ifdef GL_OES_standard_derivatives
+#if (__VERSION__ == 300 || defined(GL_OES_standard_derivatives))
     float dxc = abs(dFdx(materialInput.height));
     float dyc = abs(dFdy(materialInput.height));
     float dF = max(dxc, dyc) * czm_pixelRatio * width;
     float alpha = (distanceToContour < dF) ? 1.0 : 0.0;
 #else
+    // If no derivatives available (IE 10?), use pixel ratio
     float alpha = (distanceToContour < (czm_pixelRatio * width)) ? 1.0 : 0.0;
 #endif
 

@@ -34,11 +34,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server/",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(typeof provider.hasAlphaChannel).toBe("boolean");
-    });
+    expect(typeof provider.hasAlphaChannel).toBe("boolean");
   });
 
   it("supports a Resource for the url", function () {
@@ -50,28 +46,24 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: resource,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).not.toContain("//");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).not.toContain("//");
+      );
+    });
 
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -80,28 +72,24 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server/",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).not.toContain("//");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).not.toContain("//");
+      );
+    });
 
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -110,28 +98,24 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain("made/up/osm/server/");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).toContain("made/up/osm/server/");
+      );
+    });
 
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -140,35 +124,29 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server/",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.url).toContain("made/up/osm/server/");
-      expect(provider.tileWidth).toEqual(256);
-      expect(provider.tileHeight).toEqual(256);
-      expect(provider.maximumLevel).toBeUndefined();
-      expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-      expect(provider.rectangle).toEqual(
-        new WebMercatorTilingScheme().rectangle
-      );
+    expect(provider.url).toContain("made/up/osm/server/");
+    expect(provider.tileWidth).toEqual(256);
+    expect(provider.tileHeight).toEqual(256);
+    expect(provider.maximumLevel).toBeUndefined();
+    expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+    expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
+      );
+    });
 
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -176,9 +154,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
     const provider = new OpenStreetMapImageryProvider({
       url: "made/up/osm/server",
     });
-    return provider.readyPromise.then(function () {
-      expect(provider.credit).toBeDefined();
-    });
+    expect(provider.credit).toBeDefined();
   });
 
   it("turns the supplied credit into a logo", function () {
@@ -186,9 +162,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server",
       credit: "Thanks to our awesome made up source of this imagery!",
     });
-    return providerWithCredit.readyPromise.then(function () {
-      expect(providerWithCredit.credit).toBeDefined();
-    });
+    expect(providerWithCredit.credit).toBeDefined();
   });
 
   it("rectangle passed to constructor does not affect tile numbering", function () {
@@ -198,50 +172,46 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       rectangle: rectangle,
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      expect(provider.tileWidth).toEqual(256);
-      expect(provider.tileHeight).toEqual(256);
-      expect(provider.maximumLevel).toBeUndefined();
-      expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-      expect(provider.rectangle.west).toBeCloseTo(
-        rectangle.west,
-        CesiumMath.EPSILON10
-      );
-      expect(provider.rectangle.south).toBeCloseTo(
-        rectangle.south,
-        CesiumMath.EPSILON10
-      );
-      expect(provider.rectangle.east).toBeCloseTo(
-        rectangle.east,
-        CesiumMath.EPSILON10
-      );
-      expect(provider.rectangle.north).toBeCloseTo(
-        rectangle.north,
-        CesiumMath.EPSILON10
-      );
-      expect(provider.tileDiscardPolicy).toBeUndefined();
+    expect(provider.tileWidth).toEqual(256);
+    expect(provider.tileHeight).toEqual(256);
+    expect(provider.maximumLevel).toBeUndefined();
+    expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+    expect(provider.rectangle.west).toBeCloseTo(
+      rectangle.west,
+      CesiumMath.EPSILON10
+    );
+    expect(provider.rectangle.south).toBeCloseTo(
+      rectangle.south,
+      CesiumMath.EPSILON10
+    );
+    expect(provider.rectangle.east).toBeCloseTo(
+      rectangle.east,
+      CesiumMath.EPSILON10
+    );
+    expect(provider.rectangle.north).toBeCloseTo(
+      rectangle.north,
+      CesiumMath.EPSILON10
+    );
+    expect(provider.tileDiscardPolicy).toBeUndefined();
 
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      expect(request.url).toContain("/0/0/0");
+
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        expect(request.url).toContain("/0/0/0");
+      );
+    });
 
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
-
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -250,9 +220,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server",
       maximumLevel: 5,
     });
-    return provider.readyPromise.then(function () {
-      expect(provider.maximumLevel).toEqual(5);
-    });
+    expect(provider.maximumLevel).toEqual(5);
   });
 
   it("uses minimumLevel passed to constructor", function () {
@@ -260,9 +228,7 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       url: "made/up/osm/server",
       minimumLevel: 1,
     });
-    return provider.readyPromise.then(function () {
-      expect(provider.minimumLevel).toEqual(1);
-    });
+    expect(provider.minimumLevel).toEqual(1);
   });
 
   it("raises error event when image cannot be loaded", function () {
@@ -304,21 +270,17 @@ describe("Scene/OpenStreetMapImageryProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      const imagery = new Imagery(layer, 0, 0, 0);
-      imagery.addReference();
-      layer._requestImagery(imagery);
-      RequestScheduler.update();
+    const imagery = new Imagery(layer, 0, 0, 0);
+    imagery.addReference();
+    layer._requestImagery(imagery);
+    RequestScheduler.update();
 
-      return pollToPromise(function () {
-        return imagery.state === ImageryState.RECEIVED;
-      }).then(function () {
-        expect(imagery.image).toBeImageOrImageBitmap();
-        expect(tries).toEqual(2);
-        imagery.releaseReference();
-      });
+    return pollToPromise(function () {
+      return imagery.state === ImageryState.RECEIVED;
+    }).then(function () {
+      expect(imagery.image).toBeImageOrImageBitmap();
+      expect(tries).toEqual(2);
+      imagery.releaseReference();
     });
   });
 

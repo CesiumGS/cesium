@@ -9,7 +9,7 @@ import ModelArticulationStage from "./ModelArticulationStage.js";
  * {@link ModelSceneGraph}. This is defined in a model by the
  * <code>AGI_articulations</code> extension.
  *
- * @param {Object} options An object containing the following options:
+ * @param {object} options An object containing the following options:
  * @param {ModelComponents.Articulation} options.articulation The articulation components from the 3D model.
  * @param {ModelSceneGraph} options.sceneGraph The scene graph this articulation belongs to.
  *
@@ -80,7 +80,7 @@ Object.defineProperties(ModelArticulation.prototype, {
    * The name of this articulation.
    *
    * @memberof ModelArticulation.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    *
    * @private
@@ -150,8 +150,8 @@ function initialize(runtimeArticulation) {
 /**
  * Sets the current value of an articulation stage.
  *
- * @param {String} stageName The name of the articulation stage.
- * @param {Number} value The numeric value of this stage of the articulation.
+ * @param {string} stageName The name of the articulation stage.
+ * @param {number} value The numeric value of this stage of the articulation.
  *
  * @private
  */

@@ -4,28 +4,28 @@
  * @alias Iau2006XysSample
  * @constructor
  *
- * @param {Number} x The X value.
- * @param {Number} y The Y value.
- * @param {Number} s The S value.
+ * @param {number} x The X value.
+ * @param {number} y The Y value.
+ * @param {number} s The S value.
  *
  * @private
  */
 function Iau2006XysSample(x, y, s) {
   /**
    * The X value.
-   * @type {Number}
+   * @type {number}
    */
   this.x = x;
 
   /**
    * The Y value.
-   * @type {Number}
+   * @type {number}
    */
   this.y = y;
 
   /**
    * The S value.
-   * @type {Number}
+   * @type {number}
    */
   this.s = s;
 }

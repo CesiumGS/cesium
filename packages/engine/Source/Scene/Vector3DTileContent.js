@@ -51,6 +51,8 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
   this.featurePropertiesDirty = false;
   this._group = undefined;
 
+  this._ready = false;
+
   initialize(this, arrayBuffer, byteOffset);
 }
 
@@ -119,24 +121,18 @@ Object.defineProperties(Vector3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Vector3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
     get: function () {
-      const pointsPromise = defined(this._points)
-        ? this._points.readyPromise
-        : undefined;
-      const polygonPromise = defined(this._polygons)
-        ? this._polygons.readyPromise
-        : undefined;
-      const polylinePromise = defined(this._polylines)
-        ? this._polylines.readyPromise
-        : undefined;
-
-      const that = this;
-      return Promise.all([pointsPromise, polygonPromise, polylinePromise]).then(
-        function () {
-          return that;
-        }
-      );
+      return this._ready;
     },
   },
 
@@ -245,7 +241,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
   if (atLeastOneDefined && atLeastOneUndefined) {
     throw new RuntimeError(
-      "If one group of batch ids is defined, then all batch ids must be defined."
+      "If one group of batch ids is defined, then all batch ids must be defined"
     );
   }
 
@@ -311,7 +307,8 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
-    return Promise.resolve(content);
+    content._ready = true;
+    return;
   }
 
   const featureTableJSONByteLength = view.getUint32(byteOffset, true);
@@ -635,8 +632,6 @@ function initialize(content, arrayBuffer, byteOffset) {
       batchTable: batchTable,
     });
   }
-
-  return Promise.resolve(content);
 }
 
 function createFeatures(content) {
@@ -713,21 +708,22 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
     this._polygons.classificationType = this._tileset.classificationType;
     this._polygons.debugWireframe = this._tileset.debugWireframe;
     this._polygons.update(frameState);
-    ready = ready && this._polygons._ready;
+    ready = ready && this._polygons.ready;
   }
   if (defined(this._polylines)) {
     this._polylines.update(frameState);
-    ready = ready && this._polylines._ready;
+    ready = ready && this._polylines.ready;
   }
   if (defined(this._points)) {
     this._points.update(frameState);
-    ready = ready && this._points._ready;
+    ready = ready && this._points.ready;
   }
   if (defined(this._batchTable) && ready) {
     if (!defined(this._features)) {
       createFeatures(this);
     }
     this._batchTable.update(tileset, frameState);
+    this._ready = true;
   }
 };
 

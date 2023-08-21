@@ -27,14 +27,14 @@ import ShadowMode from "./ShadowMode.js";
  * @alias TimeDynamicPointCloud
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Clock} options.clock A {@link Clock} instance that is used when determining the value for the time dimension.
  * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a <code>uri</code> to a 3D Tiles Point Cloud tile and an optional <code>transform</code>.
- * @param {Boolean} [options.show=true] Determines if the point cloud will be shown.
+ * @param {boolean} [options.show=true] Determines if the point cloud will be shown.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
  * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from light sources.
- * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
- * @param {Object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
+ * @param {number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
+ * @param {object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
  * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
  */
@@ -49,7 +49,7 @@ function TimeDynamicPointCloud(options) {
   /**
    * Determines if the point cloud will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = defaultValue(options.show, true);
@@ -87,7 +87,7 @@ function TimeDynamicPointCloud(options) {
    * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
    * </p>
    *
-   * @type {Number}
+   * @type {number}
    * @default 256
    *
    * @see TimeDynamicPointCloud#totalMemoryUsageInBytes
@@ -181,11 +181,6 @@ function TimeDynamicPointCloud(options) {
   this._nextInterval = undefined;
   this._lastRenderedFrame = undefined;
   this._clockMultiplier = 0.0;
-  this._resolveReadyPromise = undefined;
-  const that = this;
-  this._readyPromise = new Promise(function (resolve) {
-    that._resolveReadyPromise = resolve;
-  });
 
   // For calculating average load time of the last N frames
   this._runningSum = 0.0;
@@ -217,7 +212,7 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
    *
    * @memberof TimeDynamicPointCloud.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    *
    * @see TimeDynamicPointCloud#maximumMemoryUsage
@@ -242,20 +237,6 @@ Object.defineProperties(TimeDynamicPointCloud.prototype, {
         return this._lastRenderedFrame.pointCloud.boundingSphere;
       }
       return undefined;
-    },
-  },
-
-  /**
-   * Gets the promise that will be resolved when the point cloud renders a frame for the first time.
-   *
-   * @memberof TimeDynamicPointCloud.prototype
-   *
-   * @type {Promise.<TimeDynamicPointCloud>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 });
@@ -395,6 +376,7 @@ function requestFrame(that, interval, frameState) {
       sequential: true,
       ready: false,
       touchedFrameNumber: frameState.frameNumber,
+      uri: uri,
     };
     frames[index] = frame;
     Resource.fetchArrayBuffer({
@@ -410,7 +392,6 @@ function requestFrame(that, interval, frameState) {
           uniformMapLoaded: getUniformMapLoaded(that),
           pickIdLoaded: getPickIdLoaded,
         });
-        return frame.pointCloud.readyPromise;
       })
       .catch(handleFrameFailure(that, uri));
   }
@@ -507,7 +488,12 @@ function renderFrame(that, frame, updateState, frameState) {
   pointCloud.geometricErrorScale = shading.geometricErrorScale;
   pointCloud.maximumAttenuation = getMaximumAttenuation(that);
 
-  pointCloud.update(frameState);
+  try {
+    pointCloud.update(frameState);
+  } catch (error) {
+    handleFrameFailure(that, frame.uri)(error);
+  }
+
   frame.touchedFrameNumber = frameState.frameNumber;
 }
 
@@ -738,7 +724,6 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
   const that = this;
   if (defined(frame) && !defined(this._lastRenderedFrame)) {
     frameState.afterRender.push(function () {
-      that._resolveReadyPromise(that);
       return true;
     });
   }
@@ -787,7 +772,7 @@ TimeDynamicPointCloud.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see TimeDynamicPointCloud#destroy
  */

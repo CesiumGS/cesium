@@ -18,7 +18,7 @@ import {
 } from "../../index.js";
 
 describe("Scene/IonImageryProvider", function () {
-  function createTestProvider(endpointData) {
+  async function createTestProviderAsync(endpointData) {
     endpointData = defaultValue(endpointData, {
       type: "IMAGERY",
       url: "http://test.invalid/layer",
@@ -27,7 +27,7 @@ describe("Scene/IonImageryProvider", function () {
     });
 
     const assetId = 12335;
-    const options = { assetId: assetId };
+    const options = {};
     const endpointResource = IonResource._createEndpointResource(
       assetId,
       options
@@ -40,7 +40,7 @@ describe("Scene/IonImageryProvider", function () {
       Promise.resolve(endpointData)
     );
 
-    const provider = new IonImageryProvider(options);
+    const provider = await IonImageryProvider.fromAssetId(assetId, options);
 
     expect(IonResource._createEndpointResource).toHaveBeenCalledWith(
       assetId,
@@ -58,60 +58,50 @@ describe("Scene/IonImageryProvider", function () {
     expect(IonImageryProvider).toConformToInterface(ImageryProvider);
   });
 
-  it("throws without asset ID", function () {
-    expect(function () {
-      return new IonImageryProvider({});
-    }).toThrowDeveloperError(ImageryProvider);
+  it("fromAssetId throws without assetId", async function () {
+    await expectAsync(
+      IonImageryProvider.fromAssetId()
+    ).toBeRejectedWithDeveloperError();
   });
 
-  it("readyPromise rejects with non-imagery asset", function () {
-    const provider = createTestProvider({
-      type: "3DTILES",
-      url: "http://test.invalid/layer",
-      accessToken: "not_really_a_refresh_token",
-      attributions: [],
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail("should not be called");
+  it("fromAssetId throws with non-imagery asset", async function () {
+    await expectAsync(
+      createTestProviderAsync({
+        type: "3DTILES",
+        url: "http://test.invalid/layer",
+        accessToken: "not_really_a_refresh_token",
+        attributions: [],
       })
-      .catch(function (error) {
-        expect(error).toBeInstanceOf(RuntimeError);
-        expect(provider.ready).toBe(false);
-      });
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "Cesium ion asset 12335 is not an imagery asset."
+    );
   });
 
-  it("readyPromise rejects with unknown external asset type", function () {
-    const provider = createTestProvider({
-      type: "IMAGERY",
-      externalType: "TUBELCANE",
-      options: { url: "http://test.invalid/layer" },
-      attributions: [],
-    });
-
-    return provider.readyPromise
-      .then(function () {
-        fail("should not be called");
+  it("fromAssetId rejects with unknown external asset type", async function () {
+    await expectAsync(
+      createTestProviderAsync({
+        type: "IMAGERY",
+        externalType: "TUBELCANE",
+        options: { url: "http://test.invalid/layer" },
+        attributions: [],
       })
-      .catch(function (error) {
-        expect(error).toBeInstanceOf(RuntimeError);
-        expect(provider.ready).toBe(false);
-      });
+    ).toBeRejectedWithError(
+      RuntimeError,
+      "Unrecognized Cesium ion imagery type: TUBELCANE"
+    );
   });
 
-  it("readyPromise resolves when ready", function () {
-    const provider = createTestProvider();
-    return provider.readyPromise.then(function () {
-      expect(provider.errorEvent).toBeDefined();
-      expect(provider.ready).toBe(true);
-      expect(provider._imageryProvider).toBeInstanceOf(
-        UrlTemplateImageryProvider
-      );
-    });
+  it("fromAssetId resolves to created provider", async function () {
+    const provider = await createTestProviderAsync();
+    expect(provider).toBeInstanceOf(IonImageryProvider);
+    expect(provider.errorEvent).toBeDefined();
+    expect(provider._imageryProvider).toBeInstanceOf(
+      UrlTemplateImageryProvider
+    );
   });
 
-  it("Uses previously fetched endpoint cache", function () {
+  it("Uses previously fetched endpoint cache", async function () {
     const endpointData = {
       type: "IMAGERY",
       url: "http://test.invalid/layer",
@@ -121,7 +111,6 @@ describe("Scene/IonImageryProvider", function () {
 
     const assetId = 12335;
     const options = {
-      assetId: assetId,
       accessToken: "token",
       server: "http://test.invalid",
     };
@@ -137,179 +126,102 @@ describe("Scene/IonImageryProvider", function () {
     );
 
     expect(endpointResource.fetchJson.calls.count()).toBe(0);
-    const provider = new IonImageryProvider(options);
-    let provider2;
-    return provider.readyPromise
-      .then(function () {
-        expect(provider.ready).toBe(true);
-        expect(endpointResource.fetchJson.calls.count()).toBe(1);
+    await IonImageryProvider.fromAssetId(assetId, options);
+    expect(endpointResource.fetchJson.calls.count()).toBe(1);
 
-        // Same as options but in a different order to verify cache is order independant.
-        const options2 = {
-          accessToken: "token",
-          server: "http://test.invalid",
-          assetId: assetId,
-        };
-        provider2 = new IonImageryProvider(options2);
-        return provider2.readyPromise;
-      })
-      .then(function () {
-        //Since the data is cached, fetchJson is not called again.
-        expect(endpointResource.fetchJson.calls.count()).toBe(1);
-        expect(provider2.ready).toBe(true);
-      });
+    // Same as options but in a different order to verify cache is order independant.
+    const options2 = {
+      accessToken: "token",
+      server: "http://test.invalid",
+    };
+    await IonImageryProvider.fromAssetId(assetId, options2);
+    //Since the data is cached, fetchJson is not called again.
+    expect(endpointResource.fetchJson.calls.count()).toBe(1);
   });
 
-  it("propagates called to underlying imagery provider resolves when ready", function () {
-    const provider = createTestProvider();
-    let internalProvider;
+  it("propagates called to underlying imagery provider resolves when ready", async function () {
+    const provider = await createTestProviderAsync();
+    const internalProvider = provider._imageryProvider;
+    expect(provider.rectangle).toBe(internalProvider.rectangle);
+    expect(provider.tileWidth).toBe(internalProvider.tileWidth);
+    expect(provider.tileHeight).toBe(internalProvider.tileHeight);
+    expect(provider.maximumLevel).toBe(internalProvider.maximumLevel);
+    expect(provider.minimumLevel).toBe(internalProvider.minimumLevel);
+    expect(provider.tilingScheme).toBe(internalProvider.tilingScheme);
+    expect(provider.tileDiscardPolicy).toBe(internalProvider.tileDiscardPolicy);
+    expect(provider.credit).toBe(internalProvider.credit);
+    expect(provider.hasAlphaChannel).toBe(internalProvider.hasAlphaChannel);
 
-    return provider.readyPromise
-      .then(function () {
-        internalProvider = provider._imageryProvider;
-        expect(provider.rectangle).toBe(internalProvider.rectangle);
-        expect(provider.tileWidth).toBe(internalProvider.tileWidth);
-        expect(provider.tileHeight).toBe(internalProvider.tileHeight);
-        expect(provider.maximumLevel).toBe(internalProvider.maximumLevel);
-        expect(provider.minimumLevel).toBe(internalProvider.minimumLevel);
-        expect(provider.tilingScheme).toBe(internalProvider.tilingScheme);
-        expect(provider.tileDiscardPolicy).toBe(
-          internalProvider.tileDiscardPolicy
-        );
-        expect(provider.credit).toBe(internalProvider.credit);
-        expect(provider.hasAlphaChannel).toBe(internalProvider.hasAlphaChannel);
-
-        const image = new Image();
-        const request = {};
-        spyOn(internalProvider, "requestImage").and.returnValue(
-          Promise.resolve(image)
-        );
-        return provider.requestImage(1, 2, 3, request).then(function (result) {
-          expect(internalProvider.requestImage).toHaveBeenCalledWith(
-            1,
-            2,
-            3,
-            request
-          );
-          expect(result).toBe(image);
-        });
-      })
-      .then(function () {
-        const info = {};
-        spyOn(internalProvider, "pickFeatures").and.returnValue(
-          Promise.resolve(info)
-        );
-        return provider.pickFeatures(1, 2, 3, 4, 5).then(function (result) {
-          expect(internalProvider.pickFeatures).toHaveBeenCalledWith(
-            1,
-            2,
-            3,
-            4,
-            5
-          );
-          expect(result).toBe(info);
-        });
-      })
-      .then(function () {
-        const innerCredit = new Credit("Data provided");
-        spyOn(internalProvider, "getTileCredits").and.returnValue([
-          innerCredit,
-        ]);
-        const credits = provider.getTileCredits(1, 2, 3);
-        expect(internalProvider.getTileCredits).toHaveBeenCalledWith(1, 2, 3);
-        expect(credits).toContain(innerCredit);
-      });
+    const image = new Image();
+    const request = {};
+    spyOn(internalProvider, "requestImage").and.returnValue(
+      Promise.resolve(image)
+    );
+    let result = await provider.requestImage(1, 2, 3, request);
+    expect(internalProvider.requestImage).toHaveBeenCalledWith(
+      1,
+      2,
+      3,
+      request
+    );
+    expect(result).toBe(image);
+    const info = {};
+    spyOn(internalProvider, "pickFeatures").and.returnValue(
+      Promise.resolve(info)
+    );
+    result = await provider.pickFeatures(1, 2, 3, 4, 5);
+    expect(internalProvider.pickFeatures).toHaveBeenCalledWith(1, 2, 3, 4, 5);
+    expect(result).toBe(info);
+    const innerCredit = new Credit("Data provided");
+    spyOn(internalProvider, "getTileCredits").and.returnValue([innerCredit]);
+    const credits = provider.getTileCredits(1, 2, 3);
+    expect(internalProvider.getTileCredits).toHaveBeenCalledWith(1, 2, 3);
+    expect(credits).toContain(innerCredit);
   });
 
-  it("throws developer errors when not ready", function () {
-    const provider = createTestProvider();
-    provider._ready = false;
-
-    expect(function () {
-      return provider.rectangle;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.tileWidth;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.tileHeight;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.maximumLevel;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.minimumLevel;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.tilingScheme;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.tileDiscardPolicy;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.credit;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.hasAlphaChannel;
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.requestImage(1, 2, 3, {});
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.pickFeatures(1, 2, 3, 4, 5);
-    }).toThrowDeveloperError();
-    expect(function () {
-      return provider.getTileCredits(1, 2, 3);
-    }).toThrowDeveloperError();
-
-    return provider.readyPromise;
-  });
-
-  it("handles server-sent credits", function () {
+  it("handles server-sent credits", async function () {
     const serverCredit = {
       html: '<a href="http://test.invalid/">Text</a>',
       collapsible: false,
     };
-    const provider = createTestProvider({
+    const provider = await createTestProviderAsync({
       type: "IMAGERY",
       url: "http://test.invalid/layer",
       accessToken: "not_really_a_refresh_token",
       attributions: [serverCredit],
     });
 
-    return provider.readyPromise.then(function () {
-      const credits = provider.getTileCredits(0, 0, 0);
-      const credit = credits[0];
-      expect(credit).toBeInstanceOf(Credit);
-      expect(credit.html).toEqual(serverCredit.html);
-      expect(credit.showOnScreen).toEqual(!serverCredit.collapsible);
-    });
+    const credits = provider.getTileCredits(0, 0, 0);
+    const credit = credits[0];
+    expect(credit).toBeInstanceOf(Credit);
+    expect(credit.html).toEqual(serverCredit.html);
+    expect(credit.showOnScreen).toEqual(!serverCredit.collapsible);
   });
 
-  function testExternalImagery(type, options, ImageryClass) {
-    const provider = createTestProvider({
+  async function testExternalImagery(type, options, ImageryClass) {
+    const provider = await createTestProviderAsync({
       type: "IMAGERY",
       externalType: type,
       options: options,
       attributions: [],
     });
-    return provider.readyPromise.then(function () {
-      expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
-    });
+    expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
   }
 
   it("createImageryProvider works with ARCGIS_MAPSERVER", function () {
-    spyOn(Resource._Implementations, "loadAndExecuteScript").and.callFake(
-      function (url, name, deffered) {
-        deffered.resolve({
-          resourceSets: [
-            {
-              resources: [{ imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 }],
-            },
-          ],
-        });
-      }
-    );
+    spyOn(Resource._Implementations, "loadWithXhr").and.callFake(function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      deferred.resolve(
+        JSON.stringify({ imageUrl: "", imageUrlSubdomains: [], zoomMax: 0 })
+      );
+    });
     return testExternalImagery(
       "ARCGIS_MAPSERVER",
       { url: "http://test.invalid" },
@@ -370,7 +282,10 @@ describe("Scene/IonImageryProvider", function () {
       crossOrigin,
       deferred
     ) {
-      deferred.resolve({});
+      deferred.resolve({
+        height: 16,
+        width: 16,
+      });
     });
 
     return testExternalImagery(

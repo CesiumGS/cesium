@@ -32,7 +32,7 @@ Object.defineProperties(Event.prototype, {
   /**
    * The number of listeners currently subscribed to the event.
    * @memberof Event.prototype
-   * @type {Number}
+   * @type {number}
    * @readonly
    */
   numberOfListeners: {
@@ -48,7 +48,7 @@ Object.defineProperties(Event.prototype, {
  * in which the function will execute.
  *
  * @param {Listener} listener The function to be executed when the event is raised.
- * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
+ * @param {object} [scope] An optional object scope to serve as the <code>this</code>
  *        pointer in which the listener function will execute.
  * @returns {Event.RemoveCallback} A function that will remove this event listener when invoked.
  *
@@ -73,8 +73,8 @@ Event.prototype.addEventListener = function (listener, scope) {
  * Unregisters a previously registered callback.
  *
  * @param {Listener} listener The function to be unregistered.
- * @param {Object} [scope] The scope that was originally passed to addEventListener.
- * @returns {Boolean} <code>true</code> if the listener was removed; <code>false</code> if the listener and scope are not registered with the event.
+ * @param {object} [scope] The scope that was originally passed to addEventListener.
+ * @returns {boolean} <code>true</code> if the listener was removed; <code>false</code> if the listener and scope are not registered with the event.
  *
  * @see Event#addEventListener
  * @see Event#raiseEvent

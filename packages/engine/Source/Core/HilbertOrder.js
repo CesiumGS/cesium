@@ -11,10 +11,10 @@ const HilbertOrder = {};
 /**
  * Computes the Hilbert index at the given level from 2D coordinates.
  *
- * @param {Number} level The level of the curve
- * @param {Number} x The X coordinate
- * @param {Number} y The Y coordinate
- * @returns {Number} The Hilbert index.
+ * @param {number} level The level of the curve
+ * @param {number} x The X coordinate
+ * @param {number} y The Y coordinate
+ * @returns {number} The Hilbert index.
  * @private
  */
 HilbertOrder.encode2D = function (level, x, y) {
@@ -55,9 +55,9 @@ HilbertOrder.encode2D = function (level, x, y) {
 /**
  * Computes the 2D coordinates from the Hilbert index at the given level.
  *
- * @param {Number} level The level of the curve
- * @param {BigInt} index The Hilbert index
- * @returns {Number[]} An array containing the 2D coordinates ([x, y]) corresponding to the Morton index.
+ * @param {number} level The level of the curve
+ * @param {bigint} index The Hilbert index
+ * @returns {number[]} An array containing the 2D coordinates ([x, y]) corresponding to the Morton index.
  * @private
  */
 HilbertOrder.decode2D = function (level, index) {

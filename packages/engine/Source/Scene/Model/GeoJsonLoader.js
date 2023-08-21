@@ -37,8 +37,8 @@ import BufferUsage from "../../Renderer/BufferUsage.js";
  * @augments ResourceLoader
  * @private
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.geoJson The GeoJson object.
+ * @param {object} options Object with the following properties:
+ * @param {object} options.geoJson The GeoJson object.
  */
 function GeoJsonLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -48,8 +48,6 @@ function GeoJsonLoader(options) {
   //>>includeEnd('debug');
 
   this._geoJson = options.geoJson;
-  this._promise = undefined;
-  this._process = function (loader, frameState) {};
   this._components = undefined;
 }
 
@@ -60,25 +58,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(GeoJsonLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource has not yet started loading.
-   *
-   * @memberof GeoJsonLoader.prototype
-   *
-   * @type {Promise.<GeoJsonLoader>|Undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
-  /**
    * The cache key of the resource.
    *
    * @memberof GeoJsonLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -105,25 +89,11 @@ Object.defineProperties(GeoJsonLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<GeoJsonLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 GeoJsonLoader.prototype.load = function () {
-  const loader = this;
-  const promise = new Promise(function (resolve) {
-    loader._process = function (loader, frameState) {
-      if (defined(loader._components)) {
-        return;
-      }
-
-      loader._components = parse(loader._geoJson, frameState);
-      loader._geoJson = undefined;
-      resolve(loader);
-    };
-  });
-
-  this._promise = promise;
-  return promise;
+  return Promise.resolve(this);
 };
 
 /**
@@ -137,7 +107,13 @@ GeoJsonLoader.prototype.process = function (frameState) {
   Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
-  this._process(this, frameState);
+  if (defined(this._components)) {
+    return true;
+  }
+
+  this._components = parse(this._geoJson, frameState);
+  this._geoJson = undefined;
+  return true;
 };
 
 function ParsedFeature() {

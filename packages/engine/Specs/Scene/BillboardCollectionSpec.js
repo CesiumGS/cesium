@@ -2503,7 +2503,7 @@ describe(
         expect(b._clampedPosition).toBeUndefined();
       });
 
-      it("changing the terrain provider", function () {
+      it("changing the terrain provider", async function () {
         const b = billboardsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
           position: Cartesian3.fromDegrees(-72.0, 40.0),
@@ -2512,10 +2512,12 @@ describe(
 
         spyOn(b, "_updateClamping").and.callThrough();
 
-        const terrainProvider = new CesiumTerrainProvider({
-          url: "made/up/url",
-          requestVertexNormals: true,
-        });
+        const terrainProvider = await CesiumTerrainProvider.fromUrl(
+          "made/up/url",
+          {
+            requestVertexNormals: true,
+          }
+        );
 
         scene.terrainProvider = terrainProvider;
 

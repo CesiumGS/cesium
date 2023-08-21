@@ -38,16 +38,15 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      window.startup = function (Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-
         const viewer = new Cesium.Viewer("cesiumContainer", {
           scene3DOnly: true,
           infoBox: false,
           selectionIndicator: false,
           timeline: false,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const scene = viewer.scene;
@@ -73,28 +72,30 @@
 
           shadowMap.enabled = true;
 
-          const model = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url:
-                "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
-              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
-                center,
-                new Cesium.HeadingPitchRoll(heading, 0.0, 0.0)
-              ),
-            })
-          );
+          (async () => {
+            try {
+              const model = scene.primitives.add(
+                await Cesium.Model.fromGltfAsync({
+                  url:
+                    "../../SampleData/models/ShadowTester/Shadow_Tester_Point.glb",
+                  modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                    center,
+                    new Cesium.HeadingPitchRoll(heading, 0.0, 0.0)
+                  ),
+                })
+              );
 
-          model.readyPromise
-            .then(function (model) {
-              // Play and loop all animations at half-speed
-              model.activeAnimations.addAll({
-                multiplier: 0.5,
-                loop: Cesium.ModelAnimationLoop.REPEAT,
+              model.readyEvent.addEventListener(() => {
+                // Play and loop all animations at half-speed
+                model.activeAnimations.addAll({
+                  multiplier: 0.5,
+                  loop: Cesium.ModelAnimationLoop.REPEAT,
+                });
               });
-            })
-            .catch(function (error) {
+            } catch (error) {
               window.alert(error);
-            });
+            }
+          })();
 
           return shadowMap;
         }
@@ -126,7 +127,7 @@
 
         scene.shadowMap = shadowMap1;
 
-        // TODO : workaround until Cesium supports multiple light sources
+        // Workaround until Cesium supports multiple light sources
         const CustomPrimitive = function (shadowMap) {
           this.shadowMap = shadowMap;
         };
@@ -136,13 +137,15 @@
         };
 
         scene.primitives.add(new CustomPrimitive(shadowMap2));
-
         //Sandcastle_End
-        Sandcastle.finishedLoading();
       };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        window.startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

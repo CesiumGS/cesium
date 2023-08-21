@@ -4,7 +4,6 @@ import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
-import defer from "./defer.js";
 import DeveloperError from "./DeveloperError.js";
 import DoubleEndedPriorityQueue from "./DoubleEndedPriorityQueue.js";
 import Ellipsoid from "./Ellipsoid.js";
@@ -18,6 +17,7 @@ import MetadataSemantic from "../Scene/MetadataSemantic.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Rectangle from "./Rectangle.js";
 import Resource from "./Resource.js";
+import RuntimeError from "./RuntimeError.js";
 import TerrainProvider from "./TerrainProvider.js";
 
 /**
@@ -181,27 +181,28 @@ function isChildAvailable(implicitTileset, subtree, coord, x, y) {
 }
 
 /**
+ * @typedef {Object} Cesium3DTilesTerrainProvider.ConstructorOptions
+ *
+ * Initialization options for the Cesium3DTilesTerrainProvider constructor
+ *
+ * @property {boolean} [requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * A {@link TerrainProvider} that accesses terrain data in a 3D Tiles format.
  *
  * @alias Cesium3DTilesTerrainProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the tileset JSON.
- * @param {Boolean} [options.requestVertexNormals] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid. If not specified, the WGS84 ellipsoid is used.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {Cesium3DTilesTerrainProvider.ConstructorOptionst}[options] An object describing initialization options
  *
  * @see TerrainProvider
+ * @see Cesium3DTilesTerrainProvider.fromUrl
  */
 function Cesium3DTilesTerrainProvider(options) {
-  //>>includeStart('debug', pragmas.debug)
-  Check.typeOf.object("options", options);
-  Check.defined("options.url", options.url);
-  //>>includeEnd('debug');
-
-  this._ready = false;
-  this._readyPromise = defer();
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   let credit = options.credit;
   if (typeof credit === "string") {
@@ -220,10 +221,8 @@ function Cesium3DTilesTerrainProvider(options) {
     ellipsoid: this._ellipsoid,
   });
 
-  const that = this;
-
   this._subtreeCache = new ImplicitSubtreeCache({
-    provider: that,
+    provider: this,
   });
 
   /**
@@ -245,50 +244,71 @@ function Cesium3DTilesTerrainProvider(options) {
     options.requestVertexNormals,
     false
   );
-
-  Promise.resolve(options.url)
-    .then(function (/** @type {Resource|String} */ url) {
-      // @ts-ignore
-      const resource = Resource.createIfNeeded(url);
-
-      // ion resources have a credits property we can use for additional attribution.
-      // @ts-ignore
-      that._tileCredits = resource.credits;
-
-      that._resource = resource;
-
-      const promise = resource.fetchJson();
-      if (promise === undefined) {
-        return Promise.reject("Could not load tileset JSON");
-      }
-      return promise;
-    })
-    .then(function (/** @type {Object.<String,*>} */ tilesetJson) {
-      const childrenJson = tilesetJson["root"]["children"];
-      const child0Json = childrenJson[0];
-      const child1Json = childrenJson[1];
-
-      const metadataSchemaJson = tilesetJson["schema"];
-      const metadataSchema = MetadataSchema.fromJson(metadataSchemaJson);
-
-      that._tileset0 = new ImplicitTileset(
-        that._resource,
-        child0Json,
-        metadataSchema
-      );
-      that._tileset1 = new ImplicitTileset(
-        that._resource,
-        child1Json,
-        metadataSchema
-      );
-
-      that._ready = true;
-      that._readyPromise.resolve(true);
-    })
-    .catch(function (/**@type {any}*/ error) {
-      that._readyPromise.reject(error);
-    });
 }
+
+/**
+ * Creates a {@link TerrainProvider} that accesses terrain data in a Cesium 3D Tiles format.
+ *
+ * @param {Resource|String|Promise<Resource>|Promise<String>} url The URL of the Cesium terrain server.
+ * @param {Cesium3DTilesTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
+ * @returns {Promise<Cesium3DTilesTerrainProvider>}
+ *
+ * @example
+ * // Create terrain with normals.
+ * try {
+ *   const viewer = new Cesium.Viewer("cesiumContainer", {
+ *     terrainProvider: await Cesium.Cesium3DTilesTerrainProvider.fromUrl(
+ *       Cesium.IonResource.fromAssetId(3956), {
+ *         requestVertexNormals: true
+ *     })
+ *   });
+ * } catch (error) {
+ *   console.log(error);
+ * }
+ */
+Cesium3DTilesTerrainProvider.fromUrl = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  url = await Promise.resolve(url);
+  const resource = Resource.createIfNeeded(url);
+
+  let tilesetJson;
+  try {
+    tilesetJson = await resource.fetchJson();
+  } catch (error) {
+    throw new RuntimeError("Could not load tileset JSON", error);
+  }
+
+  const provider = new Cesium3DTilesTerrainProvider(options);
+  // ion resources have a credits property we can use for additional attribution.
+  // @ts-ignore
+  provider._tileCredits = resource.credits;
+  provider._resource = resource;
+
+  const childrenJson = tilesetJson["root"]["children"];
+  const child0Json = childrenJson[0];
+  const child1Json = childrenJson[1];
+
+  const metadataSchemaJson = tilesetJson["schema"];
+  const metadataSchema = MetadataSchema.fromJson(metadataSchemaJson);
+
+  provider._tileset0 = new ImplicitTileset(
+    resource,
+    child0Json,
+    metadataSchema
+  );
+  provider._tileset1 = new ImplicitTileset(
+    resource,
+    child1Json,
+    metadataSchema
+  );
+
+  return provider;
+};
 
 const scratchPromises = new Array(2);
 
@@ -305,9 +325,6 @@ const scratchPromises = new Array(2);
  * @returns {Promise.<Cesium3DTilesTerrainData>|undefined} A promise for the requested geometry. If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
- *
- * @exception {DeveloperError} This function must not be called before {@link Cesium3DTilesTerrainProvider#ready}
- *            returns true.
  */
 Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   x,
@@ -315,14 +332,6 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug)
-  if (!this._ready) {
-    throw new DeveloperError(
-      "requestTileGeometry must not be called before the terrain provider is ready."
-    );
-  }
-  //>>includeEnd('debug');
-
   const rootId = getRootIdFromGeographic(level, x);
   const implicitTileset = rootId === 0 ? this._tileset0 : this._tileset1;
 
@@ -337,7 +346,7 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
   const subtreeCoord = tileCoord.getSubtreeCoordinates();
 
   const cache = this._subtreeCache;
-  const subtree = cache.find(rootId, subtreeCoord);
+  let subtree = cache.find(rootId, subtreeCoord);
   const that = this;
 
   /** @type {Promise<ImplicitSubtree>} */
@@ -358,12 +367,12 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
     // @ts-ignore
     subtreePromise = subtreeResource
       .fetchArrayBuffer()
-      .then(function (arrayBuffer) {
+      .then(async function (arrayBuffer) {
         // Check if the subtree exists again in case multiple fetches for the same subtree went out at the same time. Don't want to double-add to the cache
-        let subtree = cache.find(rootId, subtreeCoord);
+        subtree = cache.find(rootId, subtreeCoord);
         if (subtree === undefined) {
           const bufferU8 = new Uint8Array(arrayBuffer);
-          subtree = new ImplicitSubtree(
+          subtree = await ImplicitSubtree.fromSubtreeJson(
             that._resource,
             undefined,
             bufferU8,
@@ -373,10 +382,10 @@ Cesium3DTilesTerrainProvider.prototype.requestTileGeometry = function (
           cache.addSubtree(rootId, subtree);
         }
 
-        return subtree.readyPromise;
+        return subtree;
       });
   } else {
-    subtreePromise = subtree.readyPromise;
+    subtreePromise = Promise.resolve(subtree);
   }
 
   // Note: only one content for terrain
@@ -650,8 +659,7 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
 
   /**
    * Gets the credit to display when this terrain provider is active. Typically this is used to credit
-   * the source of the terrain. This function should
-   * not be called before {@link Cesium3DTilesTerrainProvider#ready} returns true.
+   * the source of the terrain.
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {Credit}
    */
@@ -659,21 +667,12 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
   credit: {
     // @ts-ignore
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "credit must not be called before the terrain provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._credit;
     },
   },
 
   /**
-   * Gets the tiling scheme used by the provider. This function should
-   * not be called before {@link Cesium3DTilesTerrainProvider#ready} returns true.
+   * Gets the tiling scheme used by the provider.
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {TilingScheme}
    */
@@ -681,84 +680,32 @@ Object.defineProperties(Cesium3DTilesTerrainProvider.prototype, {
   tilingScheme: {
     // @ts-ignore
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "tilingScheme must not be called before the terrain provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof Cesium3DTilesTerrainProvider.prototype
-   * @type {Boolean}
-   */
-  // @ts-ignore
-  ready: {
-    get: function () {
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof Cesium3DTilesTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
-   * @readonly
-   */
-  // @ts-ignore
-  readyPromise: {
-    // @ts-ignore
-    get: function () {
-      return this._readyPromise.promise;
     },
   },
 
   /**
    * Gets a value indicating whether or not the provider includes a water mask. The water mask
    * indicates which areas of the globe are water rather than land, so they can be rendered
-   * as a reflective surface with animated waves. This function should not be
-   * called before {@link Cesium3DTilesTerrainProvider#ready} returns true.
+   * as a reflective surface with animated waves.
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {Boolean}
    */
   // @ts-ignore
   hasWaterMask: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "hasWaterMask must not be called before the terrain provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return false;
     },
   },
 
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
-   * This function should not be called before {@link Cesium3DTilesTerrainProvider#ready} returns true.
    * @memberof Cesium3DTilesTerrainProvider.prototype
    * @type {Boolean}
    */
   // @ts-ignore
   hasVertexNormals: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug)
-      if (!this._ready) {
-        throw new DeveloperError(
-          "hasVertexNormals must not be called before the terrain provider is ready."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._requestVertexNormals;
     },
   },

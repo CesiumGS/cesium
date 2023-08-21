@@ -9,14 +9,14 @@ import defined from "../Core/defined.js";
 function ImageryLayerFeatureInfo() {
   /**
    * Gets or sets the name of the feature.
-   * @type {String|undefined}
+   * @type {string|undefined}
    */
   this.name = undefined;
 
   /**
    * Gets or sets an HTML description of the feature.  The HTML is not trusted and should
    * be sanitized before display to the user.
-   * @type {String|undefined}
+   * @type {string|undefined}
    */
   this.description = undefined;
 
@@ -30,13 +30,13 @@ function ImageryLayerFeatureInfo() {
   /**
    * Gets or sets the raw data describing the feature.  The raw data may be in any
    * number of formats, such as GeoJSON, KML, etc.
-   * @type {Object|undefined}
+   * @type {object|undefined}
    */
   this.data = undefined;
 
   /**
    * Gets or sets the image layer of the feature.
-   * @type {Object|undefined}
+   * @type {object|undefined}
    */
   this.imageryLayer = undefined;
 }
@@ -47,7 +47,7 @@ function ImageryLayerFeatureInfo() {
  * 3) the first property containing the word 'name', 4) the first property containing the word 'title'.  If
  * the name cannot be obtained from any of these sources, the existing name will be left unchanged.
  *
- * @param {Object} properties An object literal containing the properties of the feature.
+ * @param {object} properties An object literal containing the properties of the feature.
  */
 ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function (
   properties
@@ -83,7 +83,7 @@ ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function (
 /**
  * Configures the description of this feature by creating an HTML table of properties and their values.
  *
- * @param {Object} properties An object literal containing the properties of the feature.
+ * @param {object} properties An object literal containing the properties of the feature.
  */
 ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties = function (
   properties

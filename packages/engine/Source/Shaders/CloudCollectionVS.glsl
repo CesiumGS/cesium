@@ -1,17 +1,17 @@
 #ifdef INSTANCED
-attribute vec2 direction;
+in vec2 direction;
 #endif
-attribute vec4 positionHighAndScaleX;
-attribute vec4 positionLowAndScaleY;
-attribute vec4 packedAttribute0;
-attribute vec4 packedAttribute1;
-attribute vec4 color;
+in vec4 positionHighAndScaleX;
+in vec4 positionLowAndScaleY;
+in vec4 packedAttribute0;
+in vec4 packedAttribute1;
+in vec4 color;
 
-varying vec2 v_offset;
-varying vec3 v_maximumSize;
-varying vec4 v_color;
-varying float v_slice;
-varying float v_brightness;
+out vec2 v_offset;
+out vec3 v_maximumSize;
+out vec4 v_color;
+out float v_slice;
+out float v_brightness;
 
 void main() {
     // Unpack attributes.

@@ -43,18 +43,9 @@ function Context(canvas, options) {
   Check.defined("canvas", canvas);
   //>>includeEnd('debug');
 
-  let requestWebgl2 = false;
-  if (defined(options) && defined(options.requestWebgl2)) {
-    requestWebgl2 = options.requestWebgl2;
-    Context._deprecationWarning(
-      "ContextOptions.requestWebgl2",
-      "Cesium.requestWebgl2 was deprecated in CesiumJS 1.101 and will be removed in 1.102. Use Cesium.requestWebgl1 to request a WebGL1 or WebGL2 context."
-    );
-  }
-
   const {
     getWebGLStub,
-    requestWebgl1 = !requestWebgl2,
+    requestWebgl1,
     webgl: webglOptions = {},
     allowTextureFilterAnisotropic = true,
   } = defaultValue(options, {});
@@ -72,9 +63,8 @@ function Context(canvas, options) {
     : getWebGLContext(canvas, webglOptions, requestWebgl1);
 
   // Get context type. instanceof will throw if WebGL2 is not supported
-  const webgl2 =
-    typeof WebGL2RenderingContext !== "undefined" &&
-    glContext instanceof WebGL2RenderingContext;
+  const webgl2Supported = typeof WebGL2RenderingContext !== "undefined";
+  const webgl2 = webgl2Supported && glContext instanceof WebGL2RenderingContext;
 
   this._canvas = canvas;
   this._originalGLContext = glContext;
@@ -389,7 +379,7 @@ function Context(canvas, options) {
    * be stored globally, except they're tied to a particular context, and to manage
    * their lifetime.
    *
-   * @type {Object}
+   * @type {object}
    */
   this.cache = {};
 
@@ -397,7 +387,7 @@ function Context(canvas, options) {
 }
 
 /**
- * @typedef {Object} ContextOptions
+ * @typedef {object} ContextOptions
  *
  * Options to control the setting up of a WebGL Context.
  * <p>
@@ -407,8 +397,8 @@ function Context(canvas, options) {
  * especially for horizon views.
  * </p>
  *
- * @property {Boolean} [requestWebgl1 = true] If true and the browser supports it, use a WebGL 1 rendering context
- * @property {Boolean} [allowTextureFilterAnisotropic=true] If true, use anisotropic filtering during texture sampling
+ * @property {boolean} [requestWebgl1=false] If true and the browser supports it, use a WebGL 1 rendering context
+ * @property {boolean} [allowTextureFilterAnisotropic=true] If true, use anisotropic filtering during texture sampling
  * @property {WebGLOptions} [webgl] WebGL options to be passed on to canvas.getContext
  * @property {Function} [getWebGLStub] A function to create a WebGL stub for testing
  */
@@ -417,7 +407,7 @@ function Context(canvas, options) {
  * @private
  * @param {HTMLCanvasElement} canvas The canvas element to which the context will be associated
  * @param {WebGLOptions} webglOptions WebGL options to be passed on to HTMLCanvasElement.getContext()
- * @param {Boolean} requestWebgl1 Whether to request a WebGLRenderingContext or a WebGL2RenderingContext.
+ * @param {boolean} requestWebgl1 Whether to request a WebGLRenderingContext or a WebGL2RenderingContext.
  * @returns {WebGLRenderingContext|WebGL2RenderingContext}
  */
 function getWebGLContext(canvas, webglOptions, requestWebgl1) {
@@ -446,7 +436,7 @@ function getWebGLContext(canvas, webglOptions, requestWebgl1) {
 }
 
 /**
- * @typedef {Object} WebGLOptions
+ * @typedef {object} WebGLOptions
  *
  * WebGL options to be passed on to HTMLCanvasElement.getContext().
  * See {@link https://registry.khronos.org/webgl/specs/latest/1.0/#5.2|WebGLContextAttributes}
@@ -459,14 +449,14 @@ function getWebGLContext(canvas, webglOptions, requestWebgl1) {
  * <code>alpha</code> to true.
  * </p>
  *
- * @property {Boolean} [alpha=false]
- * @property {Boolean} [depth=true]
- * @property {Boolean} [stencil=false]
- * @property {Boolean} [antialias=true]
- * @property {Boolean} [premultipliedAlpha=true]
- * @property {Boolean} [preserveDrawingBuffer=false]
+ * @property {boolean} [alpha=false]
+ * @property {boolean} [depth=true]
+ * @property {boolean} [stencil=false]
+ * @property {boolean} [antialias=true]
+ * @property {boolean} [premultipliedAlpha=true]
+ * @property {boolean} [preserveDrawingBuffer=false]
  * @property {("default"|"low-power"|"high-performance")} [powerPreference="high-performance"]
- * @property {Boolean} [failIfMajorPerformanceCaveat=false]
+ * @property {boolean} [failIfMajorPerformanceCaveat=false]
  */
 
 function errorToString(gl, error) {
@@ -618,7 +608,7 @@ Object.defineProperties(Context.prototype, {
   /**
    * The number of stencil bits per pixel in the default bound framebuffer.  The minimum is eight bits.
    * @memberof Context.prototype
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>STENCIL_BITS</code>.
    */
   stencilBits: {
@@ -631,7 +621,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if the WebGL context supports stencil buffers.
    * Stencil buffers are not supported by all systems.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   stencilBuffer: {
     get: function () {
@@ -643,7 +633,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if the WebGL context supports antialiasing.  By default
    * antialiasing is requested, but it is not supported by all systems.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   antialias: {
     get: function () {
@@ -655,7 +645,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if the WebGL context supports multisample antialiasing. Requires
    * WebGL2.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   msaa: {
     get: function () {
@@ -669,7 +659,7 @@ Object.defineProperties(Context.prototype, {
    * functions from GLSL.  A shader using these functions still needs to explicitly enable the
    * extension with <code>#extension GL_OES_standard_derivatives : enable</code>.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link http://www.khronos.org/registry/gles/extensions/OES/OES_standard_derivatives.txt|OES_standard_derivatives}
    */
   standardDerivatives: {
@@ -682,7 +672,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if the EXT_float_blend extension is supported. This
    * extension enables blending with 32-bit float values.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/}
    */
   floatBlend: {
@@ -696,7 +686,7 @@ Object.defineProperties(Context.prototype, {
    * extension extends blending capabilities by adding two new blend equations:
    * the minimum or maximum color components of the source and destination colors.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/}
    */
   blendMinmax: {
@@ -710,7 +700,7 @@ Object.defineProperties(Context.prototype, {
    * extension allows the use of unsigned int indices, which can improve performance by
    * eliminating batch breaking caused by unsigned short indices.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link http://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/|OES_element_index_uint}
    */
   elementIndexUint: {
@@ -723,7 +713,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if WEBGL_depth_texture is supported.  This extension provides
    * access to depth textures that, for example, can be attached to framebuffers for shadow mapping.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
    */
   depthTexture: {
@@ -736,7 +726,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if OES_texture_float is supported. This extension provides
    * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
    */
   floatingPointTexture: {
@@ -749,7 +739,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if OES_texture_half_float is supported. This extension provides
    * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/}
    */
   halfFloatingPointTexture: {
@@ -762,7 +752,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if OES_texture_float_linear is supported. This extension provides
    * access to linear sampling methods for minification and magnification filters of floating-point textures.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/}
    */
   textureFloatLinear: {
@@ -775,7 +765,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if OES_texture_half_float_linear is supported. This extension provides
    * access to linear sampling methods for minification and magnification filters of half floating-point textures.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float_linear/}
    */
   textureHalfFloatLinear: {
@@ -791,7 +781,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if EXT_texture_filter_anisotropic is supported. This extension provides
    * access to anisotropic filtering for textured surfaces at an oblique angle from the viewer.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/}
    */
   textureFilterAnisotropic: {
@@ -804,7 +794,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if WEBGL_compressed_texture_s3tc is supported.  This extension provides
    * access to DXT compressed textures.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/}
    */
   s3tc: {
@@ -817,7 +807,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if WEBGL_compressed_texture_pvrtc is supported.  This extension provides
    * access to PVR compressed textures.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_pvrtc/}
    */
   pvrtc: {
@@ -830,7 +820,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if WEBGL_compressed_texture_astc is supported.  This extension provides
    * access to ASTC compressed textures.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_astc/}
    */
   astc: {
@@ -843,7 +833,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if WEBGL_compressed_texture_etc is supported.  This extension provides
    * access to ETC compressed textures.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc/}
    */
   etc: {
@@ -856,7 +846,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if WEBGL_compressed_texture_etc1 is supported.  This extension provides
    * access to ETC1 compressed textures.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_etc1/}
    */
   etc1: {
@@ -869,7 +859,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if EXT_texture_compression_bptc is supported.  This extension provides
    * access to BC7 compressed textures.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/}
    */
   bc7: {
@@ -881,7 +871,7 @@ Object.defineProperties(Context.prototype, {
   /**
    * <code>true</code> if S3TC, PVRTC, ASTC, ETC, ETC1, or BC7 compression is supported.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   supportsBasis: {
     get: function () {
@@ -901,7 +891,7 @@ Object.defineProperties(Context.prototype, {
    * extension can improve performance by reducing the overhead of switching vertex arrays.
    * When enabled, this extension is automatically used by {@link VertexArray}.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/|OES_vertex_array_object}
    */
   vertexArrayObject: {
@@ -916,7 +906,7 @@ Object.defineProperties(Context.prototype, {
    * from GLSL fragment shaders.  A shader using these functions still needs to explicitly enable the
    * extension with <code>#extension GL_EXT_frag_depth : enable</code>.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/|EXT_frag_depth}
    */
   fragmentDepth: {
@@ -929,7 +919,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if the ANGLE_instanced_arrays extension is supported.  This
    * extension provides access to instanced rendering.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays}
    */
   instancedArrays: {
@@ -942,7 +932,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if the EXT_color_buffer_float extension is supported.  This
    * extension makes the gl.RGBA32F format color renderable.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
    */
@@ -956,7 +946,7 @@ Object.defineProperties(Context.prototype, {
    * <code>true</code> if the EXT_color_buffer_half_float extension is supported.  This
    * extension makes the format gl.RGBA16F format color renderable.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/}
    * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
    */
@@ -976,7 +966,7 @@ Object.defineProperties(Context.prototype, {
    * A shader using this feature needs to explicitly enable the extension with
    * <code>#extension GL_EXT_draw_buffers : enable</code>.
    * @memberof Context.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/|WEBGL_draw_buffers}
    */
   drawBuffers: {
@@ -1116,7 +1106,7 @@ Object.defineProperties(Context.prototype, {
   /**
    * The drawingBufferHeight of the underlying GL context.
    * @memberof Context.prototype
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
    */
   drawingBufferHeight: {
@@ -1128,7 +1118,7 @@ Object.defineProperties(Context.prototype, {
   /**
    * The drawingBufferWidth of the underlying GL context.
    * @memberof Context.prototype
-   * @type {Number}
+   * @type {number}
    * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
    */
   drawingBufferWidth: {
@@ -1142,7 +1132,7 @@ Object.defineProperties(Context.prototype, {
    * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
    * {@link Texture.fromFramebuffer}.
    * @memberof Context.prototype
-   * @type {Object}
+   * @type {object}
    */
   defaultFramebuffer: {
     get: function () {
@@ -1350,7 +1340,11 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
 
   if (defined(indexBuffer)) {
     offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
-    count = defaultValue(count, indexBuffer.numberOfIndices);
+    if (defined(count)) {
+      count = Math.min(count, indexBuffer.numberOfIndices);
+    } else {
+      count = indexBuffer.numberOfIndices;
+    }
     if (instanceCount === 0) {
       context._gl.drawElements(
         primitiveType,
@@ -1368,7 +1362,11 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
       );
     }
   } else {
-    count = defaultValue(count, va.numberOfVertices);
+    if (defined(count)) {
+      count = Math.min(count, va.numberOfVertices);
+    } else {
+      count = va.numberOfVertices;
+    }
     if (instanceCount === 0) {
       context._gl.drawArrays(primitiveType, offset, count);
     } else {
@@ -1546,7 +1544,7 @@ Context.prototype.createViewportQuadCommand = function (
  * Gets the object associated with a pick color.
  *
  * @param {Color} pickColor The pick color.
- * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
+ * @returns {object} The object associated with the pick color, or undefined if no object is associated with that color.
  *
  * @example
  * const object = context.getObjectByPickColor(pickColor);
@@ -1588,8 +1586,8 @@ PickId.prototype.destroy = function () {
  * The ID has an RGBA color value unique to this context.  You must call destroy()
  * on the pick ID when destroying the input object.
  *
- * @param {Object} object The object to associate with the pick ID.
- * @returns {Object} A PickId object with a <code>color</code> property.
+ * @param {object} object The object to associate with the pick ID.
+ * @returns {object} A PickId object with a <code>color</code> property.
  *
  * @exception {RuntimeError} Out of unique Pick IDs.
  *

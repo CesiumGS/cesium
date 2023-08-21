@@ -36,17 +36,17 @@ import StencilOperation from "./StencilOperation.js";
  * @alias GroundPolylinePrimitive
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Array|GeometryInstance} [options.geometryInstances] GeometryInstances containing GroundPolylineGeometry
  * @param {Appearance} [options.appearance] The Appearance used to render the polyline. Defaults to a white color {@link Material} on a {@link PolylineMaterialAppearance}.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
- * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
- * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
- * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+ * @param {boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+ * @param {boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+ * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
  * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
- * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on creation to have effect.
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on creation to have effect.
  *
  * @example
  * // 1. Draw a polyline on terrain with a basic color material
@@ -132,7 +132,7 @@ function GroundPolylinePrimitive(options) {
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -156,7 +156,7 @@ function GroundPolylinePrimitive(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -192,24 +192,6 @@ function GroundPolylinePrimitive(options) {
   this._zIndex = undefined;
 
   this._ready = false;
-  const groundPolylinePrimitive = this;
-  this._readyPromise = new Promise((resolve, reject) => {
-    groundPolylinePrimitive._completeLoad = () => {
-      this._ready = true;
-
-      if (this.releaseGeometryInstances) {
-        this.geometryInstances = undefined;
-      }
-
-      const error = this._error;
-      if (!defined(error)) {
-        resolve(this);
-      } else {
-        reject(error);
-      }
-    };
-  });
-
   this._primitive = undefined;
 
   this._sp = undefined;
@@ -238,7 +220,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    *
    * @memberof GroundPolylinePrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -254,7 +236,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    *
    * @memberof GroundPolylinePrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -270,7 +252,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    *
    * @memberof GroundPolylinePrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -286,7 +268,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    *
    * @memberof GroundPolylinePrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -304,24 +286,12 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    *
    * @memberof GroundPolylinePrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
     get: function () {
       return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof GroundPolylinePrimitive.prototype
-   * @type {Promise.<GroundPolylinePrimitive>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 
@@ -333,7 +303,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
    *
    * @memberof GroundPolylinePrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -405,12 +375,10 @@ function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
 
     // Check for use of v_width and v_polylineAngle in material shader
     // to determine whether these varyings should be active in the vertex shader.
-    if (
-      materialShaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1
-    ) {
+    if (materialShaderSource.search(/in\s+float\s+v_polylineAngle;/g) !== -1) {
       vsDefines.push("ANGLE_VARYING");
     }
-    if (materialShaderSource.search(/varying\s+float\s+v_width;/g) !== -1) {
+    if (materialShaderSource.search(/in\s+float\s+v_width;/g) !== -1) {
       vsDefines.push("WIDTH_VARYING");
     }
   } else {
@@ -827,7 +795,6 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
     };
 
     this._primitive = new Primitive(primitiveOptions);
-    this._primitive.readyPromise.then(this._completeLoad);
   }
 
   if (
@@ -843,13 +810,22 @@ GroundPolylinePrimitive.prototype.update = function (frameState) {
   this._primitive.show = this.show;
   this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
   this._primitive.update(frameState);
+  frameState.afterRender.push(() => {
+    if (!this._ready && defined(this._primitive) && this._primitive.ready) {
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
+    }
+  });
 };
 
 /**
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
  *
  * @param {*} id The id of the {@link GeometryInstance}.
- * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
+ * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
  *
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
@@ -876,7 +852,7 @@ GroundPolylinePrimitive.prototype.getGeometryInstanceAttributes = function (
  * GroundPolylinePrimitives require support for the WEBGL_depth_texture extension.
  *
  * @param {Scene} scene The current scene.
- * @returns {Boolean} Whether or not the current scene supports GroundPolylinePrimitives.
+ * @returns {boolean} Whether or not the current scene supports GroundPolylinePrimitives.
  */
 GroundPolylinePrimitive.isSupported = function (scene) {
   return scene.frameState.context.depthTexture;
@@ -889,7 +865,7 @@ GroundPolylinePrimitive.isSupported = function (scene) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see GroundPolylinePrimitive#destroy
  */

@@ -1,7 +1,7 @@
 import {
   Cartesian3,
   Cartesian4,
-  createWorldTerrain,
+  createWorldTerrainAsync,
   Ellipsoid,
   EllipsoidTerrainProvider,
   GeographicTilingScheme,
@@ -335,8 +335,8 @@ describe("Scene/GlobeSurfaceTile", function () {
         scene.destroyForSpecs();
       });
 
-      it("gets correct results even when the mesh includes normals", function () {
-        const terrainProvider = createWorldTerrain({
+      it("gets correct results even when the mesh includes normals", async function () {
+        const terrainProvider = await createWorldTerrainAsync({
           requestVertexNormals: true,
           requestWaterMask: false,
         });
@@ -351,25 +351,24 @@ describe("Scene/GlobeSurfaceTile", function () {
         processor.frameState = scene.frameState;
         processor.terrainProvider = terrainProvider;
 
-        return processor.process([tile]).then(function () {
-          const ray = new Ray(
-            new Cartesian3(
-              -5052039.459789615,
-              2561172.040315167,
-              -2936276.999965875
-            ),
-            new Cartesian3(
-              0.5036332963145244,
-              0.6648033332898124,
-              0.5517155343926082
-            )
-          );
-          const pickResult = tile.data.pick(ray, undefined, undefined, true);
-          const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
-            pickResult
-          );
-          expect(cartographic.height).toBeGreaterThan(-500.0);
-        });
+        await processor.process([tile]);
+        const ray = new Ray(
+          new Cartesian3(
+            -5052039.459789615,
+            2561172.040315167,
+            -2936276.999965875
+          ),
+          new Cartesian3(
+            0.5036332963145244,
+            0.6648033332898124,
+            0.5517155343926082
+          )
+        );
+        const pickResult = tile.data.pick(ray, undefined, undefined, true);
+        const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
+          pickResult
+        );
+        expect(cartographic.height).toBeGreaterThan(-500.0);
       });
 
       it("gets correct result when a closer triangle is processed after a farther triangle", function () {

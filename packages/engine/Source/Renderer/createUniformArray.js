@@ -74,7 +74,7 @@ function UniformArrayFloat(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -116,7 +116,7 @@ function UniformArrayFloatVec2(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -160,7 +160,7 @@ function UniformArrayFloatVec3(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -222,7 +222,7 @@ function UniformArrayFloatVec4(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -289,7 +289,7 @@ function UniformArraySampler(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -339,7 +339,7 @@ function UniformArrayInt(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -381,7 +381,7 @@ function UniformArrayIntVec2(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -425,7 +425,7 @@ function UniformArrayIntVec3(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -469,7 +469,7 @@ function UniformArrayIntVec4(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -513,7 +513,7 @@ function UniformArrayMat2(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -557,7 +557,7 @@ function UniformArrayMat3(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;
@@ -601,7 +601,7 @@ function UniformArrayMat4(gl, activeUniform, uniformName, locations) {
   const length = locations.length;
 
   /**
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   this.name = uniformName;

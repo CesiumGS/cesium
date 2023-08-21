@@ -1,7 +1,7 @@
-attribute vec4 position;
-attribute vec3 cubeMapCoordinates;
+in vec4 position;
+in vec3 cubeMapCoordinates;
 
-varying vec3 v_cubeMapCoordinates;
+out vec3 v_cubeMapCoordinates;
 
 void main()
 {

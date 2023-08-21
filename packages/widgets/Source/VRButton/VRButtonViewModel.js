@@ -77,7 +77,7 @@ function toggleVR(viewModel, scene, isVRMode, isOrthographic) {
  * @constructor
  *
  * @param {Scene} scene The scene.
- * @param {Element|String} [vrElement=document.body] The element or id to be placed into VR mode.
+ * @param {Element|string} [vrElement=document.body] The element or id to be placed into VR mode.
  */
 function VRButtonViewModel(scene, vrElement) {
   //>>includeStart('debug', pragmas.debug);
@@ -94,7 +94,7 @@ function VRButtonViewModel(scene, vrElement) {
   /**
    * Gets whether or not VR mode is active.
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.isVRMode = undefined;
   knockout.defineProperty(this, "isVRMode", {
@@ -106,7 +106,7 @@ function VRButtonViewModel(scene, vrElement) {
   /**
    * Gets or sets whether or not VR functionality should be enabled.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @see Fullscreen.enabled
    */
   this.isVREnabled = undefined;
@@ -122,7 +122,7 @@ function VRButtonViewModel(scene, vrElement) {
   /**
    * Gets the tooltip.  This property is observable.
    *
-   * @type {String}
+   * @type {string}
    */
   this.tooltip = undefined;
   knockout.defineProperty(this, "tooltip", function () {
@@ -207,7 +207,7 @@ Object.defineProperties(VRButtonViewModel.prototype, {
 });
 
 /**
- * @returns {Boolean} true if the object has been destroyed, false otherwise.
+ * @returns {boolean} true if the object has been destroyed, false otherwise.
  */
 VRButtonViewModel.prototype.isDestroyed = function () {
   return false;

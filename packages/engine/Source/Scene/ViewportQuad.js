@@ -27,7 +27,7 @@ function ViewportQuad(rectangle, material) {
   /**
    * Determines if the viewport quad primitive will be shown.
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.show = true;
@@ -147,7 +147,7 @@ ViewportQuad.prototype.update = function (frameState) {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  *
  * @see ViewportQuad#destroy
  */

@@ -6,7 +6,7 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
- * @typedef {Object} RectangleGraphics.ConstructorOptions
+ * @typedef {object} RectangleGraphics.ConstructorOptions
  *
  * Initialization options for the RectangleGraphics constructor
  *

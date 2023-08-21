@@ -34,7 +34,7 @@ function Imagery(imageryLayer, x, y, level, rectangle) {
   this.credits = undefined;
   this.referenceCount = 0;
 
-  if (!defined(rectangle) && imageryLayer.imageryProvider.ready) {
+  if (!defined(rectangle) && imageryLayer.ready) {
     const tilingScheme = imageryLayer.imageryProvider.tilingScheme;
     rectangle = tilingScheme.tileXYToRectangle(x, y, level);
   }

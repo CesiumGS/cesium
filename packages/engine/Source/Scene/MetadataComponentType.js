@@ -7,49 +7,49 @@ import FeatureDetection from "../Core/FeatureDetection.js";
 /**
  * An enum of metadata component types.
  *
- * @enum {String}
+ * @enum {string}
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
  */
 const MetadataComponentType = {
   /**
    * An 8-bit signed integer
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   INT8: "INT8",
   /**
    * An 8-bit unsigned integer
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   UINT8: "UINT8",
   /**
    * A 16-bit signed integer
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   INT16: "INT16",
   /**
    * A 16-bit unsigned integer
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   UINT16: "UINT16",
   /**
    * A 32-bit signed integer
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   INT32: "INT32",
   /**
    * A 32-bit unsigned integer
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   UINT32: "UINT32",
@@ -58,7 +58,7 @@ const MetadataComponentType = {
    *
    * @see FeatureDetection.supportsBigInt
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   INT64: "INT64",
@@ -67,21 +67,21 @@ const MetadataComponentType = {
    *
    * @see FeatureDetection.supportsBigInt
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   UINT64: "UINT64",
   /**
    * A 32-bit (single precision) floating point number
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   FLOAT32: "FLOAT32",
   /**
    * A 64-bit (double precision) floating point number
    *
-   * @type {String}
+   * @type {string}
    * @constant
    */
   FLOAT64: "FLOAT64",
@@ -95,7 +95,7 @@ const MetadataComponentType = {
  * </p>
  *
  * @param {MetadataComponentType} type The type.
- * @returns {Number|BigInt} The minimum value.
+ * @returns {number|bigint} The minimum value.
  *
  * @private
  */
@@ -143,7 +143,7 @@ MetadataComponentType.getMinimum = function (type) {
  * </p>
  *
  * @param {MetadataComponentType} type The type.
- * @returns {Number|BigInt} The maximum value.
+ * @returns {number|bigint} The maximum value.
  *
  * @private
  */
@@ -189,7 +189,7 @@ MetadataComponentType.getMaximum = function (type) {
  * Returns whether the type is an integer type.
  *
  * @param {MetadataComponentType} type The type.
- * @returns {Boolean} Whether the type is an integer type.
+ * @returns {boolean} Whether the type is an integer type.
  *
  * @private
  */
@@ -217,7 +217,7 @@ MetadataComponentType.isIntegerType = function (type) {
  * Returns whether the type is an unsigned integer type.
  *
  * @param {MetadataComponentType} type The type.
- * @returns {Boolean} Whether the type is an unsigned integer type.
+ * @returns {boolean} Whether the type is an unsigned integer type.
  *
  * @private
  */
@@ -242,7 +242,7 @@ MetadataComponentType.isUnsignedIntegerType = function (type) {
  * {@link Cartesian3}, or {@link Cartesian4} classes. This includes all numeric
  * types except for types requiring 64-bit integers
  * @param {MetadataComponentType} type The type to check
- * @return {Boolean} <code>true</code> if the type can be encoded as a vector type, or <code>false</code> otherwise
+ * @return {boolean} <code>true</code> if the type can be encoded as a vector type, or <code>false</code> otherwise
  * @private
  */
 MetadataComponentType.isVectorCompatible = function (type) {
@@ -274,9 +274,9 @@ MetadataComponentType.isVectorCompatible = function (type) {
  * small precision differences.
  * </p>
  *
- * @param {Number|BigInt} value The integer value.
+ * @param {number|bigint} value The integer value.
  * @param {MetadataComponentType} type The type.
- * @returns {Number} The normalized value.
+ * @returns {number} The normalized value.
  *
  * @exception {DeveloperError} value must be a number or a BigInt
  * @exception {DeveloperError} type must be an integer type
@@ -307,9 +307,9 @@ MetadataComponentType.normalize = function (value, type) {
  * Returns a BigInt for the INT64 and UINT64 types if BigInt is supported on this platform.
  * </p>
  *
- * @param {Number} value The normalized value.
+ * @param {number} value The normalized value.
  * @param {MetadataComponentType} type The type.
- * @returns {Number|BigInt} The integer value.
+ * @returns {number|bigint} The integer value.
  *
  * @exception {DeveloperError} type must be an integer type
  *
@@ -371,7 +371,7 @@ MetadataComponentType.unapplyValueTransform = function (value, offset, scale) {
  * Gets the size in bytes for the numeric type.
  *
  * @param {MetadataComponentType} type The type.
- * @returns {Number} The size in bytes.
+ * @returns {number} The size in bytes.
  *
  * @private
  */

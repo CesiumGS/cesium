@@ -79,15 +79,16 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    function loadPntsArrayBuffer(arrayBuffer, options) {
+    async function loadPntsArrayBuffer(arrayBuffer, options) {
       options = defaultValue(options, defaultValue.EMPTY_OBJECT);
       const loader = new PntsLoader({
         arrayBuffer: arrayBuffer,
         loadAttributesFor2D: options.loadAttributesFor2D,
       });
       pntsLoaders.push(loader);
-      loader.load();
-      return waitForLoaderProcess(loader, scene);
+      await loader.load();
+      await waitForLoaderProcess(loader, scene);
+      return loader;
     }
 
     function loadPnts(pntsPath, options) {
@@ -98,10 +99,10 @@ describe(
       });
     }
 
-    function expectLoadError(arrayBuffer) {
-      expect(function () {
-        return loadPntsArrayBuffer(arrayBuffer);
-      }).toThrowError(RuntimeError);
+    async function expectLoadError(arrayBuffer) {
+      await expectAsync(loadPntsArrayBuffer(arrayBuffer)).toBeRejectedWithError(
+        RuntimeError
+      );
     }
 
     function expectEmptyMetadata(structuralMetadata) {
@@ -765,21 +766,21 @@ describe(
       );
     });
 
-    it("throws with invalid version", function () {
+    it("throws with invalid version", async function () {
       const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
         version: 2,
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("throws if featureTableJsonByteLength is 0", function () {
+    it("throws if featureTableJsonByteLength is 0", async function () {
       const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
         featureTableJsonByteLength: 0,
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("throws if the feature table does not contain POINTS_LENGTH", function () {
+    it("throws if the feature table does not contain POINTS_LENGTH", async function () {
       const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
         featureTableJson: {
           POSITION: {
@@ -787,19 +788,19 @@ describe(
           },
         },
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("throws if the feature table does not contain POSITION or POSITION_QUANTIZED", function () {
+    it("throws if the feature table does not contain POSITION or POSITION_QUANTIZED", async function () {
       const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
         featureTableJson: {
           POINTS_LENGTH: 1,
         },
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE", function () {
+    it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE", async function () {
       const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
         featureTableJson: {
           POINTS_LENGTH: 1,
@@ -809,10 +810,10 @@ describe(
           QUANTIZED_VOLUME_OFFSET: [0.0, 0.0, 0.0],
         },
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET", function () {
+    it("throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET", async function () {
       const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
         featureTableJson: {
           POINTS_LENGTH: 1,
@@ -822,10 +823,10 @@ describe(
           QUANTIZED_VOLUME_SCALE: [1.0, 1.0, 1.0],
         },
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("throws if the BATCH_ID semantic is defined but BATCH_LENGTH is not", function () {
+    it("throws if the BATCH_ID semantic is defined but BATCH_LENGTH is not", async function () {
       const arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
         featureTableJson: {
           POINTS_LENGTH: 2,
@@ -833,29 +834,24 @@ describe(
           BATCH_ID: [0, 1],
         },
       });
-      expectLoadError(arrayBuffer);
+      await expectLoadError(arrayBuffer);
     });
 
-    it("error decoding a draco point cloud causes loading to fail", function () {
+    it("error decoding a draco point cloud causes loading to fail", async function () {
       const readyPromise = pollToPromise(function () {
         return DracoLoader._taskProcessorReady;
       });
       DracoLoader._getDecoderTaskProcessor();
-      return readyPromise
-        .then(function () {
-          const decoder = DracoLoader._getDecoderTaskProcessor();
-          spyOn(decoder, "scheduleTask").and.callFake(function () {
-            return Promise.reject({ message: "my error" });
-          });
+      await readyPromise;
+      const decoder = DracoLoader._getDecoderTaskProcessor();
+      spyOn(decoder, "scheduleTask").and.callFake(function () {
+        return Promise.reject({ message: "my error" });
+      });
 
-          return loadPnts(pointCloudDracoUrl);
-        })
-        .then(function () {
-          fail("should not resolve");
-        })
-        .catch(function (error) {
-          expect(error.message).toBe("Failed to load Draco pnts\nmy error");
-        });
+      await expectAsync(loadPnts(pointCloudDracoUrl)).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load Draco pnts\nmy error"
+      );
     });
 
     it("destroys pnts loader", function () {

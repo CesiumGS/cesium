@@ -1,4 +1,5 @@
 import Check from "./Check.js";
+import defined from "./defined.js";
 
 /**
  * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -17,40 +18,36 @@ import Check from "./Check.js";
  * @function sampleTerrain
  *
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
- * @param {Number} level The terrain level-of-detail from which to query terrain heights.
+ * @param {number} level The terrain level-of-detail from which to query terrain heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.
- * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
+ * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
  *
  * @see sampleTerrainMostDetailed
  *
  * @example
  * // Query the terrain height of two Cartographic positions
- * const terrainProvider = Cesium.createWorldTerrain();
+ * const terrainProvider = await Cesium.createWorldTerrainAsync();
  * const positions = [
  *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
  *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
  * ];
- * const promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
- * Promise.resolve(promise).then(function(updatedPositions) {
- *     // positions[0].height and positions[1].height have been updated.
- *     // updatedPositions is just a reference to positions.
- * });
+ * const updatedPositions = await Cesium.sampleTerrain(terrainProvider, 11, positions);
+ * // positions[0].height and positions[1].height have been updated.
+ * // updatedPositions is just a reference to positions.
  */
-function sampleTerrain(terrainProvider, level, positions) {
+async function sampleTerrain(terrainProvider, level, positions) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("terrainProvider", terrainProvider);
   Check.typeOf.number("level", level);
   Check.defined("positions", positions);
   //>>includeEnd('debug');
 
-  return terrainProvider.readyPromise.then(function () {
-    return doSampling(terrainProvider, level, positions);
-  });
+  return doSampling(terrainProvider, level, positions);
 }
 
 /**
- * @param {Array.<Object>} tileRequests The mutated list of requests, the first one will be attempted
- * @param {Array.<Promise<void>>} results The list to put the result promises into
+ * @param {object[]} tileRequests The mutated list of requests, the first one will be attempted
+ * @param {Array<Promise<void>>} results The list to put the result promises into
  * @returns {boolean} true if the request was made, and we are okay to attempt the next item immediately,
  *  or false if we were throttled and should wait awhile before retrying.
  *
@@ -96,8 +93,8 @@ function delay(ms) {
 /**
  * Recursively consumes all the tileRequests until the list has been emptied
  *  and a Promise of each result has been put into the results list
- * @param {Array.<Object>} tileRequests The list of requests desired to be made
- * @param {Array.<Promise<void>>} results The list to put all the result promises into
+ * @param {object[]} tileRequests The list of requests desired to be made
+ * @param {Array<Promise<void>>} results The list to put all the result promises into
  * @returns {Promise<void>} A promise which resolves once all requests have been started
  *
  * @private
@@ -132,6 +129,10 @@ function doSampling(terrainProvider, level, positions) {
   const tileRequestSet = {}; // A unique set
   for (i = 0; i < positions.length; ++i) {
     const xy = tilingScheme.positionToTileXY(positions[i], level);
+    if (!defined(xy)) {
+      continue;
+    }
+
     const key = xy.toString();
 
     if (!tileRequestSet.hasOwnProperty(key)) {
@@ -171,7 +172,7 @@ function doSampling(terrainProvider, level, positions) {
  * @param {Cartographic} position The position to interpolate for and assign the height value to
  * @param {TerrainData} terrainData
  * @param {Rectangle} rectangle
- * @returns {Boolean} If the height was actually interpolated and assigned
+ * @returns {boolean} If the height was actually interpolated and assigned
  * @private
  */
 function interpolateAndAssignHeight(position, terrainData, rectangle) {

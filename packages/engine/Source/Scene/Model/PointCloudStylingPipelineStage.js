@@ -161,7 +161,7 @@ PointCloudStylingPipelineStage.process = function (
     if (is3DTiles) {
       defaultPointSize = usesAddRefinement
         ? 5.0
-        : content.tileset.maximumScreenSpaceError;
+        : content.tileset.memoryAdjustedScreenSpaceError;
     }
     vec4.x = defaultValue(
       pointCloudShading.maximumAttenuation,
@@ -355,7 +355,7 @@ function addShaderFunctionsAndDefines(shaderBuilder, shaderFunctionInfo) {
  * function.
  *
  * @param {Function} source The style function.
- * @param {String[]} propertyNames The array of property names to add to.
+ * @param {string[]} propertyNames The array of property names to add to.
  *
  * @private
  */

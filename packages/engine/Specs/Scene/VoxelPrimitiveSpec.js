@@ -6,6 +6,7 @@ import {
   VoxelPrimitive,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/VoxelPrimitive",
@@ -13,13 +14,17 @@ describe(
     let scene;
     let provider;
 
-    beforeEach(function () {
+    beforeEach(async function () {
       scene = createScene();
-      provider = new Cesium3DTilesVoxelProvider({
-        url: "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json",
-      });
 
-      return provider.readyPromise;
+      const camera = scene.camera;
+      camera.position = Cartesian3.fromElements(-10, -10, -10);
+      camera.direction = Cartesian3.fromElements(1, 1, 1);
+
+      provider = await Cesium3DTilesVoxelProvider.fromUrl(
+        "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json"
+      );
+      return provider;
     });
 
     afterEach(function () {
@@ -35,18 +40,69 @@ describe(
       expect(primitive.show).toEqual(true);
     });
 
-    it("constructs with options", function () {
+    it("constructs with options", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
-      scene.renderForSpecs();
 
       expect(primitive.provider).toBe(provider);
-      return primitive.readyPromise.then(function () {
-        expect(primitive.shape._type).toBe(provider.shape._type);
-        expect(primitive.dimensions.equals(provider.dimensions)).toBe(true);
-        expect(primitive._tileCount).toBe(provider._tileCount);
-        expect(primitive._traversal).toBeDefined();
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
       });
+
+      expect(primitive.shape._type).toBe(provider.shape._type);
+      expect(primitive.dimensions.equals(provider.dimensions)).toBe(true);
+      expect(primitive._tileCount).toBe(provider._tileCount);
+      expect(primitive._traversal).toBeDefined();
+      expect(primitive.minimumValues).toBe(provider.minimumValues);
+      expect(primitive.maximumValues).toBe(provider.maximumValues);
+    });
+
+    it("toggles render options that require shader rebuilds", async function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+
+      function toggleOption(option, defaultValue, newValue) {
+        expect(primitive[option]).toBe(defaultValue);
+        primitive[option] = newValue;
+        expect(primitive._shaderDirty).toBe(true);
+        primitive.update(scene.frameState);
+        expect(primitive[option]).toBe(newValue);
+        expect(primitive._shaderDirty).toBe(false);
+      }
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        const traversal = primitive._traversal;
+        return traversal.isRenderable(traversal.rootNode);
+      });
+
+      toggleOption("depthTest", true, false);
+      toggleOption("jitter", true, false);
+      toggleOption("nearestSampling", false, true);
+    });
+
+    it("sets render parameters", async function () {
+      const primitive = new VoxelPrimitive({ provider });
+      scene.primitives.add(primitive);
+
+      function setParameter(parameter, defaultValue, newValue) {
+        expect(primitive[parameter]).toBe(defaultValue);
+        primitive[parameter] = newValue;
+        primitive.update(scene.frameState);
+        expect(primitive[parameter]).toBe(newValue);
+      }
+
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        const traversal = primitive._traversal;
+        return traversal.isRenderable(traversal.rootNode);
+      });
+
+      setParameter("levelBlendFactor", 0.0, 0.5);
+      setParameter("screenSpaceError", 4.0, 2.0);
+      setParameter("stepSize", 1.0, 0.5);
+      setParameter("debugDraw", false, true);
     });
 
     it("sets clipping range extrema when given valid range between 0 and 1", function () {
@@ -71,65 +127,73 @@ describe(
       expect(primitive.style).toBe(VoxelPrimitive.DefaultStyle);
     });
 
-    it("updates step size", function () {
+    it("updates step size", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
       const shape = primitive._shape;
       shape.translation = new Cartesian3(2.382, -3.643, 1.084);
-      return primitive.readyPromise.then(function () {
-        primitive.update(scene.frameState);
-        const stepSizeUv = shape.computeApproximateStepSize(
-          primitive.dimensions
-        );
-        expect(primitive._stepSizeUv).toBe(stepSizeUv);
+
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
       });
+
+      primitive.update(scene.frameState);
+      const stepSizeUv = shape.computeApproximateStepSize(primitive.dimensions);
+      expect(primitive._stepSizeUv).toBe(stepSizeUv);
     });
 
-    it("accepts a new Custom Shader", function () {
+    it("accepts a new Custom Shader", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
 
-      return primitive.readyPromise.then(function () {
-        expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
-
-        // If new shader is undefined, we should get DefaultCustomShader again
-        primitive.customShader = undefined;
+      await pollToPromise(() => {
         scene.renderForSpecs();
-        expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+        return primitive.ready;
+      });
 
-        const modifiedShader = new CustomShader({
-          fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+      expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+
+      // If new shader is undefined, we should get DefaultCustomShader again
+      primitive.customShader = undefined;
+      scene.renderForSpecs();
+      expect(primitive.customShader).toBe(VoxelPrimitive.DefaultCustomShader);
+
+      const modifiedShader = new CustomShader({
+        fragmentShaderText: `void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
 {
     material.diffuse = vec3(1.0, 1.0, 0.0);
     material.alpha = 0.8;
 }`,
-        });
-        primitive.customShader = modifiedShader;
-        scene.renderForSpecs();
-        expect(primitive.customShader).toBe(modifiedShader);
       });
+      primitive.customShader = modifiedShader;
+      scene.renderForSpecs();
+      expect(primitive.customShader).toBe(modifiedShader);
     });
 
-    it("destroys", function () {
+    it("destroys", async function () {
       const primitive = new VoxelPrimitive({ provider });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
       expect(primitive.isDestroyed()).toBe(false);
 
-      return primitive.readyPromise.then(function () {
-        primitive.update(scene.frameState);
-        expect(primitive.isDestroyed()).toBe(false);
-        expect(primitive._pickId).toBeDefined();
-        expect(primitive._traversal).toBeDefined();
-
-        scene.primitives.remove(primitive);
-        expect(primitive.isDestroyed()).toBe(true);
-        expect(primitive._pickId).toBeUndefined();
-        expect(primitive._traversal).toBeUndefined();
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        return primitive.ready;
       });
+
+      primitive.update(scene.frameState);
+      expect(primitive.isDestroyed()).toBe(false);
+      expect(primitive._pickId).toBeDefined();
+      expect(primitive._traversal).toBeDefined();
+
+      scene.primitives.remove(primitive);
+      expect(primitive.isDestroyed()).toBe(true);
+      expect(primitive._pickId).toBeUndefined();
+      expect(primitive._traversal).toBeUndefined();
     });
   },
   "WebGL"

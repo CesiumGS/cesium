@@ -6,6 +6,7 @@ import {
   MetadataSchemaLoader,
   Resource,
   ResourceCache,
+  RuntimeError,
   SupportedImageFormats,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -250,7 +251,7 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("rejects promise if buffer view fails to load", function () {
+    it("load throws if buffer view fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
         const error = new Error("404 Not Found");
         return Promise.reject(error);
@@ -269,20 +270,13 @@ describe(
         frameState: mockFrameState,
       });
 
-      structuralMetadataLoader.load();
-
-      return structuralMetadataLoader.promise
-        .then(function (structuralMetadataLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load structural metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
-          );
-        });
+      await expectAsync(structuralMetadataLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load structural metadata\nFailed to load buffer view\nFailed to load external buffer: https://example.com/external.bin\n404 Not Found"
+      );
     });
 
-    it("rejects promise if texture fails to load", function () {
+    it("load throws if texture fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(buffer)
       );
@@ -301,20 +295,13 @@ describe(
         frameState: mockFrameState,
       });
 
-      structuralMetadataLoader.load();
-
-      return structuralMetadataLoader.promise
-        .then(function (structuralMetadataLoader) {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load structural metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
-          );
-        });
+      await expectAsync(structuralMetadataLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load structural metadata\nFailed to load texture\nFailed to load image: map.png\n404 Not Found"
+      );
     });
 
-    it("rejects promise if external schema fails to load", function () {
+    it("load throws if external schema fails to load", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(buffer)
       );
@@ -337,20 +324,13 @@ describe(
         frameState: mockFrameState,
       });
 
-      structuralMetadataLoader.load();
-
-      return structuralMetadataLoader.promise
-        .then(function () {
-          fail();
-        })
-        .catch(function (runtimeError) {
-          expect(runtimeError.message).toBe(
-            "Failed to load structural metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found"
-          );
-        });
+      await expectAsync(structuralMetadataLoader.load()).toBeRejectedWithError(
+        RuntimeError,
+        "Failed to load structural metadata\nFailed to load schema: https://example.com/schema.json\n404 Not Found"
+      );
     });
 
-    it("loads structural metadata", function () {
+    it("loads structural metadata", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(buffer)
       );
@@ -368,56 +348,56 @@ describe(
         frameState: mockFrameState,
       });
 
-      structuralMetadataLoader.load();
+      await structuralMetadataLoader.load();
+      await waitForLoaderProcess(structuralMetadataLoader, scene);
+      expect(() =>
+        loaderProcess(structuralMetadataLoader, scene)
+      ).not.toThrow();
 
-      return waitForLoaderProcess(structuralMetadataLoader, scene).then(
-        function (structuralMetadataLoader) {
-          loaderProcess(structuralMetadataLoader, scene); // Check that calling process after load doesn't break anything
+      const structuralMetadata = structuralMetadataLoader.structuralMetadata;
+      const buildingsTable = structuralMetadata.getPropertyTable(0);
+      expect(buildingsTable.id).toBe(0);
+      const treesTable = structuralMetadata.getPropertyTable(1);
+      expect(treesTable.id).toBe(1);
 
-          const structuralMetadata =
-            structuralMetadataLoader.structuralMetadata;
-          const buildingsTable = structuralMetadata.getPropertyTable(0);
-          expect(buildingsTable.id).toBe(0);
-          const treesTable = structuralMetadata.getPropertyTable(1);
-          expect(treesTable.id).toBe(1);
+      const mapTexture = structuralMetadata.getPropertyTexture(0);
+      expect(mapTexture.id).toBe(0);
+      const orthoTexture = structuralMetadata.getPropertyTexture(1);
+      expect(orthoTexture.id).toBe(1);
 
-          const mapTexture = structuralMetadata.getPropertyTexture(0);
-          expect(mapTexture.id).toBe(0);
-          const orthoTexture = structuralMetadata.getPropertyTexture(1);
-          expect(orthoTexture.id).toBe(1);
+      expect(buildingsTable.getProperty(0, "name")).toBe("House");
+      expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
+      expect(treesTable.getProperty(0, "species")).toEqual([
+        "Sparrow",
+        "Squirrel",
+      ]);
+      expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
 
-          expect(buildingsTable.getProperty(0, "name")).toBe("House");
-          expect(buildingsTable.getProperty(1, "name")).toBe("Hospital");
-          expect(treesTable.getProperty(0, "species")).toEqual([
-            "Sparrow",
-            "Squirrel",
-          ]);
-          expect(treesTable.getProperty(1, "species")).toEqual(["Crow"]);
+      const colorProperty = mapTexture.getProperty("color");
+      const intensityProperty = mapTexture.getProperty("intensity");
+      const vegetationProperty = orthoTexture.getProperty("vegetation");
 
-          const colorProperty = mapTexture.getProperty("color");
-          const intensityProperty = mapTexture.getProperty("intensity");
-          const vegetationProperty = orthoTexture.getProperty("vegetation");
-
-          expect(colorProperty.textureReader.texture.width).toBe(1);
-          expect(colorProperty.textureReader.texture.height).toBe(1);
-          expect(colorProperty.textureReader.texture).toBe(
-            intensityProperty.textureReader.texture
-          );
-
-          expect(vegetationProperty.textureReader.texture.width).toBe(1);
-          expect(vegetationProperty.textureReader.texture.height).toBe(1);
-          expect(vegetationProperty.textureReader.texture).not.toBe(
-            colorProperty.textureReader.texture
-          );
-
-          expect(
-            Object.keys(structuralMetadata.schema.classes).sort()
-          ).toEqual(["building", "map", "ortho", "tree"]);
-        }
+      expect(colorProperty.textureReader.texture.width).toBe(1);
+      expect(colorProperty.textureReader.texture.height).toBe(1);
+      expect(colorProperty.textureReader.texture).toBe(
+        intensityProperty.textureReader.texture
       );
+
+      expect(vegetationProperty.textureReader.texture.width).toBe(1);
+      expect(vegetationProperty.textureReader.texture.height).toBe(1);
+      expect(vegetationProperty.textureReader.texture).not.toBe(
+        colorProperty.textureReader.texture
+      );
+
+      expect(Object.keys(structuralMetadata.schema.classes).sort()).toEqual([
+        "building",
+        "map",
+        "ortho",
+        "tree",
+      ]);
     });
 
-    it("loads structural metadata with external schema", function () {
+    it("loads structural metadata with external schema", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(buffer)
       );
@@ -439,20 +419,19 @@ describe(
         frameState: mockFrameState,
       });
 
-      structuralMetadataLoader.load();
+      await structuralMetadataLoader.load();
+      await waitForLoaderProcess(structuralMetadataLoader, scene);
 
-      return waitForLoaderProcess(structuralMetadataLoader, scene).then(
-        function (structuralMetadataLoader) {
-          const structuralMetadata =
-            structuralMetadataLoader.structuralMetadata;
-          expect(
-            Object.keys(structuralMetadata.schema.classes).sort()
-          ).toEqual(["building", "map", "ortho", "tree"]);
-        }
-      );
+      const structuralMetadata = structuralMetadataLoader.structuralMetadata;
+      expect(Object.keys(structuralMetadata.schema.classes).sort()).toEqual([
+        "building",
+        "map",
+        "ortho",
+        "tree",
+      ]);
     });
 
-    it("destroys structural metadata", function () {
+    it("destroys structural metadata", async function () {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(buffer)
       );
@@ -489,46 +468,34 @@ describe(
         frameState: mockFrameState,
       });
 
-      structuralMetadataLoader.load();
+      await structuralMetadataLoader.load();
 
-      return waitForLoaderProcess(structuralMetadataLoader, scene).then(
-        function (structuralMetadataLoader) {
-          expect(structuralMetadataLoader.structuralMetadata).toBeDefined();
-          expect(structuralMetadataLoader.isDestroyed()).toBe(false);
+      await waitForLoaderProcess(structuralMetadataLoader, scene);
+      expect(structuralMetadataLoader.structuralMetadata).toBeDefined();
+      expect(structuralMetadataLoader.isDestroyed()).toBe(false);
 
-          structuralMetadataLoader.destroy();
+      structuralMetadataLoader.destroy();
 
-          expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
-          expect(structuralMetadataLoader.isDestroyed()).toBe(true);
+      expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
+      expect(structuralMetadataLoader.isDestroyed()).toBe(true);
 
-          expect(destroyBufferView.calls.count()).toBe(6);
-          expect(destroyTexture.calls.count()).toBe(2);
-          expect(destroySchema.calls.count()).toBe(1);
-        }
-      );
+      expect(destroyBufferView.calls.count()).toBe(6);
+      expect(destroyTexture.calls.count()).toBe(2);
+      expect(destroySchema.calls.count()).toBe(1);
     });
 
-    function resolveAfterDestroy(rejectPromise) {
+    async function resolveAfterDestroy(rejectPromise) {
       spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
         Promise.resolve(buffer)
       );
       spyOn(Resource.prototype, "fetchImage").and.returnValue(
         Promise.resolve(image)
       );
-
-      let promise = new Promise(function (resolve, reject) {
-        if (rejectPromise) {
-          const error = new Error("404 Not Found");
-          reject(error);
-          return;
-        }
-        resolve(schemaJson);
-      });
-      if (rejectPromise) {
-        // handle the error so Jasmine doesn't fail the test
-        promise = promise.catch(function () {});
-      }
-      spyOn(Resource.prototype, "fetchJson").and.returnValue(promise);
+      spyOn(Resource.prototype, "fetchJson").and.callFake(() =>
+        rejectPromise
+          ? Promise.reject(new Error(""))
+          : Promise.resolve(schemaJson)
+      );
 
       const destroyBufferView = spyOn(
         GltfBufferViewLoader.prototype,
@@ -543,60 +510,25 @@ describe(
         "destroy"
       ).and.callThrough();
 
-      // Load a copy of structural metadata into the cache so that the resource
-      // promises resolve even if the structural metadata loader is destroyed
-      const structuralMetadataLoaderCopy = new GltfStructuralMetadataLoader({
-        gltf: gltf,
-        extension: extension,
+      const structuralMetadataLoader = new GltfStructuralMetadataLoader({
+        gltf: gltfSchemaUri,
+        extension: extensionSchemaUri,
         gltfResource: gltfResource,
         baseResource: gltfResource,
         supportedImageFormats: new SupportedImageFormats(),
         frameState: mockFrameState,
       });
-      // Also load a copy of the schema into the cache
-      const schemaResource = gltfResource.getDerivedResource({
-        url: "schema.json",
-      });
-      const schemaCopy = ResourceCache.loadSchema({
-        resource: schemaResource,
-      });
+      expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
+      const promise = structuralMetadataLoader.load();
+      structuralMetadataLoader.destroy();
 
-      if (rejectPromise) {
-        // handle the error so Jasmine doesn't fail the test
-        schemaCopy.promise.catch(function () {});
-      }
+      expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
+      expect(structuralMetadataLoader.isDestroyed()).toBe(true);
 
-      structuralMetadataLoaderCopy.load();
-
-      return waitForLoaderProcess(structuralMetadataLoaderCopy, scene).then(
-        function (structuralMetadataLoaderCopy) {
-          // Ignore structuralMetadataLoaderCopy destroying its buffer views
-          destroyBufferView.calls.reset();
-
-          const structuralMetadataLoader = new GltfStructuralMetadataLoader({
-            gltf: gltfSchemaUri,
-            extension: extensionSchemaUri,
-            gltfResource: gltfResource,
-            baseResource: gltfResource,
-            supportedImageFormats: new SupportedImageFormats(),
-            frameState: mockFrameState,
-          });
-          expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
-          structuralMetadataLoader.load();
-          structuralMetadataLoader.destroy();
-
-          expect(structuralMetadataLoader.structuralMetadata).not.toBeDefined();
-          expect(structuralMetadataLoader.isDestroyed()).toBe(true);
-
-          structuralMetadataLoaderCopy.destroy();
-
-          expect(destroyBufferView.calls.count()).toBe(6);
-          expect(destroyTexture.calls.count()).toBe(2);
-          expect(destroySchema.calls.count()).toBe(1);
-
-          ResourceCache.unload(schemaCopy);
-        }
-      );
+      expect(destroyBufferView.calls.count()).toBe(6);
+      expect(destroyTexture.calls.count()).toBe(2);
+      expect(destroySchema.calls.count()).toBe(1);
+      await expectAsync(promise).toBeResolved();
     }
 
     it("handles resolving resources after destroy", function () {

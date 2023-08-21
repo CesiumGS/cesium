@@ -65,7 +65,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
     expect(cache._subtreeRequestCounter).toBe(0);
   });
 
-  it("can add a subtree", function () {
+  it("can add a subtree", async function () {
     const cache = new ImplicitSubtreeCache();
     const octreeCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitOctree.subdivisionScheme,
@@ -75,7 +75,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
       y: 0,
       z: 0,
     });
-    const subtree = new ImplicitSubtree(
+    const subtree = await ImplicitSubtree.fromSubtreeJson(
       subtreeResource,
       subtreeConstantJson,
       undefined,
@@ -86,7 +86,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
     expect(cache._subtreeRequestCounter).toBe(1);
   });
 
-  it("addSubtree throws if parent does not exist", function () {
+  it("addSubtree throws if parent does not exist", async function () {
     const cache = new ImplicitSubtreeCache();
     const octreeCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitOctree.subdivisionScheme,
@@ -96,7 +96,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
       y: 1,
       z: 0,
     });
-    const subtree = new ImplicitSubtree(
+    const subtree = await ImplicitSubtree.fromSubtreeJson(
       subtreeResource,
       subtreeConstantJson,
       undefined,
@@ -106,7 +106,7 @@ describe("Scene/ImplicitSubtreeCache", function () {
     expect(() => cache.addSubtree(subtree)).toThrowDeveloperError();
   });
 
-  it("addSubtree trims cache as needed", function () {
+  it("addSubtree trims cache as needed", async function () {
     const cache = new ImplicitSubtreeCache({
       maximumSubtreeCount: 3,
     });
@@ -120,19 +120,21 @@ describe("Scene/ImplicitSubtreeCache", function () {
       subdivisionScheme: implicitOctree.subdivisionScheme,
       subtreeLevels: implicitOctree.subtreeLevels,
     };
-    octreeCoordArray.forEach((octreeCoord) => {
-      const octreeCoordinates = new ImplicitTileCoordinates(
-        Object.assign({}, octreeCoordParams, octreeCoord)
-      );
-      const subtree = new ImplicitSubtree(
-        subtreeResource,
-        subtreeConstantJson,
-        undefined,
-        implicitOctree,
-        octreeCoordinates
-      );
-      cache.addSubtree(subtree);
-    });
+    await Promise.all(
+      octreeCoordArray.map(async (octreeCoord) => {
+        const octreeCoordinates = new ImplicitTileCoordinates(
+          Object.assign({}, octreeCoordParams, octreeCoord)
+        );
+        const subtree = await ImplicitSubtree.fromSubtreeJson(
+          subtreeResource,
+          subtreeConstantJson,
+          undefined,
+          implicitOctree,
+          octreeCoordinates
+        );
+        cache.addSubtree(subtree);
+      })
+    );
     expect(cache._subtreeRequestCounter).toBe(4);
     expect(cache._queue.length).toBe(3);
   });

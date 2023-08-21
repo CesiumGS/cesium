@@ -27,6 +27,7 @@ import {
   CylinderOutlineGeometry,
   CzmlDataSource,
   DataSource,
+  defined,
   EllipseGeometry,
   EllipseOutlineGeometry,
   EllipsoidGeometry,
@@ -104,16 +105,16 @@ import {
 // Verify ImageryProvider instances conform to the expected interface
 let imageryProvider: ImageryProvider;
 imageryProvider = new WebMapServiceImageryProvider({ url: "", layers: "0" });
-imageryProvider = new ArcGisMapServerImageryProvider({ url: "" });
-imageryProvider = new BingMapsImageryProvider({ url: "", key: "" });
+imageryProvider = new ArcGisMapServerImageryProvider();
+imageryProvider = new BingMapsImageryProvider({ key: "" });
 imageryProvider = new OpenStreetMapImageryProvider({ url: "" });
-imageryProvider = new TileMapServiceImageryProvider({ url: "" });
+imageryProvider = new TileMapServiceImageryProvider();
 imageryProvider = new GridImageryProvider({
   tileWidth: 256,
   tileHeight: 256,
   color: new Color(1.0, 1.0, 1.0, 0.4),
 });
-imageryProvider = new IonImageryProvider({ assetId: 2 });
+imageryProvider = new IonImageryProvider();
 imageryProvider = new MapboxImageryProvider({ mapId: "", accessToken: "" });
 imageryProvider = new MapboxStyleImageryProvider({
   styleId: "",
@@ -123,12 +124,8 @@ imageryProvider = new SingleTileImageryProvider({ url: "" });
 imageryProvider = new TileCoordinatesImageryProvider();
 imageryProvider = new UrlTemplateImageryProvider({ url: "" });
 imageryProvider = new WebMapServiceImageryProvider({ url: "", layers: "" });
-imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-  url: "",
-  metadata: new GoogleEarthEnterpriseMetadata(""),
-});
+imageryProvider = new GoogleEarthEnterpriseImageryProvider();
 imageryProvider = new GoogleEarthEnterpriseMapsProvider({
-  url: "",
   channel: 1,
 });
 imageryProvider = new WebMapTileServiceImageryProvider({
@@ -140,14 +137,11 @@ imageryProvider = new WebMapTileServiceImageryProvider({
 
 // Verify TerrainProvider instances conform to the expected interface
 let terrainProvider: TerrainProvider;
-terrainProvider = new ArcGISTiledElevationTerrainProvider({ url: "" });
-terrainProvider = new CesiumTerrainProvider({ url: "" });
+terrainProvider = new ArcGISTiledElevationTerrainProvider();
+terrainProvider = new CesiumTerrainProvider();
 terrainProvider = new EllipsoidTerrainProvider();
-terrainProvider = new VRTheWorldTerrainProvider({ url: "" });
-terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-  url: "",
-  metadata: new GoogleEarthEnterpriseMetadata(""),
-});
+terrainProvider = new VRTheWorldTerrainProvider();
+terrainProvider = new GoogleEarthEnterpriseTerrainProvider();
 
 // Verify DataSource instances conform to the expected interface
 let dataSource: DataSource;
@@ -394,3 +388,16 @@ const canvas: HTMLCanvasElement | undefined = writeTextToCanvas("test");
 let pb = new PropertyBag();
 let hasProp: boolean = pb.hasProperty("xyz");
 property = pb.xyz;
+
+// Validate overridden defined with type predicate
+let pos: Cartesian3 | undefined | null;
+if (defined(pos)) {
+  pos.clone();
+}
+function consumeDefined(pos: Cartesian3) {
+  pos.clone();
+}
+pos = undefined;
+if (defined(pos)) {
+  consumeDefined(pos);
+}

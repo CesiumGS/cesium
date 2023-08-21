@@ -25,16 +25,16 @@ const SHIFT_LEFT_12 = Math.pow(2.0, 12.0);
  * @alias TerrainEncoding
  * @constructor
  *
- * @param {Cartesian3} [center] The center point of the vertices.
- * @param {AxisAlignedBoundingBox} [axisAlignedBoundingBox] The bounds of the tile in the east-north-up coordinates at the tiles center.
- * @param {Number} [minimumHeight] The minimum height.
- * @param {Number} [maximumHeight] The maximum height.
- * @param {Matrix4} [fromENU] The east-north-up to fixed frame matrix at the center of the terrain mesh.
- * @param {Boolean} [hasVertexNormals] If the mesh has vertex normals.
- * @param {Boolean} [hasWebMercatorT] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
- * @param {Boolean} [hasGeodeticSurfaceNormals] true if the terrain data includes geodetic surface normals; otherwise, false.
- * @param {Number} [exaggeration] A scalar used to exaggerate terrain.
- * @param {Number} [exaggerationRelativeHeight] The relative height from which terrain is exaggerated.
+ * @param {Cartesian3|undefined} [center] The center point of the vertices.
+ * @param {AxisAlignedBoundingBox|undefined} [axisAlignedBoundingBox] The bounds of the tile in the east-north-up coordinates at the tiles center.
+ * @param {number|undefined} [minimumHeight] The minimum height.
+ * @param {number|undefined} [maximumHeight] The maximum height.
+ * @param {Matrix4|undefined} [fromENU] The east-north-up to fixed frame matrix at the center of the terrain mesh.
+ * @param {boolean|undefined} [hasVertexNormals] If the mesh has vertex normals.
+ * @param {boolean} [hasWebMercatorT=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
+ * @param {boolean} [hasGeodeticSurfaceNormals=false] true if the terrain data includes geodetic surface normals; otherwise, false.
+ * @param {number} [exaggeration=1.0] A scalar used to exaggerate terrain.
+ * @param {number} [exaggerationRelativeHeight=0.0] The relative height from which terrain is exaggerated.
  *
  * @private
  */
@@ -117,13 +117,13 @@ function TerrainEncoding(
 
   /**
    * The minimum height of the tile including the skirts.
-   * @type {Number}
+   * @type {number}
    */
   this.minimumHeight = minimumHeight;
 
   /**
    * The maximum height of the tile.
-   * @type {Number}
+   * @type {number}
    */
   this.maximumHeight = maximumHeight;
 
@@ -154,19 +154,19 @@ function TerrainEncoding(
 
   /**
    * The terrain mesh contains normals.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.hasVertexNormals = hasVertexNormals;
 
   /**
    * The terrain mesh contains a vertical texture coordinate following the Web Mercator projection.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.hasWebMercatorT = defaultValue(hasWebMercatorT, false);
 
   /**
    * The terrain mesh contains geodetic surface normals, used for terrain exaggeration.
-   * @type {Boolean}
+   * @type {boolean}
    */
   this.hasGeodeticSurfaceNormals = defaultValue(
     hasGeodeticSurfaceNormals,
@@ -175,7 +175,7 @@ function TerrainEncoding(
 
   /**
    * A scalar used to exaggerate terrain.
-   * @type {Number}
+   * @type {number}
    */
   this.exaggeration = defaultValue(exaggeration, 1.0);
 
@@ -189,7 +189,7 @@ function TerrainEncoding(
 
   /**
    * The number of components in each vertex. This value can differ with different quantizations.
-   * @type {Number}
+   * @type {number}
    */
   this.stride = 0;
 

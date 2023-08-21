@@ -41,6 +41,7 @@ import {
   SunLight,
   TweenCollection,
   Sun,
+  Terrain,
   GroundPrimitive,
   PerInstanceColorAppearance,
   ColorGeometryInstanceAttribute,
@@ -69,7 +70,7 @@ describe(
           sources: ["void main() { gl_Position = vec4(1.0); }"],
         }),
         fragmentShaderSource: new ShaderSource({
-          sources: ["void main() { gl_FragColor = vec4(1.0); }"],
+          sources: ["void main() { out_FragColor = vec4(1.0); }"],
         }),
       });
       simpleRenderState = new RenderState();
@@ -1495,33 +1496,69 @@ describe(
       scene.destroyForSpecs();
     });
 
-    it("Sets terrainProvider", function () {
+    it("Sets terrainProvider", async function () {
       returnQuantizedMeshTileJson();
 
       const scene = createScene();
       const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
-      scene.terrainProvider = new CesiumTerrainProvider({
-        url: "//terrain/tiles",
+      scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
+        "//terrain/tiles"
+      );
+
+      expect(scene.terrainProvider).toBe(globe.terrainProvider);
+      scene.globe = undefined;
+      const newProvider = await CesiumTerrainProvider.fromUrl(
+        "//newTerrain/tiles"
+      );
+      expect(function () {
+        scene.terrainProvider = newProvider;
+      }).not.toThrow();
+      scene.destroyForSpecs();
+      Resource._Implementations.loadWithXhr =
+        Resource._DefaultImplementations.loadWithXhr;
+    });
+
+    it("setTerrain updates terrain provider", async function () {
+      returnQuantizedMeshTileJson();
+
+      const scene = createScene();
+      const globe = (scene.globe = new Globe(Ellipsoid.UNIT_SPHERE));
+      const promise = CesiumTerrainProvider.fromUrl("//terrain/tiles");
+      scene.setTerrain(new Terrain(promise));
+
+      const originalProvider = scene.terrainProvider;
+      let terrainWasChanged = false;
+      scene.terrainProviderChanged.addEventListener((terrainProvider) => {
+        expect(terrainProvider).not.toBe(originalProvider);
+        expect(scene.terrainProvider).toBe(terrainProvider);
+        expect(scene.terrainProvider).toBe(globe.terrainProvider);
+        terrainWasChanged = true;
       });
 
-      return scene.terrainProvider.readyPromise
-        .then(() => {
-          expect(scene.terrainProvider).toBe(globe.terrainProvider);
-          scene.globe = undefined;
-          const newProvider = new CesiumTerrainProvider({
-            url: "//newTerrain/tiles",
-          });
-          return newProvider.readyPromise.then(() => {
-            expect(function () {
-              scene.terrainProvider = newProvider;
-            }).not.toThrow();
-          });
-        })
-        .finally(() => {
-          scene.destroyForSpecs();
-          Resource._Implementations.loadWithXhr =
-            Resource._DefaultImplementations.loadWithXhr;
-        });
+      await promise;
+
+      expect(terrainWasChanged).toBeTrue();
+
+      scene.destroyForSpecs();
+      Resource._Implementations.loadWithXhr =
+        Resource._DefaultImplementations.loadWithXhr;
+    });
+
+    it("setTerrain handles destroy", async function () {
+      returnQuantizedMeshTileJson();
+
+      const scene = createScene();
+      scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+
+      const promise = CesiumTerrainProvider.fromUrl("//newTerrain/tiles");
+      scene.setTerrain(new Terrain(promise));
+      scene.destroyForSpecs();
+
+      await expectAsync(promise).toBeResolved();
+      expect(scene.isDestroyed()).toBeTrue();
+
+      Resource._Implementations.loadWithXhr =
+        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("Gets terrainProviderChanged", function () {

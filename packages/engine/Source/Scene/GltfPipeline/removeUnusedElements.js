@@ -19,8 +19,8 @@ const allElementTypes = [
 /**
  * Removes unused elements from gltf.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @param {String[]} [elementTypes=['mesh', 'node', 'material', 'accessor', 'bufferView', 'buffer']] Element types to be removed. Needs to be a subset of ['mesh', 'node', 'material', 'accessor', 'bufferView', 'buffer'], other items will be ignored.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @param {string[]} [elementTypes=['mesh', 'node', 'material', 'accessor', 'bufferView', 'buffer']] Element types to be removed. Needs to be a subset of ['mesh', 'node', 'material', 'accessor', 'bufferView', 'buffer'], other items will be ignored.
  *
  * @private
  */
@@ -105,6 +105,15 @@ Remove.accessor = function (gltf, accessorId) {
       const indices = primitive.indices;
       if (defined(indices) && indices > accessorId) {
         primitive.indices--;
+      }
+
+      const ext = primitive.extensions;
+      if (
+        defined(ext) &&
+        defined(ext.CESIUM_primitive_outline) &&
+        ext.CESIUM_primitive_outline.indices > accessorId
+      ) {
+        --ext.CESIUM_primitive_outline.indices;
       }
     });
   });
@@ -543,6 +552,24 @@ getListOfElementsIdsInUse.accessor = function (gltf) {
           }
         );
       }
+    });
+  }
+
+  if (usesExtension(gltf, "CESIUM_primitive_outline")) {
+    ForEach.mesh(gltf, function (mesh) {
+      ForEach.meshPrimitive(mesh, function (primitive) {
+        const extensions = primitive.extensions;
+        if (
+          defined(extensions) &&
+          defined(extensions.CESIUM_primitive_outline)
+        ) {
+          const extension = extensions.CESIUM_primitive_outline;
+          const indicesAccessorId = extension.indices;
+          if (defined(indicesAccessorId)) {
+            usedAccessorIds[indicesAccessorId] = true;
+          }
+        }
+      });
     });
   }
 

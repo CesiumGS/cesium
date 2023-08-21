@@ -9,30 +9,31 @@ import IonWorldImageryStyle from "./IonWorldImageryStyle.js";
  *
  * @param {Object} [options] Object with the following properties:
  * @param {IonWorldImageryStyle} [options.style=IonWorldImageryStyle] The style of base imagery, only AERIAL, AERIAL_WITH_LABELS, and ROAD are currently supported.
- * @returns {IonImageryProvider}
+ * @returns {Promise<IonImageryProvider>}
  *
  * @see Ion
  *
  * @example
- * // Create Cesium World Terrain with default settings
- * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     imageryProvider : Cesium.createWorldImagery();
- * });
+ * // Create a Cesium World Imagery base layer with default settings
+ * try {
+ *   const imageryProvider = await Cesium.createWorldImageryAsync();
+ * } catch (error) {
+ *   console.log(`There was an error creating world imagery: ${error}`);
+ * }
  *
  * @example
- * // Create Cesium World Terrain with water and normals.
- * const viewer = new Cesium.Viewer('cesiumContainer', {
- *     imageryProvider : Cesium.createWorldImagery({
+ * // Create Cesium World Imagery with different style
+ * try {
+ *   const imageryProvider = await Cesium.createWorldImageryAsync({
  *         style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS
- *     })
- * });
- *
+ *   });
+ * } catch (error) {
+ *   console.log(`There was an error creating world imagery: ${error}`);
+ * }
  */
-function createWorldImagery(options) {
+function createWorldImageryAsync(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   const style = defaultValue(options.style, IonWorldImageryStyle.AERIAL);
-  return new IonImageryProvider({
-    assetId: style,
-  });
+  return IonImageryProvider.fromAssetId(style);
 }
-export default createWorldImagery;
+export default createWorldImageryAsync;

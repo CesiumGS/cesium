@@ -49,19 +49,19 @@ import StencilOperation from "./StencilOperation.js";
  * @alias ClassificationPrimitive
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {object} [options] Object with the following properties:
  * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render. This can either be a single instance or an array of length one.
  * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to PerInstanceColorAppearance when GeometryInstances have a color attribute.
- * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
- * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
- * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
- * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
- * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
- * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
- * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
+ * @param {boolean} [options.show=true] Determines if this primitive will be shown.
+ * @param {boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+ * @param {boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
+ * @param {boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
+ * @param {boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+ * @param {boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+ * @param {boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
  * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
- * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
- * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
+ * @param {boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
  *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
  *
  * @see Primitive
@@ -96,7 +96,7 @@ function ClassificationPrimitive(options) {
    * Determines if the primitive will be shown.  This affects all geometry
    * instances in the primitive.
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -118,7 +118,7 @@ function ClassificationPrimitive(options) {
    * Draws the bounding sphere for each draw command in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -132,7 +132,7 @@ function ClassificationPrimitive(options) {
    * Draws the shadow volume for each geometry in the primitive.
    * </p>
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default false
    */
@@ -162,29 +162,6 @@ function ClassificationPrimitive(options) {
   this._commandsIgnoreShow = [];
 
   this._ready = false;
-
-  const classificationPrimitive = this;
-  this._readyPromise = new Promise((resolve, reject) => {
-    classificationPrimitive._completeLoad = () => {
-      if (this._ready) {
-        return;
-      }
-
-      this._ready = true;
-
-      if (this.releaseGeometryInstances) {
-        this.geometryInstances = undefined;
-      }
-
-      const error = this._error;
-      if (!defined(error)) {
-        resolve(this);
-      } else {
-        reject(error);
-      }
-    };
-  });
-
   this._primitive = undefined;
   this._pickPrimitive = options._pickPrimitive;
 
@@ -228,7 +205,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    *
    * @memberof ClassificationPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -244,7 +221,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    *
    * @memberof ClassificationPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default false
@@ -260,7 +237,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    *
    * @memberof ClassificationPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -276,7 +253,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    *
    * @memberof ClassificationPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -292,7 +269,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    *
    * @memberof ClassificationPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -308,7 +285,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    *
    * @memberof ClassificationPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    *
    * @default true
@@ -326,7 +303,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
    *
    * @memberof ClassificationPrimitive.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   ready: {
@@ -336,23 +313,11 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
   },
 
   /**
-   * Gets a promise that resolves when the primitive is ready to render.
-   * @memberof ClassificationPrimitive.prototype
-   * @type {Promise.<ClassificationPrimitive>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
-    },
-  },
-
-  /**
    * Returns true if the ClassificationPrimitive needs a separate shader and commands for 2D.
    * This is because texture coordinates on ClassificationPrimitives are computed differently,
    * and are used for culling when multiple GeometryInstances are batched in one ClassificationPrimitive.
    * @memberof ClassificationPrimitive.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    * @private
    */
@@ -369,7 +334,7 @@ Object.defineProperties(ClassificationPrimitive.prototype, {
  * Determines if ClassificationPrimitive rendering is supported.
  *
  * @param {Scene} scene The scene.
- * @returns {Boolean} <code>true</code> if ClassificationPrimitives are supported; otherwise, returns <code>false</code>
+ * @returns {boolean} <code>true</code> if ClassificationPrimitives are supported; otherwise, returns <code>false</code>
  */
 ClassificationPrimitive.isSupported = function (scene) {
   return scene.context.stencilBuffer;
@@ -493,22 +458,17 @@ function modifyForEncodedNormals(primitive, vertexShaderSource) {
     return vertexShaderSource;
   }
 
-  if (
-    vertexShaderSource.search(/attribute\s+vec3\s+extrudeDirection;/g) !== -1
-  ) {
+  if (vertexShaderSource.search(/in\s+vec3\s+extrudeDirection;/g) !== -1) {
     const attributeName = "compressedAttributes";
 
     //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
-    const attributeDecl = `attribute vec2 ${attributeName};`;
+    const attributeDecl = `in vec2 ${attributeName};`;
 
     const globalDecl = "vec3 extrudeDirection;\n";
     const decode = `    extrudeDirection = czm_octDecode(${attributeName}, 65535.0);\n`;
 
     let modifiedVS = vertexShaderSource;
-    modifiedVS = modifiedVS.replace(
-      /attribute\s+vec3\s+extrudeDirection;/g,
-      ""
-    );
+    modifiedVS = modifiedVS.replace(/in\s+vec3\s+extrudeDirection;/g, "");
     modifiedVS = ShaderSource.replaceMain(
       modifiedVS,
       "czm_non_compressed_main"
@@ -1357,7 +1317,11 @@ ClassificationPrimitive.prototype.update = function (frameState) {
 
   frameState.afterRender.push(() => {
     if (defined(this._primitive) && this._primitive.ready) {
-      this._completeLoad();
+      this._ready = true;
+
+      if (this.releaseGeometryInstances) {
+        this.geometryInstances = undefined;
+      }
     }
   });
 };
@@ -1366,7 +1330,7 @@ ClassificationPrimitive.prototype.update = function (frameState) {
  * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
  *
  * @param {*} id The id of the {@link GeometryInstance}.
- * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
+ * @returns {object} The typed array in the attribute's format or undefined if the is no instance with id.
  *
  * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
  *
@@ -1395,7 +1359,7 @@ ClassificationPrimitive.prototype.getGeometryInstanceAttributes = function (
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see ClassificationPrimitive#destroy
  */

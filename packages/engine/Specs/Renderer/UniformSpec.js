@@ -33,7 +33,7 @@ describe(
       const fs =
         "uniform float u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == 1.0); " +
+        "  out_FragColor = vec4(u == 1.0); " +
         "}";
 
       expect({
@@ -53,7 +53,7 @@ describe(
       const fs =
         "uniform vec2 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == vec2(0.25, 0.5)); " +
+        "  out_FragColor = vec4(u == vec2(0.25, 0.5)); " +
         "}";
 
       expect({
@@ -73,7 +73,7 @@ describe(
       const fs =
         "uniform vec3 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == vec3(0.25, 0.5, 0.75)); " +
+        "  out_FragColor = vec4(u == vec3(0.25, 0.5, 0.75)); " +
         "}";
 
       expect({
@@ -93,7 +93,7 @@ describe(
       const fs =
         "uniform vec3 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == vec3(0.25, 0.5, 0.75)); " +
+        "  out_FragColor = vec4(u == vec3(0.25, 0.5, 0.75)); " +
         "}";
 
       expect({
@@ -113,7 +113,7 @@ describe(
       const fs =
         "uniform vec4 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == vec4(0.25, 0.5, 0.75, 1.0)); " +
+        "  out_FragColor = vec4(u == vec4(0.25, 0.5, 0.75, 1.0)); " +
         "}";
 
       expect({
@@ -133,7 +133,7 @@ describe(
       const fs =
         "uniform vec4 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == vec4(0.25, 0.5, 0.75, 1.0)); " +
+        "  out_FragColor = vec4(u == vec4(0.25, 0.5, 0.75, 1.0)); " +
         "}";
 
       expect({
@@ -153,7 +153,7 @@ describe(
       const fs =
         "uniform int u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == 1); " +
+        "  out_FragColor = vec4(u == 1); " +
         "}";
 
       expect({
@@ -173,7 +173,7 @@ describe(
       const fs =
         "uniform ivec2 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == ivec2(1, 2)); " +
+        "  out_FragColor = vec4(u == ivec2(1, 2)); " +
         "}";
 
       expect({
@@ -193,7 +193,7 @@ describe(
       const fs =
         "uniform ivec3 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == ivec3(1, 2, 3)); " +
+        "  out_FragColor = vec4(u == ivec3(1, 2, 3)); " +
         "}";
 
       expect({
@@ -213,7 +213,7 @@ describe(
       const fs =
         "uniform ivec4 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == ivec4(1, 2, 3, 4)); " +
+        "  out_FragColor = vec4(u == ivec4(1, 2, 3, 4)); " +
         "}";
 
       expect({
@@ -233,7 +233,7 @@ describe(
       const fs =
         "uniform bool u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u); " +
+        "  out_FragColor = vec4(u); " +
         "}";
 
       expect({
@@ -253,7 +253,7 @@ describe(
       const fs =
         "uniform bvec2 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == bvec2(true, false)); " +
+        "  out_FragColor = vec4(u == bvec2(true, false)); " +
         "}";
 
       expect({
@@ -273,7 +273,7 @@ describe(
       const fs =
         "uniform bvec3 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == bvec3(true, false, true)); " +
+        "  out_FragColor = vec4(u == bvec3(true, false, true)); " +
         "}";
 
       expect({
@@ -293,7 +293,7 @@ describe(
       const fs =
         "uniform bvec4 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(u == bvec4(true, false, true, false)); " +
+        "  out_FragColor = vec4(u == bvec4(true, false, true, false)); " +
         "}";
 
       expect({
@@ -313,7 +313,7 @@ describe(
       const fs =
         "uniform mat2 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0].x == 1.0) && (u[1].x == 2.0) &&" +
         "    (u[0].y == 3.0) && (u[1].y == 4.0) " +
         "  ); " +
@@ -336,7 +336,7 @@ describe(
       const fs =
         "uniform mat3 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0].x == 1.0) && (u[1].x == 2.0) && (u[2].x == 3.0) &&" +
         "    (u[0].y == 4.0) && (u[1].y == 5.0) && (u[2].y == 6.0) &&" +
         "    (u[0].z == 7.0) && (u[1].z == 8.0) && (u[2].z == 9.0)" +
@@ -377,7 +377,7 @@ describe(
       const fs =
         "uniform mat4 u;" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0].x == 1.0)  && (u[1].x == 2.0)  && (u[2].x == 3.0)  && (u[3].x == 4.0) &&" +
         "    (u[0].y == 5.0)  && (u[1].y == 6.0)  && (u[2].y == 7.0)  && (u[3].y == 8.0) &&" +
         "    (u[0].z == 9.0)  && (u[1].z == 10.0) && (u[2].z == 11.0) && (u[3].z == 12.0) &&" +
@@ -405,13 +405,13 @@ describe(
       const fs =
         "uniform struct { float f; vec4 v; } u;" +
         "void main() { " +
-        "  gl_FragColor = vec4((u.f == 2.5)); " +
+        "  out_FragColor = vec4((u.f == 2.5)); " +
         "}";
 
       // There appears to be a bug in Chrome on Windows (not in Firefox or IE, or Chrome on Mac).
       // The following fails since u.v is still (0.0, 0.0, 0.0, 0.0) even after the call to uniform4f.
       //
-      // '  gl_FragColor = vec4((u.f == 2.5) && (u.v == vec4(0.25, 0.5, 0.75, 1.0))); '
+      // '  out_FragColor = vec4((u.f == 2.5) && (u.v == vec4(0.25, 0.5, 0.75, 1.0))); '
 
       expect({
         context: context,
@@ -434,7 +434,7 @@ describe(
         "uniform float u[2];" +
         "uniform float u2[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == 0.25) && (u[1] == 0.5) &&" +
         "    (u2[0] == 1.25) && (u2[1] == 1.5)" +
         "  ); " +
@@ -457,7 +457,7 @@ describe(
       const fs =
         "uniform vec2 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == vec2(0.25, 0.5)) &&" +
         "    (u[1] == vec2(1.25, 1.5))" +
         "  ); " +
@@ -483,7 +483,7 @@ describe(
       const fs =
         "uniform vec3 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == vec3(0.25, 0.5, 0.75)) &&" +
         "    (u[1] == vec3(1.25, 1.5, 1.75))" +
         "  ); " +
@@ -509,7 +509,7 @@ describe(
       const fs =
         "uniform vec4 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == vec4(0.25, 0.5, 0.75, 1.0)) &&" +
         "    (u[1] == vec4(1.25, 1.5, 1.75, 2.0))" +
         "  ); " +
@@ -536,7 +536,7 @@ describe(
         "uniform int u[2];" +
         "uniform int u2[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == 1) && (u[1] == 2) &&" +
         "    (u2[0] == 3) && (u2[1] == 4)" +
         "  ); " +
@@ -559,7 +559,7 @@ describe(
       const fs =
         "uniform ivec2 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == ivec2(1, 2)) &&" +
         "    (u[1] == ivec2(3, 4))" +
         "  ); " +
@@ -582,7 +582,7 @@ describe(
       const fs =
         "uniform ivec3 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == ivec3(1, 2, 3)) &&" +
         "    (u[1] == ivec3(4, 5, 6))" +
         "  ); " +
@@ -605,7 +605,7 @@ describe(
       const fs =
         "uniform ivec4 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == ivec4(1, 2, 3, 4)) &&" +
         "    (u[1] == ivec4(5, 6, 7, 8))" +
         "  ); " +
@@ -632,7 +632,7 @@ describe(
         "uniform bool u[2];" +
         "uniform bool u2[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    u[0] && !u[1] &&" +
         "    !u2[0] && u2[1]" +
         "  ); " +
@@ -655,7 +655,7 @@ describe(
       const fs =
         "uniform bvec2 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == bvec2(true, false)) &&" +
         "    (u[1] == bvec2(false, true))" +
         "  ); " +
@@ -681,7 +681,7 @@ describe(
       const fs =
         "uniform bvec3 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == bvec3(true, false, true)) &&" +
         "    (u[1] == bvec3(false, true, false))" +
         "  ); " +
@@ -707,7 +707,7 @@ describe(
       const fs =
         "uniform bvec4 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    (u[0] == bvec4(true, false, true, false)) &&" +
         "    (u[1] == bvec4(false, true, false, true))" +
         "  ); " +
@@ -733,7 +733,7 @@ describe(
       const fs =
         "uniform mat2 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    ((u[0])[0].x == 1.0) && ((u[0])[1].x == 2.0) &&" +
         "    ((u[0])[0].y == 3.0) && ((u[0])[1].y == 4.0) &&" +
         "    ((u[1])[0].x == 5.0) && ((u[1])[1].x == 6.0) &&" +
@@ -761,7 +761,7 @@ describe(
       const fs =
         "uniform mat3 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    ((u[0])[0].x == 1.0) && ((u[0])[1].x == 2.0) && ((u[0])[2].x == 3.0) &&" +
         "    ((u[0])[0].y == 4.0) && ((u[0])[1].y == 5.0) && ((u[0])[2].y == 6.0) &&" +
         "    ((u[0])[0].z == 7.0) && ((u[0])[1].z == 8.0) && ((u[0])[2].z == 9.0) &&" +
@@ -825,7 +825,7 @@ describe(
       const fs =
         "uniform mat4 u[2];" +
         "void main() { " +
-        "  gl_FragColor = vec4(" +
+        "  out_FragColor = vec4(" +
         "    ((u[0])[0].x == 1.0)  && ((u[0])[1].x == 2.0)  && ((u[0])[2].x == 3.0)  && ((u[0])[3].x == 4.0) &&" +
         "    ((u[0])[0].y == 5.0)  && ((u[0])[1].y == 6.0)  && ((u[0])[2].y == 7.0)  && ((u[0])[3].y == 8.0) &&" +
         "    ((u[0])[0].z == 9.0)  && ((u[0])[1].z == 10.0) && ((u[0])[2].z == 11.0) && ((u[0])[3].z == 12.0) &&" +

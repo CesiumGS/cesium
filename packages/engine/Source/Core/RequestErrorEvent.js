@@ -7,9 +7,9 @@ import parseResponseHeaders from "./parseResponseHeaders.js";
  * @constructor
  * @alias RequestErrorEvent
  *
- * @param {Number} [statusCode] The HTTP error status code, such as 404.
- * @param {Object} [response] The response included along with the error.
- * @param {String|Object} [responseHeaders] The response headers, represented either as an object literal or as a
+ * @param {number} [statusCode] The HTTP error status code, such as 404.
+ * @param {object} [response] The response included along with the error.
+ * @param {string|object} [responseHeaders] The response headers, represented either as an object literal or as a
  *                        string in the format returned by XMLHttpRequest's getAllResponseHeaders() function.
  */
 function RequestErrorEvent(statusCode, response, responseHeaders) {
@@ -17,7 +17,7 @@ function RequestErrorEvent(statusCode, response, responseHeaders) {
    * The HTTP error status code, such as 404.  If the error does not have a particular
    * HTTP code, this property will be undefined.
    *
-   * @type {Number}
+   * @type {number}
    */
   this.statusCode = statusCode;
 
@@ -25,7 +25,7 @@ function RequestErrorEvent(statusCode, response, responseHeaders) {
    * The response included along with the error.  If the error does not include a response,
    * this property will be undefined.
    *
-   * @type {Object}
+   * @type {object}
    */
   this.response = response;
 
@@ -33,7 +33,7 @@ function RequestErrorEvent(statusCode, response, responseHeaders) {
    * The headers included in the response, represented as an object literal of key/value pairs.
    * If the error does not include any headers, this property will be undefined.
    *
-   * @type {Object}
+   * @type {object}
    */
   this.responseHeaders = responseHeaders;
 
@@ -46,7 +46,7 @@ function RequestErrorEvent(statusCode, response, responseHeaders) {
  * Creates a string representing this RequestErrorEvent.
  * @memberof RequestErrorEvent
  *
- * @returns {String} A string representing the provided RequestErrorEvent.
+ * @returns {string} A string representing the provided RequestErrorEvent.
  */
 RequestErrorEvent.prototype.toString = function () {
   let str = "Request has failed.";

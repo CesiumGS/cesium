@@ -1,6 +1,7 @@
 import {
   Cartesian2,
   Cartesian3,
+  Cartesian4,
   Cartographic,
   clone,
   Color,
@@ -83,14 +84,10 @@ describe(
     }
 
     function loadPoints(points) {
-      let ready = false;
-      points.readyPromise.then(function () {
-        ready = true;
-      });
       return pollToPromise(function () {
         points.update(scene.frameState);
         scene.frameState.commandList.length = 0;
-        return ready;
+        return points.ready;
       });
     }
 
@@ -429,6 +426,147 @@ describe(
             });
           }
         });
+    });
+
+    it("renders multiple points and test style options witch can be evaluated to undefined", function () {
+      const testOptions =
+        /*[
+            Cesium3DTileStyle option,
+             Cesium3DTileStyle default value,
+             Cesium3DTileFeature property, 
+             expected Cesium3DTileFeature value,
+             expected undefined Cesium3DTileFeature value
+           ]*/
+        [
+          [
+            "scaleByDistance",
+            new Cartesian4(1.0e4, 1.0, 1.0e6, 0.0),
+            "scaleByDistance",
+            new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
+            undefined,
+          ],
+          [
+            "translucencyByDistance",
+            new Cartesian4(1.0e4, 1.0, 1.0e6, 0.0),
+            "translucencyByDistance",
+            new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
+            undefined,
+          ],
+          [
+            "distanceDisplayCondition",
+            new Cartesian2(0.1, 1.0e6),
+            "distanceDisplayCondition",
+            new DistanceDisplayCondition(0.1, 1.0e6),
+            undefined,
+          ],
+          [
+            "disableDepthTestDistance",
+            1.0e6,
+            "disableDepthTestDistance",
+            1.0e6,
+            undefined,
+          ],
+        ];
+      const minHeight = 0.0;
+      const maxHeight = 100.0;
+      const cartoPositions = [];
+      for (let i = 0; i < testOptions.length; ++i) {
+        cartoPositions.push(Cartographic.fromDegrees(0.1 * i, 0.0, 10.0));
+      }
+
+      const positions = encodePositions(
+        rectangle,
+        minHeight,
+        maxHeight,
+        cartoPositions
+      );
+
+      const mockTilesetClone = clone(mockTileset);
+      const batchTable = new Cesium3DTileBatchTable(
+        mockTilesetClone,
+        testOptions.length
+      );
+      mockTilesetClone.batchTable = batchTable;
+
+      const batchIds = [];
+      for (let i = 0; i < testOptions.length; ++i) {
+        batchTable.setProperty(i, "pointIndex", i);
+        batchIds.push(i);
+      }
+      batchTable.update(mockTilesetClone, scene.frameState);
+
+      points = scene.primitives.add(
+        new Vector3DTilePoints({
+          positions: positions,
+          batchTable: batchTable,
+          batchIds: new Uint16Array(batchIds),
+          rectangle: rectangle,
+          minimumHeight: minHeight,
+          maximumHeight: maxHeight,
+        })
+      );
+
+      const styleOptions = {};
+      // Creating style which returns undefined for a single option for every feature. Undefined option index equal pointIndex
+      for (
+        let testOptionIndex = 0;
+        testOptionIndex < testOptions.length;
+        ++testOptionIndex
+      ) {
+        const testOption = testOptions[testOptionIndex];
+        const cesium3DTileStyleOptionName = testOption[0];
+        const cesium3DTileStyleOptionDefaultValue = testOption[1];
+        styleOptions[cesium3DTileStyleOptionName] = {
+          evaluate: function (feature) {
+            if (feature.getProperty("pointIndex") === testOptionIndex) {
+              return undefined;
+            }
+            return cesium3DTileStyleOptionDefaultValue;
+          },
+        };
+      }
+
+      const style = new Cesium3DTileStyle(styleOptions);
+
+      return loadPoints(points).then(function () {
+        const features = [];
+        points.createFeatures(mockTilesetClone, features);
+        points.applyStyle(style, features);
+
+        let i;
+        for (i = 0; i < features.length; ++i) {
+          const feature = features[i];
+          // Checking feature properties. Undefined option index equal pointIndex
+          for (
+            let testOptionIndex = 0;
+            testOptionIndex < testOptions.length;
+            ++testOptionIndex
+          ) {
+            const testOption = testOptions[testOptionIndex];
+            const cesium3DTileFeaturePropertyName = testOption[2];
+            const expectedCesium3DTileFeaturePropertyDefaultValue =
+              testOption[3];
+            const expectedCesium3DTileFeaturePropertyUndefinedValue =
+              testOption[4];
+            const expectedCesium3DTileFeaturePropertyValue =
+              i === testOptionIndex
+                ? expectedCesium3DTileFeaturePropertyUndefinedValue
+                : expectedCesium3DTileFeaturePropertyDefaultValue;
+            if (defined(expectedCesium3DTileFeaturePropertyValue)) {
+              expect(feature[cesium3DTileFeaturePropertyName]).toBeDefined();
+              expect(feature[cesium3DTileFeaturePropertyName]).toEqual(
+                expectedCesium3DTileFeaturePropertyValue
+              );
+            } else {
+              expect(feature[cesium3DTileFeaturePropertyName]).toBeUndefined();
+            }
+          }
+        }
+        // Look at first feature to load all primitives
+        const position = ellipsoid.cartographicToCartesian(cartoPositions[0]);
+        scene.camera.lookAt(position, new Cartesian3(0.0, 0.0, 50.0));
+        return allPrimitivesReady(points);
+      });
     });
 
     it("renders a point with an image", function () {

@@ -16,7 +16,7 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @alias Vector3DTileGeometry
  * @constructor
  *
- * @param {Object} options An object with following properties:
+ * @param {object} options An object with following properties:
  * @param {Float32Array} [options.boxes] The boxes in the tile.
  * @param {Uint16Array} [options.boxBatchIds] The batch ids for each box.
  * @param {Float32Array} [options.cylinders] The cylinders in the tile.
@@ -71,8 +71,8 @@ function Vector3DTileGeometry(options) {
   this._packedBuffer = undefined;
 
   this._ready = false;
-  this._update = function (geometries, frameState) {};
-  this._readyPromise = initialize(this);
+  this._promise = undefined;
+  this._error = undefined;
 
   this._verticesPromise = undefined;
 
@@ -80,14 +80,14 @@ function Vector3DTileGeometry(options) {
 
   /**
    * Draws the wireframe of the classification geometries.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.debugWireframe = false;
 
   /**
    * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.forceRebatch = false;
@@ -106,8 +106,9 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
    *
    * @memberof Vector3DTileGeometry.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
+   * @private
    */
   trianglesLength: {
     get: function () {
@@ -123,8 +124,9 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
    *
    * @memberof Vector3DTileGeometry.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
+   * @private
    */
   geometryByteLength: {
     get: function () {
@@ -136,14 +138,15 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
   },
 
   /**
-   * Gets a promise that resolves when the primitive is ready to render.
+   * Return true when the primitive is ready to render.
    * @memberof Vector3DTileGeometry.prototype
-   * @type {Promise<void>}
+   * @type {boolean}
    * @readonly
+   * @private
    */
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 });
@@ -308,31 +311,45 @@ function createPrimitive(geometries) {
       return;
     }
 
-    return verticesPromise.then(function (result) {
-      const packedBuffer = new Float64Array(result.packedBuffer);
-      const indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
+    return verticesPromise
+      .then(function (result) {
+        if (geometries.isDestroyed()) {
+          return;
+        }
 
-      if (indicesBytesPerElement === 2) {
-        geometries._indices = new Uint16Array(result.indices);
-      } else {
-        geometries._indices = new Uint32Array(result.indices);
-      }
+        const packedBuffer = new Float64Array(result.packedBuffer);
+        const indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
 
-      geometries._indexOffsets = new Uint32Array(result.indexOffsets);
-      geometries._indexCounts = new Uint32Array(result.indexCounts);
+        if (indicesBytesPerElement === 2) {
+          geometries._indices = new Uint16Array(result.indices);
+        } else {
+          geometries._indices = new Uint32Array(result.indices);
+        }
 
-      geometries._positions = new Float32Array(result.positions);
-      geometries._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
+        geometries._indexOffsets = new Uint32Array(result.indexOffsets);
+        geometries._indexCounts = new Uint32Array(result.indexCounts);
 
-      geometries._batchIds = new Uint16Array(result.batchIds);
+        geometries._positions = new Float32Array(result.positions);
+        geometries._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
 
-      geometries._ready = true;
-    });
+        geometries._batchIds = new Uint16Array(result.batchIds);
+
+        finishPrimitive(geometries);
+
+        geometries._ready = true;
+      })
+      .catch((error) => {
+        if (geometries.isDestroyed()) {
+          return;
+        }
+
+        geometries._error = error;
+      });
   }
 }
 
 function finishPrimitive(geometries) {
-  if (geometries._ready && !defined(geometries._primitive)) {
+  if (!defined(geometries._primitive)) {
     geometries._primitive = new Vector3DTilePrimitive({
       batchTable: geometries._batchTable,
       positions: geometries._positions,
@@ -393,7 +410,7 @@ Vector3DTileGeometry.prototype.createFeatures = function (content, features) {
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (geometry batch table color * color).
  *
- * @param {Boolean} enabled Whether to enable debug coloring.
+ * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
 Vector3DTileGeometry.prototype.applyDebugSettings = function (enabled, color) {
@@ -414,41 +431,12 @@ Vector3DTileGeometry.prototype.applyStyle = function (style, features) {
  * Call when updating the color of a geometry with batchId changes color. The geometries will need to be re-batched
  * on the next update.
  *
- * @param {Number} batchId The batch id of the geometries whose color has changed.
+ * @param {number} batchId The batch id of the geometries whose color has changed.
  * @param {Color} color The new polygon color.
  */
 Vector3DTileGeometry.prototype.updateCommands = function (batchId, color) {
   this._primitive.updateCommands(batchId, color);
 };
-
-function initialize(geometries) {
-  return new Promise(function (resolve, reject) {
-    geometries._update = function (geometries, frameState) {
-      const promise = createPrimitive(geometries);
-
-      if (geometries._ready) {
-        geometries._primitive.debugWireframe = geometries.debugWireframe;
-        geometries._primitive.forceRebatch = geometries.forceRebatch;
-        geometries._primitive.classificationType =
-          geometries.classificationType;
-        geometries._primitive.update(frameState);
-      }
-
-      if (!defined(promise)) {
-        return;
-      }
-
-      promise
-        .then(function () {
-          finishPrimitive(geometries);
-          resolve(geometries);
-        })
-        .catch(function (e) {
-          reject(e);
-        });
-    };
-  });
-}
 
 /**
  * Updates the batches and queues the commands for rendering.
@@ -456,7 +444,24 @@ function initialize(geometries) {
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTileGeometry.prototype.update = function (frameState) {
-  this._update(this, frameState);
+  if (!this._ready) {
+    if (!defined(this._promise)) {
+      this._promise = createPrimitive(this);
+    }
+
+    if (defined(this._error)) {
+      const error = this._error;
+      this._error = undefined;
+      throw error;
+    }
+
+    return;
+  }
+
+  this._primitive.debugWireframe = this.debugWireframe;
+  this._primitive.forceRebatch = this.forceRebatch;
+  this._primitive.classificationType = this.classificationType;
+  this._primitive.update(frameState);
 };
 
 /**
@@ -466,7 +471,7 @@ Vector3DTileGeometry.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTileGeometry.prototype.isDestroyed = function () {
   return false;

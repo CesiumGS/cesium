@@ -10,7 +10,7 @@ import Rectangle from "./Rectangle.js";
  * @constructor
  *
  * @param {TilingScheme} tilingScheme The tiling scheme in which to report availability.
- * @param {Number} maximumLevel The maximum tile level that is potentially available.
+ * @param {number} maximumLevel The maximum tile level that is potentially available.
  */
 function TileAvailability(tilingScheme, maximumLevel) {
   this._tilingScheme = tilingScheme;
@@ -37,11 +37,11 @@ function findNode(level, x, y, nodes) {
  * Marks a rectangular range of tiles in a particular level as being available.  For best performance,
  * add your ranges in order of increasing level.
  *
- * @param {Number} level The level.
- * @param {Number} startX The X coordinate of the first available tiles at the level.
- * @param {Number} startY The Y coordinate of the first available tiles at the level.
- * @param {Number} endX The X coordinate of the last available tiles at the level.
- * @param {Number} endY The Y coordinate of the last available tiles at the level.
+ * @param {number} level The level.
+ * @param {number} startX The X coordinate of the first available tiles at the level.
+ * @param {number} startY The Y coordinate of the first available tiles at the level.
+ * @param {number} endX The X coordinate of the last available tiles at the level.
+ * @param {number} endY The Y coordinate of the last available tiles at the level.
  */
 TileAvailability.prototype.addAvailableTileRange = function (
   level,
@@ -93,7 +93,7 @@ TileAvailability.prototype.addAvailableTileRange = function (
  * {@link TileAvailability#addAvailableTileRange}.
  *
  * @param {Cartographic} position The position for which to determine the maximum available level.  The height component is ignored.
- * @return {Number} The level of the most detailed tile covering the position.
+ * @return {number} The level of the most detailed tile covering the position.
  * @throws {DeveloperError} If position is outside any tile according to the tiling scheme.
  */
 TileAvailability.prototype.computeMaximumLevelAtPosition = function (position) {
@@ -127,7 +127,7 @@ const eastScratch = new Rectangle();
  * {@link TileAvailability#addAvailableTileRange}.
  *
  * @param {Rectangle} rectangle The rectangle.
- * @return {Number} The best available level for the entire rectangle.
+ * @return {number} The best available level for the entire rectangle.
  */
 TileAvailability.prototype.computeBestAvailableLevelOverRectangle = function (
   rectangle
@@ -187,10 +187,10 @@ const cartographicScratch = new Cartographic();
 
 /**
  * Determines if a particular tile is available.
- * @param {Number} level The tile level to check.
- * @param {Number} x The X coordinate of the tile to check.
- * @param {Number} y The Y coordinate of the tile to check.
- * @return {Boolean} True if the tile is available; otherwise, false.
+ * @param {number} level The tile level to check.
+ * @param {number} x The X coordinate of the tile to check.
+ * @param {number} y The Y coordinate of the tile to check.
+ * @return {boolean} True if the tile is available; otherwise, false.
  */
 TileAvailability.prototype.isTileAvailable = function (level, x, y) {
   // Get the center of the tile and find the maximum level at that position.
@@ -220,10 +220,10 @@ TileAvailability.prototype.isTileAvailable = function (level, x, y) {
  *     <tr><td>3</td><td>8</td><td>Northeast</td></tr>
  * </table>
  *
- * @param {Number} level The level of the parent tile.
- * @param {Number} x The X coordinate of the parent tile.
- * @param {Number} y The Y coordinate of the parent tile.
- * @return {Number} The bit mask indicating child availability.
+ * @param {number} level The level of the parent tile.
+ * @param {number} x The X coordinate of the parent tile.
+ * @param {number} y The Y coordinate of the parent tile.
+ * @return {number} The bit mask indicating child availability.
  */
 TileAvailability.prototype.computeChildMaskForTile = function (level, x, y) {
   const childLevel = level + 1;

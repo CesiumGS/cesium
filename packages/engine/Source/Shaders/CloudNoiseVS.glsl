@@ -1,7 +1,7 @@
 uniform vec3 u_noiseTextureDimensions;
-attribute vec2 position;
+in vec2 position;
 
-varying vec2 v_position;
+out vec2 v_position;
 
 void main()
 {

@@ -17,12 +17,12 @@ const defaultZIndex = new ConstantProperty(0);
  * An abstract class for updating ground geometry entities.
  * @constructor
  * @alias GroundGeometryUpdater
- * @param {Object} options An object with the following properties:
+ * @param {object} options An object with the following properties:
  * @param {Entity} options.entity The entity containing the geometry to be visualized.
  * @param {Scene} options.scene The scene where visualization is taking place.
- * @param {Object} options.geometryOptions Options for the geometry
- * @param {String} options.geometryPropertyName The geometry property name
- * @param {String[]} options.observedPropertyNames The entity properties this geometry cares about
+ * @param {object} options.geometryOptions Options for the geometry
+ * @param {string} options.geometryPropertyName The geometry property name
+ * @param {string[]} options.observedPropertyNames The entity properties this geometry cares about
  */
 function GroundGeometryUpdater(options) {
   GeometryUpdater.call(this, options);
@@ -39,7 +39,7 @@ if (defined(Object.create)) {
 Object.defineProperties(GroundGeometryUpdater.prototype, {
   /**
    * Gets the zindex
-   * @type {Number}
+   * @type {number}
    * @memberof GroundGeometryUpdater.prototype
    * @readonly
    */

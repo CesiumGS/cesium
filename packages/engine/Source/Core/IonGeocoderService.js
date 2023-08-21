@@ -11,10 +11,10 @@ import Resource from "./Resource.js";
  * @alias IonGeocoderService
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Scene} options.scene The scene
- * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
- * @param {String|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
+ * @param {string} [options.accessToken=Ion.defaultAccessToken] The access token to use.
+ * @param {string|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
  *
  * @see Ion
  */
@@ -33,7 +33,7 @@ function IonGeocoderService(options) {
 
   const defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
   if (defined(defaultTokenCredit)) {
-    options.scene.frameState.creditDisplay.addDefaultCredit(
+    options.scene.frameState.creditDisplay.addStaticCredit(
       Credit.clone(defaultTokenCredit)
     );
   }
@@ -51,14 +51,29 @@ function IonGeocoderService(options) {
   this._pelias = new PeliasGeocoderService(searchEndpoint);
 }
 
+Object.defineProperties(IonGeocoderService.prototype, {
+  /**
+   * Gets the credit to display after a geocode is performed. Typically this is used to credit
+   * the geocoder service.
+   * @memberof IonGeocoderService.prototype
+   * @type {Credit|undefined}
+   * @readonly
+   */
+  credit: {
+    get: function () {
+      return undefined;
+    },
+  },
+});
+
 /**
  * @function
  *
- * @param {String} query The query to be sent to the geocoder service
+ * @param {string} query The query to be sent to the geocoder service
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
  * @returns {Promise<GeocoderService.Result[]>}
  */
-IonGeocoderService.prototype.geocode = function (query, geocodeType) {
+IonGeocoderService.prototype.geocode = async function (query, geocodeType) {
   return this._pelias.geocode(query, geocodeType);
 };
 export default IonGeocoderService;

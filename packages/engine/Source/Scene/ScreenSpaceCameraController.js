@@ -49,41 +49,41 @@ function ScreenSpaceCameraController(scene) {
    * start of such events, and set true on completion.  To keep inputs disabled
    * past the end of camera flights, you must use the other booleans (enableTranslate,
    * enableZoom, enableRotate, enableTilt, and enableLook).
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableInputs = true;
   /**
    * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
    * This flag only applies in 2D and Columbus view modes.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableTranslate = true;
   /**
    * If true, allows the user to zoom in and out.  If false, the camera is locked to the current distance from the ellipsoid.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableZoom = true;
   /**
    * If true, allows the user to rotate the world which translates the user's position.
    * This flag only applies in 2D and 3D.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableRotate = true;
   /**
    * If true, allows the user to tilt the camera.  If false, the camera is locked to the current heading.
    * This flag only applies in 3D and Columbus view.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableTilt = true;
   /**
    * If true, allows the user to use free-look. If false, the camera view direction can only be changed through translating
    * or rotating. This flag only applies in 3D and Columbus view modes.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.enableLook = true;
@@ -91,7 +91,7 @@ function ScreenSpaceCameraController(scene) {
    * A parameter in the range <code>[0, 1)</code> used to determine how long
    * the camera will continue to spin because of inertia.
    * With value of zero, the camera will have no inertia.
-   * @type {Number}
+   * @type {number}
    * @default 0.9
    */
   this.inertiaSpin = 0.9;
@@ -99,7 +99,7 @@ function ScreenSpaceCameraController(scene) {
    * A parameter in the range <code>[0, 1)</code> used to determine how long
    * the camera will continue to translate because of inertia.
    * With value of zero, the camera will have no inertia.
-   * @type {Number}
+   * @type {number}
    * @default 0.9
    */
   this.inertiaTranslate = 0.9;
@@ -107,7 +107,7 @@ function ScreenSpaceCameraController(scene) {
    * A parameter in the range <code>[0, 1)</code> used to determine how long
    * the camera will continue to zoom because of inertia.
    * With value of zero, the camera will have no inertia.
-   * @type {Number}
+   * @type {number}
    * @default 0.8
    */
   this.inertiaZoom = 0.8;
@@ -115,32 +115,32 @@ function ScreenSpaceCameraController(scene) {
    * A parameter in the range <code>[0, 1)</code> used to limit the range
    * of various user inputs to a percentage of the window width/height per animation frame.
    * This helps keep the camera under control in low-frame-rate situations.
-   * @type {Number}
+   * @type {number}
    * @default 0.1
    */
   this.maximumMovementRatio = 0.1;
   /**
    * Sets the duration, in seconds, of the bounce back animations in 2D and Columbus view.
-   * @type {Number}
+   * @type {number}
    * @default 3.0
    */
   this.bounceAnimationTime = 3.0;
   /**
    * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 1.0.
-   * @type {Number}
+   * @type {number}
    * @default 1.0
    */
   this.minimumZoomDistance = 1.0;
   /**
    * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
-   * @type {Number}
+   * @type {number}
    * @default {@link Number.POSITIVE_INFINITY}
    */
   this.maximumZoomDistance = Number.POSITIVE_INFINITY;
   /**
    * The input that allows the user to pan around the map. This only applies in 2D and Columbus view modes.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -151,7 +151,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to zoom in/out.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -166,7 +166,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to rotate around the globe or another object. This only applies in 3D and Columbus view modes.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -177,7 +177,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to tilt in 3D and Columbus view or twist in 2D.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -205,7 +205,7 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The input that allows the user to change the direction the camera is viewing. This only applies in 3D and Columbus view modes.
    * <p>
-   * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+   * The type can be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
    * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
    * or an array of any of the preceding.
    * </p>
@@ -217,15 +217,21 @@ function ScreenSpaceCameraController(scene) {
     modifier: KeyboardEventModifier.SHIFT,
   };
   /**
-   * The minimum height the camera must be before picking the terrain instead of the ellipsoid.
-   * @type {Number}
+   * The minimum height the camera must be before picking the terrain or scene content instead of the ellipsoid.
+   * @type {number}
    * @default 150000.0
    */
   this.minimumPickingTerrainHeight = 150000.0;
   this._minimumPickingTerrainHeight = this.minimumPickingTerrainHeight;
   /**
+   * The minimum distance the camera must be before testing for collision with terrain when zoom with inertia.
+   * @type {number}
+   * @default 4000.0
+   */
+  this.minimumPickingTerrainDistanceWithInertia = 4000.0;
+  /**
    * The minimum height the camera must be before testing for collision with terrain.
-   * @type {Number}
+   * @type {number}
    * @default 15000.0
    */
   this.minimumCollisionTerrainHeight = 15000.0;
@@ -233,14 +239,14 @@ function ScreenSpaceCameraController(scene) {
   /**
    * The minimum height the camera must be before switching from rotating a track ball to
    * free look when clicks originate on the sky or in space.
-   * @type {Number}
+   * @type {number}
    * @default 7500000.0
    */
   this.minimumTrackBallHeight = 7500000.0;
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
   /**
-   * Enables or disables camera collision detection with terrain.
-   * @type {Boolean}
+   * When disabled, the values of <code>maximumZoomDistance</code> and <code>minimumZoomDistance</code> are ignored.
+   * @type {boolean}
    * @default true
    */
   this.enableCollisionDetection = true;
@@ -285,6 +291,8 @@ function ScreenSpaceCameraController(scene) {
   this._zoomMouseStart = new Cartesian2(-1.0, -1.0);
   this._zoomWorldPosition = new Cartesian3();
   this._useZoomWorldPosition = false;
+  this._panLastMousePosition = new Cartesian2();
+  this._panLastWorldPosition = new Cartesian3();
   this._tiltCVOffMap = false;
   this._looking = false;
   this._rotating = false;
@@ -586,14 +594,14 @@ function handleZoom(
   if (camera.frustum instanceof OrthographicFrustum) {
     if (Math.abs(distance) > 0.0) {
       camera.zoomIn(distance);
-      camera._adjustOrthographicFrustum();
+      camera._adjustOrthographicFrustum(true);
     }
     return;
   }
 
-  const sameStartPosition = Cartesian2.equals(
-    startPosition,
-    object._zoomMouseStart
+  const sameStartPosition = defaultValue(
+    movement.inertiaEnabled,
+    Cartesian2.equals(startPosition, object._zoomMouseStart)
   );
   let zoomingOnVector = object._zoomingOnVector;
   let rotatingZoom = object._rotatingZoom;
@@ -605,19 +613,23 @@ function handleZoom(
       object._zoomMouseStart
     );
 
-    if (defined(object._globe)) {
-      if (mode === SceneMode.SCENE2D) {
-        pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay)
-          .origin;
-        pickedPosition = Cartesian3.fromElements(
-          pickedPosition.y,
-          pickedPosition.z,
-          pickedPosition.x
-        );
-      } else {
-        pickedPosition = pickGlobe(object, startPosition, scratchPickCartesian);
-      }
+    // When camera transform is set, such as tracking an entity, object._globe will be undefined, and no position should be picked
+    if (defined(object._globe) && mode === SceneMode.SCENE2D) {
+      pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay)
+        .origin;
+      pickedPosition = Cartesian3.fromElements(
+        pickedPosition.y,
+        pickedPosition.z,
+        pickedPosition.x
+      );
+    } else if (defined(object._globe)) {
+      pickedPosition = pickPosition(
+        object,
+        startPosition,
+        scratchPickCartesian
+      );
     }
+
     if (defined(pickedPosition)) {
       object._useZoomWorldPosition = true;
       object._zoomWorldPosition = Cartesian3.clone(
@@ -703,7 +715,7 @@ function handleZoom(
         const centerPixel = scratchCenterPixel;
         centerPixel.x = canvas.clientWidth / 2;
         centerPixel.y = canvas.clientHeight / 2;
-        const centerPosition = pickGlobe(
+        const centerPosition = pickPosition(
           object,
           centerPixel,
           scratchCenterPosition
@@ -1101,16 +1113,10 @@ const pickGlobeScratchRay = new Ray();
 const scratchDepthIntersection = new Cartesian3();
 const scratchRayIntersection = new Cartesian3();
 
-function pickGlobe(controller, mousePosition, result) {
+function pickPosition(controller, mousePosition, result) {
   const scene = controller._scene;
   const globe = controller._globe;
   const camera = scene.camera;
-
-  if (!defined(globe)) {
-    return undefined;
-  }
-
-  const cullBackFaces = !controller._cameraUnderground;
 
   let depthIntersection;
   if (scene.pickPositionSupported) {
@@ -1120,6 +1126,11 @@ function pickGlobe(controller, mousePosition, result) {
     );
   }
 
+  if (!defined(globe)) {
+    return Cartesian3.clone(depthIntersection, result);
+  }
+
+  const cullBackFaces = !controller._cameraUnderground;
   const ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
   const rayIntersection = globe.pickWorldCoordinates(
     ray,
@@ -1283,7 +1294,8 @@ function translateCV(controller, startPosition, movement) {
 
   let globePos;
   if (camera.position.z < controller._minimumPickingTerrainHeight) {
-    globePos = pickGlobe(controller, startMouse, translateCVStartPos);
+    globePos = pickPosition(controller, startMouse, translateCVStartPos);
+
     if (defined(globePos)) {
       origin.x = globePos.x;
     }
@@ -1470,7 +1482,7 @@ function rotateCVOnTerrain(controller, startPosition, movement) {
     center = Cartesian3.clone(controller._tiltCenter, rotateCVCenter);
   } else {
     if (camera.position.z < controller._minimumPickingTerrainHeight) {
-      center = pickGlobe(controller, startPosition, rotateCVCenter);
+      center = pickPosition(controller, startPosition, rotateCVCenter);
     }
 
     if (!defined(center)) {
@@ -1705,7 +1717,7 @@ function zoomCV(controller, startPosition, movement) {
 
   let intersection;
   if (height < controller._minimumPickingTerrainHeight) {
-    intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
+    intersection = pickPosition(controller, windowPosition, zoomCVIntersection);
   }
 
   let distance;
@@ -1820,7 +1832,6 @@ const scratchStrafeRay = new Ray();
 const scratchStrafePlane = new Plane(Cartesian3.UNIT_X, 0.0);
 const scratchStrafeIntersection = new Cartesian3();
 const scratchStrafeDirection = new Cartesian3();
-const scratchMousePos = new Cartesian3();
 
 function strafe(controller, movement, strafeStartPosition) {
   const scene = controller._scene;
@@ -1861,6 +1872,7 @@ const scratchRadii = new Cartesian3();
 const scratchEllipsoid = new Ellipsoid();
 const scratchLookUp = new Cartesian3();
 const scratchNormal = new Cartesian3();
+const scratchMousePosition = new Cartesian3();
 
 function spin3D(controller, startPosition, movement) {
   const scene = controller._scene;
@@ -1912,10 +1924,10 @@ function spin3D(controller, startPosition, movement) {
   const globe = controller._globe;
 
   if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
-    const mousePos = pickGlobe(
+    const mousePos = pickPosition(
       controller,
       movement.startPosition,
-      scratchMousePos
+      scratchMousePosition
     );
     if (defined(mousePos)) {
       let strafing = false;
@@ -2045,6 +2057,9 @@ const pan3DTemp2 = new Cartesian3();
 const pan3DTemp3 = new Cartesian3();
 const pan3DStartMousePosition = new Cartesian2();
 const pan3DEndMousePosition = new Cartesian2();
+const pan3DDiffMousePosition = new Cartesian2();
+const pan3DPixelDimensions = new Cartesian2();
+const panRay = new Ray();
 
 function pan3D(controller, startPosition, movement, ellipsoid) {
   const scene = controller._scene;
@@ -2058,9 +2073,109 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
     movement.endPosition,
     pan3DEndMousePosition
   );
+  const height = ellipsoid.cartesianToCartographic(
+    camera.positionWC,
+    scratchCartographic
+  ).height;
 
-  let p0 = camera.pickEllipsoid(startMousePosition, ellipsoid, pan3DP0);
-  let p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);
+  let p0, p1;
+
+  if (
+    !movement.inertiaEnabled &&
+    height < controller._minimumPickingTerrainHeight
+  ) {
+    p0 = Cartesian3.clone(controller._panLastWorldPosition, pan3DP0);
+
+    // Use the last picked world position unless we're starting a new drag
+    if (
+      !defined(controller._globe) &&
+      !Cartesian2.equalsEpsilon(
+        startMousePosition,
+        controller._panLastMousePosition
+      )
+    ) {
+      p0 = pickPosition(controller, startMousePosition, pan3DP0);
+    }
+
+    if (!defined(controller._globe) && defined(p0)) {
+      const toCenter = Cartesian3.subtract(p0, camera.positionWC, pan3DTemp1);
+      const toCenterProj = Cartesian3.multiplyByScalar(
+        camera.directionWC,
+        Cartesian3.dot(camera.directionWC, toCenter),
+        pan3DTemp1
+      );
+      const distanceToNearPlane = Cartesian3.magnitude(toCenterProj);
+      const pixelDimensions = camera.frustum.getPixelDimensions(
+        scene.drawingBufferWidth,
+        scene.drawingBufferHeight,
+        distanceToNearPlane,
+        scene.pixelRatio,
+        pan3DPixelDimensions
+      );
+
+      const dragDelta = Cartesian2.subtract(
+        endMousePosition,
+        startMousePosition,
+        pan3DDiffMousePosition
+      );
+
+      // Move the camera to the the distance the cursor moved in worldspace
+      const right = Cartesian3.multiplyByScalar(
+        camera.rightWC,
+        dragDelta.x * pixelDimensions.x,
+        pan3DTemp1
+      );
+
+      // Move the camera towards the picked position in worldspace as the camera is pointed towards a horizon view
+      const cameraPositionNormal = Cartesian3.normalize(
+        camera.positionWC,
+        scratchCameraPositionNormal
+      );
+      const endPickDirection = camera.getPickRay(endMousePosition, panRay)
+        .direction;
+      const endPickProj = Cartesian3.subtract(
+        endPickDirection,
+        Cartesian3.projectVector(endPickDirection, camera.rightWC, pan3DTemp2),
+        pan3DTemp2
+      );
+      const angle = Cartesian3.angleBetween(endPickProj, camera.directionWC);
+      let forward = 1.0;
+      if (defined(camera.frustum.fov)) {
+        forward = Math.max(Math.tan(angle), 0.1); // Clamp so we don't make the magnitude infinitely large when the angle is small
+      }
+      let dot = Math.abs(
+        Cartesian3.dot(camera.directionWC, cameraPositionNormal)
+      );
+      const magnitude =
+        ((-dragDelta.y * pixelDimensions.y * 2.0) / Math.sqrt(forward)) *
+        (1.0 - dot);
+      const direction = Cartesian3.multiplyByScalar(
+        endPickDirection,
+        magnitude,
+        pan3DTemp2
+      );
+
+      // Move the camera up the distance the cursor moved in worldspace as the camera is pointed towards the center
+      dot = Math.abs(Cartesian3.dot(camera.upWC, cameraPositionNormal));
+      const up = Cartesian3.multiplyByScalar(
+        camera.upWC,
+        -dragDelta.y * (1.0 - dot) * pixelDimensions.y,
+        pan3DTemp3
+      );
+
+      p1 = Cartesian3.add(p0, right, pan3DP1);
+      p1 = Cartesian3.add(p1, direction, p1);
+      p1 = Cartesian3.add(p1, up, p1);
+
+      Cartesian3.clone(p1, controller._panLastWorldPosition);
+      Cartesian2.clone(endMousePosition, controller._panLastMousePosition);
+    }
+  }
+
+  if (!defined(p0) || !defined(p1)) {
+    p0 = camera.pickEllipsoid(startMousePosition, ellipsoid, pan3DP0);
+    p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);
+  }
 
   if (!defined(p0) || !defined(p1)) {
     controller._rotating = true;
@@ -2158,10 +2273,13 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
 const zoom3DUnitPosition = new Cartesian3();
 const zoom3DCartographic = new Cartographic();
 
+let preIntersectionDistance = 0;
+
 function zoom3D(controller, startPosition, movement) {
   if (defined(movement.distance)) {
     movement = movement.distance;
   }
+  const inertiaMovement = movement.inertiaEnabled;
 
   const ellipsoid = controller._ellipsoid;
   const scene = controller._scene;
@@ -2187,13 +2305,22 @@ function zoom3D(controller, startPosition, movement) {
     camera.position,
     zoom3DCartographic
   ).height;
-  if (height < controller._minimumPickingTerrainHeight) {
-    intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
+
+  const approachingCollision =
+    Math.abs(preIntersectionDistance) <
+    controller.minimumPickingTerrainDistanceWithInertia;
+
+  const needPickGlobe = inertiaMovement
+    ? approachingCollision
+    : height < controller._minimumPickingTerrainHeight;
+  if (needPickGlobe) {
+    intersection = pickPosition(controller, windowPosition, zoomCVIntersection);
   }
 
   let distance;
   if (defined(intersection)) {
     distance = Cartesian3.distance(ray.origin, intersection);
+    preIntersectionDistance = distance;
   }
 
   if (cameraUnderground) {
@@ -2379,7 +2506,7 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
     center = Cartesian3.clone(controller._tiltCenter, tilt3DCenter);
   } else {
-    center = pickGlobe(controller, startPosition, tilt3DCenter);
+    center = pickPosition(controller, startPosition, tilt3DCenter);
 
     if (!defined(center)) {
       ray = camera.getPickRay(startPosition, tilt3DRay);
@@ -2902,7 +3029,7 @@ ScreenSpaceCameraController.prototype.update = function () {
  * If this object was destroyed, it should not be used; calling any function other than
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
  * @see ScreenSpaceCameraController#destroy
  */

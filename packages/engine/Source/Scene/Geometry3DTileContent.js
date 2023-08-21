@@ -42,7 +42,9 @@ function Geometry3DTileContent(
   this.featurePropertiesDirty = false;
   this._group = undefined;
 
-  this._readyPromise = initialize(this, arrayBuffer, byteOffset);
+  this._ready = false;
+
+  initialize(this, arrayBuffer, byteOffset);
 }
 
 Object.defineProperties(Geometry3DTileContent.prototype, {
@@ -96,9 +98,18 @@ Object.defineProperties(Geometry3DTileContent.prototype, {
     },
   },
 
-  readyPromise: {
+  /**
+   * Returns true when the tile's content is ready to render; otherwise false
+   *
+   * @memberof Geometry3DTileContent.prototype
+   *
+   * @type {boolean}
+   * @readonly
+   * @private
+   */
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 
@@ -224,7 +235,7 @@ function getBatchIds(featureTableJson, featureTableBinary) {
 
   if (atLeastOneDefined && atLeastOneUndefined) {
     throw new RuntimeError(
-      "If one group of batch ids is defined, then all batch ids must be defined."
+      "If one group of batch ids is defined, then all batch ids must be defined"
     );
   }
 
@@ -290,7 +301,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   byteOffset += sizeOfUint32;
 
   if (byteLength === 0) {
-    content._readyPromise.resolve(content);
+    content._ready = true;
     return;
   }
 
@@ -451,9 +462,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       boundingVolume: content.tile.boundingVolume.boundingVolume,
     });
 
-    return content._geometries.readyPromise.then(function () {
-      return content;
-    });
+    return content;
   }
 
   return Promise.resolve(content);
@@ -509,8 +518,10 @@ Geometry3DTileContent.prototype.update = function (tileset, frameState) {
     this._geometries.debugWireframe = this._tileset.debugWireframe;
     this._geometries.update(frameState);
   }
-  if (defined(this._batchTable) && this._geometries._ready) {
+
+  if (defined(this._batchTable) && this._geometries.ready) {
     this._batchTable.update(tileset, frameState);
+    this._ready = true;
   }
 };
 

@@ -155,8 +155,8 @@ GeometryPipeline.toWireframe = function (geometry) {
  * visualize vector attributes like normals, tangents, and bitangents.
  *
  * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
- * @param {String} [attributeName='normal'] The name of the attribute.
- * @param {Number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
+ * @param {string} [attributeName='normal'] The name of the attribute.
+ * @param {number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
  * @returns {Geometry} A new <code>Geometry</code> instance with line segments for the vector.
  *
  * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
@@ -228,7 +228,7 @@ GeometryPipeline.createLineSegmentsForVectors = function (
  * for matching vertex attributes and shader programs.
  *
  * @param {Geometry} geometry The geometry, which is not modified, to create the object for.
- * @returns {Object} An object with attribute name / index pairs.
+ * @returns {object} An object with attribute name / index pairs.
  *
  * @example
  * const attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
@@ -394,7 +394,7 @@ GeometryPipeline.reorderForPreVertexCache = function (geometry) {
  * is not <code>TRIANGLES</code> or the geometry does not have an <code>indices</code>, this function has no effect.
  *
  * @param {Geometry} geometry The geometry to modify.
- * @param {Number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
+ * @param {number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its indices reordered for the post-vertex-shader cache.
  *
  * @exception {DeveloperError} cacheCapacity must be greater than two.
@@ -601,10 +601,10 @@ const scratchProjectTo2DCartographic = new Cartographic();
  * </p>
  *
  * @param {Geometry} geometry The geometry to modify.
- * @param {String} attributeName The name of the attribute.
- * @param {String} attributeName3D The name of the attribute in 3D.
- * @param {String} attributeName2D The name of the attribute in 2D.
- * @param {Object} [projection=new GeographicProjection()] The projection to use.
+ * @param {string} attributeName The name of the attribute.
+ * @param {string} attributeName3D The name of the attribute in 3D.
+ * @param {string} attributeName2D The name of the attribute in 2D.
+ * @param {object} [projection=new GeographicProjection()] The projection to use.
  * @returns {Geometry} The modified <code>geometry</code> argument with <code>position3D</code> and <code>position2D</code> attributes.
  *
  * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
@@ -714,9 +714,9 @@ const encodedResult = {
  * </p>
  *
  * @param {Geometry} geometry The geometry to modify.
- * @param {String} attributeName The name of the attribute.
- * @param {String} attributeHighName The name of the attribute for the encoded high bits.
- * @param {String} attributeLowName The name of the attribute for the encoded low bits.
+ * @param {string} attributeName The name of the attribute.
+ * @param {string} attributeHighName The name of the attribute for the encoded high bits.
+ * @param {string} attributeLowName The name of the attribute for the encoded low bits.
  * @returns {Geometry} The modified <code>geometry</code> argument, with its encoded attribute.
  *
  * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.

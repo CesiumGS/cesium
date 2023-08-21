@@ -10,7 +10,7 @@ import createCanvas from "../../../../Specs/createCanvas.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 import ViewportPrimitive from "../../../../Specs/ViewportPrimitive.js";
-import loadAndZoomToModel from "./Model/loadAndZoomToModel.js";
+import loadAndZoomToModelAsync from "./Model/loadAndZoomToModelAsync.js";
 
 describe(
   "Scene/PostProcessStageLibrary",
@@ -48,7 +48,7 @@ describe(
     it("black and white", function () {
       const fs =
         "void main() { \n" +
-        "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+        "    out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
@@ -87,7 +87,7 @@ describe(
     });
 
     it("per-feature black and white", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: boxTexturedUrl,
         },
@@ -121,7 +121,7 @@ describe(
     it("brightness", function () {
       const fs =
         "void main() { \n" +
-        "    gl_FragColor = vec4(vec3(0.25), 1.0); \n" +
+        "    out_FragColor = vec4(vec3(0.25), 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
@@ -169,7 +169,7 @@ describe(
     it("night vision", function () {
       const fs =
         "void main() { \n" +
-        "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+        "    out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
@@ -209,7 +209,7 @@ describe(
 
       const fs =
         "void main() { \n" +
-        "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
+        "    out_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
@@ -245,7 +245,7 @@ describe(
     it("blur", function () {
       const fs =
         "void main() { \n" +
-        "    gl_FragColor = all(equal(floor(gl_FragCoord.xy), vec2(1.0, 1.0))) ? vec4(1.0, 0.0, 0.0, 1.0) : vec4(0.0, 0.0, 1.0, 1.0); \n" +
+        "    out_FragColor = all(equal(floor(gl_FragCoord.xy), vec2(1.0, 1.0))) ? vec4(1.0, 0.0, 0.0, 1.0) : vec4(0.0, 0.0, 1.0, 1.0); \n" +
         "} \n";
       scene.primitives.add(new ViewportPrimitive(fs));
 
@@ -305,7 +305,7 @@ describe(
         new HeadingPitchRoll()
       );
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: boxTexturedUrl,
           // Ensure the texture loads every time
@@ -426,7 +426,7 @@ describe(
         new HeadingPitchRoll()
       );
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: boxTexturedUrl,
           // Ensure the texture loads every time

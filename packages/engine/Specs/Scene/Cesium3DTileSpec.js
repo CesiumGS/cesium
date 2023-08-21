@@ -12,6 +12,7 @@ import {
   Cesium3DTileRefine,
   Cesium3DTilesetHeatmap,
   Math as CesiumMath,
+  MetadataSchema,
   RuntimeError,
   TileBoundingRegion,
   TileOrientedBoundingBox,
@@ -123,6 +124,7 @@ describe(
       debugShowViewerRequestVolume: true,
       modelMatrix: Matrix4.IDENTITY,
       _geometricError: 2,
+      _scaledGeometricError: 2,
       _heatmap: new Cesium3DTilesetHeatmap(),
     };
 
@@ -531,6 +533,43 @@ describe(
           CesiumMath.EPSILON7
         );
       });
+
+      it("TILE_BOUNDING_XXX metadata semantics override bounding volume", function () {
+        const tileset = clone(mockTileset, true);
+        tileset.schema = MetadataSchema.fromJson({
+          id: "test-schema",
+          classes: {
+            tile: {
+              properties: {
+                tileBoundingBox: {
+                  type: "SCALAR",
+                  componentType: "FLOAT64",
+                  array: true,
+                  count: 12,
+                  semantic: "TILE_BOUNDING_BOX",
+                },
+              },
+            },
+          },
+        });
+
+        const header = clone(tileWithBoundingRegion, true);
+        header.metadata = {
+          class: "tile",
+          properties: {
+            tileBoundingBox: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+          },
+        };
+
+        const tile = new Cesium3DTile(tileset, "/some_url", header, undefined);
+
+        // the TILE_BOUNDING_BOX should override the boundingVolume.region.
+        const boundingBox = tile.boundingVolume.boundingVolume;
+        const expectedCenter = new Cartesian3();
+        const expectedHalfAxes = Matrix3.IDENTITY;
+        expect(boundingBox.center).toEqual(expectedCenter);
+        expect(boundingBox.halfAxes).toEqual(expectedHalfAxes);
+      });
     });
 
     describe("debug bounding volumes", function () {
@@ -671,6 +710,28 @@ describe(
       const foveatedDeferralPenalty = 10000000.0;
       expect(tile2._priority).toBeGreaterThanOrEqual(foveatedDeferralPenalty);
       tile2._priorityDeferred = false;
+    });
+
+    it("tile transform scales geometric error", function () {
+      const header = clone(tileWithContentBoundingSphere, true);
+      header.transform = Matrix4.pack(
+        Matrix4.fromUniformScale(2.0),
+        new Array(16)
+      );
+
+      const mockTilesetScaled = clone(mockTileset, true);
+
+      const tile = new Cesium3DTile(
+        mockTilesetScaled,
+        "/some_url",
+        header,
+        undefined
+      );
+
+      expect(tile._geometricError).toBe(1);
+      expect(tile.geometricError).toBe(2);
+      expect(mockTilesetScaled._geometricError).toBe(2);
+      expect(mockTilesetScaled._scaledGeometricError).toBe(4);
     });
   },
   "WebGL"

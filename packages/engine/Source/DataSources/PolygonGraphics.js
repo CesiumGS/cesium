@@ -16,12 +16,12 @@ function createPolygonHierarchyProperty(value) {
 }
 
 /**
- * @typedef {Object} PolygonGraphics.ConstructorOptions
+ * @typedef {object} PolygonGraphics.ConstructorOptions
  *
  * Initialization options for the PolygonGraphics constructor
  *
  * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the polygon.
- * @property {Property | PolygonHierarchy} [hierarchy] A Property specifying the {@link PolygonHierarchy}.
+ * @property {Property | PolygonHierarchy | Cartesian3[]} [hierarchy] A Property specifying the {@link PolygonHierarchy}.
  * @property {Property | number} [height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
  * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
  * @property {Property | number} [extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
@@ -34,8 +34,8 @@ function createPolygonHierarchyProperty(value) {
  * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
  * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
  * @property {Property | boolean} [perPositionHeight=false] A boolean specifying whether or not the height of each position is used.
- * @property {Boolean | boolean} [closeTop=true] When false, leaves off the top of an extruded polygon open.
- * @property {Boolean | boolean} [closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+ * @property {boolean | boolean} [closeTop=true] When false, leaves off the top of an extruded polygon open.
+ * @property {boolean | boolean} [closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @property {Property | ArcType} [arcType=ArcType.GEODESIC] The type of line the polygon edges must follow.
  * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from light sources.
  * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.

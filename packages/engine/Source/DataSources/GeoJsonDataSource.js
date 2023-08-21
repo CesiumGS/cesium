@@ -550,20 +550,20 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
 }
 
 /**
- * @typedef {Object} GeoJsonDataSource.LoadOptions
+ * @typedef {object} GeoJsonDataSource.LoadOptions
  *
  * Initialization options for the <code>load</code> method.
  *
- * @property {String} [sourceUri] Overrides the url to use for resolving relative links.
+ * @property {string} [sourceUri] Overrides the url to use for resolving relative links.
  * @property {GeoJsonDataSource.describe} [describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string).
- * @property {Number} [markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
- * @property {String} [markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
+ * @property {number} [markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
+ * @property {string} [markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
  * @property {Color} [markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
  * @property {Color} [stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
- * @property {Number} [strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
+ * @property {number} [strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
  * @property {Color} [fill=GeoJsonDataSource.fill] The default color for polygon interiors.
- * @property {Boolean} [clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
- * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {boolean} [clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
  */
 
 /**
@@ -575,7 +575,7 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * @alias GeoJsonDataSource
  * @constructor
  *
- * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
+ * @param {string} [name] The name of this data source.  If undefined, a name will be taken from
  *                        the name of the GeoJSON file.
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
@@ -607,10 +607,10 @@ function GeoJsonDataSource(name) {
 /**
  * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
  *
- * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+ * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
+ * @returns {Promise<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
  */
 GeoJsonDataSource.load = function (data, options) {
   return new GeoJsonDataSource().load(data, options);
@@ -620,7 +620,7 @@ Object.defineProperties(GeoJsonDataSource, {
   /**
    * Gets or sets the default size of the map pin created for each point, in pixels.
    * @memberof GeoJsonDataSource
-   * @type {Number}
+   * @type {number}
    * @default 48
    */
   markerSize: {
@@ -636,7 +636,7 @@ Object.defineProperties(GeoJsonDataSource, {
    * This can be any valid {@link http://mapbox.com/maki/|Maki} identifier, any single character,
    * or blank if no symbol is to be used.
    * @memberof GeoJsonDataSource
-   * @type {String}
+   * @type {string}
    */
   markerSymbol: {
     get: function () {
@@ -677,7 +677,7 @@ Object.defineProperties(GeoJsonDataSource, {
   /**
    * Gets or sets the default width of polylines and polygon outlines.
    * @memberof GeoJsonDataSource
-   * @type {Number}
+   * @type {number}
    * @default 2.0
    */
   strokeWidth: {
@@ -705,7 +705,7 @@ Object.defineProperties(GeoJsonDataSource, {
   /**
    * Gets or sets default of whether to clamp to the ground.
    * @memberof GeoJsonDataSource
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   clampToGround: {
@@ -723,7 +723,7 @@ Object.defineProperties(GeoJsonDataSource, {
    * supported the EPSG type can be added to this list as well, by specifying the complete EPSG name,
    * for example 'EPSG:4326'.
    * @memberof GeoJsonDataSource
-   * @type {Object}
+   * @type {object}
    */
   crsNames: {
     get: function () {
@@ -738,7 +738,7 @@ Object.defineProperties(GeoJsonDataSource, {
    * Items in this object take precedence over those defined in <code>crsLinkHrefs</code>, assuming
    * the link has a type specified.
    * @memberof GeoJsonDataSource
-   * @type {Object}
+   * @type {object}
    */
   crsLinkHrefs: {
     get: function () {
@@ -752,7 +752,7 @@ Object.defineProperties(GeoJsonDataSource, {
    * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
    * Items in <code>crsLinkHrefs</code> take precedence over this object.
    * @memberof GeoJsonDataSource
-   * @type {Object}
+   * @type {object}
    */
   crsLinkTypes: {
     get: function () {
@@ -765,7 +765,7 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
   /**
    * Gets or sets a human-readable name for this instance.
    * @memberof GeoJsonDataSource.prototype
-   * @type {String}
+   * @type {string}
    */
   name: {
     get: function () {
@@ -800,7 +800,7 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
   /**
    * Gets a value indicating if the data source is currently loading data.
    * @memberof GeoJsonDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   isLoading: {
     get: function () {
@@ -840,7 +840,7 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
   /**
    * Gets whether or not this data source should be displayed.
    * @memberof GeoJsonDataSource.prototype
-   * @type {Boolean}
+   * @type {boolean}
    */
   show: {
     get: function () {
@@ -885,10 +885,10 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
 /**
  * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
  *
- * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+ * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
+ * @returns {Promise<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
  */
 GeoJsonDataSource.prototype.load = function (data, options) {
   return preload(this, data, options, true);
@@ -897,10 +897,10 @@ GeoJsonDataSource.prototype.load = function (data, options) {
 /**
  * Asynchronously loads the provided GeoJSON or TopoJSON data, without replacing any existing data.
  *
- * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+ * @param {Resource|string|object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
- * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
+ * @returns {Promise<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
  */
 GeoJsonDataSource.prototype.process = function (data, options) {
   return preload(this, data, options, false);
@@ -976,7 +976,7 @@ function preload(that, data, options, clear) {
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
  *
  * @param {JulianDate} time The simulation time.
- * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ * @returns {boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
 GeoJsonDataSource.prototype.update = function (time) {
   return true;
@@ -1058,7 +1058,7 @@ function load(that, geoJson, options, sourceUri, clear) {
 /**
  * This callback is displayed as part of the GeoJsonDataSource class.
  * @callback GeoJsonDataSource.describe
- * @param {Object} properties The properties of the feature.
- * @param {String} nameProperty The property key that Cesium estimates to have the name of the feature.
+ * @param {object} properties The properties of the feature.
+ * @param {string} nameProperty The property key that Cesium estimates to have the name of the feature.
  */
 export default GeoJsonDataSource;

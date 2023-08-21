@@ -3,6 +3,8 @@ import {
   defined,
   DeveloperError,
   EllipsoidTerrainProvider,
+  ImageryLayer,
+  Terrain,
 } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import createCommand from "../createCommand.js";
@@ -12,7 +14,7 @@ import createCommand from "../createCommand.js";
  * @alias BaseLayerPickerViewModel
  * @constructor
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {Globe} options.globe The Globe to use.
  * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
  * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
@@ -59,7 +61,7 @@ function BaseLayerPickerViewModel(options) {
 
   /**
    * Gets or sets whether the imagery selection drop-down is currently visible.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.dropDownVisible = false;
@@ -134,7 +136,7 @@ function BaseLayerPickerViewModel(options) {
 
   /**
    * Gets the button tooltip.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.buttonTooltip = undefined;
   knockout.defineProperty(this, "buttonTooltip", function () {
@@ -158,7 +160,7 @@ function BaseLayerPickerViewModel(options) {
 
   /**
    * Gets the button background image.  This property is observable.
-   * @type {String}
+   * @type {string}
    */
   this.buttonImageUrl = undefined;
   knockout.defineProperty(this, "buttonImageUrl", function () {
@@ -176,7 +178,7 @@ function BaseLayerPickerViewModel(options) {
   this.selectedImagery = undefined;
   const selectedImageryViewModel = knockout.observable();
 
-  this._currentImageryProviders = [];
+  this._currentImageryLayers = [];
   knockout.defineProperty(this, "selectedImagery", {
     get: function () {
       return selectedImageryViewModel();
@@ -188,15 +190,15 @@ function BaseLayerPickerViewModel(options) {
       }
 
       let i;
-      const currentImageryProviders = this._currentImageryProviders;
-      const currentImageryProvidersLength = currentImageryProviders.length;
+      const currentImageryLayers = this._currentImageryLayers;
+      const currentImageryLayersLength = currentImageryLayers.length;
       const imageryLayers = this._globe.imageryLayers;
       let hadExistingBaseLayer = false;
-      for (i = 0; i < currentImageryProvidersLength; i++) {
+      for (i = 0; i < currentImageryLayersLength; i++) {
         const layersLength = imageryLayers.length;
         for (let x = 0; x < layersLength; x++) {
           const layer = imageryLayers.get(x);
-          if (layer.imageryProvider === currentImageryProviders[i]) {
+          if (layer === currentImageryLayers[i]) {
             imageryLayers.remove(layer);
             hadExistingBaseLayer = true;
             break;
@@ -208,21 +210,26 @@ function BaseLayerPickerViewModel(options) {
         const newProviders = value.creationCommand();
         if (Array.isArray(newProviders)) {
           const newProvidersLength = newProviders.length;
+          this._currentImageryLayers = [];
           for (i = newProvidersLength - 1; i >= 0; i--) {
-            imageryLayers.addImageryProvider(newProviders[i], 0);
+            const layer = ImageryLayer.fromProviderAsync(newProviders[i]);
+            imageryLayers.add(layer, 0);
+            this._currentImageryLayers.push(layer);
           }
-          this._currentImageryProviders = newProviders.slice(0);
         } else {
-          this._currentImageryProviders = [newProviders];
+          this._currentImageryLayers = [];
+          const layer = ImageryLayer.fromProviderAsync(newProviders);
+          layer.name = value.name;
           if (hadExistingBaseLayer) {
-            imageryLayers.addImageryProvider(newProviders, 0);
+            imageryLayers.add(layer, 0);
           } else {
             const baseLayer = imageryLayers.get(0);
             if (defined(baseLayer)) {
               imageryLayers.remove(baseLayer);
             }
-            imageryLayers.addImageryProvider(newProviders, 0);
+            imageryLayers.add(layer, 0);
           }
+          this._currentImageryLayers.push(layer);
         }
       }
       selectedImageryViewModel(value);
@@ -253,10 +260,39 @@ function BaseLayerPickerViewModel(options) {
         newProvider = value.creationCommand();
       }
 
-      this._globe.depthTestAgainstTerrain = !(
-        newProvider instanceof EllipsoidTerrainProvider
-      );
-      this._globe.terrainProvider = newProvider;
+      // If this is not a promise, we must set this synchronously to avoid overriding depthTestAgainstTerrain
+      // See https://github.com/CesiumGS/cesium/issues/6991
+      if (defined(newProvider) && !defined(newProvider.then)) {
+        this._globe.depthTestAgainstTerrain = !(
+          newProvider instanceof EllipsoidTerrainProvider
+        );
+        this._globe.terrainProvider = newProvider;
+      } else if (defined(newProvider)) {
+        let cancelUpdate = false;
+        const removeCancelListener = this._globe.terrainProviderChanged.addEventListener(
+          () => {
+            cancelUpdate = true;
+            removeCancelListener();
+          }
+        );
+
+        const terrain = new Terrain(newProvider);
+        const removeEventListener = terrain.readyEvent.addEventListener(
+          (terrainProvider) => {
+            if (cancelUpdate) {
+              // Early return in case something has changed outside of the picker.
+              return;
+            }
+
+            this._globe.depthTestAgainstTerrain = !(
+              terrainProvider instanceof EllipsoidTerrainProvider
+            );
+            this._globe.terrainProvider = terrainProvider;
+            removeEventListener();
+          }
+        );
+      }
+
       selectedTerrainViewModel(value);
       this.dropDownVisible = false;
     },

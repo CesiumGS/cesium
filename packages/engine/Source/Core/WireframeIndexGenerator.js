@@ -164,7 +164,7 @@ function createWireframeFromTriangleFanIndices(vertexCount, originalIndices) {
  * or creating them from scratch if the model had none.
  *
  * @param {PrimitiveType} primitiveType The primitive type.
- * @param {Number} vertexCount The number of vertices in the primitive.
+ * @param {number} vertexCount The number of vertices in the primitive.
  * @param {Uint8Array|Uint16Array|Uint32Array} [originalIndices] A typed array containing the original indices of the primitive.
  *
  * @return {Uint16Array|Uint32Array} A typed array with the wireframe indices, or undefined if the primitive type does not use triangles.
@@ -202,8 +202,8 @@ WireframeIndexGenerator.createWireframeIndices = function (
  * Gets the number of indices in the wireframe index buffer of a primitive type.
  *
  * @param {PrimitiveType} primitiveType The primitive type.
- * @param {Number} originalCount The original number of vertices or indices in the primitive.
- * @return {Number} The number of indices in the primitive's wireframe.
+ * @param {number} originalCount The original number of vertices or indices in the primitive.
+ * @return {number} The number of indices in the primitive's wireframe.
  *
  * @private
  */

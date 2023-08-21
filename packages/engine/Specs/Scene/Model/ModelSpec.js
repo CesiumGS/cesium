@@ -34,6 +34,7 @@ import {
   PrimitiveType,
   Resource,
   ResourceCache,
+  RuntimeError,
   ShaderProgram,
   ShadowMode,
   SplitDirection,
@@ -43,7 +44,7 @@ import {
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
 import pollToPromise from "../../../../../Specs/pollToPromise.js";
-import loadAndZoomToModel from "./loadAndZoomToModel.js";
+import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe(
   "Scene/Model/Model",
@@ -242,37 +243,36 @@ describe(
       }
     }
 
-    it("fromGltf throws with undefined options", function () {
-      expect(function () {
-        Model.fromGltf();
-      }).toThrowDeveloperError();
+    it("fromGltfAsync throws with undefined options", async function () {
+      await expectAsync(Model.fromGltfAsync()).toBeRejectedWithDeveloperError();
     });
 
-    it("fromGltf throws with undefined url", function () {
-      expect(function () {
-        Model.fromGltf({});
-      }).toThrowDeveloperError();
+    it("fromGltfAsync throws with undefined url", async function () {
+      await expectAsync(
+        Model.fromGltfAsync({})
+      ).toBeRejectedWithDeveloperError();
     });
 
     it("initializes and renders from Uint8Array", function () {
       const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
-        return loadAndZoomToModel({ gltf: new Uint8Array(buffer) }, scene).then(
-          function (model) {
-            expect(model.ready).toEqual(true);
-            expect(model._sceneGraph).toBeDefined();
-            expect(model._resourcesLoaded).toEqual(true);
-            verifyRender(model, true);
-          }
-        );
+        return loadAndZoomToModelAsync(
+          { gltf: new Uint8Array(buffer) },
+          scene
+        ).then(function (model) {
+          expect(model.ready).toEqual(true);
+          expect(model._sceneGraph).toBeDefined();
+          expect(model._resourcesLoaded).toEqual(true);
+          verifyRender(model, true);
+        });
       });
     });
 
     it("initializes and renders from JSON object", function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: boxTexturedGltfUrl,
@@ -290,7 +290,7 @@ describe(
     it("initializes and renders from JSON object with external buffers", function () {
       const resource = Resource.createIfNeeded(microcosm);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: microcosm,
@@ -306,7 +306,7 @@ describe(
     });
 
     it("initializes and renders with url", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: boxTexturedGltfUrl,
         },
@@ -319,62 +319,108 @@ describe(
       });
     });
 
-    it("rejects ready promise when texture fails to load", function () {
-      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
-      return resource.fetchJson().then(function (gltf) {
-        gltf.images[0].uri = "non-existent-path.png";
-        const model = Model.fromGltf({
-          gltf: gltf,
-          basePath: boxTexturedGltfUrl,
-          incrementallyLoadTextures: false,
-        });
-        scene.primitives.add(model);
-        let finished = false;
-        model.readyPromise
-          .then(function (model) {
-            finished = true;
-            fail();
-          })
-          .catch(function (error) {
-            finished = true;
-            expect(error).toBeDefined();
-          });
-
-        let texturesFinished = false;
-        model.texturesLoadedPromise
-          .then(function () {
-            texturesFinished = true;
-            fail();
-          })
-          .catch(function (error) {
-            texturesFinished = true;
-            expect(error).toBeDefined();
-          });
-
-        return pollToPromise(function () {
-          scene.renderForSpecs();
-          return finished && texturesFinished;
-        });
+    it("calls gltfCallback", function () {
+      let wasCalled = false;
+      return loadAndZoomToModelAsync(
+        {
+          url: boxTexturedGltfUrl,
+          gltfCallback: (gltf) => {
+            wasCalled = true;
+            expect(gltf).toEqual(
+              jasmine.objectContaining({
+                asset: { generator: "COLLADA2GLTF", version: "2.0" },
+              })
+            );
+          },
+        },
+        scene
+      ).then(function (model) {
+        expect(model.ready).toEqual(true);
+        expect(model._sceneGraph).toBeDefined();
+        expect(model._resourcesLoaded).toEqual(true);
+        expect(wasCalled).toBeTrue();
+        verifyRender(model, true);
       });
     });
 
-    it("rejects ready promise when external buffer fails to load", function () {
+    it("raises errorEvent when a texture fails to load and incrementallyLoadTextures is true", async function () {
       const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
-      return resource.fetchJson().then(function (gltf) {
-        gltf.buffers[0].uri = "non-existent-path.bin";
-        return loadAndZoomToModel(
-          {
-            gltf: gltf,
-            basePath: boxTexturedGltfUrl,
-          },
-          scene
-        )
-          .then(function (model) {
-            fail();
-          })
-          .catch(function (error) {
-            expect(error).toBeDefined();
-          });
+      const gltf = await resource.fetchJson();
+      gltf.images[0].uri = "non-existent-path.png";
+      const model = await Model.fromGltfAsync({
+        gltf: gltf,
+        basePath: boxTexturedGltfUrl,
+        incrementallyLoadTextures: true,
+      });
+      scene.primitives.add(model);
+      let finished = false;
+
+      model.errorEvent.addEventListener((e) => {
+        expect(e).toBeInstanceOf(RuntimeError);
+        expect(e.message).toContain("Failed to load texture");
+        expect(e.message).toContain(
+          "Failed to load image: non-existent-path.png"
+        );
+        finished = true;
+      });
+
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return model.ready && finished;
+      });
+    });
+
+    it("raises errorEvent when a texture fails to load and incrementallyLoadTextures is false", async function () {
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      const gltf = await resource.fetchJson();
+      gltf.images[0].uri = "non-existent-path.png";
+      const model = await Model.fromGltfAsync({
+        gltf: gltf,
+        basePath: boxTexturedGltfUrl,
+        incrementallyLoadTextures: false,
+      });
+      scene.primitives.add(model);
+      let finished = false;
+
+      model.errorEvent.addEventListener((e) => {
+        expect(e).toBeInstanceOf(RuntimeError);
+        expect(e.message).toContain(
+          `Failed to load model: ${boxTexturedGltfUrl}`
+        );
+        expect(e.message).toContain("Failed to load texture");
+        finished = true;
+      });
+
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return finished;
+      });
+    });
+
+    it("raises errorEvent when external buffer fails to load", async function () {
+      const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
+      const gltf = await resource.fetchJson();
+      gltf.buffers[0].uri = "non-existent-path.bin";
+      const model = await Model.fromGltfAsync({
+        gltf: gltf,
+        basePath: boxTexturedGltfUrl,
+        incrementallyLoadTextures: false,
+      });
+      scene.primitives.add(model);
+      let finished = false;
+
+      model.errorEvent.addEventListener((e) => {
+        expect(e).toBeInstanceOf(RuntimeError);
+        expect(e.message).toContain(
+          `Failed to load model: ${boxTexturedGltfUrl}`
+        );
+        expect(e.message).toContain("Failed to load vertex buffer");
+        finished = true;
+      });
+
+      return pollToPromise(function () {
+        scene.renderForSpecs();
+        return finished;
       });
     });
 
@@ -384,7 +430,7 @@ describe(
         "execute"
       ).and.callThrough();
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGltfUrl,
           asynchronous: true,
@@ -404,7 +450,7 @@ describe(
         "execute"
       ).and.callThrough();
 
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGltfUrl,
           asynchronous: false,
@@ -419,7 +465,7 @@ describe(
     });
 
     it("initializes feature table", function () {
-      return loadAndZoomToModel({ gltf: buildingsMetadata }, scene).then(
+      return loadAndZoomToModelAsync({ gltf: buildingsMetadata }, scene).then(
         function (model) {
           expect(model.ready).toEqual(true);
           expect(model.featureTables).toBeDefined();
@@ -446,7 +492,7 @@ describe(
     });
 
     it("sets default properties", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
         },
@@ -502,7 +548,7 @@ describe(
     it("renders model without indices", function () {
       const resource = Resource.createIfNeeded(triangleWithoutIndicesUrl);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: triangleWithoutIndicesUrl,
@@ -533,7 +579,7 @@ describe(
     it("renders model with vertex colors", function () {
       const resource = Resource.createIfNeeded(vertexColorTestUrl);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: vertexColorTestUrl,
@@ -569,7 +615,7 @@ describe(
     it("renders model with double-sided material", function () {
       const resource = Resource.createIfNeeded(twoSidedPlaneUrl);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: twoSidedPlaneUrl,
@@ -623,7 +669,7 @@ describe(
     xit("renders model with emissive texture", function () {
       const resource = Resource.createIfNeeded(emissiveTextureUrl);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: emissiveTextureUrl,
@@ -653,7 +699,7 @@ describe(
 
       const resource = Resource.createIfNeeded(boomBoxUrl);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: boomBoxUrl,
@@ -675,7 +721,7 @@ describe(
 
       const resource = Resource.createIfNeeded(morphPrimitivesTestUrl);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: morphPrimitivesTestUrl,
@@ -701,57 +747,52 @@ describe(
     });
 
     it("renders Draco-compressed model", function () {
-      return loadAndZoomToModel({ gltf: dracoCesiumManUrl }, scene).then(
+      return loadAndZoomToModelAsync({ gltf: dracoCesiumManUrl }, scene).then(
         function (model) {
           verifyRender(model, true);
         }
       );
     });
 
-    it("fails to load with Draco decoding error", function () {
-      const readyPromise = pollToPromise(function () {
+    it("fails to load with Draco decoding error", async function () {
+      DracoLoader._getDecoderTaskProcessor();
+      await pollToPromise(function () {
         return DracoLoader._taskProcessorReady;
       });
-      DracoLoader._getDecoderTaskProcessor();
-      return readyPromise
-        .then(function () {
-          const decoder = DracoLoader._getDecoderTaskProcessor();
-          spyOn(decoder, "scheduleTask").and.callFake(function () {
-            return Promise.reject({ message: "Custom error" });
-          });
 
-          const model = scene.primitives.add(
-            Model.fromGltf({
-              url: dracoCesiumManUrl,
-            })
-          );
+      const decoder = DracoLoader._getDecoderTaskProcessor();
+      spyOn(decoder, "scheduleTask").and.callFake(function () {
+        return Promise.reject({ message: "Custom error" });
+      });
 
-          return Promise.all([
-            pollToPromise(
-              function () {
-                scene.renderForSpecs();
-                return model.loader._state === 7; // FAILED
-              },
-              { timeout: 10000 }
-            ),
-            model.readyPromise,
-          ]);
+      const model = scene.primitives.add(
+        await Model.fromGltfAsync({
+          url: dracoCesiumManUrl,
         })
-        .then(function (e) {
-          fail("Should not resolve");
-        })
-        .catch(function (e) {
-          expect(e).toBeDefined();
-          expect(
-            e.message.includes(`Failed to load model: ${dracoCesiumManUrl}`)
-          ).toBe(true);
-          expect(e.message.includes(`Failed to load Draco`)).toBe(true);
-          expect(e.message.includes(`Custom error`)).toBe(true);
-        });
+      );
+
+      let failed = false;
+      model.errorEvent.addEventListener((e) => {
+        expect(e).toBeInstanceOf(RuntimeError);
+        expect(e.message).toContain(
+          `Failed to load model: ${dracoCesiumManUrl}`
+        );
+        expect(e.message).toContain("Failed to load Draco");
+        expect(e.message).toContain("Custom error");
+        failed = true;
+      });
+
+      await pollToPromise(
+        function () {
+          scene.renderForSpecs();
+          return failed;
+        },
+        { timeout: 10000 }
+      );
     });
 
     it("renders model without animations added", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
           offset: animatedTriangleOffset,
@@ -771,7 +812,7 @@ describe(
     });
 
     it("renders model with animations added", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: animatedTriangleUrl,
           offset: animatedTriangleOffset,
@@ -804,7 +845,7 @@ describe(
     });
 
     it("renders model with CESIUM_RTC extension", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxCesiumRtcUrl,
         },
@@ -815,7 +856,7 @@ describe(
     });
 
     it("adds animation to draco-compressed model", function () {
-      return loadAndZoomToModel({ gltf: dracoCesiumManUrl }, scene).then(
+      return loadAndZoomToModelAsync({ gltf: dracoCesiumManUrl }, scene).then(
         function (model) {
           verifyRender(model, true);
 
@@ -840,7 +881,7 @@ describe(
 
       const resource = Resource.createIfNeeded(boxInstancedNoNormalsUrl);
       return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: gltf,
             basePath: boxInstancedNoNormalsUrl,
@@ -861,7 +902,7 @@ describe(
       const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: new Uint8Array(buffer), show: false },
           scene
         ).then(function (model) {
@@ -877,7 +918,7 @@ describe(
     });
 
     it("renders in 2D", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
@@ -893,7 +934,7 @@ describe(
     });
 
     it("renders in 2D over the IDL", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -919,7 +960,7 @@ describe(
     });
 
     it("renders in CV", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
@@ -936,7 +977,7 @@ describe(
     });
 
     it("renders in CV after draw commands are reset", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
@@ -959,7 +1000,7 @@ describe(
     });
 
     it("projectTo2D works for 2D", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
@@ -977,7 +1018,7 @@ describe(
     });
 
     it("projectTo2D works for CV", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
@@ -996,7 +1037,7 @@ describe(
     });
 
     it("does not render during morph", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: modelMatrix,
@@ -1021,63 +1062,136 @@ describe(
       });
     });
 
-    it("renders model with style", function () {
-      let model;
-      let style;
-      return loadAndZoomToModel({ gltf: buildingsMetadata }, scene).then(
-        function (result) {
-          model = result;
-          // Renders without style.
-          verifyRender(model, true);
+    describe("style", function () {
+      it("applies style to model with feature table", function () {
+        let model;
+        let style;
+        return loadAndZoomToModelAsync({ gltf: buildingsMetadata }, scene).then(
+          function (result) {
+            model = result;
+            // Renders without style.
+            verifyRender(model, true);
 
-          // Renders with opaque style.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red')"]],
-            },
-          });
+            // Renders with opaque style.
+            style = new Cesium3DTileStyle({
+              color: {
+                conditions: [["${height} > 1", "color('red')"]],
+              },
+            });
 
-          model.style = style;
-          verifyRender(model, true);
-          expect(model._styleCommandsNeeded).toBe(
-            StyleCommandsNeeded.ALL_OPAQUE
-          );
+            model.style = style;
+            verifyRender(model, true);
+            expect(model._styleCommandsNeeded).toBe(
+              StyleCommandsNeeded.ALL_OPAQUE
+            );
 
-          // Renders with translucent style.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red', 0.5)"]],
-            },
-          });
+            // Renders with translucent style.
+            style = new Cesium3DTileStyle({
+              color: {
+                conditions: [["${height} > 1", "color('red', 0.5)"]],
+              },
+            });
 
-          model.style = style;
-          verifyRender(model, true);
-          expect(model._styleCommandsNeeded).toBe(
-            StyleCommandsNeeded.ALL_TRANSLUCENT
-          );
+            model.style = style;
+            verifyRender(model, true);
+            expect(model._styleCommandsNeeded).toBe(
+              StyleCommandsNeeded.ALL_TRANSLUCENT
+            );
 
-          // Does not render with invisible color.
-          style = new Cesium3DTileStyle({
-            color: {
-              conditions: [["${height} > 1", "color('red', 0.0)"]],
-            },
-          });
+            // Does not render with invisible color.
+            style = new Cesium3DTileStyle({
+              color: {
+                conditions: [["${height} > 1", "color('red', 0.0)"]],
+              },
+            });
 
-          // Does not render when style disables show.
-          style = new Cesium3DTileStyle({
-            show: {
-              conditions: [["${height} > 1", "false"]],
-            },
-          });
+            // Does not render when style disables show.
+            style = new Cesium3DTileStyle({
+              show: {
+                conditions: [["${height} > 1", "false"]],
+              },
+            });
 
-          model.style = style;
-          verifyRender(model, false);
+            model.style = style;
+            verifyRender(model, false);
 
-          // Render when style is removed.
-          model.style = undefined;
-          verifyRender(model, true);
-        }
-      );
+            // Render when style is removed.
+            model.style = undefined;
+            verifyRender(model, true);
+          }
+        );
+      });
+
+      it("applies style to model without feature table", function () {
+        let model;
+        let style;
+        return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
+          function (result) {
+            const renderOptions = {
+              scene: scene,
+              time: defaultDate,
+            };
+            model = result;
+
+            // Renders without style.
+            let original;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              original = rgba;
+            });
+
+            // Renders with opaque style.
+            style = new Cesium3DTileStyle({
+              color: "color('red')",
+            });
+
+            model.style = style;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toEqual(original[0]);
+              expect(rgba[1]).toBeLessThan(original[1]);
+              expect(rgba[2]).toBeLessThan(original[2]);
+              expect(rgba[3]).toEqual(original[3]);
+            });
+
+            // Renders with translucent style.
+            style = new Cesium3DTileStyle({
+              color: "color('red', 0.5)",
+            });
+
+            model.style = style;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toBeLessThan(original[0]);
+              expect(rgba[1]).toBeLessThan(original[1]);
+              expect(rgba[2]).toBeLessThan(original[2]);
+              expect(rgba[3]).toEqual(original[3]);
+            });
+
+            // Does not render with invisible color.
+            style = new Cesium3DTileStyle({
+              color: "color('red', 0.0)",
+            });
+
+            model.style = style;
+            verifyRender(model, false, { zoomToModel: false });
+
+            // Does not render when style disables show.
+            style = new Cesium3DTileStyle({
+              show: "false",
+            });
+
+            model.style = style;
+            verifyRender(model, false, { zoomToModel: false });
+
+            // Render when style is removed.
+            model.style = undefined;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              expect(rgba[0]).toEqual(original[0]);
+              expect(rgba[1]).toEqual(original[1]);
+              expect(rgba[2]).toEqual(original[2]);
+              expect(rgba[3]).toEqual(original[3]);
+            });
+          }
+        );
+      });
     });
 
     describe("credits", function () {
@@ -1088,7 +1202,7 @@ describe(
         const credit = new Credit("User Credit");
         const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
         return resource.fetchJson().then(function (gltf) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: gltf,
               basePath: boxTexturedGltfUrl,
@@ -1111,7 +1225,7 @@ describe(
         const creditString = "User Credit";
         const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
         return resource.fetchJson().then(function (gltf) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: gltf,
               basePath: boxTexturedGltfUrl,
@@ -1133,7 +1247,7 @@ describe(
       it("gets copyrights from gltf", function () {
         const resource = Resource.createIfNeeded(boxWithCreditsUrl);
         return resource.fetchJson().then(function (gltf) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: gltf,
               basePath: boxWithCreditsUrl,
@@ -1162,7 +1276,7 @@ describe(
       it("displays all types of credits", function () {
         const resource = Resource.createIfNeeded(boxWithCreditsUrl);
         return resource.fetchJson().then(function (gltf) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: gltf,
               basePath: boxWithCreditsUrl,
@@ -1195,7 +1309,7 @@ describe(
       it("initializes with showCreditsOnScreen", function () {
         const resource = Resource.createIfNeeded(boxWithCreditsUrl);
         return resource.fetchJson().then(function (gltf) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: gltf,
               basePath: boxWithCreditsUrl,
@@ -1227,7 +1341,7 @@ describe(
       it("changing showCreditsOnScreen works", function () {
         const resource = Resource.createIfNeeded(boxWithCreditsUrl);
         return resource.fetchJson().then(function (gltf) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: gltf,
               basePath: boxWithCreditsUrl,
@@ -1285,7 +1399,7 @@ describe(
       it("showCreditsOnScreen overrides existing credit setting", function () {
         const resource = Resource.createIfNeeded(boxTexturedGltfUrl);
         return resource.fetchJson().then(function (gltf) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: gltf,
               basePath: boxTexturedGltfUrl,
@@ -1314,31 +1428,31 @@ describe(
       const triangleFanUrl =
         "./Data/Models/glTF-2.0/TriangleFan/glTF/TriangleFan.gltf";
 
-      let sceneWithWebgl2;
+      let sceneWithWebgl1;
 
       beforeAll(function () {
-        sceneWithWebgl2 = createScene({
+        sceneWithWebgl1 = createScene({
           contextOptions: {
-            requestWebgl1: false,
+            requestWebgl1: true,
           },
         });
       });
 
       afterEach(function () {
-        sceneWithWebgl2.primitives.removeAll();
+        sceneWithWebgl1.primitives.removeAll();
       });
 
       afterAll(function () {
-        sceneWithWebgl2.destroyForSpecs();
+        sceneWithWebgl1.destroyForSpecs();
       });
 
       it("debugWireframe works for WebGL1 if enableDebugWireframe is true", function () {
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             { gltf: new Uint8Array(buffer), enableDebugWireframe: true },
-            scene
+            sceneWithWebgl1
           ).then(function (model) {
             verifyDebugWireframe(model, PrimitiveType.TRIANGLES);
           });
@@ -1349,14 +1463,14 @@ describe(
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             { gltf: new Uint8Array(buffer), enableDebugWireframe: false },
-            scene
+            sceneWithWebgl1
           ).then(function (model) {
             const commandList = scene.frameState.commandList;
             const commandCounts = [];
             let i, command;
-            scene.renderForSpecs();
+            sceneWithWebgl1.renderForSpecs();
             for (i = 0; i < commandList.length; i++) {
               command = commandList[i];
               expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
@@ -1366,7 +1480,7 @@ describe(
             model.debugWireframe = true;
             expect(model._drawCommandsBuilt).toBe(false);
 
-            scene.renderForSpecs();
+            sceneWithWebgl1.renderForSpecs();
             for (i = 0; i < commandList.length; i++) {
               command = commandList[i];
               expect(command.primitiveType).toBe(PrimitiveType.TRIANGLES);
@@ -1377,25 +1491,25 @@ describe(
       });
 
       it("debugWireframe works for WebGL2", function () {
-        if (!sceneWithWebgl2.context.webgl2) {
+        if (!scene.context.webgl2) {
           return;
         }
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             { gltf: new Uint8Array(buffer) },
             scene
           ).then(function (model) {
             verifyDebugWireframe(model, PrimitiveType.TRIANGLES, {
-              scene: sceneWithWebgl2,
+              scene: scene,
             });
           });
         });
       });
 
       it("debugWireframe works for model without indices", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: triangleWithoutIndicesUrl, enableDebugWireframe: true },
           scene
         ).then(function (model) {
@@ -1406,7 +1520,7 @@ describe(
       });
 
       it("debugWireframe works for model with triangle strip", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: triangleStripUrl, enableDebugWireframe: true },
           scene
         ).then(function (model) {
@@ -1415,7 +1529,7 @@ describe(
       });
 
       it("debugWireframe works for model with triangle fan", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: triangleFanUrl, enableDebugWireframe: true },
           scene
         ).then(function (model) {
@@ -1424,7 +1538,7 @@ describe(
       });
 
       it("debugWireframe ignores points", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: pointCloudUrl, enableDebugWireframe: true },
           scene
         ).then(function (model) {
@@ -1451,7 +1565,7 @@ describe(
       const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
       const loadPromise = resource.fetchArrayBuffer();
       return loadPromise.then(function (buffer) {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: new Uint8Array(buffer), debugShowBoundingVolume: true },
           scene
         ).then(function (model) {
@@ -1472,8 +1586,8 @@ describe(
     });
 
     describe("boundingSphere", function () {
-      it("boundingSphere throws if model is not ready", function () {
-        const model = Model.fromGltf({
+      it("boundingSphere throws if model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
           url: boxTexturedGlbUrl,
         });
         expect(function () {
@@ -1485,7 +1599,7 @@ describe(
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             { gltf: new Uint8Array(buffer) },
             scene
           ).then(function (model) {
@@ -1503,7 +1617,7 @@ describe(
       it("boundingSphere accounts for axis correction", function () {
         const resource = Resource.createIfNeeded(riggedFigureUrl);
         return resource.fetchJson().then(function (gltf) {
-          return loadAndZoomToModel({ gltf: gltf }, scene).then(function (
+          return loadAndZoomToModelAsync({ gltf: gltf }, scene).then(function (
             model
           ) {
             // The bounding sphere should transform from z-forward
@@ -1523,7 +1637,7 @@ describe(
       });
 
       it("boundingSphere accounts for transform from CESIUM_RTC extension", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxCesiumRtcUrl,
           },
@@ -1536,7 +1650,7 @@ describe(
       });
 
       it("boundingSphere updates bounding sphere when invoked", function () {
-        return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+        return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             const expectedRadius = 0.8660254037844386;
             const translation = new Cartesian3(10, 0, 0);
@@ -1563,7 +1677,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             offset: offset,
@@ -1584,7 +1698,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             offset: offset,
@@ -1617,7 +1731,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             offset: offset,
@@ -1641,7 +1755,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             offset: offset,
@@ -1667,7 +1781,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             offset: offset,
@@ -1700,7 +1814,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             allowPicking: false,
@@ -1724,7 +1838,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             offset: offset,
@@ -1761,7 +1875,7 @@ describe(
       }
 
       it("resets draw commands when the style commands needed are changed", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: buildingsMetadata,
           },
@@ -1807,7 +1921,7 @@ describe(
         if (webglStub) {
           return;
         }
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxInstanced,
             instanceFeatureIdLabel: "section",
@@ -1819,7 +1933,7 @@ describe(
       });
 
       it("selects feature table for feature ID textures", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: microcosm,
           },
@@ -1830,7 +1944,7 @@ describe(
       });
 
       it("selects feature table for feature ID attributes", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: buildingsMetadata,
           },
@@ -1841,7 +1955,7 @@ describe(
       });
 
       it("featureIdLabel setter works", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: buildingsMetadata,
           },
@@ -1859,7 +1973,7 @@ describe(
         if (webglStub) {
           return;
         }
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxInstanced,
           },
@@ -1879,7 +1993,7 @@ describe(
         const translation = new Cartesian3(10, 0, 0);
         const transform = Matrix4.fromTranslation(translation);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             upAxis: Axis.Z,
@@ -1905,7 +2019,7 @@ describe(
           ModelSceneGraph.prototype,
           "updateModelMatrix"
         ).and.callThrough();
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
           scene
         ).then(function (model) {
@@ -1932,7 +2046,7 @@ describe(
 
       it("changing model matrix affects bounding sphere", function () {
         const translation = new Cartesian3(10, 0, 0);
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, upAxis: Axis.Z, forwardAxis: Axis.X },
           scene
         ).then(function (model) {
@@ -1951,7 +2065,7 @@ describe(
       });
 
       it("changing model matrix in 2D mode works if projectTo2D is false", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             modelMatrix: modelMatrix,
@@ -1974,7 +2088,7 @@ describe(
       });
 
       it("changing model matrix in 2D mode throws if projectTo2D is true", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             modelMatrix: modelMatrix,
@@ -2004,9 +2118,7 @@ describe(
             return 0.0;
           },
           _surface: {
-            tileProvider: {
-              ready: true,
-            },
+            tileProvider: {},
             _tileLoadQueueHigh: [],
             _tileLoadQueueMedium: [],
             _tileLoadQueueLow: [],
@@ -2059,7 +2171,7 @@ describe(
       });
 
       it("initializes with height reference", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2076,7 +2188,7 @@ describe(
       });
 
       it("changing height reference works", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             heightReference: HeightReference.NONE,
@@ -2100,7 +2212,7 @@ describe(
       });
 
       it("creates height update callback when initializing with height reference", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2119,7 +2231,7 @@ describe(
       });
 
       it("creates height update callback after setting height reference", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2143,7 +2255,7 @@ describe(
       });
 
       it("updates height reference callback when the height reference changes", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2173,7 +2285,7 @@ describe(
         const modelMatrix = Transforms.eastNorthUpToFixedFrame(
           Cartesian3.fromDegrees(-72.0, 40.0)
         );
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Matrix4.clone(modelMatrix),
@@ -2204,7 +2316,7 @@ describe(
       });
 
       it("height reference callback updates the position", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2232,7 +2344,7 @@ describe(
       });
 
       it("height reference accounts for change in terrain provider", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2256,7 +2368,7 @@ describe(
       });
 
       it("throws when initializing height reference with no scene", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2274,7 +2386,7 @@ describe(
       });
 
       it("throws when changing height reference with no scene", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2292,7 +2404,7 @@ describe(
       });
 
       it("throws when initializing height reference with no globe", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2310,7 +2422,7 @@ describe(
       });
 
       it("throws when changing height reference with no globe", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2328,7 +2440,7 @@ describe(
       });
 
       it("destroys height reference callback", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2353,7 +2465,7 @@ describe(
         const near = 10.0;
         const far = 100.0;
         const condition = new DistanceDisplayCondition(near, far);
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             distanceDisplayCondition: condition,
@@ -2368,7 +2480,7 @@ describe(
         const near = 10.0;
         const far = 100.0;
         const condition = new DistanceDisplayCondition(near, far);
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
           },
@@ -2388,7 +2500,7 @@ describe(
         const near = 10.0;
         const far = 100.0;
         const condition = new DistanceDisplayCondition(near, far);
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
           },
@@ -2426,7 +2538,7 @@ describe(
         const near = 101.0;
         const far = 100.0;
         const condition = new DistanceDisplayCondition(near, far);
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
           },
@@ -2441,7 +2553,7 @@ describe(
 
     describe("model color", function () {
       it("initializes with model color", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, color: Color.BLACK },
           scene
         ).then(function (model) {
@@ -2450,20 +2562,21 @@ describe(
       });
 
       it("changing model color works", function () {
-        return loadAndZoomToModel({ gltf: boxTexturedGltfUrl }, scene).then(
-          function (model) {
-            verifyRender(model, true);
+        return loadAndZoomToModelAsync(
+          { gltf: boxTexturedGltfUrl },
+          scene
+        ).then(function (model) {
+          verifyRender(model, true);
 
-            model.color = Color.BLACK;
-            verifyRender(model, false);
+          model.color = Color.BLACK;
+          verifyRender(model, false);
 
-            model.color = Color.RED;
-            verifyRender(model, true);
+          model.color = Color.RED;
+          verifyRender(model, true);
 
-            model.color = undefined;
-            verifyRender(model, true);
-          }
-        );
+          model.color = undefined;
+          verifyRender(model, true);
+        });
       });
 
       it("renders with translucent color", function () {
@@ -2471,7 +2584,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             offset: offset,
@@ -2503,7 +2616,7 @@ describe(
         // the camera just a little
         const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             color: Color.fromAlpha(Color.BLACK, 0.0),
@@ -2553,7 +2666,7 @@ describe(
       const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
       it("initializes with ColorBlendMode.HIGHLIGHT", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             offset: offset,
@@ -2575,7 +2688,7 @@ describe(
       });
 
       it("initializes with ColorBlendMode.REPLACE", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             offset: offset,
@@ -2597,7 +2710,7 @@ describe(
       });
 
       it("initializes with ColorBlendMode.MIX", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             offset: offset,
@@ -2619,7 +2732,7 @@ describe(
       });
 
       it("toggles colorBlendMode", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             offset: offset,
@@ -2661,7 +2774,7 @@ describe(
       const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
 
       it("initializes with colorBlendAmount", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             offset: offset,
@@ -2686,7 +2799,7 @@ describe(
       });
 
       it("changing colorBlendAmount works", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             offset: offset,
@@ -2736,7 +2849,7 @@ describe(
 
     describe("silhouette", function () {
       it("initializes with silhouette size", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, silhouetteSize: 1.0 },
           scene
         ).then(function (model) {
@@ -2751,33 +2864,34 @@ describe(
       });
 
       it("changing silhouette size works", function () {
-        return loadAndZoomToModel({ gltf: boxTexturedGltfUrl }, scene).then(
-          function (model) {
-            const commands = scene.frameState.commandList;
-            scene.renderForSpecs();
-            expect(commands.length).toBe(1);
-            expect(commands[0].renderState.stencilTest.enabled).toBe(false);
-            expect(commands[0].pass).toBe(Pass.OPAQUE);
+        return loadAndZoomToModelAsync(
+          { gltf: boxTexturedGltfUrl },
+          scene
+        ).then(function (model) {
+          const commands = scene.frameState.commandList;
+          scene.renderForSpecs();
+          expect(commands.length).toBe(1);
+          expect(commands[0].renderState.stencilTest.enabled).toBe(false);
+          expect(commands[0].pass).toBe(Pass.OPAQUE);
 
-            model.silhouetteSize = 1.0;
-            scene.renderForSpecs();
-            expect(commands.length).toBe(2);
-            expect(commands[0].renderState.stencilTest.enabled).toBe(true);
-            expect(commands[0].pass).toBe(Pass.OPAQUE);
-            expect(commands[1].renderState.stencilTest.enabled).toBe(true);
-            expect(commands[1].pass).toBe(Pass.OPAQUE);
+          model.silhouetteSize = 1.0;
+          scene.renderForSpecs();
+          expect(commands.length).toBe(2);
+          expect(commands[0].renderState.stencilTest.enabled).toBe(true);
+          expect(commands[0].pass).toBe(Pass.OPAQUE);
+          expect(commands[1].renderState.stencilTest.enabled).toBe(true);
+          expect(commands[1].pass).toBe(Pass.OPAQUE);
 
-            model.silhouetteSize = 0.0;
-            scene.renderForSpecs();
-            expect(commands.length).toBe(1);
-            expect(commands[0].renderState.stencilTest.enabled).toBe(false);
-            expect(commands[0].pass).toBe(Pass.OPAQUE);
-          }
-        );
+          model.silhouetteSize = 0.0;
+          scene.renderForSpecs();
+          expect(commands.length).toBe(1);
+          expect(commands[0].renderState.stencilTest.enabled).toBe(false);
+          expect(commands[0].pass).toBe(Pass.OPAQUE);
+        });
       });
 
       it("silhouette works with translucent color", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             silhouetteSize: 1.0,
@@ -2796,7 +2910,7 @@ describe(
       });
 
       it("silhouette is disabled by invisible color", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, silhouetteSize: 1.0 },
           scene
         ).then(function (model) {
@@ -2817,7 +2931,7 @@ describe(
       });
 
       it("silhouette works for invisible model", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             silhouetteSize: 1.0,
@@ -2843,7 +2957,7 @@ describe(
       });
 
       it("silhouette works for translucent model", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             silhouetteSize: 1.0,
@@ -2865,7 +2979,7 @@ describe(
       });
 
       it("silhouette works for translucent model and translucent silhouette color", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             silhouetteSize: 1.0,
@@ -2886,14 +3000,14 @@ describe(
       });
 
       it("silhouette works for multiple models", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             silhouetteSize: 1.0,
           },
           scene
         ).then(function (model) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: boxTexturedGltfUrl,
               silhouetteSize: 1.0,
@@ -2920,7 +3034,7 @@ describe(
 
     describe("light color", function () {
       it("initializes with light color", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, lightColor: Cartesian3.ZERO },
           scene
         ).then(function (model) {
@@ -2929,34 +3043,35 @@ describe(
       });
 
       it("changing light color works", function () {
-        return loadAndZoomToModel({ gltf: boxTexturedGltfUrl }, scene).then(
-          function (model) {
-            model.lightColor = Cartesian3.ZERO;
-            verifyRender(model, false);
+        return loadAndZoomToModelAsync(
+          { gltf: boxTexturedGltfUrl },
+          scene
+        ).then(function (model) {
+          model.lightColor = Cartesian3.ZERO;
+          verifyRender(model, false);
 
-            model.lightColor = new Cartesian3(1.0, 0.0, 0.0);
-            verifyRender(model, true);
+          model.lightColor = new Cartesian3(1.0, 0.0, 0.0);
+          verifyRender(model, true);
 
-            model.lightColor = undefined;
-            verifyRender(model, true);
-          }
-        );
+          model.lightColor = undefined;
+          verifyRender(model, true);
+        });
       });
 
       it("light color doesn't affect unlit models", function () {
-        return loadAndZoomToModel({ gltf: boxUnlitUrl }, scene).then(function (
-          model
-        ) {
-          const options = {
-            zoomToModel: false,
-          };
-          // Move the camera to face one of the two boxes.
-          scene.camera.moveRight(1.0);
-          verifyRender(model, true, options);
+        return loadAndZoomToModelAsync({ gltf: boxUnlitUrl }, scene).then(
+          function (model) {
+            const options = {
+              zoomToModel: false,
+            };
+            // Move the camera to face one of the two boxes.
+            scene.camera.moveRight(1.0);
+            verifyRender(model, true, options);
 
-          model.lightColor = Cartesian3.ZERO;
-          verifyRender(model, true, options);
-        });
+            model.lightColor = Cartesian3.ZERO;
+            verifyRender(model, true, options);
+          }
+        );
       });
     });
 
@@ -2970,7 +3085,7 @@ describe(
           imageBasedLightingFactor: Cartesian2.ZERO,
           luminanceAtZenith: 0.5,
         });
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, imageBasedLighting: ibl },
           scene
         ).then(function (model) {
@@ -2979,52 +3094,54 @@ describe(
       });
 
       it("creates default imageBasedLighting", function () {
-        return loadAndZoomToModel({ gltf: boxTexturedGltfUrl }, scene).then(
-          function (model) {
-            const imageBasedLighting = model.imageBasedLighting;
-            expect(imageBasedLighting).toBeDefined();
-            expect(
-              Cartesian2.equals(
-                imageBasedLighting.imageBasedLightingFactor,
-                new Cartesian2(1, 1)
-              )
-            ).toBe(true);
-            expect(imageBasedLighting.luminanceAtZenith).toBe(0.2);
-            expect(
-              imageBasedLighting.sphericalHarmonicCoefficients
-            ).toBeUndefined();
-            expect(imageBasedLighting.specularEnvironmentMaps).toBeUndefined();
-          }
-        );
+        return loadAndZoomToModelAsync(
+          { gltf: boxTexturedGltfUrl },
+          scene
+        ).then(function (model) {
+          const imageBasedLighting = model.imageBasedLighting;
+          expect(imageBasedLighting).toBeDefined();
+          expect(
+            Cartesian2.equals(
+              imageBasedLighting.imageBasedLightingFactor,
+              new Cartesian2(1, 1)
+            )
+          ).toBe(true);
+          expect(imageBasedLighting.luminanceAtZenith).toBe(0.2);
+          expect(
+            imageBasedLighting.sphericalHarmonicCoefficients
+          ).toBeUndefined();
+          expect(imageBasedLighting.specularEnvironmentMaps).toBeUndefined();
+        });
       });
 
       it("changing imageBasedLighting works", function () {
         const imageBasedLighting = new ImageBasedLighting({
           imageBasedLightingFactor: Cartesian2.ZERO,
         });
-        return loadAndZoomToModel({ gltf: boxTexturedGltfUrl }, scene).then(
-          function (model) {
-            const renderOptions = {
-              scene: scene,
-              time: defaultDate,
-            };
+        return loadAndZoomToModelAsync(
+          { gltf: boxTexturedGltfUrl },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: defaultDate,
+          };
 
-            let result;
-            verifyRender(model, true);
-            expect(renderOptions).toRenderAndCall(function (rgba) {
-              result = rgba;
-            });
+          let result;
+          verifyRender(model, true);
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            result = rgba;
+          });
 
-            model.imageBasedLighting = imageBasedLighting;
-            expect(renderOptions).toRenderAndCall(function (rgba) {
-              expect(rgba).not.toEqual(result);
-            });
-          }
-        );
+          model.imageBasedLighting = imageBasedLighting;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            expect(rgba).not.toEqual(result);
+          });
+        });
       });
 
       it("changing imageBasedLightingFactor works", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             imageBasedLighting: new ImageBasedLighting({
@@ -3053,7 +3170,7 @@ describe(
       });
 
       it("changing luminanceAtZenith works", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             imageBasedLighting: new ImageBasedLighting({
@@ -3131,7 +3248,7 @@ describe(
           0.121102528320197
         ); // L22, irradiance, pre-scaled base
         const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             imageBasedLighting: new ImageBasedLighting({
@@ -3166,7 +3283,7 @@ describe(
           return;
         }
         const url = "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boomBoxUrl,
             scale: 10.0,
@@ -3209,7 +3326,7 @@ describe(
       it("renders when specularEnvironmentMaps aren't supported", function () {
         spyOn(OctahedralProjectedCubeMap, "isSupported").and.returnValue(false);
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boomBoxUrl,
             scale: 10.0,
@@ -3224,7 +3341,7 @@ describe(
 
     describe("scale", function () {
       it("initializes with scale", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             upAxis: Axis.Z,
@@ -3246,7 +3363,7 @@ describe(
           ModelSceneGraph.prototype,
           "updateModelMatrix"
         ).and.callThrough();
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             upAxis: Axis.Z,
@@ -3271,7 +3388,7 @@ describe(
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: new Uint8Array(buffer),
               scale: 10,
@@ -3308,7 +3425,7 @@ describe(
         const resource = Resource.createIfNeeded(boxWithOffsetUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: new Uint8Array(buffer),
               scale: 10,
@@ -3365,7 +3482,7 @@ describe(
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: new Uint8Array(buffer),
               upAxis: Axis.Z,
@@ -3398,7 +3515,7 @@ describe(
           ModelSceneGraph.prototype,
           "updateModelMatrix"
         ).and.callThrough();
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             upAxis: Axis.Z,
@@ -3433,7 +3550,7 @@ describe(
           ModelSceneGraph.prototype,
           "updateModelMatrix"
         ).and.callThrough();
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             upAxis: Axis.Z,
@@ -3478,7 +3595,7 @@ describe(
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: new Uint8Array(buffer),
               upAxis: Axis.Z,
@@ -3500,7 +3617,7 @@ describe(
           ModelSceneGraph.prototype,
           "updateModelMatrix"
         ).and.callThrough();
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             upAxis: Axis.Z,
@@ -3528,7 +3645,7 @@ describe(
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: new Uint8Array(buffer),
               scale: 20,
@@ -3566,7 +3683,7 @@ describe(
         const resource = Resource.createIfNeeded(boxTexturedGlbUrl);
         const loadPromise = resource.fetchArrayBuffer();
         return loadPromise.then(function (buffer) {
-          return loadAndZoomToModel(
+          return loadAndZoomToModelAsync(
             {
               gltf: new Uint8Array(buffer),
               minimumPixelSize: 1,
@@ -3602,7 +3719,7 @@ describe(
     });
 
     it("does not issue draw commands when ignoreCommands is true", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGltfUrl,
         },
@@ -3618,7 +3735,7 @@ describe(
 
     describe("frustum culling ", function () {
       it("enables frustum culling", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             cull: true,
@@ -3641,7 +3758,7 @@ describe(
       });
 
       it("disables frustum culling", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             cull: false,
@@ -3675,7 +3792,7 @@ describe(
       );
 
       it("enables back-face culling", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxBackFaceCullingUrl,
             backFaceCulling: true,
@@ -3690,7 +3807,7 @@ describe(
       });
 
       it("disables back-face culling", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxBackFaceCullingUrl,
             backFaceCulling: false,
@@ -3705,7 +3822,7 @@ describe(
       });
 
       it("ignores back-face culling when translucent", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxBackFaceCullingUrl,
             backFaceCulling: true,
@@ -3726,7 +3843,7 @@ describe(
       });
 
       it("toggles back-face culling at runtime", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxBackFaceCullingUrl,
             backFaceCulling: false,
@@ -3747,7 +3864,7 @@ describe(
       });
 
       it("ignores back-face culling toggles when translucent", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxBackFaceCullingUrl,
             backFaceCulling: false,
@@ -3776,7 +3893,7 @@ describe(
     });
 
     it("reverses winding order for negatively scaled models", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           gltf: boxTexturedGlbUrl,
           modelMatrix: Matrix4.fromUniformScale(-1.0),
@@ -3815,12 +3932,12 @@ describe(
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [plane],
         });
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
           scene
         )
           .then(function (model) {
-            return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene);
+            return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene);
           })
           .then(function (model2) {
             expect(function () {
@@ -3834,7 +3951,7 @@ describe(
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [plane],
         });
-        return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+        return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             const gl = scene.frameState.context._gl;
             spyOn(gl, "texImage2D").and.callThrough();
@@ -3860,7 +3977,7 @@ describe(
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [plane],
         });
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
           scene
         ).then(function (model) {
@@ -3881,7 +3998,7 @@ describe(
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [plane],
         });
-        return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+        return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             let modelColor;
             verifyRender(model, true);
@@ -3909,7 +4026,7 @@ describe(
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [plane],
         });
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
           scene
         ).then(function (model) {
@@ -3925,7 +4042,7 @@ describe(
         const clippingPlanes = new ClippingPlaneCollection({
           planes: [plane],
         });
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
           scene
         ).then(function (model) {
@@ -3944,7 +4061,7 @@ describe(
           planes: [modelClippedPlane],
         });
 
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGlbUrl, clippingPlanes: clippingPlanes },
           scene
         ).then(function (model) {
@@ -3972,7 +4089,7 @@ describe(
           edgeColor: Color.BLUE,
         });
 
-        return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+        return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             let modelColor;
             verifyRender(model, true);
@@ -4002,7 +4119,7 @@ describe(
           ],
           unionClippingRegions: true,
         });
-        return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+        return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
           function (model) {
             verifyRender(model, true);
 
@@ -4017,7 +4134,7 @@ describe(
       });
 
       it("destroys attached ClippingPlaneCollections", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
           },
@@ -4039,7 +4156,7 @@ describe(
 
       it("destroys ClippingPlaneCollections that are detached", function () {
         let clippingPlanes;
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
           },
@@ -4058,7 +4175,7 @@ describe(
     });
 
     it("renders with classificationType", function () {
-      return loadAndZoomToModel(
+      return loadAndZoomToModelAsync(
         {
           url: boxTexturedGltfUrl,
           classificationType: ClassificationType.CESIUM_3D_TILE,
@@ -4076,16 +4193,17 @@ describe(
 
     describe("statistics", function () {
       it("gets triangle count", function () {
-        return loadAndZoomToModel({ gltf: boxTexturedGltfUrl }, scene).then(
-          function (model) {
-            const statistics = model.statistics;
-            expect(statistics.trianglesLength).toEqual(12);
-          }
-        );
+        return loadAndZoomToModelAsync(
+          { gltf: boxTexturedGltfUrl },
+          scene
+        ).then(function (model) {
+          const statistics = model.statistics;
+          expect(statistics.trianglesLength).toEqual(12);
+        });
       });
 
       it("gets point count", function () {
-        return loadAndZoomToModel({ gltf: pointCloudUrl }, scene).then(
+        return loadAndZoomToModelAsync({ gltf: pointCloudUrl }, scene).then(
           function (model) {
             const statistics = model.statistics;
             expect(statistics.pointsLength).toEqual(2500);
@@ -4094,7 +4212,7 @@ describe(
       });
 
       it("gets memory usage for geometry and textures", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           { gltf: boxTexturedGltfUrl, incrementallyLoadTextures: false },
           scene
         ).then(function (model) {
@@ -4109,7 +4227,7 @@ describe(
       });
 
       it("gets memory usage for property tables", function () {
-        return loadAndZoomToModel({ gltf: buildingsMetadata }, scene).then(
+        return loadAndZoomToModelAsync({ gltf: buildingsMetadata }, scene).then(
           function (model) {
             const expectedPropertyTableMemory = 110;
 
@@ -4123,8 +4241,8 @@ describe(
     });
 
     describe("AGI_articulations", function () {
-      it("setArticulationStage throws when model is not ready", function () {
-        const model = Model.fromGltf({
+      it("setArticulationStage throws when model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
           url: boxArticulationsUrl,
         });
 
@@ -4134,7 +4252,7 @@ describe(
       });
 
       it("setArticulationStage throws with invalid value", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxArticulationsUrl,
           },
@@ -4146,8 +4264,8 @@ describe(
         });
       });
 
-      it("applyArticulations throws when model is not ready", function () {
-        const model = Model.fromGltf({
+      it("applyArticulations throws when model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
           url: boxArticulationsUrl,
         });
 
@@ -4157,7 +4275,7 @@ describe(
       });
 
       it("applies articulations", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxArticulationsUrl,
           },
@@ -4185,8 +4303,8 @@ describe(
     });
 
     describe("getNode", function () {
-      it("getNode throws when model is not ready", function () {
-        const model = Model.fromGltf({
+      it("getNode throws when model is not ready", async function () {
+        const model = await Model.fromGltfAsync({
           url: boxArticulationsUrl,
         });
 
@@ -4196,7 +4314,7 @@ describe(
       });
 
       it("getNode throws when name is undefined", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxArticulationsUrl,
           },
@@ -4209,7 +4327,7 @@ describe(
       });
 
       it("getNode returns undefined for nonexistent node", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxArticulationsUrl,
           },
@@ -4221,7 +4339,7 @@ describe(
       });
 
       it("getNode returns a node", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxArticulationsUrl,
           },
@@ -4239,7 +4357,7 @@ describe(
       });
 
       it("changing node.show works", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxArticulationsUrl,
           },
@@ -4255,7 +4373,7 @@ describe(
       });
 
       it("changing node.matrix works", function () {
-        return loadAndZoomToModel(
+        return loadAndZoomToModelAsync(
           {
             gltf: boxArticulationsUrl,
           },
@@ -4276,7 +4394,7 @@ describe(
 
     it("destroy works", function () {
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
-      return loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene).then(
+      return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
         function (model) {
           const resources = model._pipelineResources;
           const loader = model._loader;
@@ -4309,8 +4427,8 @@ describe(
 
     it("destroy doesn't destroy resources when they're in use", function () {
       return Promise.all([
-        loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene),
-        loadAndZoomToModel({ gltf: boxTexturedGlbUrl }, scene),
+        loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene),
+        loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene),
       ]).then(function (models) {
         const cacheEntries = ResourceCache.cacheEntries;
         let cacheKey;

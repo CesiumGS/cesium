@@ -42,10 +42,10 @@ const MetallicRoughness = ModelComponents.MetallicRoughness;
  * @augments ResourceLoader
  * @private
  *
- * @param {Object} options An object containing the following properties
+ * @param {object} options An object containing the following properties
  * @param {ArrayBuffer} options.arrayBuffer The array buffer of the pnts contents
- * @param {Number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
- * @param {Boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
+ * @param {number} [options.byteOffset] The byte offset to the beginning of the pnts contents in the array buffer
+ * @param {boolean} [options.loadAttributesFor2D=false] If true, load the positions buffer as a typed array for accurately projecting models to 2D.
  */
 function PntsLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -66,7 +66,7 @@ function PntsLoader(options) {
   this._decodedAttributes = undefined;
 
   this._promise = undefined;
-  this._process = function (frameState) {};
+  this._error = undefined;
   this._state = ResourceLoaderState.UNLOADED;
   this._buffers = [];
 
@@ -82,25 +82,11 @@ if (defined(Object.create)) {
 
 Object.defineProperties(PntsLoader.prototype, {
   /**
-   * A promise that resolves to the resource when the resource is ready, or undefined if the resource hasn't started loading.
-   *
-   * @memberof PntsLoader.prototype
-   *
-   * @type {Promise.<PntsLoader>|undefined}
-   * @readonly
-   * @private
-   */
-  promise: {
-    get: function () {
-      return this._promise;
-    },
-  },
-  /**
    * The cache key of the resource
    *
    * @memberof PntsLoader.prototype
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -144,32 +130,40 @@ Object.defineProperties(PntsLoader.prototype, {
 
 /**
  * Loads the resource.
- * @returns {Promise.<PntsLoader>} A promise which resolves to the loader when the resource loading is completed.
+ * @returns {Promise<PntsLoader>} A promise which resolves to the loader when the resource loading is completed.
  * @private
  */
 PntsLoader.prototype.load = function () {
+  if (defined(this._promise)) {
+    return this._promise;
+  }
+
   this._parsedContent = PntsParser.parse(this._arrayBuffer, this._byteOffset);
   this._state = ResourceLoaderState.PROCESSING;
 
-  const loader = this;
-  this._promise = new Promise(function (resolve, reject) {
-    loader._process = function (frameState) {
-      if (loader._state === ResourceLoaderState.PROCESSING) {
-        if (defined(loader._decodePromise)) {
-          return;
-        }
-
-        const decodePromise = decodeDraco(loader, frameState.context);
-        if (defined(decodePromise)) {
-          decodePromise.then(resolve).catch(reject);
-        }
-      }
-    };
-  });
+  this._promise = Promise.resolve(this);
 };
 
 PntsLoader.prototype.process = function (frameState) {
-  this._process(frameState);
+  if (defined(this._error)) {
+    const error = this._error;
+    this._error = undefined;
+    throw error;
+  }
+
+  if (this._state === ResourceLoaderState.READY) {
+    return true;
+  }
+
+  if (this._state === ResourceLoaderState.PROCESSING) {
+    if (defined(this._decodePromise)) {
+      return false;
+    }
+
+    this._decodePromise = decodeDraco(this, frameState.context);
+  }
+
+  return false;
 };
 
 function decodeDraco(loader, context) {
@@ -207,7 +201,8 @@ function decodeDraco(loader, context) {
       loader.unload();
       loader._state = ResourceLoaderState.FAILED;
       const errorMessage = "Failed to load Draco pnts";
-      return Promise.reject(loader.getError(errorMessage, error));
+      // This error will be thrown next time process is called;
+      loader._error = loader.getError(errorMessage, error);
     });
 }
 

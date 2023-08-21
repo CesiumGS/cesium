@@ -30,75 +30,59 @@ const defaultKey = stringToBuffer(
 );
 
 /**
+ * <div class="notice">
+ * To construct GoogleEarthEnterpriseMetadata, call {@link GoogleEarthEnterpriseMetadata.fromUrl}. Do not call the constructor directly.
+ * </div>
+ *
  * Provides metadata using the Google Earth Enterprise REST API. This is used by the GoogleEarthEnterpriseImageryProvider
  *  and GoogleEarthEnterpriseTerrainProvider to share metadata requests.
  *
  * @alias GoogleEarthEnterpriseMetadata
  * @constructor
  *
- * @param {Resource|String} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery
- *
  * @see GoogleEarthEnterpriseImageryProvider
  * @see GoogleEarthEnterpriseTerrainProvider
  *
  */
 function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("resourceOrUrl", resourceOrUrl);
-  //>>includeEnd('debug');
-
-  let url = resourceOrUrl;
-
-  if (typeof url !== "string" && !(url instanceof Resource)) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.string("resourceOrUrl.url", resourceOrUrl.url);
-    //>>includeEnd('debug');
-
-    url = resourceOrUrl.url;
-  }
-
-  const resource = Resource.createIfNeeded(url);
-  resource.appendForwardSlash();
-  this._resource = resource;
-
   /**
    * True if imagery is available.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.imageryPresent = true;
 
   /**
    * True if imagery is sent as a protocol buffer, false if sent as plain images. If undefined we will try both.
-   * @type {Boolean}
+   * @type {boolean}
    * @default undefined
    */
   this.protoImagery = undefined;
 
   /**
    * True if terrain is available.
-   * @type {Boolean}
+   * @type {boolean}
    * @default true
    */
   this.terrainPresent = true;
 
   /**
    * Exponent used to compute constant to calculate negative height values.
-   * @type {Number}
+   * @type {number}
    * @default 32
    */
   this.negativeAltitudeExponentBias = 32;
 
   /**
    * Threshold where any numbers smaller are actually negative values. They are multiplied by -2^negativeAltitudeExponentBias.
-   * @type {Number}
+   * @type {number}
    * @default EPSILON12
    */
   this.negativeAltitudeThreshold = CesiumMath.EPSILON12;
 
   /**
    * Dictionary of provider id to copyright strings.
-   * @type {Object}
+   * @type {object}
    * @default {}
    */
   this.providers = {};
@@ -109,32 +93,17 @@ function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
    */
   this.key = undefined;
 
+  this._resource = undefined;
   this._quadPacketVersion = 1;
-
   this._tileInfo = {};
   this._subtreePromises = {};
-
-  const that = this;
-  this._readyPromise = requestDbRoot(this)
-    .then(function () {
-      return that.getQuadTreePacket("", that._quadPacketVersion);
-    })
-    .then(function () {
-      return true;
-    })
-    .catch(function (e) {
-      const message = `An error occurred while accessing ${
-        getMetadataResource(that, "", 1).url
-      }.`;
-      return Promise.reject(new RuntimeError(message));
-    });
 }
 
 Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
   /**
    * Gets the name of the Google Earth Enterprise server.
    * @memberof GoogleEarthEnterpriseMetadata.prototype
-   * @type {String}
+   * @type {string}
    * @readonly
    */
   url: {
@@ -166,27 +135,57 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
       return this._resource;
     },
   },
-
-  /**
-   * Gets a promise that resolves to true when the metadata is ready for use.
-   * @memberof GoogleEarthEnterpriseMetadata.prototype
-   * @type {Promise.<Boolean>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
-    },
-  },
 });
+
+/**
+ * Creates a metadata object using the Google Earth Enterprise REST API. This is used by the GoogleEarthEnterpriseImageryProvider
+ * and GoogleEarthEnterpriseTerrainProvider to share metadata requests.
+ *
+ * @param {Resource|String} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery.
+ *
+ * @returns {Promise<GoogleEarthEnterpriseMetadata>} A promise which resolves to the created GoogleEarthEnterpriseMetadata instance/
+ */
+GoogleEarthEnterpriseMetadata.fromUrl = async function (resourceOrUrl) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("resourceOrUrl", resourceOrUrl);
+  //>>includeEnd('debug');
+  let url = resourceOrUrl;
+
+  if (typeof url !== "string" && !(url instanceof Resource)) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("resourceOrUrl.url", resourceOrUrl.url);
+    //>>includeEnd('debug');
+
+    url = resourceOrUrl.url;
+  }
+
+  const resource = Resource.createIfNeeded(url);
+  resource.appendForwardSlash();
+
+  const metadata = new GoogleEarthEnterpriseMetadata();
+  metadata._resource = resource;
+
+  try {
+    await requestDbRoot(metadata);
+    await metadata.getQuadTreePacket("", metadata._quadPacketVersion);
+  } catch (error) {
+    const message = `An error occurred while accessing ${
+      getMetadataResource(metadata, "", 1).url
+    }: ${error}`;
+
+    throw new RuntimeError(message);
+  }
+
+  return metadata;
+};
 
 /**
  * Converts a tiles (x, y, level) position into a quadkey used to request an image
  * from a Google Earth Enterprise server.
  *
- * @param {Number} x The tile's x coordinate.
- * @param {Number} y The tile's y coordinate.
- * @param {Number} level The tile's zoom level.
+ * @param {number} x The tile's x coordinate.
+ * @param {number} y The tile's y coordinate.
+ * @param {number} level The tile's zoom level.
  *
  * @see GoogleEarthEnterpriseMetadata#quadKeyToTileXY
  */
@@ -226,7 +225,7 @@ GoogleEarthEnterpriseMetadata.tileXYToQuadKey = function (x, y, level) {
  * Converts a tile's quadkey used to request an image from a Google Earth Enterprise server into the
  * (x, y, level) position.
  *
- * @param {String} quadkey The tile's quad key
+ * @param {string} quadkey The tile's quad key
  *
  * @see GoogleEarthEnterpriseMetadata#tileXYToQuadKey
  */
@@ -294,8 +293,8 @@ const taskProcessor = new TaskProcessor("decodeGoogleEarthEnterprisePacket");
 /**
  * Retrieves a Google Earth Enterprise quadtree packet.
  *
- * @param {String} [quadKey=''] The quadkey to retrieve the packet for.
- * @param {Number} [version=1] The cnode version to be used in the request.
+ * @param {string} [quadKey=''] The quadkey to retrieve the packet for.
+ * @param {number} [version=1] The cnode version to be used in the request.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
  * @private
@@ -373,9 +372,9 @@ GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function (
 /**
  * Populates the metadata subtree down to the specified tile.
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
  * @returns {Promise<GoogleEarthEnterpriseTileInformation>} A promise that resolves to the tile info for the requested quad key
@@ -460,9 +459,9 @@ function populateSubtree(that, quadKey, request) {
 /**
  * Gets information about a tile
  *
- * @param {Number} x The tile X coordinate.
- * @param {Number} y The tile Y coordinate.
- * @param {Number} level The tile level.
+ * @param {number} x The tile X coordinate.
+ * @param {number} y The tile Y coordinate.
+ * @param {number} level The tile level.
  * @returns {GoogleEarthEnterpriseTileInformation|undefined} Information about the tile or undefined if it isn't loaded.
  *
  * @private
@@ -479,7 +478,7 @@ GoogleEarthEnterpriseMetadata.prototype.getTileInformation = function (
 /**
  * Gets information about a tile from a quadKey
  *
- * @param {String} quadkey The quadkey for the tile
+ * @param {string} quadkey The quadkey for the tile
  * @returns {GoogleEarthEnterpriseTileInformation|undefined} Information about the tile or undefined if it isn't loaded.
  *
  * @private

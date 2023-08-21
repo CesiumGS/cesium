@@ -612,7 +612,7 @@ function PathVisualizer(scene, entityCollection) {
  * Entity counterpart at the given time.
  *
  * @param {JulianDate} time The time to update to.
- * @returns {Boolean} This function always returns true.
+ * @returns {boolean} This function always returns true.
  */
 PathVisualizer.prototype.update = function (time) {
   //>>includeStart('debug', pragmas.debug);
@@ -682,7 +682,7 @@ PathVisualizer.prototype.update = function (time) {
 /**
  * Returns true if this object was destroyed; otherwise, false.
  *
- * @returns {Boolean} True if this object was destroyed; otherwise, false.
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
  */
 PathVisualizer.prototype.isDestroyed = function () {
   return false;

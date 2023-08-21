@@ -4,8 +4,8 @@ import defined from "../../Core/defined.js";
 /**
  * Iterate through the objects within the glTF and delete their pipeline extras object.
  *
- * @param {Object} gltf A javascript object containing a glTF asset.
- * @returns {Object} glTF with no pipeline extras.
+ * @param {object} gltf A javascript object containing a glTF asset.
+ * @returns {object} glTF with no pipeline extras.
  *
  * @private
  */

@@ -277,38 +277,6 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     expect(createWithoutClock).toThrowDeveloperError();
   });
 
-  it("resolves readyPromise", function () {
-    const provider = new WebMapTileServiceImageryProvider({
-      layer: "someLayer",
-      style: "someStyle",
-      url: "http://wmts.invalid",
-      tileMatrixSetID: "someTMS",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
-  it("resolves readyPromise with Resource", function () {
-    const resource = new Resource({
-      url: "http://wmts.invalid",
-    });
-
-    const provider = new WebMapTileServiceImageryProvider({
-      layer: "someLayer",
-      style: "someStyle",
-      url: resource,
-      tileMatrixSetID: "someTMS",
-    });
-
-    return provider.readyPromise.then(function (result) {
-      expect(result).toBe(true);
-      expect(provider.ready).toBe(true);
-    });
-  });
-
   // default parameters values
   it("uses default values for undefined parameters", function () {
     const provider = new WebMapTileServiceImageryProvider({
@@ -371,31 +339,25 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       tileMatrixSetID: "someTMS",
     });
 
-    return pollToPromise(function () {
-      return provider1.ready && provider2.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
+      );
+    });
 
-      return provider1.requestImage(0, 0, 0).then(function (image) {
-        return provider2.requestImage(0, 0, 0).then(function (image) {
-          expect(Resource._Implementations.createImage.calls.count()).toEqual(
-            2
-          );
-          //expect the two image URLs to be the same between the two providers
-          const allCalls = Resource._Implementations.createImage.calls.all();
-          expect(allCalls[1].args[0].url).toEqual(allCalls[0].args[0].url);
-        });
+    return provider1.requestImage(0, 0, 0).then(function (image) {
+      return provider2.requestImage(0, 0, 0).then(function (image) {
+        expect(Resource._Implementations.createImage.calls.count()).toEqual(2);
+        //expect the two image URLs to be the same between the two providers
+        const allCalls = Resource._Implementations.createImage.calls.all();
+        expect(allCalls[1].args[0].url).toEqual(allCalls[0].args[0].url);
       });
     });
   });
@@ -408,26 +370,22 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       tileMatrixSetID: "someTMS",
     });
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      spyOn(Resource._Implementations, "createImage").and.callFake(function (
-        request,
+    spyOn(Resource._Implementations, "createImage").and.callFake(function (
+      request,
+      crossOrigin,
+      deferred
+    ) {
+      // Just return any old image.
+      Resource._DefaultImplementations.createImage(
+        new Request({ url: "Data/Images/Red16x16.png" }),
         crossOrigin,
         deferred
-      ) {
-        // Just return any old image.
-        Resource._DefaultImplementations.createImage(
-          new Request({ url: "Data/Images/Red16x16.png" }),
-          crossOrigin,
-          deferred
-        );
-      });
+      );
+    });
 
-      return provider.requestImage(0, 0, 0).then(function (image) {
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-        expect(image).toBeImageOrImageBitmap();
-      });
+    return provider.requestImage(0, 0, 0).then(function (image) {
+      expect(Resource._Implementations.createImage).toHaveBeenCalled();
+      expect(image).toBeImageOrImageBitmap();
     });
   });
 
@@ -473,21 +431,17 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
       }
     };
 
-    return pollToPromise(function () {
-      return provider.ready;
-    }).then(function () {
-      const imagery = new Imagery(layer, 0, 0, 0);
-      imagery.addReference();
-      layer._requestImagery(imagery);
-      RequestScheduler.update();
+    const imagery = new Imagery(layer, 0, 0, 0);
+    imagery.addReference();
+    layer._requestImagery(imagery);
+    RequestScheduler.update();
 
-      return pollToPromise(function () {
-        return imagery.state === ImageryState.RECEIVED;
-      }).then(function () {
-        expect(imagery.image).toBeImageOrImageBitmap();
-        expect(tries).toEqual(2);
-        imagery.releaseReference();
-      });
+    return pollToPromise(function () {
+      return imagery.state === ImageryState.RECEIVED;
+    }).then(function () {
+      expect(imagery.image).toBeImageOrImageBitmap();
+      expect(tries).toEqual(2);
+      imagery.releaseReference();
     });
   });
 
@@ -527,13 +481,9 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     };
 
     let entry;
-    return pollToPromise(function () {
-      return provider.ready;
-    })
-      .then(function () {
-        clock.currentTime = JulianDate.fromIso8601("2017-04-26T23:59:56Z");
-        return provider.requestImage(0, 0, 0, new Request());
-      })
+    clock.currentTime = JulianDate.fromIso8601("2017-04-26T23:59:56Z");
+    return provider
+      .requestImage(0, 0, 0, new Request())
       .then(function () {
         RequestScheduler.update();
 
@@ -587,12 +537,8 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     };
 
     let entry;
-    return pollToPromise(function () {
-      return provider.ready;
-    })
-      .then(function () {
-        return provider.requestImage(0, 0, 0, new Request());
-      })
+    return provider
+      .requestImage(0, 0, 0, new Request())
       .then(function () {
         // Test tile 0,0,0 wasn't prefetched
         const cache = provider._timeDynamicImagery._tileCache;
@@ -655,13 +601,9 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
     provider._reload = jasmine.createSpy();
     spyOn(provider._timeDynamicImagery, "getFromCache").and.callThrough();
 
-    return pollToPromise(function () {
-      return provider.ready;
-    })
-      .then(function () {
-        clock.currentTime = JulianDate.fromIso8601("2017-04-26T23:59:59Z");
-        return provider.requestImage(0, 0, 0, new Request());
-      })
+    clock.currentTime = JulianDate.fromIso8601("2017-04-26T23:59:59Z");
+    return provider
+      .requestImage(0, 0, 0, new Request())
       .then(function () {
         RequestScheduler.update();
         clock.tick();
@@ -705,12 +647,8 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
 
     provider._reload = jasmine.createSpy();
 
-    return pollToPromise(function () {
-      return provider.ready;
-    })
-      .then(function () {
-        return provider.requestImage(0, 0, 0, new Request());
-      })
+    return provider
+      .requestImage(0, 0, 0, new Request())
       .then(function () {
         expect(lastUrl).toStartWith("http://wmts.invalid/BAR");
         expect(provider._reload.calls.count()).toEqual(0);
@@ -767,12 +705,8 @@ describe("Scene/WebMapTileServiceImageryProvider", function () {
 
     provider._reload = jasmine.createSpy();
 
-    return pollToPromise(function () {
-      return provider.ready;
-    })
-      .then(function () {
-        return provider.requestImage(0, 0, 0, new Request());
-      })
+    return provider
+      .requestImage(0, 0, 0, new Request())
       .then(function () {
         // Verify request is correct
         uri.query(objectToQuery(query));

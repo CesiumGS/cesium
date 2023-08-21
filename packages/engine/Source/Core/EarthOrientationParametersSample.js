@@ -4,11 +4,11 @@
  * @alias EarthOrientationParametersSample
  * @constructor
  *
- * @param {Number} xPoleWander The pole wander about the X axis, in radians.
- * @param {Number} yPoleWander The pole wander about the Y axis, in radians.
- * @param {Number} xPoleOffset The offset to the Celestial Intermediate Pole (CIP) about the X axis, in radians.
- * @param {Number} yPoleOffset The offset to the Celestial Intermediate Pole (CIP) about the Y axis, in radians.
- * @param {Number} ut1MinusUtc The difference in time standards, UT1 - UTC, in seconds.
+ * @param {number} xPoleWander The pole wander about the X axis, in radians.
+ * @param {number} yPoleWander The pole wander about the Y axis, in radians.
+ * @param {number} xPoleOffset The offset to the Celestial Intermediate Pole (CIP) about the X axis, in radians.
+ * @param {number} yPoleOffset The offset to the Celestial Intermediate Pole (CIP) about the Y axis, in radians.
+ * @param {number} ut1MinusUtc The difference in time standards, UT1 - UTC, in seconds.
  *
  * @private
  */
@@ -21,31 +21,31 @@ function EarthOrientationParametersSample(
 ) {
   /**
    * The pole wander about the X axis, in radians.
-   * @type {Number}
+   * @type {number}
    */
   this.xPoleWander = xPoleWander;
 
   /**
    * The pole wander about the Y axis, in radians.
-   * @type {Number}
+   * @type {number}
    */
   this.yPoleWander = yPoleWander;
 
   /**
    * The offset to the Celestial Intermediate Pole (CIP) about the X axis, in radians.
-   * @type {Number}
+   * @type {number}
    */
   this.xPoleOffset = xPoleOffset;
 
   /**
    * The offset to the Celestial Intermediate Pole (CIP) about the Y axis, in radians.
-   * @type {Number}
+   * @type {number}
    */
   this.yPoleOffset = yPoleOffset;
 
   /**
    * The difference in time standards, UT1 - UTC, in seconds.
-   * @type {Number}
+   * @type {number}
    */
   this.ut1MinusUtc = ut1MinusUtc;
 }

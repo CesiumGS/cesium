@@ -1,7 +1,7 @@
 /**
  * Determines if and how a glTF animation is looped.
  *
- * @enum {Number}
+ * @enum {number}
  *
  * @see ModelAnimationCollection#add
  */
@@ -9,7 +9,7 @@ const ModelAnimationLoop = {
   /**
    * Play the animation once; do not loop it.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   NONE: 0,
@@ -17,7 +17,7 @@ const ModelAnimationLoop = {
   /**
    * Loop the animation playing it from the start immediately after it stops.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   REPEAT: 1,
@@ -25,7 +25,7 @@ const ModelAnimationLoop = {
   /**
    * Loop the animation.  First, playing it forward, then in reverse, then forward, and so on.
    *
-   * @type {Number}
+   * @type {number}
    * @constant
    */
   MIRRORED_REPEAT: 2,

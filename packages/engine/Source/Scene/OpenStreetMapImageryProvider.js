@@ -12,17 +12,17 @@ const defaultCredit = new Credit(
 );
 
 /**
- * @typedef {Object} OpenStreetMapImageryProvider.ConstructorOptions
+ * @typedef {object} OpenStreetMapImageryProvider.ConstructorOptions
  *
  * Initialization options for the OpenStreetMapImageryProvider constructor
  *
- * @property {String} [url='https://a.tile.openstreetmap.org'] The OpenStreetMap server url.
- * @property {String} [fileExtension='png'] The file extension for images on the server.
+ * @property {string} [url='https://tile.openstreetmap.org'] The OpenStreetMap server url.
+ * @property {string} [fileExtension='png'] The file extension for images on the server.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
- * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
- * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
+ * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @property {Credit|String} [credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
+ * @property {Credit|string} [credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
  */
 
 /**
@@ -49,7 +49,7 @@ const defaultCredit = new Credit(
  *
  * @example
  * const osm = new Cesium.OpenStreetMapImageryProvider({
- *     url : 'https://a.tile.openstreetmap.org/'
+ *     url : 'https://tile.openstreetmap.org/'
  * });
  *
  * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
@@ -59,7 +59,7 @@ function OpenStreetMapImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://a.tile.openstreetmap.org/")
+    defaultValue(options.url, "https://tile.openstreetmap.org/")
   );
   resource.appendForwardSlash();
   resource.url += `{z}/{x}/{y}.${defaultValue(options.fileExtension, "png")}`;

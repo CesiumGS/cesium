@@ -41,9 +41,9 @@ Object.defineProperties(TerrainData.prototype, {
  * @function
  *
  * @param {Rectangle} rectangle The rectangle covered by this terrain data.
- * @param {Number} longitude The longitude in radians.
- * @param {Number} latitude The latitude in radians.
- * @returns {Number} The terrain height at the specified position.  If the position
+ * @param {number} longitude The longitude in radians.
+ * @param {number} latitude The latitude in radians.
+ * @returns {number} The terrain height at the specified position.  If the position
  *          is outside the rectangle, this method will extrapolate the height, which is likely to be wildly
  *          incorrect for positions far outside the rectangle.
  */
@@ -57,11 +57,11 @@ TerrainData.prototype.interpolateHeight =
  * given, the availability of the southeast child tile is returned.
  * @function
  *
- * @param {Number} thisX The tile X coordinate of this (the parent) tile.
- * @param {Number} thisY The tile Y coordinate of this (the parent) tile.
- * @param {Number} childX The tile X coordinate of the child tile to check for availability.
- * @param {Number} childY The tile Y coordinate of the child tile to check for availability.
- * @returns {Boolean} True if the child tile is available; otherwise, false.
+ * @param {number} thisX The tile X coordinate of this (the parent) tile.
+ * @param {number} thisY The tile Y coordinate of this (the parent) tile.
+ * @param {number} childX The tile X coordinate of the child tile to check for availability.
+ * @param {number} childY The tile Y coordinate of the child tile to check for availability.
+ * @returns {boolean} True if the child tile is available; otherwise, false.
  */
 TerrainData.prototype.isChildAvailable = DeveloperError.throwInstantiationError;
 
@@ -71,15 +71,15 @@ TerrainData.prototype.isChildAvailable = DeveloperError.throwInstantiationError;
  *
  * @private
  *
- * @param {Object} options Object with the following properties:
+ * @param {object} options Object with the following properties:
  * @param {TilingScheme} options.tilingScheme The tiling scheme to which this tile belongs.
- * @param {Number} options.x The X coordinate of the tile for which to create the terrain data.
- * @param {Number} options.y The Y coordinate of the tile for which to create the terrain data.
- * @param {Number} options.level The level of the tile for which to create the terrain data.
- * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
- * @param {Number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
- * @param {Boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
- * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
+ * @param {number} options.x The X coordinate of the tile for which to create the terrain data.
+ * @param {number} options.y The Y coordinate of the tile for which to create the terrain data.
+ * @param {number} options.level The level of the tile for which to create the terrain data.
+ * @param {number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
+ * @param {number} [options.exaggerationRelativeHeight=0.0] The height relative to which terrain is exaggerated.
+ * @param {boolean} [options.throttle=true] If true, indicates that this operation will need to be retried if too many asynchronous mesh creations are already in progress.
+ * @returns {Promise<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
  *          asynchronous mesh creations are already in progress and the operation should
  *          be retried later.
  */
@@ -90,13 +90,13 @@ TerrainData.prototype.createMesh = DeveloperError.throwInstantiationError;
  * @function
  *
  * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
- * @param {Number} thisX The X coordinate of this tile in the tiling scheme.
- * @param {Number} thisY The Y coordinate of this tile in the tiling scheme.
- * @param {Number} thisLevel The level of this tile in the tiling scheme.
- * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
- * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
- * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile,
+ * @param {number} thisX The X coordinate of this tile in the tiling scheme.
+ * @param {number} thisY The Y coordinate of this tile in the tiling scheme.
+ * @param {number} thisLevel The level of this tile in the tiling scheme.
+ * @param {number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+ * @param {number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
+ * @param {number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
+ * @returns {Promise<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile,
  *          or undefined if too many asynchronous upsample operations are in progress and the request has been
  *          deferred.
  */
@@ -109,7 +109,7 @@ TerrainData.prototype.upsample = DeveloperError.throwInstantiationError;
  * returned from a call to {@link TerrainData#upsample}.
  * @function
  *
- * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
+ * @returns {boolean} True if this instance was created by upsampling; otherwise, false.
  */
 TerrainData.prototype.wasCreatedByUpsampling =
   DeveloperError.throwInstantiationError;
@@ -117,7 +117,7 @@ TerrainData.prototype.wasCreatedByUpsampling =
 /**
  * The maximum number of asynchronous tasks used for terrain processing.
  *
- * @type {Number}
+ * @type {number}
  * @private
  */
 TerrainData.maximumAsynchronousTasks = 5;

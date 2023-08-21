@@ -27,10 +27,10 @@ vec4 czm_getWaterNoise(sampler2D normalMap, vec2 uv, float time, float angleInRa
     uv1 = fract(uv1);
     uv2 = fract(uv2);
     uv3 = fract(uv3);
-    vec4 noise = (texture2D(normalMap, uv0)) +
-                 (texture2D(normalMap, uv1)) +
-                 (texture2D(normalMap, uv2)) +
-                 (texture2D(normalMap, uv3));
+    vec4 noise = (texture(normalMap, uv0)) +
+                 (texture(normalMap, uv1)) +
+                 (texture(normalMap, uv2)) +
+                 (texture(normalMap, uv3));
 
     // average and scale to between -1 and 1
     return ((noise / 4.0) - 0.5) * 2.0;

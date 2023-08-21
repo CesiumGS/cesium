@@ -17,7 +17,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @constructor
  *
  * @param {Resource} baseResource The base resource for the tileset
- * @param {Object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
+ * @param {object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
  * @param {MetadataSchema} [metadataSchema] The metadata schema containing the implicit tile metadata class.
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -45,7 +45,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   /**
    * The geometric error of the root tile
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -60,6 +60,11 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    */
   this.metadataSchema = metadataSchema;
 
+  // Due to using explicit tile metadata to store a tight bounding box
+  // in some cases (see https://github.com/CesiumGS/cesium/pull/11365)
+  // it's important that this bounding volume is computed from the tile JSON
+  // (which is the original, possibly loose bounding volume) rather than
+  // tile.boundingVolume which is the tighter one.
   const boundingVolume = tileJson.boundingVolume;
   if (
     !defined(boundingVolume.box) &&
@@ -76,7 +81,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * The JSON representation of a bounding volume. This is either a box or a
    * region.
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -85,7 +90,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   /**
    * The refine strategy as a string, either 'ADD' or 'REPLACE'
    *
-   * @type {String}
+   * @type {string}
    * @readonly
    * @private
    */
@@ -141,7 +146,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * The maximum number of contents as well as content availability bitstreams.
    * This is used for loop bounds when checking content availability.
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -160,7 +165,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * <li><code>tile.extensions["3DTILES_multiple_contents"]</code>, if used instead of tile.contents or tile.content</li>
    * </ul>
    *
-   * @type {Object}
+   * @type {object}
    * @readonly
    * @private
    */
@@ -180,7 +185,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * The branching factor for this tileset. Either 4 for quadtrees or 8 for
    * octrees.
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -192,7 +197,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
    * How many distinct levels within each subtree. For example, a quadtree
    * with subtreeLevels = 2 will have 5 nodes per quadtree (1 root + 4 children)
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -201,7 +206,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
   /**
    * The number of levels containing available tiles in the tileset.
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
    * @private
    */
@@ -217,7 +222,7 @@ function ImplicitTileset(baseResource, tileJson, metadataSchema) {
  * This handles both regular tiles and tiles with multiple contents, either
  * in the contents array (3D Tiles 1.1) or the `3DTILES_multiple_contents` extension
  *
- * @param {Object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
+ * @param {object} tileJson The JSON header of the tile with either implicit tiling (3D Tiles 1.1) or the 3DTILES_implicit_tiling extension.
  * @return {Object[]} An array of JSON headers for the contents of each tile
  * @private
  */

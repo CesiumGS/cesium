@@ -80,7 +80,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    *
    * @default true
    */
@@ -123,7 +123,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   pointSize: {
     get: function () {
@@ -163,7 +163,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   pointOutlineWidth: {
     get: function () {
@@ -222,7 +222,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   labelOutlineWidth: {
     get: function () {
@@ -241,7 +241,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {String}
+   * @type {string}
    */
   font: {
     get: function () {
@@ -276,7 +276,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {String}
+   * @type {string}
    */
   labelText: {
     get: function () {
@@ -336,7 +336,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   backgroundEnabled: {
     get: function () {
@@ -404,7 +404,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   heightOffset: {
     get: function () {
@@ -437,7 +437,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {Boolean}
+   * @type {boolean}
    */
   anchorLineEnabled: {
     get: function () {
@@ -475,7 +475,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {String}
+   * @type {string}
    */
   image: {
     get: function () {
@@ -495,7 +495,7 @@ Object.defineProperties(Cesium3DTilePointFeature.prototype, {
    *
    * @memberof Cesium3DTilePointFeature.prototype
    *
-   * @type {Number}
+   * @type {number}
    */
   disableDepthTestDistance: {
     get: function () {
@@ -719,8 +719,8 @@ function setBillboardImage(feature) {
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
- * @param {String} name The case-sensitive name of the property.
- * @returns {Boolean} Whether the feature contains this property.
+ * @param {string} name The case-sensitive name of the property.
+ * @returns {boolean} Whether the feature contains this property.
  */
 Cesium3DTilePointFeature.prototype.hasProperty = function (name) {
   return this._content.batchTable.hasProperty(this._batchId, name);
@@ -732,8 +732,8 @@ Cesium3DTilePointFeature.prototype.hasProperty = function (name) {
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The IDs of the feature's properties.
+ * @param {string[]} [results] An array into which to store the results.
+ * @returns {string[]} The IDs of the feature's properties.
  */
 Cesium3DTilePointFeature.prototype.getPropertyIds = function (results) {
   return this._content.batchTable.getPropertyIds(this._batchId, results);
@@ -745,7 +745,7 @@ Cesium3DTilePointFeature.prototype.getPropertyIds = function (results) {
  *
  * @see {@link https://github.com/CesiumGS/3d-tiles/tree/main/extensions/3DTILES_batch_table_hierarchy}
  *
- * @param {String} name The case-sensitive name of the property.
+ * @param {string} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  *
  * @example
@@ -772,7 +772,7 @@ Cesium3DTilePointFeature.prototype.getProperty = function (name) {
  * tileset. Within each granularity, semantics are resolved first, then other
  * properties.
  * </p>
- * @param {String} name The case-sensitive name of the property.
+ * @param {string} name The case-sensitive name of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the feature does not have this property.
  * @private
  * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
@@ -791,7 +791,7 @@ Cesium3DTilePointFeature.prototype.getPropertyInherited = function (name) {
  * If a property with the given name doesn't exist, it is created.
  * </p>
  *
- * @param {String} name The case-sensitive name of the property.
+ * @param {string} name The case-sensitive name of the property.
  * @param {*} value The value of the property that will be copied.
  *
  * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
@@ -824,8 +824,8 @@ Cesium3DTilePointFeature.prototype.setProperty = function (name, value) {
  * This function returns <code>false</code> if no batch table hierarchy is present.
  * </p>
  *
- * @param {String} className The name to check against.
- * @returns {Boolean} Whether the feature's class name equals <code>className</code>
+ * @param {string} className The name to check against.
+ * @returns {boolean} Whether the feature's class name equals <code>className</code>
  *
  * @private
  */
@@ -839,8 +839,8 @@ Cesium3DTilePointFeature.prototype.isExactClass = function (className) {
  * This function returns <code>false</code> if no batch table hierarchy is present.
  * </p>
  *
- * @param {String} className The name to check against.
- * @returns {Boolean} Whether the feature's class or inherited classes are named <code>className</code>
+ * @param {string} className The name to check against.
+ * @returns {boolean} Whether the feature's class or inherited classes are named <code>className</code>
  *
  * @private
  */
@@ -854,7 +854,7 @@ Cesium3DTilePointFeature.prototype.isClass = function (className) {
  * This function returns <code>undefined</code> if no batch table hierarchy is present.
  * </p>
  *
- * @returns {String} The feature's class name.
+ * @returns {string} The feature's class name.
  *
  * @private
  */

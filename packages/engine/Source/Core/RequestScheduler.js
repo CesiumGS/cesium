@@ -51,7 +51,7 @@ function RequestScheduler() {}
 
 /**
  * The maximum number of simultaneous active requests. Un-throttled requests do not observe this limit.
- * @type {Number}
+ * @type {number}
  * @default 50
  */
 RequestScheduler.maximumRequests = 50;
@@ -59,36 +59,43 @@ RequestScheduler.maximumRequests = 50;
 /**
  * The maximum number of simultaneous active requests per server. Un-throttled requests or servers specifically
  * listed in {@link requestsByServer} do not observe this limit.
- * @type {Number}
+ * @type {number}
  * @default 6
  */
 RequestScheduler.maximumRequestsPerServer = 6;
 
 /**
- * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>
- * @type {Object}
+ * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>.
+ * Useful when streaming data from a known HTTP/2 or HTTP/3 server.
+ * @type {object}
+ *
+ * @example
+ * RequestScheduler.requestsByServer["myserver.com:443"] = 18;
  *
  * @example
  * RequestScheduler.requestsByServer = {
- *   'api.cesium.com:443': 18,
- *   'assets.cesium.com:443': 18
+ *   "api.cesium.com:443": 18,
+ *   "assets.cesium.com:443": 18,
  * };
  */
 RequestScheduler.requestsByServer = {
   "api.cesium.com:443": 18,
-  "assets.cesium.com:443": 18,
+  "assets.ion.cesium.com:443": 18,
+  "ibasemaps-api.arcgis.com:443": 18,
+  "tile.googleapis.com:443": 18,
+  "tile.openstreetmap.org:443": 18,
 };
 
 /**
  * Specifies if the request scheduler should throttle incoming requests, or let the browser queue requests under its control.
- * @type {Boolean}
+ * @type {boolean}
  * @default true
  */
 RequestScheduler.throttleRequests = true;
 
 /**
  * When true, log statistics to the console every frame
- * @type {Boolean}
+ * @type {boolean}
  * @default false
  * @private
  */
@@ -110,7 +117,7 @@ Object.defineProperties(RequestScheduler, {
    *
    * @memberof RequestScheduler
    *
-   * @type Object
+   * @type {object}
    * @readonly
    * @private
    */
@@ -125,7 +132,7 @@ Object.defineProperties(RequestScheduler, {
    *
    * @memberof RequestScheduler
    *
-   * @type {Number}
+   * @type {number}
    * @default 20
    * @private
    */
@@ -157,9 +164,9 @@ function updatePriority(request) {
 
 /**
  * Check if there are open slots for a particular server key. If desiredRequests is greater than 1, this checks if the queue has room for scheduling multiple requests.
- * @param {String} serverKey The server key returned by {@link RequestScheduler.getServerKey}.
- * @param {Number} [desiredRequests=1] How many requests the caller plans to request
- * @return {Boolean} True if there are enough open slots for <code>desiredRequests</code> more requests.
+ * @param {string} serverKey The server key returned by {@link RequestScheduler.getServerKey}.
+ * @param {number} [desiredRequests=1] How many requests the caller plans to request
+ * @return {boolean} True if there are enough open slots for <code>desiredRequests</code> more requests.
  * @private
  */
 RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
@@ -179,8 +186,8 @@ RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
  * Check if the priority heap has open slots, regardless of which server they
  * are from. This is used in {@link Multiple3DTileContent} for determining when
  * all requests can be scheduled
- * @param {Number} desiredRequests The number of requests the caller intends to make
- * @return {Boolean} <code>true</code> if the heap has enough available slots to meet the desiredRequests. <code>false</code> otherwise.
+ * @param {number} desiredRequests The number of requests the caller intends to make
+ * @return {boolean} <code>true</code> if the heap has enough available slots to meet the desiredRequests. <code>false</code> otherwise.
  *
  * @private
  */
@@ -341,8 +348,8 @@ RequestScheduler.update = function () {
 /**
  * Get the server key from a given url.
  *
- * @param {String} url The url.
- * @returns {String} The server key.
+ * @param {string} url The url.
+ * @returns {string} The server key.
  * @private
  */
 RequestScheduler.getServerKey = function (url) {
@@ -352,7 +359,7 @@ RequestScheduler.getServerKey = function (url) {
 
   let uri = new Uri(url);
   if (uri.scheme() === "") {
-    uri = new Uri(url).absoluteTo(pageUri);
+    uri = uri.absoluteTo(pageUri);
     uri.normalize();
   }
 

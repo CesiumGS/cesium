@@ -125,7 +125,7 @@ DepthPlane.prototype.update = function (frameState) {
 
   const context = frameState.context;
 
-  // Allow offsetting the ellipsoid radius to address rendering artefacts below ellipsoid zero elevation.
+  // Allow offsetting the ellipsoid radius to address rendering artifacts below ellipsoid zero elevation.
   const radii = frameState.mapProjection.ellipsoid.radii;
   const ellipsoid = new Ellipsoid(
     radii.x + this._ellipsoidOffset,
@@ -173,12 +173,6 @@ DepthPlane.prototype.update = function (frameState) {
       sources: [DepthPlaneFS],
     });
     if (useLogDepth) {
-      const extension =
-        "#ifdef GL_EXT_frag_depth \n" +
-        "#extension GL_EXT_frag_depth : enable \n" +
-        "#endif \n\n";
-
-      fs.sources.push(extension);
       fs.defines.push("LOG_DEPTH");
       vs.defines.push("LOG_DEPTH");
     }

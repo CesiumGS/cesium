@@ -18,7 +18,7 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @alias Vector3DTilePolygons
  * @constructor
  *
- * @param {Object} options An object with following properties:
+ * @param {object} options An object with following properties:
  * @param {Float32Array|Uint16Array} options.positions The positions of the polygons. The positions must be contiguous
  * so that the positions for polygon n are in [c, c + counts[n]] where c = sum{counts[0], counts[n - 1]} and they are the outer ring of
  * the polygon in counter-clockwise order.
@@ -26,8 +26,8 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @param {Uint32Array} options.indices The indices of the triangulated polygons. The indices must be contiguous so that
  * the indices for polygon n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
  * @param {Uint32Array} options.indexCounts The number of indices for each polygon.
- * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
- * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+ * @param {number} options.minimumHeight The minimum height of the terrain covered by the tile.
+ * @param {number} options.maximumHeight The maximum height of the terrain covered by the tile.
  * @param {Float32Array} [options.polygonMinimumHeights] An array containing the minimum heights for each polygon.
  * @param {Float32Array} [options.polygonMaximumHeights] An array containing the maximum heights for each polygon.
  * @param {Rectangle} options.rectangle The rectangle containing the tile.
@@ -40,8 +40,7 @@ import Vector3DTilePrimitive from "./Vector3DTilePrimitive.js";
  * @private
  */
 function Vector3DTilePolygons(options) {
-  // All of the private properties will be released except _readyPromise
-  // and _primitive after the Vector3DTilePrimitive is created.
+  // All of the private properties will be released except _primitive after the Vector3DTilePrimitive is created.
   this._batchTable = options.batchTable;
 
   this._batchIds = options.batchIds;
@@ -75,22 +74,20 @@ function Vector3DTilePolygons(options) {
   this._batchedIndices = undefined;
 
   this._ready = false;
-  this._update = function (polygons, frameState) {};
-  this._readyPromise = initialize(this);
-  this._verticesPromise = undefined;
-
+  this._promise = undefined;
+  this._error = undefined;
   this._primitive = undefined;
 
   /**
    * Draws the wireframe of the classification meshes.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.debugWireframe = false;
 
   /**
    * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
-   * @type {Boolean}
+   * @type {boolean}
    * @default false
    */
   this.forceRebatch = false;
@@ -109,8 +106,9 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
    *
    * @memberof Vector3DTilePolygons.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
+   * @private
    */
   trianglesLength: {
     get: function () {
@@ -126,8 +124,9 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
    *
    * @memberof Vector3DTilePolygons.prototype
    *
-   * @type {Number}
+   * @type {number}
    * @readonly
+   * @private
    */
   geometryByteLength: {
     get: function () {
@@ -139,14 +138,15 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
   },
 
   /**
-   * Gets a promise that resolves when the primitive is ready to render.
+   * Returns true when the primitive is ready to render.
    * @memberof Vector3DTilePolygons.prototype
-   * @type {Promise<void>}
+   * @type {boolean}
    * @readonly
+   * @private
    */
-  readyPromise: {
+  ready: {
     get: function () {
-      return this._readyPromise;
+      return this._ready;
     },
   },
 });
@@ -224,85 +224,89 @@ function createPrimitive(polygons) {
     return;
   }
 
-  if (!defined(polygons._verticesPromise)) {
-    let positions = polygons._positions;
-    let counts = polygons._counts;
-    let indexCounts = polygons._indexCounts;
-    let indices = polygons._indices;
+  let positions = polygons._positions;
+  let counts = polygons._counts;
+  let indexCounts = polygons._indexCounts;
+  let indices = polygons._indices;
 
-    let batchIds = polygons._transferrableBatchIds;
-    let batchTableColors = polygons._batchTableColors;
+  let batchIds = polygons._transferrableBatchIds;
+  let batchTableColors = polygons._batchTableColors;
 
-    let packedBuffer = polygons._packedBuffer;
+  let packedBuffer = polygons._packedBuffer;
 
-    if (!defined(batchTableColors)) {
-      // Copy because they may be the views on the same buffer.
-      positions = polygons._positions = polygons._positions.slice();
-      counts = polygons._counts = polygons._counts.slice();
-      indexCounts = polygons._indexCounts = polygons._indexCounts.slice();
-      indices = polygons._indices = polygons._indices.slice();
+  if (!defined(batchTableColors)) {
+    // Copy because they may be the views on the same buffer.
+    positions = polygons._positions = polygons._positions.slice();
+    counts = polygons._counts = polygons._counts.slice();
+    indexCounts = polygons._indexCounts = polygons._indexCounts.slice();
+    indices = polygons._indices = polygons._indices.slice();
 
-      polygons._center = polygons._ellipsoid.cartographicToCartesian(
-        Rectangle.center(polygons._rectangle)
-      );
+    polygons._center = polygons._ellipsoid.cartographicToCartesian(
+      Rectangle.center(polygons._rectangle)
+    );
 
-      batchIds = polygons._transferrableBatchIds = new Uint32Array(
-        polygons._batchIds
-      );
-      batchTableColors = polygons._batchTableColors = new Uint32Array(
-        batchIds.length
-      );
-      const batchTable = polygons._batchTable;
+    batchIds = polygons._transferrableBatchIds = new Uint32Array(
+      polygons._batchIds
+    );
+    batchTableColors = polygons._batchTableColors = new Uint32Array(
+      batchIds.length
+    );
+    const batchTable = polygons._batchTable;
 
-      const length = batchTableColors.length;
-      for (let i = 0; i < length; ++i) {
-        const color = batchTable.getColor(i, scratchColor);
-        batchTableColors[i] = color.toRgba();
+    const length = batchTableColors.length;
+    for (let i = 0; i < length; ++i) {
+      const color = batchTable.getColor(i, scratchColor);
+      batchTableColors[i] = color.toRgba();
+    }
+
+    packedBuffer = polygons._packedBuffer = packBuffer(polygons);
+  }
+
+  const transferrableObjects = [
+    positions.buffer,
+    counts.buffer,
+    indexCounts.buffer,
+    indices.buffer,
+    batchIds.buffer,
+    batchTableColors.buffer,
+    packedBuffer.buffer,
+  ];
+  const parameters = {
+    packedBuffer: packedBuffer.buffer,
+    positions: positions.buffer,
+    counts: counts.buffer,
+    indexCounts: indexCounts.buffer,
+    indices: indices.buffer,
+    batchIds: batchIds.buffer,
+    batchTableColors: batchTableColors.buffer,
+  };
+
+  let minimumHeights = polygons._polygonMinimumHeights;
+  let maximumHeights = polygons._polygonMaximumHeights;
+  if (defined(minimumHeights) && defined(maximumHeights)) {
+    minimumHeights = minimumHeights.slice();
+    maximumHeights = maximumHeights.slice();
+
+    transferrableObjects.push(minimumHeights.buffer, maximumHeights.buffer);
+    parameters.minimumHeights = minimumHeights;
+    parameters.maximumHeights = maximumHeights;
+  }
+
+  const verticesPromise = createVerticesTaskProcessor.scheduleTask(
+    parameters,
+    transferrableObjects
+  );
+  if (!defined(verticesPromise)) {
+    // Postponed
+    return;
+  }
+
+  return verticesPromise
+    .then((result) => {
+      if (polygons.isDestroyed()) {
+        return;
       }
 
-      packedBuffer = polygons._packedBuffer = packBuffer(polygons);
-    }
-
-    const transferrableObjects = [
-      positions.buffer,
-      counts.buffer,
-      indexCounts.buffer,
-      indices.buffer,
-      batchIds.buffer,
-      batchTableColors.buffer,
-      packedBuffer.buffer,
-    ];
-    const parameters = {
-      packedBuffer: packedBuffer.buffer,
-      positions: positions.buffer,
-      counts: counts.buffer,
-      indexCounts: indexCounts.buffer,
-      indices: indices.buffer,
-      batchIds: batchIds.buffer,
-      batchTableColors: batchTableColors.buffer,
-    };
-
-    let minimumHeights = polygons._polygonMinimumHeights;
-    let maximumHeights = polygons._polygonMaximumHeights;
-    if (defined(minimumHeights) && defined(maximumHeights)) {
-      minimumHeights = minimumHeights.slice();
-      maximumHeights = maximumHeights.slice();
-
-      transferrableObjects.push(minimumHeights.buffer, maximumHeights.buffer);
-      parameters.minimumHeights = minimumHeights;
-      parameters.maximumHeights = maximumHeights;
-    }
-
-    const verticesPromise = (polygons._verticesPromise = createVerticesTaskProcessor.scheduleTask(
-      parameters,
-      transferrableObjects
-    ));
-    if (!defined(verticesPromise)) {
-      // Postponed
-      return;
-    }
-
-    return verticesPromise.then(function (result) {
       polygons._positions = undefined;
       polygons._counts = undefined;
       polygons._polygonMinimumHeights = undefined;
@@ -323,13 +327,22 @@ function createPrimitive(polygons) {
       polygons._batchedPositions = new Float32Array(result.positions);
       polygons._vertexBatchIds = new Uint16Array(result.batchIds);
 
+      finishPrimitive(polygons);
+
       polygons._ready = true;
+    })
+    .catch((error) => {
+      if (polygons.isDestroyed()) {
+        return;
+      }
+
+      // Throw the error next frame
+      polygons._error = error;
     });
-  }
 }
 
 function finishPrimitive(polygons) {
-  if (polygons._ready && !defined(polygons._primitive)) {
+  if (!defined(polygons._primitive)) {
     polygons._primitive = new Vector3DTilePrimitive({
       batchTable: polygons._batchTable,
       positions: polygons._batchedPositions,
@@ -366,7 +379,6 @@ function finishPrimitive(polygons) {
     polygons._boundingVolume = undefined;
     polygons._boundingVolumes = undefined;
     polygons._batchedIndices = undefined;
-    polygons._verticesPromise = undefined;
   }
 }
 
@@ -383,7 +395,7 @@ Vector3DTilePolygons.prototype.createFeatures = function (content, features) {
 /**
  * Colors the entire tile when enabled is true. The resulting color will be (polygon batch table color * color).
  *
- * @param {Boolean} enabled Whether to enable debug coloring.
+ * @param {boolean} enabled Whether to enable debug coloring.
  * @param {Color} color The debug color.
  */
 Vector3DTilePolygons.prototype.applyDebugSettings = function (enabled, color) {
@@ -404,40 +416,12 @@ Vector3DTilePolygons.prototype.applyStyle = function (style, features) {
  * Call when updating the color of a polygon with batchId changes color. The polygons will need to be re-batched
  * on the next update.
  *
- * @param {Number} batchId The batch id of the polygon whose color has changed.
+ * @param {number} batchId The batch id of the polygon whose color has changed.
  * @param {Color} color The new polygon color.
  */
 Vector3DTilePolygons.prototype.updateCommands = function (batchId, color) {
   this._primitive.updateCommands(batchId, color);
 };
-
-function initialize(polygons) {
-  return new Promise(function (resolve, reject) {
-    polygons._update = function (polygons, frameState) {
-      const promise = createPrimitive(polygons);
-
-      if (polygons._ready) {
-        polygons._primitive.debugWireframe = polygons.debugWireframe;
-        polygons._primitive.forceRebatch = polygons.forceRebatch;
-        polygons._primitive.classificationType = polygons.classificationType;
-        polygons._primitive.update(frameState);
-      }
-
-      if (!defined(promise)) {
-        return;
-      }
-
-      promise
-        .then(function () {
-          finishPrimitive(polygons);
-          resolve(polygons);
-        })
-        .catch(function (e) {
-          reject(e);
-        });
-    };
-  });
-}
 
 /**
  * Updates the batches and queues the commands for rendering.
@@ -445,7 +429,24 @@ function initialize(polygons) {
  * @param {FrameState} frameState The current frame state.
  */
 Vector3DTilePolygons.prototype.update = function (frameState) {
-  this._update(this, frameState);
+  if (!this._ready) {
+    if (!defined(this._promise)) {
+      this._promise = createPrimitive(this);
+    }
+
+    if (defined(this._error)) {
+      const error = this._error;
+      this._error = undefined;
+      throw error;
+    }
+
+    return;
+  }
+
+  this._primitive.debugWireframe = this.debugWireframe;
+  this._primitive.forceRebatch = this.forceRebatch;
+  this._primitive.classificationType = this.classificationType;
+  this._primitive.update(frameState);
 };
 
 /**
@@ -455,7 +456,7 @@ Vector3DTilePolygons.prototype.update = function (frameState) {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
  * </p>
  *
- * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ * @returns {boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  */
 Vector3DTilePolygons.prototype.isDestroyed = function () {
   return false;

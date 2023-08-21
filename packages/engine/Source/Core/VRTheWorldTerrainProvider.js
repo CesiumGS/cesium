@@ -1,7 +1,7 @@
+import Check from "./Check.js";
 import Credit from "./Credit.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
@@ -20,41 +20,143 @@ function DataRectangle(rectangle, maxLevel) {
 }
 
 /**
+ * @typedef {Object} VRTheWorldTerrainProvider.ConstructorOptions
+ *
+ * Initialization options for the VRTheWorldTerrainProvider constructor
+ *
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
+ * Used to track creation details while fetching initial metadata
+ *
+ * @constructor
+ * @private
+ *
+ * @param {VRTheWorldTerrainProvider.ConstructorOptions} options An object describing initialization options
+ */
+function TerrainProviderBuilder(options) {
+  this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+  this.tilingScheme = undefined;
+  this.heightmapWidth = undefined;
+  this.heightmapHeight = undefined;
+  this.levelZeroMaximumGeometricError = undefined;
+  this.rectangles = [];
+}
+
+TerrainProviderBuilder.prototype.build = function (provider) {
+  provider._tilingScheme = this.tilingScheme;
+  provider._heightmapWidth = this.heightmapWidth;
+  provider._heightmapHeight = this.heightmapHeight;
+  provider._levelZeroMaximumGeometricError = this.levelZeroMaximumGeometricError;
+  provider._rectangles = this.rectangles;
+};
+
+function metadataSuccess(terrainProviderBuilder, xml) {
+  const srs = xml.getElementsByTagName("SRS")[0].textContent;
+  if (srs === "EPSG:4326") {
+    terrainProviderBuilder.tilingScheme = new GeographicTilingScheme({
+      ellipsoid: terrainProviderBuilder.ellipsoid,
+    });
+  } else {
+    throw new RuntimeError(`SRS ${srs} is not supported`);
+  }
+
+  const tileFormat = xml.getElementsByTagName("TileFormat")[0];
+  terrainProviderBuilder.heightmapWidth = parseInt(
+    tileFormat.getAttribute("width"),
+    10
+  );
+  terrainProviderBuilder.heightmapHeight = parseInt(
+    tileFormat.getAttribute("height"),
+    10
+  );
+  terrainProviderBuilder.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+    terrainProviderBuilder.ellipsoid,
+    Math.min(
+      terrainProviderBuilder.heightmapWidth,
+      terrainProviderBuilder.heightmapHeight
+    ),
+    terrainProviderBuilder.tilingScheme.getNumberOfXTilesAtLevel(0)
+  );
+
+  const dataRectangles = xml.getElementsByTagName("DataExtent");
+
+  for (let i = 0; i < dataRectangles.length; ++i) {
+    const dataRectangle = dataRectangles[i];
+
+    const west = CesiumMath.toRadians(
+      parseFloat(dataRectangle.getAttribute("minx"))
+    );
+    const south = CesiumMath.toRadians(
+      parseFloat(dataRectangle.getAttribute("miny"))
+    );
+    const east = CesiumMath.toRadians(
+      parseFloat(dataRectangle.getAttribute("maxx"))
+    );
+    const north = CesiumMath.toRadians(
+      parseFloat(dataRectangle.getAttribute("maxy"))
+    );
+    const maxLevel = parseInt(dataRectangle.getAttribute("maxlevel"), 10);
+
+    terrainProviderBuilder.rectangles.push(
+      new DataRectangle(new Rectangle(west, south, east, north), maxLevel)
+    );
+  }
+}
+
+function metadataFailure(resource, error, provider) {
+  let message = `An error occurred while accessing ${resource.url}`;
+
+  if (defined(error) && defined(error.message)) {
+    message = `${message}: ${error.message}`;
+  }
+
+  TileProviderError.reportError(
+    undefined,
+    provider,
+    defined(provider) ? provider._errorEvent : undefined,
+    message
+  );
+
+  throw new RuntimeError(message);
+}
+
+async function requestMetadata(terrainProviderBuilder, resource, provider) {
+  try {
+    const xml = await resource.fetchXML();
+    metadataSuccess(terrainProviderBuilder, xml);
+  } catch (error) {
+    metadataFailure(resource, error, provider);
+  }
+}
+
+/**
+ * <div class="notice">
+ * To construct a VRTheWorldTerrainProvider, call {@link VRTheWorldTerrainProvider.fromUrl}. Do not call the constructor directly.
+ * </div>
+ *
  * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
  * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
  *
  * @alias VRTheWorldTerrainProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The URL of the VR-TheWorld TileMap.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.  If this parameter is not
- *                    specified, the WGS84 ellipsoid is used.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- *
+ * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
  *
  * @example
- * const terrainProvider = new Cesium.VRTheWorldTerrainProvider({
- *   url : 'https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
- * });
+ * const terrainProvider = await Cesium.VRTheWorldTerrainProvider.fromUrl(
+ *   "https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/"
+ * );
  * viewer.terrainProvider = terrainProvider;
  *
  * @see TerrainProvider
  */
 function VRTheWorldTerrainProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(options.url)) {
-    throw new DeveloperError("options.url is required.");
-  }
-  //>>includeEnd('debug');
-
-  const resource = Resource.createIfNeeded(options.url);
-
-  this._resource = resource;
 
   this._errorEvent = new Event();
-  this._ready = false;
 
   this._terrainDataStructure = {
     heightScale: 1.0 / 1000.0,
@@ -75,81 +177,6 @@ function VRTheWorldTerrainProvider(options) {
 
   this._tilingScheme = undefined;
   this._rectangles = [];
-
-  const that = this;
-  let metadataError;
-  const ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-
-  function metadataSuccess(xml) {
-    const srs = xml.getElementsByTagName("SRS")[0].textContent;
-    if (srs === "EPSG:4326") {
-      that._tilingScheme = new GeographicTilingScheme({ ellipsoid: ellipsoid });
-    } else {
-      return Promise.reject(new RuntimeError(`SRS ${srs} is not supported.`));
-    }
-
-    const tileFormat = xml.getElementsByTagName("TileFormat")[0];
-    that._heightmapWidth = parseInt(tileFormat.getAttribute("width"), 10);
-    that._heightmapHeight = parseInt(tileFormat.getAttribute("height"), 10);
-    that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
-      ellipsoid,
-      Math.min(that._heightmapWidth, that._heightmapHeight),
-      that._tilingScheme.getNumberOfXTilesAtLevel(0)
-    );
-
-    const dataRectangles = xml.getElementsByTagName("DataExtent");
-
-    for (let i = 0; i < dataRectangles.length; ++i) {
-      const dataRectangle = dataRectangles[i];
-
-      const west = CesiumMath.toRadians(
-        parseFloat(dataRectangle.getAttribute("minx"))
-      );
-      const south = CesiumMath.toRadians(
-        parseFloat(dataRectangle.getAttribute("miny"))
-      );
-      const east = CesiumMath.toRadians(
-        parseFloat(dataRectangle.getAttribute("maxx"))
-      );
-      const north = CesiumMath.toRadians(
-        parseFloat(dataRectangle.getAttribute("maxy"))
-      );
-      const maxLevel = parseInt(dataRectangle.getAttribute("maxlevel"), 10);
-
-      that._rectangles.push(
-        new DataRectangle(new Rectangle(west, south, east, north), maxLevel)
-      );
-    }
-
-    that._ready = true;
-    return Promise.resolve(true);
-  }
-
-  function metadataFailure(e) {
-    const message = defaultValue(
-      defined(e) ? e.message : undefined,
-      `An error occurred while accessing ${that._resource.url}.`
-    );
-    metadataError = TileProviderError.reportError(
-      metadataError,
-      that,
-      that._errorEvent,
-      message
-    );
-    if (metadataError.retry) {
-      return requestMetadata();
-    }
-    return Promise.reject(new RuntimeError(message));
-  }
-
-  function requestMetadata() {
-    return that._resource
-      .fetchXML()
-      .then(metadataSuccess)
-      .catch(metadataFailure);
-  }
-
-  this._readyPromise = requestMetadata();
 }
 
 Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
@@ -169,7 +196,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
 
   /**
    * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-   * the source of the terrain.  This function should not be called before {@link VRTheWorldTerrainProvider#ready} returns true.
+   * the source of the terrain.
    * @memberof VRTheWorldTerrainProvider.prototype
    * @type {Credit}
    * @readonly
@@ -181,57 +208,23 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
   },
 
   /**
-   * Gets the tiling scheme used by this provider.  This function should
-   * not be called before {@link VRTheWorldTerrainProvider#ready} returns true.
+   * Gets the tiling scheme used by this provider.
    * @memberof VRTheWorldTerrainProvider.prototype
    * @type {GeographicTilingScheme}
    * @readonly
    */
   tilingScheme: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!this.ready) {
-        throw new DeveloperError(
-          "requestTileGeometry must not be called before ready returns true."
-        );
-      }
-      //>>includeEnd('debug');
-
       return this._tilingScheme;
-    },
-  },
-
-  /**
-   * Gets a value indicating whether or not the provider is ready for use.
-   * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {Boolean}
-   * @readonly
-   */
-  ready: {
-    get: function () {
-      return this._ready;
-    },
-  },
-
-  /**
-   * Gets a promise that resolves to true when the provider is ready for use.
-   * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {Promise.<Boolean>}
-   * @readonly
-   */
-  readyPromise: {
-    get: function () {
-      return this._readyPromise;
     },
   },
 
   /**
    * Gets a value indicating whether or not the provider includes a water mask.  The water mask
    * indicates which areas of the globe are water rather than land, so they can be rendered
-   * as a reflective surface with animated waves.  This function should not be
-   * called before {@link VRTheWorldTerrainProvider#ready} returns true.
+   * as a reflective surface with animated waves.
    * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasWaterMask: {
@@ -242,9 +235,8 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
 
   /**
    * Gets a value indicating whether or not the requested tiles include vertex normals.
-   * This function should not be called before {@link VRTheWorldTerrainProvider#ready} returns true.
    * @memberof VRTheWorldTerrainProvider.prototype
-   * @type {Boolean}
+   * @type {boolean}
    * @readonly
    */
   hasVertexNormals: {
@@ -254,8 +246,7 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
   },
   /**
    * Gets an object that can be used to determine availability of terrain from this provider, such as
-   * at points and in rectangles.  This function should not be called before
-   * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
+   * at points and in rectangles. This property may be undefined if availability
    * information is not available.
    * @memberof VRTheWorldTerrainProvider.prototype
    * @type {TileAvailability|undefined}
@@ -269,15 +260,49 @@ Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
 });
 
 /**
- * Requests the geometry for a given tile.  This function should not be called before
- * {@link VRTheWorldTerrainProvider#ready} returns true.  The result includes terrain
+ * Creates a {@link TerrainProvider} that produces terrain geometry by tessellating height maps
+ * retrieved from a {@link http://vr-theworld.com/|VT MÄK VR-TheWorld server}.
+ *
+ * @param {Resource|String} url The URL of the VR-TheWorld TileMap.
+ * @param {VRTheWorldTerrainProvider.ConstructorOptions} [options] An object describing initialization options.
+ * @returns {Promise<VRTheWorldTerrainProvider>}
+ *
+ * @example
+ * const terrainProvider = await Cesium.VRTheWorldTerrainProvider.fromUrl(
+ *   "https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/"
+ * );
+ * viewer.terrainProvider = terrainProvider;
+ *
+ * @exception {RuntimeError} metadata specifies and unknown SRS
+ */
+VRTheWorldTerrainProvider.fromUrl = async function (url, options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("url", url);
+  //>>includeEnd('debug');
+
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  const terrainProviderBuilder = new TerrainProviderBuilder(options);
+  const resource = Resource.createIfNeeded(url);
+
+  await requestMetadata(terrainProviderBuilder, resource);
+
+  const provider = new VRTheWorldTerrainProvider(options);
+  terrainProviderBuilder.build(provider);
+  provider._resource = resource;
+
+  return provider;
+};
+
+/**
+ * Requests the geometry for a given tile. The result includes terrain
  * data and indicates that all child tiles are available.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
+ * @returns {Promise<TerrainData>|undefined} A promise for the requested geometry.  If this method
  *          returns undefined instead of a promise, it is an indication that too many requests are already
  *          pending and the request will be retried later.
  */
@@ -287,14 +312,6 @@ VRTheWorldTerrainProvider.prototype.requestTileGeometry = function (
   level,
   request
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this.ready) {
-    throw new DeveloperError(
-      "requestTileGeometry must not be called before ready returns true."
-    );
-  }
-  //>>includeEnd('debug');
-
   const yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
   const resource = this._resource.getDerivedResource({
     url: `${level}/${x}/${yTiles - y - 1}.tif`,
@@ -325,19 +342,12 @@ VRTheWorldTerrainProvider.prototype.requestTileGeometry = function (
 /**
  * Gets the maximum geometric error allowed in a tile at a given level.
  *
- * @param {Number} level The tile level for which to get the maximum geometric error.
- * @returns {Number} The maximum geometric error.
+ * @param {number} level The tile level for which to get the maximum geometric error.
+ * @returns {number} The maximum geometric error.
  */
 VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function (
   level
 ) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!this.ready) {
-    throw new DeveloperError(
-      "requestTileGeometry must not be called before ready returns true."
-    );
-  }
-  //>>includeEnd('debug');
   return this._levelZeroMaximumGeometricError / (1 << level);
 };
 
@@ -419,10 +429,10 @@ function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
 /**
  * Determines whether data for a tile is available to be loaded.
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Boolean|undefined} Undefined if not supported, otherwise true or false.
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {boolean|undefined} Undefined if not supported, otherwise true or false.
  */
 VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function (
   x,
@@ -435,10 +445,10 @@ VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function (
 /**
  * Makes sure we load availability data for a tile
  *
- * @param {Number} x The X coordinate of the tile for which to request geometry.
- * @param {Number} y The Y coordinate of the tile for which to request geometry.
- * @param {Number} level The level of the tile for which to request geometry.
- * @returns {Promise<void>|undefined} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @param {number} x The X coordinate of the tile for which to request geometry.
+ * @param {number} y The Y coordinate of the tile for which to request geometry.
+ * @param {number} level The level of the tile for which to request geometry.
+ * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 VRTheWorldTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
