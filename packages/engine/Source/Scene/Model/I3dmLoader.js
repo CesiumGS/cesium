@@ -423,7 +423,11 @@ function createInstances(loader, components, frameState) {
   // For I3DMs that do not define an RTC center, we manually compute a BoundingSphere and store
   // positions relative to the center, to be uploaded to the GPU. This avoids jittering at higher
   // precisions.
-  if (!defined(rtcCenter)) {
+  // Also manually compute if RTC center equals Cartesian3.ZERO
+  if (
+    !defined(rtcCenter) ||
+    Cartesian3.equals(Cartesian3.unpack(rtcCenter), Cartesian3.ZERO)
+  ) {
     const positionBoundingSphere = BoundingSphere.fromPoints(instancePositions);
 
     for (i = 0; i < instancePositions.length; i++) {
