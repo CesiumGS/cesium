@@ -6,7 +6,7 @@
 
 ##### Additions :tada:
 
-- Added the `retinaTiles` option to the `OpenStreetMapImageryProvider` contructor options to allow requesting tiles at the 2x resolution for retina displays.
+- Added the `retinaTiles` option to the `OpenStreetMapImageryProvider` contructor options to allow requesting tiles at the 2x resolution for retina displays. [#11485](https://github.com/CesiumGS/cesium/pull/11485)
 - The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
 
 ##### Fixes :wrench:
@@ -17,7 +17,7 @@
 
 ##### Additions :tada:
 
-- Added two additional default imagery providers from Stadia maps to the BaseLayerPicker widget: Alidade Smooth and Alidade Smooth Dark.
+- Added two additional default imagery providers from Stadia maps to the BaseLayerPicker widget: Alidade Smooth and Alidade Smooth Dark. [#11485](https://github.com/CesiumGS/cesium/pull/11485)
 
 ##### Fixes :wrench:
 
