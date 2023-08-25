@@ -1838,7 +1838,10 @@ Model.prototype.update = function (frameState) {
 };
 
 function processLoader(model, frameState) {
-  if (!model._resourcesLoaded || !model._texturesLoaded) {
+  if (
+    !model._resourcesLoaded ||
+    (model._loader.incrementallyLoadTextures && !model._texturesLoaded)
+  ) {
     // Ensures frames continue to render in requestRender mode while resources are processing
     frameState.afterRender.push(() => true);
     return model._loader.process(frameState);
