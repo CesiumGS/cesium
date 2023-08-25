@@ -80,6 +80,14 @@ Cartesian3.maximumComponent(); // Not Cartesian3.maxComponent()
 Ellipsoid.WGS84; // Not Ellipsoid.WORLD_GEODETIC_SYSTEM_1984
 ```
 
+- If you do use abbreviations, use the recommended casing and do not capitalize all letters in the abbreviation. e.g.
+
+```javascript
+new UrlTemplateImageryProvider(); // Not URLTemplateImageryProvider
+
+resource.url; // Not resource.URL
+```
+
 - Prefer short and descriptive names for local variables, e.g., if a function has only one length variable,
 
 ```javascript
