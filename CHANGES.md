@@ -11,6 +11,7 @@
 ##### Fixes :wrench:
 
 - The return type of `SingleTileImageryProvider.fromUrl` has been fixed to be `Promise.<SingleTileImageryProvider>` (was `void`). [#11432](https://github.com/CesiumGS/cesium/pull/11432)
+- Fixed request render mode when models are loading without `incrementallyLoadTextures`. [#11486](https://github.com/CesiumGS/cesium/pull/11486)
 
 #### @cesium/widgets
 
