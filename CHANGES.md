@@ -1,6 +1,29 @@
 # Change Log
 
+### 1.109 - 2023-09-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
+
+##### Fixes :wrench:
+
+- The return type of `SingleTileImageryProvider.fromUrl` has been fixed to be `Promise.<SingleTileImageryProvider>` (was `void`). [#11432](https://github.com/CesiumGS/cesium/pull/11432)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed types for `ProviderViewModel.CreationFunction`. [#11452](https://github.com/CesiumGS/cesium/issues/11452)
+- Fixed I3dmLoader manually compute positions when RTC_CENTER is ZERO [#11466](https://github.com/CesiumGS/cesium/pull/11466)
+
 ### 1.108 - 2023-08-01
+
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.109, CesiumJS will require Firefox version 114 or higher for rendering. This is to [facilitate web worker loading and remove outdated dependencies](https://github.com/CesiumGS/cesium/pull/11400). Other browsers and node will be unaffected.
 
 #### @cesium/engine
 
@@ -14,10 +37,14 @@
 - Fixed issue where terrain with multiple layers was loading higher LOD tiles inconsistently. [#11312](https://github.com/CesiumGS/cesium/issues/11312)
 - Fixed `OpenStreetMapImageryProvider` usage in comments, change default url and add `tile.openstreetmap.org` to `RequestScheduler.requestsByServer`. [#11407](https://github.com/CesiumGS/cesium/pull/11407)
 - Fixed calculation of GroundPolyline bounding spheres in regions with negative terrain heights. [#11184](https://github.com/CesiumGS/cesium/pull/11184)
+- Fixed `CzmlDataSource` in cases of custom `Ellipsoid.WGS84` definitions. [#11190](https://github.com/CesiumGS/cesium/pull/11190)
+- Fixed mipmaps for textures using the `KHR_texture_transform` extension. [#11411](https://github.com/CesiumGS/cesium/pull/11411)
 
 #### @cesium/widgets
 
 ##### Fixes :wrench:
+
+- Fixed conflicting geocoder suggestions for latitude and longitude pairs by removing `CartographicGeocoderService` from the default geocoder services in `GeocoderViewModel`. [#11433](https://github.com/CesiumGS/cesium/issues/11433).
 
 ### 1.107.2 - 2023-07-13
 

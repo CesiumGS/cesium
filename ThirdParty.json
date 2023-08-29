@@ -44,7 +44,7 @@
     "license": [
       "Apache-2.0"
     ],
-    "version": "3.0.4",
+    "version": "3.0.5",
     "url": "https://www.npmjs.com/package/dompurify",
     "notes": "dompurify is available as both MPL-2.0 OR Apache-2.0"
   },
@@ -109,7 +109,7 @@
     "license": [
       "MIT"
     ],
-    "version": "0.5.0",
+    "version": "0.6.0",
     "url": "https://www.npmjs.com/package/ktx-parse"
   },
   {
