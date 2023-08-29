@@ -15,6 +15,7 @@ import ProviderViewModel from "./ProviderViewModel.js";
  */
 function createDefaultImageryProviderViewModels() {
   const providerViewModels = [];
+  const useRetinaTiles = devicePixelRatio >= 2.0;
   providerViewModels.push(
     new ProviderViewModel({
       name: "Bing Maps Aerial",
@@ -192,7 +193,7 @@ of the world.\nhttp://www.openstreetmap.org",
       creationFunction: function () {
         return new OpenStreetMapImageryProvider({
           url: "https://tiles.stadiamaps.com/tiles/stamen_toner/",
-          retinaTiles: true,
+          retinaTiles: useRetinaTiles,
           credit: `&copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a>
             &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
             &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
@@ -214,7 +215,7 @@ of the world.\nhttp://www.openstreetmap.org",
       creationFunction: function () {
         return new OpenStreetMapImageryProvider({
           url: "https://tiles.stadiamaps.com/tiles/alidade_smooth/",
-          retinaTiles: true,
+          retinaTiles: useRetinaTiles,
           credit: `&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
             &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
             &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
@@ -235,7 +236,7 @@ of the world.\nhttp://www.openstreetmap.org",
       creationFunction: function () {
         return new OpenStreetMapImageryProvider({
           url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/",
-          retinaTiles: true,
+          retinaTiles: useRetinaTiles,
           credit: `&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
             &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
             &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
