@@ -752,9 +752,16 @@ export async function deployS3() {
   const bucketName = argv.bucket;
   const dryRun = argv.dryRun;
   const cacheControl = argv.cacheControl ? argv.cacheControl : "max-age=3600";
+  const skipFiles = process.env.TRAVIS_BRANCH !== "main"; // Always re-upload the file on the main branch. This will ensure the file does not get deleted after a 30-day period
 
   if (argv.confirm) {
-    return deployCesium(bucketName, uploadDirectory, cacheControl, dryRun);
+    return deployCesium(
+      bucketName,
+      uploadDirectory,
+      cacheControl,
+      skipFiles,
+      dryRun
+    );
   }
 
   const iface = createInterface({
@@ -770,7 +777,13 @@ export async function deployS3() {
         iface.close();
         if (answer === "y") {
           resolve(
-            deployCesium(bucketName, uploadDirectory, cacheControl, dryRun)
+            deployCesium(
+              bucketName,
+              uploadDirectory,
+              cacheControl,
+              skipFiles,
+              dryRun
+            )
           );
         } else {
           console.log("Deploy aborted by user.");
@@ -782,7 +795,13 @@ export async function deployS3() {
 }
 
 // Deploy cesium to s3
-async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
+async function deployCesium(
+  bucketName,
+  uploadDirectory,
+  cacheControl,
+  skipFiles,
+  dryRun
+) {
   // Limit promise concurrency since we are reading many
   // files off disk in parallel
   const limit = pLimit(2000);
@@ -857,6 +876,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     const hash = createHash("md5").update(content).digest("hex");
 
     if (
+      !skipFiles ||
       data.ETag !== `"${hash}"` ||
       data.CacheControl !== cacheControl ||
       data.ContentType !== contentType ||
