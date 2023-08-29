@@ -8,6 +8,7 @@ import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import deprecationWarning from "./deprecationWarning.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidGeodesic from "./EllipsoidGeodesic.js";
@@ -24,6 +25,7 @@ import PolygonGeometryLibrary from "./PolygonGeometryLibrary.js";
 import PolygonPipeline from "./PolygonPipeline.js";
 import Quaternion from "./Quaternion.js";
 import Rectangle from "./Rectangle.js";
+import Stereographic from "./Stereographic.js";
 import VertexFormat from "./VertexFormat.js";
 import WindingOrder from "./WindingOrder.js";
 
@@ -1078,6 +1080,199 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   return result;
 };
 
+const scratchPolar = new Stereographic();
+const scratchPolarPrevious = new Stereographic();
+const scratchCartesian0 = new Cartesian2();
+const scratchCartesian1 = new Cartesian2();
+const scratchPolarClosest = new Stereographic();
+function expandRectangle(
+  position,
+  lastPosition,
+  ellipsoid,
+  arcType,
+  polygon,
+  result
+) {
+  const positionPolar = Stereographic.fromCartesian(position, scratchPolar);
+  const positionPolarPrevious = Stereographic.fromCartesian(
+    lastPosition,
+    scratchPolarPrevious
+  );
+
+  const lastLongitude = positionPolarPrevious.longitude;
+  const longitude = positionPolar.longitude;
+  const lonAdjusted =
+    longitude >= 0 ? longitude : longitude + CesiumMath.TWO_PI;
+
+  if (Math.abs(longitude - lastLongitude) >= CesiumMath.PI) {
+    polygon.westOverIdl = Math.min(polygon.westOverIdl, lonAdjusted);
+    polygon.eastOverIdl = Math.max(polygon.eastOverIdl, lonAdjusted);
+  }
+
+  result.west = Math.min(result.west, longitude);
+  result.east = Math.max(result.east, longitude);
+
+  const latitude = positionPolar.getLatitude(ellipsoid);
+  let segmentLatitude = latitude;
+
+  result.south = Math.min(result.south, latitude);
+  result.north = Math.max(result.north, latitude);
+
+  if (arcType !== ArcType.RHUMB) {
+    // Geodescis will need to find the closest point on line. Rhumb lines will not have a latitude greater in magnitude than either of their endpoints.
+    const segment = Cartesian2.subtract(
+      positionPolarPrevious.position,
+      positionPolar.position,
+      scratchCartesian0
+    );
+    const t =
+      Cartesian2.dot(positionPolarPrevious.position, segment) /
+      Cartesian2.dot(segment, segment);
+    if (t > 0.0 && t < 1.0) {
+      const projected = Cartesian2.add(
+        positionPolarPrevious.position,
+        Cartesian2.multiplyByScalar(segment, -t, segment),
+        scratchCartesian1
+      );
+      scratchPolarClosest.position = projected;
+      scratchPolarClosest.tangentPlane = positionPolar.tangentPlane;
+      const adjustedLatitude = scratchPolarClosest.getLatitude(ellipsoid);
+      result.south = Math.min(result.south, adjustedLatitude);
+      result.north = Math.max(result.north, adjustedLatitude);
+
+      if (Math.abs(latitude) > Math.abs(adjustedLatitude)) {
+        segmentLatitude = adjustedLatitude;
+      }
+    }
+  }
+
+  // The direction we're currently traversing the polygon determines if the closest segment if the pole is inside or outside the polygon
+  let direction =
+    positionPolarPrevious.x * positionPolar.y -
+    positionPolar.x * positionPolarPrevious.y;
+
+  if (segmentLatitude < 0) {
+    direction *= -1;
+  }
+  polygon.area += direction;
+  const inside = direction > 0;
+
+  if (segmentLatitude > 0 && segmentLatitude > polygon.closestNorth) {
+    polygon.closestNorth = segmentLatitude;
+    polygon.north = inside;
+  } else if (segmentLatitude < 0 && segmentLatitude < polygon.closestSouth) {
+    polygon.closestSouth = segmentLatitude;
+    polygon.south = inside;
+  }
+}
+
+const polygon = {
+  area: 0.0,
+  north: false,
+  south: false,
+  closestNorth: 0.0,
+  closestSouth: 0.0,
+  westOverIdl: 0.0,
+  eastOverIdl: 0.0,
+};
+
+/**
+ * Computes a rectangle which encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
+ *
+ * @param {Cartesian3[]} positions A linear ring defining the outer boundary of the polygon.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {ArcType} [arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+ * @param {Rectangle} result An object in which to store the result.
+ *
+ * @returns {Reactangle} The result rectangle
+ */
+PolygonGeometry.computeRectangleFromPositions = function (
+  positions,
+  ellipsoid,
+  arcType,
+  result
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("positions", positions);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Rectangle();
+  }
+
+  if (positions.length < 3) {
+    return result;
+  }
+
+  result.west = Number.POSITIVE_INFINITY;
+  result.east = Number.NEGATIVE_INFINITY;
+  result.south = Number.POSITIVE_INFINITY;
+  result.north = Number.NEGATIVE_INFINITY;
+
+  polygon.area = 0.0;
+  polygon.north = false;
+  polygon.south = false;
+  polygon.closestNorth = -Number.POSITIVE_INFINITY;
+  polygon.closestSouth = Number.POSITIVE_INFINITY;
+  polygon.westOverIdl = Number.POSITIVE_INFINITY;
+  polygon.eastOverIdl = Number.NEGATIVE_INFINITY;
+
+  const positionsLength = positions.length;
+  for (let i = 1; i < positionsLength; i++) {
+    expandRectangle(
+      positions[i],
+      positions[i - 1],
+      ellipsoid,
+      arcType,
+      polygon,
+      result
+    );
+  }
+
+  expandRectangle(
+    positions[0],
+    positions[positionsLength - 1],
+    ellipsoid,
+    arcType,
+    polygon,
+    result
+  );
+
+  // If total area is less than or equal to 0.0, then the windong order of the positions
+  // is clockwise. Inside/outside computations should be reversed.
+  if (polygon.area < 0) {
+    polygon.north = !polygon.north;
+    polygon.south = !polygon.south;
+  }
+
+  // If either pole is inside the polygon, adjust the rectangle so it is included
+  if (polygon.north && polygon.closestNorth > 0) {
+    result.north = CesiumMath.PI_OVER_TWO;
+  }
+
+  if (polygon.south && polygon.closestSouth < 0) {
+    result.south = -CesiumMath.PI_OVER_TWO;
+  }
+
+  const overIdl = polygon.eastOverIdl - polygon.westOverIdl;
+  if (polygon.eastOverIdl === polygon.westOverIdl) {
+    result.east = CesiumMath.PI;
+    result.west = -CesiumMath.PI;
+  } else if (overIdl > Number.NEGATIVE_INFINITY) {
+    result.west = polygon.westOverIdl;
+    result.east = polygon.eastOverIdl;
+
+    if (result.east > CesiumMath.PI) {
+      result.east = result.east - CesiumMath.TWO_PI;
+    }
+    if (result.west > CesiumMath.PI) {
+      result.west = result.west - CesiumMath.TWO_PI;
+    }
+  }
+
+  return result;
+};
+
 /**
  * Returns the bounding rectangle given the provided options
  *
@@ -1095,6 +1290,11 @@ PolygonGeometry.computeRectangle = function (options, result) {
   Check.typeOf.object("options", options);
   Check.typeOf.object("options.polygonHierarchy", options.polygonHierarchy);
   //>>includeEnd('debug');
+
+  deprecationWarning(
+    "PolygonGeometry.computeRectangle",
+    "PolygonGeometry.computeRectangle was deprecated in CesiumJS 1.110.  It will be removed in CesiumJS 1.112. Use PolygonGeometry.computeRectangleFromPositions instead."
+  );
 
   const granularity = defaultValue(
     options.granularity,
@@ -1407,11 +1607,10 @@ Object.defineProperties(PolygonGeometry.prototype, {
     get: function () {
       if (!defined(this._rectangle)) {
         const positions = this._polygonHierarchy.positions;
-        this._rectangle = computeRectangle(
+        this._rectangle = PolygonGeometry.computeRectangleFromPositions(
           positions,
           this._ellipsoid,
-          this._arcType,
-          this._granularity
+          this._arcType
         );
       }
 

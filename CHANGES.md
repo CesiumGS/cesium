@@ -1,5 +1,22 @@
 # Change Log
 
+### 1.110 - 2023-10-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `Stereographic` for computing 2D operations in stereographic, or polar, coordinates.
+- Added `PolygonGeometry.computeRectangleFromPositions` for computing a bounding speher that encloses a polygon, including cases over the international date line and the poles.
+
+##### Fixes :wrench:
+
+- Fixed ground primitive polygon visual artifacts at pole. [#8033](https://github.com/CesiumGS/cesium/issues/8033)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `PolygonGeometry.computeRectangle` has been deprecated. It will be removed in 1.112. Use `PolygonGeometry.computeRectangleFromPositions` instead.
+
 ### 1.109 - 2023-09-01
 
 #### @cesium/engine
