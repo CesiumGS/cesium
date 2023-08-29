@@ -1762,6 +1762,343 @@ describe("Core/PolygonGeometry", function () {
     expect(returned).toBe(result);
   });
 
+  describe("computeRectangleFromPositions", function () {
+    it("computes a rectangle enclosing a simple polygon in the northern hemisphere", function () {
+      const positions = Cartesian3.fromDegreesArray([30, 30, 60, 60, 30, 60]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(30),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(
+        CesiumMath.toRadians(30),
+        CesiumMath.EPSILON7
+      );
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(60),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(1.06430076, CesiumMath.EPSILON7);
+    });
+
+    it("computes a rectangle enclosing a simple polygon in the southern hemisphere", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        -30,
+        -30,
+        -60,
+        -60,
+        -30,
+        -60,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(-60),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(-1.57079632, CesiumMath.EPSILON7);
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(-30),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(
+        CesiumMath.toRadians(-30),
+        CesiumMath.EPSILON7
+      );
+    });
+
+    it("computes a rectangle enclosing a simple polygon across the IDL", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        170,
+        60,
+        170,
+        30,
+        -10,
+        30,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(170),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(
+        CesiumMath.toRadians(30),
+        CesiumMath.EPSILON7
+      );
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(-10),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(
+        CesiumMath.toRadians(60),
+        CesiumMath.EPSILON7
+      );
+    });
+
+    it("computes a rectangle enclosing a simple polygon across the equator", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        30,
+        30,
+        -30,
+        30,
+        -30,
+        -30,
+        30,
+        -30,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(-30),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(
+        CesiumMath.toRadians(-30),
+        CesiumMath.EPSILON7
+      );
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(30),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(
+        CesiumMath.toRadians(30),
+        CesiumMath.EPSILON7
+      );
+    });
+
+    it("computes a rectangle enclosing a simple convex polygon around the north pole", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        45,
+        60,
+        -45,
+        60,
+        -135,
+        60,
+        140,
+        60,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(-180),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(
+        CesiumMath.toRadians(60),
+        CesiumMath.EPSILON7
+      );
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(180),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(
+        CesiumMath.toRadians(90),
+        CesiumMath.EPSILON7
+      );
+    });
+
+    it("computes a rectangle enclosing a simple concave polygon around the north pole", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        45,
+        60,
+        -45,
+        60,
+        -135,
+        60,
+        -45,
+        80,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(-135),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(
+        CesiumMath.toRadians(60),
+        CesiumMath.EPSILON7
+      );
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(45),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(1.40485733, CesiumMath.EPSILON7);
+    });
+
+    it("computes a rectangle enclosing a simple clockwise convex polygon around the north pole", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        140,
+        60,
+        -135,
+        60,
+        -45,
+        60,
+        45,
+        60,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(-180),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(
+        CesiumMath.toRadians(60),
+        CesiumMath.EPSILON7
+      );
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(180),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(
+        CesiumMath.toRadians(90),
+        CesiumMath.EPSILON7
+      );
+    });
+
+    it("computes a rectangle enclosing a simple convex polygon around the south pole", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        140,
+        -60,
+        -135,
+        -60,
+        -45,
+        -60,
+        45,
+        -60,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(-180),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(
+        CesiumMath.toRadians(-90),
+        CesiumMath.EPSILON7
+      );
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(180),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(
+        CesiumMath.toRadians(-60),
+        CesiumMath.EPSILON7
+      );
+    });
+
+    it("computes a rectangle enclosing a simple concave polygon around the south pole", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        45,
+        -60,
+        -45,
+        -60,
+        -135,
+        -60,
+        -45,
+        -80,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(-135),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(-1.40485733, CesiumMath.EPSILON7);
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(45),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(
+        CesiumMath.toRadians(-60),
+        CesiumMath.EPSILON7
+      );
+    });
+
+    it("computes a rectangle enclosing a simple clockwise convex polygon around the south pole", function () {
+      const positions = Cartesian3.fromDegreesArray([
+        45,
+        -60,
+        -45,
+        -60,
+        -135,
+        -60,
+        140,
+        -60,
+      ]);
+
+      const result = PolygonGeometry.computeRectangleFromPositions(
+        positions,
+        Ellipsoid.WGS84
+      );
+
+      expect(result).toBeInstanceOf(Rectangle);
+      expect(result.west).toEqualEpsilon(
+        CesiumMath.toRadians(-180),
+        CesiumMath.EPSILON7
+      );
+      expect(result.south).toEqualEpsilon(
+        CesiumMath.toRadians(-90),
+        CesiumMath.EPSILON7
+      );
+      expect(result.east).toEqualEpsilon(
+        CesiumMath.toRadians(180),
+        CesiumMath.EPSILON7
+      );
+      expect(result.north).toEqualEpsilon(
+        CesiumMath.toRadians(-60),
+        CesiumMath.EPSILON7
+      );
+    });
+  });
+
   it("computing textureCoordinateRotationPoints property", function () {
     let p = new PolygonGeometry({
       vertexFormat: VertexFormat.POSITION_AND_ST,
