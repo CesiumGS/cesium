@@ -9,7 +9,7 @@ vec4 intersectLongitude(in Ray ray, in float angle, in bool positiveNormal) {
     vec2 direction = ray.dir.xy;
     float approachRate = dot(direction, planeNormal);
     float distance = -dot(position, planeNormal);
-    
+
     float t = (approachRate == 0.0)
         ? NO_HIT
         : distance / approachRate;
@@ -21,7 +21,7 @@ RayShapeIntersection intersectHalfSpace(in Ray ray, in float angle, in bool posi
 {
     vec4 intersection = intersectLongitude(ray, angle, positiveNormal);
     vec4 farSide = vec4(normalize(ray.dir), INF_HIT);
-    
+
     bool hitFront = (intersection.w > 0.0) == (dot(ray.pos.xy, intersection.xy) > 0.0);
     if (!hitFront) {
         return RayShapeIntersection(intersection, farSide);
