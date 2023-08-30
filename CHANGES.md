@@ -4,6 +4,11 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- Firefox 114 is now the minimum Firefox version required to run CesiumJS. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
+- `TaskProcessor` now loads worker files as ESM instead of AMD. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
+
 ##### Additions :tada:
 
 - The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
@@ -26,11 +31,6 @@
 - Starting with version 1.109, CesiumJS will require Firefox version 114 or higher for rendering. This is to [facilitate web worker loading and remove outdated dependencies](https://github.com/CesiumGS/cesium/pull/11400). Other browsers and node will be unaffected.
 
 #### @cesium/engine
-
-##### Breaking Changes :mega:
-
-- Firefox 114 is now the minimum Firefox version required to run CesiumJS. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
-- `TaskProcessor` now loads worker files as ESM instead of AMD. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
 
 ##### Fixes :wrench:
 
