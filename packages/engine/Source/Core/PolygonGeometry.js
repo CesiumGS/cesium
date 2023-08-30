@@ -1284,6 +1284,8 @@ PolygonGeometry.computeRectangleFromPositions = function (
  * @param {Rectangle} [result] An object in which to store the result.
  *
  * @returns {Rectangle} The result rectangle
+ *
+ * @deprecated
  */
 PolygonGeometry.computeRectangle = function (options, result) {
   //>>includeStart('debug', pragmas.debug);
