@@ -10,7 +10,7 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
 
 /**
  * <span style="display: block; text-align: center;">
- * <img src="Images/BaseLayerPicker.png" width="264" height="287" alt="" />
+ * <img src="Images/BaseLayerPicker.png" width="264" alt="BaseLayerPicker" />
  * <br />BaseLayerPicker with its drop-panel open.
  * </span>
  * <br /><br />
@@ -20,6 +20,9 @@ import BaseLayerPickerViewModel from "./BaseLayerPickerViewModel.js";
  * it replaces the current terrain provider.  Each item in the available providers list contains a name,
  * a representative icon, and a tooltip to display more information when hovered. The list is initially
  * empty, and must be configured before use, as illustrated in the below example.
+ * <br /><br />
+ * By default, the BaseLayerPicker uses a default list of example providers for demonstration purposes.
+ * Notably some of these providers, such as <a href="https://developers.arcgis.com" target="_blank">Esri ArcGIS</a> and <a href="https://docs.stadiamaps.com/ target="_blank">Stadia Maps</a>, have seperate terms of service and require authentication for production use.
  *
  * @alias BaseLayerPicker
  * @constructor
