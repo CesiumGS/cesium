@@ -269,7 +269,31 @@ TerrainProvider.addSkirtIndices = function (
     offset
   );
   vertexIndex += eastIndicesNorthToSouth.length;
-  addSkirtIndices(northIndicesWestToEast, vertexIndex, indices, offset);
+  offset = addSkirtIndices(
+    northIndicesWestToEast,
+    vertexIndex,
+    indices,
+    offset
+  );
+  return offset;
+};
+
+TerrainProvider.addSkirtsBottomPlane = function (
+  WSVertexIndex,
+  WNVertexIndex,
+  ENVertexIndex,
+  ESVertexIndex,
+  indices,
+  offset
+) {
+  // add triangles for bottom plane
+  indices[offset++] = WSVertexIndex;
+  indices[offset++] = WNVertexIndex;
+  indices[offset++] = ENVertexIndex;
+
+  indices[offset++] = WSVertexIndex;
+  indices[offset++] = ENVertexIndex;
+  indices[offset++] = ESVertexIndex;
 };
 
 function getEdgeIndices(width, height) {

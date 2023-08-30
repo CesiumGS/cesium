@@ -335,6 +335,7 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     ellipsoid: ellipsoid,
     exaggeration: exaggeration,
     exaggerationRelativeHeight: exaggerationRelativeHeight,
+    level: level,
   });
 
   if (!defined(verticesPromise)) {
