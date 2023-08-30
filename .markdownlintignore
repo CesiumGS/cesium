@@ -1,0 +1,7 @@
+/node_modules
+/ThirdParty/
+/Tools/
+/Documentation/**
+
+CHANGES.md 
+LICENSE.md
