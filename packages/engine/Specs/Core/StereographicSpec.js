@@ -204,4 +204,36 @@ describe("Core/Stereographic", function () {
       CesiumMath.EPSILON7
     );
   });
+
+  it("fromCartesianArray creates a Stereographic array", function () {
+    const stereographics = Stereographic.fromCartesianArray([
+      Cartesian3.fromDegrees(30.0, 60.0),
+      Cartesian3.fromDegrees(30.0, -60.0),
+    ]);
+    expect(stereographics.length).toBe(2);
+
+    expect(stereographics[0].x).toEqualEpsilon(
+      0.1347555369,
+      CesiumMath.EPSILON7
+    );
+    expect(stereographics[0].y).toEqualEpsilon(
+      -0.2334034365,
+      CesiumMath.EPSILON7
+    );
+    expect(stereographics[0].tangentPlane).toEqual(
+      Stereographic.NORTH_POLE_TANGENT_PLANE
+    );
+
+    expect(stereographics[1].x).toEqualEpsilon(
+      0.1347555369,
+      CesiumMath.EPSILON7
+    );
+    expect(stereographics[1].y).toEqualEpsilon(
+      -0.2334034365,
+      CesiumMath.EPSILON7
+    );
+    expect(stereographics[1].tangentPlane).toEqual(
+      Stereographic.SOUTH_POLE_TANGENT_PLANE
+    );
+  });
 });

@@ -127,14 +127,14 @@ const scratchProjectPointOntoPlaneCartesian3 = new Cartesian3();
  *
  * @param {Cartesian3} cartesian The point to project.
  * @param {Stereographic} [result] The object onto which to store the result.
- * @returns {Cartesian2} The modified result parameter or a new Sterographic instance if none was provided.
+ * @returns {Sterographic} The modified result parameter or a new Sterographic instance if none was provided.
  */
-Stereographic.fromCartesian = function (position, result) {
+Stereographic.fromCartesian = function (cartesian, result) {
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("position", position);
+  Check.defined("cartesian", cartesian);
   //>>includeEnd('debug');
 
-  const sign = CesiumMath.sign(position.z);
+  const sign = CesiumMath.sign(cartesian.z);
   let tangentPlane = Stereographic.NORTH_POLE_TANGENT_PLANE;
   let origin = Stereographic.SOUTH_POLE;
   if (sign < 0) {
@@ -144,7 +144,7 @@ Stereographic.fromCartesian = function (position, result) {
 
   const ray = scratchProjectPointOntoPlaneRay;
   ray.origin = tangentPlane.ellipsoid.scaleToGeocentricSurface(
-    position,
+    cartesian,
     ray.origin
   );
   ray.direction = Cartesian3.subtract(
@@ -169,6 +169,30 @@ Stereographic.fromCartesian = function (position, result) {
 
   result.position = new Cartesian2(x, y);
   result.tangentPlane = tangentPlane;
+  return result;
+};
+
+/**
+ * Computes the projection of the provided 3D positions onto the 2D polar plane, radially outward from the provided origin.
+ *
+ * @param {Cartesian3[]} cartesians The points to project.
+ * @param {Stereographic[]} [result] The object onto which to store the result.
+ * @returns {Sterographic[]} The modified result parameter or a new Sterographic instance if none was provided.
+ */
+Stereographic.fromCartesianArray = function (cartesians, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("cartesians", cartesians);
+  //>>includeEnd('debug');
+
+  const length = cartesians.length;
+  if (!defined(result)) {
+    result = new Array(length);
+  } else {
+    result.length = length;
+  }
+  for (let i = 0; i < length; i++) {
+    result[i] = Stereographic.fromCartesian(cartesians[i], result[i]);
+  }
   return result;
 };
 
