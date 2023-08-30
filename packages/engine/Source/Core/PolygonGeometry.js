@@ -1182,9 +1182,9 @@ const polygon = {
  * @param {Cartesian3[]} positions A linear ring defining the outer boundary of the polygon.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
  * @param {ArcType} [arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
- * @param {Rectangle} result An object in which to store the result.
+ * @param {Rectangle} [result] An object in which to store the result.
  *
- * @returns {Reactangle} The result rectangle
+ * @returns {Rectangle} The result rectangle
  */
 PolygonGeometry.computeRectangleFromPositions = function (
   positions,
