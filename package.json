@@ -70,7 +70,6 @@
     "esbuild": "^0.19.2",
     "eslint": "^8.41.0",
     "eslint-config-cesium": "^9.0.1",
-    "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^7.1.0",
     "eslint-plugin-node": "^11.1.0",
@@ -136,7 +135,7 @@
     "build-docs-watch": "gulp buildDocsWatch",
     "eslint": "eslint \"./**/*.js\" \"./**/*.cjs\" \"./**/*.html\" --cache --quiet",
     "make-zip": "gulp makeZip",
-    "markdownlint": "markdownlint \"*.md\" \"Documentation/**/*.md\" \"packages/**/*.md\" --ignore CHANGES.md --ignore \"./**/LICENSE.md\"",
+    "markdownlint": "markdownlint \"*.md\"",
     "release": "gulp release",
     "website-release": "gulp websiteRelease",
     "test": "gulp test",
@@ -167,7 +166,7 @@
       "prettier --write --no-config"
     ],
     "*.md": [
-      "markdownlint --ignore CHANGES.md --ignore \"./**/LICENSE.md\"",
+      "markdownlint",
       "prettier --write --no-config"
     ]
   },
