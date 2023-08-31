@@ -11,6 +11,7 @@
 
 ##### Fixes :wrench:
 
+- Fix rendering of polygons spanning extents of 90 degrees or more. [#4871](https://github.com/CesiumGS/cesium/issues/4871)
 - Fixed ground primitive polygon visual artifacts at pole. [#8033](https://github.com/CesiumGS/cesium/issues/8033)
 
 ##### Deprecated :hourglass_flowing_sand:
