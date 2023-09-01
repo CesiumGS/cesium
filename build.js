@@ -11,11 +11,6 @@ import { globby } from "globby";
 import glslStripComments from "glsl-strip-comments";
 import gulp from "gulp";
 import { rimraf } from "rimraf";
-import { rollup } from "rollup";
-import rollupPluginStripPragma from "rollup-plugin-strip-pragma";
-import terser from "@rollup/plugin-terser";
-import rollupCommonjs from "@rollup/plugin-commonjs";
-import rollupResolve from "@rollup/plugin-node-resolve";
 import streamToPromise from "stream-to-promise";
 
 import { mkdirp } from "mkdirp";
@@ -105,10 +100,7 @@ function printBuildWarning({ location, text }) {
 // Ignore `eval` warnings in third-party code we don't have control over
 function handleBuildWarnings(result) {
   for (const warning of result.warnings) {
-    if (
-      !warning.location.file.includes("protobufjs.js") &&
-      !warning.location.file.includes("Build/Cesium")
-    ) {
+    if (!warning.location.file.includes("protobufjs.js")) {
       printBuildWarning(warning);
     }
   }
@@ -204,6 +196,9 @@ export async function bundleCesiumJs(options) {
       format: "iife",
       globalName: "Cesium",
       outfile: path.join(options.path, "Cesium.js"),
+      logOverride: {
+        "empty-import-meta": "silent",
+      },
     });
 
     if (incremental) {
@@ -218,6 +213,9 @@ export async function bundleCesiumJs(options) {
       ...buildConfig,
       format: "cjs",
       platform: "node",
+      logOverride: {
+        "empty-import-meta": "silent",
+      },
       define: {
         // TransformStream is a browser-only implementation depended on by zip.js
         TransformStream: "null",
@@ -244,9 +242,8 @@ const workspaceSourceFiles = {
     "packages/engine/Source/**/*.js",
     "!packages/engine/Source/*.js",
     "!packages/engine/Source/Workers/**",
-    "!packages/engine/Source/WorkersES6/**",
-    "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
-    "!packages/engine/Source/ThirdParty/Workers/**",
+    "packages/engine/Source/Workers/createTaskProcessorWorker.js",
+    "!packages/engine/Source/ThirdParty/Workers/**.js",
     "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
     "!packages/engine/Source/ThirdParty/_*",
   ],
@@ -320,39 +317,20 @@ export async function createCombinedSpecList() {
   return contents;
 }
 
-function rollupWarning(message) {
-  // Ignore eval warnings in third-party code we don't have control over
-  if (message.code === "EVAL" && /protobufjs/.test(message.loc.file)) {
-    return;
-  }
-
-  console.log(message);
-}
-
 /**
  * @param {object} options
+ * @param {string} options.path output directory
  * @param {boolean} [options.minify=false] true if the worker output should be minified
  * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
  * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
- * @param {string} options.path output directory
+ * @param {boolean} [options.incremental=false] true if build output should be cached for repeated builds
+ * @param {boolean} [options.write=true] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  */
-export async function bundleCombinedWorkers(options) {
-  // Bundle non ES6 workers.
-  const workers = await globby(["packages/engine/Source/Workers/**"]);
-  const workerConfig = defaultESBuildOptions();
-  workerConfig.bundle = false;
-  workerConfig.banner = {
-    js: combinedCopyrightHeader,
-  };
-  workerConfig.entryPoints = workers;
-  workerConfig.outdir = options.path;
-  workerConfig.minify = options.minify;
-  workerConfig.outbase = "packages/engine/Source";
-  await esbuild.build(workerConfig);
-
+export async function bundleWorkers(options) {
   // Copy ThirdParty workers
   const thirdPartyWorkers = await globby([
-    "packages/engine/Source/ThirdParty/Workers/**",
+    "packages/engine/Source/ThirdParty/Workers/**.js",
+    "!packages/engine/Source/ThirdParty/Workers/basis_transcoder.js",
   ]);
 
   const thirdPartyWorkerConfig = defaultESBuildOptions();
@@ -363,96 +341,28 @@ export async function bundleCombinedWorkers(options) {
   thirdPartyWorkerConfig.outbase = "packages/engine/Source";
   await esbuild.build(thirdPartyWorkerConfig);
 
-  // Bundle ES6 workers.
-
-  const es6Workers = await globby([`packages/engine/Source/WorkersES6/*.js`]);
-  const plugins = [rollupResolve({ preferBuiltins: true }), rollupCommonjs()];
-
-  if (options.removePragmas) {
-    plugins.push(
-      rollupPluginStripPragma({
-        pragmas: ["debug"],
-      })
-    );
-  }
-
-  if (options.minify) {
-    plugins.push(terser());
-  }
-
-  const bundle = await rollup({
-    input: es6Workers,
-    plugins: plugins,
-    onwarn: rollupWarning,
-  });
-
-  return bundle.write({
-    dir: path.join(options.path, "Workers"),
-    format: "amd",
-    // Rollup cannot generate a sourcemap when pragmas are removed
-    sourcemap: options.sourcemap && !options.removePragmas,
-    // SAMTODO: Add copyrightBanner
-  });
-}
-
-/**
- * Bundles the workers and outputs the result to the specified directory
- * @param {object} options
- * @param {boolean} [options.minify=false] true if the worker output should be minified
- * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
- * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
- * @param {string[]} options.input The worker globs.
- * @param {string[]} options.inputES6 The ES6 worker globs.
- * @param {string} options.path output directory
- * @param {string} options.copyrightHeader The copyright header to add to worker bundles
- * @returns {Promise<any>}
- */
-export async function bundleWorkers(options) {
-  // Copy existing workers
-  const workers = await globby(options.input);
-
+  // Bundle Cesium workers
+  const workers = await globby(["packages/engine/Source/Workers/**"]);
   const workerConfig = defaultESBuildOptions();
-  workerConfig.bundle = false;
+  workerConfig.bundle = true;
+  workerConfig.format = "esm";
+  workerConfig.splitting = true;
   workerConfig.banner = {
     js: combinedCopyrightHeader,
   };
   workerConfig.entryPoints = workers;
-  workerConfig.outdir = options.path;
-  workerConfig.outbase = `packages/engine/Source`; // Maintain existing file paths
+  workerConfig.outdir = path.join(options.path, "Workers");
   workerConfig.minify = options.minify;
-  await esbuild.build(workerConfig);
+  workerConfig.external = ["http", "https", "url", "zlib", "fs", "path"];
+  workerConfig.write = options.write;
 
-  // Use rollup to build the workers:
-  // 1) They can be built as AMD style modules
-  // 2) They can be built using code-splitting, resulting in smaller modules
-  const files = await globby(options.inputES6);
-  const plugins = [rollupResolve({ preferBuiltins: true }), rollupCommonjs()];
-
-  if (options.removePragmas) {
-    plugins.push(
-      rollupPluginStripPragma({
-        pragmas: ["debug"],
-      })
-    );
+  const incremental = options.incremental;
+  let build = esbuild.build;
+  if (incremental) {
+    build = esbuild.context;
   }
 
-  if (options.minify) {
-    plugins.push(terser());
-  }
-
-  const bundle = await rollup({
-    input: files,
-    plugins: plugins,
-    onwarn: rollupWarning,
-  });
-
-  return bundle.write({
-    dir: path.join(options.path, "Workers"),
-    format: "amd",
-    // Rollup cannot generate a sourcemap when pragmas are removed
-    sourcemap: options.sourcemap && !options.removePragmas,
-    banner: options.copyrightHeader,
-  });
+  return build(workerConfig);
 }
 
 const shaderFiles = [
@@ -754,7 +664,6 @@ export async function copyFiles(globs, destination, base) {
 export async function copyEngineAssets(destination) {
   const engineStaticAssets = [
     "packages/engine/Source/**",
-    "!packages/engine/Source/Workers/package.json",
     "!packages/engine/Source/**/*.js",
     "!packages/engine/Source/**/*.glsl",
     "!packages/engine/Source/**/*.css",
@@ -821,7 +730,7 @@ export async function createJsHintOptions() {
  * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
  * @returns {Promise<any>}
  */
-export function bundleCombinedSpecs(options) {
+export async function bundleCombinedSpecs(options) {
   options = options || {};
 
   let build = esbuild.build;
@@ -838,10 +747,36 @@ export function bundleCombinedSpecs(options) {
     bundle: true,
     format: "esm",
     sourcemap: true,
-    target: "es2020",
     outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
     external: [`http`, `https`, `url`, `zlib`],
+    write: options.write,
+  });
+}
+
+/**
+ * Bundles test worker in used specs.
+ * @param {object} options
+ * @param {boolean} [options.incremental=false] true if the build should be cached for repeated rebuilds
+ * @param {boolean} [options.write=false] true if build output should be written to disk. If false, the files that would have been written as in-memory buffers
+ * @returns {Promise<any>}
+ */
+export async function bundleTestWorkers(options) {
+  options = options || {};
+
+  let build = esbuild.build;
+  if (options.incremental) {
+    build = esbuild.context;
+  }
+
+  const workers = await globby(["Specs/TestWorkers/**.js"]);
+  return build({
+    entryPoints: workers,
+    bundle: true,
+    format: "esm",
+    sourcemap: true,
+    outdir: path.join("Build", "Specs", "TestWorkers"),
+    external: ["http", "https", "url", "zlib", "fs", "path"],
     write: options.write,
   });
 }
@@ -1013,8 +948,7 @@ export const buildEngine = async (options) => {
 
   // Build workers.
   await bundleWorkers({
-    input: ["packages/engine/Source/Workers/**"],
-    inputES6: ["packages/engine/Source/WorkersES6/*.js"],
+    ...options,
     path: "packages/engine/Build",
   });
 
@@ -1145,19 +1079,24 @@ export async function buildCesium(options) {
     write: write,
   });
 
-  await Promise.all([
-    createJsHintOptions(),
-    bundleCombinedWorkers({
-      minify: minify,
-      sourcemap: sourcemap,
-      path: outputDirectory,
-      removePragmas: removePragmas,
-    }),
-    createGalleryList(!development),
-  ]);
+  await Promise.all([createJsHintOptions(), createGalleryList(!development)]);
+
+  const workersContext = await bundleWorkers({
+    minify: minify,
+    sourcemap: sourcemap,
+    path: outputDirectory,
+    removePragmas: removePragmas,
+    incremental: incremental,
+    write: write,
+  });
 
   // Generate Specs bundle.
   const specsContext = await bundleCombinedSpecs({
+    incremental: incremental,
+    write: write,
+  });
+
+  const testWorkersContext = await bundleTestWorkers({
     incremental: incremental,
     write: write,
   });
@@ -1204,5 +1143,7 @@ export async function buildCesium(options) {
     iife: contexts.iife,
     node: contexts.node,
     specs: specsContext,
+    workers: workersContext,
+    testWorkers: testWorkersContext,
   };
 }

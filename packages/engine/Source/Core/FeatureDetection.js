@@ -426,4 +426,13 @@ FeatureDetection.supportsWebgl2 = function (scene) {
   return scene.context.webgl2;
 };
 
+/**
+ * Detects whether the current browser supports ECMAScript modules in web workers.
+ * @returns {boolean} true if the browser supports ECMAScript modules in web workers.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Worker|Worker}
+ */
+FeatureDetection.supportsEsmWebWorkers = function () {
+  return !isFirefox() || parseInt(firefoxVersionResult) >= 114;
+};
+
 export default FeatureDetection;

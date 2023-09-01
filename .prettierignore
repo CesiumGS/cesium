@@ -28,9 +28,6 @@ packages/engine/index.js
 packages/engine/Source/Scene/GltfPipeline/**
 packages/engine/Source/Shaders/**/*.js
 packages/engine/Source/ThirdParty/**
-packages/engine/Source/Workers/**/*
-!packages/engine/Source/Workers/cesiumWorkerBootstrapper.js
-!packages/engine/Source/Workers/transferTypedArrayTest.js
 
 packages/widgets/Build/**
 packages/widgets/index.js
