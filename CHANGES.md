@@ -11,6 +11,7 @@
 
 ##### Fixes :wrench:
 
+- Restore previous behavior for cut out terrain loading. [#11482](https://github.com/CesiumGS/cesium/issues/11482)
 - The return type of `SingleTileImageryProvider.fromUrl` has been fixed to be `Promise.<SingleTileImageryProvider>` (was `void`). [#11432](https://github.com/CesiumGS/cesium/pull/11432)
 - Fixed request render mode when models are loading without `incrementallyLoadTextures`. [#11486](https://github.com/CesiumGS/cesium/pull/11486)
 
@@ -36,6 +37,7 @@
 
 ##### Fixes :wrench:
 
+- Fixed issue where terrain with multiple layers was loading higher LOD tiles inconsistently. [#11312](https://github.com/CesiumGS/cesium/issues/11312)
 - Fixed `OpenStreetMapImageryProvider` usage in comments, change default url and add `tile.openstreetmap.org` to `RequestScheduler.requestsByServer`. [#11407](https://github.com/CesiumGS/cesium/pull/11407)
 - Fixed calculation of GroundPolyline bounding spheres in regions with negative terrain heights. [#11184](https://github.com/CesiumGS/cesium/pull/11184)
 - Fixed `CzmlDataSource` in cases of custom `Ellipsoid.WGS84` definitions. [#11190](https://github.com/CesiumGS/cesium/pull/11190)
