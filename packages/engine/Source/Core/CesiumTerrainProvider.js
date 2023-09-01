@@ -867,8 +867,7 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
     // Optimized path for single layers
     layerToUse = layers[0];
   } else {
-    // Use the last layer where terrain data is available as it should be the most up-to-date
-    for (let i = layerCount - 1; i >= 0; --i) {
+    for (let i = 0; i < layerCount; ++i) {
       const layer = layers[i];
       if (
         !defined(layer.availability) ||

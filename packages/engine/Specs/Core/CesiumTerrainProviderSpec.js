@@ -356,41 +356,6 @@ describe("Core/CesiumTerrainProvider", function () {
     expect(layers[1].availability.isTileAvailable(2, 0, 0)).toBe(false);
   });
 
-  it("requests tile geometry from expected layer", async function () {
-    Resource._Implementations.loadWithXhr = function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      expect(url).toContain("v=2.0.0");
-      Resource._DefaultImplementations.loadWithXhr(
-        "Data/CesiumTerrainTileJson/tile.terrain",
-        responseType,
-        method,
-        data,
-        headers,
-        deferred
-      );
-    };
-
-    returnParentUrlTileJson();
-
-    const provider = await CesiumTerrainProvider.fromUrl("made/up/url", {
-      requestVertexNormals: true,
-      requestWaterMask: true,
-    });
-
-    const layers = provider._layers;
-    expect(layers.length).toBe(2);
-
-    const loadedData = await provider.requestTileGeometry(0, 0, 1);
-    expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-  });
-
   it("fromUrl throws if layer.json specifies an unknown format", async function () {
     returnTileJson("Data/CesiumTerrainTileJson/InvalidFormat.tile.json");
 
