@@ -182,6 +182,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Jussi Hirvonen](https://github.com/VsKatshuma)
 - [Sierra Nevada Corp](https://www.sncorp.com/)
   - [Robert Irving](https://github.com/robert-irving-snc)
+- [General Atomics CCRi](https://www.ga-ccri.com/)
+  - [matthias-ccri](https://github.com/matthias-ccri)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -362,3 +364,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [e3dio](https://github.com/e3dio)
 - [Dphalos](https://github.com/Dphalos)
 - [hongfaqiu](https://github.com/hongfaqiu)
+- [KOBAYASHI Ittoku](https://github.com/kittoku)
