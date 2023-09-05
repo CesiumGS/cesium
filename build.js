@@ -1090,6 +1090,12 @@ export async function buildCesium(options) {
     write: write,
   });
 
+  // TODO: For Cesium.js, bundle the workers into one file (which should diambiguate based on postmesage), without code splitting and as IIFE.
+  // Then, inline that file as a dataUrl into TaskProcessor in CesiumJS as a variable.
+  // Workers should then try to load this dataUrl as the worker, if possible.
+  // scheduleTask() should make sure to pass the worker path, and
+  // onMessage = ({data}) => const worker = CesiumWorkers[data.parameters.worker]; worker(); worker.onmessage({data});
+
   // Generate Specs bundle.
   const specsContext = await bundleCombinedSpecs({
     incremental: incremental,
