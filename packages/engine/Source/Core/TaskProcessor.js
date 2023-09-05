@@ -6,7 +6,6 @@ import destroyObject from "./destroyObject.js";
 import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
 import FeatureDetection from "./FeatureDetection.js";
-import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 
@@ -60,33 +59,7 @@ function canTransferArrayBuffer() {
 const taskCompletedEvent = new Event();
 
 function getWorkerUrl(moduleID) {
-  let url = buildModuleUrl(moduleID);
-
-  if (isCrossOriginUrl(url)) {
-    //to load cross-origin, create a shim worker from a blob URL
-    const script = `importScripts("${url}");`;
-
-    let blob;
-    try {
-      blob = new Blob([script], {
-        type: "application/javascript",
-      });
-    } catch (e) {
-      const BlobBuilder =
-        window.BlobBuilder ||
-        window.WebKitBlobBuilder ||
-        window.MozBlobBuilder ||
-        window.MSBlobBuilder;
-      const blobBuilder = new BlobBuilder();
-      blobBuilder.append(script);
-      blob = blobBuilder.getBlob("application/javascript");
-    }
-
-    const URL = window.URL || window.webkitURL;
-    url = URL.createObjectURL(blob);
-  }
-
-  return url;
+  return buildModuleUrl(moduleID);
 }
 
 function createWorker(processor) {
