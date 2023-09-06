@@ -1101,8 +1101,10 @@ function expandRectangle(
   const longitude = positionPolar.longitude;
   const lonAdjusted =
     longitude >= 0 ? longitude : longitude + CesiumMath.TWO_PI;
+  const segmentCrossesIdl =
+    Math.abs(longitude - lastLongitude) >= CesiumMath.PI;
 
-  if (Math.abs(longitude - lastLongitude) >= CesiumMath.PI) {
+  if (segmentCrossesIdl) {
     polygon.westOverIdl = Math.min(polygon.westOverIdl, lonAdjusted);
     polygon.eastOverIdl = Math.max(polygon.eastOverIdl, lonAdjusted);
   }
@@ -1143,33 +1145,30 @@ function expandRectangle(
       }
     }
   }
-
-  // The direction we're currently traversing the polygon determines if the closest segment if the pole is inside or outside the polygon
-  let direction =
+  const direction =
     positionPolarPrevious.x * positionPolar.y -
     positionPolar.x * positionPolarPrevious.y;
 
-  if (segmentLatitude < 0) {
-    direction *= -1;
-  }
-  polygon.area += direction;
-  const inside = direction > 0;
+  // The total internal angle in either hemisphere determines if the pole is inside or outside the polygon
+  const angle =
+    Math.sign(direction) *
+    Cartesian2.angleBetween(
+      positionPolarPrevious.position,
+      positionPolar.position
+    );
 
-  if (segmentLatitude > 0 && segmentLatitude > polygon.closestNorth) {
-    polygon.closestNorth = segmentLatitude;
-    polygon.north = inside;
-  } else if (segmentLatitude < 0 && segmentLatitude < polygon.closestSouth) {
-    polygon.closestSouth = segmentLatitude;
-    polygon.south = inside;
+  if (segmentLatitude >= 0) {
+    polygon.northAngle += angle;
+  }
+
+  if (segmentLatitude <= 0) {
+    polygon.southAngle += angle;
   }
 }
 
 const polygon = {
-  area: 0.0,
-  north: false,
-  south: false,
-  closestNorth: 0.0,
-  closestSouth: 0.0,
+  northAngle: 0.0,
+  southAngle: 0.0,
   westOverIdl: 0.0,
   eastOverIdl: 0.0,
 };
@@ -1207,11 +1206,8 @@ PolygonGeometry.computeRectangleFromPositions = function (
   result.south = Number.POSITIVE_INFINITY;
   result.north = Number.NEGATIVE_INFINITY;
 
-  polygon.area = 0.0;
-  polygon.north = false;
-  polygon.south = false;
-  polygon.closestNorth = -Number.POSITIVE_INFINITY;
-  polygon.closestSouth = Number.POSITIVE_INFINITY;
+  polygon.northAngle = 0.0;
+  polygon.southAngle = 0.0;
   polygon.westOverIdl = Number.POSITIVE_INFINITY;
   polygon.eastOverIdl = Number.NEGATIVE_INFINITY;
 
@@ -1236,19 +1232,24 @@ PolygonGeometry.computeRectangleFromPositions = function (
     result
   );
 
-  // If total area is less than or equal to 0.0, then the windong order of the positions
-  // is clockwise. Inside/outside computations should be reversed.
-  if (polygon.area < 0) {
-    polygon.north = !polygon.north;
-    polygon.south = !polygon.south;
-  }
-
-  // If either pole is inside the polygon, adjust the rectangle so it is included
-  if (polygon.north && polygon.closestNorth > 0) {
+  // If either pole is inside the polygon, adjust the rectangle so the pole is included
+  if (
+    CesiumMath.equalsEpsilon(
+      Math.abs(polygon.northAngle),
+      CesiumMath.TWO_PI,
+      CesiumMath.EPSILON10
+    )
+  ) {
     result.north = CesiumMath.PI_OVER_TWO;
   }
 
-  if (polygon.south && polygon.closestSouth < 0) {
+  if (
+    CesiumMath.equalsEpsilon(
+      Math.abs(polygon.southAngle),
+      CesiumMath.TWO_PI,
+      CesiumMath.EPSILON10
+    )
+  ) {
     result.south = -CesiumMath.PI_OVER_TWO;
   }
 
