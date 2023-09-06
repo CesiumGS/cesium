@@ -812,11 +812,13 @@ PolygonGeometryLibrary.polygonsFromHierarchy = function (
       let polygons = [outerRing];
       polygons = splitPolygons(polygons, polygons);
 
-      for (const positions of polygons) {
-        queue.enqueue(new PolygonHierarchy(positions, holes));
-      }
+      if (polygons.length > 1) {
+        for (const positions of polygons) {
+          queue.enqueue(new PolygonHierarchy(positions, holes));
+        }
 
-      continue;
+        continue;
+      }
     }
 
     let positions = outerRing.slice();
