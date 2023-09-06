@@ -387,6 +387,7 @@ function VoxelPrimitive(options) {
     transformDirectionViewToLocal: new Matrix3(),
     transformNormalLocalToWorld: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
+    cameraPositionShapeUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
@@ -1097,6 +1098,12 @@ VoxelPrimitive.prototype.update = function (frameState) {
     cameraPositionWorld,
     uniforms.cameraPositionUv
   );
+  if (this.shape === VoxelShapeType.ELLIPSOID) {
+    uniforms.cameraPositionShapeUv = shape.convertUvToShapeUvSpace(
+      uniforms.cameraPositionUv,
+      uniforms.cameraPositionShapeUv
+    );
+  }
   uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
 
   // Render the primitive

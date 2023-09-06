@@ -1,6 +1,7 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import CesiumMath from "../Core/Math.js";
@@ -675,6 +676,88 @@ VoxelEllipsoidShape.prototype.update = function (
   this.shaderMaximumIntersectionsLength = intersectionCount;
 
   return true;
+};
+
+/**
+ * Convert a position in model UV coordinates to shape UV coordinates:
+ * longitude, latitude, and altitude, all expressed as numbers in [0,1]
+ * where the endpoints of the interval correspond to the shape bounds
+ *
+ * @param {Cartesian3} positionUv The input position
+ * @param {Cartesian3} result The object onto which to store the result
+ * @returns {Cartesian3} The modified result parameter
+ */
+VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
+  positionUv,
+  result
+) {
+  const { shaderUniforms, shaderDefines } = this;
+  // Compute position and normal.
+  // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).
+  // A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
+  const positionLocal = Cartesian3.multiplyByScalar(positionUv, 2.0);
+  Cartesian3.add(positionLocal, new Cartesian3(1.0, 1.0, 1.0), positionLocal);
+  const posEllipsoid = Cartesian3.multiplyComponents(
+    positionLocal,
+    shaderUniforms.ellipsoidRadiiUv
+  );
+
+  const { x, y, z } = shaderUniforms.ellipsoidRadiiUv;
+  const ellipsoid = new Ellipsoid(x, y, z);
+  const cartographic = Cartographic.fromCartesian(
+    posEllipsoid,
+    ellipsoid,
+    new Cartographic()
+  );
+
+  // Compute longitude, shifted and scaled to the range [0, 1]
+  let longitude = (cartographic.longitude + Math.PI) / (2.0 * Math.PI);
+  // Correct the angle when max < min
+  // Technically this should compare against min longitude - but it has precision problems so compare against the middle of empty space.
+  if (shaderDefines.ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED) {
+    longitude +=
+      longitude < shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.z;
+  }
+
+  // Avoid flickering from reading voxels from both sides of the -pi/+pi discontinuity.
+  if (shaderDefines.ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY) {
+    longitude =
+      longitude > shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.z
+        ? shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.x
+        : longitude;
+  }
+  if (shaderDefines.ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY) {
+    longitude =
+      longitude < shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.z
+        ? shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.y
+        : longitude;
+  }
+
+  if (shaderDefines.ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE) {
+    longitude =
+      longitude * shaderUniforms.ellipsoidUvToShapeUvLongitude.x +
+      shaderUniforms.ellipsoidUvToShapeUvLongitude.y;
+  }
+
+  // Compute latitude, shifted and scaled to the range [0, 1]
+  let latitude = (cartographic.latitude + Math.PI / 2.0) / Math.PI;
+  if (shaderDefines.ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE) {
+    latitude =
+      latitude * shaderUniforms.ellipsoidUvToShapeUvLatitude.x +
+      shaderUniforms.ellipsoidUvToShapeUvLatitude.y;
+  }
+
+  // Compute height
+  let height =
+    cartographic.height * shaderUniforms.ellipsoidInverseHeightDifferenceUv;
+  if (shaderDefines.ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT) {
+    // TODO: This breaks down when minBounds == maxBounds. To fix it, this
+    // function would have to know if ray is intersecting the front or back of the shape
+    // and set the shape space position to 1 (front) or 0 (back) accordingly.
+    height = 1.0;
+  }
+
+  return Cartesian3.fromElements(longitude, latitude, height, result);
 };
 
 const scratchRectangle = new Rectangle();
