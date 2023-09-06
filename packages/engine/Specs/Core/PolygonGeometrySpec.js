@@ -2265,6 +2265,7 @@ describe("Core/PolygonGeometry", function () {
       },
       granularity: CesiumMath.PI,
       stRotation: CesiumMath.toRadians(90),
+      arcType: ArcType.RHUMB,
     });
 
     // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
