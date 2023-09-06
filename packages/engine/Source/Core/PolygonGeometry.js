@@ -1150,12 +1150,13 @@ function expandRectangle(
     positionPolar.x * positionPolarPrevious.y;
 
   // The total internal angle in either hemisphere determines if the pole is inside or outside the polygon
-  const angle =
-    Math.sign(direction) *
-    Cartesian2.angleBetween(
+  let angle = Math.sign(direction);
+  if (angle !== 0.0) {
+    angle *= Cartesian2.angleBetween(
       positionPolarPrevious.position,
       positionPolar.position
     );
+  }
 
   if (segmentLatitude >= 0) {
     polygon.northAngle += angle;
