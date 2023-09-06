@@ -1097,17 +1097,11 @@ function expandRectangle(
     scratchPolarPrevious
   );
 
-  const lastLongitude = positionPolarPrevious.longitude;
   const longitude = positionPolar.longitude;
   const lonAdjusted =
     longitude >= 0 ? longitude : longitude + CesiumMath.TWO_PI;
-  const segmentCrossesIdl =
-    Math.abs(longitude - lastLongitude) >= CesiumMath.PI;
-
-  if (segmentCrossesIdl) {
-    polygon.westOverIdl = Math.min(polygon.westOverIdl, lonAdjusted);
-    polygon.eastOverIdl = Math.max(polygon.eastOverIdl, lonAdjusted);
-  }
+  polygon.westOverIdl = Math.min(polygon.westOverIdl, lonAdjusted);
+  polygon.eastOverIdl = Math.max(polygon.eastOverIdl, lonAdjusted);
 
   result.west = Math.min(result.west, longitude);
   result.east = Math.max(result.east, longitude);
@@ -1150,12 +1144,13 @@ function expandRectangle(
     positionPolar.x * positionPolarPrevious.y;
 
   // The total internal angle in either hemisphere determines if the pole is inside or outside the polygon
-  const angle =
-    Math.sign(direction) *
-    Cartesian2.angleBetween(
+  let angle = Math.sign(direction);
+  if (angle !== 0.0) {
+    angle *= Cartesian2.angleBetween(
       positionPolarPrevious.position,
       positionPolar.position
     );
+  }
 
   if (segmentLatitude >= 0) {
     polygon.northAngle += angle;
@@ -1232,6 +1227,18 @@ PolygonGeometry.computeRectangleFromPositions = function (
     result
   );
 
+  if (result.east - result.west > polygon.eastOverIdl - polygon.westOverIdl) {
+    result.west = polygon.westOverIdl;
+    result.east = polygon.eastOverIdl;
+
+    if (result.east > CesiumMath.PI) {
+      result.east = result.east - CesiumMath.TWO_PI;
+    }
+    if (result.west > CesiumMath.PI) {
+      result.west = result.west - CesiumMath.TWO_PI;
+    }
+  }
+
   // If either pole is inside the polygon, adjust the rectangle so the pole is included
   if (
     CesiumMath.equalsEpsilon(
@@ -1241,6 +1248,8 @@ PolygonGeometry.computeRectangleFromPositions = function (
     )
   ) {
     result.north = CesiumMath.PI_OVER_TWO;
+    result.east = CesiumMath.PI;
+    result.west = -CesiumMath.PI;
   }
 
   if (
@@ -1251,22 +1260,8 @@ PolygonGeometry.computeRectangleFromPositions = function (
     )
   ) {
     result.south = -CesiumMath.PI_OVER_TWO;
-  }
-
-  const overIdl = polygon.eastOverIdl - polygon.westOverIdl;
-  if (polygon.eastOverIdl === polygon.westOverIdl) {
     result.east = CesiumMath.PI;
     result.west = -CesiumMath.PI;
-  } else if (overIdl > Number.NEGATIVE_INFINITY) {
-    result.west = polygon.westOverIdl;
-    result.east = polygon.eastOverIdl;
-
-    if (result.east > CesiumMath.PI) {
-      result.east = result.east - CesiumMath.TWO_PI;
-    }
-    if (result.west > CesiumMath.PI) {
-      result.west = result.west - CesiumMath.TWO_PI;
-    }
   }
 
   return result;
