@@ -784,8 +784,13 @@ JulianDate.toIso8601 = function (julianDate, precision) {
   let millisecondStr;
 
   if (!defined(precision) && millisecond !== 0) {
-    //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
-    millisecondStr = (millisecond * 0.01).toString().replace(".", "");
+    // This works only for milliseconds expressed numerically or with negative exponential notation,
+    // which is OK because milliseconds are lower than 999 by design.
+    const milliHundreds = millisecond * 0.01;
+    const expFactor = +(milliHundreds.toString().split("e-")[1] || 0);
+    millisecondStr = expFactor
+      ? milliHundreds.toFixed(expFactor).replace(".", "")
+      : milliHundreds.toString().replace(".", "");
     return `${year.toString().padStart(4, "0")}-${month
       .toString()
       .padStart(2, "0")}-${day

@@ -878,6 +878,31 @@ describe("Core/JulianDate", function () {
     expect(date).toEqual("0950-01-02T03:04:05.0123450Z");
   });
 
+  function roundtripTest(expectedDate) {
+    const date = JulianDate.fromIso8601(expectedDate);
+    const dateStr = JulianDate.toIso8601(JulianDate.fromIso8601(expectedDate));
+    const roundtripDate = JulianDate.fromIso8601(dateStr);
+    // There are situations where numerical precision introduces a very small difference in the milliseconds,
+    // in which case the ISO8601 dates will differ and we have to compare dates with epsilon
+    expect(
+      dateStr === expectedDate ||
+        roundtripDate.equalsEpsilon(date, CesiumMath.EPSILON12)
+    ).toEqual(true);
+  }
+
+  it("toIso8601 works with very small milliseconds", function () {
+    roundtripTest("0950-01-02T03:04:05.001Z");
+    roundtripTest("0950-01-02T03:04:05.0001Z");
+    roundtripTest("0950-01-02T03:04:05.00001Z");
+    roundtripTest("0950-01-02T03:04:05.000001Z");
+    roundtripTest("0950-01-02T03:04:05.0000001Z");
+    roundtripTest("0950-01-02T03:04:05.00000001Z");
+    roundtripTest("0950-01-02T03:04:05.000000001Z");
+    roundtripTest("0950-01-02T03:04:05.0000000001Z");
+    roundtripTest("0950-01-02T03:04:05.00000000001Z");
+    roundtripTest("0950-01-02T03:04:05.000000000001Z");
+  });
+
   it("can format Iso8601.MINIMUM_VALUE and MAXIMUM_VALUE to ISO strings", function () {
     const minString = Iso8601.MINIMUM_VALUE.toString();
     expect(minString).toEqual("0000-01-01T00:00:00Z");

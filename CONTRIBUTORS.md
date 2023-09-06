@@ -366,3 +366,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [hongfaqiu](https://github.com/hongfaqiu)
 - [KOBAYASHI Ittoku](https://github.com/kittoku)
 - [王康](https://github.com/yieryi)
+- [Jérôme Fayot](https://github.com/jfayot)
