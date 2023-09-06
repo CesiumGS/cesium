@@ -1399,8 +1399,9 @@ function createProjectPositionTo2d(rectangle, outerRing, ellipsoid) {
 function createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight) {
   return (polygons, results) => {
     if (
-      (!perPositionHeight && rectangle.height >= CesiumMath.PI) ||
-      rectangle.width >= CesiumMath.PI
+      !perPositionHeight &&
+      (rectangle.height >= CesiumMath.PI_OVER_TWO ||
+        rectangle.width >= 2 * CesiumMath.PI_OVER_THREE)
     ) {
       return PolygonGeometryLibrary.splitPolygonsOnEquator(
         polygons,
@@ -1469,7 +1470,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     createProjectTo2d(rectangle, ellipsoid, perPositionHeight),
     !perPositionHeight,
     ellipsoid,
-    createSplitPolygons(rectangle, ellipsoid, arcType)
+    createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight)
   );
 
   const hierarchy = results.hierarchy;
