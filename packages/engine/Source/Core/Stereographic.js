@@ -134,7 +134,10 @@ Stereographic.fromCartesian = function (cartesian, result) {
   Check.defined("cartesian", cartesian);
   //>>includeEnd('debug');
 
-  const sign = CesiumMath.sign(cartesian.z);
+  let sign = CesiumMath.sign(cartesian.z);
+  if (sign === 0) {
+    sign = 1;
+  }
   let tangentPlane = Stereographic.NORTH_POLE_TANGENT_PLANE;
   let origin = Stereographic.SOUTH_POLE;
   if (sign < 0) {
