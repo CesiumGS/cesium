@@ -38,6 +38,17 @@ describe("Core/Stereographic", function () {
     );
   });
 
+  it("fromCartesian constructs a Stereographic at 0,0", function () {
+    const stereographic = new Stereographic.fromCartesian(
+      Cartesian3.fromDegrees(0.0, 0.0)
+    );
+    expect(stereographic.x).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(stereographic.y).toEqualEpsilon(-1.0, CesiumMath.EPSILON7);
+    expect(stereographic.tangentPlane).toEqual(
+      Stereographic.NORTH_POLE_TANGENT_PLANE
+    );
+  });
+
   it("fromCartesian constructs a Stereographic in the southern hemisphere", function () {
     const stereographic = new Stereographic.fromCartesian(
       Cartesian3.fromDegrees(30.0, -60.0)
