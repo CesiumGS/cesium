@@ -1719,12 +1719,18 @@ Viewer.prototype.isDestroyed = function () {
 Viewer.prototype.destroy = function () {
   let i;
 
-  this.screenSpaceEventHandler.removeInputAction(
-    ScreenSpaceEventType.LEFT_CLICK
-  );
-  this.screenSpaceEventHandler.removeInputAction(
-    ScreenSpaceEventType.LEFT_DOUBLE_CLICK
-  );
+  // Check if Event handler is exist
+  if(define(this.screenSpaceEventHandler)){
+    this.screenSpaceEventHandler.removeInputAction(
+      ScreenSpaceEventType.LEFT_CLICK
+    );
+    this.screenSpaceEventHandler.removeInputAction(
+      ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+    );
+
+    // Destroy the handler
+    this.screenSpaceEventHandler.destroy(); 
+  }
 
   // Unsubscribe from data sources
   const dataSources = this.dataSources;
