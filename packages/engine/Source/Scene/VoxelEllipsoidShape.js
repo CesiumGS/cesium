@@ -720,7 +720,7 @@ VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
   }
 
   // Avoid flickering from reading voxels from both sides of the -pi/+pi discontinuity.
-  if (shaderDefines.ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY) {
+  /*if (shaderDefines.ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY) {
     longitude =
       longitude > shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.z
         ? shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.x
@@ -731,7 +731,7 @@ VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
       longitude < shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.z
         ? shaderUniforms.ellipsoidShapeUvLongitudeMinMaxMid.y
         : longitude;
-  }
+  }*/
 
   if (shaderDefines.ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE) {
     longitude =
@@ -748,14 +748,14 @@ VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
   }
 
   // Compute height
-  let height =
+  const height =
     cartographic.height * shaderUniforms.ellipsoidInverseHeightDifferenceUv;
-  if (shaderDefines.ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT) {
+  /*if (shaderDefines.ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT) {
     // TODO: This breaks down when minBounds == maxBounds. To fix it, this
     // function would have to know if ray is intersecting the front or back of the shape
     // and set the shape space position to 1 (front) or 0 (back) accordingly.
     height = 1.0;
-  }
+  }*/
 
   return Cartesian3.fromElements(longitude, latitude, height, result);
 };
