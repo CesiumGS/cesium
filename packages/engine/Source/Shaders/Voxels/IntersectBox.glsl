@@ -18,7 +18,7 @@ vec3 getBoxNormal(in VoxelBounds box, in Ray ray, in float t)
 
 // Find the distances along a ray at which the ray intersects an axis-aligned box
 // See https://tavianator.com/2011/ray_box.html
-RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds box)
+RayShapeIntersection intersectBox(in Ray ray, in VoxelBounds box)
 {
     // Consider the box as the intersection of the space between 3 pairs of parallel planes
     // Compute the distance along the ray to each plane
@@ -44,8 +44,16 @@ RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds box)
     return RayShapeIntersection(vec4(entryNormal, entryT), vec4(exitNormal, exitT));
 }
 
+RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
+{
+    vec3 p0 = convertShapeUvToShapeSpace(voxel.p0);
+    vec3 p1 = convertShapeUvToShapeSpace(voxel.p1);
+    VoxelBounds box = VoxelBounds(p0, p1);
+    return intersectBox(ray, box);
+}
+
 void intersectShape(in Ray ray, inout Intersections ix)
 {
-    RayShapeIntersection intersection = intersectVoxel(ray, VoxelBounds(u_renderMinBounds, u_renderMaxBounds));
+    RayShapeIntersection intersection = intersectBox(ray, VoxelBounds(u_renderMinBounds, u_renderMaxBounds));
     setShapeIntersection(ix, BOX_INTERSECTION_INDEX, intersection);
 }

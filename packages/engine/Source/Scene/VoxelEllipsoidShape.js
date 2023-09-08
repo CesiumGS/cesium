@@ -678,6 +678,9 @@ VoxelEllipsoidShape.prototype.update = function (
   return true;
 };
 
+const scratchPositionLocal = new Cartesian3();
+const scratchPosEllipsoid = new Cartesian3();
+
 /**
  * Convert a position in model UV coordinates to shape UV coordinates:
  * longitude, latitude, and altitude, all expressed as numbers in [0,1]
@@ -691,15 +694,25 @@ VoxelEllipsoidShape.prototype.convertUvToShapeUvSpace = function (
   positionUv,
   result
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("positionUv", positionUv);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
   const { shaderUniforms, shaderDefines } = this;
   // Compute position and normal.
   // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).
   // A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
-  const positionLocal = Cartesian3.multiplyByScalar(positionUv, 2.0);
+  const positionLocal = Cartesian3.multiplyByScalar(
+    positionUv,
+    2.0,
+    scratchPositionLocal
+  );
   Cartesian3.add(positionLocal, new Cartesian3(1.0, 1.0, 1.0), positionLocal);
   const posEllipsoid = Cartesian3.multiplyComponents(
     positionLocal,
-    shaderUniforms.ellipsoidRadiiUv
+    shaderUniforms.ellipsoidRadiiUv,
+    scratchPosEllipsoid
   );
 
   const { x, y, z } = shaderUniforms.ellipsoidRadiiUv;
