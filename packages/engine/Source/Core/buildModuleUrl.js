@@ -41,7 +41,7 @@ function getCesiumBaseUrl() {
   let baseUrlString;
   if (typeof CESIUM_BASE_URL !== "undefined") {
     baseUrlString = CESIUM_BASE_URL;
-  } else if (defined(import.meta) && defined(import.meta.url)) {
+  } else if (defined(import.meta?.url)) {
     // ESM
     baseUrlString = getAbsoluteUri(".", import.meta.url);
   } else if (

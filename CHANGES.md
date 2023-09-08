@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.110 - 2023-10-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Remove reading of `import.meta` meta-property because webpack does not support it. [#11511](https://github.com/CesiumGS/cesium/pull/11511)
+
 ### 1.109 - 2023-09-01
 
 #### @cesium/engine
