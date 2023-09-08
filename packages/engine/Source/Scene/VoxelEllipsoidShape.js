@@ -208,7 +208,7 @@ VoxelEllipsoidShape.prototype.update = function (
     new Cartesian3()
   );
   const shapeMaxBounds = Cartesian3.clamp(
-    minBounds,
+    maxBounds,
     actualMinBounds,
     DefaultMaxBounds,
     new Cartesian3()
@@ -498,8 +498,6 @@ VoxelEllipsoidShape.prototype.update = function (
 
   if (shapeHasLongitude) {
     shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE"] = true;
-
-    const shapeIsLongitudeReversed = shapeMaxBounds.x < shapeMinBounds.x;
 
     if (shapeIsLongitudeReversed) {
       shaderDefines[
