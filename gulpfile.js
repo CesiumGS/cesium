@@ -598,6 +598,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/Documentation/**",
       "Build/Specs/**",
       "!Build/Specs/e2e/**",
+      "!Build/InlineWorkers.js",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",

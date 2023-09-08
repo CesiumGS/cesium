@@ -128,13 +128,20 @@ const serveResult = (result, fileName, res, next) => {
 };
 
 class ResultCache {
-  constructor() {
+  constructor(context) {
+    this.context = context;
     this.promise = Promise.resolve();
     this.result = undefined;
   }
 
   clear() {
     this.result = undefined;
+  }
+
+  async rebuild() {
+    const promise = (this.promise = this.context.rebuild());
+    const result = (this.result = await promise);
+    return result;
   }
 
   isBuilt() {
@@ -146,8 +153,8 @@ class ResultCache {
   }
 }
 
-function createRoute(app, name, route, context) {
-  const cache = new ResultCache();
+function createRoute(app, name, route, context, dependantCache) {
+  const cache = new ResultCache(context);
   app.get(route, async function (req, res, next) {
     // Multiple files may be requested at this path, calling this function in quick succession.
     // Await the previous build before re-building again.
@@ -156,8 +163,16 @@ function createRoute(app, name, route, context) {
     if (!cache.isBuilt()) {
       try {
         const start = performance.now();
-        cache.promise = context.rebuild();
-        cache.result = await cache.promise;
+        if (dependantCache) {
+          await Promise.all(
+            dependantCache.map((dependantCache) => {
+              if (!dependantCache.isBuilt()) {
+                return dependantCache.rebuild();
+              }
+            })
+          );
+        }
+        await cache.rebuild();
         console.log(
           `Built ${name} in ${formatTimeSinceInSeconds(start)} seconds.`
         );
@@ -249,23 +264,24 @@ function createRoute(app, name, route, context) {
   app.get(knownTilesetFormats, checkGzipAndNext);
 
   if (!production) {
+    const workersCache = createRoute(
+      app,
+      "Workers/*",
+      "/Build/CesiumUnminified/Workers/*.js",
+      contexts.workers
+    );
     const iifeCache = createRoute(
       app,
       "Cesium.js",
       "/Build/CesiumUnminified/Cesium.js*",
-      contexts.iife
+      contexts.iife,
+      [workersCache]
     );
     const esmCache = createRoute(
       app,
       "index.js",
       "/Build/CesiumUnminified/index.js*",
       contexts.esm
-    );
-    const workersCache = createRoute(
-      app,
-      "Workers/*",
-      "/Build/CesiumUnminified/Workers/*.js",
-      contexts.workers
     );
 
     const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });

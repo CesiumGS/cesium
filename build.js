@@ -135,6 +135,8 @@ export async function getFilesFromWorkspaceGlobs(workspaceGlobs) {
   return files;
 }
 
+const inlineWorkerPath = "Build/InlineWorkers.js";
+
 /**
  * @typedef {object} CesiumBundles
  * @property {object} esm The ESM bundle.
@@ -194,6 +196,7 @@ export async function bundleCesiumJs(options) {
     const iife = await build({
       ...buildConfig,
       format: "iife",
+      inject: [inlineWorkerPath],
       globalName: "Cesium",
       outfile: path.join(options.path, "Cesium.js"),
       logOverride: {
@@ -205,6 +208,7 @@ export async function bundleCesiumJs(options) {
       contexts.iife = iife;
     } else {
       handleBuildWarnings(iife);
+      rimraf.sync(inlineWorkerPath);
     }
   }
 
@@ -320,6 +324,7 @@ export async function createCombinedSpecList() {
 /**
  * @param {object} options
  * @param {string} options.path output directory
+ * @param {boolean} [options.iife=false] true if the worker output should be inlined into a top-level iife file, ie. in Cesium.js
  * @param {boolean} [options.minify=false] true if the worker output should be minified
  * @param {boolean} [options.removePragmas=false] true if debug pragma should be removed
  * @param {boolean} [options.sourcemap=false] true if an external sourcemap should be generated
@@ -345,16 +350,41 @@ export async function bundleWorkers(options) {
   const workers = await globby(["packages/engine/Source/Workers/**"]);
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = true;
-  workerConfig.format = "esm";
-  workerConfig.splitting = true;
-  workerConfig.banner = {
-    js: combinedCopyrightHeader,
-  };
-  workerConfig.entryPoints = workers;
-  workerConfig.outdir = path.join(options.path, "Workers");
-  workerConfig.minify = options.minify;
   workerConfig.external = ["http", "https", "url", "zlib", "fs", "path"];
-  workerConfig.write = options.write;
+
+  if (options.iife) {
+    let contents = ``;
+    const files = await globby(workers);
+    const declarations = files.map((file) => {
+      let assignmentName = path.basename(file, path.extname(file));
+      assignmentName = assignmentName.replace(/(\.|-)/g, "_");
+      return `export const ${assignmentName} = () => { import('./${file}'); };`;
+    });
+    contents += declarations.join(`${EOL}`);
+    contents += "\n";
+
+    workerConfig.globalName = "CesiumWorkers";
+    workerConfig.format = "iife";
+    workerConfig.stdin = {
+      contents: contents,
+      resolveDir: ".",
+    };
+    workerConfig.minify = options.minify;
+    workerConfig.write = false;
+    workerConfig.logOverride = {
+      "empty-import-meta": "silent",
+    };
+  } else {
+    workerConfig.format = "esm";
+    workerConfig.splitting = true;
+    workerConfig.banner = {
+      js: combinedCopyrightHeader,
+    };
+    workerConfig.entryPoints = workers;
+    workerConfig.outdir = path.join(options.path, "Workers");
+    workerConfig.minify = options.minify;
+    workerConfig.write = options.write;
+  }
 
   const incremental = options.incremental;
   let build = esbuild.build;
@@ -362,7 +392,33 @@ export async function bundleWorkers(options) {
     build = esbuild.context;
   }
 
-  return build(workerConfig);
+  if (!options.iife) {
+    return build(workerConfig);
+  }
+
+  //if iife, write this output to it's own file in which the script content is exported
+  const writeInjectionCode = (result) => {
+    const bundle = result.outputFiles[0].contents;
+    const base64 = Buffer.from(bundle).toString("base64");
+    const contents = `globalThis.CESIUM_WORKERS = atob("${base64}");`;
+    return writeFile(inlineWorkerPath, contents);
+  };
+
+  if (incremental) {
+    const context = await build(workerConfig);
+    const rebuild = context.rebuild;
+    context.rebuild = async () => {
+      const result = await rebuild();
+      if (result) {
+        await writeInjectionCode(result);
+      }
+      return result;
+    };
+    return context;
+  }
+
+  const result = await build(workerConfig);
+  return writeInjectionCode(result);
 }
 
 const shaderFiles = [
@@ -949,6 +1005,7 @@ export const buildEngine = async (options) => {
   // Build workers.
   await bundleWorkers({
     ...options,
+    iife: false,
     path: "packages/engine/Build",
   });
 
@@ -1067,6 +1124,16 @@ export async function buildCesium(options) {
     outbase: "packages/widgets/Source",
   });
 
+  const workersContext = await bundleWorkers({
+    iife: iife,
+    minify: minify,
+    sourcemap: sourcemap,
+    path: outputDirectory,
+    removePragmas: removePragmas,
+    incremental: incremental,
+    write: write,
+  });
+
   // Generate bundles.
   const contexts = await bundleCesiumJs({
     minify: minify,
@@ -1080,21 +1147,6 @@ export async function buildCesium(options) {
   });
 
   await Promise.all([createJsHintOptions(), createGalleryList(!development)]);
-
-  const workersContext = await bundleWorkers({
-    minify: minify,
-    sourcemap: sourcemap,
-    path: outputDirectory,
-    removePragmas: removePragmas,
-    incremental: incremental,
-    write: write,
-  });
-
-  // TODO: For Cesium.js, bundle the workers into one file (which should diambiguate based on postmesage), without code splitting and as IIFE.
-  // Then, inline that file as a dataUrl into TaskProcessor in CesiumJS as a variable.
-  // Workers should then try to load this dataUrl as the worker, if possible.
-  // scheduleTask() should make sure to pass the worker path, and
-  // onMessage = ({data}) => const worker = CesiumWorkers[data.parameters.worker]; worker(); worker.onmessage({data});
 
   // Generate Specs bundle.
   const specsContext = await bundleCombinedSpecs({
