@@ -1720,7 +1720,7 @@ Viewer.prototype.destroy = function () {
   let i;
 
   // Check if Event handler is exist
-  if(define(this.screenSpaceEventHandler)){
+  if(defined(this.screenSpaceEventHandler)){
     this.screenSpaceEventHandler.removeInputAction(
       ScreenSpaceEventType.LEFT_CLICK
     );
