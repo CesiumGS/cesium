@@ -1,34 +1,34 @@
-/.metadata
-/Build
-/Cesium-*.zip
-/cesium-*.tgz
-/packages/**/*.tgz
-.directory
-.DS_Store
-Thumbs.db
+#/.metadata
+#/Build
+#/Cesium-*.zip
+#/cesium-*.tgz
+#/packages/**/*.tgz
+#.directory
+#.DS_Store
+#Thumbs.db
 .eslintcache
 
-/Apps/CesiumViewer/Gallery/gallery-index.js
+#/Apps/CesiumViewer/Gallery/gallery-index.js
 
-/Apps/Sandcastle/jsHintOptions.js
-/Apps/Sandcastle/gallery/gallery-index.js
-/Apps/Sandcastle/templates/bucket.css
+#/Apps/Sandcastle/jsHintOptions.js
+#/Apps/Sandcastle/gallery/gallery-index.js
+#/Apps/Sandcastle/templates/bucket.css
 
-/Source/Assets/
-/Source/ThirdParty/
-/Source/Widgets/
-/Source/Cesium.d.ts
-/Source/Cesium.js
+#/Source/Assets/
+#/Source/ThirdParty/
+#/Source/Widgets/
+#/Source/Cesium.d.ts
+#/Source/Cesium.js
 
-/Specs/SpecList.js
-/Specs/jasmine/**
+#/Specs/SpecList.js
+#/Specs/jasmine/**
 
 # playwright
-/playwright/.cache/
-/Specs/e2e/*-snapshots/
+#/playwright/.cache/
+#/Specs/e2e/*-snapshots/
 
-/Tools/jsdoc/cesium_template/static/javascript/prism.js
-/Tools/jsdoc/cesium_template/static/styles/prism.css
+#/Tools/jsdoc/cesium_template/static/javascript/prism.js
+#/Tools/jsdoc/cesium_template/static/styles/prism.css
 
 /node_modules
 npm-debug.log
