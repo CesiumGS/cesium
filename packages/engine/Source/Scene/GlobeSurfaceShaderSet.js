@@ -3,6 +3,7 @@ import destroyObject from "../Core/destroyObject.js";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import getClippingFunction from "./getClippingFunction.js";
+import getMultiClippingFunction from "./getMultiClippingFunction.js";
 import SceneMode from "./SceneMode.js";
 
 function GlobeSurfaceShader(
@@ -10,13 +11,15 @@ function GlobeSurfaceShader(
   flags,
   material,
   shaderProgram,
-  clippingShaderState
+  clippingShaderState,
+  multiClippingShaderState
 ) {
   this.numberOfDayTextures = numberOfDayTextures;
   this.flags = flags;
   this.material = material;
   this.shaderProgram = shaderProgram;
   this.clippingShaderState = clippingShaderState;
+  this.multiClippingShaderState = multiClippingShaderState;
 }
 
 /**
@@ -94,6 +97,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   const useWebMercatorProjection = options.useWebMercatorProjection;
   const enableFog = options.enableFog;
   const enableClippingPlanes = options.enableClippingPlanes;
+  const multiClippingPlanes = options.multiClippingPlanes;
+  const enableMultiClippingPlanes =
+    defined(multiClippingPlanes) && multiClippingPlanes.length > 0;
+  // if (defined(multiClippingPlanes) && multiClippingPlanes.length > 0) enableClippingPlanes = true;
   const clippingPlanes = options.clippingPlanes;
   const clippedByBoundaries = options.clippedByBoundaries;
   const hasImageryLayerCutout = options.hasImageryLayerCutout;
@@ -161,7 +168,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (hasExaggeration << 27) |
     (showUndergroundColor << 28) |
     (translucent << 29) |
-    (applyDayNightAlpha << 30);
+    (applyDayNightAlpha << 30) |
+    (enableMultiClippingPlanes << 31);
 
   let currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -169,13 +177,20 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       ? clippingPlanes.clippingPlanesState
       : 0;
   }
+
+  let currentMultiClippingShaderState = 0;
+  if (enableMultiClippingPlanes) {
+    currentMultiClippingShaderState = multiClippingPlanes.collectionsState;
+  }
+
   let surfaceShader = surfaceTile.surfaceShader;
   if (
     defined(surfaceShader) &&
     surfaceShader.numberOfDayTextures === numberOfDayTextures &&
     surfaceShader.flags === flags &&
     surfaceShader.material === this.material &&
-    surfaceShader.clippingShaderState === currentClippingShaderState
+    surfaceShader.clippingShaderState === currentClippingShaderState &&
+    surfaceShader.multiClippingShaderState === currentMultiClippingShaderState
   ) {
     return surfaceShader.shaderProgram;
   }
@@ -190,16 +205,23 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   if (
     !defined(surfaceShader) ||
     surfaceShader.material !== this.material ||
-    surfaceShader.clippingShaderState !== currentClippingShaderState
+    surfaceShader.clippingShaderState !== currentClippingShaderState ||
+    surfaceShader.multiClippingShaderState !== currentMultiClippingShaderState
   ) {
     // Cache miss - we've never seen this combination of numberOfDayTextures and flags before.
     const vs = this.baseVertexShaderSource.clone();
     const fs = this.baseFragmentShaderSource.clone();
 
-    if (currentClippingShaderState !== 0) {
+    if (currentClippingShaderState !== 0 && !defined(multiClippingPlanes)) {
       fs.sources.unshift(
         getClippingFunction(clippingPlanes, frameState.context)
       ); // Need to go before GlobeFS
+    }
+
+    if (currentMultiClippingShaderState !== 0) {
+      fs.sources.unshift(
+        getMultiClippingFunction(multiClippingPlanes, frameState.context)
+      );
     }
 
     vs.defines.push(quantizationDefine);
@@ -292,6 +314,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       fs.defines.push("ENABLE_CLIPPING_PLANES");
     }
 
+    if (enableMultiClippingPlanes) {
+      fs.defines.push("ENABLE_MULTI_CLIPPING_PLANES");
+    }
+
     if (colorCorrect) {
       fs.defines.push("COLOR_CORRECT");
     }
@@ -377,7 +403,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       flags,
       this.material,
       shader,
-      currentClippingShaderState
+      currentClippingShaderState,
+      currentMultiClippingShaderState
     );
   }
 

@@ -470,6 +470,20 @@ Object.defineProperties(Globe.prototype, {
     },
   },
   /**
+   * A property specifying a {@link MultiClippingPlaneCollection} used to selectively disable rendering on the outside of each ClippingPlaneCollection.
+   *
+   * @memberof Globe.prototype
+   * @type {MultiClippingPlaneCollection}
+   */
+  multiClippingPlanes: {
+    get: function () {
+      return this._surface.tileProvider._multiClippingPlanes;
+    },
+    set: function (value) {
+      this._surface.tileProvider._multiClippingPlanes = value;
+    },
+  },
+  /**
    * A property specifying a {@link Rectangle} used to limit globe rendering to a cartographic area.
    * Defaults to the maximum extent of cartographic coordinates.
    *

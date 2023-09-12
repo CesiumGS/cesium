@@ -171,6 +171,13 @@ function GlobeSurfaceTileProvider(options) {
   this._clippingPlanes = undefined;
 
   /**
+   * A property specifying a {@link MultiClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
+   * @type {MultiClippingPlaneCollection}
+   * @private
+   */
+  this._multiClippingPlanes = undefined;
+
+  /**
    * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
    * @type {Rectangle}
    */
@@ -304,6 +311,25 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
       ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
     },
   },
+  /**
+   * The {@link ClippingPlaneCollection} array used to selectively disable rendering the tileset.
+   *
+   * @type {Array}
+   *
+   * @private
+   */
+  multiClippingPlanes: {
+    get: function () {
+      return this._multiClippingPlanes;
+    },
+    set: function (value) {
+      if (defined(value)) {
+        this._multiClippingPlanes = value;
+      } else {
+        this._multiClippingPlanes = undefined;
+      }
+    },
+  },
 });
 
 function sortTileImageryByLayerIndex(a, b) {
@@ -391,6 +417,12 @@ GlobeSurfaceTileProvider.prototype.beginUpdate = function (frameState) {
   if (defined(clippingPlanes) && clippingPlanes.enabled) {
     clippingPlanes.update(frameState);
   }
+
+  const multiClippingPlanes = this._multiClippingPlanes;
+  if (defined(multiClippingPlanes)) {
+    multiClippingPlanes.update(frameState);
+  }
+
   this._usedDrawCommands = 0;
 
   this._hasLoadedTilesThisFrame = false;
@@ -657,6 +689,11 @@ function isUndergroundVisible(tileProvider, frameState) {
     return true;
   }
 
+  // multi clipping on the globe
+  if (defined(tileProvider._multiClippingPlanes)) {
+    return true;
+  }
+
   if (
     !Rectangle.equals(
       tileProvider.cartographicLimitRectangle,
@@ -772,6 +809,20 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
     tile.isClipped = planeIntersection !== Intersect.INSIDE;
     if (planeIntersection === Intersect.OUTSIDE) {
       return Visibility.NONE;
+    }
+  }
+
+  const multiClippingPlanes = this._multiClippingPlanes;
+  if (defined(multiClippingPlanes) && multiClippingPlanes.enabled) {
+    for (let i = 0; i < multiClippingPlanes.length; i++) {
+      const plane = multiClippingPlanes[i];
+      const planeIntersection = plane.computeIntersectionWithBoundingVolume(
+        boundingVolume
+      );
+      tile.isClipped = planeIntersection !== Intersect.INSIDE;
+      if (planeIntersection === Intersect.OUTSIDE) {
+        return Visibility.NONE;
+      }
     }
   }
 
@@ -1364,6 +1415,10 @@ GlobeSurfaceTileProvider.prototype.isDestroyed = function () {
 GlobeSurfaceTileProvider.prototype.destroy = function () {
   this._tileProvider = this._tileProvider && this._tileProvider.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+  if (defined(this._multiClippingPlanes)) {
+    this._multiClippingPlanes.destroy();
+    this._multiClippingPlanes = undefined;
+  }
   this._removeLayerAddedListener =
     this._removeLayerAddedListener && this._removeLayerAddedListener();
   this._removeLayerRemovedListener =
@@ -1725,6 +1780,13 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       return this.properties.dayTextureCutoutRectangles;
     },
     u_clippingPlanes: function () {
+      const multiClippingPlanes = globeSurfaceTileProvider._multiClippingPlanes;
+      if (defined(multiClippingPlanes)) {
+        const texture = multiClippingPlanes.dataTexture;
+        if (defined(texture)) {
+          return texture;
+        }
+      }
       const clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
       if (defined(clippingPlanes) && defined(clippingPlanes.texture)) {
         // Check in case clippingPlanes hasn't been updated yet.
@@ -1736,6 +1798,19 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       return this.properties.localizedCartographicLimitRectangle;
     },
     u_clippingPlanesMatrix: function () {
+      const multiClippingPlanes = globeSurfaceTileProvider._multiClippingPlanes;
+      if (defined(multiClippingPlanes)) {
+        const transform = Matrix4.multiply(
+          frameState.context.uniformState.view,
+          multiClippingPlanes.modelMatrix,
+          scratchClippingPlanesMatrix
+        );
+
+        return Matrix4.inverseTranspose(
+          transform,
+          scratchInverseTransposeClippingPlanesMatrix
+        );
+      }
       const clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
       const transform = defined(clippingPlanes)
         ? Matrix4.multiply(
@@ -1751,9 +1826,29 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       );
     },
     u_clippingPlanesEdgeStyle: function () {
-      const style = this.properties.clippingPlanesEdgeColor;
+      const multiClippingPlanes = globeSurfaceTileProvider._multiClippingPlanes;
+      if (defined(multiClippingPlanes)) {
+        const style = multiClippingPlanes.edgeColor.clone();
+        style.alpha = multiClippingPlanes.edgeWidth;
+        return style;
+      }
+      const style = this.properties.clippingPlanesEdgeColor.clone();
       style.alpha = this.properties.clippingPlanesEdgeWidth;
       return style;
+    },
+    u_multiClippingPlanesLength: function () {
+      const clippingPlanesLength =
+        globeSurfaceTileProvider._multiClippingPlanes;
+      if (defined(clippingPlanesLength)) {
+        const texture = clippingPlanesLength.lengthTexture;
+        if (defined(texture)) {
+          return texture;
+        }
+      }
+      if (defined(clippingPlanesLength)) {
+        return clippingPlanesLength;
+      }
+      return frameState.context.defaultTexture;
     },
     u_minimumBrightness: function () {
       return frameState.fog.minimumBrightness;
@@ -1849,6 +1944,11 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       vertexShadowDarkness: 0.0,
     },
   };
+
+  // multipolygon terrain clipping
+  if (defined(globeSurfaceTileProvider.cutPolygonUniformMap)) {
+    return combine(uniformMap, globeSurfaceTileProvider.cutPolygonUniformMap);
+  }
 
   if (defined(globeSurfaceTileProvider.materialUniformMap)) {
     return combine(uniformMap, globeSurfaceTileProvider.materialUniformMap);
@@ -2736,6 +2836,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.enableFog = applyFog;
     surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
     surfaceShaderSetOptions.clippingPlanes = clippingPlanes;
+    surfaceShaderSetOptions.multiClippingPlanes =
+      tileProvider._multiClippingPlanes;
     surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
     surfaceShaderSetOptions.colorCorrect = colorCorrect;
     surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
