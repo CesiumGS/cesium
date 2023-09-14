@@ -20,7 +20,7 @@ import { mkdirp } from "mkdirp";
 const scope = "cesium";
 
 const require = createRequire(import.meta.url);
-const packageJson = require("./package.json");
+const packageJson = require("../package.json");
 let version = packageJson.version;
 if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
@@ -193,6 +193,16 @@ export async function bundleCesiumJs(options) {
 
   // Build IIFE
   if (options.iife) {
+    const iifeWorkers = await bundleWorkers({
+      iife: true,
+      minify: options.minify,
+      sourcemap: false,
+      path: options.path,
+      removePragmas: options.removePragmas,
+      incremental: incremental,
+      write: options.write,
+    });
+
     const iife = await build({
       ...buildConfig,
       format: "iife",
@@ -206,6 +216,7 @@ export async function bundleCesiumJs(options) {
 
     if (incremental) {
       contexts.iife = iife;
+      contexts.iifeWorkers = iifeWorkers;
     } else {
       handleBuildWarnings(iife);
       rimraf.sync(inlineWorkerPath);
@@ -1125,7 +1136,7 @@ export async function buildCesium(options) {
   });
 
   const workersContext = await bundleWorkers({
-    iife: iife,
+    iife: false,
     minify: minify,
     sourcemap: sourcemap,
     path: outputDirectory,
@@ -1199,6 +1210,7 @@ export async function buildCesium(options) {
   return {
     esm: contexts.esm,
     iife: contexts.iife,
+    iifeWorkers: contexts.iifeWorkers,
     node: contexts.node,
     specs: specsContext,
     workers: workersContext,

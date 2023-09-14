@@ -10,6 +10,9 @@ import compression from "compression";
 import express from "express";
 import yargs from "yargs";
 
+import ContextCache from "./scripts/ContextCache.js";
+import createRoute from "./scripts/createRoute.js";
+
 const argv = yargs(process.argv)
   .options({
     port: {
@@ -42,7 +45,7 @@ import {
   glslToJavaScript,
   createIndexJs,
   buildCesium,
-} from "./build.js";
+} from "./scripts/build.js";
 
 const sourceFiles = [
   "packages/engine/Source/**/*.js",
@@ -107,84 +110,6 @@ async function generateDevelopmentBuild() {
   );
 
   return contexts;
-}
-
-const serveResult = (result, fileName, res, next) => {
-  let bundle;
-  for (const out of result.outputFiles) {
-    if (path.basename(out.path) === fileName) {
-      bundle = out.text;
-    }
-  }
-
-  if (!bundle) {
-    next(new Error(`Failed to generate bundle: ${fileName}`));
-    return;
-  }
-
-  res.append("Cache-Control", "max-age=0");
-  res.append("Content-Type", "application/javascript");
-  res.send(bundle);
-};
-
-class ResultCache {
-  constructor(context) {
-    this.context = context;
-    this.promise = Promise.resolve();
-    this.result = undefined;
-  }
-
-  clear() {
-    this.result = undefined;
-  }
-
-  async rebuild() {
-    const promise = (this.promise = this.context.rebuild());
-    const result = (this.result = await promise);
-    return result;
-  }
-
-  isBuilt() {
-    return (
-      this.result &&
-      this.result.outputFiles &&
-      this.result.outputFiles.length > 0
-    );
-  }
-}
-
-function createRoute(app, name, route, context, dependantCache) {
-  const cache = new ResultCache(context);
-  app.get(route, async function (req, res, next) {
-    // Multiple files may be requested at this path, calling this function in quick succession.
-    // Await the previous build before re-building again.
-    await cache.promise;
-
-    if (!cache.isBuilt()) {
-      try {
-        const start = performance.now();
-        if (dependantCache) {
-          await Promise.all(
-            dependantCache.map((dependantCache) => {
-              if (!dependantCache.isBuilt()) {
-                return dependantCache.rebuild();
-              }
-            })
-          );
-        }
-        await cache.rebuild();
-        console.log(
-          `Built ${name} in ${formatTimeSinceInSeconds(start)} seconds.`
-        );
-      } catch (e) {
-        next(e);
-      }
-    }
-
-    return serveResult(cache.result, path.basename(req.originalUrl), res, next);
-  });
-
-  return cache;
 }
 
 (async function () {
@@ -264,24 +189,25 @@ function createRoute(app, name, route, context, dependantCache) {
   app.get(knownTilesetFormats, checkGzipAndNext);
 
   if (!production) {
-    const workersCache = createRoute(
-      app,
-      "Workers/*",
-      "/Build/CesiumUnminified/Workers/*.js",
-      contexts.workers
-    );
+    const iifeWorkersCache = new ContextCache(contexts.iifeWorkers);
     const iifeCache = createRoute(
       app,
       "Cesium.js",
       "/Build/CesiumUnminified/Cesium.js*",
       contexts.iife,
-      [workersCache]
+      [iifeWorkersCache]
     );
     const esmCache = createRoute(
       app,
       "index.js",
       "/Build/CesiumUnminified/index.js*",
       contexts.esm
+    );
+    const workersCache = createRoute(
+      app,
+      "Workers/*",
+      "/Build/CesiumUnminified/Workers/*.js",
+      contexts.workers
     );
 
     const glslWatcher = chokidar.watch(shaderFiles, { ignoreInitial: true });
@@ -299,6 +225,7 @@ function createRoute(app, name, route, context, dependantCache) {
       esmCache.clear();
       iifeCache.clear();
       workersCache.clear();
+      iifeWorkersCache.clear();
       jsHintOptionsCache = undefined;
       await createCesiumJs();
     });
