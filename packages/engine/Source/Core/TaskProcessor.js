@@ -81,34 +81,44 @@ function urlFromScript(script) {
 function createWorker(url) {
   const uri = new Uri(url);
   const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
-  const moduleID = isUri ? url : url.replace(/\.js$/, "");
+
   const options = {};
   let workerPath;
+  if (isCrossOriginUrl(url)) {
+    // To load cross-origin, create a shim worker from a blob URL
+    const script = `importScripts("${url}");`;
+    workerPath = urlFromScript(script);
+    return new Worker(workerPath, options);
+  }
+
+  const moduleID = url.replace(/\.js$/, "");
+
   /* global CESIUM_WORKERS */
-  if (typeof CESIUM_WORKERS !== "undefined") {
+  if (!isUri && typeof CESIUM_WORKERS !== "undefined") {
     // If the workers are embedded, create a shim worker from the embedded script data
     const script = `
-     importScripts("${urlFromScript(CESIUM_WORKERS)}");
-     CesiumWorkers["${moduleID}"]();
-   `;
+      importScripts("${urlFromScript(CESIUM_WORKERS)}");
+      CesiumWorkers["${moduleID}"]();
+    `;
     workerPath = urlFromScript(script);
-  } else if (isCrossOriginUrl(moduleID)) {
-    // To load cross-origin, create a shim worker from a blob URL
-    const script = `importScripts("${moduleID}");`;
-    workerPath = urlFromScript(script);
-  } else {
+    return new Worker(workerPath, options);
+  }
+
+  workerPath = url;
+
+  if (!isUri) {
     workerPath = buildModuleUrl(
       `${TaskProcessor._workerModulePrefix + moduleID}.js`
     );
-
-    if (!FeatureDetection.supportsEsmWebWorkers()) {
-      throw new RuntimeError(
-        "This browser is not supported. Please update your browser to continue."
-      );
-    }
-
-    options.type = "module";
   }
+
+  if (!FeatureDetection.supportsEsmWebWorkers()) {
+    throw new RuntimeError(
+      "This browser is not supported. Please update your browser to continue."
+    );
+  }
+
+  options.type = "module";
 
   return new Worker(workerPath, options);
 }
