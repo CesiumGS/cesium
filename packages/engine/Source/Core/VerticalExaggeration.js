@@ -3,7 +3,7 @@ import Cartesian3 from "./Cartesian3.js";
 /**
  * @private
  */
-const TerrainExaggeration = {};
+const VerticalExaggeration = {};
 
 /**
  * Scales a height relative to an offset.
@@ -12,7 +12,7 @@ const TerrainExaggeration = {};
  * @param {number} scale A scalar used to exaggerate the terrain. If the value is 1.0 there will be no effect.
  * @param {number} relativeHeight The height relative to which terrain is exaggerated. If the value is 0.0 terrain will be exaggerated relative to the ellipsoid surface.
  */
-TerrainExaggeration.getHeight = function (height, scale, relativeHeight) {
+VerticalExaggeration.getHeight = function (height, scale, relativeHeight) {
   return (height - relativeHeight) * scale + relativeHeight;
 };
 
@@ -21,21 +21,21 @@ const scratchCartographic = new Cartesian3();
 /**
  * Scales a position by exaggeration.
  */
-TerrainExaggeration.getPosition = function (
+VerticalExaggeration.getPosition = function (
   position,
   ellipsoid,
-  terrainExaggeration,
-  terrainExaggerationRelativeHeight,
+  verticalExaggeration,
+  verticalExaggerationRelativeHeight,
   result
 ) {
   const cartographic = ellipsoid.cartesianToCartographic(
     position,
     scratchCartographic
   );
-  const newHeight = TerrainExaggeration.getHeight(
+  const newHeight = VerticalExaggeration.getHeight(
     cartographic.height,
-    terrainExaggeration,
-    terrainExaggerationRelativeHeight
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight
   );
   return Cartesian3.fromRadians(
     cartographic.longitude,
@@ -46,4 +46,4 @@ TerrainExaggeration.getPosition = function (
   );
 };
 
-export default TerrainExaggeration;
+export default VerticalExaggeration;

@@ -17,7 +17,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Plane from "../Core/Plane.js";
 import Quaternion from "../Core/Quaternion.js";
 import Ray from "../Core/Ray.js";
-import TerrainExaggeration from "../Core/TerrainExaggeration.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import Transforms from "../Core/Transforms.js";
 import CameraEventAggregator from "./CameraEventAggregator.js";
 import CameraEventType from "./CameraEventType.js";
@@ -2968,17 +2968,17 @@ ScreenSpaceCameraController.prototype.update = function () {
   const exaggerationRelativeHeight = defined(this._globe)
     ? this._globe.terrainExaggerationRelativeHeight
     : 0.0;
-  this._minimumCollisionTerrainHeight = TerrainExaggeration.getHeight(
+  this._minimumCollisionTerrainHeight = VerticalExaggeration.getHeight(
     this.minimumCollisionTerrainHeight,
     exaggeration,
     exaggerationRelativeHeight
   );
-  this._minimumPickingTerrainHeight = TerrainExaggeration.getHeight(
+  this._minimumPickingTerrainHeight = VerticalExaggeration.getHeight(
     this.minimumPickingTerrainHeight,
     exaggeration,
     exaggerationRelativeHeight
   );
-  this._minimumTrackBallHeight = TerrainExaggeration.getHeight(
+  this._minimumTrackBallHeight = VerticalExaggeration.getHeight(
     this.minimumTrackBallHeight,
     exaggeration,
     exaggerationRelativeHeight

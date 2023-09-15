@@ -1881,8 +1881,8 @@ Scene.prototype.updateFrameState = function () {
   frameState.globeTranslucencyState = this._globeTranslucencyState;
 
   if (defined(this.globe)) {
-    frameState.terrainExaggeration = this.globe.terrainExaggeration;
-    frameState.terrainExaggerationRelativeHeight = this.globe.terrainExaggerationRelativeHeight;
+    frameState.verticalExaggeration = this.globe.terrainExaggeration;
+    frameState.verticalExaggerationRelativeHeight = this.globe.terrainExaggerationRelativeHeight;
   }
 
   if (
