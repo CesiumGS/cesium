@@ -1134,10 +1134,12 @@ function setCamera(uniformState, camera) {
   const positionCartographic = camera.positionCartographic;
   if (!defined(positionCartographic)) {
     uniformState._eyeHeight = -ellipsoid.maximumRadius;
-    uniformState._eyeEllipsoidNormalEC = Cartesian3.normalize(
-      camera.positionWC,
-      uniformState._eyeEllipsoidNormalEC
-    );
+    if (Cartesian3.magnitude(camera.positionWC) > 0.0) {
+      uniformState._eyeEllipsoidNormalEC = Cartesian3.normalize(
+        camera.positionWC,
+        uniformState._eyeEllipsoidNormalEC
+      );
+    }
     surfacePosition = ellipsoid.scaleToGeodeticSurface(
       camera.positionWC,
       surfacePositionScratch
@@ -1155,6 +1157,12 @@ function setCamera(uniformState, camera) {
       ellipsoid,
       surfacePositionScratch
     );
+  }
+
+  uniformState._encodedCameraPositionMCDirty = true;
+
+  if (!defined(surfacePosition)) {
+    return;
   }
 
   uniformState._eyeEllipsoidNormalEC = Matrix3.multiplyByVector(
@@ -1200,8 +1208,6 @@ function setCamera(uniformState, camera) {
     uniformState._enuToModel,
     uniformState._modelToEnu
   );
-
-  uniformState._encodedCameraPositionMCDirty = true;
 }
 
 let transformMatrix = new Matrix3();

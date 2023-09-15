@@ -463,9 +463,9 @@ GlobeSurfaceTile.prototype.updateExaggeration = function (
   }
 
   // Check the tile's terrain encoding to see if it has been exaggerated yet
-  const exaggeration = frameState.terrainExaggeration;
+  const exaggeration = frameState.verticalExaggeration;
   const exaggerationRelativeHeight =
-    frameState.terrainExaggerationRelativeHeight;
+    frameState.verticalExaggerationRelativeHeight;
   const hasExaggerationScale = exaggeration !== 1.0;
 
   const encoding = mesh.encoding;
@@ -790,9 +790,9 @@ function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
   createMeshOptions.x = x;
   createMeshOptions.y = y;
   createMeshOptions.level = level;
-  createMeshOptions.exaggeration = frameState.terrainExaggeration;
+  createMeshOptions.exaggeration = frameState.verticalExaggeration;
   createMeshOptions.exaggerationRelativeHeight =
-    frameState.terrainExaggerationRelativeHeight;
+    frameState.verticalExaggerationRelativeHeight;
   createMeshOptions.throttle = true;
 
   const terrainData = surfaceTile.terrainData;

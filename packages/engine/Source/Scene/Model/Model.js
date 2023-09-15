@@ -1987,7 +1987,7 @@ function updateSceneMode(model, frameState) {
 }
 
 function updateVerticalExaggeration(model, frameState) {
-  const verticalExaggerationNeeded = frameState.terrainExaggeration !== 1.0;
+  const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
   if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
     model.resetDrawCommands();
     model._verticalExaggerationOn = verticalExaggerationNeeded;

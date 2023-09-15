@@ -1006,8 +1006,8 @@ VoxelPrimitive.prototype.update = function (frameState) {
     this._exaggeratedMaxBounds
   );
   if (this.shape === VoxelShapeType.ELLIPSOID) {
-    const relativeHeight = frameState.terrainExaggerationRelativeHeight;
-    const exaggeration = frameState.terrainExaggeration;
+    const relativeHeight = frameState.verticalExaggerationRelativeHeight;
+    const exaggeration = frameState.verticalExaggeration;
     this._exaggeratedMinBounds.z =
       (this._minBounds.z - relativeHeight) * exaggeration + relativeHeight;
     this._exaggeratedMaxBounds.z =

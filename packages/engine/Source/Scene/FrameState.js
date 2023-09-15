@@ -275,18 +275,18 @@ function FrameState(context, creditDisplay, jobScheduler) {
   };
 
   /**
-   * A scalar used to exaggerate the terrain.
+   * A scalar used to vertically exaggerate the scene
    * @type {number}
    * @default 1.0
    */
-  this.terrainExaggeration = 1.0;
+  this.verticalExaggeration = 1.0;
 
   /**
-   * The height relative to which terrain is exaggerated.
+   * The height relative to which the scene is vertically exaggerated.
    * @type {number}
    * @default 0.0
    */
-  this.terrainExaggerationRelativeHeight = 0.0;
+  this.verticalExaggerationRelativeHeight = 0.0;
 
   /**
    * @typedef FrameState.ShadowState
