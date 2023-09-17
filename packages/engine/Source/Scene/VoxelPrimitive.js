@@ -474,6 +474,7 @@ function initialize(primitive, provider) {
   // Create the shape object, and update it so it is valid for VoxelTraversal
   const ShapeConstructor = VoxelShapeType.getShapeConstructor(shapeType);
   primitive._shape = new ShapeConstructor();
+  updateVerticalExaggeration(primitive);
   primitive._shapeVisible = updateShapeAndTransforms(
     primitive,
     primitive._shape,
@@ -996,23 +997,7 @@ VoxelPrimitive.prototype.update = function (frameState) {
     return;
   }
 
-  // Update the vertical exaggeration
-  this._exaggeratedMinBounds = Cartesian3.clone(
-    this._minBounds,
-    this._exaggeratedMinBounds
-  );
-  this._exaggeratedMaxBounds = Cartesian3.clone(
-    this._maxBounds,
-    this._exaggeratedMaxBounds
-  );
-  if (this.shape === VoxelShapeType.ELLIPSOID) {
-    const relativeHeight = frameState.verticalExaggerationRelativeHeight;
-    const exaggeration = frameState.verticalExaggeration;
-    this._exaggeratedMinBounds.z =
-      (this._minBounds.z - relativeHeight) * exaggeration + relativeHeight;
-    this._exaggeratedMaxBounds.z =
-      (this._maxBounds.z - relativeHeight) * exaggeration + relativeHeight;
-  }
+  updateVerticalExaggeration(this, frameState);
 
   // Check if the shape is dirty before updating it. This needs to happen every
   // frame because the member variables can be modified externally via the
@@ -1156,6 +1141,32 @@ VoxelPrimitive.prototype.update = function (frameState) {
   command.boundingVolume = shape.boundingSphere;
   frameState.commandList.push(command);
 };
+
+/**
+ * Update the exaggerated bounds of a primitive to account for vertical exaggeration
+ * Currently only applies to Ellipsoid shape type
+ * @param {VoxelPrimitive} primitive
+ * @param {FrameState} [frameState]
+ * @private
+ */
+function updateVerticalExaggeration(primitive, frameState) {
+  primitive._exaggeratedMinBounds = Cartesian3.clone(
+    primitive._minBounds,
+    primitive._exaggeratedMinBounds
+  );
+  primitive._exaggeratedMaxBounds = Cartesian3.clone(
+    primitive._maxBounds,
+    primitive._exaggeratedMaxBounds
+  );
+  if (defined(frameState) && primitive.shape === VoxelShapeType.ELLIPSOID) {
+    const relativeHeight = frameState.verticalExaggerationRelativeHeight;
+    const exaggeration = frameState.verticalExaggeration;
+    primitive._exaggeratedMinBounds.z =
+      (primitive._minBounds.z - relativeHeight) * exaggeration + relativeHeight;
+    primitive._exaggeratedMaxBounds.z =
+      (primitive._maxBounds.z - relativeHeight) * exaggeration + relativeHeight;
+  }
+}
 
 /**
  * Initialize primitive properties that are derived from the voxel provider
