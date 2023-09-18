@@ -1,5 +1,4 @@
-/.metadata
-/Build
+#/Build
 /Cesium-*.zip
 /cesium-*.tgz
 /packages/**/*.tgz
@@ -14,11 +13,11 @@ Thumbs.db
 /Apps/Sandcastle/gallery/gallery-index.js
 /Apps/Sandcastle/templates/bucket.css
 
-/Source/Assets/
-/Source/ThirdParty/
-/Source/Widgets/
-/Source/Cesium.d.ts
-/Source/Cesium.js
+#/Source/Assets/
+#/Source/ThirdParty/
+#/Source/Widgets/
+#/Source/Cesium.d.ts
+#/Source/Cesium.js
 
 /Specs/SpecList.js
 /Specs/jasmine/**
@@ -40,3 +39,5 @@ yarn.lock
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/shelf
+
+.vs

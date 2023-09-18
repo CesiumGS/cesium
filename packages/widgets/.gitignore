@@ -1,4 +1,10 @@
-Build
+#Build
 Specs/SpecList.js
-index.js
-index.d.ts
+#index.js
+#index.d.ts
+
+/node_modules
+npm-debug.log
+npm-debug.log.*
+package-lock.json
+yarn.lock

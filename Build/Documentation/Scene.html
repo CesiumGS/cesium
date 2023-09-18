@@ -1,0 +1,8591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Scene - Cesium Documentation</title>
+
+    <!--[if lt IE 9]>
+      <script src="javascript/html5.js"></script>
+    <![endif]-->
+    <link href="styles/jsdoc-default.css" rel="stylesheet">
+    <link href="styles/prism.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">
+        <a href="index.html"><img src="Images/CesiumLogo.png" class="cesiumLogo"></a>
+        Scene
+        <div class="titleCenterer"></div>
+    </h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+
+    
+        
+    <div class="nameContainer">
+    <h4 class="name" id="Scene">
+        <a href="#Scene" class="doc-link"></a>
+        new Cesium.Scene<span class="signature">(options)</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L118">engine/Source/Scene/Scene.js 118</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,a scene is not created directly; instead, it is implicitly created by <a href="CesiumWidget.html"><code>CesiumWidget</code></a>.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                Object with the following properties:
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>canvas</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLCanvasElement</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                The HTML canvas element to create the scene for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>contextOptions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#ContextOptions">ContextOptions</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Context and WebGL creation properties.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>creditContainer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The HTML element in which the credits will be displayed.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>creditViewport</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Element</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mapProjection</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="MapProjection.html">MapProjection</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">new GeographicProjection()</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The map projection to use in 2D and Columbus View modes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>orderIndependentTranslucency</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">true</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                If true and the configuration supports it, use order independent translucency.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>scene3DOnly</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>shadows</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Determines if shadows are cast by light sources.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>mapMode2D</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#MapMode2D">MapMode2D</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">MapMode2D.INFINITE_SCROLL</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>requestRenderMode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using <a href="Scene.html#requestRender"><code>Scene#requestRender</code></a> to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See <a href="https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/">Improving Performance with Explicit Rendering</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>maximumRenderTimeChange</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.0</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See <a href="https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/">Improving Performance with Explicit Rendering</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>depthPlaneEllipsoidOffset</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.0</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Adjust the DepthPlane to address rendering artefacts below ellipsoid zero elevation.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>msaaSamples</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">1</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                If provided, this value controls the rate of multisample antialiasing. Typical multisampling rates are 2, 4, and sometimes 8 samples per pixel. Higher sampling rates of MSAA may impact performance in exchange for improved visual quality. This value only applies to WebGL2 contexts that support multisample render targets.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: options and options.canvas are required.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">// Create scene without anisotropic texture filteringconst scene = new Cesium.Scene({  canvas : canvas,  contextOptions : {    allowTextureFilterAnisotropic : false  }});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="CesiumWidget.html">CesiumWidget</a></li>
+    
+        <li><a href="http://www.khronos.org/registry/webgl/specs/latest/#5.2">WebGLContextAttributes</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="backgroundColor">
+    <a href="#backgroundColor" class="doc-link"></a>
+    backgroundColor<span class="type-signature"> : <a href="Color.html">Color</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L306">engine/Source/Scene/Scene.js 306</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The background color, which is only visible if there is no sky box, i.e., <a href="Scene.html#skyBox"><code>Scene#skyBox</code></a> is undefined.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript"><a href="Color.html#.BLACK"><code>Color.BLACK</code></a></code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#skyBox">Scene#skyBox</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="camera">
+    <a href="#camera" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> camera<span class="type-signature"> : <a href="Camera.html">Camera</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L930">engine/Source/Scene/Scene.js 930</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets or sets the camera.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="cameraUnderground">
+    <a href="#cameraUnderground" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> cameraUnderground<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1554">engine/Source/Scene/Scene.js 1554</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Whether or not the camera is underneath the globe.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="canvas">
+    <a href="#canvas" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> canvas<span class="type-signature"> : HTMLCanvasElement</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L735">engine/Source/Scene/Scene.js 735</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the canvas element to which this scene is bound.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="clampToHeightSupported">
+    <a href="#clampToHeightSupported" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> clampToHeightSupported<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L842">engine/Source/Scene/Scene.js 842</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Returns <code>true</code> if the <a href="Scene.html#clampToHeight"><code>Scene#clampToHeight</code></a> and <a href="Scene.html#clampToHeightMostDetailed"><code>Scene#clampToHeightMostDetailed</code></a> functions are supported.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#clampToHeight">Scene#clampToHeight</a></li>
+    
+        <li><a href="Scene.html#clampToHeightMostDetailed">Scene#clampToHeightMostDetailed</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="completeMorphOnUserInput">
+    <a href="#completeMorphOnUserInput" class="doc-link"></a>
+    completeMorphOnUserInput<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L239">engine/Source/Scene/Scene.js 239</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Determines whether or not to instantly complete thescene transition animation on user input.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugCommandFilter">
+    <a href="#debugCommandFilter" class="doc-link"></a>
+    debugCommandFilter<span class="type-signature"> : function</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L386">engine/Source/Scene/Scene.js 386</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not for production use.<p>A function that determines what commands are executed.  As shown in the examples below,the function receives the command's <code>owner</code> as an argument, and returns a boolean indicating if thecommand should be executed.</p><p>The default is <code>undefined</code>, indicating that all commands are executed.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">// Do not execute any commands.scene.debugCommandFilter = function(command) {    return false;};// Execute only the billboard's commands.  That is, only draw the billboard.const billboards = new Cesium.BillboardCollection();scene.debugCommandFilter = function(command) {    return command.owner === billboards;};</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugFrustumStatistics">
+    <a href="#debugFrustumStatistics" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> debugFrustumStatistics<span class="type-signature"> : object</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1274">engine/Source/Scene/Scene.js 1274</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not for production use.<p>When <code>Scene.debugShowFrustums</code> is <code>true</code>, this containsproperties with statistics about the number of command execute per frustum.<code>totalCommands</code> is the total number of commands executed, ignoringoverlap. <code>commandsInFrustums</code> is an array with the number of timescommands are executed redundantly, e.g., how many commands overlap two orthree frustums.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowCommands">
+    <a href="#debugShowCommands" class="doc-link"></a>
+    debugShowCommands<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L400">engine/Source/Scene/Scene.js 400</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not for production use.<p>When <code>true</code>, commands are randomly shaded.  This is usefulfor performance analysis to see what parts of a scene or model arecommand-dense and could benefit from batching.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowDepthFrustum">
+    <a href="#debugShowDepthFrustum" class="doc-link"></a>
+    debugShowDepthFrustum<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L441">engine/Source/Scene/Scene.js 441</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not for production use.<p>Indicates which frustum will have depth information displayed.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">1</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowFramesPerSecond">
+    <a href="#debugShowFramesPerSecond" class="doc-link"></a>
+    debugShowFramesPerSecond<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L429">engine/Source/Scene/Scene.js 429</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not for production use.<p>Displays frames per second and time between frames.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowFrustumPlanes">
+    <a href="#debugShowFrustumPlanes" class="doc-link"></a>
+    debugShowFrustumPlanes<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L453">engine/Source/Scene/Scene.js 453</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not for production use.<p>When <code>true</code>, draws outlines to show the boundaries of the camera frustums</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowFrustums">
+    <a href="#debugShowFrustums" class="doc-link"></a>
+    debugShowFrustums<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L417">engine/Source/Scene/Scene.js 417</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not for production use.<p>When <code>true</code>, commands are shaded based on the frustums theyoverlap.  Commands in the closest frustum are tinted red, commands inthe next closest are green, and commands in the farthest frustum areblue.  If a command overlaps more than one frustum, the color componentsare combined, e.g., a command overlapping the first two frustums is tintedyellow.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="drawingBufferHeight">
+    <a href="#drawingBufferHeight" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> drawingBufferHeight<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L750">engine/Source/Scene/Scene.js 750</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The drawingBufferHeight of the underlying GL context.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight">drawingBufferHeight</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="drawingBufferWidth">
+    <a href="#drawingBufferWidth" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> drawingBufferWidth<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L765">engine/Source/Scene/Scene.js 765</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The drawingBufferWidth of the underlying GL context.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth">drawingBufferWidth</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="eyeSeparation">
+    <a href="#eyeSeparation" class="doc-link"></a>
+    eyeSeparation<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L548">engine/Source/Scene/Scene.js 548</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The eye separation distance in meters for use with cardboard or WebVR.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="farToNearRatio">
+    <a href="#farToNearRatio" class="doc-link"></a>
+    farToNearRatio<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L334">engine/Source/Scene/Scene.js 334</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The far-to-near ratio of the multi-frustum when using a normal depth buffer.<p>This value is used to create the near and far values for each frustum of the multi-frustum. It is only usedwhen <a href="Scene.html#logarithmicDepthBuffer"><code>Scene#logarithmicDepthBuffer</code></a> is <code>false</code>. When <code>logarithmicDepthBuffer</code> is<code>true</code>, use <a href="Scene.html#logarithmicDepthFarToNearRatio"><code>Scene#logarithmicDepthFarToNearRatio</code></a>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">1000.0</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="focalLength">
+    <a href="#focalLength" class="doc-link"></a>
+    focalLength<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L542">engine/Source/Scene/Scene.js 542</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The focal length for use when with cardboard or WebVR.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="fog">
+    <a href="#fog" class="doc-link"></a>
+    fog<span class="type-signature"> : <a href="Fog.html">Fog</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L502">engine/Source/Scene/Scene.js 502</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Blends the atmosphere to geometry far from the camera for horizon views. Allows for additionalperformance improvements by rendering less geometry and dispatching less terrain requests.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="gamma">
+    <a href="#gamma" class="doc-link"></a>
+    gamma<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1500">engine/Source/Scene/Scene.js 1500</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The value used for gamma correction. This is only used when rendering with high dynamic range.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">2.2</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="globe">
+    <a href="#globe" class="doc-link"></a>
+    globe<span class="type-signature"> : <a href="Globe.html">Globe</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L884">engine/Source/Scene/Scene.js 884</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets or sets the depth-test ellipsoid.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="groundPrimitives">
+    <a href="#groundPrimitives" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> groundPrimitives<span class="type-signature"> : <a href="PrimitiveCollection.html">PrimitiveCollection</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L917">engine/Source/Scene/Scene.js 917</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the collection of ground primitives.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="highDynamicRange">
+    <a href="#highDynamicRange" class="doc-link"></a>
+    highDynamicRange<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1515">engine/Source/Scene/Scene.js 1515</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Whether or not to use high dynamic range rendering.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="highDynamicRangeSupported">
+    <a href="#highDynamicRangeSupported" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> highDynamicRangeSupported<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1537">engine/Source/Scene/Scene.js 1537</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Whether or not high dynamic range rendering is supported.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="id">
+    <a href="#id" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> id<span class="type-signature"> : string</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1312">engine/Source/Scene/Scene.js 1312</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the unique identifier for this scene.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="imageryLayers">
+    <a href="#imageryLayers" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> imageryLayers<span class="type-signature"> : <a href="ImageryLayerCollection.html">ImageryLayerCollection</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1084">engine/Source/Scene/Scene.js 1084</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the collection of image layers that will be rendered on the globe.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="invertClassification">
+    <a href="#invertClassification" class="doc-link"></a>
+    invertClassification<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L522">engine/Source/Scene/Scene.js 522</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally andunclassified 3D Tile geometry will render with the color multiplied by <a href="Scene.html#invertClassificationColor"><code>Scene#invertClassificationColor</code></a>.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="invertClassificationColor">
+    <a href="#invertClassificationColor" class="doc-link"></a>
+    invertClassificationColor<span class="type-signature"> : <a href="Color.html">Color</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L531">engine/Source/Scene/Scene.js 531</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The highlight color of unclassified 3D Tile geometry when <a href="Scene.html#invertClassification"><code>Scene#invertClassification</code></a> is <code>true</code>.<p>When the color's alpha is less than 1.0, the unclassified portions of the 3D Tiles will not blend correctly with the classified positions of the 3D Tiles.</p><p>Also, when the color's alpha is less than 1.0, the WEBGL_depth_texture and EXT_frag_depth WebGL extensions must be supported.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">Color.WHITE</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="invertClassificationSupported">
+    <a href="#invertClassificationSupported" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> invertClassificationSupported<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L857">engine/Source/Scene/Scene.js 857</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Returns <code>true</code> if the <a href="Scene.html#invertClassification"><code>Scene#invertClassification</code></a> is supported.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#invertClassification">Scene#invertClassification</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="lastRenderTime">
+    <a href="#lastRenderTime" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> lastRenderTime<span class="type-signature"> : <a href="JulianDate.html">JulianDate</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1239">engine/Source/Scene/Scene.js 1239</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the simulation time when the scene was last rendered. Returns undefined if the scene has not yet beenrendered.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="light">
+    <a href="#light" class="doc-link"></a>
+    light<span class="type-signature"> : <a href="Light.html">Light</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L697">engine/Source/Scene/Scene.js 697</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The light source for shading. Defaults to a directional light from the Sun.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="logarithmicDepthBuffer">
+    <a href="#logarithmicDepthBuffer" class="doc-link"></a>
+    logarithmicDepthBuffer<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1481">engine/Source/Scene/Scene.js 1481</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,increasing performance. This property relies on fragmentDepth being supported.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="logarithmicDepthFarToNearRatio">
+    <a href="#logarithmicDepthFarToNearRatio" class="doc-link"></a>
+    logarithmicDepthFarToNearRatio<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L347">engine/Source/Scene/Scene.js 347</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer.<p>This value is used to create the near and far values for each frustum of the multi-frustum. It is only usedwhen <a href="Scene.html#logarithmicDepthBuffer"><code>Scene#logarithmicDepthBuffer</code></a> is <code>true</code>. When <code>logarithmicDepthBuffer</code> is<code>false</code>, use <a href="Scene.html#farToNearRatio"><code>Scene#farToNearRatio</code></a>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">1e9</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="mapMode2D">
+    <a href="#mapMode2D" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> mapMode2D<span class="type-signature"> : <a href="global.html#MapMode2D">MapMode2D</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1429">engine/Source/Scene/Scene.js 1429</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="mapProjection">
+    <a href="#mapProjection" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> mapProjection<span class="type-signature"> : <a href="MapProjection.html">MapProjection</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1011">engine/Source/Scene/Scene.js 1011</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Get the map projection to use in 2D and Columbus View modes.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">new GeographicProjection()</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="maximumAliasedLineWidth">
+    <a href="#maximumAliasedLineWidth" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> maximumAliasedLineWidth<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L780">engine/Source/Scene/Scene.js 780</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml">glGet</a> with <code>ALIASED_LINE_WIDTH_RANGE</code>.</li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="maximumCubeMapSize">
+    <a href="#maximumCubeMapSize" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> maximumCubeMapSize<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L795">engine/Source/Scene/Scene.js 795</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The maximum length in pixels of one edge of a cube map, supported by this WebGL implementation.  It will be at least 16.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml">glGet</a> with <code>GL_MAX_CUBE_MAP_TEXTURE_SIZE</code>.</li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="maximumRenderTimeChange">
+    <a href="#maximumRenderTimeChange" class="doc-link"></a>
+    maximumRenderTimeChange<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L628">engine/Source/Scene/Scene.js 628</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    If <a href="Scene.html#requestRenderMode"><code>Scene#requestRenderMode</code></a> is <code>true</code>, this value defines the maximum change insimulation time allowed before a render is requested. Lower values increase the number of frames renderedand higher values decrease the number of frames rendered. If <code>undefined</code>, changes tothe simulation time will never request a render.This value impacts the rate of rendering for changes in the scene like lighting, entity property updates,and animations.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.0</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/">Improving Performance with Explicit Rendering</a></li>
+    
+        <li><a href="Scene.html#requestRenderMode">Scene#requestRenderMode</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="minimumDisableDepthTestDistance">
+    <a href="#minimumDisableDepthTestDistance" class="doc-link"></a>
+    minimumDisableDepthTestDistance<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1459">engine/Source/Scene/Scene.js 1459</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The distance from the camera at which to disable the depth test of billboards, labels and pointsto, for example, prevent clipping against terrain. When set to zero, the depth test should alwaysbe applied. When less than zero, the depth test should never be applied. Setting the disableDepthTestDistanceproperty of a billboard, label or point will override this value.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.0</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="mode">
+    <a href="#mode" class="doc-link"></a>
+    mode<span class="type-signature"> : <a href="global.html#SceneMode">SceneMode</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1324">engine/Source/Scene/Scene.js 1324</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets or sets the current mode of the scene.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript"><a href="global.html#SceneMode#.SCENE3D"><code>SceneMode.SCENE3D</code></a></code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="moon">
+    <a href="#moon" class="doc-link"></a>
+    moon<span class="type-signature"> : <a href="Moon.html">Moon</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L296">engine/Source/Scene/Scene.js 296</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The <a href="Moon.html"><code>Moon</code></a>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="morphComplete">
+    <a href="#morphComplete" class="doc-link"></a>
+    morphComplete<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L253">engine/Source/Scene/Scene.js 253</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The event fired at the completion of a scene transition.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">Event()</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="morphStart">
+    <a href="#morphStart" class="doc-link"></a>
+    morphStart<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L246">engine/Source/Scene/Scene.js 246</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The event fired at the beginning of a scene transition.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">Event()</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="morphTime">
+    <a href="#morphTime" class="doc-link"></a>
+    morphTime<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L321">engine/Source/Scene/Scene.js 321</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The current morph transition time between 2D/Columbus View and 3D,with 0.0 being 2D or Columbus View and 1.0 being 3D.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">1.0</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="msaaSamples">
+    <a href="#msaaSamples" class="doc-link"></a>
+    msaaSamples<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1566">engine/Source/Scene/Scene.js 1566</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The sample rate of multisample antialiasing (values greater than 1 enable MSAA).
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">1</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="msaaSupported">
+    <a href="#msaaSupported" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> msaaSupported<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1582">engine/Source/Scene/Scene.js 1582</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Returns <code>true</code> if the Scene's context supports MSAA.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="nearToFarDistance2D">
+    <a href="#nearToFarDistance2D" class="doc-link"></a>
+    nearToFarDistance2D<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L357">engine/Source/Scene/Scene.js 357</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model closeto the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On theother hand, increasing this will increase performance but may cause z-fighting among primitives close to the surface.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">1.75e6</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="orderIndependentTranslucency">
+    <a href="#orderIndependentTranslucency" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> orderIndependentTranslucency<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1300">engine/Source/Scene/Scene.js 1300</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets whether or not the scene has order independent translucency enabled.Note that this only reflects the original construction option, and there areother factors that could prevent OIT from functioning on a given system configuration.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="pickPositionSupported">
+    <a href="#pickPositionSupported" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> pickPositionSupported<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L810">engine/Source/Scene/Scene.js 810</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Returns <code>true</code> if the <a href="Scene.html#pickPosition"><code>Scene#pickPosition</code></a> function is supported.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#pickPosition">Scene#pickPosition</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="pickTranslucentDepth">
+    <a href="#pickTranslucentDepth" class="doc-link"></a>
+    pickTranslucentDepth<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L487">engine/Source/Scene/Scene.js 487</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that <a href="Scene.html#useDepthPicking"><code>Scene#useDepthPicking</code></a> must also be true for enabling this to work.<p>There is a decrease in performance when enabled. There are extra draw calls to write depth fortranslucent geometry.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">// picking the position of a translucent primitiveviewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {     const pickedFeature = viewer.scene.pick(movement.position);     if (!Cesium.defined(pickedFeature)) {         // nothing picked         return;     }     const worldPosition = viewer.scene.pickPosition(movement.position);}, Cesium.ScreenSpaceEventType.LEFT_CLICK);</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="postProcessStages">
+    <a href="#postProcessStages" class="doc-link"></a>
+    postProcessStages<span class="type-signature"> : <a href="PostProcessStageCollection.html">PostProcessStageCollection</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L554">engine/Source/Scene/Scene.js 554</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Post processing effects applied to the final render.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="postRender">
+    <a href="#postRender" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> postRender<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1225">engine/Source/Scene/Scene.js 1225</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the event that will be raised immediately after the scene is rendered.  Subscribers to the eventreceive the Scene instance as the first parameter and the current time as the second parameter.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/">Improving Performance with Explicit Rendering</a></li>
+    
+        <li><a href="Scene.html#preUpdate">Scene#preUpdate</a></li>
+    
+        <li><a href="Scene.html#postUpdate">Scene#postUpdate</a></li>
+    
+        <li><a href="Scene.html#postRender">Scene#postRender</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="postUpdate">
+    <a href="#postUpdate" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> postUpdate<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1170">engine/Source/Scene/Scene.js 1170</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the event that will be raised immediately after the scene is updated and before the scene is rendered.Subscribers to the event receive the Scene instance as the first parameter and the current time as the secondparameter.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/">Improving Performance with Explicit Rendering</a></li>
+    
+        <li><a href="Scene.html#preUpdate">Scene#preUpdate</a></li>
+    
+        <li><a href="Scene.html#preRender">Scene#preRender</a></li>
+    
+        <li><a href="Scene.html#postRender">Scene#postRender</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="preRender">
+    <a href="#preRender" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> preRender<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1206">engine/Source/Scene/Scene.js 1206</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the event that will be raised after the scene is updated and immediately before the scene is rendered.Subscribers to the event receive the Scene instance as the first parameter and the current time as the secondparameter.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/">Improving Performance with Explicit Rendering</a></li>
+    
+        <li><a href="Scene.html#preUpdate">Scene#preUpdate</a></li>
+    
+        <li><a href="Scene.html#postUpdate">Scene#postUpdate</a></li>
+    
+        <li><a href="Scene.html#postRender">Scene#postRender</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="preUpdate">
+    <a href="#preUpdate" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> preUpdate<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1150">engine/Source/Scene/Scene.js 1150</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the event that will be raised before the scene is updated or rendered.  Subscribers to the eventreceive the Scene instance as the first parameter and the current time as the second parameter.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/">Improving Performance with Explicit Rendering</a></li>
+    
+        <li><a href="Scene.html#postUpdate">Scene#postUpdate</a></li>
+    
+        <li><a href="Scene.html#preRender">Scene#preRender</a></li>
+    
+        <li><a href="Scene.html#postRender">Scene#postRender</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="primitives">
+    <a href="#primitives" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> primitives<span class="type-signature"> : <a href="PrimitiveCollection.html">PrimitiveCollection</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L904">engine/Source/Scene/Scene.js 904</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the collection of primitives.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="renderError">
+    <a href="#renderError" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> renderError<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1186">engine/Source/Scene/Scene.js 1186</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the event that will be raised when an error is thrown inside the <code>render</code> function.The Scene instance and the thrown error are the only two parameters passed to the event handler.By default, errors are not rethrown after this event is raised, but that can be changed by settingthe <code>rethrowRenderErrors</code> property.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="requestRenderMode">
+    <a href="#requestRenderMode" class="doc-link"></a>
+    requestRenderMode<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L611">engine/Source/Scene/Scene.js 611</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.Enabling improves performance of the application, but requires using <a href="Scene.html#requestRender"><code>Scene#requestRender</code></a>to render a new frame explicitly in this mode. This will be necessary in many cases after making changesto the scene in other parts of the API.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/">Improving Performance with Explicit Rendering</a></li>
+    
+        <li><a href="Scene.html#maximumRenderTimeChange">Scene#maximumRenderTimeChange</a></li>
+    
+        <li><a href="Scene.html#requestRender">Scene#requestRender</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="rethrowRenderErrors">
+    <a href="#rethrowRenderErrors" class="doc-link"></a>
+    rethrowRenderErrors<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L230">engine/Source/Scene/Scene.js 230</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Exceptions occurring in <code>render</code> are always caught in order to raise the<code>renderError</code> event.  If this property is true, the error is rethrownafter the event is raised.  If this property is false, the <code>render</code> functionreturns normally after raising the event.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="sampleHeightSupported">
+    <a href="#sampleHeightSupported" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> sampleHeightSupported<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L826">engine/Source/Scene/Scene.js 826</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Returns <code>true</code> if the <a href="Scene.html#sampleHeight"><code>Scene#sampleHeight</code></a> and <a href="Scene.html#sampleHeightMostDetailed"><code>Scene#sampleHeightMostDetailed</code></a> functions are supported.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#sampleHeight">Scene#sampleHeight</a></li>
+    
+        <li><a href="Scene.html#sampleHeightMostDetailed">Scene#sampleHeightMostDetailed</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="scene3DOnly">
+    <a href="#scene3DOnly" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> scene3DOnly<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1286">engine/Source/Scene/Scene.js 1286</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets whether or not the scene is optimized for 3D only viewing.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="screenSpaceCameraController">
+    <a href="#screenSpaceCameraController" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> screenSpaceCameraController<span class="type-signature"> : <a href="ScreenSpaceCameraController.html">ScreenSpaceCameraController</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L996">engine/Source/Scene/Scene.js 996</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the controller for camera input handling.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="shadowMap">
+    <a href="#shadowMap" class="doc-link"></a>
+    shadowMap<span class="type-signature"> : <a href="ShadowMap.html">ShadowMap</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L510">engine/Source/Scene/Scene.js 510</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The shadow map for the scene's light source. When enabled, models, primitives, and the globe may cast and receive shadows.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="skyAtmosphere">
+    <a href="#skyAtmosphere" class="doc-link"></a>
+    skyAtmosphere<span class="type-signature"> : <a href="SkyAtmosphere.html">SkyAtmosphere</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L271">engine/Source/Scene/Scene.js 271</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The sky atmosphere drawn around the globe.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="skyBox">
+    <a href="#skyBox" class="doc-link"></a>
+    skyBox<span class="type-signature"> : <a href="SkyBox.html">SkyBox</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L263">engine/Source/Scene/Scene.js 263</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The <a href="SkyBox.html"><code>SkyBox</code></a> used to draw the stars.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#backgroundColor">Scene#backgroundColor</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="specularEnvironmentMaps">
+    <a href="#specularEnvironmentMaps" class="doc-link"></a>
+    specularEnvironmentMaps<span class="type-signature"> : string</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L690">engine/Source/Scene/Scene.js 690</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The url to the KTX2 file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="specularEnvironmentMapsSupported">
+    <a href="#specularEnvironmentMapsSupported" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> specularEnvironmentMapsSupported<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L872">engine/Source/Scene/Scene.js 872</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Returns <code>true</code> if specular environment maps are supported.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#specularEnvironmentMaps">Scene#specularEnvironmentMaps</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="sphericalHarmonicCoefficients">
+    <a href="#sphericalHarmonicCoefficients" class="doc-link"></a>
+    sphericalHarmonicCoefficients<span class="type-signature"> : Array.&lt;<a href="Cartesian3.html">Cartesian3</a>></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L684">engine/Source/Scene/Scene.js 684</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The spherical harmonic coefficients for image-based lighting of PBR models.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="splitPosition">
+    <a href="#splitPosition" class="doc-link"></a>
+    splitPosition<span class="type-signature"> : number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1441">engine/Source/Scene/Scene.js 1441</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets or sets the position of the splitter within the viewport.  Valid values are between 0.0 and 1.0.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="sun">
+    <a href="#sun" class="doc-link"></a>
+    sun<span class="type-signature"> : <a href="Sun.html">Sun</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L279">engine/Source/Scene/Scene.js 279</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The <a href="Sun.html"><code>Sun</code></a>.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="sunBloom">
+    <a href="#sunBloom" class="doc-link"></a>
+    sunBloom<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L287">engine/Source/Scene/Scene.js 287</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Uses a bloom filter on the sun when enabled.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="terrainProvider">
+    <a href="#terrainProvider" class="doc-link"></a>
+    terrainProvider<span class="type-signature"> : <a href="TerrainProvider.html">TerrainProvider</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1100">engine/Source/Scene/Scene.js 1100</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The terrain provider providing surface geometry for the globe.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="terrainProviderChanged">
+    <a href="#terrainProviderChanged" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> terrainProviderChanged<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1127">engine/Source/Scene/Scene.js 1127</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets an event that's raised when the terrain provider is changed
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="useDepthPicking">
+    <a href="#useDepthPicking" class="doc-link"></a>
+    useDepthPicking<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L463">engine/Source/Scene/Scene.js 463</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    When <code>true</code>, enables picking using the depth buffer.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="useWebVR">
+    <a href="#useWebVR" class="doc-link"></a>
+    useWebVR<span class="type-signature"> : boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1386">engine/Source/Scene/Scene.js 1386</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    When <code>true</code>, splits the scene into two viewports with steroscopic views for the left and right eyes.Used for cardboard and WebVR.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="cartesianToCanvasCoordinates">
+        <a href="#cartesianToCanvasCoordinates" class="doc-link"></a>
+        cartesianToCanvasCoordinates<span class="signature">(position, <span class="optional">result</span>)</span> &rarr; <span class="type-signature returnType"><a href="Cartesian2.html">Cartesian2</a></span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4328">engine/Source/Scene/Scene.js 4328</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place anHTML element at the same screen position as an object in the scene.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>position</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian3.html">Cartesian3</a></span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                The position in cartesian coordinates.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>result</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian2.html">Cartesian2</a></span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                An optional object to return the input position transformed to canvas coordinates.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">// Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.const scene = widget.scene;const ellipsoid = scene.globe.ellipsoid;const position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);handler.setInputAction(function(movement) {    console.log(scene.cartesianToCanvasCoordinates(position));}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="clampToHeight">
+        <a href="#clampToHeight" class="doc-link"></a>
+        clampToHeight<span class="signature">(cartesian, <span class="optional">objectsToExclude</span>, <span class="optional">width</span>, <span class="optional">result</span>)</span> &rarr; <span class="type-signature returnType"><a href="Cartesian3.html">Cartesian3</a></span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4214">engine/Source/Scene/Scene.js 4214</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Clamps the given cartesian position to the scene geometry along the geodetic surface normal. Returns theclamped position or <code>undefined</code> if there was no scene geometry to clamp to. May be used to clampobjects to the globe, 3D Tiles, or primitives in the scene.<p>This function only clamps to globe tiles and 3D Tiles that are rendered in the current view. Clamps toall other primitives regardless of their visibility.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>cartesian</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian3.html">Cartesian3</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                The cartesian position.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>objectsToExclude</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;Object></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                A list of primitives, entities, or 3D Tiles features to not clamp to.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>width</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.1</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Width of the intersection volume in meters.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>result</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian3.html">Cartesian3</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                An optional object to return the clamped position.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
+</div>
+
+
+    
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: clampToHeight is only supported in 3D mode.
+    </div>
+
+</li>
+    
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: clampToHeight requires depth texture support. Check clampToHeightSupported.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">// Clamp an entity to the underlying scene geometryconst position = entity.position.getValue(Cesium.JulianDate.now());entity.position = viewer.scene.clampToHeight(position);</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#sampleHeight">Scene#sampleHeight</a></li>
+    
+        <li><a href="Scene.html#sampleHeightMostDetailed">Scene#sampleHeightMostDetailed</a></li>
+    
+        <li><a href="Scene.html#clampToHeightMostDetailed">Scene#clampToHeightMostDetailed</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="clampToHeightMostDetailed">
+        <a href="#clampToHeightMostDetailed" class="doc-link"></a>
+        clampToHeightMostDetailed<span class="signature">(cartesians, <span class="optional">objectsToExclude</span>, <span class="optional">width</span>)</span> &rarr; <span class="type-signature returnType">Promise.&lt;Array.&lt;<a href="Cartesian3.html">Cartesian3</a>>></span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4297">engine/Source/Scene/Scene.js 4297</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Initiates an asynchronous <a href="Scene.html#clampToHeight"><code>Scene#clampToHeight</code></a> query for an array of <a href="Cartesian3.html"><code>Cartesian3</code></a> positionsusing the maximum level of detail for 3D Tilesets in the scene. Returns a promise that is resolved whenthe query completes. Each position is modified in place. If a position cannot be clamped because no geometrycan be sampled at that location, or another error occurs, the element in the array is set to undefined.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>cartesians</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;<a href="Cartesian3.html">Cartesian3</a>></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                The cartesian positions to update with clamped positions.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>objectsToExclude</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;Object></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                A list of primitives, entities, or 3D Tiles features to not clamp to.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>width</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.1</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Width of the intersection volume in meters.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    A promise that resolves to the provided list of positions when the query has completed.
+</div>
+
+
+    
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: clampToHeightMostDetailed is only supported in 3D mode.
+    </div>
+
+</li>
+    
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">const cartesians = [    entities[0].position.getValue(Cesium.JulianDate.now()),    entities[1].position.getValue(Cesium.JulianDate.now())];const promise = viewer.scene.clampToHeightMostDetailed(cartesians);promise.then(function(updatedCartesians) {    entities[0].position = updatedCartesians[0];    entities[1].position = updatedCartesians[1];}</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#clampToHeight">Scene#clampToHeight</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="completeMorph">
+        <a href="#completeMorph" class="doc-link"></a>
+        completeMorph<span class="signature">()</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4335">engine/Source/Scene/Scene.js 4335</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Instantly completes an active transition.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="destroy">
+        <a href="#destroy" class="doc-link"></a>
+        destroy<span class="signature">()</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4472">engine/Source/Scene/Scene.js 4472</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Destroys the WebGL resources held by this object.  Destroying an object allows for deterministicrelease of WebGL resources, instead of relying on the garbage collector to destroy this object.<br /><br />Once an object is destroyed, it should not be used; calling any function other than<code>isDestroyed</code> will result in a <a href="DeveloperError.html"><code>DeveloperError</code></a> exception.  Therefore,assign the return value (<code>undefined</code>) to the object as done in the example.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: This object was destroyed, i.e., destroy() was called.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">scene = scene &amp;&amp; scene.destroy();</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#isDestroyed">Scene#isDestroyed</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="drillPick">
+        <a href="#drillPick" class="doc-link"></a>
+        drillPick<span class="signature">(windowPosition, <span class="optional">limit</span>, <span class="optional">width</span>, <span class="optional">height</span>)</span> &rarr; <span class="type-signature returnType">Array.&lt;any></span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4007">engine/Source/Scene/Scene.js 4007</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Returns a list of objects, each containing a `primitive` property, for all primitives ata particular window coordinate position. Other properties may also be set depending on thetype of primitive and may be used to further identify the picked object. The primitives inthe list are ordered by their visual order in the scene (front to back).
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>windowPosition</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian2.html">Cartesian2</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                Window coordinates to perform picking on.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>limit</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                If supplied, stop drilling after collecting this many picks.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>width</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">3</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Width of the pick rectangle.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>height</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">3</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Height of the pick rectangle.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Array of objects, each containing 1 picked primitives.
+</div>
+
+
+    
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: windowPosition is undefined.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">const pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#pick">Scene#pick</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="getCompressedTextureFormatSupported">
+        <a href="#getCompressedTextureFormatSupported" class="doc-link"></a>
+        getCompressedTextureFormatSupported<span class="signature">(format)</span> &rarr; <span class="type-signature returnType">boolean</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L1630">engine/Source/Scene/Scene.js 1630</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Determines if a compressed texture format is supported.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>format</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                The texture format. May be the name of the format or the WebGL extension name, e.g. s3tc or WEBGL_compressed_texture_s3tc.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Whether or not the format is supported.
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="isDestroyed">
+        <a href="#isDestroyed" class="doc-link"></a>
+        isDestroyed<span class="signature">()</span> &rarr; <span class="type-signature returnType">boolean</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4452">engine/Source/Scene/Scene.js 4452</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Returns true if this object was destroyed; otherwise, false.<br /><br />If this object was destroyed, it should not be used; calling any function other than<code>isDestroyed</code> will result in a <a href="DeveloperError.html"><code>DeveloperError</code></a> exception.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#destroy">Scene#destroy</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="morphTo2D">
+        <a href="#morphTo2D" class="doc-link"></a>
+        morphTo2D<span class="signature">(<span class="optional">duration</span>)</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4343">engine/Source/Scene/Scene.js 4343</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Asynchronously transitions the scene to 2D.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>duration</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">2.0</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The amount of time, in seconds, for transition animations to complete.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="morphTo3D">
+        <a href="#morphTo3D" class="doc-link"></a>
+        morphTo3D<span class="signature">(<span class="optional">duration</span>)</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4375">engine/Source/Scene/Scene.js 4375</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Asynchronously transitions the scene to 3D.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>duration</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">2.0</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The amount of time, in seconds, for transition animations to complete.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="morphToColumbusView">
+        <a href="#morphToColumbusView" class="doc-link"></a>
+        morphToColumbusView<span class="signature">(<span class="optional">duration</span>)</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4359">engine/Source/Scene/Scene.js 4359</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Asynchronously transitions the scene to Columbus View.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>duration</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">2.0</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The amount of time, in seconds, for transition animations to complete.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="pick">
+        <a href="#pick" class="doc-link"></a>
+        pick<span class="signature">(windowPosition, <span class="optional">width</span>, <span class="optional">height</span>)</span> &rarr; <span class="type-signature returnType">object</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L3934">engine/Source/Scene/Scene.js 3934</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Returns an object with a `primitive` property that contains the first (top) primitive in the sceneat a particular window coordinate or undefined if nothing is at the location. Other properties maypotentially be set depending on the type of primitive and may be used to further identify the picked object.<p>When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a <a href="Cesium3DTileFeature.html"><code>Cesium3DTileFeature</code></a> object.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>windowPosition</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian2.html">Cartesian2</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                Window coordinates to perform picking on.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>width</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">3</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Width of the pick rectangle.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>height</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">3</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Height of the pick rectangle.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    Object containing the picked primitive.
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">// On mouse over, color the feature yellow.handler.setInputAction(function(movement) {    const feature = scene.pick(movement.endPosition);    if (feature instanceof Cesium.Cesium3DTileFeature) {        feature.color = Cesium.Color.YELLOW;    }}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="pickPosition">
+        <a href="#pickPosition" class="doc-link"></a>
+        pickPosition<span class="signature">(windowPosition, <span class="optional">result</span>)</span> &rarr; <span class="type-signature returnType"><a href="Cartesian3.html">Cartesian3</a></span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L3984">engine/Source/Scene/Scene.js 3984</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Returns the cartesian position reconstructed from the depth buffer and window position.<p>The position reconstructed from the depth buffer in 2D may be slightly different from thosereconstructed in 3D and Columbus view. This is caused by the difference in the distributionof depth values of perspective and orthographic projection.</p><p>Set <a href="Scene.html#pickTranslucentDepth"><code>Scene#pickTranslucentDepth</code></a> to <code>true</code> to include the depth oftranslucent primitives; otherwise, this essentially picks through translucent primitives.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>windowPosition</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian2.html">Cartesian2</a></span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                Window coordinates to perform picking on.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>result</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian3.html">Cartesian3</a></span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The object on which to restore the result.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The cartesian position.
+</div>
+
+
+    
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: Picking from the depth buffer is not supported. Check pickPositionSupported.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="render">
+        <a href="#render" class="doc-link"></a>
+        render<span class="signature">(<span class="optional">time</span>)</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L3788">engine/Source/Scene/Scene.js 3788</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Update and render the scene. It is usually not necessary to call this functiondirectly because <a href="CesiumWidget.html"><code>CesiumWidget</code></a> will do it automatically.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>time</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="JulianDate.html">JulianDate</a></span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The simulation time at which to render.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="requestRender">
+        <a href="#requestRender" class="doc-link"></a>
+        requestRender<span class="signature">()</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L3898">engine/Source/Scene/Scene.js 3898</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Requests a new rendered frame when <a href="Scene.html#requestRenderMode"><code>Scene#requestRenderMode</code></a> is set to <code>true</code>.The render rate will not exceed the <a href="CesiumWidget.html#targetFrameRate"><code>CesiumWidget#targetFrameRate</code></a>.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#requestRenderMode">Scene#requestRenderMode</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="sampleHeight">
+        <a href="#sampleHeight" class="doc-link"></a>
+        sampleHeight<span class="signature">(position, <span class="optional">objectsToExclude</span>, <span class="optional">width</span>)</span> &rarr; <span class="type-signature returnType">number</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4183">engine/Source/Scene/Scene.js 4183</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Returns the height of scene geometry at the given cartographic position or <code>undefined</code> if there was noscene geometry to sample height from. The height of the input position is ignored. May be used to clamp objects tothe globe, 3D Tiles, or primitives in the scene.<p>This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. Samples heightfrom all other primitives regardless of their visibility.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>position</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartographic.html">Cartographic</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                The cartographic position to sample height from.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>objectsToExclude</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;Object></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                A list of primitives, entities, or 3D Tiles features to not sample height from.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>width</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.1</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Width of the intersection volume in meters.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
+</div>
+
+
+    
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: sampleHeight is only supported in 3D mode.
+    </div>
+
+</li>
+    
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: sampleHeight requires depth texture support. Check sampleHeightSupported.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">const position = new Cesium.Cartographic(-1.31968, 0.698874);const height = viewer.scene.sampleHeight(position);console.log(height);</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#clampToHeight">Scene#clampToHeight</a></li>
+    
+        <li><a href="Scene.html#clampToHeightMostDetailed">Scene#clampToHeightMostDetailed</a></li>
+    
+        <li><a href="Scene.html#sampleHeightMostDetailed">Scene#sampleHeightMostDetailed</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="sampleHeightMostDetailed">
+        <a href="#sampleHeightMostDetailed" class="doc-link"></a>
+        sampleHeightMostDetailed<span class="signature">(positions, <span class="optional">objectsToExclude</span>, <span class="optional">width</span>)</span> &rarr; <span class="type-signature returnType">Promise.&lt;Array.&lt;<a href="Cartographic.html">Cartographic</a>>></span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4257">engine/Source/Scene/Scene.js 4257</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Initiates an asynchronous <a href="Scene.html#sampleHeight"><code>Scene#sampleHeight</code></a> query for an array of <a href="Cartographic.html"><code>Cartographic</code></a> positionsusing the maximum level of detail for 3D Tilesets in the scene. The height of the input positions is ignored.Returns a promise that is resolved when the query completes. Each point height is modified in place.If a height cannot be determined because no geometry can be sampled at that location, or another error occurs,the height is set to undefined.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>positions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;<a href="Cartographic.html">Cartographic</a>></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                The cartographic positions to update with sampled heights.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>objectsToExclude</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;Object></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                A list of primitives, entities, or 3D Tiles features to not sample height from.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>width</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.1</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Width of the intersection volume in meters.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    A promise that resolves to the provided list of positions when the query has completed.
+</div>
+
+
+    
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: sampleHeightMostDetailed is only supported in 3D mode.
+    </div>
+
+</li>
+    
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">const positions = [    new Cesium.Cartographic(-1.31968, 0.69887),    new Cesium.Cartographic(-1.10489, 0.83923)];const promise = viewer.scene.sampleHeightMostDetailed(positions);promise.then(function(updatedPosition) {    // positions[0].height and positions[1].height have been updated.    // updatedPositions is just a reference to positions.}</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Scene.html#sampleHeight">Scene#sampleHeight</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="setTerrain">
+        <a href="#setTerrain" class="doc-link"></a>
+        setTerrain<span class="signature">(terrain)</span> &rarr; <span class="type-signature returnType"><a href="Terrain.html">Terrain</a></span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.109/packages/engine/Source/Scene/Scene.js#L4432">engine/Source/Scene/Scene.js 4432</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Update the terrain providing surface geometry for the globe.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>terrain</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Terrain.html">Terrain</a></span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                The terrain provider async helper</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    terrain The terrain provider async helper
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Examples:</h5>
+        
+    <pre><code class="language-javascript">// Use Cesium World Terrainscene.setTerrain(Cesium.Terrain.fromWorldTerrain());</code></pre>
+
+    <pre><code class="language-javascript">// Use a custom terrain providerconst terrain = new Cesium.Terrain(Cesium.CesiumTerrainProvider.fromUrl("https://myTestTerrain.com"));scene.setTerrain(terrain);terrain.errorEvent.addEventListener(error => {  alert(`Encountered an error while creating terrain! ${error}`);});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+    <div class="help">
+        Need help? The fastest way to get answers is from the community and team on the <a href="https://community.cesium.com/">Cesium Forum</a>.
+    </div>
+
+    <footer>
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.11</a>
+    </footer>
+</div>
+
+<div class="nav">
+    <div class="menu">
+        <input type="text" class="classFilter" id="ClassFilter" placeholder="Search">
+        <div id="ClassList"><h5>packages/engine</h5><ul><li data-name="Appearance"><a href="Appearance.html">Appearance</a></li><li data-name="ArcGisBaseMapType"><a href="global.html#ArcGisBaseMapType">ArcGisBaseMapType</a></li><li data-name="ArcGisMapServerImageryProvider"><a href="ArcGisMapServerImageryProvider.html">ArcGisMapServerImageryProvider</a></li><li data-name="ArcGisMapService"><a href="ArcGisMapService.html">ArcGisMapService</a></li><li data-name="ArcGISTiledElevationTerrainProvider"><a href="ArcGISTiledElevationTerrainProvider.html">ArcGISTiledElevationTerrainProvider</a></li><li data-name="ArcType"><a href="global.html#ArcType">ArcType</a></li><li data-name="AssociativeArray"><a href="AssociativeArray.html">AssociativeArray</a></li><li data-name="Axis"><a href="global.html#Axis">Axis</a></li><li data-name="AxisAlignedBoundingBox"><a href="AxisAlignedBoundingBox.html">AxisAlignedBoundingBox</a></li><li data-name="barycentricCoordinates"><a href="global.html#barycentricCoordinates">barycentricCoordinates</a></li><li data-name="Billboard"><a href="Billboard.html">Billboard</a></li><li data-name="BillboardCollection"><a href="BillboardCollection.html">BillboardCollection</a></li><li data-name="BillboardGraphics"><a href="BillboardGraphics.html">BillboardGraphics</a></li><li data-name="BillboardVisualizer"><a href="BillboardVisualizer.html">BillboardVisualizer</a></li><li data-name="binarySearch"><a href="global.html#binarySearch">binarySearch</a></li><li data-name="binarySearchComparator"><a href="global.html#binarySearchComparator">binarySearchComparator</a></li><li data-name="BingMapsGeocoderService"><a href="BingMapsGeocoderService.html">BingMapsGeocoderService</a></li><li data-name="BingMapsImageryProvider"><a href="BingMapsImageryProvider.html">BingMapsImageryProvider</a></li><li data-name="BingMapsStyle"><a href="global.html#BingMapsStyle">BingMapsStyle</a></li><li data-name="BlendEquation"><a href="global.html#BlendEquation">BlendEquation</a></li><li data-name="BlendFunction"><a href="global.html#BlendFunction">BlendFunction</a></li><li data-name="BlendingState"><a href="BlendingState.html">BlendingState</a></li><li data-name="BlendOption"><a href="global.html#BlendOption">BlendOption</a></li><li data-name="BoundingRectangle"><a href="BoundingRectangle.html">BoundingRectangle</a></li><li data-name="BoundingSphere"><a href="BoundingSphere.html">BoundingSphere</a></li><li data-name="BoxEmitter"><a href="BoxEmitter.html">BoxEmitter</a></li><li data-name="BoxGeometry"><a href="BoxGeometry.html">BoxGeometry</a></li><li data-name="BoxGeometryUpdater"><a href="BoxGeometryUpdater.html">BoxGeometryUpdater</a></li><li data-name="BoxGraphics"><a href="BoxGraphics.html">BoxGraphics</a></li><li data-name="BoxOutlineGeometry"><a href="BoxOutlineGeometry.html">BoxOutlineGeometry</a></li><li data-name="buildModuleUrl"><a href="global.html#buildModuleUrl">buildModuleUrl</a></li><li data-name="CallbackProperty"><a href="CallbackProperty.html">CallbackProperty</a></li><li data-name="Camera"><a href="Camera.html">Camera</a></li><li data-name="CameraEventAggregator"><a href="CameraEventAggregator.html">CameraEventAggregator</a></li><li data-name="CameraEventType"><a href="global.html#CameraEventType">CameraEventType</a></li><li data-name="Cartesian2"><a href="Cartesian2.html">Cartesian2</a></li><li data-name="Cartesian3"><a href="Cartesian3.html">Cartesian3</a></li><li data-name="Cartesian4"><a href="Cartesian4.html">Cartesian4</a></li><li data-name="Cartographic"><a href="Cartographic.html">Cartographic</a></li><li data-name="CartographicGeocoderService"><a href="CartographicGeocoderService.html">CartographicGeocoderService</a></li><li data-name="CatmullRomSpline"><a href="CatmullRomSpline.html">CatmullRomSpline</a></li><li data-name="Cesium3DTile"><a href="Cesium3DTile.html">Cesium3DTile</a></li><li data-name="Cesium3DTileColorBlendMode"><a href="global.html#Cesium3DTileColorBlendMode">Cesium3DTileColorBlendMode</a></li><li data-name="Cesium3DTileContent"><a href="Cesium3DTileContent.html">Cesium3DTileContent</a></li><li data-name="Cesium3DTileFeature"><a href="Cesium3DTileFeature.html">Cesium3DTileFeature</a></li><li data-name="Cesium3DTilePointFeature"><a href="Cesium3DTilePointFeature.html">Cesium3DTilePointFeature</a></li><li data-name="Cesium3DTileset"><a href="Cesium3DTileset.html">Cesium3DTileset</a></li><li data-name="Cesium3DTilesetGraphics"><a href="Cesium3DTilesetGraphics.html">Cesium3DTilesetGraphics</a></li><li data-name="Cesium3DTilesetVisualizer"><a href="Cesium3DTilesetVisualizer.html">Cesium3DTilesetVisualizer</a></li><li data-name="Cesium3DTileStyle"><a href="Cesium3DTileStyle.html">Cesium3DTileStyle</a></li><li data-name="Cesium3DTilesVoxelProvider"><a href="Cesium3DTilesVoxelProvider.html">Cesium3DTilesVoxelProvider</a></li><li data-name="CesiumTerrainProvider"><a href="CesiumTerrainProvider.html">CesiumTerrainProvider</a></li><li data-name="CesiumWidget"><a href="CesiumWidget.html">CesiumWidget</a></li><li data-name="CheckerboardMaterialProperty"><a href="CheckerboardMaterialProperty.html">CheckerboardMaterialProperty</a></li><li data-name="CircleEmitter"><a href="CircleEmitter.html">CircleEmitter</a></li><li data-name="CircleGeometry"><a href="CircleGeometry.html">CircleGeometry</a></li><li data-name="CircleOutlineGeometry"><a href="CircleOutlineGeometry.html">CircleOutlineGeometry</a></li><li data-name="ClassificationPrimitive"><a href="ClassificationPrimitive.html">ClassificationPrimitive</a></li><li data-name="ClassificationType"><a href="global.html#ClassificationType">ClassificationType</a></li><li data-name="ClippingPlane"><a href="ClippingPlane.html">ClippingPlane</a></li><li data-name="ClippingPlaneCollection"><a href="ClippingPlaneCollection.html">ClippingPlaneCollection</a></li><li data-name="Clock"><a href="Clock.html">Clock</a></li><li data-name="ClockRange"><a href="global.html#ClockRange">ClockRange</a></li><li data-name="ClockStep"><a href="global.html#ClockStep">ClockStep</a></li><li data-name="clone"><a href="global.html#clone">clone</a></li><li data-name="CloudCollection"><a href="CloudCollection.html">CloudCollection</a></li><li data-name="CloudType"><a href="global.html#CloudType">CloudType</a></li><li data-name="Color"><a href="Color.html">Color</a></li><li data-name="ColorBlendMode"><a href="global.html#ColorBlendMode">ColorBlendMode</a></li><li data-name="ColorGeometryInstanceAttribute"><a href="ColorGeometryInstanceAttribute.html">ColorGeometryInstanceAttribute</a></li><li data-name="ColorMaterialProperty"><a href="ColorMaterialProperty.html">ColorMaterialProperty</a></li><li data-name="combine"><a href="global.html#combine">combine</a></li><li data-name="ComponentDatatype"><a href="global.html#ComponentDatatype">ComponentDatatype</a></li><li data-name="CompositeEntityCollection"><a href="CompositeEntityCollection.html">CompositeEntityCollection</a></li><li data-name="CompositeMaterialProperty"><a href="CompositeMaterialProperty.html">CompositeMaterialProperty</a></li><li data-name="CompositePositionProperty"><a href="CompositePositionProperty.html">CompositePositionProperty</a></li><li data-name="CompositeProperty"><a href="CompositeProperty.html">CompositeProperty</a></li><li data-name="CompressedTextureBuffer"><a href="CompressedTextureBuffer.html">CompressedTextureBuffer</a></li><li data-name="ConditionsExpression"><a href="ConditionsExpression.html">ConditionsExpression</a></li><li data-name="ConeEmitter"><a href="ConeEmitter.html">ConeEmitter</a></li><li data-name="ConstantPositionProperty"><a href="ConstantPositionProperty.html">ConstantPositionProperty</a></li><li data-name="ConstantProperty"><a href="ConstantProperty.html">ConstantProperty</a></li><li data-name="ConstantSpline"><a href="ConstantSpline.html">ConstantSpline</a></li><li data-name="ContextOptions"><a href="global.html#ContextOptions">ContextOptions</a></li><li data-name="CoplanarPolygonGeometry"><a href="CoplanarPolygonGeometry.html">CoplanarPolygonGeometry</a></li><li data-name="CoplanarPolygonOutlineGeometry"><a href="CoplanarPolygonOutlineGeometry.html">CoplanarPolygonOutlineGeometry</a></li><li data-name="CornerType"><a href="global.html#CornerType">CornerType</a></li><li data-name="CorridorGeometry"><a href="CorridorGeometry.html">CorridorGeometry</a></li><li data-name="CorridorGeometryUpdater"><a href="CorridorGeometryUpdater.html">CorridorGeometryUpdater</a></li><li data-name="CorridorGraphics"><a href="CorridorGraphics.html">CorridorGraphics</a></li><li data-name="CorridorOutlineGeometry"><a href="CorridorOutlineGeometry.html">CorridorOutlineGeometry</a></li><li data-name="createElevationBandMaterial"><a href="global.html#createElevationBandMaterial">createElevationBandMaterial</a></li><li data-name="createElevationBandMaterialBand"><a href="global.html#createElevationBandMaterialBand">createElevationBandMaterialBand</a></li><li data-name="createElevationBandMaterialEntry"><a href="global.html#createElevationBandMaterialEntry">createElevationBandMaterialEntry</a></li><li data-name="createGooglePhotorealistic3DTileset"><a href="global.html#createGooglePhotorealistic3DTileset">createGooglePhotorealistic3DTileset</a></li><li data-name="createGuid"><a href="global.html#createGuid">createGuid</a></li><li data-name="createOsmBuildingsAsync"><a href="global.html#createOsmBuildingsAsync">createOsmBuildingsAsync</a></li><li data-name="createTangentSpaceDebugPrimitive"><a href="global.html#createTangentSpaceDebugPrimitive">createTangentSpaceDebugPrimitive</a></li><li data-name="createWorldImageryAsync"><a href="global.html#createWorldImageryAsync">createWorldImageryAsync</a></li><li data-name="createWorldTerrainAsync"><a href="global.html#createWorldTerrainAsync">createWorldTerrainAsync</a></li><li data-name="Credit"><a href="Credit.html">Credit</a></li><li data-name="CreditDisplay"><a href="CreditDisplay.html">CreditDisplay</a></li><li data-name="CubicRealPolynomial"><a href="CubicRealPolynomial.html">CubicRealPolynomial</a></li><li data-name="CullFace"><a href="global.html#CullFace">CullFace</a></li><li data-name="CullingVolume"><a href="CullingVolume.html">CullingVolume</a></li><li data-name="CumulusCloud"><a href="CumulusCloud.html">CumulusCloud</a></li><li data-name="CustomDataSource"><a href="CustomDataSource.html">CustomDataSource</a></li><li data-name="CustomHeightmapTerrainProvider"><a href="CustomHeightmapTerrainProvider.html">CustomHeightmapTerrainProvider</a></li><li data-name="CustomShader"><a href="CustomShader.html">CustomShader</a></li><li data-name="CustomShaderMode"><a href="global.html#CustomShaderMode">CustomShaderMode</a></li><li data-name="CustomShaderTranslucencyMode"><a href="global.html#CustomShaderTranslucencyMode">CustomShaderTranslucencyMode</a></li><li data-name="CylinderGeometry"><a href="CylinderGeometry.html">CylinderGeometry</a></li><li data-name="CylinderGeometryUpdater"><a href="CylinderGeometryUpdater.html">CylinderGeometryUpdater</a></li><li data-name="CylinderGraphics"><a href="CylinderGraphics.html">CylinderGraphics</a></li><li data-name="CylinderOutlineGeometry"><a href="CylinderOutlineGeometry.html">CylinderOutlineGeometry</a></li><li data-name="CzmlDataSource"><a href="CzmlDataSource.html">CzmlDataSource</a></li><li data-name="DataSource"><a href="DataSource.html">DataSource</a></li><li data-name="DataSourceClock"><a href="DataSourceClock.html">DataSourceClock</a></li><li data-name="DataSourceCollection"><a href="DataSourceCollection.html">DataSourceCollection</a></li><li data-name="DataSourceDisplay"><a href="DataSourceDisplay.html">DataSourceDisplay</a></li><li data-name="DebugAppearance"><a href="DebugAppearance.html">DebugAppearance</a></li><li data-name="DebugCameraPrimitive"><a href="DebugCameraPrimitive.html">DebugCameraPrimitive</a></li><li data-name="DebugModelMatrixPrimitive"><a href="DebugModelMatrixPrimitive.html">DebugModelMatrixPrimitive</a></li><li data-name="DefaultProxy"><a href="DefaultProxy.html">DefaultProxy</a></li><li data-name="defaultValue"><a href="global.html#defaultValue">defaultValue</a></li><li data-name="defined"><a href="global.html#defined">defined</a></li><li data-name="DepthFunction"><a href="global.html#DepthFunction">DepthFunction</a></li><li data-name="destroyObject"><a href="global.html#destroyObject">destroyObject</a></li><li data-name="DeveloperError"><a href="DeveloperError.html">DeveloperError</a></li><li data-name="DirectionalLight"><a href="DirectionalLight.html">DirectionalLight</a></li><li data-name="DirectionUp"><a href="global.html#DirectionUp">DirectionUp</a></li><li data-name="DiscardEmptyTileImagePolicy"><a href="DiscardEmptyTileImagePolicy.html">DiscardEmptyTileImagePolicy</a></li><li data-name="DiscardMissingTileImagePolicy"><a href="DiscardMissingTileImagePolicy.html">DiscardMissingTileImagePolicy</a></li><li data-name="DistanceDisplayCondition"><a href="DistanceDisplayCondition.html">DistanceDisplayCondition</a></li><li data-name="DistanceDisplayConditionGeometryInstanceAttribute"><a href="DistanceDisplayConditionGeometryInstanceAttribute.html">DistanceDisplayConditionGeometryInstanceAttribute</a></li><li data-name="EasingFunction"><a href="EasingFunction.html">EasingFunction</a></li><li data-name="EllipseGeometry"><a href="EllipseGeometry.html">EllipseGeometry</a></li><li data-name="EllipseGeometryUpdater"><a href="EllipseGeometryUpdater.html">EllipseGeometryUpdater</a></li><li data-name="EllipseGraphics"><a href="EllipseGraphics.html">EllipseGraphics</a></li><li data-name="EllipseOutlineGeometry"><a href="EllipseOutlineGeometry.html">EllipseOutlineGeometry</a></li><li data-name="Ellipsoid"><a href="Ellipsoid.html">Ellipsoid</a></li><li data-name="EllipsoidGeodesic"><a href="EllipsoidGeodesic.html">EllipsoidGeodesic</a></li><li data-name="EllipsoidGeometry"><a href="EllipsoidGeometry.html">EllipsoidGeometry</a></li><li data-name="EllipsoidGeometryUpdater"><a href="EllipsoidGeometryUpdater.html">EllipsoidGeometryUpdater</a></li><li data-name="EllipsoidGraphics"><a href="EllipsoidGraphics.html">EllipsoidGraphics</a></li><li data-name="EllipsoidOutlineGeometry"><a href="EllipsoidOutlineGeometry.html">EllipsoidOutlineGeometry</a></li><li data-name="EllipsoidRhumbLine"><a href="EllipsoidRhumbLine.html">EllipsoidRhumbLine</a></li><li data-name="EllipsoidSurfaceAppearance"><a href="EllipsoidSurfaceAppearance.html">EllipsoidSurfaceAppearance</a></li><li data-name="EllipsoidTangentPlane"><a href="EllipsoidTangentPlane.html">EllipsoidTangentPlane</a></li><li data-name="EllipsoidTerrainProvider"><a href="EllipsoidTerrainProvider.html">EllipsoidTerrainProvider</a></li><li data-name="Entity"><a href="Entity.html">Entity</a></li><li data-name="EntityCluster"><a href="EntityCluster.html">EntityCluster</a></li><li data-name="EntityCollection"><a href="EntityCollection.html">EntityCollection</a></li><li data-name="EntityView"><a href="EntityView.html">EntityView</a></li><li data-name="Event"><a href="Event.html">Event</a></li><li data-name="EventHelper"><a href="EventHelper.html">EventHelper</a></li><li data-name="excludesReverseAxis"><a href="global.html#excludesReverseAxis">excludesReverseAxis</a></li><li data-name="exportKml"><a href="global.html#exportKml">exportKml</a></li><li data-name="exportKmlModelCallback"><a href="global.html#exportKmlModelCallback">exportKmlModelCallback</a></li><li data-name="exportKmlResultKml"><a href="global.html#exportKmlResultKml">exportKmlResultKml</a></li><li data-name="exportKmlResultKmz"><a href="global.html#exportKmlResultKmz">exportKmlResultKmz</a></li><li data-name="Expression"><a href="Expression.html">Expression</a></li><li data-name="ExtrapolationType"><a href="global.html#ExtrapolationType">ExtrapolationType</a></li><li data-name="FeatureDetection"><a href="FeatureDetection.html">FeatureDetection</a></li><li data-name="Fog"><a href="Fog.html">Fog</a></li><li data-name="formatError"><a href="global.html#formatError">formatError</a></li><li data-name="FrameRateMonitor"><a href="FrameRateMonitor.html">FrameRateMonitor</a></li><li data-name="FrustumGeometry"><a href="FrustumGeometry.html">FrustumGeometry</a></li><li data-name="FrustumOutlineGeometry"><a href="FrustumOutlineGeometry.html">FrustumOutlineGeometry</a></li><li data-name="Fullscreen"><a href="Fullscreen.html">Fullscreen</a></li><li data-name="GeocoderService"><a href="GeocoderService.html">GeocoderService</a></li><li data-name="GeocodeType"><a href="global.html#GeocodeType">GeocodeType</a></li><li data-name="GeographicProjection"><a href="GeographicProjection.html">GeographicProjection</a></li><li data-name="GeographicTilingScheme"><a href="GeographicTilingScheme.html">GeographicTilingScheme</a></li><li data-name="GeoJsonDataSource"><a href="GeoJsonDataSource.html">GeoJsonDataSource</a></li><li data-name="Geometry"><a href="Geometry.html">Geometry</a></li><li data-name="GeometryAttribute"><a href="GeometryAttribute.html">GeometryAttribute</a></li><li data-name="GeometryAttributes"><a href="GeometryAttributes.html">GeometryAttributes</a></li><li data-name="GeometryFactory"><a href="GeometryFactory.html">GeometryFactory</a></li><li data-name="GeometryInstance"><a href="GeometryInstance.html">GeometryInstance</a></li><li data-name="GeometryInstanceAttribute"><a href="GeometryInstanceAttribute.html">GeometryInstanceAttribute</a></li><li data-name="GeometryPipeline"><a href="GeometryPipeline.html">GeometryPipeline</a></li><li data-name="GeometryUpdater"><a href="GeometryUpdater.html">GeometryUpdater</a></li><li data-name="GeometryVisualizer"><a href="GeometryVisualizer.html">GeometryVisualizer</a></li><li data-name="getAbsoluteUri"><a href="global.html#getAbsoluteUri">getAbsoluteUri</a></li><li data-name="getBaseUri"><a href="global.html#getBaseUri">getBaseUri</a></li><li data-name="getExtensionFromUri"><a href="global.html#getExtensionFromUri">getExtensionFromUri</a></li><li data-name="GetFeatureInfoFormat"><a href="GetFeatureInfoFormat.html">GetFeatureInfoFormat</a></li><li data-name="getFilenameFromUri"><a href="global.html#getFilenameFromUri">getFilenameFromUri</a></li><li data-name="getImagePixels"><a href="global.html#getImagePixels">getImagePixels</a></li><li data-name="getTimestamp"><a href="global.html#getTimestamp">getTimestamp</a></li><li data-name="Globe"><a href="Globe.html">Globe</a></li><li data-name="GlobeTranslucency"><a href="GlobeTranslucency.html">GlobeTranslucency</a></li><li data-name="GoogleEarthEnterpriseImageryProvider"><a href="GoogleEarthEnterpriseImageryProvider.html">GoogleEarthEnterpriseImageryProvider</a></li><li data-name="GoogleEarthEnterpriseMapsProvider"><a href="GoogleEarthEnterpriseMapsProvider.html">GoogleEarthEnterpriseMapsProvider</a></li><li data-name="GoogleEarthEnterpriseMetadata"><a href="GoogleEarthEnterpriseMetadata.html">GoogleEarthEnterpriseMetadata</a></li><li data-name="GoogleEarthEnterpriseTerrainData"><a href="GoogleEarthEnterpriseTerrainData.html">GoogleEarthEnterpriseTerrainData</a></li><li data-name="GoogleEarthEnterpriseTerrainProvider"><a href="GoogleEarthEnterpriseTerrainProvider.html">GoogleEarthEnterpriseTerrainProvider</a></li><li data-name="GoogleMaps"><a href="GoogleMaps.html">GoogleMaps</a></li><li data-name="GpxDataSource"><a href="GpxDataSource.html">GpxDataSource</a></li><li data-name="GregorianDate"><a href="GregorianDate.html">GregorianDate</a></li><li data-name="GridImageryProvider"><a href="GridImageryProvider.html">GridImageryProvider</a></li><li data-name="GridMaterialProperty"><a href="GridMaterialProperty.html">GridMaterialProperty</a></li><li data-name="GroundGeometryUpdater"><a href="GroundGeometryUpdater.html">GroundGeometryUpdater</a></li><li data-name="GroundPolylineGeometry"><a href="GroundPolylineGeometry.html">GroundPolylineGeometry</a></li><li data-name="GroundPolylinePrimitive"><a href="GroundPolylinePrimitive.html">GroundPolylinePrimitive</a></li><li data-name="GroundPrimitive"><a href="GroundPrimitive.html">GroundPrimitive</a></li><li data-name="HeadingPitchRange"><a href="HeadingPitchRange.html">HeadingPitchRange</a></li><li data-name="HeadingPitchRoll"><a href="HeadingPitchRoll.html">HeadingPitchRoll</a></li><li data-name="HeadingPitchRollValues"><a href="global.html#HeadingPitchRollValues">HeadingPitchRollValues</a></li><li data-name="HeightmapEncoding"><a href="global.html#HeightmapEncoding">HeightmapEncoding</a></li><li data-name="HeightmapTerrainData"><a href="HeightmapTerrainData.html">HeightmapTerrainData</a></li><li data-name="HeightReference"><a href="global.html#HeightReference">HeightReference</a></li><li data-name="HermitePolynomialApproximation"><a href="HermitePolynomialApproximation.html">HermitePolynomialApproximation</a></li><li data-name="HermiteSpline"><a href="HermiteSpline.html">HermiteSpline</a></li><li data-name="HilbertOrder"><a href="HilbertOrder.html">HilbertOrder</a></li><li data-name="HorizontalOrigin"><a href="global.html#HorizontalOrigin">HorizontalOrigin</a></li><li data-name="I3SDataProvider"><a href="I3SDataProvider.html">I3SDataProvider</a></li><li data-name="I3SFeature"><a href="I3SFeature.html">I3SFeature</a></li><li data-name="I3SField"><a href="I3SField.html">I3SField</a></li><li data-name="I3SGeometry"><a href="I3SGeometry.html">I3SGeometry</a></li><li data-name="I3SLayer"><a href="I3SLayer.html">I3SLayer</a></li><li data-name="I3SNode"><a href="I3SNode.html">I3SNode</a></li><li data-name="ImageBasedLighting"><a href="ImageBasedLighting.html">ImageBasedLighting</a></li><li data-name="ImageMaterialProperty"><a href="ImageMaterialProperty.html">ImageMaterialProperty</a></li><li data-name="ImageryLayer"><a href="ImageryLayer.html">ImageryLayer</a></li><li data-name="ImageryLayerCollection"><a href="ImageryLayerCollection.html">ImageryLayerCollection</a></li><li data-name="ImageryLayerFeatureInfo"><a href="ImageryLayerFeatureInfo.html">ImageryLayerFeatureInfo</a></li><li data-name="ImageryProvider"><a href="ImageryProvider.html">ImageryProvider</a></li><li data-name="ImageryTypes"><a href="global.html#ImageryTypes">ImageryTypes</a></li><li data-name="includesReverseAxis"><a href="global.html#includesReverseAxis">includesReverseAxis</a></li><li data-name="IndexDatatype"><a href="global.html#IndexDatatype">IndexDatatype</a></li><li data-name="Intersect"><a href="global.html#Intersect">Intersect</a></li><li data-name="Intersections2D"><a href="Intersections2D.html">Intersections2D</a></li><li data-name="IntersectionTests"><a href="IntersectionTests.html">IntersectionTests</a></li><li data-name="Interval"><a href="Interval.html">Interval</a></li><li data-name="Ion"><a href="Ion.html">Ion</a></li><li data-name="IonGeocoderService"><a href="IonGeocoderService.html">IonGeocoderService</a></li><li data-name="IonImageryProvider"><a href="IonImageryProvider.html">IonImageryProvider</a></li><li data-name="IonResource"><a href="IonResource.html">IonResource</a></li><li data-name="IonWorldImageryStyle"><a href="global.html#IonWorldImageryStyle">IonWorldImageryStyle</a></li><li data-name="isLeapYear"><a href="global.html#isLeapYear">isLeapYear</a></li><li data-name="Iso8601"><a href="Iso8601.html">Iso8601</a></li><li data-name="JulianDate"><a href="JulianDate.html">JulianDate</a></li><li data-name="KeyboardEventModifier"><a href="global.html#KeyboardEventModifier">KeyboardEventModifier</a></li><li data-name="KmlCamera"><a href="KmlCamera.html">KmlCamera</a></li><li data-name="KmlDataSource"><a href="KmlDataSource.html">KmlDataSource</a></li><li data-name="KmlFeatureData"><a href="KmlFeatureData.html">KmlFeatureData</a></li><li data-name="KmlLookAt"><a href="KmlLookAt.html">KmlLookAt</a></li><li data-name="KmlTour"><a href="KmlTour.html">KmlTour</a></li><li data-name="KmlTourFlyTo"><a href="KmlTourFlyTo.html">KmlTourFlyTo</a></li><li data-name="KmlTourWait"><a href="KmlTourWait.html">KmlTourWait</a></li><li data-name="Label"><a href="Label.html">Label</a></li><li data-name="LabelCollection"><a href="LabelCollection.html">LabelCollection</a></li><li data-name="LabelGraphics"><a href="LabelGraphics.html">LabelGraphics</a></li><li data-name="LabelStyle"><a href="global.html#LabelStyle">LabelStyle</a></li><li data-name="LabelVisualizer"><a href="LabelVisualizer.html">LabelVisualizer</a></li><li data-name="LagrangePolynomialApproximation"><a href="LagrangePolynomialApproximation.html">LagrangePolynomialApproximation</a></li><li data-name="LeapSecond"><a href="LeapSecond.html">LeapSecond</a></li><li data-name="Light"><a href="Light.html">Light</a></li><li data-name="LightingModel"><a href="global.html#LightingModel">LightingModel</a></li><li data-name="LinearApproximation"><a href="LinearApproximation.html">LinearApproximation</a></li><li data-name="LinearSpline"><a href="LinearSpline.html">LinearSpline</a></li><li data-name="loadGltfJson"><a href="global.html#loadGltfJson">loadGltfJson</a></li><li data-name="MapboxImageryProvider"><a href="MapboxImageryProvider.html">MapboxImageryProvider</a></li><li data-name="MapboxStyleImageryProvider"><a href="MapboxStyleImageryProvider.html">MapboxStyleImageryProvider</a></li><li data-name="MapMode2D"><a href="global.html#MapMode2D">MapMode2D</a></li><li data-name="MapProjection"><a href="MapProjection.html">MapProjection</a></li><li data-name="Material"><a href="Material.html">Material</a></li><li data-name="MaterialAppearance"><a href="MaterialAppearance.html">MaterialAppearance</a></li><li data-name="MaterialSupport"><a href="MaterialAppearance.MaterialSupport.html">MaterialSupport</a></li><li data-name="MaterialProperty"><a href="MaterialProperty.html">MaterialProperty</a></li><li data-name="Math"><a href="Math.html">Math</a></li><li data-name="Matrix2"><a href="Matrix2.html">Matrix2</a></li><li data-name="Matrix3"><a href="Matrix3.html">Matrix3</a></li><li data-name="Matrix4"><a href="Matrix4.html">Matrix4</a></li><li data-name="mergeSort"><a href="global.html#mergeSort">mergeSort</a></li><li data-name="mergeSortComparator"><a href="global.html#mergeSortComparator">mergeSortComparator</a></li><li data-name="MetadataClass"><a href="MetadataClass.html">MetadataClass</a></li><li data-name="MetadataClassProperty"><a href="MetadataClassProperty.html">MetadataClassProperty</a></li><li data-name="MetadataComponentType"><a href="global.html#MetadataComponentType">MetadataComponentType</a></li><li data-name="MetadataEnum"><a href="MetadataEnum.html">MetadataEnum</a></li><li data-name="MetadataEnumValue"><a href="MetadataEnumValue.html">MetadataEnumValue</a></li><li data-name="MetadataSchema"><a href="MetadataSchema.html">MetadataSchema</a></li><li data-name="MetadataType"><a href="global.html#MetadataType">MetadataType</a></li><li data-name="Model"><a href="Model.html">Model</a></li><li data-name="ModelAnimation"><a href="ModelAnimation.html">ModelAnimation</a></li><li data-name="ModelAnimationCollection"><a href="ModelAnimationCollection.html">ModelAnimationCollection</a></li><li data-name="ModelAnimationLoop"><a href="global.html#ModelAnimationLoop">ModelAnimationLoop</a></li><li data-name="ModelFeature"><a href="ModelFeature.html">ModelFeature</a></li><li data-name="ModelGraphics"><a href="ModelGraphics.html">ModelGraphics</a></li><li data-name="ModelNode"><a href="ModelNode.html">ModelNode</a></li><li data-name="ModelVisualizer"><a href="ModelVisualizer.html">ModelVisualizer</a></li><li data-name="Moon"><a href="Moon.html">Moon</a></li><li data-name="MorphWeightSpline"><a href="MorphWeightSpline.html">MorphWeightSpline</a></li><li data-name="NearFarScalar"><a href="NearFarScalar.html">NearFarScalar</a></li><li data-name="NeverTileDiscardPolicy"><a href="NeverTileDiscardPolicy.html">NeverTileDiscardPolicy</a></li><li data-name="NodeTransformationProperty"><a href="NodeTransformationProperty.html">NodeTransformationProperty</a></li><li data-name="objectToQuery"><a href="global.html#objectToQuery">objectToQuery</a></li><li data-name="Occluder"><a href="Occluder.html">Occluder</a></li><li data-name="OpenCageGeocoderService"><a href="OpenCageGeocoderService.html">OpenCageGeocoderService</a></li><li data-name="OpenStreetMapImageryProvider"><a href="OpenStreetMapImageryProvider.html">OpenStreetMapImageryProvider</a></li><li data-name="OrientedBoundingBox"><a href="OrientedBoundingBox.html">OrientedBoundingBox</a></li><li data-name="OrthographicFrustum"><a href="OrthographicFrustum.html">OrthographicFrustum</a></li><li data-name="OrthographicOffCenterFrustum"><a href="OrthographicOffCenterFrustum.html">OrthographicOffCenterFrustum</a></li><li data-name="PackableForInterpolation"><a href="PackableForInterpolation.html">PackableForInterpolation</a></li><li data-name="Particle"><a href="Particle.html">Particle</a></li><li data-name="ParticleBurst"><a href="ParticleBurst.html">ParticleBurst</a></li><li data-name="ParticleEmitter"><a href="ParticleEmitter.html">ParticleEmitter</a></li><li data-name="ParticleSystem"><a href="ParticleSystem.html">ParticleSystem</a></li><li data-name="PathGraphics"><a href="PathGraphics.html">PathGraphics</a></li><li data-name="PathVisualizer"><a href="PathVisualizer.html">PathVisualizer</a></li><li data-name="PeliasGeocoderService"><a href="PeliasGeocoderService.html">PeliasGeocoderService</a></li><li data-name="PerInstanceColorAppearance"><a href="PerInstanceColorAppearance.html">PerInstanceColorAppearance</a></li><li data-name="PerspectiveFrustum"><a href="PerspectiveFrustum.html">PerspectiveFrustum</a></li><li data-name="PerspectiveOffCenterFrustum"><a href="PerspectiveOffCenterFrustum.html">PerspectiveOffCenterFrustum</a></li><li data-name="PinBuilder"><a href="PinBuilder.html">PinBuilder</a></li><li data-name="PixelDatatype"><a href="global.html#PixelDatatype">PixelDatatype</a></li><li data-name="PixelFormat"><a href="global.html#PixelFormat">PixelFormat</a></li><li data-name="Plane"><a href="Plane.html">Plane</a></li><li data-name="PlaneGeometry"><a href="PlaneGeometry.html">PlaneGeometry</a></li><li data-name="PlaneGeometryUpdater"><a href="PlaneGeometryUpdater.html">PlaneGeometryUpdater</a></li><li data-name="PlaneGraphics"><a href="PlaneGraphics.html">PlaneGraphics</a></li><li data-name="PlaneOutlineGeometry"><a href="PlaneOutlineGeometry.html">PlaneOutlineGeometry</a></li><li data-name="PointCloudShading"><a href="PointCloudShading.html">PointCloudShading</a></li><li data-name="PointGraphics"><a href="PointGraphics.html">PointGraphics</a></li><li data-name="pointInsideTriangle"><a href="global.html#pointInsideTriangle">pointInsideTriangle</a></li><li data-name="PointPrimitive"><a href="PointPrimitive.html">PointPrimitive</a></li><li data-name="PointPrimitiveCollection"><a href="PointPrimitiveCollection.html">PointPrimitiveCollection</a></li><li data-name="PointVisualizer"><a href="PointVisualizer.html">PointVisualizer</a></li><li data-name="PolygonGeometry"><a href="PolygonGeometry.html">PolygonGeometry</a></li><li data-name="PolygonGeometryUpdater"><a href="PolygonGeometryUpdater.html">PolygonGeometryUpdater</a></li><li data-name="PolygonGraphics"><a href="PolygonGraphics.html">PolygonGraphics</a></li><li data-name="PolygonHierarchy"><a href="PolygonHierarchy.html">PolygonHierarchy</a></li><li data-name="PolygonOutlineGeometry"><a href="PolygonOutlineGeometry.html">PolygonOutlineGeometry</a></li><li data-name="Polyline"><a href="Polyline.html">Polyline</a></li><li data-name="PolylineArrowMaterialProperty"><a href="PolylineArrowMaterialProperty.html">PolylineArrowMaterialProperty</a></li><li data-name="PolylineCollection"><a href="PolylineCollection.html">PolylineCollection</a></li><li data-name="PolylineColorAppearance"><a href="PolylineColorAppearance.html">PolylineColorAppearance</a></li><li data-name="PolylineDashMaterialProperty"><a href="PolylineDashMaterialProperty.html">PolylineDashMaterialProperty</a></li><li data-name="PolylineGeometry"><a href="PolylineGeometry.html">PolylineGeometry</a></li><li data-name="PolylineGeometryUpdater"><a href="PolylineGeometryUpdater.html">PolylineGeometryUpdater</a></li><li data-name="PolylineGlowMaterialProperty"><a href="PolylineGlowMaterialProperty.html">PolylineGlowMaterialProperty</a></li><li data-name="PolylineGraphics"><a href="PolylineGraphics.html">PolylineGraphics</a></li><li data-name="PolylineMaterialAppearance"><a href="PolylineMaterialAppearance.html">PolylineMaterialAppearance</a></li><li data-name="PolylineOutlineMaterialProperty"><a href="PolylineOutlineMaterialProperty.html">PolylineOutlineMaterialProperty</a></li><li data-name="PolylineVisualizer"><a href="PolylineVisualizer.html">PolylineVisualizer</a></li><li data-name="PolylineVolumeGeometry"><a href="PolylineVolumeGeometry.html">PolylineVolumeGeometry</a></li><li data-name="PolylineVolumeGeometryUpdater"><a href="PolylineVolumeGeometryUpdater.html">PolylineVolumeGeometryUpdater</a></li><li data-name="PolylineVolumeGraphics"><a href="PolylineVolumeGraphics.html">PolylineVolumeGraphics</a></li><li data-name="PolylineVolumeOutlineGeometry"><a href="PolylineVolumeOutlineGeometry.html">PolylineVolumeOutlineGeometry</a></li><li data-name="PositionProperty"><a href="PositionProperty.html">PositionProperty</a></li><li data-name="PositionPropertyArray"><a href="PositionPropertyArray.html">PositionPropertyArray</a></li><li data-name="PostProcessStage"><a href="PostProcessStage.html">PostProcessStage</a></li><li data-name="PostProcessStageCollection"><a href="PostProcessStageCollection.html">PostProcessStageCollection</a></li><li data-name="PostProcessStageComposite"><a href="PostProcessStageComposite.html">PostProcessStageComposite</a></li><li data-name="PostProcessStageLibrary"><a href="PostProcessStageLibrary.html">PostProcessStageLibrary</a></li><li data-name="PostProcessStageSampleMode"><a href="global.html#PostProcessStageSampleMode">PostProcessStageSampleMode</a></li><li data-name="Primitive"><a href="Primitive.html">Primitive</a></li><li data-name="PrimitiveCollection"><a href="PrimitiveCollection.html">PrimitiveCollection</a></li><li data-name="PrimitiveType"><a href="global.html#PrimitiveType">PrimitiveType</a></li><li data-name="Property"><a href="Property.html">Property</a></li><li data-name="PropertyArray"><a href="PropertyArray.html">PropertyArray</a></li><li data-name="PropertyBag"><a href="PropertyBag.html">PropertyBag</a></li><li data-name="Proxy"><a href="Proxy.html">Proxy</a></li><li data-name="QuadraticRealPolynomial"><a href="QuadraticRealPolynomial.html">QuadraticRealPolynomial</a></li><li data-name="QuantizedMeshTerrainData"><a href="QuantizedMeshTerrainData.html">QuantizedMeshTerrainData</a></li><li data-name="QuarticRealPolynomial"><a href="QuarticRealPolynomial.html">QuarticRealPolynomial</a></li><li data-name="Quaternion"><a href="Quaternion.html">Quaternion</a></li><li data-name="QuaternionSpline"><a href="QuaternionSpline.html">QuaternionSpline</a></li><li data-name="queryToObject"><a href="global.html#queryToObject">queryToObject</a></li><li data-name="Queue"><a href="Queue.html">Queue</a></li><li data-name="Ray"><a href="Ray.html">Ray</a></li><li data-name="Rectangle"><a href="Rectangle.html">Rectangle</a></li><li data-name="RectangleGeometry"><a href="RectangleGeometry.html">RectangleGeometry</a></li><li data-name="RectangleGeometryUpdater"><a href="RectangleGeometryUpdater.html">RectangleGeometryUpdater</a></li><li data-name="RectangleGraphics"><a href="RectangleGraphics.html">RectangleGraphics</a></li><li data-name="RectangleOutlineGeometry"><a href="RectangleOutlineGeometry.html">RectangleOutlineGeometry</a></li><li data-name="ReferenceFrame"><a href="global.html#ReferenceFrame">ReferenceFrame</a></li><li data-name="ReferenceProperty"><a href="ReferenceProperty.html">ReferenceProperty</a></li><li data-name="removeExtension"><a href="global.html#removeExtension">removeExtension</a></li><li data-name="Request"><a href="Request.html">Request</a></li><li data-name="RequestErrorEvent"><a href="RequestErrorEvent.html">RequestErrorEvent</a></li><li data-name="RequestScheduler"><a href="RequestScheduler.html">RequestScheduler</a></li><li data-name="RequestState"><a href="global.html#RequestState">RequestState</a></li><li data-name="RequestType"><a href="global.html#RequestType">RequestType</a></li><li data-name="Resource"><a href="Resource.html">Resource</a></li><li data-name="RuntimeError"><a href="RuntimeError.html">RuntimeError</a></li><li data-name="SampledPositionProperty"><a href="SampledPositionProperty.html">SampledPositionProperty</a></li><li data-name="SampledProperty"><a href="SampledProperty.html">SampledProperty</a></li><li data-name="sampleTerrain"><a href="global.html#sampleTerrain">sampleTerrain</a></li><li data-name="sampleTerrainMostDetailed"><a href="global.html#sampleTerrainMostDetailed">sampleTerrainMostDetailed</a></li><li data-name="Scene"><a href="Scene.html">Scene</a></li><li data-name="SceneMode"><a href="global.html#SceneMode">SceneMode</a></li><li data-name="SceneTransforms"><a href="SceneTransforms.html">SceneTransforms</a></li><li data-name="ScreenSpaceCameraController"><a href="ScreenSpaceCameraController.html">ScreenSpaceCameraController</a></li><li data-name="ScreenSpaceEventHandler"><a href="ScreenSpaceEventHandler.html">ScreenSpaceEventHandler</a></li><li data-name="ScreenSpaceEventType"><a href="global.html#ScreenSpaceEventType">ScreenSpaceEventType</a></li><li data-name="shaderDefines"><a href="global.html#shaderDefines">shaderDefines</a></li><li data-name="shaderMaximumIntersectionsLength"><a href="global.html#shaderMaximumIntersectionsLength">shaderMaximumIntersectionsLength</a></li><li data-name="shaderUniforms"><a href="global.html#shaderUniforms">shaderUniforms</a></li><li data-name="ShadowMap"><a href="ShadowMap.html">ShadowMap</a></li><li data-name="ShadowMode"><a href="global.html#ShadowMode">ShadowMode</a></li><li data-name="ShowGeometryInstanceAttribute"><a href="ShowGeometryInstanceAttribute.html">ShowGeometryInstanceAttribute</a></li><li data-name="Simon1994PlanetaryPositions"><a href="Simon1994PlanetaryPositions.html">Simon1994PlanetaryPositions</a></li><li data-name="SimplePolylineGeometry"><a href="SimplePolylineGeometry.html">SimplePolylineGeometry</a></li><li data-name="SingleTileImageryProvider"><a href="SingleTileImageryProvider.html">SingleTileImageryProvider</a></li><li data-name="SkyAtmosphere"><a href="SkyAtmosphere.html">SkyAtmosphere</a></li><li data-name="SkyBox"><a href="SkyBox.html">SkyBox</a></li><li data-name="SphereEmitter"><a href="SphereEmitter.html">SphereEmitter</a></li><li data-name="SphereGeometry"><a href="SphereGeometry.html">SphereGeometry</a></li><li data-name="SphereOutlineGeometry"><a href="SphereOutlineGeometry.html">SphereOutlineGeometry</a></li><li data-name="Spherical"><a href="Spherical.html">Spherical</a></li><li data-name="Spline"><a href="Spline.html">Spline</a></li><li data-name="SplitDirection"><a href="global.html#SplitDirection">SplitDirection</a></li><li data-name="StencilFunction"><a href="global.html#StencilFunction">StencilFunction</a></li><li data-name="StencilOperation"><a href="global.html#StencilOperation">StencilOperation</a></li><li data-name="SteppedSpline"><a href="SteppedSpline.html">SteppedSpline</a></li><li data-name="StripeMaterialProperty"><a href="StripeMaterialProperty.html">StripeMaterialProperty</a></li><li data-name="StripeOrientation"><a href="global.html#StripeOrientation">StripeOrientation</a></li><li data-name="StyleExpression"><a href="StyleExpression.html">StyleExpression</a></li><li data-name="subdivideArray"><a href="global.html#subdivideArray">subdivideArray</a></li><li data-name="Sun"><a href="Sun.html">Sun</a></li><li data-name="SunLight"><a href="SunLight.html">SunLight</a></li><li data-name="TaskProcessor"><a href="TaskProcessor.html">TaskProcessor</a></li><li data-name="Terrain"><a href="Terrain.html">Terrain</a></li><li data-name="TerrainData"><a href="TerrainData.html">TerrainData</a></li><li data-name="TerrainProvider"><a href="TerrainProvider.html">TerrainProvider</a></li><li data-name="TextureMagnificationFilter"><a href="global.html#TextureMagnificationFilter">TextureMagnificationFilter</a></li><li data-name="TextureMinificationFilter"><a href="global.html#TextureMinificationFilter">TextureMinificationFilter</a></li><li data-name="TextureUniform"><a href="TextureUniform.html">TextureUniform</a></li><li data-name="TileAvailability"><a href="TileAvailability.html">TileAvailability</a></li><li data-name="TileCoordinatesImageryProvider"><a href="TileCoordinatesImageryProvider.html">TileCoordinatesImageryProvider</a></li><li data-name="TileDiscardPolicy"><a href="TileDiscardPolicy.html">TileDiscardPolicy</a></li><li data-name="TileMapServiceImageryProvider"><a href="TileMapServiceImageryProvider.html">TileMapServiceImageryProvider</a></li><li data-name="TileProviderError"><a href="TileProviderError.html">TileProviderError</a></li><li data-name="TilingScheme"><a href="TilingScheme.html">TilingScheme</a></li><li data-name="TimeDynamicImagery"><a href="TimeDynamicImagery.html">TimeDynamicImagery</a></li><li data-name="TimeDynamicPointCloud"><a href="TimeDynamicPointCloud.html">TimeDynamicPointCloud</a></li><li data-name="TimeInterval"><a href="TimeInterval.html">TimeInterval</a></li><li data-name="TimeIntervalCollection"><a href="TimeIntervalCollection.html">TimeIntervalCollection</a></li><li data-name="TimeIntervalCollectionPositionProperty"><a href="TimeIntervalCollectionPositionProperty.html">TimeIntervalCollectionPositionProperty</a></li><li data-name="TimeIntervalCollectionProperty"><a href="TimeIntervalCollectionProperty.html">TimeIntervalCollectionProperty</a></li><li data-name="TimeStandard"><a href="global.html#TimeStandard">TimeStandard</a></li><li data-name="Transforms"><a href="Transforms.html">Transforms</a></li><li data-name="TranslationRotationScale"><a href="TranslationRotationScale.html">TranslationRotationScale</a></li><li data-name="TridiagonalSystemSolver"><a href="TridiagonalSystemSolver.html">TridiagonalSystemSolver</a></li><li data-name="TrustedServers"><a href="TrustedServers.html">TrustedServers</a></li><li data-name="UniformSpecifier"><a href="global.html#UniformSpecifier">UniformSpecifier</a></li><li data-name="UniformType"><a href="global.html#UniformType">UniformType</a></li><li data-name="UrlTemplateImageryProvider"><a href="UrlTemplateImageryProvider.html">UrlTemplateImageryProvider</a></li><li data-name="VaryingType"><a href="global.html#VaryingType">VaryingType</a></li><li data-name="VelocityOrientationProperty"><a href="VelocityOrientationProperty.html">VelocityOrientationProperty</a></li><li data-name="VelocityVectorProperty"><a href="VelocityVectorProperty.html">VelocityVectorProperty</a></li><li data-name="VertexFormat"><a href="VertexFormat.html">VertexFormat</a></li><li data-name="VerticalOrigin"><a href="global.html#VerticalOrigin">VerticalOrigin</a></li><li data-name="VideoSynchronizer"><a href="VideoSynchronizer.html">VideoSynchronizer</a></li><li data-name="ViewportQuad"><a href="ViewportQuad.html">ViewportQuad</a></li><li data-name="Visibility"><a href="global.html#Visibility">Visibility</a></li><li data-name="Visualizer"><a href="Visualizer.html">Visualizer</a></li><li data-name="VoxelPrimitive"><a href="VoxelPrimitive.html">VoxelPrimitive</a></li><li data-name="VoxelProvider"><a href="VoxelProvider.html">VoxelProvider</a></li><li data-name="VoxelShapeType"><a href="global.html#VoxelShapeType">VoxelShapeType</a></li><li data-name="VRTheWorldTerrainProvider"><a href="VRTheWorldTerrainProvider.html">VRTheWorldTerrainProvider</a></li><li data-name="WallGeometry"><a href="WallGeometry.html">WallGeometry</a></li><li data-name="WallGeometryUpdater"><a href="WallGeometryUpdater.html">WallGeometryUpdater</a></li><li data-name="WallGraphics"><a href="WallGraphics.html">WallGraphics</a></li><li data-name="WallOutlineGeometry"><a href="WallOutlineGeometry.html">WallOutlineGeometry</a></li><li data-name="WebGLConstants"><a href="global.html#WebGLConstants">WebGLConstants</a></li><li data-name="WebGLOptions"><a href="global.html#WebGLOptions">WebGLOptions</a></li><li data-name="WebMapServiceImageryProvider"><a href="WebMapServiceImageryProvider.html">WebMapServiceImageryProvider</a></li><li data-name="WebMapTileServiceImageryProvider"><a href="WebMapTileServiceImageryProvider.html">WebMapTileServiceImageryProvider</a></li><li data-name="WebMercatorProjection"><a href="WebMercatorProjection.html">WebMercatorProjection</a></li><li data-name="WebMercatorTilingScheme"><a href="WebMercatorTilingScheme.html">WebMercatorTilingScheme</a></li><li data-name="WindingOrder"><a href="global.html#WindingOrder">WindingOrder</a></li><li data-name="writeTextToCanvas"><a href="global.html#writeTextToCanvas">writeTextToCanvas</a></li></ul><h5>packages/widgets</h5><ul><li data-name="Animation"><a href="Animation.html">Animation</a></li><li data-name="AnimationViewModel"><a href="AnimationViewModel.html">AnimationViewModel</a></li><li data-name="BaseLayerPicker"><a href="BaseLayerPicker.html">BaseLayerPicker</a></li><li data-name="BaseLayerPickerViewModel"><a href="BaseLayerPickerViewModel.html">BaseLayerPickerViewModel</a></li><li data-name="Cesium3DTilesInspector"><a href="Cesium3DTilesInspector.html">Cesium3DTilesInspector</a></li><li data-name="Cesium3DTilesInspectorViewModel"><a href="Cesium3DTilesInspectorViewModel.html">Cesium3DTilesInspectorViewModel</a></li><li data-name="CesiumInspector"><a href="CesiumInspector.html">CesiumInspector</a></li><li data-name="CesiumInspectorViewModel"><a href="CesiumInspectorViewModel.html">CesiumInspectorViewModel</a></li><li data-name="ClockViewModel"><a href="ClockViewModel.html">ClockViewModel</a></li><li data-name="Command"><a href="Command.html">Command</a></li><li data-name="createCommand"><a href="global.html#createCommand">createCommand</a></li><li data-name="FullscreenButton"><a href="FullscreenButton.html">FullscreenButton</a></li><li data-name="FullscreenButtonViewModel"><a href="FullscreenButtonViewModel.html">FullscreenButtonViewModel</a></li><li data-name="Geocoder"><a href="Geocoder.html">Geocoder</a></li><li data-name="GeocoderViewModel"><a href="GeocoderViewModel.html">GeocoderViewModel</a></li><li data-name="HomeButton"><a href="HomeButton.html">HomeButton</a></li><li data-name="HomeButtonViewModel"><a href="HomeButtonViewModel.html">HomeButtonViewModel</a></li><li data-name="InfoBox"><a href="InfoBox.html">InfoBox</a></li><li data-name="InfoBoxViewModel"><a href="InfoBoxViewModel.html">InfoBoxViewModel</a></li><li data-name="NavigationHelpButton"><a href="NavigationHelpButton.html">NavigationHelpButton</a></li><li data-name="NavigationHelpButtonViewModel"><a href="NavigationHelpButtonViewModel.html">NavigationHelpButtonViewModel</a></li><li data-name="PerformanceWatchdog"><a href="PerformanceWatchdog.html">PerformanceWatchdog</a></li><li data-name="PerformanceWatchdogViewModel"><a href="PerformanceWatchdogViewModel.html">PerformanceWatchdogViewModel</a></li><li data-name="ProjectionPicker"><a href="ProjectionPicker.html">ProjectionPicker</a></li><li data-name="ProjectionPickerViewModel"><a href="ProjectionPickerViewModel.html">ProjectionPickerViewModel</a></li><li data-name="ProviderViewModel"><a href="ProviderViewModel.html">ProviderViewModel</a></li><li data-name="SceneModePicker"><a href="SceneModePicker.html">SceneModePicker</a></li><li data-name="SceneModePickerViewModel"><a href="SceneModePickerViewModel.html">SceneModePickerViewModel</a></li><li data-name="SelectionIndicator"><a href="SelectionIndicator.html">SelectionIndicator</a></li><li data-name="SelectionIndicatorViewModel"><a href="SelectionIndicatorViewModel.html">SelectionIndicatorViewModel</a></li><li data-name="SvgPathBindingHandler"><a href="SvgPathBindingHandler.html">SvgPathBindingHandler</a></li><li data-name="Timeline"><a href="Timeline.html">Timeline</a></li><li data-name="ToggleButtonViewModel"><a href="ToggleButtonViewModel.html">ToggleButtonViewModel</a></li><li data-name="Viewer"><a href="Viewer.html">Viewer</a></li><li data-name="viewerCesium3DTilesInspectorMixin"><a href="global.html#viewerCesium3DTilesInspectorMixin">viewerCesium3DTilesInspectorMixin</a></li><li data-name="viewerCesiumInspectorMixin"><a href="global.html#viewerCesiumInspectorMixin">viewerCesiumInspectorMixin</a></li><li data-name="viewerDragDropMixin"><a href="global.html#viewerDragDropMixin">viewerDragDropMixin</a></li><li data-name="viewerPerformanceWatchdogMixin"><a href="global.html#viewerPerformanceWatchdogMixin">viewerPerformanceWatchdogMixin</a></li><li data-name="viewerVoxelInspectorMixin"><a href="global.html#viewerVoxelInspectorMixin">viewerVoxelInspectorMixin</a></li><li data-name="VoxelInspector"><a href="VoxelInspector.html">VoxelInspector</a></li><li data-name="VoxelInspectorViewModel"><a href="VoxelInspectorViewModel.html">VoxelInspectorViewModel</a></li><li data-name="VRButton"><a href="VRButton.html">VRButton</a></li><li data-name="VRButtonViewModel"><a href="VRButtonViewModel.html">VRButtonViewModel</a></li></ul></div>
+    </div>
+</div>
+
+<script>
+if (window.frameElement) {
+    document.body.className = 'embedded';
+
+    var ele = document.createElement('a');
+    ele.className = 'popout';
+    ele.target = '_blank';
+    ele.href = window.location.href;
+    ele.title = 'Pop out';
+    document.getElementById('main').appendChild(ele);
+}
+
+// Set targets on external links.  Sandcastle and GitHub shouldn't be embedded in any iframe.
+Array.prototype.forEach.call(document.getElementsByTagName('a'), function(a) {
+    if (/^https?:/i.test(a.getAttribute('href'))) {
+        a.target='_blank';
+    }
+});
+</script>
+
+<script src="javascript/prism.js"></script>
+<script src="javascript/cesiumDoc.js"></script>
+
+</body>
+</html>
