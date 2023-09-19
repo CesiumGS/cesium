@@ -1171,6 +1171,32 @@ function setCamera(uniformState, camera) {
     uniformState._eyeEllipsoidNormalEC
   );
 
+  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
+    surfacePosition,
+    ellipsoid,
+    enuTransformScratch
+  );
+  uniformState._enuToModel = Matrix4.multiplyTransformation(
+    uniformState.inverseModel,
+    enuToWorld,
+    uniformState._enuToModel
+  );
+  uniformState._modelToEnu = Matrix4.inverseTransformation(
+    uniformState._enuToModel,
+    uniformState._modelToEnu
+  );
+
+  if (
+    !CesiumMath.equalsEpsilon(
+      ellipsoid._radii.x,
+      ellipsoid._radii.y,
+      CesiumMath.EPSILON15
+    )
+  ) {
+    // Ellipsoid curvature calculations only work for an ellipsoid of revolution
+    return;
+  }
+
   const primeVerticalEndpoint = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
     surfacePosition,
     0.0,
@@ -1192,21 +1218,6 @@ function setCamera(uniformState, camera) {
     1.0 / primeVerticalRadius,
     1.0 / meridionalRadius,
     uniformState._eyeEllipsoidCurvature
-  );
-
-  const enuToWorld = Transforms.eastNorthUpToFixedFrame(
-    surfacePosition,
-    ellipsoid,
-    enuTransformScratch
-  );
-  uniformState._enuToModel = Matrix4.multiplyTransformation(
-    uniformState.inverseModel,
-    enuToWorld,
-    uniformState._enuToModel
-  );
-  uniformState._modelToEnu = Matrix4.inverseTransformation(
-    uniformState._enuToModel,
-    uniformState._modelToEnu
   );
 }
 

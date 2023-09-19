@@ -2150,6 +2150,30 @@ describe(
       }).contextToRender();
     });
 
+    it("has czm_eyeEllipsoidNormalEC", function () {
+      const { uniformState } = context;
+      const frameState = createFrameState(context, createMockCamera());
+      const ellipsoid = new Ellipsoid(1.1, 1.1, 1.0);
+      frameState.mapProjection = new GeographicProjection(ellipsoid);
+      uniformState.update(frameState);
+      const fragmentShader = `void main() {
+        out_FragColor = vec4(czm_eyeEllipsoidNormalEC != vec3(0.0));
+      }`;
+      expect({ context, fragmentShader }).contextToRender();
+    });
+
+    it("has czm_eyeEllipsoidCurvature", function () {
+      const { uniformState } = context;
+      const frameState = createFrameState(context, createMockCamera());
+      const ellipsoid = new Ellipsoid(1.0, 1.0, 1.0);
+      frameState.mapProjection = new GeographicProjection(ellipsoid);
+      uniformState.update(frameState);
+      const fragmentShader = `void main() {
+        out_FragColor = vec4(czm_eyeEllipsoidCurvature == vec2(1.0));
+      }`;
+      expect({ context, fragmentShader }).contextToRender();
+    });
+
     it("has czm_ellipsoidRadii", function () {
       const us = context.uniformState;
       const frameState = createFrameState(context, createMockCamera());
