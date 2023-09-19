@@ -1,19 +1,86 @@
 # Change Log
 
-### 1.108 - 2023-08-01
+### 1.110 - 2023-10-01
 
 #### @cesium/engine
 
 ##### Fixes :wrench:
 
-- Fixed dimensions of `tangentEC` in custom shaders [#11394](https://github.com/CesiumGS/cesium/pull/11394).
-- Fixed a bug where `Model` would not respond to different alpha values in a `Cesium3DTileStyle`. [#11399](https://github.com/CesiumGS/cesium/pull/11399)
+- Remove reading of `import.meta` meta-property because webpack does not support it. [#11511](https://github.com/CesiumGS/cesium/pull/11511)
+
+### 1.109 - 2023-09-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- Firefox 114 is now the minimum Firefox version required to run CesiumJS. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
+- `TaskProcessor` now loads worker files as ESM instead of AMD. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
+
+##### Additions :tada:
+
+- Added the `retinaTiles` option to the `OpenStreetMapImageryProvider` contructor options to allow requesting tiles at the 2x resolution for retina displays. [#11485](https://github.com/CesiumGS/cesium/pull/11485)
+- The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
+
+##### Fixes :wrench:
+
+- Restore previous behavior for cut out terrain loading. [#11482](https://github.com/CesiumGS/cesium/issues/11482)
+- The return type of `SingleTileImageryProvider.fromUrl` has been fixed to be `Promise.<SingleTileImageryProvider>` (was `void`). [#11432](https://github.com/CesiumGS/cesium/pull/11432)
+- Fixed request render mode when models are loading without `incrementallyLoadTextures`. [#11486](https://github.com/CesiumGS/cesium/pull/11486)
+
+#### @cesium/widgets
+
+##### Additions :tada:
+
+- Added two additional default imagery providers from Stadia maps to the BaseLayerPicker widget: Alidade Smooth and Alidade Smooth Dark. [#11485](https://github.com/CesiumGS/cesium/pull/11485)
+
+##### Fixes :wrench:
+
+- Use updated URLs and attribution for Stamen Map styles in the default BaseLayerPicker widget. [#11451](https://github.com/CesiumGS/cesium/issues/11451)
+- Fixed types for `ProviderViewModel.CreationFunction`. [#11452](https://github.com/CesiumGS/cesium/issues/11452)
+- Fixed I3dmLoader manually compute positions when RTC_CENTER is ZERO [#11466](https://github.com/CesiumGS/cesium/pull/11466)
+
+### 1.108 - 2023-08-01
+
+#### Major Announcements :loudspeaker:
+
+- Starting with version 1.109, CesiumJS will require Firefox version 114 or higher for rendering. This is to [facilitate web worker loading and remove outdated dependencies](https://github.com/CesiumGS/cesium/pull/11400). Other browsers and node will be unaffected.
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed issue where terrain with multiple layers was loading higher LOD tiles inconsistently. [#11312](https://github.com/CesiumGS/cesium/issues/11312)
+- Fixed `OpenStreetMapImageryProvider` usage in comments, change default url and add `tile.openstreetmap.org` to `RequestScheduler.requestsByServer`. [#11407](https://github.com/CesiumGS/cesium/pull/11407)
+- Fixed calculation of GroundPolyline bounding spheres in regions with negative terrain heights. [#11184](https://github.com/CesiumGS/cesium/pull/11184)
+- Fixed `CzmlDataSource` in cases of custom `Ellipsoid.WGS84` definitions. [#11190](https://github.com/CesiumGS/cesium/pull/11190)
+- Fixed mipmaps for textures using the `KHR_texture_transform` extension. [#11411](https://github.com/CesiumGS/cesium/pull/11411)
 
 #### @cesium/widgets
 
 ##### Fixes :wrench:
 
-- Fixed the error report "rectanglePromise.then is not a function" that occurred when using `viewer.flyTo` to navigate to an ImageryLayer. [#11392](https://github.com/CesiumGS/cesium/pull/11392)
+- Fixed conflicting geocoder suggestions for latitude and longitude pairs by removing `CartographicGeocoderService` from the default geocoder services in `GeocoderViewModel`. [#11433](https://github.com/CesiumGS/cesium/issues/11433).
+
+### 1.107.2 - 2023-07-13
+
+This is an npm-only release to fix a dependency issue published in 1.107.1
+
+### 1.107.1 - 2023-07-13
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug where `Model` would not respond to different alpha values in a `Cesium3DTileStyle`. [#11399](https://github.com/CesiumGS/cesium/pull/11399)
+- Fixed dimensions of `tangentEC` in custom shaders. [#11394](https://github.com/CesiumGS/cesium/pull/11394)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed promise return value when using `viewer.flyTo` to navigate to an ImageryLayer. [#11392](https://github.com/CesiumGS/cesium/pull/11392)
+- Fixed `depthTestAgainstTerrain` value being overridden when using the base layer picker widget. [#11393](https://github.com/CesiumGS/cesium/issues/11393)
 
 ### 1.107 - 2023-07-03
 

@@ -17,8 +17,6 @@ packages/engine/Build/**
 packages/engine/Source/Scene/GltfPipeline/**
 packages/engine/Source/Shaders/**
 packages/engine/Source/ThirdParty/**
-packages/engine/Source/Workers/**
-!packages/engine/Source/Workers/transferTypedArrayTest.js
 
 # packages/widgets
 packages/widgets/Build/**

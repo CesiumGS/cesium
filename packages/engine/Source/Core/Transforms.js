@@ -749,10 +749,10 @@ const rotation2Scratch = new Matrix3();
  *
  *
  * @example
- * // Transform a point from the ICRF axes to the Fixed axes.
+ * // Transform a point from the Fixed axes to the ICRF axes.
  * const now = Cesium.JulianDate.now();
  * const pointInFixed = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
- * const fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
+ * const fixedToIcrf = Cesium.Transforms.computeFixedToIcrfMatrix(now);
  * let pointInInertial = new Cesium.Cartesian3();
  * if (Cesium.defined(fixedToIcrf)) {
  *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed, pointInInertial);

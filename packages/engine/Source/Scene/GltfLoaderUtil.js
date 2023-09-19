@@ -103,14 +103,8 @@ GltfLoaderUtil.createSampler = function (options) {
     magFilter = defaultValue(sampler.magFilter, magFilter);
   }
 
-  let usesTextureTransform = false;
-  const extensions = textureInfo.extensions;
-  if (defined(extensions) && defined(extensions.KHR_texture_transform)) {
-    usesTextureTransform = true;
-  }
-
   if (
-    (compressedTextureNoMipmap || usesTextureTransform) &&
+    compressedTextureNoMipmap &&
     minFilter !== TextureMinificationFilter.LINEAR &&
     minFilter !== TextureMinificationFilter.NEAREST
   ) {

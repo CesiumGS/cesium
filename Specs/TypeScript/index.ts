@@ -27,6 +27,7 @@ import {
   CylinderOutlineGeometry,
   CzmlDataSource,
   DataSource,
+  defined,
   EllipseGeometry,
   EllipseOutlineGeometry,
   EllipsoidGeometry,
@@ -387,3 +388,16 @@ const canvas: HTMLCanvasElement | undefined = writeTextToCanvas("test");
 let pb = new PropertyBag();
 let hasProp: boolean = pb.hasProperty("xyz");
 property = pb.xyz;
+
+// Validate overridden defined with type predicate
+let pos: Cartesian3 | undefined | null;
+if (defined(pos)) {
+  pos.clone();
+}
+function consumeDefined(pos: Cartesian3) {
+  pos.clone();
+}
+pos = undefined;
+if (defined(pos)) {
+  consumeDefined(pos);
+}

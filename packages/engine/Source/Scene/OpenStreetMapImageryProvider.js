@@ -16,8 +16,9 @@ const defaultCredit = new Credit(
  *
  * Initialization options for the OpenStreetMapImageryProvider constructor
  *
- * @property {string} [url='https://a.tile.openstreetmap.org'] The OpenStreetMap server url.
+ * @property {string} [url='https://tile.openstreetmap.org'] The OpenStreetMap server url.
  * @property {string} [fileExtension='png'] The file extension for images on the server.
+ * @property {boolean} [retinaTiles=false] When true, request tiles at the 2x resolution for retina displays.
  * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
  * @property {number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
  * @property {number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
@@ -49,7 +50,7 @@ const defaultCredit = new Credit(
  *
  * @example
  * const osm = new Cesium.OpenStreetMapImageryProvider({
- *     url : 'https://a.tile.openstreetmap.org/'
+ *     url : 'https://tile.openstreetmap.org/'
  * });
  *
  * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
@@ -59,10 +60,12 @@ function OpenStreetMapImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const resource = Resource.createIfNeeded(
-    defaultValue(options.url, "https://a.tile.openstreetmap.org/")
+    defaultValue(options.url, "https://tile.openstreetmap.org/")
   );
   resource.appendForwardSlash();
-  resource.url += `{z}/{x}/{y}.${defaultValue(options.fileExtension, "png")}`;
+  resource.url += `{z}/{x}/{y}${
+    options.retinaTiles ? "@2x" : ""
+  }.${defaultValue(options.fileExtension, "png")}`;
 
   const tilingScheme = new WebMercatorTilingScheme({
     ellipsoid: options.ellipsoid,
