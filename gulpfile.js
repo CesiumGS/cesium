@@ -61,9 +61,9 @@ if (/\.0$/.test(version)) {
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
 
-const travisDeployUrl =
+const devDeployUrl =
   "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
-const isProduction = process.env.TRAVIS_BRANCH === "cesium.com";
+const isProduction = process.env.PROD;
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -689,19 +689,7 @@ export const makeZip = gulp.series(release, async function () {
   );
 });
 
-function isTravisPullRequest() {
-  return (
-    process.env.TRAVIS_PULL_REQUEST !== undefined &&
-    process.env.TRAVIS_PULL_REQUEST !== "false"
-  );
-}
-
 export async function deployS3() {
-  if (isTravisPullRequest()) {
-    console.log("Skipping deployment for non-pull request.");
-    return;
-  }
-
   const argv = yargs(process.argv)
     .usage("Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]")
     .options({
@@ -739,7 +727,7 @@ export async function deployS3() {
   const bucketName = argv.bucket;
   const dryRun = argv.dryRun;
   const cacheControl = argv.cacheControl ? argv.cacheControl : "max-age=3600";
-  const skipFiles = process.env.TRAVIS_BRANCH !== "main"; // Always re-upload the file on the main branch. This will ensure the file does not get deleted after a 30-day period
+  const skipFiles = process.env.BRANCH !== "main"; // Always re-upload the file on the main branch. This will ensure the file does not get deleted after a 30-day period
 
   if (argv.confirm) {
     return deployCesium(
@@ -1063,7 +1051,7 @@ async function deployCesium(
 
 async function deployCesiumRelease(bucketName, s3Client, errors) {
   const releaseDir = "cesiumjs/releases";
-  const quiet = process.env.TRAVIS;
+  const quiet = process.env.CI;
 
   let release;
   try {
@@ -1073,8 +1061,8 @@ async function deployCesiumRelease(bucketName, s3Client, errors) {
       {
         method: "GET",
         headers: {
-          Authorization: process.env.TOKEN
-            ? `token ${process.env.TOKEN}`
+          Authorization: process.env.GITHUB_TOKEN
+            ? `token ${process.env.GITHUB_TOKEN}`
             : undefined,
           "User-Agent": "cesium.com-build",
         },
@@ -1229,19 +1217,14 @@ export async function deploySetVersion() {
 }
 
 export async function deployStatus() {
-  if (isTravisPullRequest()) {
-    console.log("Skipping deployment status for non-pull request.");
-    return;
-  }
-
   const status = argv.status;
   const message = argv.message;
 
-  const deployUrl = `${travisDeployUrl + process.env.TRAVIS_BRANCH}/`;
+  const deployUrl = `${devDeployUrl + process.env.BRANCH}/`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
   const coverageUrl = `${
-    travisDeployUrl + process.env.TRAVIS_BRANCH
+    devDeployUrl + process.env.BRANCH
   }/Build/Coverage/index.html`;
 
   return Promise.all([
@@ -1254,7 +1237,7 @@ export async function deployStatus() {
 
 async function setStatus(state, targetUrl, description, context) {
   // skip if the environment does not have the token
-  if (!process.env.TOKEN) {
+  if (!process.env.GITHUB_TOKEN) {
     return;
   }
 
@@ -1266,19 +1249,20 @@ async function setStatus(state, targetUrl, description, context) {
   };
 
   const response = await fetch(
-    `https://api.github.com/repos/${process.env.TRAVIS_REPO_SLUG}/statuses/${process.env.TRAVIS_COMMIT}`,
+    `https://api.github.com/repos/${process.env.GITHUB_REPO}/statuses/${process.env.GITHUB_SHA}`,
     {
       method: "post",
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
-        Authorization: `token ${process.env.TOKEN}`,
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
         "User-Agent": "Cesium",
       },
     }
   );
 
-  return response.json();
+  const result = await response.json();
+  return result;
 }
 
 /**
@@ -1471,7 +1455,7 @@ export async function runCoverage(options) {
       html += "</ul></body></html>";
       writeFileSync(join(options.coverageDirectory, "index.html"), html);
 
-      if (!process.env.TRAVIS) {
+      if (!process.env.CI) {
         folders.forEach(function (dir) {
           open(join(options.coverageDirectory, `${dir}/index.html`));
         });
