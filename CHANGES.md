@@ -1,11 +1,12 @@
 # Change Log
 
-### 1.110 - 2023-10-01
+### 1.110 - 2023-10-02
 
 #### @cesium/engine
 
 ##### Fixes :wrench:
 
+- Fix bug in `Cesium3DTilePass` affecting the `PRELOAD` pass. [#11525](https://github.com/CesiumGS/cesium/pull/11525)
 - Remove reading of `import.meta` meta-property because webpack does not support it. [#11511](https://github.com/CesiumGS/cesium/pull/11511)
 
 ### 1.109 - 2023-09-01
