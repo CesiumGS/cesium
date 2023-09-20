@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.110 - 2023-10-02
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fix bug in `Cesium3DTilePass` affecting the `PRELOAD` pass. [#11525](https://github.com/CesiumGS/cesium/pull/11525)
+
 ### 1.109 - 2023-09-01
 
 #### @cesium/engine
