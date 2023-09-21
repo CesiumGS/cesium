@@ -649,6 +649,42 @@ describe(
         primitives.lowerToBottom(p);
       }).toThrowDeveloperError();
     });
+
+    it("fires an event on primitive added", function () {
+      const primitiveAdded = primitives.primitiveAdded;
+
+      const onPrimitiveAddedSpy = jasmine.createSpy("event");
+      primitiveAdded.addEventListener(onPrimitiveAddedSpy);
+      expect(onPrimitiveAddedSpy).not.toHaveBeenCalled();
+      primitives.add(createLabels());
+      expect(onPrimitiveAddedSpy).toHaveBeenCalled();
+    });
+
+    it("fires an event on primitive removed", function () {
+      const p = createLabels();
+      const primitiveRemoved = primitives.primitiveRemoved;
+
+      const onPrimitiveRemovedSpy = jasmine.createSpy("event");
+      primitiveRemoved.addEventListener(onPrimitiveRemovedSpy);
+      expect(onPrimitiveRemovedSpy).not.toHaveBeenCalled();
+      primitives.add(p);
+      expect(onPrimitiveRemovedSpy).not.toHaveBeenCalled();
+      primitives.remove(p);
+      expect(onPrimitiveRemovedSpy).toHaveBeenCalled();
+    });
+
+    it("fires an event on primitive remove all", function () {
+      const primitiveRemoved = primitives.primitiveRemoved;
+
+      const onPrimitiveRemovedSpy = jasmine.createSpy("event");
+      primitiveRemoved.addEventListener(onPrimitiveRemovedSpy);
+      expect(onPrimitiveRemovedSpy).not.toHaveBeenCalled();
+      primitives.add(createLabels());
+      primitives.add(createLabels());
+      expect(onPrimitiveRemovedSpy).not.toHaveBeenCalled();
+      primitives.removeAll();
+      expect(onPrimitiveRemovedSpy).toHaveBeenCalledTimes(2);
+    });
   },
   "WebGL"
 );
