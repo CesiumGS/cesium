@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Adds an optional `rejectOnTileFail` parameter to `sampleTerrain()` to allow handling of tile request failures. [#11530](https://github.com/CesiumGS/cesium/pull/11530)
+
 ##### Fixes :wrench:
 
 - Fix bug in `Cesium3DTilePass` affecting the `PRELOAD` pass. [#11525](https://github.com/CesiumGS/cesium/pull/11525)
