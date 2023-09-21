@@ -56,7 +56,7 @@ function addWhitePixelCanvas(textureAtlas) {
 
   // Canvas operations take a frame to draw. Use the asynchronous add function which resolves a promise and allows the draw to complete,
   // but there's no need to wait on the promise before operation can continue
-  textureAtlas.addImage(whitePixelCanvasId, canvas);
+  return textureAtlas.addImage(whitePixelCanvasId, canvas);
 }
 
 // reusable object for calling writeTextToCanvas
@@ -911,7 +911,11 @@ LabelCollection.prototype.update = function (frameState) {
       initialSize: whitePixelSize,
     });
     backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
-    addWhitePixelCanvas(this._backgroundTextureAtlas);
+
+    // Request a new render in request render mode after the next frame renders
+    addWhitePixelCanvas(this._backgroundTextureAtlas).then(() =>
+      frameState.afterRender.push(() => true)
+    );
   }
 
   const len = this._labelsToUpdate.length;
