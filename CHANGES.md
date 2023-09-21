@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Adds events to `PrimitiveCollection` for primitive added/removed. [#11531](https://github.com/CesiumGS/cesium/pull/11531)
+
 ##### Fixes :wrench:
 
 - Fix bug in `Cesium3DTilePass` affecting the `PRELOAD` pass. [#11525](https://github.com/CesiumGS/cesium/pull/11525)
