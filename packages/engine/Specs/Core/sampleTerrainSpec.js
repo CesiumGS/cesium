@@ -4,6 +4,7 @@ import {
   CesiumTerrainProvider,
   createWorldTerrainAsync,
   defined,
+  RequestErrorEvent,
   RequestScheduler,
   Resource,
   sampleTerrain,
@@ -55,6 +56,14 @@ describe("Core/sampleTerrain", function () {
 
     return sampleTerrain(worldTerrain, 18, positions).then(function () {
       expect(positions[0].height).toBeUndefined();
+    });
+  });
+
+  it("rejects if terrain data is not available and rejectOnTileFail is set", function () {
+    const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
+
+    sampleTerrain(worldTerrain, 18, positions, true).catch(function (error) {
+      expect(error).toBeInstanceOf(RequestErrorEvent);
     });
   });
 
