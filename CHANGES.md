@@ -7,6 +7,7 @@
 ##### Additions :tada:
 
 - Adds events to `PrimitiveCollection` for primitive added/removed. [#11531](https://github.com/CesiumGS/cesium/pull/11531)
+- Adds an optional `rejectOnTileFail` parameter to `sampleTerrain()` to allow handling of tile request failures. [#11530](https://github.com/CesiumGS/cesium/pull/11530)
 
 ##### Fixes :wrench:
 
