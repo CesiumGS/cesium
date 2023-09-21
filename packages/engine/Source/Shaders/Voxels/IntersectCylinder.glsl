@@ -87,7 +87,32 @@ RayShapeIntersection intersectBoundedCylinder(in Ray ray, in float radius, in ve
     return intersectIntersections(ray, cylinderIntersection, heightBoundsIntersection);
 }
 
-RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
+/**
+ * Intersect height bounds as a flat plane tangent to the surface at the voxel center.
+ * NOTE: problematic unless voxel sampling is consistent with this behavior.
+ * Even then, the resulting faceted surface is not coincedent across LODs
+ */
+RayShapeIntersection intersectRadialBounds(in Ray ray, in vec2 normal, in vec2 minMaxRadius)
+{
+    vec2 position = ray.pos.xy;
+    vec2 direction = ray.dir.xy;
+
+    float distanceFromOrigin = dot(position, normal);
+    float approachRate = -dot(direction, normal);
+    float tmin = (distanceFromOrigin - minMaxRadius.x) / approachRate;
+    float tmax = (distanceFromOrigin - minMaxRadius.y) / approachRate;
+
+    vec4 intersectMin = vec4(-normal, 0.0, tmin);
+    vec4 intersectMax = vec4(normal, 0.0, tmax);
+
+    bool fromOutside = approachRate >= 0.0;
+    vec4 entry = fromOutside ? intersectMax : intersectMin;
+    vec4 exit = fromOutside ? intersectMin : intersectMax;
+
+    return RayShapeIntersection(entry, exit);
+}
+
+RayShapeIntersection intersectVoxel(in Ray ray, in VoxelCell voxel)
 {
     // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
     // Direction is scaled as well to be in sync with position.
@@ -95,8 +120,9 @@ RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
     ray.dir *= 2.0;
 
     // VoxelBounds for a cylinder is vec3(radius, height, angle)
-    vec3 p0 = convertShapeUvToShapeSpace(voxel.p0);
-    vec3 p1 = convertShapeUvToShapeSpace(voxel.p1);
+    voxel = convertShapeUvToShapeSpace(voxel);
+    vec3 p0 = voxel.p - voxel.dP;
+    vec3 p1 = voxel.p + voxel.dP;
 
     // Intersect with outer height and radius bounds
     RayShapeIntersection cylinderIntersect = intersectBoundedCylinder(ray, p1.x, vec2(p0.y, p1.y));

@@ -214,7 +214,7 @@ RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in 
     }
 }
 
-RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
+RayShapeIntersection intersectVoxel(in Ray ray, in VoxelCell voxel)
 {
     // Position is converted from [0,1] to [-1,+1] because shape intersections assume unit space is [-1,+1].
     // Direction is scaled as well to be in sync with position.
@@ -222,8 +222,9 @@ RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
     ray.dir *= 2.0;
 
     // VoxelBounds for an ellipsoid is vec3(longitude, latitude, height)
-    vec3 p0 = convertShapeUvToShapeSpace(voxel.p0);
-    vec3 p1 = convertShapeUvToShapeSpace(voxel.p1);
+    voxel = convertShapeUvToShapeSpace(voxel);
+    vec3 p0 = voxel.p - voxel.dP;
+    vec3 p1 = voxel.p + voxel.dP;
 
     // Intersect with outer ellipsoid.
     // The ray is already scaled by the ellipsoid axes, so we can simply intersect with a sphere

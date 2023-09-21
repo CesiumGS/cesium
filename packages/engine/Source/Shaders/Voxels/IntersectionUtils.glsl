@@ -232,4 +232,22 @@ VoxelBounds constructVoxelBounds(in ivec4 octreeCoords, in vec3 tileUv) {
     return VoxelBounds(p0, p1);
 }
 
+struct VoxelCell {
+    vec3 p;
+    vec3 dP;
+};
+
+VoxelCell constructVoxelCell(in ivec4 octreeCoords, in vec3 tileUv) {
+    // Find the min cornerpoint of the voxel in tile coordinates
+    vec3 tileOrigin = vec3(octreeCoords.xyz);
+    vec3 numSamples = vec3(u_dimensions);
+    vec3 voxelSize = 1.0 / numSamples;
+    vec3 halfSize = 0.5 * voxelSize;
+    vec3 coord = floor(tileUv * numSamples) * voxelSize + halfSize + tileOrigin;
+    // Transform to the UV coordinates of the tileset
+    float tileSize = 1.0 / pow(2.0, float(octreeCoords.w));
+    vec3 p = coord * tileSize;
+    vec3 dP = halfSize * tileSize;
+    return VoxelCell(p, dP);
+}
 // NOTE: initializeIntersections, nextIntersection aren't even declared unless INTERSECTION_COUNT > 1

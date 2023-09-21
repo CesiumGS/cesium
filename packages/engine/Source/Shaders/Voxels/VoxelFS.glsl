@@ -29,7 +29,11 @@ float hash(vec2 p)
 #endif
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection) {
-    VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
+    #if defined(SHAPE_BOX)
+        VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
+    #else
+        VoxelCell voxel = constructVoxelCell(sampleData.tileCoords, sampleData.tileUv);
+    #endif
     RayShapeIntersection voxelIntersection = intersectVoxel(viewRay, voxel);
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);

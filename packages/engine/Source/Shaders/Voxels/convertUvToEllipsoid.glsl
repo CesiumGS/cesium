@@ -129,3 +129,38 @@ vec3 convertShapeUvToShapeSpace(in vec3 shapeUv) {
 
     return vec3(longitude, latitude, height);
 }
+
+VoxelCell convertShapeUvToShapeSpace(in VoxelCell voxel) {
+    vec3 p = voxel.p;
+    vec3 dP = voxel.dP;
+
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
+        p.x = (p.x - u_ellipsoidUvToShapeUvLongitude.y) / u_ellipsoidUvToShapeUvLongitude.x;
+        dP.x = dP.x / u_ellipsoidUvToShapeUvLongitude.x;
+    #endif
+    // Correct the angle when max < min. TODO: confirm this
+    // Technically this should compare against min longitude - but it has precision problems so compare against the middle of empty space.
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
+        p.x -= float(p.x >= u_ellipsoidShapeUvLongitudeMinMaxMid.z);
+    #endif
+    // Convert from [0, 1] to radians [-pi, pi]
+    p.x = p.x * czm_twoPi - czm_pi;
+    dP.x = dP.x * czm_twoPi;
+
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
+        p.y = (p.y - u_ellipsoidUvToShapeUvLatitude.y) / u_ellipsoidUvToShapeUvLatitude.x;
+        dP.y = dP.y / u_ellipsoidUvToShapeUvLatitude.x;
+    #endif
+    // Convert from [0, 1] to radians [-pi/2, pi/2]
+    p.y = p.y * czm_pi - czm_piOverTwo;
+    dP.y = dP.y * czm_pi;
+
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
+        p.z = 0.0;
+    #else
+        p.z = (p.z - 1.0) / u_ellipsoidInverseHeightDifferenceUv;
+        dP.z = dP.z / u_ellipsoidInverseHeightDifferenceUv;
+    #endif
+
+    return VoxelCell(p, dP);
+}
