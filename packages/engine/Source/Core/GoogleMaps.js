@@ -48,7 +48,6 @@ GoogleMaps.getDefaultApiKeyCredit = function (providedKey) {
             with <a href="https://developers.google.com/maps/documentation/embed/get-api-key">your API key for the Google Maps Platform</a>.</b>';
 
     defaultKeyCredit = new Credit(defaultKeyMessage, true);
-    defaultKeyCredit._isDefaultToken = true;
   }
 
   return defaultKeyCredit;
