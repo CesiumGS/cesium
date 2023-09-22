@@ -408,6 +408,7 @@ function Model(options) {
     credit = new Credit(credit);
   }
 
+  this._credits = [];
   this._credit = credit;
 
   // Credits to be added from the Resource (if it is an IonResource)
@@ -2258,24 +2259,29 @@ function updateShowCreditsOnScreen(model) {
     return;
   }
   model._showCreditsOnScreenDirty = false;
+  model._credits.length = 0;
 
   const showOnScreen = model._showCreditsOnScreen;
   if (defined(model._credit)) {
-    model._credit.showOnScreen = showOnScreen || model._credit._isDefaultToken;
+    const credit = Credit.clone(model._credit);
+    credit.showOnScreen = credit.showOnScreen || showOnScreen;
+    model._credits.push(credit);
   }
 
   const resourceCredits = model._resourceCredits;
   const resourceCreditsLength = resourceCredits.length;
   for (let i = 0; i < resourceCreditsLength; i++) {
-    resourceCredits[i].showOnScreen =
-      showOnScreen || resourceCredits[i]._isDefaultToken;
+    const credit = Credit.clone(resourceCredits[i]);
+    credit.showOnScreen = credit.showOnScreen || showOnScreen;
+    model._credits.push(credit);
   }
 
   const gltfCredits = model._gltfCredits;
   const gltfCreditsLength = gltfCredits.length;
   for (let i = 0; i < gltfCreditsLength; i++) {
-    gltfCredits[i].showOnScreen =
-      showOnScreen || gltfCredits[i]._isDefaultToken;
+    const credit = Credit.clone(gltfCredits[i]);
+    credit.showOnScreen = credit.showOnScreen || showOnScreen;
+    model._credits.push(credit);
   }
 }
 
@@ -2385,22 +2391,10 @@ function passesDistanceDisplayCondition(model, frameState) {
 
 function addCreditsToCreditDisplay(model, frameState) {
   const creditDisplay = frameState.creditDisplay;
-  // Add all credits to the credit display.
-  const credit = model._credit;
-  if (defined(credit)) {
-    creditDisplay.addCreditToNextFrame(credit);
-  }
-
-  const resourceCredits = model._resourceCredits;
-  const resourceCreditsLength = resourceCredits.length;
-  for (let c = 0; c < resourceCreditsLength; c++) {
-    creditDisplay.addCreditToNextFrame(resourceCredits[c]);
-  }
-
-  const gltfCredits = model._gltfCredits;
-  const gltfCreditsLength = gltfCredits.length;
-  for (let c = 0; c < gltfCreditsLength; c++) {
-    creditDisplay.addCreditToNextFrame(gltfCredits[c]);
+  const credits = model._credits;
+  const creditsLength = credits.length;
+  for (let c = 0; c < creditsLength; c++) {
+    creditDisplay.addCreditToNextFrame(credits[c]);
   }
 }
 
@@ -2795,7 +2789,7 @@ Model.fromGltfAsync = async function (options) {
   if (defined(resourceCredits)) {
     const length = resourceCredits.length;
     for (let i = 0; i < length; i++) {
-      model._resourceCredits.push(resourceCredits[i]);
+      model._resourceCredits.push(Credit.clone(resourceCredits[i]));
     }
   }
 
