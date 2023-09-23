@@ -72,7 +72,7 @@ function TileProviderError(
    * True if the failed operation should be retried; otherwise, false.  The imagery or terrain provider
    * will set the initial value of this property before raising the event, but any listeners
    * can change it.  The value after the last listener is invoked will be acted upon.
-   * @type {boolean}
+   * @type {boolean | Promise<void>}
    * @default false
    */
   this.retry = false;

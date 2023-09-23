@@ -113,7 +113,8 @@
     "yargs": "^17.0.1"
   },
   "scripts": {
-    "prepare": "gulp prepare && husky install && playwright install --with-deps",
+    "prepare": "gulp prepare && husky install",
+    "prepare-playwright": "playwright install --with-deps",
     "start": "node server.js",
     "start-public": "node server.js --public",
     "build": "gulp build",

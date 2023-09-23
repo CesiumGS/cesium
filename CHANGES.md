@@ -1,5 +1,9 @@
 # Change Log
 
+### terriajs-cesium only
+
+- Added `token`, `mapServerData`, and `parameters` properties to `ArcGisMapServerImageryProvider.ConstructorOptions`.
+
 ### 1.110 - 2023-10-02
 
 #### @cesium/engine
