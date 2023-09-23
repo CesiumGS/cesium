@@ -97,7 +97,7 @@ const scratchCartographic = new Cartographic();
 const scratchCartesian = new Cartesian3();
 
 /**
- * Computes the longitude based on an ellipsoid.
+ * Computes the latitude based on an ellipsoid.
  *
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which to compute the longitude.
  * @returns {number} The latitude
