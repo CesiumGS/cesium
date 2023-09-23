@@ -1113,7 +1113,7 @@ function expandRectangle(
   result.north = Math.max(result.north, latitude);
 
   if (arcType !== ArcType.RHUMB) {
-    // Geodescis will need to find the closest point on line. Rhumb lines will not have a latitude greater in magnitude than either of their endpoints.
+    // Geodesics will need to find the closest point on line. Rhumb lines will not have a latitude greater in magnitude than either of their endpoints.
     const segment = Cartesian2.subtract(
       positionPolarPrevious.position,
       positionPolar.position,
