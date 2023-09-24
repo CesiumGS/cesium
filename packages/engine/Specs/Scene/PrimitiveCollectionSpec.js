@@ -651,13 +651,14 @@ describe(
     });
 
     it("fires an event on primitive added", function () {
+      const p = createLabels();
       const primitiveAdded = primitives.primitiveAdded;
 
       const onPrimitiveAddedSpy = jasmine.createSpy("event");
       primitiveAdded.addEventListener(onPrimitiveAddedSpy);
       expect(onPrimitiveAddedSpy).not.toHaveBeenCalled();
-      primitives.add(createLabels());
-      expect(onPrimitiveAddedSpy).toHaveBeenCalled();
+      primitives.add(p);
+      expect(onPrimitiveAddedSpy).toHaveBeenCalledOnceWith(p);
     });
 
     it("fires an event on primitive removed", function () {
@@ -670,20 +671,28 @@ describe(
       primitives.add(p);
       expect(onPrimitiveRemovedSpy).not.toHaveBeenCalled();
       primitives.remove(p);
-      expect(onPrimitiveRemovedSpy).toHaveBeenCalled();
+      expect(onPrimitiveRemovedSpy).toHaveBeenCalledOnceWith(p);
     });
 
-    it("fires an event on primitive remove all", function () {
-      const primitiveRemoved = primitives.primitiveRemoved;
-
+    it("fires events on primitive remove all", function () {
+      const collection = new PrimitiveCollection({ destroyPrimitives: false });
+      const p1 = createLabels();
+      const p2 = createLabels();
+      const primitiveRemoved = collection.primitiveRemoved;
       const onPrimitiveRemovedSpy = jasmine.createSpy("event");
       primitiveRemoved.addEventListener(onPrimitiveRemovedSpy);
       expect(onPrimitiveRemovedSpy).not.toHaveBeenCalled();
-      primitives.add(createLabels());
-      primitives.add(createLabels());
+      collection.add(p1);
+      collection.add(p2);
       expect(onPrimitiveRemovedSpy).not.toHaveBeenCalled();
-      primitives.removeAll();
+      collection.removeAll();
+      expect(onPrimitiveRemovedSpy).toHaveBeenCalledWith(p1);
+      expect(onPrimitiveRemovedSpy).toHaveBeenCalledWith(p2);
       expect(onPrimitiveRemovedSpy).toHaveBeenCalledTimes(2);
+
+      collection.destroy();
+      p1.destroy();
+      p2.destroy();
     });
   },
   "WebGL"
