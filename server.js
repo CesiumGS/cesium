@@ -400,21 +400,22 @@ async function generateDevelopmentBuild() {
         console.log("Try a port number higher than 1024.");
       }
     }
-    console.log(e);
-    process.exit(1);
+
+    throw e;
   });
 
   server.on("close", function () {
     console.log("Cesium development server stopped.");
+    // eslint-disable-next-line n/no-process-exit
+    process.exit(0);
   });
 
   let isFirstSig = true;
   process.on("SIGINT", function () {
     if (isFirstSig) {
       console.log("\nCesium development server shutting down.");
-      server.close(function () {
-        process.exit(0);
-      });
+
+      server.close();
 
       if (!production) {
         contexts.esm.dispose();
@@ -426,8 +427,7 @@ async function generateDevelopmentBuild() {
 
       isFirstSig = false;
     } else {
-      console.log("Cesium development server force kill.");
-      process.exit(1);
+      throw new Error("Cesium development server force kill.");
     }
   });
 })();

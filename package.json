@@ -69,7 +69,7 @@
     "draco3d": "^1.5.1",
     "esbuild": "^0.19.2",
     "eslint": "^8.41.0",
-    "eslint-config-cesium": "^9.0.1",
+    "eslint-config-cesium": "^10.0.1",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^7.1.0",
     "eslint-plugin-node": "^11.1.0",

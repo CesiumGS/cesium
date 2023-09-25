@@ -860,8 +860,7 @@ export async function createIndexJs(workspace) {
   // Iterate over all provided source files for the workspace and export the assignment based on file name.
   const workspaceSources = workspaceSourceFiles[workspace];
   if (!workspaceSources) {
-    console.error(`Unable to find source files for workspace: ${workspace}`);
-    process.exit(-1);
+    throw new Error(`Unable to find source files for workspace: ${workspace}`);
   }
 
   const files = await globby(workspaceSources);

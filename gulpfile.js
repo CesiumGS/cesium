@@ -253,6 +253,7 @@ export const buildWatch = gulp.series(build, async function () {
     }
 
     specs.dispose();
+    // eslint-disable-next-line n/no-process-exit
     process.exit(0);
   });
 });
