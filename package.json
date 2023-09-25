@@ -106,7 +106,7 @@
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
     "rimraf": "^5.0.0",
-    "sinon": "^15.1.0",
+    "sinon": "^16.0.0",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^5.0.2",
