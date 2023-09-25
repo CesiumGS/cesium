@@ -83,4 +83,18 @@ describe("Core/sampleTerrainMostDetailed", function () {
     await sampleTerrainMostDetailed(worldTerrain, positions);
     expect(positions[0].height).toBeDefined();
   });
+
+  it("rejects on tile error when rejectOnTileFail is set", async function () {
+    const terrainProvider = await createWorldTerrainAsync();
+
+    terrainProvider.requestTileGeometry = function (x, y, level) {
+      return Promise.reject();
+    };
+
+    const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
+
+    return expectAsync(
+      sampleTerrainMostDetailed(terrainProvider, positions, true)
+    ).toBeRejected();
+  });
 });
