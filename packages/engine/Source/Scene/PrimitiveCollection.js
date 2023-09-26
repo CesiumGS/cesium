@@ -104,6 +104,9 @@ Object.defineProperties(PrimitiveCollection.prototype, {
   /**
    * An event that is raised when a primitive is removed from the collection.
    * Event handlers are passed the primitive that was removed.
+   * <p>
+   * Note: Depending on the destroyPrimitives constructor option, the primitive may already be destroyed.
+   * </p>
    * @memberof PrimitiveCollection.prototype
    * @type {Event}
    * @readonly
@@ -224,10 +227,12 @@ PrimitiveCollection.prototype.removeAll = function () {
   const length = primitives.length;
   for (let i = 0; i < length; ++i) {
     delete primitives[i]._external._composites[this._guid];
-    this._primitiveRemoved.raiseEvent(primitives[i]);
+
     if (this.destroyPrimitives) {
       primitives[i].destroy();
     }
+
+    this._primitiveRemoved.raiseEvent(primitives[i]);
   }
   this._primitives = [];
 };
