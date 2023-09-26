@@ -134,10 +134,7 @@ Stereographic.fromCartesian = function (cartesian, result) {
   Check.defined("cartesian", cartesian);
   //>>includeEnd('debug');
 
-  let sign = CesiumMath.sign(cartesian.z);
-  if (sign === 0) {
-    sign = 1;
-  }
+  const sign = CesiumMath.signNotZero(cartesian.z);
   let tangentPlane = Stereographic.NORTH_POLE_TANGENT_PLANE;
   let origin = Stereographic.SOUTH_POLE;
   if (sign < 0) {
@@ -196,6 +193,30 @@ Stereographic.fromCartesianArray = function (cartesians, result) {
   for (let i = 0; i < length; i++) {
     result[i] = Stereographic.fromCartesian(cartesians[i], result[i]);
   }
+  return result;
+};
+
+/**
+ * Duplicates a Stereographic instance.
+ *
+ * @param {Stereographic} stereographic The Stereographic to duplicate.
+ * @param {Stereographic} [result] The object onto which to store the result.
+ * @returns {Stereographic} The modified result parameter or a new Stereographic instance if one was not provided. (Returns undefined if stereographic is undefined)
+ */
+Stereographic.clone = function (stereographic, result) {
+  if (!defined(stereographic)) {
+    return undefined;
+  }
+  if (!defined(result)) {
+    return new Stereographic(
+      stereographic.position,
+      stereographic.tangentPlane
+    );
+  }
+
+  result.position = stereographic.position;
+  result.tangentPlane = stereographic.tangentPlane;
+
   return result;
 };
 
