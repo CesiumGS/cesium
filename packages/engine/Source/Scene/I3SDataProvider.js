@@ -55,7 +55,6 @@ import destroyObject from "../Core/destroyObject.js";
 import HeightmapEncoding from "../Core/HeightmapEncoding.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import TaskProcessor from "../Core/TaskProcessor.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import I3SLayer from "./I3SLayer.js";
 import Lerc from "lerc";
@@ -490,32 +489,6 @@ I3SDataProvider.prototype._binarizeGltf = function (rawGltf) {
   binaryGltf.chunkData.set(rawGltfData);
 
   return binaryGltfData;
-};
-
-/**
- * @private
- * @returns {Promise<TaskProcessor>}
- */
-I3SDataProvider.prototype.getDecoderTaskProcessor = function () {
-  if (defined(this._taskProcessorReadyPromise)) {
-    return this._taskProcessorReadyPromise;
-  }
-
-  if (!defined(this._decoderTaskProcessor)) {
-    const processor = new TaskProcessor("decodeI3S");
-    this._taskProcessorReadyPromise = processor
-      .initWebAssemblyModule({
-        modulePath: "ThirdParty/Workers/draco_decoder_nodejs.js",
-        wasmBinaryFile: "ThirdParty/draco_decoder.wasm",
-      })
-      .then(() => {
-        return processor;
-      });
-
-    this._decoderTaskProcessor = processor;
-  }
-
-  return this._taskProcessorReadyPromise;
 };
 
 const scratchCartesian2 = new Cartesian2();

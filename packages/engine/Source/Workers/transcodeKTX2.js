@@ -1,4 +1,4 @@
-/* global require */
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Check from "../Core/Check.js";
 import PixelFormat from "../Core/PixelFormat.js";
@@ -7,6 +7,7 @@ import VulkanConstants from "../Core//VulkanConstants.js";
 import PixelDatatype from "../Renderer/PixelDatatype.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import { read } from "ktx-parse";
+import basis from "../ThirdParty/Workers/basis_transcoder.js";
 
 const faceOrder = [
   "positiveX",
@@ -281,36 +282,28 @@ function transcodeCompressed(
   return result;
 }
 
-function initWorker(compiledModule) {
-  transcoderModule = compiledModule;
+async function initWorker(parameters, transferableObjects) {
+  // Require and compile WebAssembly module, or use fallback if not supported
+  const wasmConfig = parameters.webAssemblyConfig;
+  const basisTranscoder = defaultValue(basis, self.BASIS);
+  if (defined(wasmConfig.wasmBinaryFile)) {
+    transcoderModule = await basisTranscoder(wasmConfig);
+  } else {
+    transcoderModule = await basisTranscoder();
+  }
+
   transcoderModule.initializeBasis();
 
-  self.onmessage = createTaskProcessorWorker(transcode);
-  self.postMessage(true);
+  return true;
 }
 
-function transcodeKTX2(event) {
-  const data = event.data;
-
+function transcodeKTX2(parameters, transferableObjects) {
   // Expect the first message to be to load a web assembly module
-  const wasmConfig = data.webAssemblyConfig;
+  const wasmConfig = parameters.webAssemblyConfig;
   if (defined(wasmConfig)) {
-    // Require and compile WebAssembly module, or use fallback if not supported
-    return require([wasmConfig.modulePath], function (mscBasisTranscoder) {
-      if (defined(wasmConfig.wasmBinaryFile)) {
-        if (!defined(mscBasisTranscoder)) {
-          mscBasisTranscoder = self.MSC_TRANSCODER;
-        }
-
-        mscBasisTranscoder(wasmConfig).then(function (compiledModule) {
-          initWorker(compiledModule);
-        });
-      } else {
-        return mscBasisTranscoder().then(function (transcoder) {
-          initWorker(transcoder);
-        });
-      }
-    });
+    return initWorker(parameters, transferableObjects);
   }
+
+  return transcode(parameters, transferableObjects);
 }
-export default transcodeKTX2;
+export default createTaskProcessorWorker(transcodeKTX2);

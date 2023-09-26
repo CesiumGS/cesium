@@ -9,6 +9,8 @@ import {
   I3SNode,
   I3SLayer,
   I3SDataProvider,
+  I3SDecoder,
+  I3SGeometry,
   Rectangle,
   Resource,
   WebMercatorProjection,
@@ -353,7 +355,6 @@ describe("Scene/I3SNode", function () {
       return tileset;
     });
     const mockI3SProvider = await I3SDataProvider.fromUrl(url);
-    mockI3SProvider._taskProcessorReadyPromise = Promise.resolve();
     mockI3SProvider._geoidDataList = geoidDataList;
     return mockI3SProvider;
   }
@@ -1278,77 +1279,46 @@ describe("Scene/I3SNode", function () {
       Promise.resolve(new ArrayBuffer())
     );
     spyOn(nodeWithMesh, "_loadFeatureData").and.returnValue(Promise.all([]));
+    spyOn(I3SDecoder, "decode").and.returnValue(
+      Promise.resolve(i3sGeometryData)
+    );
 
-    const mockProcessor = {
-      scheduleTask: function (payload) {
-        //Expect results to match what was returned by our spy
-        expect(payload.binaryData).toEqual(new ArrayBuffer());
+    await rootNode.load();
+    await nodeWithMesh.load();
+    const result = await nodeWithMesh._createContentURL();
+    expect(result).toBeDefined();
+    expect(nodeWithMesh.tile).toBeDefined();
+    expect(I3SDecoder.decode).toHaveBeenCalledWith(
+      jasmine.stringContaining(
+        "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1/?testQuery=test"
+      ),
+      jasmine.any(Object),
+      jasmine.any(I3SGeometry),
+      undefined
+    );
 
-        //Expect featureData to be undefined as it is only used for legacy versions (<= 1.6)
-        expect(payload.featureData).toBeUndefined();
+    //Test fetching the blob url that was created
+    const data = await Resource.fetchArrayBuffer(result);
+    expect(data.error).toBeUndefined();
 
-        expect(payload.bufferInfo).toEqual(
-          mockI3SLayerWithNodePages._geometryDefinitions[0][1]
-        );
+    const magic = new Uint8Array(data, 0, 4);
+    const version = new Uint32Array(data, 4, 1);
+    const length = new Uint32Array(data, 8, 1);
+    const chunkType = new Uint8Array(data, 16, 4);
 
-        expect(payload.cartographicCenter.longitude).toEqual(
-          CesiumMath.toRadians(-90)
-        );
-        expect(payload.cartographicCenter.latitude).toEqual(
-          CesiumMath.toRadians(45)
-        );
-        expect(payload.cartographicCenter.height).toEqual(0);
+    expect(magic[0]).toEqual("g".charCodeAt());
+    expect(magic[1]).toEqual("l".charCodeAt());
+    expect(magic[2]).toEqual("T".charCodeAt());
+    expect(magic[3]).toEqual("F".charCodeAt());
 
-        expect(
-          payload.url.endsWith(
-            "mockProviderUrl/mockLayerUrl/nodes/1/geometries/1/?testQuery=test"
-          )
-        ).toEqual(true);
-        return Promise.resolve(i3sGeometryData);
-      },
-    };
-    spyOn(
-      nodeWithMesh._dataProvider,
-      "getDecoderTaskProcessor"
-    ).and.returnValue(Promise.resolve(mockProcessor));
+    expect(version[0]).toEqual(2);
 
-    return rootNode
-      .load()
-      .then(function () {
-        return nodeWithMesh.load();
-      })
-      .then(function () {
-        return nodeWithMesh._createContentURL();
-      })
-      .then(function (result) {
-        expect(result).toBeDefined();
-        expect(nodeWithMesh.tile).toBeDefined();
+    expect(length[0]).toEqual(data.byteLength);
 
-        //Test fetching the blob url that was created
-        return Resource.fetchArrayBuffer(result);
-      })
-      .then(function (data) {
-        expect(data.error).toBeUndefined();
-
-        const magic = new Uint8Array(data, 0, 4);
-        const version = new Uint32Array(data, 4, 1);
-        const length = new Uint32Array(data, 8, 1);
-        const chunkType = new Uint8Array(data, 16, 4);
-
-        expect(magic[0]).toEqual("g".charCodeAt());
-        expect(magic[1]).toEqual("l".charCodeAt());
-        expect(magic[2]).toEqual("T".charCodeAt());
-        expect(magic[3]).toEqual("F".charCodeAt());
-
-        expect(version[0]).toEqual(2);
-
-        expect(length[0]).toEqual(data.byteLength);
-
-        expect(chunkType[0]).toEqual("J".charCodeAt());
-        expect(chunkType[1]).toEqual("S".charCodeAt());
-        expect(chunkType[2]).toEqual("O".charCodeAt());
-        expect(chunkType[3]).toEqual("N".charCodeAt());
-      });
+    expect(chunkType[0]).toEqual("J".charCodeAt());
+    expect(chunkType[1]).toEqual("S".charCodeAt());
+    expect(chunkType[2]).toEqual("O".charCodeAt());
+    expect(chunkType[3]).toEqual("N".charCodeAt());
   });
 
   it("picks closest point in geometry", async function () {

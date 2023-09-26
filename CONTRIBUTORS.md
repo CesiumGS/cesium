@@ -365,3 +365,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Dphalos](https://github.com/Dphalos)
 - [hongfaqiu](https://github.com/hongfaqiu)
 - [KOBAYASHI Ittoku](https://github.com/kittoku)
+- [王康](https://github.com/yieryi)
