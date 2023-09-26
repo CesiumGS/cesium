@@ -247,4 +247,30 @@ describe("Core/Stereographic", function () {
       Stereographic.SOUTH_POLE_TANGENT_PLANE
     );
   });
+
+  it("clone works with a result parameter", function () {
+    const stereographic = new Stereographic(
+      new Cartesian2(1.0, 2.0),
+      Stereographic.SOUTH_POLE_TANGENT_PLANE
+    );
+    const result = new Stereographic();
+    const returnedResult = Stereographic.clone(stereographic, result);
+    expect(stereographic).not.toBe(result);
+    expect(result).toBe(returnedResult);
+    expect(stereographic.position).toEqual(result.position);
+  });
+
+  it("clone works without result parmater", function () {
+    const stereographic = new Stereographic(
+      new Cartesian2(1.0, 2.0),
+      Stereographic.SOUTH_POLE_TANGENT_PLANE
+    );
+    const result = Stereographic.clone(stereographic);
+    expect(stereographic).not.toBe(result);
+    expect(stereographic.position).toEqual(result.position);
+  });
+
+  it("clone returns undefined with no parameter", function () {
+    expect(Stereographic.clone()).toBeUndefined();
+  });
 });

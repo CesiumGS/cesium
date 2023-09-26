@@ -1080,35 +1080,27 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   return result;
 };
 
-const scratchPolar = new Stereographic();
-const scratchPolarPrevious = new Stereographic();
 const scratchCartesian0 = new Cartesian2();
 const scratchCartesian1 = new Cartesian2();
 const scratchPolarClosest = new Stereographic();
 function expandRectangle(
-  position,
-  lastPosition,
+  polar,
+  lastPolar,
   ellipsoid,
   arcType,
   polygon,
   result
 ) {
-  const positionPolar = Stereographic.fromCartesian(position, scratchPolar);
-  const positionPolarPrevious = Stereographic.fromCartesian(
-    lastPosition,
-    scratchPolarPrevious
-  );
-
-  const longitude = positionPolar.longitude;
+  const longitude = polar.longitude;
   const lonAdjusted =
-    longitude >= 0 ? longitude : longitude + CesiumMath.TWO_PI;
+    longitude >= 0.0 ? longitude : longitude + CesiumMath.TWO_PI;
   polygon.westOverIdl = Math.min(polygon.westOverIdl, lonAdjusted);
   polygon.eastOverIdl = Math.max(polygon.eastOverIdl, lonAdjusted);
 
   result.west = Math.min(result.west, longitude);
   result.east = Math.max(result.east, longitude);
 
-  const latitude = positionPolar.getLatitude(ellipsoid);
+  const latitude = polar.getLatitude(ellipsoid);
   let segmentLatitude = latitude;
 
   result.south = Math.min(result.south, latitude);
@@ -1117,22 +1109,22 @@ function expandRectangle(
   if (arcType !== ArcType.RHUMB) {
     // Geodesics will need to find the closest point on line. Rhumb lines will not have a latitude greater in magnitude than either of their endpoints.
     const segment = Cartesian2.subtract(
-      positionPolarPrevious.position,
-      positionPolar.position,
+      lastPolar.position,
+      polar.position,
       scratchCartesian0
     );
     const t =
-      Cartesian2.dot(positionPolarPrevious.position, segment) /
+      Cartesian2.dot(lastPolar.position, segment) /
       Cartesian2.dot(segment, segment);
     if (t > 0.0 && t < 1.0) {
       const projected = Cartesian2.add(
-        positionPolarPrevious.position,
+        lastPolar.position,
         Cartesian2.multiplyByScalar(segment, -t, segment),
         scratchCartesian1
       );
-      scratchPolarClosest.position = projected;
-      scratchPolarClosest.tangentPlane = positionPolar.tangentPlane;
-      const adjustedLatitude = scratchPolarClosest.getLatitude(ellipsoid);
+      const closestPolar = Stereographic.clone(lastPolar, scratchPolarClosest);
+      closestPolar.position = projected;
+      const adjustedLatitude = closestPolar.getLatitude(ellipsoid);
       result.south = Math.min(result.south, adjustedLatitude);
       result.north = Math.max(result.north, adjustedLatitude);
 
@@ -1141,28 +1133,25 @@ function expandRectangle(
       }
     }
   }
-  const direction =
-    positionPolarPrevious.x * positionPolar.y -
-    positionPolar.x * positionPolarPrevious.y;
+  const direction = lastPolar.x * polar.y - polar.x * lastPolar.y;
 
   // The total internal angle in either hemisphere determines if the pole is inside or outside the polygon
   let angle = Math.sign(direction);
   if (angle !== 0.0) {
-    angle *= Cartesian2.angleBetween(
-      positionPolarPrevious.position,
-      positionPolar.position
-    );
+    angle *= Cartesian2.angleBetween(lastPolar.position, polar.position);
   }
 
-  if (segmentLatitude >= 0) {
+  if (segmentLatitude >= 0.0) {
     polygon.northAngle += angle;
   }
 
-  if (segmentLatitude <= 0) {
+  if (segmentLatitude <= 0.0) {
     polygon.southAngle += angle;
   }
 }
 
+const scratchPolar = new Stereographic();
+const scratchPolarPrevious = new Stereographic();
 const polygon = {
   northAngle: 0.0,
   southAngle: 0.0,
@@ -1209,20 +1198,30 @@ PolygonGeometry.computeRectangleFromPositions = function (
   polygon.eastOverIdl = Number.NEGATIVE_INFINITY;
 
   const positionsLength = positions.length;
+  let lastPolarPosition = Stereographic.fromCartesian(
+    positions[0],
+    scratchPolarPrevious
+  );
   for (let i = 1; i < positionsLength; i++) {
-    expandRectangle(
+    const polarPosition = Stereographic.fromCartesian(
       positions[i],
-      positions[i - 1],
+      scratchPolar
+    );
+    expandRectangle(
+      polarPosition,
+      lastPolarPosition,
       ellipsoid,
       arcType,
       polygon,
       result
     );
+
+    lastPolarPosition = Stereographic.clone(polarPosition, lastPolarPosition);
   }
 
   expandRectangle(
-    positions[0],
-    positions[positionsLength - 1],
+    Stereographic.fromCartesian(positions[0], scratchPolar),
+    lastPolarPosition,
     ellipsoid,
     arcType,
     polygon,
