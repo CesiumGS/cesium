@@ -12,6 +12,7 @@ const scratchCartesian2 = new Cartesian2();
  *
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.
+ * @param {boolean} [rejectOnTileFail=false] If true, for a failed terrain tile request the promise will be rejected. If false, returned heights will be undefined.
  * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.  This
  *                                     promise will reject if the terrain provider's `availability` property is undefined.
  *
@@ -25,8 +26,22 @@ const scratchCartesian2 = new Cartesian2();
  * const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions);
  * // positions[0].height and positions[1].height have been updated.
  * // updatedPositions is just a reference to positions.
+ *
+ * // To handle tile errors, pass true for the rejectOnTileFail parameter.
+ * try {
+ *    const updatedPositions = await Cesium.sampleTerrainMostDetailed(terrainProvider, positions, true);
+ * } catch (error) {
+ *   // A tile request error occurred.
+ * }
  */
-async function sampleTerrainMostDetailed(terrainProvider, positions) {
+async function sampleTerrainMostDetailed(
+  terrainProvider,
+  positions,
+  rejectOnTileFail
+) {
+  if (!defined(rejectOnTileFail)) {
+    rejectOnTileFail = false;
+  }
   //>>includeStart('debug', pragmas.debug);
   if (!defined(terrainProvider)) {
     throw new DeveloperError("terrainProvider is required.");
@@ -84,7 +99,12 @@ async function sampleTerrainMostDetailed(terrainProvider, positions) {
   await Promise.all(
     byLevel.map(function (positionsAtLevel, index) {
       if (defined(positionsAtLevel)) {
-        return sampleTerrain(terrainProvider, index, positionsAtLevel);
+        return sampleTerrain(
+          terrainProvider,
+          index,
+          positionsAtLevel,
+          rejectOnTileFail
+        );
       }
     })
   );
@@ -100,7 +120,11 @@ async function sampleTerrainMostDetailed(terrainProvider, positions) {
   }
 
   if (changedPositions.length > 0) {
-    await sampleTerrainMostDetailed(terrainProvider, changedPositions);
+    await sampleTerrainMostDetailed(
+      terrainProvider,
+      changedPositions,
+      rejectOnTileFail
+    );
   }
 
   return positions;
