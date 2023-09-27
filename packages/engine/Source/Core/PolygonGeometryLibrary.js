@@ -543,7 +543,7 @@ function computeEdgesOnPlane(positions, ellipsoid, arcType) {
     type = CesiumMath.sign(startPoint.z);
     next = CesiumMath.sign(endPoint.z);
 
-    const getLongitiude = (position) => {
+    const getLongitude = (position) => {
       const cartographic = ellipsoid.cartesianToCartographic(
         position,
         scratchCartographic
@@ -558,7 +558,7 @@ function computeEdgesOnPlane(positions, ellipsoid, arcType) {
         type: type,
         visited: false,
         next: next,
-        theta: getLongitiude(startPoint),
+        theta: getLongitude(startPoint),
       });
     } else if (next !== 0) {
       intersection = computeEquatorIntersection(
@@ -574,14 +574,14 @@ function computeEdgesOnPlane(positions, ellipsoid, arcType) {
         continue;
       }
 
-      // The line sgement passed through
+      // The line segment passed through
       positions.splice(i, 0, intersection);
       edgesOnPlane.push({
         position: i,
         type: type,
         visited: false,
         next: next,
-        theta: getLongitiude(intersection),
+        theta: getLongitude(intersection),
       });
     }
 
