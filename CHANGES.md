@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- `GoogleMaps.defaultApiKey` is no longer defined by default. If not using Cesium ion, this value must be set to your own personal Google Maps Platform API key.
+
 ##### Additions :tada:
 
 - Adds events to `PrimitiveCollection` for primitive added/removed. [#11531](https://github.com/CesiumGS/cesium/pull/11531)
