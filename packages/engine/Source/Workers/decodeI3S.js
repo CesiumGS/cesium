@@ -1,4 +1,3 @@
-/* global require */
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 import defined from "../Core/defined.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
@@ -7,6 +6,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Matrix3 from "../Core/Matrix3.js";
 import CesiumMath from "../Core/Math.js";
+import dracoModule from "draco3d/draco_decoder_nodejs.js";
 
 let draco;
 
@@ -171,7 +171,6 @@ function transformToLocal(
       const rotatedNormal = {};
       Matrix3.multiplyByVector(parentRotation, normal, rotatedNormal);
 
-      // TODO: check if normals are Z-UP or Y-UP and flip y and z
       normals[indexOffset] = rotatedNormal.x;
       normals[indexOffset1] = rotatedNormal.y;
       normals[indexOffset2] = rotatedNormal.z;
@@ -890,17 +889,11 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
       // Use default geometry schema
       for (let i = 0; i < ordering.length; i++) {
         const decoder = binaryAttributeDecoders[ordering[i]];
-        if (!defined(decoder)) {
-          console.log(ordering[i]);
-        }
         offset = decoder(decodedGeometry, data, offset);
       }
 
       for (let j = 0; j < featureAttributeOrder.length; j++) {
         const curDecoder = binaryAttributeDecoders[featureAttributeOrder[j]];
-        if (!defined(curDecoder)) {
-          console.log(featureAttributeOrder[j]);
-        }
         offset = curDecoder(decodedGeometry, data, offset);
       }
     }
@@ -914,7 +907,7 @@ function decodeBinaryGeometry(data, schema, bufferInfo, featureData) {
   return decodedGeometry;
 }
 
-function decodeI3S(parameters) {
+function decodeAndCreateGltf(parameters) {
   // Decode the data into geometry
   const geometryData = decode(
     parameters.binaryData,
@@ -1012,33 +1005,26 @@ function decodeI3S(parameters) {
   return results;
 }
 
-function initWorker(dracoModule) {
-  draco = dracoModule;
-  self.onmessage = createTaskProcessorWorker(decodeI3S);
-  self.postMessage(true);
-}
-
-function decodeI3SStart(event) {
-  const data = event.data;
-
-  // Expect the first message to be to load a web assembly module
-  const wasmConfig = data.webAssemblyConfig;
-  if (defined(wasmConfig)) {
-    // Require and compile WebAssembly module, or use fallback if not supported
-    return require([wasmConfig.modulePath], function (dracoModule) {
-      if (defined(wasmConfig.wasmBinaryFile)) {
-        if (!defined(dracoModule)) {
-          dracoModule = self.DracoDecoderModule;
-        }
-
-        dracoModule(wasmConfig).then(function (compiledModule) {
-          initWorker(compiledModule);
-        });
-      } else {
-        initWorker(dracoModule());
-      }
-    });
+async function initWorker(parameters, transferableObjects) {
+  // Require and compile WebAssembly module, or use fallback if not supported
+  const wasmConfig = parameters.webAssemblyConfig;
+  if (defined(wasmConfig) && defined(wasmConfig.wasmBinaryFile)) {
+    draco = await dracoModule(wasmConfig);
+  } else {
+    draco = await dracoModule();
   }
+
+  return true;
 }
 
-export default decodeI3SStart;
+function decodeI3S(parameters, transferableObjects) {
+  // Expect the first message to be to load a web assembly module
+  const wasmConfig = parameters.webAssemblyConfig;
+  if (defined(wasmConfig)) {
+    return initWorker(parameters, transferableObjects);
+  }
+
+  return decodeAndCreateGltf(parameters, transferableObjects);
+}
+
+export default createTaskProcessorWorker(decodeI3S);

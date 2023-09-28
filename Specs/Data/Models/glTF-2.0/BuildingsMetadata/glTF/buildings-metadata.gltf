@@ -261,7 +261,8 @@
                 "required": false
               },
               "temperatureCelsius": {
-                "type": "UINT8",
+                "type": "SCALAR",
+                "componentType": "UINT8",
                 "normalized": true,
                 "scale": 100
               }

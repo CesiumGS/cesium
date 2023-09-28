@@ -1880,6 +1880,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._showCreditsOnScreen = value;
+      createCredits(this);
     },
   },
 
@@ -2068,24 +2069,7 @@ Cesium3DTileset.fromUrl = async function (url, options) {
   tileset._asset = asset;
   tileset._extras = tilesetJson.extras;
 
-  let credits = resource.credits;
-  if (!defined(credits)) {
-    credits = [];
-  }
-
-  const assetExtras = asset.extras;
-  if (
-    defined(assetExtras) &&
-    defined(assetExtras.cesium) &&
-    defined(assetExtras.cesium.credits)
-  ) {
-    const extraCredits = assetExtras.cesium.credits;
-    for (let i = 0; i < extraCredits.length; ++i) {
-      const credit = extraCredits[i];
-      credits.push(new Credit(credit.html, tileset._showCreditsOnScreen));
-    }
-  }
-  tileset._credits = credits;
+  createCredits(tileset);
 
   // Handle legacy gltfUpAxis option
   const gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis)
@@ -3210,14 +3194,47 @@ function update(tileset, frameState, passStatistics, passOptions) {
     if (defined(credits) && statistics.selected !== 0) {
       for (let i = 0; i < credits.length; ++i) {
         const credit = credits[i];
-        credit.showOnScreen =
-          tileset._showCreditsOnScreen || credit._isDefaultToken;
         frameState.creditDisplay.addCreditToNextFrame(credit);
       }
     }
   }
 
   return ready;
+}
+
+function createCredits(tileset) {
+  let credits = tileset._credits;
+  if (!defined(credits)) {
+    credits = [];
+  }
+  credits.length = 0;
+
+  if (defined(tileset.resource.credits)) {
+    tileset.resource.credits.forEach((credit) => {
+      credits.push(Credit.clone(credit));
+    });
+  }
+
+  const assetExtras = tileset.asset.extras;
+  if (
+    defined(assetExtras) &&
+    defined(assetExtras.cesium) &&
+    defined(assetExtras.cesium.credits)
+  ) {
+    const extraCredits = assetExtras.cesium.credits;
+    for (let i = 0; i < extraCredits.length; ++i) {
+      const credit = extraCredits[i];
+      credits.push(new Credit(credit.html));
+    }
+  }
+
+  credits.forEach(
+    (credit) =>
+      (credit.showOnScreen =
+        credit.showOnScreen || tileset._showCreditsOnScreen)
+  );
+
+  tileset._credits = credits;
 }
 
 /**

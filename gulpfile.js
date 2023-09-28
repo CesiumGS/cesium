@@ -47,8 +47,7 @@ import {
   createCombinedSpecList,
   createJsHintOptions,
   defaultESBuildOptions,
-  bundleCombinedWorkers,
-} from "./build.js";
+} from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -82,15 +81,11 @@ const sourceFiles = [
   "packages/widgets/Source/**/*.js",
   "!packages/widgets/Source/*.js",
   "!packages/engine/Source/Shaders/**",
-  "!packages/engine/Source/Workers/**",
-  "!packages/engine/Source/WorkersES6/**",
-  "packages/engine/Source/WorkersES6/createTaskProcessorWorker.js",
   "!packages/engine/Source/ThirdParty/Workers/**",
   "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
   "!packages/engine/Source/ThirdParty/_*",
 ];
 
-const workerSourceFiles = ["packages/engine/Source/WorkersES6/**"];
 const watchedSpecFiles = [
   "packages/engine/Specs/**/*Spec.js",
   "!packages/engine/Specs/SpecList.js",
@@ -214,6 +209,13 @@ export const buildWatch = gulp.series(build, async function () {
       if (cjs) {
         await cjs.rebuild();
       }
+
+      await bundleWorkers({
+        minify: minify,
+        path: outputDirectory,
+        removePragmas: removePragmas,
+        sourcemap: sourcemap,
+      });
     }
   );
 
@@ -238,15 +240,6 @@ export const buildWatch = gulp.series(build, async function () {
     }
   );
 
-  gulp.watch(workerSourceFiles, () => {
-    return bundleCombinedWorkers({
-      minify: minify,
-      path: outputDirectory,
-      removePragmas: removePragmas,
-      sourcemap: sourcemap,
-    });
-  });
-
   process.on("SIGINT", () => {
     // Free up resources
     esm.dispose();
@@ -260,6 +253,7 @@ export const buildWatch = gulp.series(build, async function () {
     }
 
     specs.dispose();
+    // eslint-disable-next-line n/no-process-exit
     process.exit(0);
   });
 });
@@ -308,10 +302,6 @@ export function buildApps() {
 const filesToClean = [
   "Source/Cesium.js",
   "Source/Shaders/**/*.js",
-  "Source/Workers/**",
-  "!Source/Workers/cesiumWorkerBootstrapper.js",
-  "!Source/Workers/transferTypedArrayTest.js",
-  "!Source/Workers/package.json",
   "Source/ThirdParty/Shaders/*.js",
   "Source/**/*.d.ts",
   "Specs/SpecList.js",
@@ -372,10 +362,6 @@ async function clocSource() {
 
 export async function prepare() {
   // Copy Draco3D files from node_modules into Source
-  copyFileSync(
-    "node_modules/draco3d/draco_decoder_nodejs.js",
-    "packages/engine/Source/ThirdParty/Workers/draco_decoder_nodejs.js"
-  );
   copyFileSync(
     "node_modules/draco3d/draco_decoder.wasm",
     "packages/engine/Source/ThirdParty/draco_decoder.wasm"
@@ -613,6 +599,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/Documentation/**",
       "Build/Specs/**",
       "!Build/Specs/e2e/**",
+      "!Build/InlineWorkers.js",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",
@@ -655,7 +642,7 @@ export const makeZip = gulp.series(release, async function () {
       ".eslintignore",
       ".eslintrc.json",
       ".prettierignore",
-      "build.js",
+      "scripts/**",
       "gulpfile.js",
       "server.js",
       "index.cjs",
@@ -752,9 +739,16 @@ export async function deployS3() {
   const bucketName = argv.bucket;
   const dryRun = argv.dryRun;
   const cacheControl = argv.cacheControl ? argv.cacheControl : "max-age=3600";
+  const skipFiles = process.env.TRAVIS_BRANCH !== "main"; // Always re-upload the file on the main branch. This will ensure the file does not get deleted after a 30-day period
 
   if (argv.confirm) {
-    return deployCesium(bucketName, uploadDirectory, cacheControl, dryRun);
+    return deployCesium(
+      bucketName,
+      uploadDirectory,
+      cacheControl,
+      skipFiles,
+      dryRun
+    );
   }
 
   const iface = createInterface({
@@ -770,7 +764,13 @@ export async function deployS3() {
         iface.close();
         if (answer === "y") {
           resolve(
-            deployCesium(bucketName, uploadDirectory, cacheControl, dryRun)
+            deployCesium(
+              bucketName,
+              uploadDirectory,
+              cacheControl,
+              skipFiles,
+              dryRun
+            )
           );
         } else {
           console.log("Deploy aborted by user.");
@@ -782,7 +782,13 @@ export async function deployS3() {
 }
 
 // Deploy cesium to s3
-async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
+async function deployCesium(
+  bucketName,
+  uploadDirectory,
+  cacheControl,
+  skipFiles,
+  dryRun
+) {
   // Limit promise concurrency since we are reading many
   // files off disk in parallel
   const limit = pLimit(2000);
@@ -857,6 +863,7 @@ async function deployCesium(bucketName, uploadDirectory, cacheControl, dryRun) {
     const hash = createHash("md5").update(content).digest("hex");
 
     if (
+      !skipFiles ||
       data.ETag !== `"${hash}"` ||
       data.CacheControl !== cacheControl ||
       data.ContentType !== contentType ||
@@ -1372,10 +1379,10 @@ export async function runCoverage(options) {
       type: "module",
     },
     // Static assets are always served from the shared/combined folders.
-    { pattern: "Build/CesiumUnminified/**", included: false },
     { pattern: "Specs/Data/**", included: false },
-    { pattern: "Specs/TestWorkers/**", included: false },
     { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
+    { pattern: "Build/CesiumUnminified/**", included: false },
+    { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
   let proxies;
@@ -1393,12 +1400,12 @@ export async function runCoverage(options) {
         type: "module",
       },
       { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
       { pattern: "packages/engine/Build/Workers/**", included: false },
       { pattern: "packages/engine/Source/Assets/**", included: false },
       { pattern: "packages/engine/Source/ThirdParty/**", included: false },
       { pattern: "packages/engine/Source/Widget/*.css", included: false },
-      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
 
     proxies = {
@@ -1563,7 +1570,7 @@ export async function test() {
     { pattern: "Build/CesiumUnminified/**", included: false },
     { pattern: "Build/Specs/karma-main.js", included: true, type: "module" },
     { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
-    { pattern: "Specs/TestWorkers/**", included: false },
+    { pattern: "Build/Specs/TestWorkers/**.js", included: false },
   ];
 
   let proxies;
@@ -1582,12 +1589,12 @@ export async function test() {
         type: "module",
       },
       { pattern: "Specs/Data/**", included: false },
+      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
       { pattern: "packages/engine/Build/Workers/**", included: false },
       { pattern: "packages/engine/Source/Assets/**", included: false },
       { pattern: "packages/engine/Source/ThirdParty/**", included: false },
       { pattern: "packages/engine/Source/Widget/*.css", included: false },
-      { pattern: "Specs/TestWorkers/**/*.wasm", included: false },
-      { pattern: "Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
 
     proxies = {
@@ -1612,7 +1619,7 @@ export async function test() {
       { pattern: "Build/Cesium/**", included: false },
       { pattern: "Build/Specs/karma-main.js", included: true },
       { pattern: "Build/Specs/SpecList.js", included: true, type: "module" },
-      { pattern: "Specs/TestWorkers/**", included: false },
+      { pattern: "Build/Specs/TestWorkers/**.js", included: false },
     ];
   }
 
@@ -2260,11 +2267,8 @@ async function buildCesiumViewer() {
   });
 
   await bundleWorkers({
-    input: [
-      "packages/engine/Source/Workers/**",
-      "packages/engine/Source/ThirdParty/Workers/**",
-    ],
-    inputES6: ["packages/engine/Source/WorkersES6/*.js"],
+    minify: true,
+    removePragmas: true,
     path: cesiumViewerOutputDirectory,
   });
 

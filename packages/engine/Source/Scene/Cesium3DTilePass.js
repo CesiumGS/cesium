@@ -39,7 +39,7 @@ passOptions[Cesium3DTilePass.SHADOW] = Object.freeze({
 });
 
 passOptions[Cesium3DTilePass.PRELOAD] = Object.freeze({
-  pass: Cesium3DTilePass.SHADOW,
+  pass: Cesium3DTilePass.PRELOAD,
   isRender: false,
   requestTiles: true,
   ignoreCommands: true,

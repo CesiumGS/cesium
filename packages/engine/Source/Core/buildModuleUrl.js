@@ -21,7 +21,7 @@ function getBaseUrlFromCesiumScript() {
 let a;
 function tryMakeAbsolute(url) {
   if (typeof document === "undefined") {
-    //Node.js and Web Workers. In both cases, the URL will already be absolute.
+    // Node.js and Web Workers. In both cases, the URL will already be absolute.
     return url;
   }
 
@@ -29,10 +29,6 @@ function tryMakeAbsolute(url) {
     a = document.createElement("a");
   }
   a.href = url;
-
-  // IE only absolutizes href on get, not set
-  // eslint-disable-next-line no-self-assign
-  a.href = a.href;
   return a.href;
 }
 
@@ -45,17 +41,22 @@ function getCesiumBaseUrl() {
   let baseUrlString;
   if (typeof CESIUM_BASE_URL !== "undefined") {
     baseUrlString = CESIUM_BASE_URL;
+  } else if (defined(import.meta?.url)) {
+    // ESM
+    baseUrlString = getAbsoluteUri(".", import.meta.url);
   } else if (
     typeof define === "object" &&
     defined(define.amd) &&
     !define.amd.toUrlUndefined &&
     defined(require.toUrl)
   ) {
+    // RequireJS
     baseUrlString = getAbsoluteUri(
       "..",
       buildModuleUrl("Core/buildModuleUrl.js")
     );
   } else {
+    // IIFE
     baseUrlString = getBaseUrlFromCesiumScript();
   }
 

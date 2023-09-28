@@ -13,9 +13,6 @@ for (const example of gallery) {
 
     await page.evaluate(() => window.__clock.tickAsync(1000));
     await page.evaluate(() => window.__clock.tickAsync(1000));
-
-    await page.waitForLoadState("networkidle");
-
     await page.evaluate(() => window.__clock.tickAsync(1000));
     await page.evaluate(() => window.__clock.tickAsync(1000));
 
