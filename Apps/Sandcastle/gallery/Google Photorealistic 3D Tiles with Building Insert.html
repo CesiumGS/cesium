@@ -40,6 +40,9 @@
           globe: false,
         });
 
+        // Enable rendering the sky
+        viewer.scene.skyAtmosphere.show = true;
+
         // Add Photorealistic 3D Tiles
         try {
           const googleTileset = await Cesium.createGooglePhotorealistic3DTileset();
