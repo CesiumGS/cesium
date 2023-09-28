@@ -10,6 +10,9 @@ import compression from "compression";
 import express from "express";
 import yargs from "yargs";
 
+import ContextCache from "./scripts/ContextCache.js";
+import createRoute from "./scripts/createRoute.js";
+
 const argv = yargs(process.argv)
   .options({
     port: {
@@ -42,7 +45,7 @@ import {
   glslToJavaScript,
   createIndexJs,
   buildCesium,
-} from "./build.js";
+} from "./scripts/build.js";
 
 const sourceFiles = [
   "packages/engine/Source/**/*.js",
@@ -106,69 +109,6 @@ async function generateDevelopmentBuild() {
   );
 
   return contexts;
-}
-
-const serveResult = (result, fileName, res, next) => {
-  let bundle;
-  for (const out of result.outputFiles) {
-    if (path.basename(out.path) === fileName) {
-      bundle = out.text;
-    }
-  }
-
-  if (!bundle) {
-    next(new Error(`Failed to generate bundle: ${fileName}`));
-    return;
-  }
-
-  res.append("Cache-Control", "max-age=0");
-  res.append("Content-Type", "application/javascript");
-  res.send(bundle);
-};
-
-class ResultCache {
-  constructor() {
-    this.promise = Promise.resolve();
-    this.result = undefined;
-  }
-
-  clear() {
-    this.result = undefined;
-  }
-
-  isBuilt() {
-    return (
-      this.result &&
-      this.result.outputFiles &&
-      this.result.outputFiles.length > 0
-    );
-  }
-}
-
-function createRoute(app, name, route, context) {
-  const cache = new ResultCache();
-  app.get(route, async function (req, res, next) {
-    // Multiple files may be requested at this path, calling this function in quick succession.
-    // Await the previous build before re-building again.
-    await cache.promise;
-
-    if (!cache.isBuilt()) {
-      try {
-        const start = performance.now();
-        cache.promise = context.rebuild();
-        cache.result = await cache.promise;
-        console.log(
-          `Built ${name} in ${formatTimeSinceInSeconds(start)} seconds.`
-        );
-      } catch (e) {
-        next(e);
-      }
-    }
-
-    return serveResult(cache.result, path.basename(req.originalUrl), res, next);
-  });
-
-  return cache;
 }
 
 (async function () {
@@ -248,11 +188,13 @@ function createRoute(app, name, route, context) {
   app.get(knownTilesetFormats, checkGzipAndNext);
 
   if (!production) {
+    const iifeWorkersCache = new ContextCache(contexts.iifeWorkers);
     const iifeCache = createRoute(
       app,
       "Cesium.js",
       "/Build/CesiumUnminified/Cesium.js*",
-      contexts.iife
+      contexts.iife,
+      [iifeWorkersCache]
     );
     const esmCache = createRoute(
       app,
@@ -282,6 +224,7 @@ function createRoute(app, name, route, context) {
       esmCache.clear();
       iifeCache.clear();
       workersCache.clear();
+      iifeWorkersCache.clear();
       jsHintOptionsCache = undefined;
       await createCesiumJs();
     });

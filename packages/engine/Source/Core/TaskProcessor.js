@@ -12,9 +12,7 @@ import RuntimeError from "./RuntimeError.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
-    const worker = new Worker(
-      getWorkerUrl("Workers/transferTypedArrayTest.js")
-    );
+    const worker = createWorker("transferTypedArrayTest");
     worker.postMessage = defaultValue(
       worker.webkitPostMessage,
       worker.postMessage
@@ -59,55 +57,70 @@ function canTransferArrayBuffer() {
 
 const taskCompletedEvent = new Event();
 
-function getWorkerUrl(moduleID) {
-  let url = buildModuleUrl(moduleID);
-
-  if (isCrossOriginUrl(url)) {
-    //to load cross-origin, create a shim worker from a blob URL
-    const script = `importScripts("${url}");`;
-
-    let blob;
-    try {
-      blob = new Blob([script], {
-        type: "application/javascript",
-      });
-    } catch (e) {
-      const BlobBuilder =
-        window.BlobBuilder ||
-        window.WebKitBlobBuilder ||
-        window.MozBlobBuilder ||
-        window.MSBlobBuilder;
-      const blobBuilder = new BlobBuilder();
-      blobBuilder.append(script);
-      blob = blobBuilder.getBlob("application/javascript");
-    }
-
-    const URL = window.URL || window.webkitURL;
-    url = URL.createObjectURL(blob);
+function urlFromScript(script) {
+  let blob;
+  try {
+    blob = new Blob([script], {
+      type: "application/javascript",
+    });
+  } catch (e) {
+    const BlobBuilder =
+      window.BlobBuilder ||
+      window.WebKitBlobBuilder ||
+      window.MozBlobBuilder ||
+      window.MSBlobBuilder;
+    const blobBuilder = new BlobBuilder();
+    blobBuilder.append(script);
+    blob = blobBuilder.getBlob("application/javascript");
   }
 
-  return url;
+  const URL = window.URL || window.webkitURL;
+  return URL.createObjectURL(blob);
 }
 
-function createWorker(processor) {
+function createWorker(url) {
+  const uri = new Uri(url);
+  const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
+
+  const options = {};
+  let workerPath;
+  if (isCrossOriginUrl(url)) {
+    // To load cross-origin, create a shim worker from a blob URL
+    const script = `importScripts("${url}");`;
+    workerPath = urlFromScript(script);
+    return new Worker(workerPath, options);
+  }
+
+  const moduleID = url.replace(/\.js$/, "");
+
+  /* global CESIUM_WORKERS */
+  if (!isUri && typeof CESIUM_WORKERS !== "undefined") {
+    // If the workers are embedded, create a shim worker from the embedded script data
+    const script = `
+      importScripts("${urlFromScript(CESIUM_WORKERS)}");
+      CesiumWorkers["${moduleID}"]();
+    `;
+    workerPath = urlFromScript(script);
+    return new Worker(workerPath, options);
+  }
+
+  workerPath = url;
+
+  if (!isUri) {
+    workerPath = buildModuleUrl(
+      `${TaskProcessor._workerModulePrefix + moduleID}.js`
+    );
+  }
+
   if (!FeatureDetection.supportsEsmWebWorkers()) {
     throw new RuntimeError(
       "This browser is not supported. Please update your browser to continue."
     );
   }
 
-  const uri = new Uri(processor._workerPath);
-  const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
-  const workerPath = isUri
-    ? processor._workerPath
-    : getWorkerUrl(
-        `${
-          TaskProcessor._workerModulePrefix +
-          processor._workerPath.replace(/\.js$/, "")
-        }.js`
-      );
+  options.type = "module";
 
-  return new Worker(workerPath, { type: "module" });
+  return new Worker(workerPath, options);
 }
 
 async function getWebAssemblyLoaderConfig(processor, wasmOptions) {
@@ -269,7 +282,7 @@ TaskProcessor.prototype.scheduleTask = function (
   transferableObjects
 ) {
   if (!defined(this._worker)) {
-    this._worker = createWorker(this);
+    this._worker = createWorker(this._workerPath);
   }
 
   if (this._activeTasks >= this._maximumActiveTasks) {
@@ -300,7 +313,7 @@ TaskProcessor.prototype.initWebAssemblyModule = async function (
   }
 
   const init = async () => {
-    const worker = (this._worker = createWorker(this));
+    const worker = (this._worker = createWorker(this._workerPath));
     const wasmConfig = await getWebAssemblyLoaderConfig(
       this,
       webAssemblyOptions

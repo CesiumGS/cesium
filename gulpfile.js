@@ -47,7 +47,7 @@ import {
   createCombinedSpecList,
   createJsHintOptions,
   defaultESBuildOptions,
-} from "./build.js";
+} from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -599,6 +599,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/Documentation/**",
       "Build/Specs/**",
       "!Build/Specs/e2e/**",
+      "!Build/InlineWorkers.js",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",
@@ -641,7 +642,7 @@ export const makeZip = gulp.series(release, async function () {
       ".eslintignore",
       ".eslintrc.json",
       ".prettierignore",
-      "build.js",
+      "scripts/**",
       "gulpfile.js",
       "server.js",
       "index.cjs",
