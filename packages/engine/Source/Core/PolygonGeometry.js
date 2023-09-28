@@ -1466,7 +1466,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
     hasTextureCoordinates,
-    createProjectTo2d(rectangle, ellipsoid, perPositionHeight),
+    createProjectTo2d(rectangle, ellipsoid),
     !perPositionHeight,
     ellipsoid,
     createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight)
@@ -1484,7 +1484,8 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         textureCoordinates,
         true,
         dummyFunction,
-        false
+        false,
+        ellipsoid
       ).polygons
     : undefined;
 
