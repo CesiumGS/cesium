@@ -10,7 +10,8 @@
 
 ##### Additions :tada:
 
-- Added `PolygonGeometry.computeRectangleFromPositions` for computing a bounding speher that encloses a polygon, including cases over the international date line and the poles.
+- Worker files are now embedded in `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js`. [#11519](https://github.com/CesiumGS/cesium/pull/11519)
+- Added `PolygonGeometry.computeRectangleFromPositions` for computing a bounding spehere that encloses a polygon, including cases over the international date line and the poles.
 - Added `Stereographic` for computing 2D operations in stereographic, or polar, coordinates.
 - Adds events to `PrimitiveCollection` for primitive added/removed. [#11531](https://github.com/CesiumGS/cesium/pull/11531)
 - Adds an optional `rejectOnTileFail` parameter to `sampleTerrain()` to allow handling of tile request failures. [#11530](https://github.com/CesiumGS/cesium/pull/11530)
@@ -18,6 +19,7 @@
 ##### Fixes :wrench:
 
 - Fix rendering of polygons spanning extents of 90 degrees or more. [#4871](https://github.com/CesiumGS/cesium/issues/4871)
+- Fixed issue loading workers in cross-origin `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js` requests. [#11505](https://github.com/CesiumGS/cesium/issues/11505)
 - Fixed ground primitive polygon visual artifacts at pole. [#8033](https://github.com/CesiumGS/cesium/issues/8033)
 - Fixed bug in `Cesium3DTilePass` affecting the `PRELOAD` pass. [#11525](https://github.com/CesiumGS/cesium/pull/11525)
 - Fixed bug where sky atmosphere could not be shown when `globe.show` is initialized to false. [#11266](https://github.com/CesiumGS/cesium/issues/11266)
