@@ -913,9 +913,7 @@ LabelCollection.prototype.update = function (frameState) {
     backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
 
     // Request a new render in request render mode after the next frame renders
-    addWhitePixelCanvas(this._backgroundTextureAtlas).then(() =>
-      frameState.afterRender.push(() => true)
-    );
+    addWhitePixelCanvas(this._backgroundTextureAtlas);
   }
 
   const len = this._labelsToUpdate.length;
