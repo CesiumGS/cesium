@@ -167,6 +167,13 @@ describe(
       expect(widget.scene.globe).not.toBeDefined();
     });
 
+    it("sky atmopshere is hidden by default if a globe if option is false", function () {
+      widget = createCesiumWidget(container, {
+        globe: false,
+      });
+      expect(widget.scene.skyAtmosphere.show).toBeFalse();
+    });
+
     it("does not create a skyBox if option is false", function () {
       widget = createCesiumWidget(container, {
         skyBox: false,
