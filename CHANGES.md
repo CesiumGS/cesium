@@ -6,7 +6,7 @@
 
 ##### Breaking Changes :mega:
 
-- `GoogleMaps.defaultApiKey` is no longer defined by default. If not using Cesium ion, this value must be set to your own personal Google Maps Platform API key.
+- `Cesium3DTileset.maximumMemoryUsage` has been removed. Use `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` instead.
 
 ##### Additions :tada:
 
