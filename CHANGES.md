@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- `Cesium3DTileset.maximumMemoryUsage` has been removed. Use `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` instead.
+
 ##### Additions :tada:
 
 - Worker files are now embedded in `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js`. [#11519](https://github.com/CesiumGS/cesium/pull/11519)
