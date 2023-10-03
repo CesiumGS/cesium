@@ -28,7 +28,7 @@
 ##### Additions :tada:
 
 - Worker files are now embedded in `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js`. [#11519](https://github.com/CesiumGS/cesium/pull/11519)
-- Added `PolygonGeometry.computeRectangleFromPositions` for computing a bounding spehere that encloses a polygon, including cases over the international date line and the poles.
+- Added `PolygonGeometry.computeRectangleFromPositions` for computing a `Rectangle` that encloses a polygon, including cases over the international date line and the poles.
 - Added `Stereographic` for computing 2D operations in stereographic, or polar, coordinates.
 - Adds events to `PrimitiveCollection` for primitive added/removed. [#11531](https://github.com/CesiumGS/cesium/pull/11531)
 - Adds an optional `rejectOnTileFail` parameter to `sampleTerrain()` to allow handling of tile request failures. [#11530](https://github.com/CesiumGS/cesium/pull/11530)
