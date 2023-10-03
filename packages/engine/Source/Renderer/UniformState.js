@@ -1523,7 +1523,6 @@ function cleanNormal3D(uniformState) {
 
     const m = uniformState._normal3D;
     Matrix4.getMatrix3(uniformState.inverseModelView3D, m);
-    Matrix3.getRotation(m, m);
     Matrix3.transpose(m, m);
   }
 }
