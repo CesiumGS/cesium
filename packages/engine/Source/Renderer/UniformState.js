@@ -1542,7 +1542,7 @@ function cleanInverseNormal3D(uniformState) {
     uniformState._inverseNormal3DDirty = false;
 
     const m = uniformState._inverseNormal3D;
-    Matrix4.getMatrix3(uniformState.modelView, m);
+    Matrix4.getMatrix3(uniformState.modelView3D, m);
     Matrix3.transpose(m, m);
   }
 }
