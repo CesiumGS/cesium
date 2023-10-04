@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.111 - 2023-10-02
+
+- `BingMapsImageryProvider.fromUrl` now takes an optional `mapLayer` parameter which is a string that maps directly to the [mapLayer template parameters](https://learn.microsoft.com/en-us/bingmaps/rest-services/imagery/get-imagery-metadata#template-parameters) specified in the Bing Maps documentation.
+
 ### 1.110 - 2023-10-02
 
 #### @cesium/engine
