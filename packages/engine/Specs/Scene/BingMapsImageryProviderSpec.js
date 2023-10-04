@@ -301,6 +301,27 @@ describe("Scene/BingMapsImageryProvider", function () {
     expect(provider.url).toEqual(url);
   });
 
+  it("fromUrl takes mapLayer as option and sets hasAlphaChannel accordingly.", async function () {
+    const url = "http://fake.fake.invalid/";
+    const mapStyle = BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND;
+
+    installFakeMetadataRequest(url, mapStyle);
+    installFakeImageRequest();
+
+    const resource = new Resource({
+      url: url,
+    });
+
+    const provider = await BingMapsImageryProvider.fromUrl(resource, {
+      key: "",
+      mapStyle: mapStyle,
+      mapLayer: "Foreground",
+    });
+
+    expect(provider.mapLayer).toEqual("Foreground");
+    expect(provider.hasAlphaChannel).toBe(true);
+  });
+
   it("fromUrl throws if request fails", async function () {
     const url = "http://fake.fake.invalid";
 
