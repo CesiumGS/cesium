@@ -140,6 +140,13 @@ Credit.prototype.equals = function (credit) {
 
 /**
  * @private
+ */
+Credit.prototype.isIon = function () {
+  return this.html.indexOf("ion-credit.png") !== -1;
+};
+
+/**
+ * @private
  * @param attribution
  * @return {Credit}
  */
@@ -148,7 +155,6 @@ Credit.getIonCredit = function (attribution) {
     defined(attribution.collapsible) && !attribution.collapsible;
   const credit = new Credit(attribution.html, showOnScreen);
 
-  credit._isIon = credit.html.indexOf("ion-credit.png") !== -1;
   return credit;
 };
 

@@ -3,7 +3,7 @@ import defined from "./defined.js";
 import Resource from "./Resource.js";
 
 let defaultKeyCredit;
-const defaultKey = "AIzaSyDG4malBzpWiOoWpAm9q2OXvt_plH-NxcM";
+const defaultKey = "AIzaSyA3mA091skJHiLbk3IOlHrHnZmzCoYz3-c";
 
 /**
  * Default settings for accessing the Google Maps API.
@@ -48,7 +48,6 @@ GoogleMaps.getDefaultApiKeyCredit = function (providedKey) {
             with <a href="https://developers.google.com/maps/documentation/embed/get-api-key">your API key for the Google Maps Platform</a>.</b>';
 
     defaultKeyCredit = new Credit(defaultKeyMessage, true);
-    defaultKeyCredit._isDefaultToken = true;
   }
 
   return defaultKeyCredit;

@@ -1,20 +1,4 @@
-import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
 import formatError from "../Core/formatError.js";
-
-// createXXXGeometry functions may return Geometry or a Promise that resolves to Geometry
-// if the function requires access to ApproximateTerrainHeights.
-// For fully synchronous functions, just wrapping the function call in a Promise doesn't
-// handle errors correctly, hence try-catch
-function callAndWrap(workerFunction, parameters, transferableObjects) {
-  let resultOrPromise;
-  try {
-    resultOrPromise = workerFunction(parameters, transferableObjects);
-    return resultOrPromise; // errors handled by Promise
-  } catch (e) {
-    return Promise.reject(e);
-  }
-}
 
 /**
  * Creates an adapter function to allow a calculation function to operate as a Web Worker,
@@ -42,11 +26,7 @@ function callAndWrap(workerFunction, parameters, transferableObjects) {
  * @see {@link http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects|Transferable objects}
  */
 function createTaskProcessorWorker(workerFunction) {
-  let postMessage;
-
-  return function (event) {
-    const data = event.data;
-
+  async function onMessageHandler({ data }) {
     const transferableObjects = [];
     const responseMessage = {
       id: data.id,
@@ -54,46 +34,50 @@ function createTaskProcessorWorker(workerFunction) {
       error: undefined,
     };
 
-    return Promise.resolve(
-      callAndWrap(workerFunction, data.parameters, transferableObjects)
-    )
-      .then(function (result) {
-        responseMessage.result = result;
-      })
-      .catch(function (e) {
-        if (e instanceof Error) {
-          // Errors can't be posted in a message, copy the properties
-          responseMessage.error = {
-            name: e.name,
-            message: e.message,
-            stack: e.stack,
-          };
-        } else {
-          responseMessage.error = e;
-        }
-      })
-      .finally(function () {
-        if (!defined(postMessage)) {
-          postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
-        }
+    self.CESIUM_BASE_URL = data.baseUrl;
 
-        if (!data.canTransferArrayBuffer) {
-          transferableObjects.length = 0;
-        }
+    try {
+      const result = await workerFunction(data.parameters, transferableObjects);
+      responseMessage.result = result;
+    } catch (error) {
+      if (error instanceof Error) {
+        responseMessage.error = {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        };
+      } else {
+        responseMessage.error = error;
+      }
+    }
 
-        try {
-          postMessage(responseMessage, transferableObjects);
-        } catch (e) {
-          // something went wrong trying to post the message, post a simpler
-          // error that we can be sure will be cloneable
-          responseMessage.result = undefined;
-          responseMessage.error = `postMessage failed with error: ${formatError(
-            e
-          )}\n  with responseMessage: ${JSON.stringify(responseMessage)}`;
-          postMessage(responseMessage);
-        }
-      });
-  };
+    if (!data.canTransferArrayBuffer) {
+      transferableObjects.length = 0;
+    }
+
+    try {
+      postMessage(responseMessage, transferableObjects);
+    } catch (error) {
+      // something went wrong trying to post the message, post a simpler
+      // error that we can be sure will be cloneable
+      responseMessage.result = undefined;
+      responseMessage.error = `postMessage failed with error: ${formatError(
+        error
+      )}\n  with responseMessage: ${JSON.stringify(responseMessage)}`;
+      postMessage(responseMessage);
+    }
+  }
+
+  function onMessageErrorHandler(event) {
+    postMessage({
+      id: event.data?.id,
+      error: `postMessage failed with error: ${JSON.stringify(event)}`,
+    });
+  }
+
+  self.onmessage = onMessageHandler;
+  self.onmessageerror = onMessageErrorHandler;
+  return self;
 }
 
 /**
