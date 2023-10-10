@@ -245,21 +245,22 @@ RayShapeIntersection intersectVoxel(in Ray ray, in VoxelCell voxel)
 
     // The latitude bound nearest to a pole defines a negative volume
     bool minLatitudeIsNegative = p0.y < 0.0;
-    float negativeConeAngle = minLatitudeIsNegative ? p0.y : p1.y;
+    float negativeConeLatitude = minLatitudeIsNegative ? p0.y : p1.y;
     // NOTE: we ASSUME the two latitude bounds do not straddle the Equator, so
     // one of the latitudes defines a positive boundary
-    float positiveConeAngle = minLatitudeIsNegative ? p1.y : p0.y;
+    float positiveConeLatitude = minLatitudeIsNegative ? p1.y : p0.y;
 
-    float cosNegativeConeAngle = cos(czm_piOverTwo - negativeConeAngle);
+    // Cone "half angle" is defined as the angle between the surface and the +z axis
+    float cosNegativeConeAngle = sin(negativeConeLatitude);
     RayShapeIntersection negativeCone = intersectRegularCone(ray, cosNegativeConeAngle, false);
 
     RayShapeIntersection positiveCone;
-    if (positiveConeAngle == 0.0) {
+    if (positiveConeLatitude == 0.0) {
         // TODO: zDirection looks flipped here? But it works
         float zDirection = minLatitudeIsNegative ? -1.0 : 1.0;
         positiveCone = intersectZPlane(ray, zDirection);
     } else {
-        float cosPositiveConeAngle = cos(czm_piOverTwo - positiveConeAngle);
+        float cosPositiveConeAngle = sin(positiveConeLatitude);
         positiveCone = intersectRegularCone(ray, cosPositiveConeAngle, true);
     }
 
