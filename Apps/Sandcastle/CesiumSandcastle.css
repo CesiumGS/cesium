@@ -50,7 +50,12 @@ body {
 }
 
 #codeContainer {
-  width: 40%;
+  width: 30%;
+}
+
+#aiContainer {
+  width: 20%;
+  min-width: 300px;
 }
 
 #bottomPanel {
@@ -271,4 +276,102 @@ a.linkButton:hover {
   width: 16px;
   height: 16px;
   text-align: center;
+}
+
+body {
+  font-family: sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#chatLog {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid;
+}
+
+.message-log {
+  overflow-y: auto;
+  container-type: inline-size;
+}
+
+.message {
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.5rem;
+
+  &.system {
+    background: #eee;
+  }
+  &.error {
+    background: lightcoral;
+  }
+
+  &.pending .name:after {
+    content: "|";
+    margin-left: 1ch;
+    margin-top: 0.2em;
+    font-size: 0.8em;
+    display: inline-block;
+    animation: spin 1s linear infinite;
+  }
+
+  .name {
+    width: 60px;
+    flex-shrink: 0;
+  }
+
+  .content > * {
+    margin: 0;
+  }
+  .content > * + * {
+    margin-top: 0.5rem;
+  }
+
+  .content code {
+    display: block;
+  }
+
+  @container (max-width: 350px) {
+    & {
+      flex-direction: column;
+    }
+    .content {
+      margin-left: 0.5rem;
+    }
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.chat-input {
+  width: 100%;
+  display: flex;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  border-top: 1px solid;
+
+  & textarea {
+    resize: none;
+    min-height: 1.5rem;
+    max-height: 10rem;
+    flex-grow: 1;
+  }
+}
+
+#chatLog.pending {
+  .chat-input button {
+    pointer-events: none;
+    color: #eee;
+  }
 }

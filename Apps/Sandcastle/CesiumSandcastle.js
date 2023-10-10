@@ -26,6 +26,7 @@ require({
       location: "../Apps/Sandcastle/ThirdParty",
     },
   ],
+  // @ts-expect-error
 }, [
   "CodeMirror/lib/codemirror",
   "dijit/Dialog",
@@ -1477,4 +1478,89 @@ require({
       registry.byId("innerPanel").selectChild(subtabs[currentTab]);
     }
   });
+
+  /** @enum {string} */
+  const User = Object.freeze({
+    USER: "USER",
+    SYSTEM: "SYSTEM",
+  });
+
+  function addMessage(user, content) {
+    const message = document.createElement("div");
+    message.classList.add("message");
+    message.classList.add(user === User.SYSTEM ? "system" : "user");
+
+    const nameElem = document.createElement("div");
+    nameElem.classList.add("name");
+    nameElem.innerText = user === User.SYSTEM ? "System" : "User";
+    message.appendChild(nameElem);
+
+    const contentElem = document.createElement("div");
+    contentElem.classList.add("content");
+    contentElem.innerHTML = content;
+    message.appendChild(contentElem);
+
+    const messageLog = document.querySelector("#chatLog .message-log");
+    messageLog?.appendChild(message);
+
+    messageLog?.scrollTo(0, messageLog.scrollHeight);
+
+    return message;
+  }
+
+  function markPending(pending) {
+    const chatLog = document.getElementById("chatLog");
+    const input = document.getElementById("aiChatInput");
+    const button = document.getElementById("aiChatSubmit");
+    if (pending) {
+      chatLog?.classList.add("pending");
+    } else {
+      chatLog?.classList.remove("pending");
+    }
+    input.disabled = pending;
+    button.disabled = pending;
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function submitMessage(message) {
+    await delay(Math.random() * 2000);
+
+    if (Math.random() < 0.2) {
+      throw new Error("Monkey in the code!!");
+    }
+    return `<code>${message}</code>`;
+  }
+
+  document
+    .getElementById("aiChatSubmit")
+    ?.addEventListener("click", async function () {
+      const input = document.getElementById("aiChatInput");
+      const message = input.value;
+
+      if (!message || message === "") {
+        return;
+      }
+
+      markPending(true);
+
+      const userMessageElem = addMessage(User.USER, message);
+      userMessageElem.classList.add("pending");
+      try {
+        const response = await submitMessage(message);
+        addMessage(User.SYSTEM, response);
+
+        // append to editor
+        // jsEditor.setValue(`${jsEditor.getValue()}\n${message}`);
+        // CodeMirror.commands.runCesium(jsEditor);
+      } catch (error) {
+        console.error(error);
+        userMessageElem.classList.add("error");
+      } finally {
+        markPending(false);
+        userMessageElem.classList.remove("pending");
+      }
+    });
 });

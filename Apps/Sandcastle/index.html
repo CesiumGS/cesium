@@ -303,6 +303,30 @@
         </div>
       </div>
       <div
+        id="aiContainer"
+        data-dojo-type="dijit.layout.TabContainer"
+        data-dojo-props="region: 'trailing', splitter: true, minSize: 300"
+      >
+        <div
+          id="chatLog"
+          data-dojo-type="dijit.layout.ContentPane"
+          data-dojo-props="title: 'AI Chat'"
+        >
+          <div class="message-log">
+            <div class="message system">
+              <div class="name">System</div>
+              <div class="content">
+                <p>Enter a message below to start.</p>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <textarea name="aiChatInput" id="aiChatInput"></textarea>
+            <button id="aiChatSubmit">Submit</button>
+          </div>
+        </div>
+      </div>
+      <div
         id="bottomPanel"
         class="bottomPanel"
         data-dojo-type="dijit.layout.TabContainer"
