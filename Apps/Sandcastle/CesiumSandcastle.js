@@ -95,7 +95,8 @@ require({
   dojoscript,
   LinkButton,
   ClipboardJS,
-  pako
+  pako,
+  openai
 ) {
   "use strict";
   // attach clipboard handling to our Copy button
@@ -1525,42 +1526,131 @@ require({
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async function submitMessage(message) {
+  const aiChatState = {
+    sessionId: undefined,
+    messages: undefined,
+  };
+
+  async function startSession() {
+    if (aiChatState.sessionId) {
+      await endSession();
+    }
+
+    const response = await fetch("/ai/start");
+    const { sessionId } = await response.json();
+    if (!sessionId) {
+      console.error("No session id", response);
+      return;
+    }
+
+    aiChatState.sessionId = sessionId;
+
+    document.getElementById("aiChatStart").disabled = true;
+    document.getElementById("aiChatSubmit").disabled = false;
+    document.getElementById("aiChatInput").disabled = false;
+
+    return sessionId;
+  }
+
+  async function endSession() {
+    if (!aiChatState.sessionId) {
+      console.log("cannot submit");
+      return;
+    }
+
+    await fetch(`/ai/${aiChatState.sessionId}/end`);
+
+    aiChatState.sessionId = undefined;
+  }
+
+  async function submitMessageToAI(message) {
     await delay(Math.random() * 2000);
 
-    if (Math.random() < 0.2) {
-      throw new Error("Monkey in the code!!");
-    }
-    return `<code>${message}</code>`;
+    const response = await fetch(`/ai/${aiChatState.sessionId}/ask`, {
+      method: "POST",
+      body: JSON.stringify({
+        message,
+      }),
+      headers: {
+        "Content-type": "application/json; charset=UTF-8",
+      },
+    });
+
+    const json = await response.json();
+
+    console.log(json);
+
+    const aiResponse = json.choices[0].message.content;
+    const adjusted = aiResponse
+      .replace(
+        "```javascript",
+        `
+      <div class="code-wrapper">
+        <div class="code-toolbar">
+          <button>C</button>
+          <button>+</button>
+          <button>=</button>
+        </div>
+        <pre>
+      `
+      )
+      .replace("```", "</pre></div>");
+
+    return adjusted;
   }
+
+  async function submitMessage() {
+    if (!aiChatState.sessionId) {
+      console.log("cannot submit");
+      return;
+    }
+
+    const input = document.getElementById("aiChatInput");
+    const message = input.value;
+
+    if (!message || message === "") {
+      return;
+    }
+
+    markPending(true);
+
+    const userMessageElem = addMessage(User.USER, message);
+    userMessageElem.classList.add("pending");
+    try {
+      const response = await submitMessageToAI(message);
+      addMessage(User.SYSTEM, response);
+
+      input.value = "";
+
+      // append to editor
+      // jsEditor.setValue(`${jsEditor.getValue()}\n${message}`);
+      // CodeMirror.commands.runCesium(jsEditor);
+    } catch (error) {
+      console.error(error);
+      userMessageElem.classList.add("error");
+    } finally {
+      markPending(false);
+      userMessageElem.classList.remove("pending");
+    }
+  }
+
+  document
+    .getElementById("aiChatStart")
+    ?.addEventListener("click", async function () {
+      await startSession();
+    });
+
+  document
+    .getElementById("aiChatInput")
+    ?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        submitMessage();
+      }
+    });
 
   document
     .getElementById("aiChatSubmit")
     ?.addEventListener("click", async function () {
-      const input = document.getElementById("aiChatInput");
-      const message = input.value;
-
-      if (!message || message === "") {
-        return;
-      }
-
-      markPending(true);
-
-      const userMessageElem = addMessage(User.USER, message);
-      userMessageElem.classList.add("pending");
-      try {
-        const response = await submitMessage(message);
-        addMessage(User.SYSTEM, response);
-
-        // append to editor
-        // jsEditor.setValue(`${jsEditor.getValue()}\n${message}`);
-        // CodeMirror.commands.runCesium(jsEditor);
-      } catch (error) {
-        console.error(error);
-        userMessageElem.classList.add("error");
-      } finally {
-        markPending(false);
-        userMessageElem.classList.remove("pending");
-      }
+      await submitMessage();
     });
 });

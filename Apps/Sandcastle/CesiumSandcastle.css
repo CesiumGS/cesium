@@ -278,11 +278,7 @@ a.linkButton:hover {
   text-align: center;
 }
 
-body {
-  font-family: sans-serif;
-}
-
-* {
+#chatLog * {
   box-sizing: border-box;
 }
 
@@ -324,15 +320,36 @@ body {
     flex-shrink: 0;
   }
 
-  .content > * {
-    margin: 0;
-  }
-  .content > * + * {
-    margin-top: 0.5rem;
-  }
+  .content {
+    overflow: hidden;
 
-  .content code {
-    display: block;
+    & > * {
+      margin: 0;
+    }
+    & > * + * {
+      margin-top: 0.5rem;
+    }
+
+    .code-wrapper {
+      border: 1px solid;
+      border-radius: 5px 5px 0 0;
+      margin: 0.5rem 0;
+    }
+
+    .code-toolbar {
+      background: gray;
+      padding: 0.3rem;
+      border-radius: 5px 5px 0 0;
+      text-align: right;
+    }
+
+    .code-wrapper pre {
+      padding: 0.5rem;
+      margin: 0;
+      max-height: 200px;
+      max-width: 100%;
+      overflow: auto;
+    }
   }
 
   @container (max-width: 350px) {

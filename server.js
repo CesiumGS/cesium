@@ -46,6 +46,7 @@ import {
   createIndexJs,
   buildCesium,
 } from "./scripts/build.js";
+import createAiServer from "./aiServer.js";
 
 const sourceFiles = [
   "packages/engine/Source/**/*.js",
@@ -276,6 +277,8 @@ async function generateDevelopmentBuild() {
     // while the latest is being served
     app.use("/Build/CesiumUnminified", express.static("Build/CesiumDev"));
   }
+
+  createAiServer(app);
 
   app.use(express.static(path.resolve(".")));
 

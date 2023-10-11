@@ -30,6 +30,7 @@
 /launches
 /packages/
 /server.js
+/aiServer.js
 /Source/copyrightHeader.js
 /Specs
 /travis

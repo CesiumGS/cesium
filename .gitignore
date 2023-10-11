@@ -40,3 +40,5 @@ yarn.lock
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/shelf
+
+.env
