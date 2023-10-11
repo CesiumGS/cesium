@@ -26,7 +26,7 @@ export default function createAiServer(app) {
         {
           role: "system",
           content:
-            "You are a helpful assistant producing javascript code for cesiumjs.",
+            "You are a helpful assistant producing javascript code for cesiumjs. You do not include an html wrapper",
         },
         {
           role: "system",
