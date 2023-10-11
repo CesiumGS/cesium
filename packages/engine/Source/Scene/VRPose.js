@@ -295,10 +295,12 @@ function applyPoseToCamera(pose, eye, camera) {
  * provides the viewports where rendering is to be performed for
  * each viewpoint required by the VR session (typically side-by-side
  * stereographic)
- * @private
+ *
  * @constructor
  *
  * @param {Scene} scene The scene for which the pose will perform computations.
+ *
+ * @private
  */
 function VRPose(scene) {
   //>>includeStart('debug', pragmas.debug);
@@ -390,6 +392,7 @@ Object.defineProperties(VRPose.prototype, {
       ) {
         this._paramsChanged = true;
       }
+      this._camera = value;
     },
   },
 });
