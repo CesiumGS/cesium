@@ -22,7 +22,18 @@ export default function createAiServer(app) {
 
     sessions.set(sessionId, {
       startedAt: new Date().toISOString(),
-      messages: [],
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a helpful assistant producing javascript code for cesiumjs.",
+        },
+        {
+          role: "system",
+          content:
+            "`createWorldTerrain` does not exist. you always replace 'terrainProvider: Cesium.createWorldTerrain()' with 'terrain: Cesium.Terrain.fromWorldTerrain()'",
+        },
+      ],
     });
 
     res.json({ sessionId });
@@ -56,15 +67,7 @@ export default function createAiServer(app) {
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a helpful assistant producing javascript code for cesiumjs.",
-        },
-        ...messageHistory,
-        { role: "user", content: newMessage },
-      ],
+      messages: [...messageHistory, { role: "user", content: newMessage }],
     });
     console.log(response);
 

@@ -1501,6 +1501,33 @@ require({
     contentElem.innerHTML = content;
     message.appendChild(contentElem);
 
+    contentElem
+      .querySelector("#copyButton")
+      ?.addEventListener("click", async (e) => {
+        const code = e.target.closest(".code-wrapper").querySelector("pre")
+          .innerText;
+        const cb = navigator.clipboard;
+        await cb.writeText(code);
+      });
+
+    contentElem
+      .querySelector("#replaceButton")
+      ?.addEventListener("click", (e) => {
+        const code = e.target.closest(".code-wrapper").querySelector("pre")
+          .innerText;
+        jsEditor.setValue(code);
+        CodeMirror.commands.runCesium(jsEditor);
+      });
+
+    contentElem
+      .querySelector("#appendButton")
+      ?.addEventListener("click", (e) => {
+        const code = e.target.closest(".code-wrapper").querySelector("pre")
+          .innerText;
+        jsEditor.setValue(`${jsEditor.getValue()}\n${code}`);
+        CodeMirror.commands.runCesium(jsEditor);
+      });
+
     const messageLog = document.querySelector("#chatLog .message-log");
     messageLog?.appendChild(message);
 
@@ -1584,18 +1611,16 @@ require({
     const adjusted = aiResponse
       .replace(
         "```javascript",
-        `
-      <div class="code-wrapper">
-        <div class="code-toolbar">
-          <button>C</button>
-          <button>+</button>
-          <button>=</button>
-        </div>
-        <pre>
-      `
+        `<div class="code-wrapper">
+          <div class="code-toolbar">
+            <button id="copyButton">C</button>
+            <button id="appendButton">+</button>
+            <button id="replaceButton">=</button>
+          </div>
+          <pre>`
       )
-      .replace("```", "</pre></div>");
-
+      .replace("```", "</pre></div>")
+      .replace(/`([\w\.-]+)`/g, "<code>$1</code>");
     return adjusted;
   }
 
