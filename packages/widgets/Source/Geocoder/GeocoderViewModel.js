@@ -1,5 +1,4 @@
 import {
-  CartographicGeocoderService,
   computeFlyToLocationForRectangle,
   defaultValue,
   defined,
@@ -44,10 +43,7 @@ function GeocoderViewModel(options) {
   if (defined(options.geocoderServices)) {
     this._geocoderServices = options.geocoderServices;
   } else {
-    this._geocoderServices = [
-      new CartographicGeocoderService(),
-      new IonGeocoderService({ scene: options.scene }),
-    ];
+    this._geocoderServices = [new IonGeocoderService({ scene: options.scene })];
   }
 
   this._viewContainer = options.container;

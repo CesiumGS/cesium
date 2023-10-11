@@ -5,6 +5,7 @@ if [ $TRAVIS_BRANCH == "cesium.com" ]; then
 else
   npm --silent run make-zip
   npm pack &> /dev/null
+  npm pack --workspaces &> /dev/null
 fi
 
 npm --silent run build-apps

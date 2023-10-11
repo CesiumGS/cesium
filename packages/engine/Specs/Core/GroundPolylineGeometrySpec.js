@@ -864,6 +864,33 @@ describe("Core/GroundPolylineGeometry", function () {
     expect(boundingSphere.radius).toBeGreaterThan(1000.0); // starting top/bottom height
   });
 
+  it("creates bounding spheres that cover the entire polyline volume height in negative elevation regions", function () {
+    const positions = Cartesian3.fromDegreesArray([
+      35.549174,
+      31.377954,
+      35.549174,
+      31.377953,
+    ]);
+
+    // Dead Sea - provided coordinates from below sea level to above sea level
+    // the min/max approximateTerrainHeight values for this region are -398.55, 2689.12
+    const groundPolylineGeometry = new GroundPolylineGeometry({
+      positions: positions,
+      granularity: 0.0, // no interpolative subdivision
+    });
+
+    const geometry = GroundPolylineGeometry.createGeometry(
+      groundPolylineGeometry
+    );
+
+    const boundingSphere = geometry.boundingSphere;
+    const pointsDistance = Cartesian3.distance(positions[0], positions[1]);
+
+    expect(boundingSphere.radius).toBeGreaterThan(pointsDistance);
+    // in the GroundPolylineCode radius is sumHeights / 2 -- so we expect radius to be at least double
+    expect(boundingSphere.radius).toBeGreaterThan(3087.0 / 2); // starting top/bottom height
+  });
+
   const packedInstance = [positions.length];
   Cartesian3.pack(positions[0], packedInstance, packedInstance.length);
   Cartesian3.pack(positions[1], packedInstance, packedInstance.length);
