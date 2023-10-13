@@ -238,16 +238,16 @@ struct VoxelCell {
 };
 
 VoxelCell constructVoxelCell(in ivec4 octreeCoords, in vec3 tileUv) {
-    // Find the min cornerpoint of the voxel in tile coordinates
+    // Find the center of the voxel in tile coordinates
     vec3 tileOrigin = vec3(octreeCoords.xyz);
     vec3 numSamples = vec3(u_dimensions);
+    vec3 sampleIndex = min(floor(tileUv * numSamples), numSamples - 1.0);
     vec3 voxelSize = 1.0 / numSamples;
-    vec3 halfSize = 0.5 * voxelSize;
-    vec3 coord = floor(tileUv * numSamples) * voxelSize + halfSize + tileOrigin;
+    vec3 center = (sampleIndex + 0.5) * voxelSize + tileOrigin;
     // Transform to the UV coordinates of the tileset
     float tileSize = 1.0 / pow(2.0, float(octreeCoords.w));
-    vec3 p = coord * tileSize;
-    vec3 dP = halfSize * tileSize;
+    vec3 p = center * tileSize;
+    vec3 dP = 0.5 * voxelSize * tileSize;
     return VoxelCell(p, dP);
 }
 // NOTE: initializeIntersections, nextIntersection aren't even declared unless INTERSECTION_COUNT > 1
