@@ -7,6 +7,7 @@
 ##### Fixes :wrench:
 
 - Fixed issue where slope materials did not render correctly when `enableLighting` was `false`. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
+- Fixed `czm_normal`, `czm_normal3D`, `czm_inverseNormal`, and `czm_inverseNormal3D` for cases where the model matrix has non-uniform scale. [#11553](https://github.com/CesiumGS/cesium/pull/11553)
 
 ### 1.110 - 2023-10-02
 
