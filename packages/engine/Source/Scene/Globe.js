@@ -644,8 +644,8 @@ function makeShadersDirty(globe) {
 
   const requireNormals =
     defined(globe._material) &&
-    (globe._material.shaderSource.match(/slope/) ||
-      globe._material.shaderSource.match("normalEC"));
+    (defined(globe._material.shaderSource.match(/slope/)) ||
+      defined(globe._material.shaderSource.match("normalEC")));
 
   const fragmentSources = [AtmosphereCommon, GroundAtmosphere];
   if (

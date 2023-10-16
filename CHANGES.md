@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.111 - 2023-11-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed issue where slope materials did not render correctly when `enableLighting` was `false`. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
+
 ### 1.110 - 2023-10-02
 
 #### @cesium/engine
