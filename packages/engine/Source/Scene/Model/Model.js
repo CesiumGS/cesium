@@ -1,17 +1,22 @@
+import AttributeType from "../AttributeType.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import Credit from "../../Core/Credit.js";
 import Color from "../../Core/Color.js";
+import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
 import Event from "../../Core/Event.js";
+import IndexDatatype from "../../Core/IndexDatatype.js";
+import IntersectionTests from "../../Core/IntersectionTests.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
+import Ray from "../../Core/Ray.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
@@ -37,6 +42,7 @@ import ModelUtility from "./ModelUtility.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
+import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * <div class="notice">
@@ -2494,6 +2500,145 @@ Model.prototype.isClippingEnabled = function () {
     clippingPlanes.enabled &&
     clippingPlanes.length !== 0
   );
+};
+
+const scratchV0 = new Cartesian3();
+const scratchV1 = new Cartesian3();
+const scratchV2 = new Cartesian3();
+
+/**
+ * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {boolean=true} cullBackFaces If false, back faces are not culled and will return an intersection if picked.
+ * @param {Cartesian3|undefined} result The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Model.prototype.pick = function (ray, frameState, cullBackFaces, result) {
+  if (!frameState.context.webgl2) {
+    // TODO: error?
+  }
+
+  let minT = Number.MAX_VALUE;
+
+  // Check all the primitive positions
+  const nodes = this._sceneGraph._runtimeNodes;
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    for (let j = 0; j < node.node.primitives.length; j++) {
+      const primitive = node.node.primitives[j];
+
+      const positionAttribute = ModelUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.POSITION
+      );
+      const vertexCount = positionAttribute.count;
+
+      let indices = primitive.indices.typedArray;
+      if (!defined(indices)) {
+        const indicesBuffer = primitive.indices.buffer;
+        const indicesCount = primitive.indices.count;
+        if (defined(indicesBuffer) && frameState.context.webgl2) {
+          const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
+          indices = useUint8Array
+            ? new Uint8Array(indicesCount)
+            : IndexDatatype.createTypedArray(vertexCount, indicesCount);
+          indicesBuffer.getBufferData(indices);
+        }
+      }
+
+      let vertices = positionAttribute.typedArray;
+      let componentDatatype = positionAttribute.componentDatatype;
+      let attributeType = positionAttribute.type;
+
+      const count =
+        vertexCount * AttributeType.getNumberOfComponents(attributeType);
+      const quantization = positionAttribute.quantization;
+      if (defined(quantization)) {
+        componentDatatype = positionAttribute.quantization.componentDatatype;
+        attributeType = positionAttribute.quantization.type;
+      }
+
+      if (!defined(vertices)) {
+        const verticesBuffer = positionAttribute.buffer;
+        if (defined(verticesBuffer) && frameState.context.webgl2) {
+          vertices = ComponentDatatype.createTypedArray(
+            componentDatatype,
+            count
+          );
+          verticesBuffer.getBufferData(vertices);
+        }
+      }
+
+      const computedNodeTransform = node.computedTransform;
+      const computedModelMatrix = this._sceneGraph.computedModelMatrix;
+      const indicesLength = indices.length;
+      for (let i = 0; i < indicesLength; i += 3) {
+        const i0 = indices[i];
+        const i1 = indices[i + 1];
+        const i2 = indices[i + 2];
+
+        const getPosition = (vertices, index, result) => {
+          // TODO: Exaggeration
+
+          const i = index * 3;
+          result.x = vertices[i];
+          result.y = vertices[i + 1];
+          result.z = vertices[i + 2];
+
+          if (defined(quantization)) {
+            result = Cartesian3.multiplyComponents(
+              result,
+              quantization.quantizedVolumeStepSize,
+              result
+            );
+
+            result = Cartesian3.add(
+              result,
+              quantization.quantizedVolumeOffset,
+              result
+            );
+          }
+
+          result = Matrix4.multiplyByPoint(
+            computedNodeTransform,
+            result,
+            result
+          );
+          result = Matrix4.multiplyByPoint(computedModelMatrix, result, result);
+
+          return result;
+        };
+
+        const v0 = getPosition(vertices, i0, scratchV0);
+        const v1 = getPosition(vertices, i1, scratchV1);
+        const v2 = getPosition(vertices, i2, scratchV2);
+
+        const t = IntersectionTests.rayTriangleParametric(
+          ray,
+          v0,
+          v1,
+          v2,
+          cullBackFaces
+        );
+
+        if (defined(t)) {
+          if (t < minT && t >= 0.0) {
+            minT = t;
+          }
+        }
+      }
+    }
+  }
+
+  if (minT === Number.MAX_VALUE) {
+    return undefined;
+  }
+
+  return Ray.getPoint(ray, minT, result);
 };
 
 /**
