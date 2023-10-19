@@ -13,6 +13,7 @@ describe("Core/EllipsoidRhumbLine", function () {
   const fifteenDegrees = Math.PI / 12;
   const thirtyDegrees = Math.PI / 6;
   const fortyfiveDegrees = Math.PI / 4;
+  const threeHundredDegrees = (5 * Math.PI) / 6;
 
   it("throws without start", function () {
     expect(function () {
@@ -746,6 +747,46 @@ describe("Core/EllipsoidRhumbLine", function () {
     expect(expectedMid.latitude).toEqualEpsilon(
       midpoint.latitude,
       CesiumMath.EPSILON12
+    );
+  });
+
+  it("interpolates when heading is near 90 degrees", function () {
+    const start = new Cartographic(0.0, 0.0);
+    const end = new Cartographic(Math.PI / 2, 0.0);
+    const expectedMid = new Cartographic(fortyfiveDegrees, 0.0);
+
+    const rhumb = new EllipsoidRhumbLine(start, end);
+    expect(rhumb.heading).toEqualEpsilon(Math.PI / 2, CesiumMath.EPSILON12);
+
+    const midpoint = rhumb.interpolateUsingFraction(0.5);
+
+    expect(expectedMid.longitude).toEqualEpsilon(
+      midpoint.longitude,
+      CesiumMath.EPSILON12
+    );
+    expect(expectedMid.latitude).toEqualEpsilon(
+      midpoint.latitude,
+      CesiumMath.EPSILON12
+    );
+  });
+
+  it("interpolates when heading is near 0 degrees", function () {
+    const start = new Cartographic(-threeHundredDegrees, fifteenDegrees);
+    const end = new Cartographic(-threeHundredDegrees, fortyfiveDegrees);
+    const expectedMid = new Cartographic(-threeHundredDegrees, thirtyDegrees);
+
+    const rhumb = new EllipsoidRhumbLine(start, end);
+    expect(rhumb.heading).toEqualEpsilon(0, CesiumMath.EPSILON12);
+
+    const midpoint = rhumb.interpolateUsingFraction(0.5);
+
+    expect(expectedMid.longitude).toEqualEpsilon(
+      midpoint.longitude,
+      CesiumMath.EPSILON12
+    );
+    expect(expectedMid.latitude).toEqualEpsilon(
+      midpoint.latitude,
+      CesiumMath.EPSILON3
     );
   });
 
