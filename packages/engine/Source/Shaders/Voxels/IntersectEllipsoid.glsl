@@ -138,7 +138,35 @@ vec3 getConeNormal(in vec3 p, in bool convex) {
     return normalize(vec3(radial, z) * flip);
 }
 
+/**
+ * Compute the shift between the ellipsoid origin and the apex of a cone of latitude
+ */
+float getLatitudeConeShift(in float cosHalfAngle) {
+    // Find prime vertical radius of curvature: 
+    // the distance along the ellipsoid normal to the intersection with the z-axis
+    float axisRatio = u_ellipsoidRadiiUv.z / u_ellipsoidRadiiUv.x;
+    float eccentricitySquared = 1.0 - axisRatio * axisRatio;
+    //float eccentricitySquared = 6.69437999014e-3; // ASSUMES WGS84. Supply as uniform?
+    float primeVerticalRadius = inversesqrt(1.0 - eccentricitySquared * cosHalfAngle * cosHalfAngle);
+
+    // Compute a shift from the origin to the intersection of the cone with the z-axis
+    return cosHalfAngle * (1.0 - primeVerticalRadius);
+}
+
+/**
+ * Compute the angle of a cone of latitude in the space where
+ * the ellipsoid has been scaled to a unit sphere.
+ */
+float scaleLatitudeAngle(in float cosHalfAngle) {
+    float sinHalfAngle = sqrt(1.0 - cosHalfAngle * cosHalfAngle);
+    // Note: cosHalfAngle is the z-component!
+    vec3 coneSurface = vec3(sinHalfAngle, 0.0, cosHalfAngle);
+    return normalize(coneSurface * u_ellipsoidRadiiUv).z;
+}
+
 void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeIntersection intersections[2]) {
+    ray.pos.z -= getLatitudeConeShift(cosHalfAngle) / u_ellipsoidRadiiUv.z;
+    cosHalfAngle = scaleLatitudeAngle(cosHalfAngle);
     float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
@@ -181,6 +209,8 @@ void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeInterse
 }
 
 RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in bool convex) {
+    ray.pos.z -= getLatitudeConeShift(cosHalfAngle) / u_ellipsoidRadiiUv.z;
+    cosHalfAngle = scaleLatitudeAngle(cosHalfAngle);
     float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
