@@ -6,6 +6,7 @@ on:
     branches: 
       - main
       - 'cesium.com'
+      - production
 jobs:
   if_error_or_failure:
     runs-on: ubuntu-latest

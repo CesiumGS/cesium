@@ -3,6 +3,7 @@ on:
   push:
     branches-ignore: 
       - 'cesium.com'
+      - production
 concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
@@ -111,8 +112,8 @@ jobs:
         run: npm install
       - name: release build
         run: npm run build-release
-      - name: package "cesium" module
+      - name: package cesium module
         run: npm pack &> /dev/null
-      - name: package "@cesium/" modules
+      - name: package workspace modules
         run: npm pack --workspaces &> /dev/null
       - uses: ./.github/actions/verify-package
