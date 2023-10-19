@@ -78,6 +78,8 @@
 - Restore previous behavior for cut out terrain loading. [#11482](https://github.com/CesiumGS/cesium/issues/11482)
 - The return type of `SingleTileImageryProvider.fromUrl` has been fixed to be `Promise.<SingleTileImageryProvider>` (was `void`). [#11432](https://github.com/CesiumGS/cesium/pull/11432)
 - Fixed request render mode when models are loading without `incrementallyLoadTextures`. [#11486](https://github.com/CesiumGS/cesium/pull/11486)
+- Fixed toggle dataSource.show,the cluster Label not hide. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
+- Fixed toggle dataSource.show,the cluster hava differently distribution. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
 
 #### @cesium/widgets
 
