@@ -47,6 +47,67 @@ float ellipseDistanceIterative (vec2 pos, vec2 radii) {
 }
 
 /**
+ * Not valid for ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
+ */
+vec3 convertUvToShapeSpace(in vec3 positionUv) {
+    // Compute position and normal.
+    // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).
+    // A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
+    vec3 positionLocal = positionUv * 2.0 - 1.0;
+    vec3 posEllipsoid = positionLocal * u_ellipsoidRadiiUv;
+    vec3 normal = normalize(posEllipsoid * u_ellipsoidInverseRadiiSquaredUv); // geodetic surface normal
+
+    float longitude = atan(normal.y, normal.x);
+
+    float latitude = asin(normal.z);
+
+    // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) 
+    // Assuming radii.x == radii.y which is true for WGS84.
+    // This is an optimization so that math can be done with ellipses instead of ellipsoids.
+    vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
+    float height = ellipseDistanceIterative(posEllipse, u_ellipseInnerRadiiUv);
+
+    return vec3(longitude, latitude, height);
+}
+
+/**
+ * Not valid for ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
+ */
+vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
+    // Longitude: shift & scale to [0, 1]
+    float longitude = (positionShape.x + czm_pi) / czm_twoPi;
+
+    // Correct the angle when max < min
+    // Technically this should compare against min longitude - but it has precision problems so compare against the middle of empty space.
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED)
+        longitude += float(longitude < u_ellipsoidShapeUvLongitudeMinMaxMid.z);
+    #endif
+
+    // Avoid flickering from reading voxels from both sides of the -pi/+pi discontinuity.
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MIN_DISCONTINUITY)
+        longitude = longitude > u_ellipsoidShapeUvLongitudeMinMaxMid.z ? u_ellipsoidShapeUvLongitudeMinMaxMid.x : longitude;
+    #endif
+    #if defined(ELLIPSOID_HAS_RENDER_BOUNDS_LONGITUDE_MAX_DISCONTINUITY)
+        longitude = longitude < u_ellipsoidShapeUvLongitudeMinMaxMid.z ? u_ellipsoidShapeUvLongitudeMinMaxMid.y : longitude;
+    #endif
+
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE)
+        longitude = longitude * u_ellipsoidUvToShapeUvLongitude.x + u_ellipsoidUvToShapeUvLongitude.y;
+    #endif
+
+    // Latitude: shift and scale to [0, 1]
+    float latitude = (positionShape.y + czm_piOverTwo) / czm_pi;
+    #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
+        latitude = latitude * u_ellipsoidUvToShapeUvLatitude.x + u_ellipsoidUvToShapeUvLatitude.y;
+    #endif
+
+    // Height: scale to the range [0, 1]
+    float height = positionShape.z * u_ellipsoidInverseHeightDifferenceUv;
+
+    return vec3(longitude, latitude, height);
+}
+
+/**
  * Composition of convertUvToShapeSpace and convertShapeToShapeUvSpace
  */
 vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
