@@ -3440,6 +3440,24 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
 };
 
 /**
+ * Get the height of the loaded surface at a given cartographic.
+ *
+ * TODO
+ * @param {Cartographic} cartographic
+ * @returns {number|undefined} The height of the cartographic or undefined if it could not be found.
+ */
+Cesium3DTileset.prototype.getHeight = function (cartographic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartographic", cartographic);
+  //>>includeEnd('debug');
+
+  // Get loaded tile at that location
+  // Drill down to content
+  // Read existing data
+  // const intersection = tile.content.pick(ray, frameState, true, result)
+};
+
+/**
  * Optimization option. Used as a callback when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone,
  * interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
  *

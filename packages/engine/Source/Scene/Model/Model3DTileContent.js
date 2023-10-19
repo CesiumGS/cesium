@@ -416,6 +416,30 @@ Model3DTileContent.fromGeoJson = async function (
   return content;
 };
 
+/**
+ * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {boolean=true} cullBackFaces If false, back faces are not culled and will return an intersection if picked.
+ * @param {Cartesian3|undefined} result The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Model3DTileContent.prototype.pick = function (
+  ray,
+  frameState,
+  cullBackFaces,
+  result
+) {
+  if (!defined(this._model) || !this._ready) {
+    return undefined;
+  }
+
+  return this._model.pick(ray, frameState, cullBackFaces, result);
+};
+
 function makeModelOptions(tileset, tile, content, additionalOptions) {
   const mainOptions = {
     cull: false, // The model is already culled by 3D Tiles

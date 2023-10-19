@@ -162,6 +162,8 @@ function Scene(options) {
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
   this._groundPrimitives = new PrimitiveCollection();
+  // List of tilesets to clamp to, in order of preference
+  this._terrainTilesets = [];
 
   this._globeHeight = undefined;
   this._cameraUnderground = false;
@@ -3576,9 +3578,18 @@ function getGlobeHeight(scene) {
   const globe = scene._globe;
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
+
+  for (const tileset of scene._terrainTilesets) {
+    const result = tileset.getHeight(cartographic);
+    if (defined(result)) {
+      return result;
+    }
+  }
+
   if (defined(globe) && globe.show && defined(cartographic)) {
     return globe.getHeight(cartographic);
   }
+
   return undefined;
 }
 
