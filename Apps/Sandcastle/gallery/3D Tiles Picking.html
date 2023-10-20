@@ -48,10 +48,12 @@
         // Enable rendering the sky
         viewer.scene.skyAtmosphere.show = true;
 
+        let tileset;
         // Add Photorealistic 3D Tiles
         try {
-          const tileset = await Cesium.createGooglePhotorealistic3DTileset();
+          tileset = await Cesium.createGooglePhotorealistic3DTileset();
           viewer.scene.primitives.add(tileset);
+          viewer.scene.enableCollisionDetectionForTileset(tileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
   ${error}`);
@@ -62,7 +64,7 @@
         const scratchCartesian = new Cesium.Cartesian3();
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(function (movement) {
-          const feature = scene.pick(movement.position);
+          // const feature = scene.pick(movement.position);
           const pickedPositionResult = scene.pickPosition(movement.position);
           console.log(pickedPositionResult);
           if (Cesium.defined(pickedPositionResult)) {
@@ -78,27 +80,33 @@
 
           const ray = scene.camera.getPickRay(movement.position);
 
-          if (Cesium.defined(feature.content)) {
-            const content = feature.content;
-            const picked = content.pick(
-              ray,
-              scene.frameState,
-              true,
-              scratchCartesian
-            );
+          const picked = tileset.pick(
+            ray,
+            scene.frameState,
+            true,
+            scratchCartesian
+          );
+          // if (Cesium.defined(feature.content)) {
+          // const content = feature.content;
+          // const picked = content.pick(
+          //   ray,
+          //   scene.frameState,
+          //   true,
+          //   scratchCartesian
+          // );
 
-            console.log(picked);
-            if (Cesium.defined(picked)) {
-              viewer.entities.add({
-                position: picked,
-                point: {
-                  pixelSize: 10,
-                  color: Cesium.Color.YELLOW,
-                  disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                },
-              });
-            }
+          console.log(picked);
+          if (Cesium.defined(picked)) {
+            viewer.entities.add({
+              position: picked,
+              point: {
+                pixelSize: 10,
+                color: Cesium.Color.YELLOW,
+                disableDepthTestDistance: Number.POSITIVE_INFINITY,
+              },
+            });
           }
+          // }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {

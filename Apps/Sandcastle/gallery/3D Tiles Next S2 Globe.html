@@ -81,6 +81,7 @@
             maximumScreenSpaceError: 4,
           });
           scene.primitives.add(tileset);
+          scene.enableCollisionDetectionForTileset(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
         }

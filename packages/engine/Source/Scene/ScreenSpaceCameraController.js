@@ -2861,16 +2861,12 @@ function adjustHeightForTerrain(controller) {
   const mode = scene.mode;
   const globe = scene.globe;
 
-  if (
-    !defined(globe) ||
-    mode === SceneMode.SCENE2D ||
-    mode === SceneMode.MORPHING
-  ) {
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return;
   }
 
   const camera = scene.camera;
-  const ellipsoid = globe.ellipsoid;
+  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
   const projection = scene.mapProjection;
 
   let transform;
