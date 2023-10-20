@@ -1,4 +1,4 @@
-run-name: prod
+name: prod
 on: 
   push:
     branches: 
