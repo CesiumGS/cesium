@@ -1,4 +1,4 @@
-run-name: dev
+name: dev
 on: 
   push:
     branches-ignore: 

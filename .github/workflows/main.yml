@@ -1,4 +1,4 @@
-run-name: main
+name: main
 on: 
   workflow_run:
     workflows: [dev]
