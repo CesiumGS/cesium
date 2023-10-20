@@ -47,6 +47,7 @@
         try {
           const googleTileset = await Cesium.createGooglePhotorealistic3DTileset();
           viewer.scene.primitives.add(googleTileset);
+          viewer.scene.enableCollisionDetectionForTileset(googleTileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
   ${error}`);

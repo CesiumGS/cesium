@@ -2610,6 +2610,8 @@ Model.prototype.pick = function (ray, frameState, cullBackFaces, result) {
           );
           result = Matrix4.multiplyByPoint(computedModelMatrix, result, result);
 
+          // TODO: Transforms for 2D? SceneTransforms.computeActualWgs84Position
+
           return result;
         };
 

@@ -13,6 +13,8 @@ import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
+import Interval from "../Core/Interval.js";
+import IntersectionTests from "../Core/IntersectionTests.js";
 import IonResource from "../Core/IonResource.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
@@ -56,6 +58,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedTraversal.js";
 import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
+import Ray from "../Core/Ray.js";
 
 /**
  * @typedef {Object} Cesium3DTileset.ConstructorOptions
@@ -3411,22 +3414,113 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
   }
 };
 
+const scratchGetHeightRay = new Ray();
+const scratchIntersection = new Cartesian3();
+const scratchGetHeightCartographic = new Cartographic();
+
 /**
  * Get the height of the loaded surface at a given cartographic.
  *
- * TODO
- * @param {Cartographic} cartographic
+ * @param {Cartographic} cartographic The cartographic for which to find the height.
+ * @param {Scene} scene The scene where visualization is taking place.
  * @returns {number|undefined} The height of the cartographic or undefined if it could not be found.
  */
-Cesium3DTileset.prototype.getHeight = function (cartographic) {
+Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("cartographic", cartographic);
+  Check.typeOf.object("scene", scene);
   //>>includeEnd('debug');
 
-  // Get loaded tile at that location
-  // Drill down to content
-  // Read existing data
-  // const intersection = tile.content.pick(ray, frameState, true, result)
+  let ellipsoid = scene.globe?.ellipsoid;
+  if (!defined(ellipsoid)) {
+    ellipsoid = Ellipsoid.WGS84;
+  }
+
+  const ray = scratchGetHeightRay;
+  ray.direction = ellipsoid.geodeticSurfaceNormalCartographic(
+    cartographic,
+    ray.direction
+  );
+
+  const intersection = this.pick(
+    ray,
+    scene.frameState,
+    false,
+    scratchIntersection
+  );
+  if (!defined(intersection)) {
+    return;
+  }
+
+  return ellipsoid.cartesianToCartographic(
+    intersection,
+    scratchGetHeightCartographic
+  )?.height;
+};
+
+const scratchSphereIntersection = new Interval();
+
+/**
+ * Find an intersection between a ray and the tileset surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {boolean=true} cullBackFaces If false, back faces are not culled and will return an intersection if picked.
+ * @param {Cartesian3|undefined} result The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.pick = function (
+  ray,
+  frameState,
+  cullBackFaces,
+  result
+) {
+  const selectedTiles = this._selectedTiles;
+  const selectedLength = selectedTiles.length;
+
+  let intersection;
+  let minT = Number.POSITIVE_INFINITY;
+  let minDistance = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < selectedLength; ++i) {
+    const tile = selectedTiles[i];
+    const boundsIntersection = IntersectionTests.raySphere(
+      ray,
+      tile.boundingSphere,
+      scratchSphereIntersection
+    );
+    if (!defined(boundsIntersection)) {
+      continue;
+    }
+
+    if (boundsIntersection.stop <= minT) {
+      minT = Math.min(boundsIntersection.stop, minT);
+      const candidate = tile.content.pick(
+        ray,
+        frameState,
+        cullBackFaces,
+        result
+      );
+
+      if (!defined(candidate)) {
+        continue;
+      }
+
+      const distance = Cartesian3.distance(ray.origin, candidate);
+      if (distance < minDistance) {
+        intersection = candidate;
+        minDistance = distance;
+      }
+    }
+  }
+
+  if (!defined(intersection)) {
+    return undefined;
+  }
+
+  Cartesian3.clone(intersection, result);
+  return result;
 };
 
 /**

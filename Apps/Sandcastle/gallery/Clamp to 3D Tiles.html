@@ -65,8 +65,9 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
+        let tileset;
         try {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
           viewer.scene.primitives.add(tileset);
 
           if (scene.clampToHeightSupported) {
@@ -78,12 +79,19 @@
           console.log(`Error loading tileset: ${error}`);
         }
 
+        const ray = new Cesium.Ray();
+
         function start() {
           clock.shouldAnimate = true;
           const objectsToExclude = [entity];
           scene.postRender.addEventListener(function () {
             const position = positionProperty.getValue(clock.currentTime);
-            entity.position = scene.clampToHeight(position, objectsToExclude);
+            ray.origin = Cesium.Cartesian3.clone(position, ray.origin);
+            ray.direction = Cesium.Cartesian3.negate(
+              scene.globe.ellipsoid.geodeticSurfaceNormal(position),
+              ray.direction
+            );
+            entity.position = tileset.pick(ray, scene, true, position);
           });
         } //Sandcastle_End
       };

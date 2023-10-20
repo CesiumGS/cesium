@@ -163,7 +163,6 @@ function Scene(options) {
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
   this._groundPrimitives = new PrimitiveCollection();
-  // List of tilesets to clamp to, in order of preference
   this._terrainTilesets = [];
 
   this._globeHeight = undefined;
@@ -3656,20 +3655,57 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
+/**
+ * Allow camera collisions, if enabled for the camera, on a tileset surface
+ * @param {Cesium3DTileset} tileset Tileset fo which to enable collision.
+ */
+Scene.prototype.enableCollisionDetectionForTileset = function (tileset) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("tileset", tileset);
+  //>>includeEnd('debug');
+
+  this._terrainTilesets.push(tileset);
+};
+
+/**
+ * Disallow camera collisions on a tileset surface
+ * @param {Cesium3DTileset} tileset Tileset for which to disable collision.
+ */
+Scene.prototype.disableCollisionDetectionForTileset = function (tileset) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("tileset", tileset);
+  //>>includeEnd('debug');
+
+  const i = this._terrainTilesets.indexOf(tileset);
+  if (i === -1) {
+    return;
+  }
+
+  this._terrainTilesets.splice(i, 1);
+};
+
 function getGlobeHeight(scene) {
   const globe = scene._globe;
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
 
+  let maxHeight = Number.NEGATIVE_INFINITY;
   for (const tileset of scene._terrainTilesets) {
-    const result = tileset.getHeight(cartographic);
-    if (defined(result)) {
-      return result;
+    const result = tileset.getHeight(cartographic, scene);
+    if (result > maxHeight) {
+      maxHeight = result;
     }
   }
 
   if (defined(globe) && globe.show && defined(cartographic)) {
-    return globe.getHeight(cartographic);
+    const result = globe.getHeight(cartographic);
+    if (result > maxHeight) {
+      maxHeight = result;
+    }
+  }
+
+  if (maxHeight > Number.NEGATIVE_INFINITY) {
+    return maxHeight;
   }
 
   return undefined;
@@ -3678,7 +3714,6 @@ function getGlobeHeight(scene) {
 function isCameraUnderground(scene) {
   const camera = scene.camera;
   const mode = scene._mode;
-  const globe = scene.globe;
   const cameraController = scene._screenSpaceCameraController;
   const cartographic = camera.positionCartographic;
 
@@ -3692,12 +3727,7 @@ function isCameraUnderground(scene) {
     return true;
   }
 
-  if (
-    !defined(globe) ||
-    !globe.show ||
-    mode === SceneMode.SCENE2D ||
-    mode === SceneMode.MORPHING
-  ) {
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return false;
   }
 
