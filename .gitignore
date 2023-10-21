@@ -30,7 +30,7 @@ Thumbs.db
 /Tools/jsdoc/cesium_template/static/javascript/prism.js
 /Tools/jsdoc/cesium_template/static/styles/prism.css
 
-/node_modules
+node_modules
 npm-debug.log
 npm-debug.log.*
 #package-lock.json

@@ -1741,7 +1741,7 @@ function generateTypeScriptDefinitions(
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
-  source = `declare module "@${scope}/${workspaceName}" {
+  source = `declare module "terriajs-cesium" {
 ${source}
 }
 `;
