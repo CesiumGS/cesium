@@ -205,7 +205,7 @@ VoxelCell convertShapeUvToShapeSpace(in VoxelCell voxel) {
         p.x -= float(p.x >= u_ellipsoidShapeUvLongitudeMinMaxMid.z);
     #endif
     // Convert from [0, 1] to radians [-pi, pi]
-    p.x = p.x * czm_twoPi - czm_pi;
+    p.x = p.x * czm_twoPi - czm_pi + 0.000011475;
     dP.x = dP.x * czm_twoPi;
 
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
@@ -213,7 +213,7 @@ VoxelCell convertShapeUvToShapeSpace(in VoxelCell voxel) {
         dP.y = dP.y / u_ellipsoidUvToShapeUvLatitude.x;
     #endif
     // Convert from [0, 1] to radians [-pi/2, pi/2]
-    p.y = p.y * czm_pi - czm_piOverTwo;
+    p.y = p.y * czm_pi - czm_piOverTwo + 0.000018;
     dP.y = dP.y * czm_pi;
 
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
