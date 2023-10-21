@@ -37,7 +37,9 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     RayShapeIntersection voxelIntersection = intersectVoxel(viewRay, voxel);
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    float dt = (exit - entry.w) * RAY_SCALE * 0.2;
+    float maxStepSize = u_stepSize * pow(2.0, -float(sampleData.tileCoords.w));
+    float dt = clamp(exit - entry.w, 0.0000001, maxStepSize);
+    dt = dt * RAY_SCALE * 0.2;
     return vec4(normalize(entry.xyz), dt);
 }
 
