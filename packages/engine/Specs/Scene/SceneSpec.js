@@ -564,6 +564,24 @@ describe(
         });
       });
 
+      it("renders sky atmopshere without a globe", function () {
+        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        s.globe.show = false;
+        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        s.camera.direction = Cartesian3.negate(
+          Cartesian3.normalize(s.camera.position, new Cartesian3()),
+          new Cartesian3()
+        );
+
+        return expect(s).toRenderAndCall(function () {
+          render(s.frameState, s.globe);
+          const pixel = s._context.readPixels();
+          const blankPixel = [0, 0, 0, 0];
+          expect(pixel).not.toEqual(blankPixel);
+        });
+      });
+
       it("renders a globe with an ElevationContour", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.globe.material = Material.fromType("ElevationContour");

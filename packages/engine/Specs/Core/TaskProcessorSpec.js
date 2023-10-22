@@ -1,4 +1,4 @@
-import { FeatureDetection, TaskProcessor, RuntimeError } from "../../index.js";
+import { FeatureDetection, RuntimeError, TaskProcessor } from "../../index.js";
 
 import absolutize from "../../../../Specs/absolutize.js";
 
@@ -16,7 +16,9 @@ describe("Core/TaskProcessor", function () {
 
   it("throws runtime error if browser is not supported", async function () {
     spyOn(FeatureDetection, "supportsEsmWebWorkers").and.returnValue(false);
-    taskProcessor = new TaskProcessor("returnParameters.js");
+    taskProcessor = new TaskProcessor(
+      absolutize("../Specs/Build/TestWorkers/returnParameters.js")
+    );
 
     expect(() => taskProcessor.scheduleTask()).toThrowError(RuntimeError);
   });
@@ -39,6 +41,8 @@ describe("Core/TaskProcessor", function () {
   });
 
   it("works with a simple worker defined as relative to TaskProcessor._workerModulePrefix", async function () {
+    window.CESIUM_WORKERS = undefined;
+
     TaskProcessor._workerModulePrefix = absolutize(
       "../Build/Specs/TestWorkers/"
     );

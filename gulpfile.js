@@ -47,7 +47,7 @@ import {
   createCombinedSpecList,
   createJsHintOptions,
   defaultESBuildOptions,
-} from "./build.js";
+} from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -253,6 +253,7 @@ export const buildWatch = gulp.series(build, async function () {
     }
 
     specs.dispose();
+    // eslint-disable-next-line n/no-process-exit
     process.exit(0);
   });
 });
@@ -362,38 +363,40 @@ async function clocSource() {
 export async function prepare() {
   // Copy Draco3D files from node_modules into Source
   copyFileSync(
-    "node_modules/draco3d/draco_decoder.wasm",
+    require.resolve("draco3d/draco_decoder.wasm"),
     "packages/engine/Source/ThirdParty/draco_decoder.wasm"
   );
 
   // Copy pako and zip.js worker files to Source/ThirdParty
   copyFileSync(
-    "node_modules/pako/dist/pako_inflate.min.js",
+    require.resolve("pako/dist/pako_inflate.min.js"),
     "packages/engine/Source/ThirdParty/Workers/pako_inflate.min.js"
   );
   copyFileSync(
-    "node_modules/pako/dist/pako_deflate.min.js",
+    require.resolve("pako/dist/pako_deflate.min.js"),
     "packages/engine/Source/ThirdParty/Workers/pako_deflate.min.js"
   );
   copyFileSync(
-    "node_modules/@zip.js/zip.js/dist/z-worker-pako.js",
+    require.resolve("@zip.js/zip.js/dist/z-worker-pako.js"),
     "packages/engine/Source/ThirdParty/Workers/z-worker-pako.js"
   );
 
   // Copy prism.js and prism.css files into Tools
   copyFileSync(
-    "node_modules/prismjs/prism.js",
+    require.resolve("prismjs/prism.js"),
     "Tools/jsdoc/cesium_template/static/javascript/prism.js"
   );
   copyFileSync(
-    "node_modules/prismjs/themes/prism.min.css",
+    require.resolve("prismjs/themes/prism.min.css"),
     "Tools/jsdoc/cesium_template/static/styles/prism.css"
   );
 
   // Copy jasmine runner files into Specs
   const files = await globby([
-    "node_modules/jasmine-core/lib/jasmine-core",
-    "!node_modules/jasmine-core/lib/jasmine-core/example",
+    dirname(require.resolve("jasmine-core/lib/jasmine-core/jasmine.js")),
+    `!${dirname(
+      dirname("jasmine-core/lib/jasmine-core/example/src/Player.js")
+    )}`,
   ]);
 
   const stream = gulp.src(files).pipe(gulp.dest("Specs/jasmine"));
@@ -598,6 +601,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/Documentation/**",
       "Build/Specs/**",
       "!Build/Specs/e2e/**",
+      "!Build/InlineWorkers.js",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",
@@ -640,7 +644,7 @@ export const makeZip = gulp.series(release, async function () {
       ".eslintignore",
       ".eslintrc.json",
       ".prettierignore",
-      "build.js",
+      "scripts/**",
       "gulpfile.js",
       "server.js",
       "index.cjs",
@@ -1681,6 +1685,7 @@ export async function test() {
  * @returns
  */
 function generateTypeScriptDefinitions(
+  //eslint-disable-next-line no-unused-vars
   workspaceName,
   definitionsPath,
   configurationPath,

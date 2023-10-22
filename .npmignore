@@ -22,7 +22,7 @@
 /cesium-engine-*.tgz
 /cesium-widgets-*.tgz
 /Documentation
-/build.js
+/scripts/
 /favicon.ico
 /gulpfile.js
 /index.html
