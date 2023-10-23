@@ -1,4 +1,5 @@
 import AttributeType from "../AttributeType.js";
+import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
@@ -2569,7 +2570,12 @@ Model.prototype.pick = function (ray, frameState, cullBackFaces, result) {
             componentDatatype,
             count
           );
-          verticesBuffer.getBufferData(vertices);
+          verticesBuffer.getBufferData(
+            vertices,
+            positionAttribute.byteOffset,
+            0,
+            count
+          );
         }
       }
 
@@ -2582,7 +2588,7 @@ Model.prototype.pick = function (ray, frameState, cullBackFaces, result) {
         const i2 = indices[i + 2];
 
         const getPosition = (vertices, index, result) => {
-          // TODO: Exaggeration
+          // TODO: Exaggeration?
 
           const i = index * 3;
           result.x = vertices[i];
@@ -2590,17 +2596,30 @@ Model.prototype.pick = function (ray, frameState, cullBackFaces, result) {
           result.z = vertices[i + 2];
 
           if (defined(quantization)) {
-            result = Cartesian3.multiplyComponents(
-              result,
-              quantization.quantizedVolumeStepSize,
-              result
-            );
+            if (quantization.octEncoded) {
+              if (quantization.octEncodedZXY) {
+                result.z = vertices[i];
+                result.x = vertices[i + 1];
+                result.y = vertices[i + 2];
+              }
+              result = AttributeCompression.octDecodeInRange(
+                result,
+                quantization.normalizationRange,
+                result
+              );
+            } else {
+              result = Cartesian3.multiplyComponents(
+                result,
+                quantization.quantizedVolumeStepSize,
+                result
+              );
 
-            result = Cartesian3.add(
-              result,
-              quantization.quantizedVolumeOffset,
-              result
-            );
+              result = Cartesian3.add(
+                result,
+                quantization.quantizedVolumeOffset,
+                result
+              );
+            }
           }
 
           result = Matrix4.multiplyByPoint(
