@@ -143,7 +143,7 @@ function rebindAllGlyphs(labelCollection, label) {
   glyphs.length = textLength;
 
   const showBackground =
-    label._showBackground && text.split("\n").join("").length > 0;
+    label.show && label._showBackground && text.split("\n").join("").length > 0;
   let backgroundBillboard = label._backgroundBillboard;
   const backgroundBillboardCollection =
     labelCollection._backgroundBillboardCollection;
@@ -181,6 +181,7 @@ function rebindAllGlyphs(labelCollection, label) {
       label._distanceDisplayCondition;
     backgroundBillboard.disableDepthTestDistance =
       label._disableDepthTestDistance;
+    backgroundBillboard.clusterShow = label.clusterShow;
   }
 
   const glyphTextureCache = labelCollection._glyphTextureCache;
