@@ -58,6 +58,14 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
+  it("rejects if terrain data is not available and rejectOnTileFail is true", function () {
+    const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
+
+    return expectAsync(
+      sampleTerrain(worldTerrain, 18, positions, true)
+    ).toBeRejected();
+  });
+
   it("fills in what it can when given a mix of positions with and without valid tiles", function () {
     const positions = [
       Cartographic.fromDegrees(86.925145, 27.988257),

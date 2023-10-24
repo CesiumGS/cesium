@@ -24,6 +24,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @property {string} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
  *        By default, tiles are loaded using the same protocol as the page.
  * @property {BingMapsStyle} [mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
+ * @property {string} [mapLayer] Additional display layer options as defined on {@link https://learn.microsoft.com/en-us/bingmaps/rest-services/imagery/get-imagery-metadata#template-parameters}
  * @property {string} [culture=''] The culture to use when requesting Bing Maps imagery. Not
  *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
  *        for information on the supported cultures.
@@ -209,6 +210,7 @@ function BingMapsImageryProvider(options) {
   this._defaultMagnificationFilter = undefined;
 
   this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
+  this._mapLayer = options.mapLayer;
   this._culture = defaultValue(options.culture, "");
   this._key = options.key;
 
@@ -284,6 +286,18 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   mapStyle: {
     get: function () {
       return this._mapStyle;
+    },
+  },
+
+  /**
+   * Gets the additional map layer options as defined in {@link https://learn.microsoft.com/en-us/bingmaps/rest-services/imagery/get-imagery-metadata#template-parameters}/
+   * @memberof BingMapsImageryProvider.prototype
+   * @type {string}
+   * @readonly
+   */
+  mapLayer: {
+    get: function () {
+      return this._mapLayer;
     },
   },
 
@@ -426,7 +440,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
    */
   hasAlphaChannel: {
     get: function () {
-      return false;
+      return defined(this.mapLayer);
     },
   },
 });
@@ -475,13 +489,20 @@ BingMapsImageryProvider.fromUrl = async function (url, options) {
   const mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
   const resource = Resource.createIfNeeded(url);
   resource.appendForwardSlash();
+
+  const queryParameters = {
+    incl: "ImageryProviders",
+    key: options.key,
+    uriScheme: tileProtocol,
+  };
+
+  if (defined(options.mapLayer)) {
+    queryParameters.mapLayer = options.mapLayer;
+  }
+
   const metadataResource = resource.getDerivedResource({
     url: `REST/v1/Imagery/Metadata/${mapStyle}`,
-    queryParameters: {
-      incl: "ImageryProviders",
-      key: options.key,
-      uriScheme: tileProtocol,
-    },
+    queryParameters: queryParameters,
   });
 
   const provider = new BingMapsImageryProvider(options);

@@ -94,7 +94,7 @@ npm start -- --help
 
 Cesium offers a few different distributions. When developing, make sure to pick the one that fits your app's architecture.
 
-- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and optimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`. While much of our documentation uses IIFE-style globals for ease-of-use, we do not recommend this approach for production apps.
+- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle, optimized for the browser, and with web worker code inlined. It defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`. This is what is available via the CDN. While much of our documentation uses IIFE-style globals for ease-of-use, we do not recommend this approach for production apps.
 - [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which is supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle by importing `Build/Cesium/index.js`.
 - [CJS (CommonJS)](https://nodejs.org/api/modules.html) - A pre-processed, bundled module packaged for running in NodeJS accessible by requiring `index.cjs`.
 
