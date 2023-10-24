@@ -1,6 +1,6 @@
 # @cesium/widgets
 
-[![Build Status](https://github.com/CesiumGS/cesium/actions/workflows/main.yml/badge.svg)](https://github.com/CesiumGS/cesium/actions/workflows/main.yml)
+[![Build Status](https://github.com/CesiumGS/cesium/actions/workflows/dev.yml/badge.svg)](https://github.com/CesiumGS/cesium/actions/workflows/dev.yml)
 [![npm](https://img.shields.io/npm/v/@cesium/widgets)](https://www.npmjs.com/package/@cesium/widgets)
 [![Docs](https://img.shields.io/badge/docs-online-orange.svg)](https://cesium.com/learn/)
 
