@@ -75,7 +75,8 @@
         text-align: right;
       }
 
-      #toolbar {
+      .benchmarkNotice {
+        color: #ffee00;
       }
     </style>
     <div id="cesiumContainer" class="fullSize">
@@ -84,19 +85,29 @@
         <div id="left" class="statsPane panel">
           <div id="leftTitle" class="statsTitle">---</div>
           <div id="leftStats">
+            Tile Load Time (s): <span id="leftTileLoadTime">---</span>
+            <br />
             Tiles Loaded: <span id="leftTilesLoaded">---</span> /
             <span id="leftTilesTotal">---</span>
             <br />
             GPU Memory: <span id="leftGpuMemoryMB">---</span> MB
+            <br />
+            <span id="leftBenchmarkNotice" class="benchmarkNotice"
+              >Press "Benchmark Current View" to measure stats</span
+            >
           </div>
         </div>
         <div id="right" class="statsPane panel">
           <div id="rightTitle" class="statsTitle">---</div>
           <div id="rightStats">
+            Tile Load Time (s): <span id="rightTileLoadTime">---</span>
+            <br />
             Tiles Loaded: <span id="rightTilesLoaded">---</span> /
             <span id="rightTilesTotal">---</span>
             <br />
             GPU Memory: <span id="rightGpuMemoryMB">---</span> MB
+            <br />
+            <span id="rightBenchmarkNotice" class="benchmarkNotice"></span>
           </div>
         </div>
       </div>
@@ -165,7 +176,6 @@
 
         const tilesetNames = getTilesetNames();
         let selectedTilesetName = tilesetNames[0];
-        let selectedTileset;
 
         // Create two primitive collections, one for each half of the screen. This way we
         // can clear one half of the screen at a time.
@@ -178,28 +188,7 @@
 
         // Tileset Loading ================
 
-        async function loadTileset(assetId, splitDirection, collection) {
-          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
-          tileset.splitDirection = splitDirection;
-
-          const side =
-            splitDirection === Cesium.SplitDirection.LEFT ? "left" : "right";
-
-          collection.removeAll();
-          collection.add(tileset);
-
-          viewer.zoomTo(tileset);
-
-          tileset.allTilesLoaded.addEventListener(() => {
-            updateStatsPanel(side, tileset);
-          });
-        }
-
-        async function viewTileset(tilesetName, splitDirection) {
-          const side =
-            splitDirection === Cesium.SplitDirection.LEFT ? "left" : "right";
-          clearStatsPanel(side);
-
+        async function loadTileset(tilesetName, splitDirection) {
           const assetIds =
             splitDirection === Cesium.SplitDirection.LEFT
               ? leftAssetIds
@@ -215,12 +204,49 @@
             return;
           }
 
-          await loadTileset(assetId, splitDirection, collection);
+          collection.removeAll();
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
+          tileset.splitDirection = splitDirection;
+
+          collection.add(tileset);
+
+          return tileset;
+        }
+
+        async function viewTileset(tilesetName, splitDirection) {
+          const tileset = await loadTileset(tilesetName, splitDirection);
+          viewer.zoomTo(tileset);
         }
 
         async function viewTilesets(tilesetName) {
+          // Load the tilesets simultaneously
           viewTileset(tilesetName, Cesium.SplitDirection.LEFT);
           viewTileset(tilesetName, Cesium.SplitDirection.RIGHT);
+        }
+
+        async function benchmarkTileset(tilesetName, splitDirection) {
+          const side =
+            splitDirection === Cesium.SplitDirection.LEFT ? "left" : "right";
+          clearStatsPanel(side);
+
+          const startMilliseconds = performance.now();
+          const tileset = await loadTileset(tilesetName, splitDirection);
+
+          return new Promise((resolve) => {
+            tileset.initialTilesLoaded.addEventListener(() => {
+              const endMilliseconds = performance.now();
+              const deltaSeconds =
+                (endMilliseconds - startMilliseconds) / 1000.0;
+              updateStatsPanel(side, tileset, deltaSeconds);
+              resolve();
+            });
+          });
+        }
+
+        async function benchmarkTilesets(tilesetName) {
+          // Note: For benchmarking, lo
+          await benchmarkTileset(tilesetName, Cesium.SplitDirection.LEFT);
+          await benchmarkTileset(tilesetName, Cesium.SplitDirection.RIGHT);
         }
 
         // UI =============================
@@ -231,6 +257,11 @@
             onselect: function () {
               selectedTilesetName = name;
               viewTilesets(name).catch(console.error);
+
+              clearStatsPanel("left");
+              addBenchmarkNotice("left");
+              clearStatsPanel("right");
+              addBenchmarkNotice("right");
             },
           };
         }
@@ -241,14 +272,32 @@
         }
 
         Sandcastle.addToolbarMenu(createOptions(), "toolbarSelect");
+        Sandcastle.addToolbarButton(
+          "Benchmark current view",
+          async function () {
+            benchmarkTilesets(selectedTilesetName);
+          },
+          "toolbarSelect"
+        );
+
+        function addBenchmarkNotice(side) {
+          document.getElementById(`${side}BenchmarkNotice`).innerHTML =
+            "Press 'Benchmark Current View' to measure stats";
+        }
 
         function clearStatsPanel(side) {
+          document.getElementById(`${side}TileLoadTime`).innerHTML = "---";
           document.getElementById(`${side}TilesLoaded`).innerHTML = "---";
           document.getElementById(`${side}TilesTotal`).innerHTML = "---";
           document.getElementById(`${side}GpuMemoryMB`).innerHTML = "---";
+          document.getElementById(`${side}BenchmarkNotice`).innerHTML = "";
         }
 
-        function updateStatsPanel(side, tileset) {
+        function updateStatsPanel(side, tileset, tileLoadTimeSeconds) {
+          document.getElementById(
+            `${side}TileLoadTime`
+          ).innerHTML = tileLoadTimeSeconds.toPrecision(3);
+
           const stats = tileset.statistics;
           document.getElementById(`${side}TilesLoaded`).innerHTML =
             stats.numberOfLoadedTilesTotal;
