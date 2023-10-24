@@ -7,19 +7,19 @@ on:
       - main
       - 'cesium.com'
       - production
-      - 'github-actions'
+      - github-actions
 jobs:
   if_error_or_failure:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: message result in slack
-        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
         id: slack
         uses: slackapi/slack-github-action@v1.24.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
-          channel-id: 'cesiumjs'
+          channel-id: cesiumjs
           payload: |
             {
               "blocks": [
