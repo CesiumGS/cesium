@@ -714,6 +714,11 @@ export async function deployS3() {
         type: "boolean",
         default: false,
       },
+      skip: {
+        description: "Skip re-uploading exisiting files.",
+        type: "boolean",
+        default: false,
+      },
       confirm: {
         description: "Skip confirmation step, useful for CI.",
         type: "boolean",
@@ -725,7 +730,7 @@ export async function deployS3() {
   const bucketName = argv.bucket;
   const dryRun = argv.dryRun;
   const cacheControl = argv.cacheControl ? argv.cacheControl : "max-age=3600";
-  const skipFiles = process.env.BRANCH !== "main"; // Always re-upload the file on the main branch. This will ensure the file does not get deleted after a 30-day period
+  const skipFiles = argv.skip;
 
   if (argv.confirm) {
     return deployCesium(
