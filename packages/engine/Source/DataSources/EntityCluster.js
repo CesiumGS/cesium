@@ -648,7 +648,7 @@ function createGetEntity(
 
     const unusedIndices = this[unusedIndicesProperty];
     if (unusedIndices.length > 0) {
-      index = unusedIndices.pop();
+      index = unusedIndices.shift();
       entityItem = collection.get(index);
     } else {
       entityItem = collection.add();
