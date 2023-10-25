@@ -74,19 +74,15 @@ module.exports = function (config) {
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
 
-    //In Travis, we need to run with the no-sandbox flag
+    //During CI, we need to run with the no-sandbox flag
     customLaunchers: {
-      ChromeCI: {
-        base: "ChromeHeadless",
-        flags: ["--no-sandbox"],
-      },
       ChromeDebugging: {
         base: "Chrome",
         flags: ["--remote-debugging-port=9333"],
       },
     },
 
-    // Ridiculous large values because travis is slow.
+    // Ridiculous large values because CI can be slow.
     captureTimeout: 120000,
     browserDisconnectTolerance: 3,
     browserDisconnectTimeout: 120000,
