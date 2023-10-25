@@ -59,7 +59,7 @@ jobs:
       - name: release build
         run: npm run build-release
       - name: release tests (chrome)
-        run: npm run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
+        run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
       - name: cloc
         run: npm run cloc
   deploy:
