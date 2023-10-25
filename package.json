@@ -26,8 +26,7 @@
     "url": "https://github.com/CesiumGS/cesium.git"
   },
   "bugs": {
-    "url": "https://github.com/CesiumGS/cesium/issues",
-    "email": "cesium-dev@googlegroups.com"
+    "url": "https://github.com/CesiumGS/cesium/issues"
   },
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
