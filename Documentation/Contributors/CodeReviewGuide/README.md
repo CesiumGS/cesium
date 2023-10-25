@@ -51,9 +51,9 @@ This guide describes best practices for code reviewers.
 ## Merging
 
 - When a reviewer hits merge, the ideal is that they have enough knowledge of the new code that they could support it in the future. In practice, this isn't always realistic but we strive for it.
-- CesiumJS uses Travis CI for continuous integration. Travis automatically builds CesiumJS, runs ESLint, and generates the documentation for each branch pushed to GitHub. Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green "Merge pull request" button:
+- CesiumJS uses GitHub Actions for continuous integration. The workflows automatically build CesiumJS, run ESLint, generate the documentation, and perform other checks for each branch pushed to GitHub. Before merging a pull request, verify that all checks pass, indicated by the green check-mark and green "Merge pull request" button:
 
-![Travis CI checks](Travis.jpg)
+![GitHub Action CI checks](github_action_checks.png)
 
 - Delete the branch after merging the pull request.
 - Verify that the corresponding issue (if any) was closed.
