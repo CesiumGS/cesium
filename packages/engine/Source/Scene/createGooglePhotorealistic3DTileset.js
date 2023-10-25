@@ -72,7 +72,7 @@ async function createGooglePhotorealistic3DTileset(key, options) {
 
 const metadataCache = {};
 async function requestCachedIonTileset(options) {
-  const ionAssetId = 823; // TODO: Asset ID
+  const ionAssetId = 2275207;
   const cacheKey = ionAssetId;
 
   let promise = metadataCache[cacheKey];
