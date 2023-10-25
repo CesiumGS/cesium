@@ -88,9 +88,9 @@ jobs:
         run: npm run deploy-set-version -- --buildVersion $BUILD_VERSION
       - name: create release zip
         run: npm run make-zip
-      - name: package "cesium" module
+      - name: package cesium module
         run: npm pack &> /dev/null
-      - name: package "@cesium/" modules
+      - name: package workspace modules
         run: npm pack --workspaces &> /dev/null
       - name: build apps
         run: npm run build-apps
