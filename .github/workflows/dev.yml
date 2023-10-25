@@ -66,6 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       statuses: write
+      contents: read
     env:
       BUILD_VERSION: ${{ github.ref_name }}.${{ github.run_number }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
