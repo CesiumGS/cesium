@@ -132,7 +132,7 @@ function configureCameraFrustum(widget) {
  * @param {boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
  * @param {boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
- * @param {Globe | false} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
+ * @param {Globe | false} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added and the sky atmosphere will be hidden by default.
  * @param {boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
  * @param {boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
  * @param {number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -336,6 +336,7 @@ function CesiumWidget(container, options) {
     let skyAtmosphere = options.skyAtmosphere;
     if (!defined(skyAtmosphere)) {
       skyAtmosphere = new SkyAtmosphere(ellipsoid);
+      skyAtmosphere.show = options.globe !== false && globe.show;
     }
     if (skyAtmosphere !== false) {
       scene.skyAtmosphere = skyAtmosphere;

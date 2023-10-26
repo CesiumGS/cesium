@@ -70,7 +70,6 @@ import Ray from "../Core/Ray.js";
  * @property {Axis} [modelForwardAxis=Axis.X] Which axis is considered forward when loading models for tile contents.
  * @property {ShadowMode} [shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from light sources.
  * @property {number} [maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
- * @property {number} [maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset. Deprecated.
  * @property {number} [cacheBytes=536870912] The size (in bytes) to which the tile cache will be trimmed, if the cache contains tiles not needed for the current view.
  * @property {number} [maximumCacheOverflowBytes=536870912] The maximum additional memory (in bytes) to allow for cache headroom, if more than {@link Cesium3DTileset#cacheBytes} are needed for the current view.
  * @property {boolean} [cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
@@ -227,15 +226,7 @@ function Cesium3DTileset(options) {
   );
   this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
 
-  let defaultCacheBytes = 512 * 1024 * 1024;
-  if (defined(options.maximumMemoryUsage)) {
-    deprecationWarning(
-      "Cesium3DTileset.maximumMemoryUsage",
-      "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.107.  It will be removed in CesiumJS 1.110. Use Cesium3DTileset.cacheBytes instead."
-    );
-    defaultCacheBytes = options.maximumMemoryUsage * 1024 * 1024;
-  }
-  this._cacheBytes = defaultValue(options.cacheBytes, defaultCacheBytes);
+  this._cacheBytes = defaultValue(options.cacheBytes, 512 * 1024 * 1024);
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number.greaterThanOrEquals("cacheBytes", this._cacheBytes, 0);
   //>>includeEnd('debug');
@@ -1376,57 +1367,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
       this._maximumScreenSpaceError = value;
       this._memoryAdjustedScreenSpaceError = value;
-    },
-  },
-
-  /**
-   * The maximum amount of GPU memory (in MB) that may be used to cache tiles. This value is estimated from
-   * geometry, textures, and batch table textures of loaded tiles. For point clouds, this value also
-   * includes per-point metadata.
-   * <p>
-   * Tiles not in view are unloaded to enforce this.
-   * </p>
-   * <p>
-   * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
-   * </p>
-   * <p>
-   * If tiles sized more than <code>maximumMemoryUsage</code> are needed
-   * to meet the desired screen space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
-   * for the current view, then the memory usage of the tiles loaded will exceed
-   * <code>maximumMemoryUsage</code>.  For example, if the maximum is 256 MB, but
-   * 300 MB of tiles are needed to meet the screen space error, then 300 MB of tiles may be loaded.  When
-   * these tiles go out of view, they will be unloaded.
-   * </p>
-   *
-   * @memberof Cesium3DTileset.prototype
-   *
-   * @type {number}
-   * @default 512
-   *
-   * @exception {DeveloperError} <code>maximumMemoryUsage</code> must be greater than or equal to zero.
-   * @see Cesium3DTileset#totalMemoryUsageInBytes
-   *
-   * @deprecated
-   */
-  maximumMemoryUsage: {
-    get: function () {
-      deprecationWarning(
-        "Cesium3DTileset.maximumMemoryUsage",
-        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.107.  It will be removed in CesiumJS 1.110. Use Cesium3DTileset.cacheBytes instead."
-      );
-      return this._maximumMemoryUsage;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "Cesium3DTileset.maximumMemoryUsage",
-        "Cesium3DTileset.maximumMemoryUsage was deprecated in CesiumJS 1.107.  It will be removed in CesiumJS 1.110. Use Cesium3DTileset.cacheBytes instead."
-      );
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.number.greaterThanOrEquals("value", value, 0);
-      //>>includeEnd('debug');
-
-      this._maximumMemoryUsage = value;
-      this._cacheBytes = value * 1024 * 1024;
     },
   },
 

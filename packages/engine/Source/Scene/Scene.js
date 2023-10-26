@@ -3167,7 +3167,10 @@ Scene.prototype.updateEnvironment = function () {
         );
         environmentState.isReadyForAtmosphere =
           environmentState.isReadyForAtmosphere ||
+          !globe.show ||
           globe._surface._tilesToRender.length > 0;
+      } else {
+        environmentState.isReadyForAtmosphere = true;
       }
       environmentState.skyAtmosphereCommand = skyAtmosphere.update(
         frameState,
