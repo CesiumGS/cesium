@@ -1,5 +1,22 @@
 # Change Log
 
+### 1.110.1 - 2023-10-25
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- CesiumJS no longer ships with a demo Google Maps API key. `GoogleMaps.defaultApiKey` is no longer defined by default.
+- `createGooglePhotorealistic3DTileset` by default now provides tiles via Cesium ion if the `GoogleMaps.defaultApiKey` is not set.
+- If you wish to continue to use your own Google Maps API key, you can go back to the previous behavior:
+
+  ```javascript
+  Cesium.GoogleMaps.defaultApiKey = "your-api-key";
+
+  const tileset = await Cesium.createGooglePhotorealistic3DTileset();
+  viewer.scene.primitives.add(tileset));
+  ```
+
 ### 1.110 - 2023-10-02
 
 #### @cesium/engine
