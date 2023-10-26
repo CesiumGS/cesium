@@ -2,6 +2,10 @@ import Credit from "../Core/Credit.js";
 import defined from "../Core/defined.js";
 import Resource from "../Core/Resource.js";
 
+// This is the "CesiumJS Sandcastle" key from the CesiumJS account
+const cesiumWebsiteToken =
+  "AAPKe2b57a40e4744c2e8595243dbdd7b2behCc4fIPuxORpch9ruOmWtyu3tsIxneD_O-1J2i9KAogQnE7_9Nl5gDhPJsKXsmqp";
+
 let defaultTokenCredit;
 const defaultAccessToken =
   "AAPK4db83df15a06415e9b7d45d826eec992u0REAmuLmykhOFOk_4e61HgsO_e3C_qGUgiWNGElpjpiMfO9_Qg5ZRyy8POvB5EF";
@@ -23,7 +27,7 @@ const ArcGisMapService = {};
  *
  * @type {string}
  */
-ArcGisMapService.defaultAccessToken = defaultAccessToken;
+ArcGisMapService.defaultAccessToken = cesiumWebsiteToken;
 
 /**
  * Gets or sets the URL of the ArcGIS World Imagery tile service.
