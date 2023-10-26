@@ -622,7 +622,7 @@ export async function createGalleryList(noDevelopmentGallery) {
     fileList.push("!Apps/Sandcastle/gallery/development/**/*.html");
   }
 
-  // On travis, the version is set to something like '1.43.0-branch-name-travisBuildNumber'
+  // In CI, the version is set to something like '1.43.0-branch-name-buildNumber'
   // We need to extract just the Major.Minor version
   const majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
   const major = majorMinor[1];

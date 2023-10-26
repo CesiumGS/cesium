@@ -1,0 +1,7 @@
+name: verify node package
+description: verifies Node.js use of the npm package
+runs:
+  using: "composite"
+  steps:
+    - run: $GITHUB_ACTION_PATH/script.sh
+      shell: bash
