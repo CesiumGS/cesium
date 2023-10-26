@@ -11,7 +11,7 @@
 - Fixed `czm_normal`, `czm_normal3D`, `czm_inverseNormal`, and `czm_inverseNormal3D` for cases where the model matrix has non-uniform scale. [#11553](https://github.com/CesiumGS/cesium/pull/11553)
 - Fixed issue with clustered labels when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
 - Fixed inconsistant clustering when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
-- By default, `createGooglePhotorealistic3DTileset` no longer shows credits on screen, as this is compliant with the minimum required attribution. To restore this behavior, pass the option `showCreditsOnScreen: true`.
+- By default, `createGooglePhotorealistic3DTileset` no longer shows credits on screen, as this is compliant with the minimum required attribution. To restore this behavior, pass the option `showCreditsOnScreen: true`. [#11589](https://github.com/CesiumGS/cesium/pull/11589)
 
 ### 1.110.1 - 2023-10-25
 
