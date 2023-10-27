@@ -38,7 +38,6 @@
         const viewer = new Cesium.Viewer("cesiumContainer", {
           timeline: false,
           animation: false,
-          sceneModePicker: false,
           baseLayerPicker: false,
           // The globe does not need to be displayed,
           // since the Photorealistic 3D Tiles include terrain
@@ -51,17 +50,26 @@
         let tileset;
         // Add Photorealistic 3D Tiles
         try {
-          tileset = await Cesium.createGooglePhotorealistic3DTileset();
+          tileset = await Cesium.createGooglePhotorealistic3DTileset(
+            undefined,
+            {
+              enableDebugWireframe: true,
+            }
+          );
           viewer.scene.primitives.add(tileset);
-          viewer.scene.enableCollisionDetectionForTileset(tileset);
         } catch (error) {
           console.log(`Error loading Photorealistic 3D Tiles tileset.
   ${error}`);
         }
 
+        viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
+        const inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
+        inspectorViewModel.tileset = tileset;
+
         const scene = viewer.scene;
 
         const scratchCartesian = new Cesium.Cartesian3();
+        const scratchTo2D = new Cesium.Matrix4();
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(function (movement) {
           // const feature = scene.pick(movement.position);
@@ -79,21 +87,12 @@
           }
 
           const ray = scene.camera.getPickRay(movement.position);
-
           const picked = tileset.pick(
             ray,
             scene.frameState,
             true,
             scratchCartesian
           );
-          // if (Cesium.defined(feature.content)) {
-          // const content = feature.content;
-          // const picked = content.pick(
-          //   ray,
-          //   scene.frameState,
-          //   true,
-          //   scratchCartesian
-          // );
 
           console.log(picked);
           if (Cesium.defined(picked)) {
