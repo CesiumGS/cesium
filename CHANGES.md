@@ -1,18 +1,98 @@
 # Change Log
 
-### 1.109 - 2023-09-01
+### 1.111 - 2023-11-01
 
 #### @cesium/engine
 
 ##### Additions :tada:
 
-- The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
-
-#### @cesium/widgets
+- `BingMapsImageryProvider.fromUrl` now takes an optional `mapLayer` parameter which is a string that maps directly to the [mapLayer template parameters](https://learn.microsoft.com/en-us/bingmaps/rest-services/imagery/get-imagery-metadata#template-parameters) specified in the Bing Maps documentation.
 
 ##### Fixes :wrench:
 
+- Fixed `czm_normal`, `czm_normal3D`, `czm_inverseNormal`, and `czm_inverseNormal3D` for cases where the model matrix has non-uniform scale. [#11553](https://github.com/CesiumGS/cesium/pull/11553)
+- Fixed issue with clustered labels when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
+- Fixed inconsistant clustering when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
+
+### 1.110.1 - 2023-10-25
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- CesiumJS no longer ships with a demo Google Maps API key. `GoogleMaps.defaultApiKey` is no longer defined by default.
+- `createGooglePhotorealistic3DTileset` by default now provides tiles via Cesium ion if the `GoogleMaps.defaultApiKey` is not set.
+- If you wish to continue to use your own Google Maps API key, you can go back to the previous behavior:
+
+  ```javascript
+  Cesium.GoogleMaps.defaultApiKey = "your-api-key";
+
+  const tileset = await Cesium.createGooglePhotorealistic3DTileset();
+  viewer.scene.primitives.add(tileset));
+  ```
+
+### 1.110 - 2023-10-02
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- `Cesium3DTileset.maximumMemoryUsage` has been removed. Use `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` instead.
+
+##### Additions :tada:
+
+- Worker files are now embedded in `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js`. [#11519](https://github.com/CesiumGS/cesium/pull/11519)
+- Added `PolygonGeometry.computeRectangleFromPositions` for computing a `Rectangle` that encloses a polygon, including cases over the international date line and the poles.
+- Added `Stereographic` for computing 2D operations in stereographic, or polar, coordinates.
+- Adds events to `PrimitiveCollection` for primitive added/removed. [#11531](https://github.com/CesiumGS/cesium/pull/11531)
+- Adds an optional `rejectOnTileFail` parameter to `sampleTerrain` and `sampleTerrainMostDetailed` to allow handling of tile request failures. [#11530](https://github.com/CesiumGS/cesium/pull/11530)
+
+##### Fixes :wrench:
+
+- Fixed rendering of polygons spanning extents of 90 degrees or more. [#4871](https://github.com/CesiumGS/cesium/issues/4871)
+- Fixed ground primitive polygon visual artifacts at pole. [#8033](https://github.com/CesiumGS/cesium/issues/8033)
+- Fixed bug in `Cesium3DTilePass` affecting the `PRELOAD` pass. [#11525](https://github.com/CesiumGS/cesium/pull/11525)
+- Fixed bug where sky atmosphere could not be shown when `globe.show` is initialized to false. [#11266](https://github.com/CesiumGS/cesium/issues/11266)
+- Fixed issue loading workers in cross-origin `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js` requests. [#11505](https://github.com/CesiumGS/cesium/issues/11505)
+- Fixed `showOnScreen` behavior for `Model` and `Cesium3DTileset` credits. [#11538](https://github.com/CesiumGS/cesium/pull/11538)
+- Remove reading of `import.meta` meta-property because webpack does not support it. [#11511](https://github.com/CesiumGS/cesium/pull/11511)
+- Fixed label background rendering in request render mode. [#11529](https://github.com/CesiumGS/cesium/issues/11529)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `PolygonGeometry.computeRectangle` has been deprecated. It will be removed in 1.112. Use `PolygonGeometry.computeRectangleFromPositions` instead.
+
+### 1.109 - 2023-09-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- Firefox 114 is now the minimum Firefox version required to run CesiumJS. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
+- `TaskProcessor` now loads worker files as ESM instead of AMD. [#11400](https://github.com/CesiumGS/cesium/pull/11400)
+
+##### Additions :tada:
+
+- Added the `retinaTiles` option to the `OpenStreetMapImageryProvider` contructor options to allow requesting tiles at the 2x resolution for retina displays. [#11485](https://github.com/CesiumGS/cesium/pull/11485)
+- The TypeScript definition of `defined` now uses type predicates to allow TypeScript to use the result during compliation.
+
+##### Fixes :wrench:
+
+- Restore previous behavior for cut out terrain loading. [#11482](https://github.com/CesiumGS/cesium/issues/11482)
+- The return type of `SingleTileImageryProvider.fromUrl` has been fixed to be `Promise.<SingleTileImageryProvider>` (was `void`). [#11432](https://github.com/CesiumGS/cesium/pull/11432)
+- Fixed request render mode when models are loading without `incrementallyLoadTextures`. [#11486](https://github.com/CesiumGS/cesium/pull/11486)
+
+#### @cesium/widgets
+
+##### Additions :tada:
+
+- Added two additional default imagery providers from Stadia maps to the BaseLayerPicker widget: Alidade Smooth and Alidade Smooth Dark. [#11485](https://github.com/CesiumGS/cesium/pull/11485)
+
+##### Fixes :wrench:
+
+- Use updated URLs and attribution for Stamen Map styles in the default BaseLayerPicker widget. [#11451](https://github.com/CesiumGS/cesium/issues/11451)
 - Fixed types for `ProviderViewModel.CreationFunction`. [#11452](https://github.com/CesiumGS/cesium/issues/11452)
+- Fixed I3dmLoader manually compute positions when RTC_CENTER is ZERO [#11466](https://github.com/CesiumGS/cesium/pull/11466)
 
 ### 1.108 - 2023-08-01
 
@@ -95,7 +175,7 @@ try {
 - `GoogleEarthEnterpriseMapsProvider` constructor parameters `options.url` and `options.channel`, `GoogleEarthEnterpriseMapsProvider.ready`, and `GoogleEarthEnterpriseMapsProvider.readyPromise` have been removed. Use `GoogleEarthEnterpriseMapsProvider.fromUrl` instead.
 - `GridImageryProvider.ready` and `GridImageryProvider.readyPromise` have been removed.
 - `IonImageryProvider` constructor parameter `assetId`,`BIonImageryProvider.ready`, and `IonImageryProvider.readyPromise` have been removed. Use `IonImageryProvider.fromAssetId` instead.
-- `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` have been removed.``
+- `MapboxImageryProvider.ready` and `MapboxImageryProvider.readyPromise` have been removed.
 - `MapboxStyleImageryProvider.ready` and `MapboxStyleImageryProvider.readyPromise` have been removed.
 - `OpenStreetMapImageryProvider.ready` and `OpenStreetMapImageryProvider.readyPromise` have been removed.
 - `SingleTileImageryProvider` constructor parameters `options.tileHeight` and `options.tileWidth` became required in CesiumJS 1.104. Omitting these properties will result in an error in 1.107. Provide `options.tileHeight` and `options.tileWidth`, or use `SingleTileImageryProvider.fromUrl` instead.

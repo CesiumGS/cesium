@@ -1,11 +1,10 @@
-define(["Workers/createTaskProcessorWorker"], function (
-  createTaskProcessorWorker
-) {
-  "use strict";
+import { createTaskProcessorWorker } from "@cesium/engine";
 
-  return createTaskProcessorWorker(function (parameters, transferableObjects) {
-    const arrayBuffer = new ArrayBuffer(parameters.byteLength);
-    transferableObjects.push(arrayBuffer);
-    return arrayBuffer;
-  });
+export default createTaskProcessorWorker(function (
+  parameters,
+  transferableObjects
+) {
+  const arrayBuffer = new ArrayBuffer(parameters.byteLength);
+  transferableObjects.push(arrayBuffer);
+  return arrayBuffer;
 });

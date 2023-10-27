@@ -437,7 +437,7 @@ CreditDisplay.prototype.addCreditToNextFrame = function (credit) {
   Check.defined("credit", credit);
   //>>includeEnd('debug');
 
-  if (credit._isIon) {
+  if (credit.isIon()) {
     // If this is the an ion logo credit from the ion server
     // Just use the default credit (which is identical) to avoid blinking
     if (!defined(this._defaultCredit)) {
@@ -546,7 +546,7 @@ CreditDisplay.prototype.beginFrame = function () {
       : lightboxCredits;
 
     if (
-      staticCredit._isIon &&
+      staticCredit.isIon() &&
       Credit.equals(CreditDisplay.cesiumCredit, this._cesiumCredit)
     ) {
       // If this is an ion logo credit from the ion server,

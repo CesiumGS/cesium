@@ -15,6 +15,7 @@ import ProviderViewModel from "./ProviderViewModel.js";
  */
 function createDefaultImageryProviderViewModels() {
   const providerViewModels = [];
+  const useRetinaTiles = devicePixelRatio >= 2.0;
   providerViewModels.push(
     new ProviderViewModel({
       name: "Bing Maps Aerial",
@@ -160,19 +161,21 @@ of the world.\nhttp://www.openstreetmap.org",
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "Stamen Watercolor",
+      name: "Stadia x Stamen Watercolor",
       iconUrl: buildModuleUrl(
         "Widgets/Images/ImageryProviders/stamenWatercolor.png"
       ),
       tooltip:
-        "Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
-area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com",
+        "Based on the original basemaps created for the Knight Foundation and reminiscent of hand drawn maps, the watercolor maps from Stamen Design apply raster effect area washes and organic edges over a paper texture to add warm pop to any map.\nhttps://docs.stadiamaps.com/map-styles/stamen-watercolor/",
       category: "Other",
       creationFunction: function () {
         return new OpenStreetMapImageryProvider({
-          url: "https://stamen-tiles.a.ssl.fastly.net/watercolor/",
-          credit:
-            "Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.",
+          url: "https://tiles.stadiamaps.com/tiles/stamen_watercolor/",
+          fileExtension: "jpg",
+          credit: `&copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a>
+           &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
+           &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
+           &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
         });
       },
     })
@@ -180,17 +183,63 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
 
   providerViewModels.push(
     new ProviderViewModel({
-      name: "Stamen Toner",
+      name: "Stadia x Stamen Toner",
       iconUrl: buildModuleUrl(
         "Widgets/Images/ImageryProviders/stamenToner.png"
       ),
-      tooltip: "A high contrast black and white map.\nhttp://maps.stamen.com",
+      tooltip:
+        "Based on the original basemaps created for the Knight Foundation and the most popular of the excellent styles from Stamen Design, these high-contrast B+W (black and white) maps are the perfect backdrop for your colorful and eye-catching overlays.\nhttps://docs.stadiamaps.com/map-styles/stamen-toner/",
       category: "Other",
       creationFunction: function () {
         return new OpenStreetMapImageryProvider({
-          url: "https://stamen-tiles.a.ssl.fastly.net/toner/",
-          credit:
-            "Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.",
+          url: "https://tiles.stadiamaps.com/tiles/stamen_toner/",
+          retinaTiles: useRetinaTiles,
+          credit: `&copy; <a href="https://stamen.com/" target="_blank">Stamen Design</a>
+            &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
+            &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
+            &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
+        });
+      },
+    })
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Stadia Alidade Smooth",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/stadiaAlidadeSmooth.png"
+      ),
+      tooltip:
+        "Stadia's custom Alidade Smooth style is designed for maps that use a lot of markers or overlays. It features a muted color scheme and fewer points of interest to allow your added data to shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth/",
+      category: "Other",
+      creationFunction: function () {
+        return new OpenStreetMapImageryProvider({
+          url: "https://tiles.stadiamaps.com/tiles/alidade_smooth/",
+          retinaTiles: useRetinaTiles,
+          credit: `&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
+            &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
+            &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
+        });
+      },
+    })
+  );
+
+  providerViewModels.push(
+    new ProviderViewModel({
+      name: "Stadia Alidade Smooth Dark",
+      iconUrl: buildModuleUrl(
+        "Widgets/Images/ImageryProviders/stadiaAlidadeSmoothDark.png"
+      ),
+      tooltip:
+        "Stadia Alidade Smooth Dark, like its lighter cousin, is also designed to stay out of the way. It just flips the dark mode switch on the color scheme. With the lights out, your data can now literally shine.\nhttps://docs.stadiamaps.com/map-styles/alidade-smooth-dark/",
+      category: "Other",
+      creationFunction: function () {
+        return new OpenStreetMapImageryProvider({
+          url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/",
+          retinaTiles: useRetinaTiles,
+          credit: `&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a>
+            &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>
+            &copy; <a href="https://www.openstreetmap.org/about/" target="_blank">OpenStreetMap contributors</a>`,
         });
       },
     })

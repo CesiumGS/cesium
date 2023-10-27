@@ -3,7 +3,6 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import HeadingPitchRoll from "../Core/HeadingPitchRoll.js";
-import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
@@ -11,6 +10,7 @@ import Quaternion from "../Core/Quaternion.js";
 import Transforms from "../Core/Transforms.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import I3SDataProvider from "./I3SDataProvider.js";
+import I3SDecoder from "./I3SDecoder.js";
 import I3SFeature from "./I3SFeature.js";
 import I3SField from "./I3SField.js";
 import I3SGeometry from "./I3SGeometry.js";
@@ -611,71 +611,6 @@ I3SNode.prototype._create3DTileDefinition = function () {
 /**
  * @private
  */
-I3SNode.prototype._createI3SDecoderTask = async function (
-  decodeI3STaskProcessor,
-  data
-) {
-  // Prepare the data to send to the worker
-  const parentData = data.geometryData._parent._data;
-  const parentRotationInverseMatrix =
-    data.geometryData._parent._inverseRotationMatrix;
-
-  let longitude = 0.0;
-  let latitude = 0.0;
-  let height = 0.0;
-
-  if (defined(parentData.obb)) {
-    longitude = parentData.obb.center[0];
-    latitude = parentData.obb.center[1];
-    height = parentData.obb.center[2];
-  } else if (defined(parentData.mbs)) {
-    longitude = parentData.mbs[0];
-    latitude = parentData.mbs[1];
-    height = parentData.mbs[2];
-  }
-
-  const axisFlipRotation = Matrix3.fromRotationX(-CesiumMath.PI_OVER_TWO);
-  const parentRotation = new Matrix3();
-
-  Matrix3.multiply(
-    axisFlipRotation,
-    parentRotationInverseMatrix,
-    parentRotation
-  );
-
-  const cartographicCenter = Cartographic.fromDegrees(
-    longitude,
-    latitude,
-    height
-  );
-
-  const cartesianCenter = Ellipsoid.WGS84.cartographicToCartesian(
-    cartographicCenter
-  );
-
-  const payload = {
-    binaryData: data.geometryData._data,
-    featureData:
-      defined(data.featureData) && defined(data.featureData[0])
-        ? data.featureData[0].data
-        : undefined,
-    schema: data.defaultGeometrySchema,
-    bufferInfo: data.geometryData._geometryBufferInfo,
-    ellipsoidRadiiSquare: Ellipsoid.WGS84.radiiSquared,
-    url: data.url,
-    geoidDataList: data.geometryData._dataProvider._geoidDataList,
-    cartographicCenter: cartographicCenter,
-    cartesianCenter: cartesianCenter,
-    parentRotation: parentRotation,
-  };
-
-  const transferrableObjects = [];
-  return decodeI3STaskProcessor.scheduleTask(payload, transferrableObjects);
-};
-
-/**
- * @private
- */
 I3SNode.prototype._createContentURL = async function () {
   let rawGltf = {
     scene: 0,
@@ -702,59 +637,46 @@ I3SNode.prototype._createContentURL = async function () {
     },
   };
 
-  const decodeI3STaskProcessor = await this._dataProvider.getDecoderTaskProcessor();
-
   // Load the geometry data
   const dataPromises = [this._loadGeometryData()];
   if (this._dataProvider.legacyVersion16) {
     dataPromises.push(this._loadFeatureData());
   }
 
-  const that = this;
-  return Promise.all(dataPromises).then(function () {
-    // Binary glTF
-    let generateGltfPromise = Promise.resolve();
-    if (defined(that._geometryData) && that._geometryData.length > 0) {
-      const parameters = {
-        geometryData: that._geometryData[0],
-        featureData: that._featureData,
-        defaultGeometrySchema: that._layer._data.store.defaultGeometrySchema,
-        url: that._geometryData[0].resource.url,
-        tile: that._tile,
-      };
-
-      const promise = that._createI3SDecoderTask(
-        decodeI3STaskProcessor,
-        parameters
-      );
-      if (!defined(promise)) {
-        // Postponed
-        return;
-      }
-
-      generateGltfPromise = promise.then(function (result) {
-        rawGltf = parameters.geometryData._generateGltf(
-          result.meshData.nodesInScene,
-          result.meshData.nodes,
-          result.meshData.meshes,
-          result.meshData.buffers,
-          result.meshData.bufferViews,
-          result.meshData.accessors
-        );
-
-        that._geometryData[0]._customAttributes =
-          result.meshData._customAttributes;
-      });
+  await Promise.all(dataPromises);
+  // Binary glTF
+  if (defined(this._geometryData) && this._geometryData.length > 0) {
+    const url = this._geometryData[0].resource.url;
+    const geometrySchema = this._layer._data.store.defaultGeometrySchema;
+    const geometryData = this._geometryData[0];
+    const result = await I3SDecoder.decode(
+      url,
+      geometrySchema,
+      geometryData,
+      this._featureData[0]
+    );
+    if (!defined(result)) {
+      // Postponed
+      return;
     }
 
-    return generateGltfPromise.then(function () {
-      const binaryGltfData = that._dataProvider._binarizeGltf(rawGltf);
-      const glbDataBlob = new Blob([binaryGltfData], {
-        type: "application/binary",
-      });
-      return URL.createObjectURL(glbDataBlob);
-    });
+    rawGltf = geometryData._generateGltf(
+      result.meshData.nodesInScene,
+      result.meshData.nodes,
+      result.meshData.meshes,
+      result.meshData.buffers,
+      result.meshData.bufferViews,
+      result.meshData.accessors
+    );
+
+    this._geometryData[0]._customAttributes = result.meshData._customAttributes;
+  }
+
+  const binaryGltfData = this._dataProvider._binarizeGltf(rawGltf);
+  const glbDataBlob = new Blob([binaryGltfData], {
+    type: "application/binary",
   });
+  return URL.createObjectURL(glbDataBlob);
 };
 
 // Reimplement Cesium3DTile.prototype.requestContent so that
