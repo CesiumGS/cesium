@@ -3481,7 +3481,6 @@ Cesium3DTileset.prototype.pick = function (
   const selectedLength = selectedTiles.length;
 
   let intersection;
-  let minT = Number.POSITIVE_INFINITY;
   let minDistance = Number.POSITIVE_INFINITY;
   for (let i = 0; i < selectedLength; ++i) {
     const tile = selectedTiles[i];
@@ -3494,24 +3493,16 @@ Cesium3DTileset.prototype.pick = function (
       continue;
     }
 
-    if (boundsIntersection.stop <= minT) {
-      minT = Math.min(boundsIntersection.stop, minT);
-      const candidate = tile.content.pick(
-        ray,
-        frameState,
-        cullBackFaces,
-        result
-      );
+    const candidate = tile.content.pick(ray, frameState, cullBackFaces, result);
 
-      if (!defined(candidate)) {
-        continue;
-      }
+    if (!defined(candidate)) {
+      continue;
+    }
 
-      const distance = Cartesian3.distance(ray.origin, candidate);
-      if (distance < minDistance) {
-        intersection = candidate;
-        minDistance = distance;
-      }
+    const distance = Cartesian3.distance(ray.origin, candidate);
+    if (distance < minDistance) {
+      intersection = candidate;
+      minDistance = distance;
     }
   }
 
