@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: install node 18
+      - name: install node 20
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -105,10 +105,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: install node 16
+      - name: install node 18
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
       - name: npm install
         run: npm install
       - name: release build
