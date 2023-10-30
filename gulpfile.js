@@ -1224,7 +1224,7 @@ export async function deployStatus() {
   const status = argv.status;
   const message = argv.message;
 
-  const deployUrl = `${devDeployUrl + process.env.BRANCH}/`;
+  const deployUrl = `${devDeployUrl + process.env.BRANCH}/index.html`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
   const coverageUrl = `${
