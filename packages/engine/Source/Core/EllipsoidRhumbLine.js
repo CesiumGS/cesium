@@ -333,10 +333,16 @@ function interpolateUsingSurfaceDistance(
     latitude = calculateInverseM(M2, ellipticity, major);
 
     //Now find the longitude of the second point
-    const sigma1 = calculateSigma(ellipticity, start.latitude);
-    const sigma2 = calculateSigma(ellipticity, latitude);
-    deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
-    longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+
+    // Check to see if the rhumb line has constant longitude
+    if (Math.abs(heading) < CesiumMath.EPSILON10) {
+      longitude = CesiumMath.negativePiToPi(start.longitude);
+    } else {
+      const sigma1 = calculateSigma(ellipticity, start.latitude);
+      const sigma2 = calculateSigma(ellipticity, latitude);
+      deltaLongitude = Math.tan(heading) * (sigma2 - sigma1);
+      longitude = CesiumMath.negativePiToPi(start.longitude + deltaLongitude);
+    }
   } else {
     //If heading is close to 90 degrees
     latitude = start.latitude;
