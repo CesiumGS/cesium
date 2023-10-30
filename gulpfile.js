@@ -61,8 +61,7 @@ if (/\.0$/.test(version)) {
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
 
-const devDeployUrl =
-  "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
 const isProduction = process.env.PROD;
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
@@ -1225,7 +1224,7 @@ export async function deployStatus() {
   const status = argv.status;
   const message = argv.message;
 
-  const deployUrl = `${devDeployUrl + process.env.BRANCH}/`;
+  const deployUrl = `${devDeployUrl + process.env.BRANCH}/index.html`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
   const coverageUrl = `${
