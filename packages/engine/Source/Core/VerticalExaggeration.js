@@ -1,4 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
+import DeveloperError from "./DeveloperError.js";
 
 /**
  * @private
@@ -13,6 +14,14 @@ const VerticalExaggeration = {};
  * @param {number} relativeHeight The height relative to which terrain is exaggerated. If the value is 0.0 terrain will be exaggerated relative to the ellipsoid surface.
  */
 VerticalExaggeration.getHeight = function (height, scale, relativeHeight) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!Number.isFinite(scale)) {
+    throw new DeveloperError("scale must be a finite number.");
+  }
+  if (!Number.isFinite(relativeHeight)) {
+    throw new DeveloperError("relativeHeight must be a finite number.");
+  }
+  //>>includeEnd('debug')
   return (height - relativeHeight) * scale + relativeHeight;
 };
 
