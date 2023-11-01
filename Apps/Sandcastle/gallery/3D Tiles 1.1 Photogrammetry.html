@@ -10,9 +10,9 @@
     />
     <meta
       name="description"
-      content="Comparison of tilesets from Cesium ion's current and next-gen 3D model tiling pipelines to showcase GPU memory improvements."
+      content="Performance comparison of photogrammetry using 3D Tiles 1.0 vs 3D Tiles 1.1 with KTX2 texture compression. Most notably, KTX2 textures provide significant GPU memory savings"
     />
-    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
     <title>3D Tiles 1.1 Photogrammetry</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -264,7 +264,8 @@
         }
 
         async function benchmarkTilesets(tilesetName) {
-          // Note: For benchmarking, lo
+          // Note: For benchmarking, load tilesets one at a time so the loading
+          // of one tileset doesn't delay the loading of the other.
           await benchmarkTileset(tilesetName, Cesium.SplitDirection.LEFT);
           await benchmarkTileset(tilesetName, Cesium.SplitDirection.RIGHT);
         }
