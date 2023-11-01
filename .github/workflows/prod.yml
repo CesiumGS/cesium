@@ -24,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       statuses: write
+      contents: read
     env:
       PROD: true
-      BUILD_VERSION: ${{ github.ref_name }}.${{ github.run_number }}
       AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-1
