@@ -442,6 +442,8 @@ function combineForSandcastle() {
 }
 
 export const websiteRelease = gulp.series(
+  buildEngine,
+  buildWidgets,
   function () {
     return buildCesium({
       development: false,
