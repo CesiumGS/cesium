@@ -200,14 +200,10 @@
         // Tileset Loading ================
 
         async function loadTileset(tilesetName, splitDirection) {
-          const assetIds =
-            splitDirection === Cesium.SplitDirection.LEFT
-              ? leftAssetIds
-              : rightAssetIds;
-          const collection =
-            splitDirection === Cesium.SplitDirection.LEFT
-              ? leftCollection
-              : rightCollection;
+          const isLeft = splitDirection === Cesium.SplitDirection.LEFT;
+
+          const assetIds = isLeft ? leftAssetIds : rightAssetIds;
+          const collection = isLeft ? leftCollection : rightCollection;
 
           const assetId = assetIds[tilesetName];
           if (!Cesium.defined(assetId)) {
