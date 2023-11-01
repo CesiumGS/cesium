@@ -17,7 +17,7 @@ import {
 import { Math as CesiumMath } from "../../index.js";
 
 describe("Scene/ShadowVolumeAppearance", function () {
-  // using ShadowVolumeAppearanceVS directly fails on Travis with the --release test
+  // using ShadowVolumeAppearanceVS directly fails on CI with the --release test
   const testVs =
     "in vec3 position3DHigh;\n" +
     "in vec3 position3DLow;\n" +

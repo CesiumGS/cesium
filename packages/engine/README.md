@@ -1,6 +1,6 @@
 # @cesium/engine
 
-[![Build Status](https://travis-ci.com/CesiumGS/cesium.svg?branch=main)](https://travis-ci.com/CesiumGS/cesium)
+[![Build Status](https://github.com/CesiumGS/cesium/actions/workflows/dev.yml/badge.svg)](https://github.com/CesiumGS/cesium/actions/workflows/dev.yml)
 [![npm](https://img.shields.io/npm/v/@cesium/engine)](https://www.npmjs.com/package/@cesium/engine)
 [![Docs](https://img.shields.io/badge/docs-online-orange.svg)](https://cesium.com/learn/)
 
