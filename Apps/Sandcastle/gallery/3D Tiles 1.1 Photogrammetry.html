@@ -83,7 +83,9 @@
       <div id="slider"></div>
       <div id="statsContainer">
         <div id="left" class="statsPane panel">
-          <div id="leftTitle" class="statsTitle">---</div>
+          <div id="leftTitle" class="statsTitle">
+            3D Tiles 1.0 (JPEG textures)
+          </div>
           <div id="leftStats">
             Tiles Loaded: <span id="leftTilesLoaded">---</span> /
             <span id="leftTilesTotal">---</span>
@@ -97,7 +99,9 @@
           </div>
         </div>
         <div id="right" class="statsPane panel">
-          <div id="rightTitle" class="statsTitle">---</div>
+          <div id="rightTitle" class="statsTitle">
+            3D Tiles 1.1 (KTX2 textures)
+          </div>
           <div id="rightStats">
             Tiles Loaded: <span id="rightTilesLoaded">---</span> /
             <span id="rightTilesTotal">---</span>
@@ -135,9 +139,34 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          geocoder: false,
+          sceneModePicker: false,
+          homeButton: false,
+          navigationHelpButton: false,
+          baseLayerPicker: false,
+        });
+
+        // Asset Lookup tables ================================================
+
+        // Left half of the screen:
+        // Tilesets produced by the Cesium ion 3D Model Tiler
+        const leftAssetIds = {
+          "AGI HQ": 40866,
+          Melbourne: 69380,
+        };
+
+        // Right half of the screen:
+        // Tilesets produced by the Cesium ion Reality Tiler
+        const rightAssetIds = {
+          "AGI HQ": 2325106,
+          Melbourne: 2325107,
+        };
 
         const ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
+        // AGI HQ looks better with Cesium World Terrain, but Melbourne looks
+        // better using the ellipsoid terrain.
         const updateTerrainFunc = {
           "AGI HQ": (viewer) => {
             viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
@@ -147,49 +176,14 @@
           },
         };
 
-        // Tilesets produced by the Cesium ion 3D Model Tiler
-        const currentGenAssetIds = {
-          "AGI HQ": 40866,
-          Melbourne: 69380,
-        };
+        // List of tileset names for creating options and indexing into the
+        // lookup tables above.
+        const tilesetNames = ["AGI HQ", "Melbourne"];
 
-        // Tilesets produced by the Cesium ion Reality Tiler
-        const nextGenAssetIds = {
-          "AGI HQ": 2325106,
-          Melbourne: 2325107,
-        };
+        // Tileset Loading ====================================================
 
-        // To make the code more reusable, use "left/right" terminology
-        const leftAssetIds = currentGenAssetIds;
-        const rightAssetIds = nextGenAssetIds;
-
-        const leftTitle = "3D Tiles 1.0 (JPEG textures)";
-        const rightTitle = "3D Tiles 1.1 (KTX2 textures)";
-
-        document.getElementById("leftTitle").innerHTML = leftTitle;
-        document.getElementById("rightTitle").innerHTML = rightTitle;
-
-        // Get the complete list of tileset names.
-        function getTilesetNames() {
-          const leftNames = Object.keys(leftAssetIds);
-          const rightNames = Object.keys(rightAssetIds);
-          const unique = new Set([...leftNames, ...rightNames]);
-          return [...unique].sort();
-        }
-
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          geocoder: false,
-          sceneModePicker: false,
-          homeButton: false,
-          navigationHelpButton: false,
-          baseLayerPicker: false,
-        });
-
-        const tilesetNames = getTilesetNames();
-        let selectedTilesetName = tilesetNames[0];
-
-        // Create two primitive collections, one for each half of the screen. This way we
-        // can clear one half of the screen at a time.
+        // Create two primitive collections, one for each half of the screen.
+        // This way we can clear one half of the screen at a time.
         const leftCollection = viewer.scene.primitives.add(
           new Cesium.PrimitiveCollection()
         );
@@ -197,8 +191,7 @@
           new Cesium.PrimitiveCollection()
         );
 
-        // Tileset Loading ================
-
+        // Load a tileset to one half of the screen, returning the tileset
         async function loadTileset(tilesetName, splitDirection) {
           const isLeft = splitDirection === Cesium.SplitDirection.LEFT;
 
@@ -218,6 +211,9 @@
           const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(assetId);
           tileset.splitDirection = splitDirection;
 
+          // Whenever a tile loads/unloads, update the stats about GPU memory
+          // and tile count. Load time is handled separately for better
+          // accuracy.
           const updateStatsCallback = (tile) => {
             updateStatsPanel(side, tileset);
           };
@@ -266,7 +262,12 @@
           await benchmarkTileset(tilesetName, Cesium.SplitDirection.RIGHT);
         }
 
-        // UI =============================
+        // UI =================================================================
+
+        // Tileset dropdown ---------------------------------------------------
+
+        // The first tileset in the dropdown will automatically be selected.
+        let selectedTilesetName = tilesetNames[0];
 
         function createOption(name) {
           return {
@@ -286,11 +287,16 @@
         }
 
         function createOptions() {
-          const options = tilesetNames.map((t) => createOption(t));
+          const options = tilesetNames.map(createOption);
           return options;
         }
 
         Sandcastle.addToolbarMenu(createOptions(), "toolbarSelect");
+
+        // Compute load time -------------------------------------------------
+
+        // For better accuracy, this button reloads the tilesets one by one
+        // so the load time of one tileset doesn't affect the other
         Sandcastle.addToolbarButton(
           "Compute time to load",
           async function () {
@@ -299,10 +305,13 @@
           "toolbarSelect"
         );
 
+        // A note to the user that load time requires a button press
         function addBenchmarkNotice(side) {
           document.getElementById(`${side}BenchmarkNotice`).innerHTML =
             "Press 'Compute time to load' to measure load time";
         }
+
+        // Stats panels -------------------------------------------------------
 
         function clearStatsPanel(side) {
           document.getElementById(`${side}TileLoadTime`).innerHTML = "---";
@@ -330,6 +339,8 @@
           ).innerHTML = gpuMemoryMB.toPrecision(3);
         }
 
+        // maximum SSE Slider -------------------------------------------------
+
         const viewModel = {
           maximumScreenSpaceError: 16.0,
         };
@@ -353,7 +364,11 @@
             }
           });
 
-        // Splitter setup ===================
+        // Splitter ----------------------------------------------------------
+
+        // This code is the same as in the 3D Tiles Compare Sandcastle.
+
+        // Sync the position of the slider with the split position
         const slider = document.getElementById("slider");
         viewer.scene.splitPosition =
           slider.offsetLeft / slider.parentElement.offsetWidth;
