@@ -8,10 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: install node 18
+      - name: install node 20
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -22,9 +22,6 @@ jobs:
         run: npm run prettier-check
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      statuses: write
-      contents: read
     env:
       PROD: true
       AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
@@ -36,10 +33,10 @@ jobs:
       GITHUB_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
-      - name: install node 18
+      - name: install node 20
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       - name: npm install
         run: npm install
       - name: build website release
@@ -49,6 +46,3 @@ jobs:
       - name: deploy to cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: npm run deploy-s3 -- -b "cesium.com-next" -c 'public, max-age=1800'--skip --confirm
-      - name: set status
-        if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: npm run deploy-status -- --status success --message Deployed
