@@ -79,6 +79,35 @@ RayShapeIntersection intersectSphere(in Ray ray, in float relativeHeight, in boo
     return RayShapeIntersection(vec4(d1, t1), vec4(d2, t2));
 }
 
+RayShapeIntersection intersectHeight(in Ray ray, in float relativeHeight, in bool convex)
+{
+    // Scale the ray by the ellipsoid axes to make it a unit sphere
+    // Note: approximating ellipsoid + height as an ellipsoid
+    vec3 radiiCorrection = u_ellipsoidRadiiUv / (u_ellipsoidRadiiUv + relativeHeight); // TODO: approximate for small relativeHeight
+    vec3 position = ray.pos * radiiCorrection;
+    vec3 direction = ray.dir * radiiCorrection;
+
+    float a = dot(direction, direction);
+    float b = dot(direction, position);
+    float c = dot(position, position) - 1.0;
+    float determinant = b * b - a * c; // Possible cancellation!
+
+    if (determinant < 0.0) {
+        vec4 miss = vec4(normalize(direction), NO_HIT);
+        return RayShapeIntersection(miss, miss);
+    }
+
+    determinant = sqrt(determinant);
+    float t1 = (-b - determinant) / a; // Possible cancellation for small relativeHeight?
+    float t2 = (-b + determinant) / a;
+
+    float directionScale = convex ? 1.0 : -1.0;
+    vec3 d1 = directionScale * normalize(position + t1 * direction);
+    vec3 d2 = directionScale * normalize(position + t2 * direction);
+
+    return RayShapeIntersection(vec4(d1, t1), vec4(d2, t2));
+}
+
 /**
  * Given a circular cone around the z-axis, with apex at the origin,
  * find the parametric distance(s) along a ray where that ray intersects

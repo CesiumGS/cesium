@@ -46,6 +46,32 @@ float ellipseDistanceIterative (vec2 pos, vec2 radii) {
     return length(v * sign(pos) - pos) * sign(p.y - v.y);
 }
 
+vec2 nearestPointOnEllipse(vec2 pos, vec2 radii) {
+    vec2 p = abs(pos);
+    vec2 inverseRadii = 1.0 / radii;
+    vec2 evoluteScale = (radii.x * radii.x - radii.y * radii.y) * vec2(1.0, -1.0) * inverseRadii;
+
+    // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
+    // but store the cos and sin of t in a vec2 for efficiency.
+    // Initial guess: t = cos(pi/4)
+    vec2 tTrigs = vec2(0.70710678118);
+    vec2 v = radii * tTrigs;
+
+    const int iterations = 3;
+    for (int i = 0; i < iterations; ++i) {
+        // Find the evolute of the ellipse (center of curvature) at v.
+        vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
+        // Find the (approximate) intersection of p - evolute with the ellipsoid.
+        vec2 q = normalize(p - evolute) * length(v - evolute);
+        // Update the estimate of t.
+        tTrigs = (q + evolute) * inverseRadii;
+        tTrigs = normalize(clamp(tTrigs, 0.0, 1.0));
+        v = radii * tTrigs;
+    }
+
+    return v * sign(pos);
+}
+
 /**
  * Not valid for ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
  */
@@ -111,15 +137,11 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
  * Composition of convertUvToShapeSpace and convertShapeToShapeUvSpace
  */
 vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
-    // Compute position and normal.
-    // Convert positionUv [0,1] to local space [-1,+1] to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).
-    // A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
+    // Convert positionUv [0,1] to local space [-1,+1]
     vec3 positionLocal = positionUv * 2.0 - 1.0;
-    vec3 posEllipsoid = positionLocal * u_ellipsoidRadiiUv;
-    vec3 normal = normalize(posEllipsoid * u_ellipsoidInverseRadiiSquaredUv); // geodetic surface normal
 
     // Compute longitude, shifted and scaled to the range [0, 1]
-    float longitude = (atan(normal.y, normal.x) + czm_pi) / czm_twoPi;
+    float longitude = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi;
 
     // Correct the angle when max < min
     // Technically this should compare against min longitude - but it has precision problems so compare against the middle of empty space.
@@ -139,8 +161,17 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
         longitude = longitude * u_ellipsoidUvToShapeUvLongitude.x + u_ellipsoidUvToShapeUvLongitude.y;
     #endif
 
+    // Convert position to "normalized" cartesian space [-a,+a] where a = (radii + height) / (max(radii) + height).
+    // A point on the largest ellipsoid axis would be [-1,+1] and everything else would be smaller.
+    vec3 posEllipsoid = positionLocal * u_ellipsoidRadiiUv;
+    // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z)
+    // (assume radii.y == radii.x) and find the nearest point on the ellipse.
+    vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
+    vec2 surfacePoint = nearestPointOnEllipse(posEllipse, u_ellipseInnerRadiiUv);
+
     // Compute latitude, shifted and scaled to the range [0, 1]
-    float latitude = (asin(normal.z) + czm_piOverTwo) / czm_pi;
+    vec2 normal = normalize(surfacePoint * u_ellipsoidInverseRadiiSquaredUv.xz);
+    float latitude = (atan(normal.y, normal.x) + czm_piOverTwo) / czm_pi;
     #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
         latitude = latitude * u_ellipsoidUvToShapeUvLatitude.x + u_ellipsoidUvToShapeUvLatitude.y;
     #endif
@@ -152,10 +183,8 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
         // and set the shape space position to 1 (front) or 0 (back) accordingly.
         float height = 1.0;
     #else
-        // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84).
-        // This is an optimization so that math can be done with ellipses instead of ellipsoids.
-        vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
-        float height = ellipseDistanceIterative(posEllipse, u_ellipseInnerRadiiUv) * u_ellipsoidInverseHeightDifferenceUv;
+        float heightSign = length(posEllipse) < length(surfacePoint) ? -1.0 : 1.0;
+        float height = heightSign * length(posEllipse - surfacePoint) * u_ellipsoidInverseHeightDifferenceUv;
     #endif
 
     return vec3(longitude, latitude, height);
