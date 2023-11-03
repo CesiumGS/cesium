@@ -2515,8 +2515,8 @@ const scratchPickCartographic = new Cartographic();
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
- * @param {boolean=true} cullBackFaces If false, back faces are not culled and will return an intersection if picked.
- * @param {Cartesian3|undefined} result The intersection or <code>undefined</code> if none was found.
+ * @param {boolean} [cullBackFaces=true] If false, back faces are not culled and will return an intersection if picked.
+ * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
  *
  * @private
