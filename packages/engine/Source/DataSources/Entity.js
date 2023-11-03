@@ -13,7 +13,9 @@ import Quaternion from "../Core/Quaternion.js";
 import Transforms from "../Core/Transforms.js";
 import GroundPolylinePrimitive from "../Scene/GroundPolylinePrimitive.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
-import HeightReference from "../Scene/HeightReference.js";
+import HeightReference, {
+  isHeightReferenceClamp,
+} from "../Scene/HeightReference.js";
 import BillboardGraphics from "./BillboardGraphics.js";
 import BoxGraphics from "./BoxGraphics.js";
 import ConstantPositionProperty from "./ConstantPositionProperty.js";
@@ -706,7 +708,7 @@ Entity.prototype.computeModelMatrixForHeightReference = function (
   }
 
   const carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
-  if (heightReference === HeightReference.CLAMP_TO_GROUND) {
+  if (isHeightReferenceClamp(heightReference)) {
     carto.height = heightOffset;
   } else {
     carto.height += heightOffset;
