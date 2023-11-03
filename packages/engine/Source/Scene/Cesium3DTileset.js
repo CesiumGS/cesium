@@ -267,6 +267,8 @@ function Cesium3DTileset(options) {
     ? Matrix4.clone(options.modelMatrix)
     : Matrix4.clone(Matrix4.IDENTITY);
 
+  this._addHeightCallbacks = [];
+
   this._statistics = new Cesium3DTilesetStatistics();
   this._statisticsLast = new Cesium3DTilesetStatistics();
   this._statisticsPerPass = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
@@ -2633,6 +2635,55 @@ function filterProcessingQueue(tileset) {
   tiles.length -= removeCount;
 }
 
+const scratchUpdateHeightCartographic = new Cartographic();
+const scratchUpdateHeightCartographic2 = new Cartographic();
+const scratchUpdateHeightCartesian = new Cartesian3();
+function processUpdateHeight(tileset, tile, frameState) {
+  const heightCallbackData = tileset._addHeightCallbacks;
+  const boundingSphere = tile.boundingSphere;
+
+  for (const callbackData of heightCallbackData) {
+    // No need to upadate if the tile was already visible last frame
+    if (callbackData.invoked || tile._wasSelectedLastFrame) {
+      continue;
+    }
+
+    const ellipsoid = callbackData.ellipsoid;
+    const positionCartographic = Cartographic.clone(
+      callbackData.positionCartographic,
+      scratchUpdateHeightCartographic
+    );
+    const centerCartographic = Cartographic.fromCartesian(
+      boundingSphere.center,
+      ellipsoid,
+      scratchUpdateHeightCartographic2
+    );
+
+    // This can be undefined when the bounding sphere is at the origin
+    if (defined(centerCartographic)) {
+      positionCartographic.height = centerCartographic.height;
+    }
+
+    const position = Cartographic.toCartesian(
+      positionCartographic,
+      ellipsoid,
+      scratchUpdateHeightCartesian
+    );
+    if (
+      Cartesian3.distance(position, boundingSphere.center) <=
+      boundingSphere.radius
+    ) {
+      frameState.afterRender.push(() => {
+        // Callback can be removed before it actually invoked at the end of the frame
+        if (defined(callbackData.callback)) {
+          callbackData.callback(positionCartographic);
+        }
+        callbackData.invoked = false;
+      });
+    }
+  }
+}
+
 /**
  * Process tiles in the PROCESSING state so they will eventually move to the READY state.
  * @private
@@ -2900,6 +2951,7 @@ function updateTiles(tileset, frameState, passOptions) {
     if (isRender) {
       tileVisible.raiseEvent(tile);
     }
+    processUpdateHeight(tileset, tile, frameState);
     tile.update(tileset, frameState, passOptions);
     statistics.incrementSelectionCounts(tile.content);
     ++statistics.selected;
@@ -3476,6 +3528,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
     cartographic,
     ray.direction
   );
+  Cartesian3.normalize(ray.direction, ray.direction);
 
   ray.direction = Cartesian3.normalize(position, ray.direction);
   ray.direction = Cartesian3.negate(position, ray.direction);
@@ -3494,6 +3547,53 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
     intersection,
     scratchGetHeightCartographic
   )?.height;
+};
+
+/**
+ * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+ * is the cartesian position on the tile.
+ *
+ * @private
+ *
+ * @param {Scene} scene The scene where visualization is taking place.
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {Function} callback The function to be called when a new tile is loaded.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @returns {Function} The function to remove this callback from the quadtree.
+ */
+Cesium3DTileset.prototype.updateHeight = function (
+  cartographic,
+  callback,
+  ellipsoid
+) {
+  if (!defined(ellipsoid)) {
+    ellipsoid = Ellipsoid.WGS84;
+  }
+
+  const object = {
+    positionCartographic: cartographic,
+    ellipsoid: ellipsoid,
+    callback: callback,
+    invoked: false,
+  };
+
+  const removeCallback = () => {
+    const addedCallbacks = this._addHeightCallbacks;
+    const length = addedCallbacks.length;
+    for (let i = 0; i < length; ++i) {
+      if (addedCallbacks[i] === object) {
+        addedCallbacks.splice(i, 1);
+        break;
+      }
+    }
+
+    if (object.callback) {
+      object.callback = undefined;
+    }
+  };
+
+  this._addHeightCallbacks.push(object);
+  return removeCallback;
 };
 
 const scratchSphereIntersection = new Interval();

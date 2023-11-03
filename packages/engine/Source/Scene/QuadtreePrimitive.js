@@ -274,7 +274,7 @@ QuadtreePrimitive.prototype.forEachRenderedTile = function (tileFunction) {
  * is the cartesian position on the tile.
  *
  * @param {Cartographic} cartographic The cartographic position.
- * @param {Function} callback The function to be called when a new tile is loaded containing cartographic.
+ * @param {Function} callback The function to be called when a new tile is loaded containing the updated cartographic.
  * @returns {Function} The function to remove this callback from the quadtree.
  */
 QuadtreePrimitive.prototype.updateHeight = function (cartographic, callback) {

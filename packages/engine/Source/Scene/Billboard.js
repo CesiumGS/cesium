@@ -13,7 +13,9 @@ import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import Matrix4 from "../Core/Matrix4.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import Resource from "../Core/Resource.js";
-import HeightReference from "./HeightReference.js";
+import HeightReference, {
+  isHeightReferenceRelative,
+} from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
 import SceneMode from "./SceneMode.js";
 import SceneTransforms from "./SceneTransforms.js";
@@ -1056,8 +1058,6 @@ Billboard.prototype._updateClamping = function () {
 };
 
 const scratchCartographic = new Cartographic();
-const scratchPosition = new Cartesian3();
-
 Billboard._updateClamping = function (collection, owner) {
   const scene = collection._scene;
   if (!defined(scene) || !defined(scene.globe)) {
@@ -1073,7 +1073,6 @@ Billboard._updateClamping = function (collection, owner) {
 
   const globe = scene.globe;
   const ellipsoid = globe.ellipsoid;
-  const surface = globe._surface;
 
   const mode = scene.frameState.mode;
 
@@ -1107,34 +1106,37 @@ Billboard._updateClamping = function (collection, owner) {
   }
 
   function updateFunction(clampedPosition) {
-    if (owner._heightReference === HeightReference.RELATIVE_TO_GROUND) {
-      if (owner._mode === SceneMode.SCENE3D) {
-        const clampedCart = ellipsoid.cartesianToCartographic(
-          clampedPosition,
-          scratchCartographic
-        );
-        clampedCart.height += position.height;
-        ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
-      } else {
-        clampedPosition.x += position.height;
-      }
-    }
-    owner._clampedPosition = Cartesian3.clone(
+    owner._clampedPosition = ellipsoid.cartographicToCartesian(
       clampedPosition,
       owner._clampedPosition
     );
+
+    if (isHeightReferenceRelative(owner._heightReference)) {
+      if (owner._mode === SceneMode.SCENE3D) {
+        clampedPosition.height += position.height;
+        ellipsoid.cartographicToCartesian(
+          clampedPosition,
+          owner._clampedPosition
+        );
+      } else {
+        owner._clampedPosition.x += position.height;
+      }
+    }
   }
-  owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
+
+  owner._removeCallbackFunc = scene.updateHeight(
+    position,
+    updateFunction,
+    owner._heightReference
+  );
 
   Cartographic.clone(position, scratchCartographic);
-  const height = globe.getHeight(position);
+  const height = scene.getHeight(position, owner._heightReference);
   if (defined(height)) {
     scratchCartographic.height = height;
   }
 
-  ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-
-  updateFunction(scratchPosition);
+  updateFunction(scratchCartographic);
 };
 
 Billboard.prototype._loadImage = function () {

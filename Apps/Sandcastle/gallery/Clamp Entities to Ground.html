@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Clamp entities to terrain and 3D Tiles" />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Showcases, 3D Tiles, Terrain, Entity"
+    />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div id="terrainMenu"></div>
+      <div id="zoomButtons"></div>
+      <div id="toggleLighting"></div>
+      <div id="sampleButtons"></div>
+    </div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          timeline: false,
+          animation: false,
+          baseLayerPicker: false,
+        });
+        const scene = viewer.scene;
+        scene.globe.depthTestAgainstTerrain = true;
+
+        let worldTerrain;
+        try {
+          worldTerrain = await Cesium.createWorldTerrainAsync();
+          viewer.scene.terrainProvider = worldTerrain;
+        } catch (error) {
+          window.alert(`There was an error creating world terrain. ${error}`);
+        }
+
+        let worldTileset;
+        try {
+          worldTileset = await Cesium.createGooglePhotorealistic3DTileset();
+          viewer.scene.primitives.add(worldTileset);
+          viewer.scene.enableCollisionDetectionForTileset(worldTileset);
+        } catch (error) {
+          console.log(`Error loading Photorealistic 3D Tiles tileset.
+            ${error}`);
+        }
+
+        // Points, labels, and billboards can be rendered on the surface
+        const pointAndLabel = viewer.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(-122.1965, 46.1915),
+          point: {
+            color: Cesium.Color.CORNFLOWERBLUE,
+            pixelSize: 18,
+            outlineColor: Cesium.Color.DARKSLATEGREY,
+            outlineWidth: 3,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+          label: {
+            text: "Clamped to ground",
+            font: "14pt sans-serif",
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+            verticalOrigin: Cesium.VerticalOrigin.BASELINE,
+            fillColor: Cesium.Color.GHOSTWHITE,
+            showBackground: true,
+            backgroundColor: Cesium.Color.DARKSLATEGREY.withAlpha(0.8),
+            backgroundPadding: new Cesium.Cartesian2(8, 4),
+            pixelOffset: new Cesium.Cartesian2(15, 6),
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          },
+        });
+
+        const billboard = viewer.entities.add({
+          position: Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
+          billboard: {
+            image: "../images/facility.gif",
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          },
+        });
+
+        viewer.trackedEntity = pointAndLabel;
+
+        Sandcastle.addDefaultToolbarMenu([
+          {
+            text: "3D Tiles",
+            onselect: () => {
+              scene.globe.show = false;
+              worldTileset.show = true;
+            },
+          },
+          {
+            text: "Terrain",
+            onselect: () => {
+              scene.globe.show = true;
+              worldTileset.show = false;
+            },
+          },
+        ]);
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>
