@@ -283,13 +283,13 @@ function executeEmptyTraversal(root, frameState) {
     // tile.contentAvailable checks for expired content and only works for
     // renderable content, so for placeholder tiles (external or implicit
     // tilesets) check for contentReady instead
-    const isWaiting =
+    const isWaitingForContent =
       (isPlaceholder && !tile.contentReady) ||
       (hasRenderableContent && !tile.contentAvailable);
 
     // We want to refine as much as possible for the current SSE threshold, but
     // if content is still loading, we have to wait.
-    if (isWaiting) {
+    if (isWaitingForContent) {
       shouldRefine = false;
     }
 
