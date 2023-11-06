@@ -274,11 +274,6 @@ function executeEmptyTraversal(root, frameState) {
     );
     const tile = stack.pop();
 
-    // Skip tiles that are expired.
-    if (tile.contentExpired) {
-      continue;
-    }
-
     // Distinguish placeholder tiles (that will load more tiles once the content
     // loads) from empty tiles
     const isPlaceholder = tile.hasTilesetContent || tile.hasImplicitContent;
@@ -318,7 +313,12 @@ function executeEmptyTraversal(root, frameState) {
     // This block makes use of the fact that empty tiles and placeholder tiles
     // that have not yet loaded will have 0 children
     const shouldTraverse = isAboveErrorThreshold || isPlaceholder;
-    if (shouldTraverse) {
+
+    // Expired placeholder tiles destroy their descendants, so stop the
+    // traversal early if this is detected.
+    const isExpiredPlaceholder = isPlaceholder && tile.isExpired;
+
+    if (shouldTraverse && !isExpiredPlaceholder) {
       const children = tile.children;
       const childrenLength = children.length;
 
