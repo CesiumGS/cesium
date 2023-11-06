@@ -285,8 +285,7 @@ RayShapeIntersection intersectVoxel(in Ray ray, in VoxelCell voxel)
     vec3 p1 = voxel.p + voxel.dP;
 
     // Intersect with outer ellipsoid.
-    // The ray is already scaled by the ellipsoid axes, so we can simply intersect with a sphere
-    RayShapeIntersection outerSphereIntersect = intersectSphere(ray, p1.z, true);
+    RayShapeIntersection maxHeightIntersect = intersectHeight(ray, p1.z, true);
 
     // Intersect with longitude bounds
     RayShapeIntersection wedgeIntersect = intersectRegularWedge(ray, vec2(p0.x, p1.x), true);
@@ -294,12 +293,11 @@ RayShapeIntersection intersectVoxel(in Ray ray, in VoxelCell voxel)
     RayShapeIntersection flippedWedge = invertVolume(wedgeIntersect);
 
     // Intersect outer ellipsoid with longitude bounds to get an orange slice
-    RayShapeIntersection orangeSlice = intersectIntersections(ray, outerSphereIntersect, flippedWedge);
+    RayShapeIntersection orangeSlice = intersectIntersections(ray, maxHeightIntersect, flippedWedge);
 
     // Remove inner ellipsoid to get the orange peel
-    RayShapeIntersection innerSphereIntersect = intersectSphere(ray, p0.z, false);
-    RayShapeIntersection orangePeel = removeNegativeIntersection(ray, orangeSlice, innerSphereIntersect);
-    //return orangePeel;
+    RayShapeIntersection minHeightIntersect = intersectHeight(ray, p0.z, false);
+    RayShapeIntersection orangePeel = removeNegativeIntersection(ray, orangeSlice, minHeightIntersect);
 
     // The latitude bound nearest to a pole defines a negative volume
     bool minLatitudeIsNegative = p0.y < 0.0;
@@ -333,7 +331,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     ray.dir *= 2.0;
 
     // Outer ellipsoid
-    RayShapeIntersection outerIntersect = intersectSphere(ray, u_clipMinMaxHeight.y, true);
+    RayShapeIntersection outerIntersect = intersectHeight(ray, u_clipMinMaxHeight.y, true);
     setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MAX, outerIntersect);
 
     // Exit early if the outer ellipsoid was missed.
@@ -342,7 +340,7 @@ void intersectShape(in Ray ray, inout Intersections ix) {
     }
 
     // Inner ellipsoid
-    RayShapeIntersection innerIntersect = intersectSphere(ray, u_clipMinMaxHeight.x, false);
+    RayShapeIntersection innerIntersect = intersectHeight(ray, u_clipMinMaxHeight.x, false);
 
     if (innerIntersect.entry.w == NO_HIT) {
         setShapeIntersection(ix, ELLIPSOID_INTERSECTION_INDEX_HEIGHT_MIN, innerIntersect);
