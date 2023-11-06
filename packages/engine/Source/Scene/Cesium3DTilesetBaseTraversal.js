@@ -239,6 +239,76 @@ function executeTraversal(root, frameState) {
   }
 }
 
+function executeEmptyTraversal(root, frameState) {
+  const { updateTile, loadTile, touchTile } = Cesium3DTilesetTraversal;
+
+  // Assume we want to refine as much as possible until we discover a tile
+  // with renderable content that still needs to be loaded.
+  let shouldRefine = true;
+
+  // Set up a depth-first search (DFS) traversal
+  const stack = emptyTraversal.stack;
+  stack.push(root);
+  while (stack.length > 0) {
+    emptyTraversal.stackMaximumLength = Math.max(
+      emptyTraversal.stackMaximumLength,
+      stack.length
+    );
+    const tile = stack.pop();
+
+    // Distinguish placeholder tiles (that will load more tiles once the content
+    // loads) from empty tiles
+    const isPlaceholder = tile.hasTilesetContent || tile.hasImplicitContent;
+    const hasRenderableContent = tile.hasRenderableContent;
+
+    // Check if we're waiting for content to load.
+    // tile.contentAvailable checks for expired content and only works for
+    // renderable content, so for placeholder tiles (external or implicit
+    // tilesets) check for contentReady instead
+    const isWaiting =
+      (isPlaceholder && !tile.contentReady) ||
+      (hasRenderableContent && !tile.contentAvailable);
+
+    // We want to refine as much as possible for the current SSE threshold, but
+    // if content is still loading, we have to wait.
+    if (isWaiting) {
+      shouldRefine = false;
+    }
+
+    // Update the tile and make requests for content as needed.
+    updateTile(tile, frameState);
+    if (!tile.isVisible) {
+      // Load tiles that aren't visible since they are still needed for the parent to refine
+      loadTile(tile, frameState);
+      touchTile(tile, frameState);
+    }
+
+    // Tiles above the screen space error threshold will be traversed
+    const isAboveErrorThreshold =
+      tile._screenSpaceError > tile.tileset.memoryAdjustedScreenSpaceError;
+
+    // Continue the DFS traversal by pushing children to the stack. The traversal
+    // will stop once the tile is below the SSE threshold. There's one exception:
+    // if the tile is a placeholder tile, the real tile (once loaded) will be
+    // its child.
+    //
+    // This block makes use of the fact that empty tiles and placeholder tiles
+    // that have not yet loaded will have 0 children
+    const shouldTraverse = isAboveErrorThreshold || isPlaceholder;
+    if (shouldTraverse) {
+      const children = tile.children;
+      const childrenLength = children.length;
+
+      for (let i = 0; i < childrenLength; ++i) {
+        const child = children[i];
+        stack.push(child);
+      }
+    }
+  }
+
+  return shouldRefine;
+}
+
 /**
  * Depth-first traversal that checks if all nearest descendants with content are loaded.
  * Ignores visibility.
@@ -248,7 +318,10 @@ function executeTraversal(root, frameState) {
  * @param {FrameState} frameState
  * @returns {boolean}
  */
-function executeEmptyTraversal(root, frameState) {
+Cesium3DTilesetBaseTraversal._executeEmptyTraversalOld = function (
+  root,
+  frameState
+) {
   const {
     canTraverse,
     updateTile,
@@ -296,6 +369,6 @@ function executeEmptyTraversal(root, frameState) {
   }
 
   return allDescendantsLoaded;
-}
+};
 
 export default Cesium3DTilesetBaseTraversal;
