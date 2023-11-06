@@ -1303,8 +1303,8 @@ describe(
       });
     });
 
-    it("replacement refinement - selects upwards when traversal stops at empty tile", function () {
-      // No children have content, but all grandchildren have content
+    it("replacement refinement - empty tile traversal does not examine tiles that are too deep to be in view", function () {
+      // No children have content, but all grandchildren have content.
       //
       //          C
       //      E       E
@@ -1314,14 +1314,17 @@ describe(
         scene,
         tilesetReplacement1Url
       ).then(function (tileset) {
+        // Set up a camera view where the empty tiles are the first tiles
+        // to meet the SSE threshold. While perhaps counterintuitive, such
+        // tiles should be rendered empty even though they're technically holes.
         tileset.root.geometricError = 90;
         setZoom(80);
         scene.renderForSpecs();
 
         const statistics = tileset._statistics;
-        expect(statistics.selected).toEqual(1);
+        expect(statistics.selected).toEqual(0);
         expect(statistics.visited).toEqual(3);
-        expect(isSelected(tileset, tileset.root)).toBe(true);
+        expect(isSelected(tileset, tileset.root)).toBe(false);
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       });
     });
