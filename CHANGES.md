@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.112 - 2023-12-01
+
+##### Fixes :wrench:
+
+- Fixed a bug where 3D Tiles replacement refinement would sometimes not refine correctly for a tile with both empty and non-empty children.[#11611](https://github.com/CesiumGS/cesium/pull/11611)
+
 ### 1.111 - 2023-11-01
 
 #### @cesium/engine
