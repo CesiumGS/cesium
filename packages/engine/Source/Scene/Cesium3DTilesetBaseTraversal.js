@@ -239,6 +239,24 @@ function executeTraversal(root, frameState) {
   }
 }
 
+/**
+ * Depth-first search starting at an empty tile to hint to help determine if
+ * this tile's parent should refine when using REPLACE refinement.
+ *
+ * The only reason why refinement should not happen is if there is a descendant
+ * tile that would be visible for the current camera view but has not finished
+ * loading.
+ *
+ * The traversal progresses from the root until the first tiles that go below
+ * the screen space error threshold. This is important to prevent long chains
+ * of empty tiles with renderable content beneath from holding up the
+ * refinement.
+ *
+ * @param {Cesium3DTile} root An empty tile that marks the root of the traversal
+ * @param {FrameState} frameState The frame state
+ * @returns {boolean} false if the parent tile should not refine yet (due to tiles still loading), true otherwise.
+ * @private
+ */
 function executeEmptyTraversal(root, frameState) {
   const { updateTile, loadTile, touchTile } = Cesium3DTilesetTraversal;
 
@@ -308,67 +326,5 @@ function executeEmptyTraversal(root, frameState) {
 
   return shouldRefine;
 }
-
-/**
- * Depth-first traversal that checks if all nearest descendants with content are loaded.
- * Ignores visibility.
- *
- * @private
- * @param {Cesium3DTile} root
- * @param {FrameState} frameState
- * @returns {boolean}
- */
-Cesium3DTilesetBaseTraversal._executeEmptyTraversalOld = function (
-  root,
-  frameState
-) {
-  const {
-    canTraverse,
-    updateTile,
-    loadTile,
-    touchTile,
-  } = Cesium3DTilesetTraversal;
-  let allDescendantsLoaded = true;
-  const stack = emptyTraversal.stack;
-  stack.push(root);
-
-  while (stack.length > 0) {
-    emptyTraversal.stackMaximumLength = Math.max(
-      emptyTraversal.stackMaximumLength,
-      stack.length
-    );
-
-    const tile = stack.pop();
-    const children = tile.children;
-    const childrenLength = children.length;
-
-    // Only traverse if the tile is empty - traversal stops at descendants with content
-    const traverse = !tile.hasRenderableContent && canTraverse(tile);
-    const emptyLeaf = !tile.hasRenderableContent && tile.children.length === 0;
-
-    // Traversal stops but the tile does not have content yet
-    // There will be holes if the parent tries to refine to its children, so don't refine
-    // One exception: a parent may refine even if one of its descendants is an empty leaf
-    if (!traverse && !tile.contentAvailable && !emptyLeaf) {
-      allDescendantsLoaded = false;
-    }
-
-    updateTile(tile, frameState);
-    if (!tile.isVisible) {
-      // Load tiles that aren't visible since they are still needed for the parent to refine
-      loadTile(tile, frameState);
-      touchTile(tile, frameState);
-    }
-
-    if (traverse) {
-      for (let i = 0; i < childrenLength; ++i) {
-        const child = children[i];
-        stack.push(child);
-      }
-    }
-  }
-
-  return allDescendantsLoaded;
-};
 
 export default Cesium3DTilesetBaseTraversal;
