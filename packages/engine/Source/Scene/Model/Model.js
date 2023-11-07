@@ -1,23 +1,17 @@
-import AttributeType from "../AttributeType.js";
-import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
 import Credit from "../../Core/Credit.js";
 import Color from "../../Core/Color.js";
-import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defined from "../../Core/defined.js";
 import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
 import Event from "../../Core/Event.js";
-import IndexDatatype from "../../Core/IndexDatatype.js";
-import IntersectionTests from "../../Core/IntersectionTests.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
-import Ray from "../../Core/Ray.js";
 import Resource from "../../Core/Resource.js";
 import RuntimeError from "../../Core/RuntimeError.js";
 import Pass from "../../Renderer/Pass.js";
@@ -43,8 +37,7 @@ import ModelUtility from "./ModelUtility.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
-import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
-import Transforms from "../../Core/Transforms.js";
+import pickModel from "./pickModel.js";
 
 /**
  * <div class="notice">
@@ -2489,12 +2482,6 @@ Model.prototype.isClippingEnabled = function () {
   );
 };
 
-const scratchV0 = new Cartesian3();
-const scratchV1 = new Cartesian3();
-const scratchV2 = new Cartesian3();
-const scratchModelMatrix = new Matrix4();
-const scratchPickCartographic = new Cartographic();
-
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
  *
@@ -2507,183 +2494,7 @@ const scratchPickCartographic = new Cartographic();
  * @private
  */
 Model.prototype.pick = function (ray, frameState, cullBackFaces, result) {
-  if (frameState.mode === SceneMode.MORPHING) {
-    return;
-  }
-
-  let minT = Number.MAX_VALUE;
-  const modelMatrix = this.sceneGraph.computedModelMatrix;
-
-  // Check all the primitive positions
-  const nodes = this._sceneGraph._runtimeNodes;
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
-    const instances = node.node.instances;
-    if (defined(instances)) {
-      // TODO: Instances
-      return;
-    }
-
-    const nodeComputedTransform = node.computedTransform;
-    let computedModelMatrix = Matrix4.multiplyTransformation(
-      modelMatrix,
-      nodeComputedTransform,
-      scratchModelMatrix
-    );
-    if (frameState.mode !== SceneMode.SCENE3D) {
-      computedModelMatrix = Transforms.basisTo2D(
-        frameState.mapProjection,
-        computedModelMatrix,
-        computedModelMatrix
-      );
-    }
-
-    for (let j = 0; j < node.node.primitives.length; j++) {
-      const primitive = node.node.primitives[j];
-      const positionAttribute = ModelUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.POSITION
-      );
-      const vertexCount = positionAttribute.count;
-
-      let indices = primitive.indices.typedArray;
-      if (!defined(indices)) {
-        const indicesBuffer = primitive.indices.buffer;
-        const indicesCount = primitive.indices.count;
-        if (defined(indicesBuffer) && frameState.context.webgl2) {
-          const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
-          indices = useUint8Array
-            ? new Uint8Array(indicesCount)
-            : IndexDatatype.createTypedArray(vertexCount, indicesCount);
-          indicesBuffer.getBufferData(indices, 0, 0, indicesCount);
-        }
-        primitive.indices.typedArray = indices;
-      }
-
-      let vertices = positionAttribute.typedArray;
-      let componentDatatype = positionAttribute.componentDatatype;
-      let attributeType = positionAttribute.type;
-
-      const quantization = positionAttribute.quantization;
-      if (defined(quantization)) {
-        componentDatatype = positionAttribute.quantization.componentDatatype;
-        attributeType = positionAttribute.quantization.type;
-      }
-
-      const numComponents = AttributeType.getNumberOfComponents(attributeType);
-      const elementCount = vertexCount * numComponents;
-
-      if (!defined(vertices)) {
-        const verticesBuffer = positionAttribute.buffer;
-
-        if (defined(verticesBuffer) && frameState.context.webgl2) {
-          vertices = ComponentDatatype.createTypedArray(
-            componentDatatype,
-            elementCount
-          );
-          verticesBuffer.getBufferData(
-            vertices,
-            positionAttribute.byteOffset,
-            0,
-            elementCount
-          );
-        }
-
-        if (quantization && positionAttribute.normalized) {
-          vertices = AttributeCompression.dequantize(
-            vertices,
-            componentDatatype,
-            attributeType,
-            vertexCount
-          );
-        }
-
-        positionAttribute.typedArray = vertices;
-      }
-
-      const indicesLength = indices.length;
-      for (let i = 0; i < indicesLength; i += 3) {
-        const i0 = indices[i];
-        const i1 = indices[i + 1];
-        const i2 = indices[i + 2];
-
-        const getPosition = (vertices, index, numComponents, result) => {
-          const i = index * numComponents;
-          result.x = vertices[i];
-          result.y = vertices[i + 1];
-          result.z = vertices[i + 2];
-
-          if (defined(quantization)) {
-            if (quantization.octEncoded) {
-              result = AttributeCompression.octDecodeInRange(
-                result,
-                quantization.normalizationRange,
-                result
-              );
-
-              if (quantization.octEncodedZXY) {
-                const x = result.x;
-                result.x = result.z;
-                result.z = result.y;
-                result.y = x;
-              }
-            } else {
-              result = Cartesian3.multiplyComponents(
-                result,
-                quantization.quantizedVolumeStepSize,
-                result
-              );
-
-              result = Cartesian3.add(
-                result,
-                quantization.quantizedVolumeOffset,
-                result
-              );
-            }
-          }
-
-          result = Matrix4.multiplyByPoint(computedModelMatrix, result, result);
-
-          return result;
-        };
-
-        const v0 = getPosition(vertices, i0, numComponents, scratchV0);
-        const v1 = getPosition(vertices, i1, numComponents, scratchV1);
-        const v2 = getPosition(vertices, i2, numComponents, scratchV2);
-
-        const t = IntersectionTests.rayTriangleParametric(
-          ray,
-          v0,
-          v1,
-          v2,
-          cullBackFaces
-        );
-
-        if (defined(t)) {
-          if (t < minT && t >= 0.0) {
-            minT = t;
-          }
-        }
-      }
-    }
-  }
-
-  if (minT === Number.MAX_VALUE) {
-    return undefined;
-  }
-
-  result = Ray.getPoint(ray, minT, result);
-  if (frameState.mode !== SceneMode.SCENE3D) {
-    Cartesian3.fromElements(result.y, result.z, result.x, result);
-
-    const projection = frameState.mapProjection;
-    const ellipsoid = projection.ellipsoid;
-
-    const cart = projection.unproject(result, scratchPickCartographic);
-    ellipsoid.cartographicToCartesian(cart, result);
-  }
-
-  return result;
+  return pickModel(this, ray, frameState, cullBackFaces, result);
 };
 
 /**

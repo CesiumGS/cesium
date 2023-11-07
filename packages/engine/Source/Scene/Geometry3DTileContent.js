@@ -525,6 +525,15 @@ Geometry3DTileContent.prototype.update = function (tileset, frameState) {
   }
 };
 
+Geometry3DTileContent.prototype.pick = function (
+  ray,
+  frameState,
+  cullBackFaces,
+  result
+) {
+  return undefined;
+};
+
 Geometry3DTileContent.prototype.isDestroyed = function () {
   return false;
 };
