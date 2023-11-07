@@ -1177,6 +1177,15 @@ Implicit3DTileContent.prototype.applyStyle = function (style) {};
 
 Implicit3DTileContent.prototype.update = function (tileset, frameState) {};
 
+Implicit3DTileContent.prototype.pick = function (
+  ray,
+  frameState,
+  cullBackFaces,
+  result
+) {
+  return undefined;
+};
+
 Implicit3DTileContent.prototype.isDestroyed = function () {
   return false;
 };
