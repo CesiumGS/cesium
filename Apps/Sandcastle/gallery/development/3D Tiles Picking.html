@@ -39,8 +39,6 @@
           timeline: false,
           animation: false,
           baseLayerPicker: false,
-          // The globe does not need to be displayed,
-          // since the Photorealistic 3D Tiles include terrain
           globe: false,
         });
 
@@ -69,10 +67,8 @@
         const scene = viewer.scene;
 
         const scratchCartesian = new Cesium.Cartesian3();
-        const scratchTo2D = new Cesium.Matrix4();
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(function (movement) {
-          // const feature = scene.pick(movement.position);
           const pickedPositionResult = scene.pickPosition(movement.position);
           console.log(pickedPositionResult);
           if (Cesium.defined(pickedPositionResult)) {
@@ -94,7 +90,6 @@
             scratchCartesian
           );
 
-          console.log(picked);
           if (Cesium.defined(picked)) {
             viewer.entities.add({
               position: picked,
@@ -105,7 +100,6 @@
               },
             });
           }
-          // }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK); //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
