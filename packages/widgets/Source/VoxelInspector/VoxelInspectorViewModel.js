@@ -195,6 +195,12 @@ function VoxelInspectorViewModel(scene) {
     getPrimitiveFunction: true,
   });
   addProperty({
+    name: "constantStep",
+    initialValue: false,
+    setPrimitiveFunction: true,
+    getPrimitiveFunction: true,
+  });
+  addProperty({
     name: "jitter",
     initialValue: true,
     setPrimitiveFunction: true,

@@ -29,6 +29,10 @@ float hash(vec2 p)
 #endif
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection) {
+#if defined(CONSTANT_STEP)
+    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
+    return vec4(viewRay.dir, u_stepSize / dimAtLevel);
+#else
     #if defined(SHAPE_BOX)
         VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
     #else
@@ -41,6 +45,7 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float dt = clamp(exit - entry.w, 0.0000001, maxStepSize);
     dt = dt * RAY_SCALE * 0.2;
     return vec4(normalize(entry.xyz), dt);
+#endif
 }
 
 void main()

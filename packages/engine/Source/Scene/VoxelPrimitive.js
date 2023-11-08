@@ -299,6 +299,12 @@ function VoxelPrimitive(options) {
    * @type {boolean}
    * @private
    */
+  this._constantStep = false;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
   this._jitter = true;
 
   /**
@@ -672,6 +678,29 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
       if (this._jitter !== jitter) {
         this._jitter = jitter;
+        this._shaderDirty = true;
+      }
+    },
+  },
+
+  /**
+   * Gets or sets whether or not to to use constant step size during the raymarch.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {boolean}
+   */
+  constantStep: {
+    get: function () {
+      return this._constantStep;
+    },
+    set: function (constantStep) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("constantStep", constantStep);
+      //>>includeEnd('debug');
+
+      console.log(`VoxelPrimitive: constantStep = ${constantStep}`);
+      if (this._constantStep !== constantStep) {
+        this._constantStep = constantStep;
         this._shaderDirty = true;
       }
     },

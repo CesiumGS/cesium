@@ -212,6 +212,14 @@ function VoxelRenderResources(primitive) {
   if (primitive._jitter) {
     shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
   }
+  if (primitive._constantStep) {
+    console.log(`setting CONSTANT_STEP = ${primitive._constantStep}`);
+    shaderBuilder.addDefine(
+      "CONSTANT_STEP",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
+  }
   if (primitive._nearestSampling) {
     shaderBuilder.addDefine(
       "NEAREST_SAMPLING",
