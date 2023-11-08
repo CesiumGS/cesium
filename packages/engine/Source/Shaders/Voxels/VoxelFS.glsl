@@ -28,10 +28,12 @@ float hash(vec2 p)
 }
 #endif
 
-vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection) {
+vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in float currentT) {
 #if defined(CONSTANT_STEP)
-    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    return vec4(viewRay.dir, u_stepSize / dimAtLevel);
+    float dt = u_stepSize * pow(2.0, -float(sampleData.tileCoords.w));
+    // Shrink the step size for points closer to the camera
+    dt = min(dt, dt * max(0.01, currentT));
+    return vec4(viewRay.dir, dt);
 #else
     #if defined(SHAPE_BOX)
         VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
@@ -80,7 +82,7 @@ void main()
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection);
+    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currT);
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
@@ -158,7 +160,7 @@ void main()
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection);
+        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection, currT);
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]
