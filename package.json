@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.110.0",
+  "version": "1.111.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -26,8 +26,7 @@
     "url": "https://github.com/CesiumGS/cesium.git"
   },
   "bugs": {
-    "url": "https://github.com/CesiumGS/cesium/issues",
-    "email": "cesium-dev@googlegroups.com"
+    "url": "https://github.com/CesiumGS/cesium/issues"
   },
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
@@ -51,12 +50,12 @@
     "./Specs/**/*"
   ],
   "dependencies": {
-    "@cesium/engine": "^5.0.0",
-    "@cesium/widgets": "^4.1.0"
+    "@cesium/engine": "^6.1.0",
+    "@cesium/widgets": "^4.3.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.342.0",
-    "@aws-sdk/lib-storage": "^3.342.0",
+    "@aws-sdk/client-s3": "^3.438.0",
+    "@aws-sdk/lib-storage": "^3.438.0",
     "@playwright/test": "^1.34.3",
     "chokidar": "^3.5.3",
     "cloc": "^2.8.0",
@@ -106,7 +105,7 @@
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
     "rimraf": "^5.0.0",
-    "sinon": "^16.0.0",
+    "sinon": "^17.0.0",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^5.0.2",
