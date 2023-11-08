@@ -87,10 +87,10 @@ RayShapeIntersection intersectHeight(in Ray ray, in float relativeHeight, in boo
     vec3 position = ray.pos * radiiCorrection;
     vec3 direction = ray.dir * radiiCorrection;
 
-    float a = dot(direction, direction);
-    float b = dot(direction, position);
-    float c = dot(position, position) - 1.0;
-    float determinant = b * b - a * c; // Possible cancellation!
+    float a = dot(direction, direction); // ~ 1.0 (or maybe 4.0 if ray is scaled)
+    float b = dot(direction, position); // roughly inside [-1.0, 1.0] when zoomed in
+    float c = dot(position, position) - 1.0; // ~ 0.0 when zoomed in. Note cancellation problem!
+    float determinant = b * b - a * c; // ~ b * b when zoomed in
 
     if (determinant < 0.0) {
         vec4 miss = vec4(normalize(direction), NO_HIT);
@@ -98,14 +98,21 @@ RayShapeIntersection intersectHeight(in Ray ray, in float relativeHeight, in boo
     }
 
     determinant = sqrt(determinant);
-    float t1 = (-b - determinant) / a; // Possible cancellation for small relativeHeight?
-    float t2 = (-b + determinant) / a;
+
+    // Compute larger root using standard formula
+    float signB = b < 0.0 ? -1.0 : 1.0;
+    // The other root may suffer from subtractive cancellation in the standard formula.
+    // Compute it from the first root instead.
+    float t1 = (-b - signB * determinant) / a;
+    float t2 = c / (a * t1);
+    float tmin = min(t1, t2);
+    float tmax = max(t1, t2);
 
     float directionScale = convex ? 1.0 : -1.0;
-    vec3 d1 = directionScale * normalize(position + t1 * direction);
-    vec3 d2 = directionScale * normalize(position + t2 * direction);
+    vec3 d1 = directionScale * normalize(position + tmin * direction);
+    vec3 d2 = directionScale * normalize(position + tmax * direction);
 
-    return RayShapeIntersection(vec4(d1, t1), vec4(d2, t2));
+    return RayShapeIntersection(vec4(d1, tmin), vec4(d2, tmax));
 }
 
 /**
@@ -134,9 +141,9 @@ vec2 intersectDoubleEndedCone(in Ray ray, in float cosSqrHalfAngle)
     float c = cSin + cCos;
     // determinant = b * b - a * c. But bSin * bSin = aSin * cSin.
     // Avoid subtractive cancellation by expanding to eliminate these terms
-    float det = 2.0 * bSin * bCos + bCos * bCos - aSin * cCos - aCos * cSin - aCos * cCos;
+    float determinant = 2.0 * bSin * bCos + bCos * bCos - aSin * cCos - aCos * cSin - aCos * cCos;
 
-    if (det < 0.0) {
+    if (determinant < 0.0) {
         return vec2(NO_HIT);
     } else if (a == 0.0) {
         // Ray is parallel to cone surface
@@ -145,9 +152,14 @@ vec2 intersectDoubleEndedCone(in Ray ray, in float cosSqrHalfAngle)
             : vec2(-0.5 * c / b, NO_HIT);
     }
 
-    det = sqrt(det);
-    float t1 = (-b - det) / a;
-    float t2 = (-b + det) / a;
+    determinant = sqrt(determinant);
+
+    // Compute larger root using standard formula
+    float signB = b < 0.0 ? -1.0 : 1.0;
+    float t1 = (-b - signB * determinant) / a;
+    // The other root may suffer from subtractive cancellation in the standard formula.
+    // Compute it from the first root instead.
+    float t2 = c / (a * t1);
     float tmin = min(t1, t2);
     float tmax = max(t1, t2);
     return vec2(tmin, tmax);
