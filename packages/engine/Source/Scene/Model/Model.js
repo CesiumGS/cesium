@@ -151,6 +151,7 @@ import pickModel from "./pickModel.js";
  * @privateParam {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @privateParam {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @privateParam {boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @privateParam {boolean} [options.enablePick=false] Whether to allow with CPU picking with <code>pick</code> when not using WebGL 2 or above. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the model has loaded.
  * @privateParam {string|number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
@@ -456,6 +457,7 @@ function Model(options) {
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
+  this._enablePick = defaultValue(options.enablePick, false);
 
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
@@ -2671,6 +2673,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @param {boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @param {boolean} [options.enablePick=false] Whether to allow with CPU picking with <code>pick</code> when not using WebGL 2 or above. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the model has loaded.
  * @param {string|number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
@@ -2765,6 +2768,7 @@ Model.fromGltfAsync = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
@@ -2841,6 +2845,7 @@ Model.fromB3dm = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
@@ -2896,6 +2901,7 @@ Model.fromI3dm = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
   };
@@ -3029,6 +3035,7 @@ function makeModelOptions(loader, modelType, options) {
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
     projectTo2D: options.projectTo2D,
+    enablePick: options.enablePick,
     featureIdLabel: options.featureIdLabel,
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,

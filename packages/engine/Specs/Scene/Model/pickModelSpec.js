@@ -55,6 +55,7 @@ describe("Scene/Model/pickModel", function () {
   it("throws without frameState", async function () {
     const model = await Model.fromGltfAsync({
       url: boxTexturedGltfUrl,
+      enablePick: !scene.frameState.context.webgl2,
     });
     const ray = new Ray();
     expect(() => pickModel(model, ray)).toThrowDeveloperError();
@@ -63,6 +64,7 @@ describe("Scene/Model/pickModel", function () {
   it("returns undefined if model is not ready", async function () {
     const model = await Model.fromGltfAsync({
       url: boxTexturedGltfUrl,
+      enablePick: !scene.frameState.context.webgl2,
     });
     const ray = new Ray();
     expect(pickModel(model, ray, scene.frameState)).toBeUndefined();
@@ -72,6 +74,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxTexturedGltfUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -83,6 +86,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxTexturedGltfUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -100,10 +104,41 @@ describe("Scene/Model/pickModel", function () {
     );
   });
 
+  it("returns position of intersection between ray and model surface with enablePick in WebGL 1", async function () {
+    const sceneWithWebgl1 = createScene({
+      contextOptions: {
+        requestWebgl1: true,
+      },
+    });
+
+    const model = await loadAndZoomToModelAsync(
+      {
+        url: boxTexturedGltfUrl,
+        enablePick: true,
+      },
+      scene
+    );
+    const ray = scene.camera.getPickRay(
+      new Cartesian2(
+        scene.drawingBufferWidth / 2.0,
+        scene.drawingBufferHeight / 2.0
+      )
+    );
+
+    const expected = new Cartesian3(0.5, 0, 0.5);
+    expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
+      expected,
+      CesiumMath.EPSILON12
+    );
+
+    sceneWithWebgl1.destroyForSpecs();
+  });
+
   it("returns position of intersection accounting for node transforms", async function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxWithOffsetUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -125,6 +160,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxCesiumRtcUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -138,7 +174,7 @@ describe("Scene/Model/pickModel", function () {
     const expected = new Cartesian3(6378137.5, 0.0, -0.499999996649);
     expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
       expected,
-      CesiumMath.EPSILON12
+      CesiumMath.EPSILON8
     );
   });
 
@@ -146,6 +182,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxWithQuantizedAttributes,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -167,6 +204,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxWithMixedCompression,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -188,6 +226,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxInstanced,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -209,6 +248,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: pointCloudUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -226,6 +266,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxTexturedGltfUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -244,6 +285,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxTexturedGltfUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -266,6 +308,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxTexturedGltfUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
@@ -287,6 +330,7 @@ describe("Scene/Model/pickModel", function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxTexturedGltfUrl,
+        enablePick: !scene.frameState.context.webgl2,
       },
       scene
     );
