@@ -116,7 +116,7 @@ export default function pickModel(
         instances.attributes[0].componentDatatype;
 
       const transformElements = 12;
-      let transformsTypedArray;
+      let transformsTypedArray = runtimeNode.transformsTypedArray;
       if (!defined(transformsTypedArray)) {
         const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
         if (defined(instanceTransformsBuffer) && frameState.context.webgl2) {
@@ -128,17 +128,19 @@ export default function pickModel(
         }
       }
 
-      for (let i = 0; i < transformsCount; i++) {
-        const transform = Matrix4.unpack(
-          transformsTypedArray,
-          i * transformElements,
-          scratchInstanceMatrix
-        );
-        transform[12] = 0.0;
-        transform[13] = 0.0;
-        transform[14] = 0.0;
-        transform[15] = 1.0;
-        transforms.push(transform);
+      if (defined(transformsTypedArray)) {
+        for (let i = 0; i < transformsCount; i++) {
+          const transform = Matrix4.unpack(
+            transformsTypedArray,
+            i * transformElements,
+            scratchInstanceMatrix
+          );
+          transform[12] = 0.0;
+          transform[13] = 0.0;
+          transform[14] = 0.0;
+          transform[15] = 1.0;
+          transforms.push(transform);
+        }
       }
     }
 
@@ -170,7 +172,6 @@ export default function pickModel(
             : IndexDatatype.createTypedArray(vertexCount, indicesCount);
           indicesBuffer.getBufferData(indices, 0, 0, indicesCount);
         }
-        primitive.indices.typedArray = indices;
       }
 
       let vertices = positionAttribute.typedArray;
@@ -210,8 +211,10 @@ export default function pickModel(
             vertexCount
           );
         }
+      }
 
-        positionAttribute.typedArray = vertices;
+      if (!defined(indices) || !defined(vertices)) {
+        return;
       }
 
       const indicesLength = indices.length;
