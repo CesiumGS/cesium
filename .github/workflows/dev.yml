@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: install node 18
+      - name: install node 20
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       - name: npm install
         run: npm install
       - name: lint *.js
@@ -27,8 +27,8 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
     steps:
@@ -45,7 +45,7 @@ jobs:
         run: npm run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
       - name: upload coverage artifacts
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: aws s3 sync ./Build/Coverage s3://cesium-dev/cesium/$BRANCH/Build/Coverage --delete --color on
+        run: aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
   release-tests:
     runs-on: ubuntu-latest
     steps:
@@ -69,8 +69,8 @@ jobs:
       contents: read
     env:
       BUILD_VERSION: ${{ github.ref_name }}.${{ github.run_number }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: us-east-1
       BRANCH: ${{ github.ref_name }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -97,7 +97,7 @@ jobs:
       - uses: ./.github/actions/verify-package
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: npm run deploy-s3 -- -b "cesium-dev" -d cesium/$BRANCH -c 'no-cache' --confirm 
+        run: npm run deploy-s3 -- -b "cesium-public-builds" -d cesium/$BRANCH -c 'no-cache' --confirm 
       - name: set status
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: npm run deploy-status -- --status success --message Deployed
@@ -105,10 +105,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: install node 16
+      - name: install node 18
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
       - name: npm install
         run: npm install
       - name: release build
