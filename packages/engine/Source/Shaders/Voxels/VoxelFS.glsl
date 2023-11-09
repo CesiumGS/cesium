@@ -29,11 +29,11 @@ float hash(vec2 p)
 #endif
 
 vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in float currentT) {
+    float lodStep = u_stepSize / pow(2.0, float(sampleData.tileCoords.w));
 #if defined(CONSTANT_STEP)
-    float dt = u_stepSize * pow(2.0, -float(sampleData.tileCoords.w));
     // Shrink the step size for points closer to the camera
-    dt = min(dt, dt * max(0.01, currentT));
-    return vec4(viewRay.dir, dt);
+    // float dt = min(lodStep, lodStep * max(0.04, 4.0 * currentT));
+    return vec4(viewRay.dir, lodStep);
 #else
     #if defined(SHAPE_BOX)
         VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
@@ -43,9 +43,8 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     RayShapeIntersection voxelIntersection = intersectVoxel(viewRay, voxel);
     vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
     float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    float maxStepSize = u_stepSize * pow(2.0, -float(sampleData.tileCoords.w));
-    float dt = clamp(exit - entry.w, 0.0000001, maxStepSize);
-    dt = dt * RAY_SCALE * 0.2;
+    float dt = (exit - entry.w) * RAY_SCALE * 0.2;
+    dt = clamp(dt, 0.00000002, lodStep);
     return vec4(normalize(entry.xyz), dt);
 #endif
 }

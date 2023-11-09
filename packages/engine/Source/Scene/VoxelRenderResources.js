@@ -213,7 +213,6 @@ function VoxelRenderResources(primitive) {
     shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
   }
   if (primitive._constantStep) {
-    console.log(`setting CONSTANT_STEP = ${primitive._constantStep}`);
     shaderBuilder.addDefine(
       "CONSTANT_STEP",
       undefined,

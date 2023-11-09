@@ -698,7 +698,6 @@ Object.defineProperties(VoxelPrimitive.prototype, {
       Check.typeOf.bool("constantStep", constantStep);
       //>>includeEnd('debug');
 
-      console.log(`VoxelPrimitive: constantStep = ${constantStep}`);
       if (this._constantStep !== constantStep) {
         this._constantStep = constantStep;
         this._shaderDirty = true;
