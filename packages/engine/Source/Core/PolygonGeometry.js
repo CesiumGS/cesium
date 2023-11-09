@@ -636,7 +636,7 @@ function createGeometryFromPositionsExtruded(
   }
 
   let outerRing = hierarchy.outerRing;
-  let tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
+  const tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
   let positions2D = tangentPlane.projectPointsOntoPlane(
     outerRing,
     createGeometryFromPositionsExtrudedPositions
@@ -664,8 +664,6 @@ function createGeometryFromPositionsExtruded(
   const holes = hierarchy.holes;
   for (i = 0; i < holes.length; i++) {
     let hole = holes[i];
-
-    tangentPlane = EllipsoidTangentPlane.fromPoints(hole, ellipsoid);
     positions2D = tangentPlane.projectPointsOntoPlane(
       hole,
       createGeometryFromPositionsExtrudedPositions
@@ -1331,7 +1329,7 @@ function getTangentPlane(rectangle, positions, ellipsoid) {
 }
 
 const scratchCartographicCyllindrical = new Cartographic();
-function createProjectTo2d(rectangle, ellipsoid) {
+function createProjectTo2d(rectangle, outerPositions, ellipsoid) {
   return (positions, results) => {
     // If the polygon positions span a large enough extent, use a specialized projection
     if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
@@ -1360,7 +1358,10 @@ function createProjectTo2d(rectangle, ellipsoid) {
     }
 
     // Use a local tangent plane for smaller extents
-    const tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+    const tangentPlane = EllipsoidTangentPlane.fromPoints(
+      outerPositions,
+      ellipsoid
+    );
     return tangentPlane.projectPointsOntoPlane(positions, results);
   };
 }
@@ -1466,7 +1467,7 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
     hasTextureCoordinates,
-    createProjectTo2d(rectangle, ellipsoid),
+    createProjectTo2d(rectangle, outerPositions, ellipsoid),
     !perPositionHeight,
     ellipsoid,
     createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight)

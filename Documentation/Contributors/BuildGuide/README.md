@@ -170,23 +170,22 @@ Additional set up is required for deployment if you do not have commit access to
 
 ### Configure a Different S3 Bucket
 
-It is possible to configure your development branch of CesiumJS to deploy build artifacts to a different [AWS S3 Bucket](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html). If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+It is possible to configure your development branch of CesiumJS to deploy build artifacts to a different [AWS S3 Bucket](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html). If you are using the cesium-public-builds bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
-- In `.gtihub/workflows/dev.yml`, in the following lines, replace "cesium-dev" with the name of your S3 bucket.
+- In `.gtihub/workflows/dev.yml`, in the following lines, replace "cesium-public-builds" with the name of your S3 bucket.
 
 ```yml
-aws s3 sync ./Build/Coverage s3://cesium-dev/cesium/$BRANCH/Build/Coverage --delete --color on
+aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
 ```
 
 ```yml
-npm run deploy-s3 -- -b "cesium-dev" -d cesium/$BRANCH -c 'no-cache' --confirm
+npm run deploy-s3 -- -b "cesium-public-builds" -d cesium/$BRANCH -c 'no-cache' --confirm
 ```
 
 - In `gulpfile.js`, edit the following line:
 
 ```javascript
-const devDeployUrl =
-  "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
 ```
 
 - Edit the URL to match the URL of the S3 bucket specified in the previous step.
