@@ -103,7 +103,6 @@ function VoxelEllipsoidShape() {
     ellipsoidUvToShapeUvLatitude: new Cartesian2(),
     ellipsoidRenderLatitudeCosHalfMinMax: new Cartesian2(),
     ellipsoidInverseHeightDifferenceUv: 0.0,
-    ellipseInnerRadiiUv: new Cartesian2(),
     clipMinMaxHeight: new Cartesian2(),
   };
 
@@ -458,11 +457,6 @@ VoxelEllipsoidShape.prototype.update = function (
   // The percent of space that is between the inner and outer ellipsoid.
   const thickness = (shapeMaxBounds.z - shapeMinBounds.z) / shapeMaxExtent;
   shaderUniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
-  shaderUniforms.ellipseInnerRadiiUv = Cartesian2.fromElements(
-    shaderUniforms.ellipsoidRadiiUv.x - thickness,
-    shaderUniforms.ellipsoidRadiiUv.z - thickness,
-    shaderUniforms.ellipseInnerRadiiUv
-  );
   if (shapeMinBounds.z === shapeMaxBounds.z) {
     shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT"] = true;
   }
