@@ -90,6 +90,7 @@ void main()
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
         currT += noise * dt;
+        cellIntersection.w += noise * dt;
         positionUv += noise * dt * viewDirUv;
     #endif
 
