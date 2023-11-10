@@ -5,7 +5,6 @@
 #define NO_HIT (-czm_infinity)
 #define INF_HIT (czm_infinity * 0.5)
 #define RAY_SHIFT (0.000003163)
-#define RAY_SCALE (1.00003163)
 
 struct Ray {
     vec3 pos;
