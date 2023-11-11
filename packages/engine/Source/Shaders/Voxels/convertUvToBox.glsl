@@ -15,7 +15,7 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
 #endif
 }
 
-vec3 convertShapeUvToUvSpace(in vec3 shapeUv) {
+vec3 convertShapeUvToShapeSpace(in vec3 shapeUv) {
 #if defined(BOX_HAS_SHAPE_BOUNDS)
     return (shapeUv - u_boxUvToShapeUvTranslate) / u_boxUvToShapeUvScale;
 #else

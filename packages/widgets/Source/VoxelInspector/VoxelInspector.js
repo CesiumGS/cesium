@@ -97,6 +97,9 @@ function VoxelInspector(container, scene) {
     createCheckbox("Disable Update", "disableUpdate")
   );
   displayPanelContents.appendChild(createCheckbox("Debug Draw", "debugDraw"));
+  displayPanelContents.appendChild(
+    createCheckbox("Constant Step", "constantStep")
+  );
   displayPanelContents.appendChild(createCheckbox("Jitter", "jitter"));
   displayPanelContents.appendChild(
     createCheckbox("Nearest Sampling", "nearestSampling")

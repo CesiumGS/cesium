@@ -1,5 +1,5 @@
 // See IntersectionUtils.glsl for the definitions of Ray and NO_HIT
-// See convertUvToBox.glsl for the definition of convertShapeUvToUvSpace
+// See convertUvToBox.glsl for the definition of convertShapeUvToShapeSpace
 
 /* Box defines (set in Scene/VoxelBoxShape.js)
 #define BOX_INTERSECTION_INDEX ### // always 0
@@ -8,29 +8,7 @@
 uniform vec3 u_renderMinBounds;
 uniform vec3 u_renderMaxBounds;
 
-struct Box {
-    vec3 p0;
-    vec3 p1;
-};
-
-Box constructVoxelBox(in ivec4 octreeCoords, in vec3 tileUv)
-{
-    // Find the min/max cornerpoints of the voxel in tile coordinates
-    vec3 tileOrigin = vec3(octreeCoords.xyz);
-    vec3 numSamples = vec3(u_dimensions);
-    vec3 voxelSize = 1.0 / numSamples;
-    vec3 coordP0 = floor(tileUv * numSamples) * voxelSize + tileOrigin;
-    vec3 coordP1 = coordP0 + voxelSize;
-
-    // Transform to the UV coordinates of the scaled tileset
-    float tileSize = 1.0 / pow(2.0, float(octreeCoords.w));
-    vec3 p0 = convertShapeUvToUvSpace(coordP0 * tileSize);
-    vec3 p1 = convertShapeUvToUvSpace(coordP1 * tileSize);
-
-    return Box(p0, p1);
-}
-
-vec3 getBoxNormal(in Box box, in Ray ray, in float t)
+vec3 getBoxNormal(in VoxelBounds box, in Ray ray, in float t)
 {
     vec3 hitPoint = ray.pos + t * ray.dir;
     vec3 lower = step(hitPoint, box.p0);
@@ -40,7 +18,7 @@ vec3 getBoxNormal(in Box box, in Ray ray, in float t)
 
 // Find the distances along a ray at which the ray intersects an axis-aligned box
 // See https://tavianator.com/2011/ray_box.html
-RayShapeIntersection intersectBox(in Ray ray, in Box box)
+RayShapeIntersection intersectBox(in Ray ray, in VoxelBounds box)
 {
     // Consider the box as the intersection of the space between 3 pairs of parallel planes
     // Compute the distance along the ray to each plane
@@ -66,8 +44,16 @@ RayShapeIntersection intersectBox(in Ray ray, in Box box)
     return RayShapeIntersection(vec4(entryNormal, entryT), vec4(exitNormal, exitT));
 }
 
+RayShapeIntersection intersectVoxel(in Ray ray, in VoxelBounds voxel)
+{
+    vec3 p0 = convertShapeUvToShapeSpace(voxel.p0);
+    vec3 p1 = convertShapeUvToShapeSpace(voxel.p1);
+    VoxelBounds box = VoxelBounds(p0, p1);
+    return intersectBox(ray, box);
+}
+
 void intersectShape(in Ray ray, inout Intersections ix)
 {
-    RayShapeIntersection intersection = intersectBox(ray, Box(u_renderMinBounds, u_renderMaxBounds));
+    RayShapeIntersection intersection = intersectBox(ray, VoxelBounds(u_renderMinBounds, u_renderMaxBounds));
     setShapeIntersection(ix, BOX_INTERSECTION_INDEX, intersection);
 }

@@ -28,17 +28,26 @@ float hash(vec2 p)
 }
 #endif
 
-vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection) {
-#if defined(SHAPE_BOX)
-    Box voxelBox = constructVoxelBox(sampleData.tileCoords, sampleData.tileUv);
-    RayShapeIntersection voxelIntersection = intersectBox(viewRay, voxelBox);
-    vec4 entry = shapeIntersection.entry.w >= voxelIntersection.entry.w ? shapeIntersection.entry : voxelIntersection.entry;
-    float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    float dt = (exit - entry.w) * RAY_SCALE;
-    return vec4(normalize(entry.xyz), dt);
+vec4 getCellIntersection(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in float currentT) {
+    float lodStep = u_stepSize / pow(2.0, float(sampleData.tileCoords.w));
+#if defined(CONSTANT_STEP)
+    // Shrink the step size for points closer to the camera
+    // float dt = min(lodStep, lodStep * max(0.04, 4.0 * currentT));
+    return vec4(viewRay.dir, currentT + lodStep);
 #else
-    float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
-    return vec4(viewRay.dir, u_stepSize / dimAtLevel);
+    #if defined(SHAPE_BOX)
+        VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
+    #else
+        VoxelCell voxel = constructVoxelCell(sampleData.tileCoords, sampleData.tileUv);
+    #endif
+    RayShapeIntersection voxelIntersection = intersectVoxel(viewRay, voxel);
+    vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
+    float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
+    //float dt = (exit - entry.w) * u_stepSize;
+    //dt = clamp(dt, 0.05 * lodStep, lodStep);
+    float dt = exit * lodStep * 100.0;
+    dt = clamp(dt, 0.001 * lodStep, lodStep);
+    return vec4(normalize(entry.xyz), exit + dt);
 #endif
 }
 
@@ -48,7 +57,7 @@ void main()
     vec2 screenCoord = (fragCoord.xy - czm_viewport.xy) / czm_viewport.zw; // [0,1]
     vec3 eyeDirection = normalize(czm_windowToEyeCoordinates(fragCoord).xyz);
     vec3 viewDirWorld = normalize(czm_inverseViewRotation * eyeDirection); // normalize again just in case
-    vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection); // normalize again just in case
+    vec3 viewDirUv = normalize(u_transformDirectionViewToLocal * eyeDirection);
     vec3 viewPosUv = u_cameraPositionUv;
     #if defined(SHAPE_BOX)
         vec3 dInv = 1.0 / viewDirUv;
@@ -65,7 +74,8 @@ void main()
         discard;
     }
 
-    float currT = shapeIntersection.entry.w * RAY_SCALE;
+    float currT = shapeIntersection.entry.w;
+    currT += currT * u_stepSize * 0.25;
     float endT = shapeIntersection.exit.w;
     vec3 positionUv = viewPosUv + currT * viewDirUv;
     vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
@@ -74,12 +84,14 @@ void main()
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    vec4 step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection);
+    vec4 cellIntersection = getCellIntersection(sampleDatas[0], viewRayUv, shapeIntersection, currT);
+    float dt = cellIntersection.w - currT;
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
-        currT += noise * step.w;
-        positionUv += noise * step.w * viewDirUv;
+        currT += noise * dt;
+        cellIntersection.w += noise * dt;
+        positionUv += noise * dt * viewDirUv;
     #endif
 
     FragmentInput fragmentInput;
@@ -100,8 +112,8 @@ void main()
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
-        fragmentInput.voxel.surfaceNormal = step.xyz;
-        fragmentInput.voxel.travelDistance = step.w;
+        fragmentInput.voxel.surfaceNormal = cellIntersection.xyz;
+        fragmentInput.voxel.travelDistance = dt;
 
         // Run the custom shader
         czm_modelMaterial materialOutput;
@@ -121,18 +133,18 @@ void main()
             break;
         }
 
-        if (step.w == 0.0) {
+        if (dt == 0.0) {
             // Shape is infinitely thin. The ray may have hit the edge of a
             // foreground voxel. Step ahead slightly to check for more voxels
-            step.w == 0.00001;
+            cellIntersection.w += 0.0000001;
         }
 
         // Keep raymarching
-        currT += step.w;
-        positionUv += step.w * viewDirUv;
+        currT = cellIntersection.w;
+        positionUv = viewPosUv + currT * viewDirUv;
 
         // Check if there's more intersections.
-        if (currT > endT) {
+        if (currT >= endT) {
             #if (INTERSECTION_COUNT == 1)
                 break;
             #else
@@ -141,7 +153,8 @@ void main()
                     break;
                 } else {
                     // Found another intersection. Resume raymarching there
-                    currT = shapeIntersection.entry.w * RAY_SCALE;
+                    currT = shapeIntersection.entry.w;
+                    currT += currT * u_stepSize * 0.25;
                     endT = shapeIntersection.exit.w;
                     positionUv = viewPosUv + currT * viewDirUv;
                 }
@@ -152,7 +165,8 @@ void main()
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
         positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        step = getStepSize(sampleDatas[0], viewRayUv, shapeIntersection);
+        cellIntersection = getCellIntersection(sampleDatas[0], viewRayUv, shapeIntersection, currT);
+        dt = cellIntersection.w - currT;
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

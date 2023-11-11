@@ -5,7 +5,6 @@
 #define NO_HIT (-czm_infinity)
 #define INF_HIT (czm_infinity * 0.5)
 #define RAY_SHIFT (0.000003163)
-#define RAY_SCALE (1.003163)
 
 struct Ray {
     vec3 pos;
@@ -19,6 +18,78 @@ struct RayShapeIntersection {
     vec4 entry;
     vec4 exit;
 };
+
+vec4 intersectionMin(in vec4 intersect0, in vec4 intersect1)
+{
+    if (intersect0.w == NO_HIT) {
+        return intersect1;
+    }
+    return (intersect0.w <= intersect1.w) ? intersect0 : intersect1;
+}
+
+vec4 intersectionMax(in vec4 intersect0, in vec4 intersect1)
+{
+    return (intersect0.w >= intersect1.w) ? intersect0 : intersect1;
+}
+
+RayShapeIntersection intersectIntersections(in Ray ray, in RayShapeIntersection intersect0, in RayShapeIntersection intersect1)
+{
+    bool missed = (intersect0.entry.w == NO_HIT) ||
+        (intersect1.entry.w == NO_HIT) ||
+        (intersect0.exit.w < intersect1.entry.w) ||
+        (intersect0.entry.w > intersect1.exit.w);
+    if (missed) {
+        vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+        return RayShapeIntersection(miss, miss);
+    }
+
+    vec4 entry = intersectionMax(intersect0.entry, intersect1.entry);
+    vec4 exit = intersectionMin(intersect0.exit, intersect1.exit);
+
+    return RayShapeIntersection(entry, exit);
+}
+
+RayShapeIntersection removeNegativeIntersection(in Ray ray, in RayShapeIntersection positive, in RayShapeIntersection negative)
+{
+    vec4 miss = vec4(normalize(ray.dir), NO_HIT);
+    if (positive.entry.w == NO_HIT) {
+        return RayShapeIntersection(miss, miss);
+    }
+    if (negative.entry.w == NO_HIT) {
+        return positive;
+    }
+
+    // Assume entry < exit for both intersections.
+
+    if (positive.entry.w < negative.entry.w) {
+        // TODO: if positive.entry < negative.entry < negative.exit < positive.exit,
+        // we have 2 possible intersections, and we want to choose the first one AFTER
+        // the current ray T. This code always returns the first one, regardless of T.
+        vec4 exit = intersectionMin(positive.exit, negative.entry);
+        return RayShapeIntersection(positive.entry, exit);
+    }
+
+    if (positive.exit.w < negative.exit.w) {
+        // Positive shape is entirely inside the negative volume
+        return RayShapeIntersection(miss, miss);
+    }
+
+    // case: negative.entry < positive.entry < negative.exit < positive.exit
+    // case: negative.entry < negative.exit < positive.entry < positive.exit
+    vec4 entry = intersectionMax(positive.entry, negative.exit);
+    return RayShapeIntersection(entry, positive.exit);
+}
+
+/**
+ * Convert an intersection with a positive (convex) volume
+ * into an intersection with a negative volume (or hole)
+ */
+RayShapeIntersection invertVolume(in RayShapeIntersection intersect) {
+    // Flip normals to point inside the (formerly) positive volume, which is now negative.
+    vec4 entry = vec4(-1.0 * intersect.entry.xyz, intersect.entry.w);
+    vec4 exit = vec4(-1.0 * intersect.exit.xyz, intersect.exit.w);
+    return RayShapeIntersection(entry, exit);
+}
 
 struct Intersections {
     // Don't access these member variables directly - call the functions instead.
@@ -57,7 +128,7 @@ vec4 encodeIntersectionType(vec4 intersection, int index, bool entry)
 // Use defines instead of real functions because WebGL1 cannot access array with non-constant index.
 #define setIntersection(/*inout Intersections*/ ix, /*int*/ index, /*float*/ t, /*bool*/ positive, /*bool*/ enter) (ix).intersections[(index)] = vec4(0.0, float(!positive) * 2.0 + float(!enter) + 1.0, 0.0, (t))
 #define setIntersectionPair(/*inout Intersections*/ ix, /*int*/ index, /*vec2*/ entryExit) (ix).intersections[(index) * 2 + 0] = vec4(0.0, float((index) > 0) * 2.0 + 1.0, 0.0, (entryExit).x); (ix).intersections[(index) * 2 + 1] = vec4(0.0, float((index) > 0) * 2.0 + 2.0, 0.0, (entryExit).y)
-#define setSurfaceIntersection(/*inout Intersections*/ ix, /*int*/ index, /*vec4*/ intersection) (ix).intersections[(index)] = intersection;
+#define setSurfaceIntersection(/*inout Intersections*/ ix, /*int*/ index, /*vec4*/ intersection, /*bool*/ positive, /*bool*/ enter) (ix).intersections[(index)] = encodeIntersectionType((intersection), int(!positive), (enter))
 #define setShapeIntersection(/*inout Intersections*/ ix, /*int*/ index, /*RayShapeIntersection*/ intersection) (ix).intersections[(index) * 2 + 0] = encodeIntersectionType((intersection).entry, (index), true); (ix).intersections[(index) * 2 + 1] = encodeIntersectionType((intersection).exit, (index), false)
 
 #if (INTERSECTION_COUNT > 1)
@@ -141,4 +212,41 @@ RayShapeIntersection nextIntersection(inout Intersections ix) {
 }
 #endif
 
+struct VoxelBounds {
+    vec3 p0;
+    vec3 p1;
+};
+
+VoxelBounds constructVoxelBounds(in ivec4 octreeCoords, in vec3 tileUv) {
+    // Find the min/max cornerpoints of the voxel in tile coordinates
+    vec3 tileOrigin = vec3(octreeCoords.xyz);
+    vec3 numSamples = vec3(u_dimensions);
+    vec3 voxelSize = 1.0 / numSamples;
+    vec3 coordP0 = floor(tileUv * numSamples) * voxelSize + tileOrigin;
+    vec3 coordP1 = coordP0 + voxelSize;
+    // Transform to the UV coordinates of the tileset
+    float tileSize = 1.0 / pow(2.0, float(octreeCoords.w));
+    vec3 p0 = coordP0 * tileSize;
+    vec3 p1 = coordP1 * tileSize;
+    return VoxelBounds(p0, p1);
+}
+
+struct VoxelCell {
+    vec3 p;
+    vec3 dP;
+};
+
+VoxelCell constructVoxelCell(in ivec4 octreeCoords, in vec3 tileUv) {
+    // Find the center of the voxel in tile coordinates
+    vec3 tileOrigin = vec3(octreeCoords.xyz);
+    vec3 numSamples = vec3(u_dimensions);
+    vec3 sampleIndex = min(floor(tileUv * numSamples), numSamples - 1.0);
+    vec3 voxelSize = 1.0 / numSamples;
+    vec3 center = (sampleIndex + 0.5) * voxelSize + tileOrigin;
+    // Transform to the UV coordinates of the tileset
+    float tileSize = 1.0 / pow(2.0, float(octreeCoords.w));
+    vec3 p = center * tileSize;
+    vec3 dP = 0.5 * voxelSize * tileSize;
+    return VoxelCell(p, dP);
+}
 // NOTE: initializeIntersections, nextIntersection aren't even declared unless INTERSECTION_COUNT > 1

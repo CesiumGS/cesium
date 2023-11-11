@@ -331,6 +331,12 @@ function VoxelPrimitive(options) {
    * @type {boolean}
    * @private
    */
+  this._constantStep = false;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
   this._jitter = true;
 
   /**
@@ -419,6 +425,7 @@ function VoxelPrimitive(options) {
     transformDirectionViewToLocal: new Matrix3(),
     transformNormalLocalToWorld: new Matrix3(),
     cameraPositionUv: new Cartesian3(),
+    cameraPositionShapeUv: new Cartesian3(),
     ndcSpaceAxisAlignedBoundingBox: new Cartesian4(),
     clippingPlanesTexture: undefined,
     clippingPlanesMatrix: new Matrix4(),
@@ -704,6 +711,28 @@ Object.defineProperties(VoxelPrimitive.prototype, {
 
       if (this._jitter !== jitter) {
         this._jitter = jitter;
+        this._shaderDirty = true;
+      }
+    },
+  },
+
+  /**
+   * Gets or sets whether or not to to use constant step size during the raymarch.
+   *
+   * @memberof VoxelPrimitive.prototype
+   * @type {boolean}
+   */
+  constantStep: {
+    get: function () {
+      return this._constantStep;
+    },
+    set: function (constantStep) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.bool("constantStep", constantStep);
+      //>>includeEnd('debug');
+
+      if (this._constantStep !== constantStep) {
+        this._constantStep = constantStep;
         this._shaderDirty = true;
       }
     },
@@ -1132,6 +1161,12 @@ VoxelPrimitive.prototype.update = function (frameState) {
     cameraPositionWorld,
     uniforms.cameraPositionUv
   );
+  if (this.shape === VoxelShapeType.ELLIPSOID) {
+    uniforms.cameraPositionShapeUv = shape.convertUvToShapeUvSpace(
+      uniforms.cameraPositionUv,
+      uniforms.cameraPositionShapeUv
+    );
+  }
   uniforms.stepSize = this._stepSizeUv * this._stepSizeMultiplier;
 
   // Render the primitive

@@ -1,10 +1,7 @@
 /* Cylinder defines (set in Scene/VoxelCylinderShape.js)
 #define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS
-#define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT
 #define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT
-#define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_EQUAL_ZERO
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED
@@ -26,50 +23,149 @@
     uniform float u_cylinderShapeUvAngleRangeZeroMid;
 #endif
 
-vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
-    vec3 positionLocal = positionUv * 2.0 - 1.0; // [-1,+1]
+vec3 convertUvToShapeSpace(in vec3 positionUv) {
+    float height = positionUv.z; // [0, 1]
 
-    // Compute radius
-    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT)
-        float radius = 1.0;
-    #else
-        float radius = length(positionLocal.xy); // [0,1]
-        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
-            radius = radius * u_cylinderUvToShapeUvRadius.x + u_cylinderUvToShapeUvRadius.y; // x = scale, y = offset
-        #endif
+    vec3 positionLocal = positionUv * 2.0 - 1.0; // [-1, +1]
+    float angle = atan(positionLocal.y, positionLocal.x);
+    float radius = length(positionLocal.xy);
+
+    return vec3(radius, height, angle);
+}
+
+vec3 convertShapeToShapeUvSpace(in vec3 position) {
+    float radius = position.x;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
+        radius = radius * u_cylinderUvToShapeUvRadius.x + u_cylinderUvToShapeUvRadius.y;
     #endif
 
-    // Compute height
-    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
-        float height = 1.0;
-    #else
-        float height = positionUv.z; // [0,1]
-        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
-            height = height * u_cylinderUvToShapeUvHeight.x + u_cylinderUvToShapeUvHeight.y; // x = scale, y = offset
-        #endif
+    float height = position.y;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        height = height * u_cylinderUvToShapeUvHeight.x + u_cylinderUvToShapeUvHeight.y;
     #endif
 
-    // Compute angle
-    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_RANGE_EQUAL_ZERO)
-        float angle = 1.0;
-    #else
-        float angle = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi; // [0,1]
-        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
-            #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
-                // Comparing against u_cylinderShapeUvAngleMinMax has precision problems. u_cylinderShapeUvAngleRangeZeroMid is more conservative.
-                angle += float(angle < u_cylinderShapeUvAngleRangeZeroMid);
-            #endif
-
-            // Avoid flickering from reading voxels from both sides of the -pi/+pi discontinuity.
-            #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY)
-                angle = angle > u_cylinderShapeUvAngleRangeZeroMid ? u_cylinderShapeUvAngleMinMax.x : angle;
-            #elif defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY)
-                angle = angle < u_cylinderShapeUvAngleRangeZeroMid ? u_cylinderShapeUvAngleMinMax.y : angle;
-            #endif
-
-            angle = angle * u_cylinderUvToShapeUvAngle.x + u_cylinderUvToShapeUvAngle.y; // x = scale, y = offset
+    float angle = (position.z + czm_pi) / czm_twoPi; // [0, 1]
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
+            // Comparing against u_cylinderShapeUvAngleMinMax has precision problems. u_cylinderShapeUvAngleRangeZeroMid is more conservative.
+            angle += float(angle < u_cylinderShapeUvAngleRangeZeroMid);
         #endif
+
+        // Avoid flickering from reading voxels from both sides of the -pi/+pi discontinuity.
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY)
+            angle = angle > u_cylinderShapeUvAngleRangeZeroMid ? u_cylinderShapeUvAngleMinMax.x : angle;
+        #elif defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY)
+            angle = angle < u_cylinderShapeUvAngleRangeZeroMid ? u_cylinderShapeUvAngleMinMax.y : angle;
+        #endif
+
+        angle = angle * u_cylinderUvToShapeUvAngle.x + u_cylinderUvToShapeUvAngle.y;
     #endif
 
     return vec3(radius, height, angle);
+}
+
+/**
+ * Composition of convertUvToShapeSpace and convertShapeToShapeUvSpace
+ */
+vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
+    vec3 positionLocal = positionUv * 2.0 - 1.0; // [-1,+1]
+
+    float radius = length(positionLocal.xy); // [0,1]
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
+        radius = radius * u_cylinderUvToShapeUvRadius.x + u_cylinderUvToShapeUvRadius.y; // x = scale, y = offset
+    #endif
+
+    // Compute height
+    float height = positionUv.z; // [0,1]
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        height = height * u_cylinderUvToShapeUvHeight.x + u_cylinderUvToShapeUvHeight.y; // x = scale, y = offset
+    #endif
+
+    // Compute angle
+    float angle = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi; // [0,1]
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
+            // Comparing against u_cylinderShapeUvAngleMinMax has precision problems. u_cylinderShapeUvAngleRangeZeroMid is more conservative.
+            angle += float(angle < u_cylinderShapeUvAngleRangeZeroMid);
+        #endif
+
+        // Avoid flickering from reading voxels from both sides of the -pi/+pi discontinuity.
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY)
+            angle = angle > u_cylinderShapeUvAngleRangeZeroMid ? u_cylinderShapeUvAngleMinMax.x : angle;
+        #elif defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY)
+            angle = angle < u_cylinderShapeUvAngleRangeZeroMid ? u_cylinderShapeUvAngleMinMax.y : angle;
+        #endif
+
+        angle = angle * u_cylinderUvToShapeUvAngle.x + u_cylinderUvToShapeUvAngle.y; // x = scale, y = offset
+    #endif
+
+    return vec3(radius, height, angle);
+}
+
+vec3 convertShapeUvToShapeSpace(in vec3 shapeUv) {
+    float radius = shapeUv.x;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
+        // TODO: what if u_cylinderUvToShapeUvRadius.x == 0.0 ?
+        radius = (radius - u_cylinderUvToShapeUvRadius.y) / u_cylinderUvToShapeUvRadius.x;
+    #endif
+
+    float height = shapeUv.y;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        // TODO: what if u_cylinderUvToShapeUvHeight.x == 0.0 ?
+        height = (height - u_cylinderUvToShapeUvHeight.y) / u_cylinderUvToShapeUvHeight.x;
+    #endif
+    // Convert from [0, 1] to [-1, 1]
+    height = height * 2.0 - 1.0;
+
+    float angle = shapeUv.z;
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
+        // TODO: what if u_cylinderUvToShapeUvAngle.x == 0.0 ?
+        angle = (angle - u_cylinderUvToShapeUvAngle.y) / u_cylinderUvToShapeUvAngle.x;
+
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
+            // Comparing against u_cylinderShapeUvAngleMinMax has precision problems. u_cylinderShapeUvAngleRangeZeroMid is more conservative.
+            angle -= float(angle < u_cylinderShapeUvAngleRangeZeroMid);
+        #endif
+    #endif
+    // Convert from [0, 1] to radians [-pi, pi]
+    angle = angle * czm_twoPi - czm_pi;
+
+    return vec3(radius, height, angle);
+}
+
+VoxelCell convertShapeUvToShapeSpace(in VoxelCell voxel) {
+    // The vec3 for a cylinder is [radius, height, angle]
+    vec3 p = voxel.p;
+    vec3 dP = voxel.dP;
+
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
+        // TODO: what if u_cylinderUvToShapeUvRadius.x == 0.0 ?
+        p.x = (p.x - u_cylinderUvToShapeUvRadius.y) / u_cylinderUvToShapeUvRadius.x;
+        dP.x = dP.x / u_cylinderUvToShapeUvRadius.x;
+    #endif
+
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        // TODO: what if u_cylinderUvToShapeUvHeight.x == 0.0 ?
+        p.y = (p.y - u_cylinderUvToShapeUvHeight.y) / u_cylinderUvToShapeUvHeight.x;
+        dP.y = dP.y / u_cylinderUvToShapeUvHeight.x;
+    #endif
+    // Convert from [0, 1] to [-1, 1]
+    p.y = p.y * 2.0 - 1.0;
+    dP.y = dP.y * 2.0;
+
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
+        // TODO: what if u_cylinderUvToShapeUvAngle.x == 0.0 ?
+        p.z = (p.z - u_cylinderUvToShapeUvAngle.y) / u_cylinderUvToShapeUvAngle.x;
+        dP.z = dP.z / u_cylinderUvToShapeUvAngle.x;
+
+        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
+            // Comparing against u_cylinderShapeUvAngleMinMax has precision problems. u_cylinderShapeUvAngleRangeZeroMid is more conservative.
+            p.z -= float(p.z < u_cylinderShapeUvAngleRangeZeroMid);
+        #endif
+    #endif
+    // Convert from [0, 1] to radians [-pi, pi]
+    p.z = p.z * czm_twoPi - czm_pi;
+    dP.z = dP.z * czm_twoPi;
+
+    return VoxelCell(p, dP);
 }

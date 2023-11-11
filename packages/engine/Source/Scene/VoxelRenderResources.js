@@ -8,6 +8,7 @@ import VoxelVS from "../Shaders/Voxels/VoxelVS.js";
 import IntersectionUtils from "../Shaders/Voxels/IntersectionUtils.js";
 import IntersectDepth from "../Shaders/Voxels/IntersectDepth.js";
 import IntersectClippingPlanes from "../Shaders/Voxels/IntersectClippingPlanes.js";
+import IntersectLongitude from "../Shaders/Voxels/IntersectLongitude.js";
 import IntersectBox from "../Shaders/Voxels/IntersectBox.js";
 import IntersectCylinder from "../Shaders/Voxels/IntersectCylinder.js";
 import IntersectEllipsoid from "../Shaders/Voxels/IntersectEllipsoid.js";
@@ -88,8 +89,8 @@ function VoxelRenderResources(primitive) {
     customShader.fragmentShaderText,
     "#line 0",
     Octree,
-    IntersectionUtils,
     Megatexture,
+    IntersectionUtils,
   ]);
 
   if (clippingPlanesLength > 0) {
@@ -131,15 +132,17 @@ function VoxelRenderResources(primitive) {
     ]);
   } else if (shapeType === "CYLINDER") {
     shaderBuilder.addFragmentLines([
+      convertUvToCylinder,
+      IntersectLongitude,
       IntersectCylinder,
       Intersection,
-      convertUvToCylinder,
     ]);
   } else if (shapeType === "ELLIPSOID") {
     shaderBuilder.addFragmentLines([
+      convertUvToEllipsoid,
+      IntersectLongitude,
       IntersectEllipsoid,
       Intersection,
-      convertUvToEllipsoid,
     ]);
   }
 
@@ -208,6 +211,13 @@ function VoxelRenderResources(primitive) {
   }
   if (primitive._jitter) {
     shaderBuilder.addDefine("JITTER", undefined, ShaderDestination.FRAGMENT);
+  }
+  if (primitive._constantStep) {
+    shaderBuilder.addDefine(
+      "CONSTANT_STEP",
+      undefined,
+      ShaderDestination.FRAGMENT
+    );
   }
   if (primitive._nearestSampling) {
     shaderBuilder.addDefine(
