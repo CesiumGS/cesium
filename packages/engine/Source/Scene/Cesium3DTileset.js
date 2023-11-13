@@ -3427,24 +3427,19 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
 };
 
 const scratchSphereIntersection = new Interval();
+const scratchPickIntersection = new Cartesian3();
 
 /**
  * Find an intersection between a ray and the tileset surface that was rendered. The ray must be given in world coordinates.
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
- * @param {boolean} [cullBackFaces=true] If false, back faces are not culled and will return an intersection if picked.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
  *
  * @private
  */
-Cesium3DTileset.prototype.pick = function (
-  ray,
-  frameState,
-  cullBackFaces,
-  result
-) {
+Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
   const selectedTiles = this._selectedTiles;
   const selectedLength = selectedTiles.length;
 
@@ -3461,7 +3456,11 @@ Cesium3DTileset.prototype.pick = function (
       continue;
     }
 
-    const candidate = tile.content.pick(ray, frameState, cullBackFaces, result);
+    const candidate = tile.content.pick(
+      ray,
+      frameState,
+      scratchPickIntersection
+    );
 
     if (!defined(candidate)) {
       continue;
@@ -3469,7 +3468,7 @@ Cesium3DTileset.prototype.pick = function (
 
     const distance = Cartesian3.distance(ray.origin, candidate);
     if (distance < minDistance) {
-      intersection = candidate;
+      intersection = Cartesian3.clone(candidate, result);
       minDistance = distance;
     }
   }
@@ -3478,8 +3477,7 @@ Cesium3DTileset.prototype.pick = function (
     return undefined;
   }
 
-  Cartesian3.clone(intersection, result);
-  return result;
+  return intersection;
 };
 
 /**

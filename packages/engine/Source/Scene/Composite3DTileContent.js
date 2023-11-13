@@ -353,18 +353,12 @@ Composite3DTileContent.prototype.update = function (tileset, frameState) {
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
- * @param {boolean} [cullBackFaces=true] If false, back faces are not culled and will return an intersection if picked.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
  *
  * @private
  */
-Composite3DTileContent.prototype.pick = function (
-  ray,
-  frameState,
-  cullBackFaces,
-  result
-) {
+Composite3DTileContent.prototype.pick = function (ray, frameState, result) {
   if (!this._ready) {
     return undefined;
   }
@@ -375,7 +369,7 @@ Composite3DTileContent.prototype.pick = function (
   const length = contents.length;
 
   for (let i = 0; i < length; ++i) {
-    const candidate = contents[i].pick(ray, frameState, cullBackFaces, result);
+    const candidate = contents[i].pick(ray, frameState, result);
 
     if (!defined(candidate)) {
       continue;
