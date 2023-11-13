@@ -727,12 +727,7 @@ Vector3DTileContent.prototype.update = function (tileset, frameState) {
   }
 };
 
-Vector3DTileContent.prototype.pick = function (
-  ray,
-  frameState,
-  cullBackFaces,
-  result
-) {
+Vector3DTileContent.prototype.pick = function (ray, frameState, result) {
   return undefined;
 };
 

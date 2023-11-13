@@ -2504,14 +2504,13 @@ Model.prototype.isClippingEnabled = function () {
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
- * @param {boolean} [cullBackFaces=true] If false, back faces are not culled and will return an intersection if picked.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
  *
  * @private
  */
-Model.prototype.pick = function (ray, frameState, cullBackFaces, result) {
-  return pickModel(this, ray, frameState, cullBackFaces, result);
+Model.prototype.pick = function (ray, frameState, result) {
+  return pickModel(this, ray, frameState, result);
 };
 
 /**

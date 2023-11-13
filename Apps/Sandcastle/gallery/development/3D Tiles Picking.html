@@ -41,36 +41,72 @@
           baseLayerPicker: false,
           globe: false,
         });
-
-        // Enable rendering the sky
-        viewer.scene.skyAtmosphere.show = true;
+        const scene = viewer.scene;
 
         let tileset;
-        // Add Photorealistic 3D Tiles
-        try {
-          tileset = await Cesium.createGooglePhotorealistic3DTileset(
-            undefined,
-            {
-              enableDebugWireframe: true,
-            }
-          );
-          viewer.scene.primitives.add(tileset);
-        } catch (error) {
-          console.log(`Error loading Photorealistic 3D Tiles tileset.
-  ${error}`);
-        }
+        const options = [
+          {
+            text: "Google P3DT",
+            onselect: async () => {
+              scene.primitives.remove(tileset);
+              try {
+                tileset = await Cesium.createGooglePhotorealistic3DTileset();
+                scene.primitives.add(tileset);
+              } catch (error) {
+                console.log(error);
+              }
+            },
+          },
+          {
+            text: "Maxar OWT WFF 1.2",
+            onselect: async () => {
+              scene.primitives.remove(tileset);
+              try {
+                tileset = await Cesium.Cesium3DTileset.fromIonAssetId(691510, {
+                  maximumScreenSpaceError: 4,
+                });
+                scene.primitives.add(tileset);
+              } catch (error) {
+                console.log(error);
+              }
+            },
+          },
+          {
+            text: "Bentley BIM Model",
+            onselect: async () => {
+              scene.primitives.remove(tileset);
+              try {
+                tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1240402);
+                scene.primitives.add(tileset);
+                viewer.zoomTo(tileset);
+              } catch (error) {
+                console.log(error);
+              }
+            },
+          },
+          {
+            text: "Instanced",
+            onselect: async () => {
+              scene.primitives.remove(tileset);
+              try {
+                tileset = await Cesium.Cesium3DTileset.fromUrl(
+                  "../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json"
+                );
+                scene.primitives.add(tileset);
+                viewer.zoomTo(tileset);
+              } catch (error) {
+                console.log(error);
+              }
+            },
+          },
+        ];
 
-        viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
-        const inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
-        inspectorViewModel.tileset = tileset;
-
-        const scene = viewer.scene;
+        Sandcastle.addDefaultToolbarMenu(options);
 
         const scratchCartesian = new Cesium.Cartesian3();
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(function (movement) {
           const pickedPositionResult = scene.pickPosition(movement.position);
-          console.log(pickedPositionResult);
           if (Cesium.defined(pickedPositionResult)) {
             viewer.entities.add({
               position: pickedPositionResult,
@@ -83,12 +119,7 @@
           }
 
           const ray = scene.camera.getPickRay(movement.position);
-          const picked = tileset.pick(
-            ray,
-            scene.frameState,
-            true,
-            scratchCartesian
-          );
+          const picked = tileset.pick(ray, scene.frameState, scratchCartesian);
 
           if (Cesium.defined(picked)) {
             viewer.entities.add({

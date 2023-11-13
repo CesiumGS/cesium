@@ -2,6 +2,7 @@ import {
   pickModel,
   Cartesian2,
   Cartesian3,
+  HeadingPitchRange,
   Math as CesiumMath,
   Model,
   Ray,
@@ -15,7 +16,7 @@ describe("Scene/Model/pickModel", function () {
   const boxTexturedGltfUrl =
     "./Data/Models/glTF-2.0/BoxTextured/glTF/BoxTextured.gltf";
   const boxInstanced =
-    "./Data/Models/glTF-2.0/BoxInstanced/glTF/box-instanced.gltf";
+    "./Data/Models/glTF-2.0/BoxInstancedNoNormals/glTF/BoxInstancedNoNormals.gltf";
   const boxWithOffsetUrl =
     "./Data/Models/glTF-2.0/BoxWithOffset/glTF/BoxWithOffset.gltf";
   const pointCloudUrl =
@@ -26,6 +27,8 @@ describe("Scene/Model/pickModel", function () {
     "./Data/Models/glTF-2.0/BoxWeb3dQuantizedAttributes/glTF/BoxWeb3dQuantizedAttributes.gltf";
   const boxCesiumRtcUrl =
     "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
+  const boxBackFaceCullingUrl =
+    "./Data/Models/glTF-2.0/BoxBackFaceCulling/glTF/BoxBackFaceCulling.gltf";
 
   let scene;
   beforeAll(function () {
@@ -223,10 +226,19 @@ describe("Scene/Model/pickModel", function () {
   });
 
   it("returns position of intersection with instanced model", async function () {
+    // None of the 4 instanced cubes are in the center of the model's bounding
+    // sphere, so set up a camera view that focuses in on one of them.
+    const offset = new HeadingPitchRange(
+      CesiumMath.PI_OVER_TWO,
+      -CesiumMath.PI_OVER_FOUR,
+      1
+    );
+
     const model = await loadAndZoomToModelAsync(
       {
         url: boxInstanced,
         enablePick: !scene.frameState.context.webgl2,
+        offset,
       },
       scene
     );
@@ -237,7 +249,7 @@ describe("Scene/Model/pickModel", function () {
       )
     );
 
-    const expected = new Cartesian3(0.278338500214, 0, 0.278338500214);
+    const expected = new Cartesian3(0, -0.5, 0.5);
     expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
       expected,
       CesiumMath.EPSILON12
@@ -281,11 +293,12 @@ describe("Scene/Model/pickModel", function () {
     expect(pickModel(model, ray, scene.frameState)).toBeUndefined();
   });
 
-  it("includes back faces results when cullsBackFaces is false", async function () {
+  it("includes back faces results when model disbales backface culling", async function () {
     const model = await loadAndZoomToModelAsync(
       {
-        url: boxTexturedGltfUrl,
+        url: boxBackFaceCullingUrl,
         enablePick: !scene.frameState.context.webgl2,
+        backFaceCulling: false,
       },
       scene
     );
@@ -295,10 +308,15 @@ describe("Scene/Model/pickModel", function () {
         scene.drawingBufferHeight / 2.0
       )
     );
+
     ray.origin = model.boundingSphere.center;
 
-    const expected = new Cartesian3(-0.5, 0, -0.5);
-    expect(pickModel(model, ray, scene.frameState, false)).toEqualEpsilon(
+    const expected = new Cartesian3(
+      -0.9999998807907355,
+      0,
+      -0.9999998807907104
+    );
+    expect(pickModel(model, ray, scene.frameState)).toEqualEpsilon(
       expected,
       CesiumMath.EPSILON12
     );

@@ -1,4 +1,5 @@
 import AttributeCompression from "../../Core/AttributeCompression.js";
+import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
 import Cartographic from "../../Core/Cartographic.js";
 import Check from "../../Core/Check.js";
@@ -18,9 +19,11 @@ import ModelUtility from "./ModelUtility.js";
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
 const scratchV2 = new Cartesian3();
+const scratchNodeComputedTransform = new Matrix4();
 const scratchModelMatrix = new Matrix4();
+const scratchcomputedModelMatrix = new Matrix4();
 const scratchPickCartographic = new Cartographic();
-const scratchInstanceMatrix = new Matrix4();
+const scratchBoundingSphere = new BoundingSphere();
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
@@ -28,19 +31,12 @@ const scratchInstanceMatrix = new Matrix4();
  * @param {Model} model The model to pick.
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
- * @param {boolean} [cullBackFaces=true] If false, back faces are not culled and will return an intersection if picked.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
  *
  * @private
  */
-export default function pickModel(
-  model,
-  ray,
-  frameState,
-  cullBackFaces,
-  result
-) {
+export default function pickModel(model, ray, frameState, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
   Check.typeOf.object("ray", ray);
@@ -59,8 +55,14 @@ export default function pickModel(
     const runtimeNode = nodes[i];
     const node = runtimeNode.node;
 
-    let nodeComputedTransform = runtimeNode.computedTransform;
-    let modelMatrix = sceneGraph.computedModelMatrix;
+    let nodeComputedTransform = Matrix4.clone(
+      runtimeNode.computedTransform,
+      scratchNodeComputedTransform
+    );
+    let modelMatrix = Matrix4.clone(
+      sceneGraph.computedModelMatrix,
+      scratchModelMatrix
+    );
 
     const instances = node.instances;
     if (defined(instances)) {
@@ -77,37 +79,22 @@ export default function pickModel(
           runtimeNode.computedTransform,
           nodeComputedTransform
         );
-      } else {
-        // The node transform should be pre-multiplied with the instancing transform.
-        modelMatrix = Matrix4.clone(
-          sceneGraph.computedModelMatrix,
-          modelMatrix
-        );
-        modelMatrix = Matrix4.multiplyTransformation(
-          modelMatrix,
-          runtimeNode.computedTransform,
-          modelMatrix
-        );
-
-        nodeComputedTransform = Matrix4.clone(
-          Matrix4.IDENTITY,
-          nodeComputedTransform
-        );
       }
     }
 
-    let computedModelMatrix = Matrix4.multiplyTransformation(
-      modelMatrix,
-      nodeComputedTransform,
-      scratchModelMatrix
-    );
     if (frameState.mode !== SceneMode.SCENE3D) {
-      computedModelMatrix = Transforms.basisTo2D(
+      modelMatrix = Transforms.basisTo2D(
         frameState.mapProjection,
-        computedModelMatrix,
-        computedModelMatrix
+        modelMatrix,
+        modelMatrix
       );
     }
+
+    const computedModelMatrix = Matrix4.multiplyTransformation(
+      modelMatrix,
+      nodeComputedTransform,
+      scratchcomputedModelMatrix
+    );
 
     const transforms = [];
     if (defined(instances)) {
@@ -130,26 +117,70 @@ export default function pickModel(
 
       if (defined(transformsTypedArray)) {
         for (let i = 0; i < transformsCount; i++) {
-          const transform = Matrix4.unpack(
-            transformsTypedArray,
-            i * transformElements,
-            scratchInstanceMatrix
+          const index = i * transformElements;
+
+          const transform = new Matrix4(
+            transformsTypedArray[index],
+            transformsTypedArray[index + 1],
+            transformsTypedArray[index + 2],
+            transformsTypedArray[index + 3],
+            transformsTypedArray[index + 4],
+            transformsTypedArray[index + 5],
+            transformsTypedArray[index + 6],
+            transformsTypedArray[index + 7],
+            transformsTypedArray[index + 8],
+            transformsTypedArray[index + 9],
+            transformsTypedArray[index + 10],
+            transformsTypedArray[index + 11],
+            0,
+            0,
+            0,
+            1
           );
-          transform[12] = 0.0;
-          transform[13] = 0.0;
-          transform[14] = 0.0;
-          transform[15] = 1.0;
+
+          if (instances.transformInWorldSpace) {
+            Matrix4.multiplyTransformation(
+              transform,
+              nodeComputedTransform,
+              transform
+            );
+            Matrix4.multiplyTransformation(modelMatrix, transform, transform);
+          } else {
+            Matrix4.multiplyTransformation(
+              transform,
+              computedModelMatrix,
+              transform
+            );
+          }
           transforms.push(transform);
         }
       }
     }
 
     if (transforms.length === 0) {
-      transforms.push(Matrix4.IDENTITY);
+      transforms.push(computedModelMatrix);
     }
 
-    for (let j = 0; j < node.primitives.length; j++) {
-      const primitive = node.primitives[j];
+    const primitivesLength = runtimeNode.runtimePrimitives.length;
+    for (let j = 0; j < primitivesLength; j++) {
+      const runtimePrimitive = runtimeNode.runtimePrimitives[j];
+      const primitive = runtimePrimitive.primitive;
+
+      if (defined(runtimePrimitive.boundingSphere) && !defined(instances)) {
+        const boundingSphere = BoundingSphere.transform(
+          runtimePrimitive.boundingSphere,
+          computedModelMatrix,
+          scratchBoundingSphere
+        );
+        const boundsIntersection = IntersectionTests.raySphere(
+          ray,
+          boundingSphere
+        );
+        if (!defined(boundsIntersection)) {
+          continue;
+        }
+      }
+
       const positionAttribute = ModelUtility.getAttributeBySemantic(
         primitive,
         VertexAttributeSemantic.POSITION
@@ -165,12 +196,17 @@ export default function pickModel(
       if (!defined(indices)) {
         const indicesBuffer = primitive.indices.buffer;
         const indicesCount = primitive.indices.count;
+        const indexDatatype = primitive.indices.indexDatatype;
         if (defined(indicesBuffer) && frameState.context.webgl2) {
-          const useUint8Array = indicesBuffer.sizeInBytes === indicesCount;
-          indices = useUint8Array
-            ? new Uint8Array(indicesCount)
-            : IndexDatatype.createTypedArray(vertexCount, indicesCount);
-          indicesBuffer.getBufferData(indices, 0, 0, indicesCount);
+          if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
+            indices = new Uint8Array(indicesCount);
+          } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
+            indices = new Uint16Array(indicesCount);
+          } else if (indexDatatype === IndexDatatype.UNSIGNED_INT) {
+            indices = new Uint32Array(indicesCount);
+          }
+
+          indicesBuffer.getBufferData(indices);
         }
       }
 
@@ -230,7 +266,6 @@ export default function pickModel(
             numComponents,
             quantization,
             instanceTransform,
-            computedModelMatrix,
             scratchV0
           );
           const v1 = getVertexPosition(
@@ -239,7 +274,6 @@ export default function pickModel(
             numComponents,
             quantization,
             instanceTransform,
-            computedModelMatrix,
             scratchV1
           );
           const v2 = getVertexPosition(
@@ -248,7 +282,6 @@ export default function pickModel(
             numComponents,
             quantization,
             instanceTransform,
-            computedModelMatrix,
             scratchV2
           );
 
@@ -257,7 +290,7 @@ export default function pickModel(
             v0,
             v1,
             v2,
-            defaultValue(cullBackFaces, true)
+            defaultValue(model.backFaceCulling, true)
           );
 
           if (defined(t)) {
@@ -281,8 +314,8 @@ export default function pickModel(
     const projection = frameState.mapProjection;
     const ellipsoid = projection.ellipsoid;
 
-    const cart = projection.unproject(result, scratchPickCartographic);
-    ellipsoid.cartographicToCartesian(cart, result);
+    const cartographic = projection.unproject(result, scratchPickCartographic);
+    ellipsoid.cartographicToCartesian(cartographic, result);
   }
 
   return result;
@@ -294,7 +327,6 @@ function getVertexPosition(
   numComponents,
   quantization,
   instanceTransform,
-  computedModelMatrix,
   result
 ) {
   const i = index * numComponents;
@@ -332,7 +364,6 @@ function getVertexPosition(
   }
 
   result = Matrix4.multiplyByPoint(instanceTransform, result, result);
-  result = Matrix4.multiplyByPoint(computedModelMatrix, result, result);
 
   return result;
 }

@@ -2444,6 +2444,151 @@ describe(
         });
     });
 
+    it("picks", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl);
+      viewRootOnly();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215026.8094312553,
+        -4736367.339076743,
+        4081652.238842398
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks tileset of tilesets", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetOfTilesetsUrl
+      );
+      viewRootOnly();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215026.8094312553,
+        -4736367.339076743,
+        4081652.238842398
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks instanced tileset", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        instancedUrl
+      );
+      viewInstances();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215015.7820120894,
+        -4736324.352446682,
+        4081615.004915994
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks translucent tileset", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        translucentUrl
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215013.1035421563,
+        -4736313.911345786,
+        4081605.96109977
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picks tileset with transforms", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        tilesetWithTransformsUrl
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(
+        1215013.8353220497,
+        -4736316.763939952,
+        4081608.4319443353
+      );
+      expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
+    it("picking point cloud tileset returns undefined", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(
+        scene,
+        pointCloudUrl
+      );
+      viewAllTiles();
+      scene.renderForSpecs();
+
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      expect(tileset.pick(ray, scene.frameState)).toBeUndefined();
+    });
+
     it("destroys", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
