@@ -2415,7 +2415,9 @@ describe(
     });
 
     it("picks", async function () {
-      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl);
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
       viewRootOnly();
       scene.renderForSpecs();
 
@@ -2440,7 +2442,10 @@ describe(
     it("picks tileset of tilesets", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetOfTilesetsUrl
+        tilesetOfTilesetsUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
       );
       viewRootOnly();
       scene.renderForSpecs();
@@ -2466,7 +2471,10 @@ describe(
     it("picks instanced tileset", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        instancedUrl
+        instancedUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
       );
       viewInstances();
       scene.renderForSpecs();
@@ -2492,7 +2500,10 @@ describe(
     it("picks translucent tileset", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        translucentUrl
+        translucentUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
       );
       viewAllTiles();
       scene.renderForSpecs();
@@ -2518,7 +2529,10 @@ describe(
     it("picks tileset with transforms", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        tilesetWithTransformsUrl
+        tilesetWithTransformsUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
       );
       viewAllTiles();
       scene.renderForSpecs();
@@ -2544,7 +2558,10 @@ describe(
     it("picking point cloud tileset returns undefined", async function () {
       const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
-        pointCloudUrl
+        pointCloudUrl,
+        {
+          enablePick: !scene.frameState.context.webgl2,
+        }
       );
       viewAllTiles();
       scene.renderForSpecs();

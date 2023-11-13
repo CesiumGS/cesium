@@ -91,6 +91,7 @@ function I3dmLoader(options) {
     false
   );
   const loadPrimitiveOutline = defaultValue(options.loadPrimitiveOutline, true);
+  const enablePick = defaultValue(options.enablePick, false);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.i3dmResource", i3dmResource);
@@ -111,6 +112,7 @@ function I3dmLoader(options) {
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
   this._loadPrimitiveOutline = loadPrimitiveOutline;
+  this._enablePick = enablePick;
 
   this._state = I3dmLoaderState.NOT_LOADED;
   this._promise = undefined;
@@ -240,6 +242,7 @@ I3dmLoader.prototype.load = function () {
     releaseGltfJson: this._releaseGltfJson,
     incrementallyLoadTextures: this._incrementallyLoadTextures,
     loadAttributesAsTypedArray: this._loadAttributesAsTypedArray,
+    enablePick: this._enablePick,
     loadIndicesForWireframe: this._loadIndicesForWireframe,
     loadPrimitiveOutline: this._loadPrimitiveOutline,
   };
