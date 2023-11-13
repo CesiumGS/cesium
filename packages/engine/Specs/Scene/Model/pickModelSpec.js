@@ -339,7 +339,7 @@ describe("Scene/Model/pickModel", function () {
 
     const result = new Cartesian3();
     const expected = new Cartesian3(0.5, 0, 0.5);
-    const returned = pickModel(model, ray, scene.frameState, true, result);
+    const returned = pickModel(model, ray, scene.frameState, result);
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON12);
     expect(returned).toBe(result);
   });
