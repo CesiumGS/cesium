@@ -75,7 +75,7 @@ function B3dmLoader(options) {
     false
   );
   const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
-  const enablePick = defaultValue(options.enablePick);
+  const enablePick = defaultValue(options.enablePick, false);
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
     false
