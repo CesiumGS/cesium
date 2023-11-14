@@ -113,6 +113,7 @@ void main()
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.surfaceNormal = cellIntersection.xyz;
+        fragmentInput.voxel.stepCount = stepCount;
         fragmentInput.voxel.travelDistance = dt;
 
         // Run the custom shader
