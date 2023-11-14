@@ -1,0 +1,36 @@
+{
+    "id": "PropertyAttributesPointCloudMetadataSchemaId",
+    "classes" : {
+      "exampleMetadataClass" : {
+        "name" : "Example metadata class",
+        "description" : "An example metadata class for property attributes",
+        "properties" : {
+          "intensity" : {
+            "name" : "Example intensity property",
+            "description" : "An example property for the intensity, with component type FLOAT32",
+            "type" : "SCALAR",
+            "componentType" : "FLOAT32"
+          },
+          "classification" : {
+            "name" : "Example classification property",
+            "description" : "An example property for the classification, with the classificationEnumType",
+            "type" : "ENUM",
+            "enumType" : "classificationEnumType"
+          }
+        }
+      }
+    },
+    "enums" : {
+      "classificationEnumType" : {
+        "valueType": "UINT16",
+        "values" : [ {
+          "name" : "MediumVegetation",
+          "value" : 0
+        }, {
+          "name" : "Buildings",
+          "value" : 1
+        } ]
+      }
+    }
+}
+

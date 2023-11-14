@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         /**
@@ -41,7 +41,7 @@
          * @alias WebGLGlobeDataSource
          * @constructor
          *
-         * @param {String} [name] The name of this data source.  If undefined, a name
+         * @param {string} [name] The name of this data source.  If undefined, a name
          *                        will be derived from the url.
          *
          * @example
@@ -144,7 +144,7 @@
           /**
            * Gets the array of series names.
            * @memberof WebGLGlobeDataSource.prototype
-           * @type {String[]}
+           * @type {string[]}
            */
           seriesNames: {
             get: function () {
@@ -226,7 +226,7 @@
 
         /**
          * Asynchronously loads the GeoJSON at the provided url, replacing any existing data.
-         * @param {Object} url The url to be processed.
+         * @param {object} url The url to be processed.
          * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
          */
         WebGLGlobeDataSource.prototype.loadUrl = function (url) {
@@ -402,11 +402,14 @@
         viewer.dataSources.add(dataSource);
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

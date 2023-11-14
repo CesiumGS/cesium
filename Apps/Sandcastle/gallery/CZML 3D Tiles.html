@@ -30,7 +30,7 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const czml = [
@@ -58,17 +58,20 @@
 
         dataSourcePromise
           .then(function (dataSource) {
-            viewer.flyTo(dataSource.entities.getById("BatchedColors"));
+            viewer.zoomTo(dataSource.entities.getById("BatchedColors"));
           })
           .catch(function (error) {
             window.alert(error);
           });
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

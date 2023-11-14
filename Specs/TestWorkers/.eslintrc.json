@@ -1,10 +1,6 @@
 {
-    "extends": "../.eslintrc.json",
-    "env": {
-        "amd": true
-    },
-    "parserOptions": {
-        "ecmaVersion": 2015,
-        "sourceType": "script"
-    }
+  "extends": "cesium/browser",
+  "plugins": [
+    "es"
+  ]
 }

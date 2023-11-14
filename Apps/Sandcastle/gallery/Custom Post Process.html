@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -54,7 +54,7 @@
 
         const fragmentShaderSource = `
           uniform sampler2D colorTexture; 
-          varying vec2 v_textureCoordinates; 
+          in vec2 v_textureCoordinates; 
           const int KERNEL_WIDTH = 16; 
           void main(void) 
           { 
@@ -65,11 +65,11 @@
               { 
                   for (int j = 0; j < KERNEL_WIDTH; j++) 
                   { 
-                      averageValue += texture2D(colorTexture, integralPos + step * vec2(i, j)).rgb; 
+                      averageValue += texture(colorTexture, integralPos + step * vec2(i, j)).rgb; 
                   } 
               } 
               averageValue /= float(KERNEL_WIDTH * KERNEL_WIDTH); 
-              gl_FragColor = vec4(averageValue, 1.0); 
+              out_FragColor = vec4(averageValue, 1.0); 
           }
           `;
         viewer.scene.postProcessStages.add(
@@ -78,11 +78,14 @@
           })
         );
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

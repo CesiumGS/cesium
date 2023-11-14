@@ -38,7 +38,7 @@
       <div><input type="checkbox" data-bind="checked: shadows" /> Shadows</div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -140,58 +140,62 @@
             viewer.shadows = enabled;
           });
 
+        let resourceToLoad;
         Cesium.knockout
           .getObservable(viewModel, "selectedTileset")
-          .subscribe(function (options) {
+          .subscribe(async function (options) {
             if (Cesium.defined(tileset)) {
               scene.primitives.remove(tileset);
             }
             if (!Cesium.defined(options)) {
               inspectorViewModel.tileset = undefined;
+              resourceToLoad = undefined;
               return;
             }
 
-            tileset = viewer.scene.primitives.add(
-              new Cesium.Cesium3DTileset({
-                url: options.resource,
-              })
-            );
-
-            tileset.readyPromise
-              .then(function () {
-                inspectorViewModel.tileset = tileset;
-                viewer.zoomTo(
-                  tileset,
-                  new Cesium.HeadingPitchRange(
-                    0,
-                    -2.0,
-                    Math.max(100.0 - tileset.boundingSphere.radius, 0.0)
-                  )
-                );
-
-                const properties = tileset.properties;
-                if (
-                  Cesium.defined(properties) &&
-                  Cesium.defined(properties.Height)
-                ) {
-                  tileset.style = new Cesium.Cesium3DTileStyle({
-                    color: {
-                      conditions: [
-                        ["${Height} >= 83", "color('purple', 0.5)"],
-                        ["${Height} >= 80", "color('red')"],
-                        ["${Height} >= 70", "color('orange')"],
-                        ["${Height} >= 12", "color('yellow')"],
-                        ["${Height} >= 7", "color('lime')"],
-                        ["${Height} >= 1", "color('cyan')"],
-                        ["true", "color('blue')"],
-                      ],
-                    },
-                  });
-                }
-              })
-              .catch(function (error) {
-                throw error;
+            resourceToLoad = options.resource;
+            try {
+              tileset = await Cesium.Cesium3DTileset.fromUrl(resourceToLoad, {
+                enableDebugWireframe: true,
               });
+              if (options.resource !== resourceToLoad) {
+                // Another tileset was loaded. Discard the result.
+                return;
+              }
+              viewer.scene.primitives.add(tileset);
+
+              inspectorViewModel.tileset = tileset;
+              viewer.zoomTo(
+                tileset,
+                new Cesium.HeadingPitchRange(
+                  0,
+                  -2.0,
+                  Math.max(100.0 - tileset.boundingSphere.radius, 0.0)
+                )
+              );
+
+              const properties = tileset.properties;
+              if (
+                Cesium.defined(properties) &&
+                Cesium.defined(properties.Height)
+              ) {
+                tileset.style = new Cesium.Cesium3DTileStyle({
+                  color: {
+                    conditions: [
+                      ["${Height} >= 83", "color('purple', 0.5)"],
+                      ["${Height} >= 80", "color('red')"],
+                      ["${Height} >= 70", "color('orange')"],
+                      ["${Height} >= 12", "color('yellow')"],
+                      ["${Height} >= 7", "color('lime')"],
+                      ["${Height} >= 1", "color('cyan')"],
+                      ["true", "color('blue')"],
+                    ],
+                  },
+                });
+              }
+            } catch (error) {
+              console.log(`Error loading tileset: ${error}`);
+            }
           });
 
         viewModel.selectedTileset = viewModel.tilesets[0];
@@ -201,13 +205,11 @@
         handler.setInputAction(function (movement) {
           const feature = inspectorViewModel.feature;
           if (Cesium.defined(feature)) {
-            const propertyNames = feature.getPropertyNames();
-            const length = propertyNames.length;
+            const propertyIds = feature.getPropertyIds();
+            const length = propertyIds.length;
             for (let i = 0; i < length; ++i) {
-              const propertyName = propertyNames[i];
-              console.log(
-                `${propertyName}: ${feature.getProperty(propertyName)}`
-              );
+              const propertyId = propertyIds[i];
+              console.log(`${propertyId}: ${feature.getProperty(propertyId)}`);
             }
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -219,11 +221,14 @@
           }
         }, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

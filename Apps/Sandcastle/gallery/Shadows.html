@@ -32,7 +32,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -41,7 +41,7 @@
           shadows: true,
           terrainShadows: Cesium.ShadowMode.ENABLED,
           shouldAnimate: true,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const shadowMap = viewer.shadowMap;
@@ -298,13 +298,15 @@
 
         setLocation(locations.Exton);
         setEntity(cesiumAir);
-
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -6,6 +6,8 @@ let excludeCategory = "";
 let webglValidation = false;
 let webglStub = false;
 let release = false;
+let debugCanvasWidth;
+let debugCanvasHeight;
 
 if (__karma__.config.args) {
   includeCategory = __karma__.config.args[0];
@@ -13,12 +15,14 @@ if (__karma__.config.args) {
   webglValidation = __karma__.config.args[4];
   webglStub = __karma__.config.args[5];
   release = __karma__.config.args[6];
+  debugCanvasWidth = __karma__.config.args[7];
+  debugCanvasHeight = __karma__.config.args[8];
 }
 
 if (release) {
   window.CESIUM_BASE_URL = "base/Build/Cesium";
 } else {
-  window.CESIUM_BASE_URL = "base/Source";
+  window.CESIUM_BASE_URL = "base/Build/CesiumUnminified";
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
@@ -28,5 +32,7 @@ customizeJasmine(
   excludeCategory,
   webglValidation,
   webglStub,
-  release
+  release,
+  debugCanvasWidth,
+  debugCanvasHeight
 );

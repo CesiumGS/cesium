@@ -29,7 +29,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -125,6 +125,15 @@
             },
           },
           {
+            text: "Unlit Box",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/BoxUnlit/BoxUnlit.gltf",
+                10.0
+              );
+            },
+          },
+          {
             text: "Draco Compressed Model",
             onselect: function () {
               createModel(
@@ -147,15 +156,27 @@
               );
             },
           },
+          {
+            text: "Instanced Box",
+            onselect: function () {
+              createModel(
+                "../../SampleData/models/BoxInstanced/BoxInstanced.gltf",
+                15
+              );
+            },
+          },
         ];
 
         Sandcastle.addToolbarMenu(options);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -83,23 +83,12 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
-
-        // A ~10 billion point 3D Tileset of the city of Montreal, Canada captured in 2015 with a resolution of 20 cm. Tiled and hosted by Cesium ion.
-        const tileset = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(28945),
-            pointCloudShading: {
-              attenuation: true,
-              maximumAttenuation: 2,
-            },
-          })
-        );
 
         // Fly to a nice overview of the city.
         viewer.camera.flyTo({
@@ -120,7 +109,7 @@
               0.41755548379407276
             ),
           },
-          easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+          duration: 0,
         });
 
         // Add stored views around Montreal. You can add to this list by capturing camera.position, camera.direction and camera.up.
@@ -363,8 +352,22 @@
           tileset.style = new Cesium.Cesium3DTileStyle(styleObject);
         }
 
-        // Apply an initial style.
-        applyStyle(tileset, pointStyles);
+        let tileset;
+        try {
+          // A ~10 billion point 3D Tileset of the city of Montreal, Canada captured in 2015 with a resolution of 20 cm. Tiled and hosted by Cesium ion.
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(28945, {
+            pointCloudShading: {
+              attenuation: true,
+              maximumAttenuation: 2,
+            },
+          });
+          viewer.scene.primitives.add(tileset);
+
+          // Apply an initial style.
+          applyStyle(tileset, pointStyles);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         Cesium.knockout.track(viewModel);
 
@@ -423,11 +426,14 @@
             applyStyle(tileset, pointStyles);
           });
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

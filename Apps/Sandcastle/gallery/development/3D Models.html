@@ -90,7 +90,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -157,10 +157,10 @@
         Cesium.knockout
           .getObservable(viewModel, "colorBlendAmount")
           .subscribe(function (newValue) {
-            model.colorBlendAmount = newValue;
+            model.colorBlendAmount = Number(newValue);
           });
 
-        function createModel(url, height, heading, pitch, roll) {
+        async function createModel(url, height, heading, pitch, roll) {
           height = Cesium.defaultValue(height, 0.0);
           heading = Cesium.defaultValue(heading, 0.0);
           pitch = Cesium.defaultValue(pitch, 0.0);
@@ -178,16 +178,16 @@
           );
 
           scene.primitives.removeAll(); // Remove previous model
-          model = scene.primitives.add(
-            Cesium.Model.fromGltf({
-              url: url,
-              modelMatrix: modelMatrix,
-              minimumPixelSize: 128,
-            })
-          );
+          try {
+            model = scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                modelMatrix: modelMatrix,
+                minimumPixelSize: 128,
+              })
+            );
 
-          model.readyPromise
-            .then(function (model) {
+            model.readyEvent.addEventListener(() => {
               model.color = Cesium.Color.fromAlpha(
                 getColor(viewModel.color),
                 Number(viewModel.alpha)
@@ -195,7 +195,7 @@
               model.colorBlendMode = getColorBlendMode(
                 viewModel.colorBlendMode
               );
-              model.colorBlendAmount = viewModel.colorBlendAmount;
+              model.colorBlendAmount = Number(viewModel.colorBlendAmount);
               // Play and loop all animations at half-speed
               model.activeAnimations.addAll({
                 multiplier: 0.5,
@@ -211,21 +211,17 @@
                 Math.max(model.boundingSphere.radius, camera.frustum.near);
               controller.minimumZoomDistance = r * 0.5;
 
-              const center = Cesium.Matrix4.multiplyByPoint(
-                model.modelMatrix,
-                model.boundingSphere.center,
-                new Cesium.Cartesian3()
-              );
+              const center = model.boundingSphere.center;
               const heading = Cesium.Math.toRadians(230.0);
               const pitch = Cesium.Math.toRadians(-20.0);
               camera.lookAt(
                 center,
                 new Cesium.HeadingPitchRange(heading, pitch, r * 2.0)
               );
-            })
-            .catch(function (error) {
-              window.alert(error);
             });
+          } catch (error) {
+            window.alert(error);
+          }
         }
 
         const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -309,11 +305,14 @@
         });
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

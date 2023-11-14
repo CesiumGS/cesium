@@ -36,7 +36,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
 
@@ -95,13 +95,35 @@
         const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url:
-            "../../SampleData/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json",
-        });
+        let tileset;
+        try {
+          tileset = await Cesium.Cesium3DTileset.fromUrl(
+            "../../SampleData/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json"
+          );
 
-        viewer.scene.primitives.add(tileset);
-        viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.3, 0.0));
+          viewer.scene.primitives.add(tileset);
+          viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.3, 0.0));
+          tileset.style = new Cesium.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                ["isExactClass('door')", "color('orange')"],
+                ["true", "color('white')"],
+              ],
+            },
+          });
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
+
+        function setStyle(style) {
+          return function () {
+            if (!Cesium.defined(tileset)) {
+              return;
+            }
+
+            tileset.style = new Cesium.Cesium3DTileStyle(style);
+          };
+        }
 
         const styles = [];
         function addStyle(name, style) {
@@ -110,19 +132,6 @@
             style: style,
           });
         }
-
-        addStyle("No style", {});
-
-        addStyle("Color by building", {
-          color: {
-            conditions: [
-              ["${building_name} === 'building0'", "color('purple')"],
-              ["${building_name} === 'building1'", "color('red')"],
-              ["${building_name} === 'building2'", "color('orange')"],
-              ["true", "color('blue')"],
-            ],
-          },
-        });
 
         addStyle("Color all doors", {
           color: {
@@ -138,6 +147,17 @@
             conditions: [
               ["isClass('door')", "color('orange')"],
               ["true", "color('white')"],
+            ],
+          },
+        });
+
+        addStyle("Color by building", {
+          color: {
+            conditions: [
+              ["${building_name} === 'building0'", "color('purple')"],
+              ["${building_name} === 'building1'", "color('red')"],
+              ["${building_name} === 'building2'", "color('orange')"],
+              ["true", "color('blue')"],
             ],
           },
         });
@@ -167,11 +187,7 @@
           },
         });
 
-        function setStyle(style) {
-          return function () {
-            tileset.style = new Cesium.Cesium3DTileStyle(style);
-          };
-        }
+        addStyle("No style", {});
 
         const styleOptions = [];
         for (let i = 0; i < styles.length; ++i) {
@@ -194,12 +210,12 @@
           }
           console.log(`Class: ${feature.getExactClassName()}`);
           console.log("Properties:");
-          const propertyNames = feature.getPropertyNames();
-          const length = propertyNames.length;
+          const propertyIds = feature.getPropertyIds();
+          const length = propertyIds.length;
           for (let i = 0; i < length; ++i) {
-            const name = propertyNames[i];
-            const value = feature.getProperty(name);
-            console.log(`  ${name}: ${value}`);
+            const propertyId = propertyIds[i];
+            const value = feature.getProperty(propertyId);
+            console.log(`  ${propertyId}: ${value}`);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -212,11 +228,14 @@
           feature.show = false;
         }, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

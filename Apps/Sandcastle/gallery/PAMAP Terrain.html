@@ -32,16 +32,20 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        // High resolution terrain of Pennsylvania curated by Pennsylvania Spatial Data Access (PASDA)
-        // http://www.pasda.psu.edu/
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: new Cesium.CesiumTerrainProvider({
-            url: Cesium.IonResource.fromAssetId(3957),
-          }),
-        });
+        const viewer = new Cesium.Viewer("cesiumContainer");
+
+        try {
+          // High resolution terrain of Pennsylvania curated by Pennsylvania Spatial Data Access (PASDA)
+          // http://www.pasda.psu.edu/
+          viewer.terrainProvider = await Cesium.CesiumTerrainProvider.fromIonAssetId(
+            3957
+          );
+        } catch (error) {
+          window.alert(`Failed to load terrain. ${error}`);
+        }
 
         // Add PA locations
         Sandcastle.addDefaultToolbarMenu(
@@ -134,12 +138,29 @@
           ],
           "toolbar"
         );
+
+        viewer.scene.camera.flyTo({
+          destination: Cesium.Cartesian3.fromRadians(
+            -1.3324415110874286,
+            0.6954224325279967,
+            236.6770689945084
+          ),
+          orientation: {
+            heading: Cesium.Math.toRadians(310),
+            pitch: Cesium.Math.toRadians(-15),
+            roll: 0.0,
+          },
+          duration: 0.0,
+        });
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

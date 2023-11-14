@@ -1,15 +1,14 @@
-import { arrayFill } from "../Source/Cesium.js";
-import { Cartesian2 } from "../Source/Cesium.js";
-import { Color } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { JulianDate } from "../Source/Cesium.js";
-import { ImageBasedLighting } from "../Source/Cesium.js";
-import { Resource } from "../Source/Cesium.js";
-import { Cesium3DTileContentFactory } from "../Source/Cesium.js";
-import { Cesium3DTileset } from "../Source/Cesium.js";
-import { TileBoundingSphere } from "../Source/Cesium.js";
-import { RuntimeError } from "../Source/Cesium.js";
+import {
+  Color,
+  defaultValue,
+  defined,
+  JulianDate,
+  Resource,
+  Cesium3DTileContentFactory,
+  Cesium3DTileset,
+  TileBoundingSphere,
+} from "@cesium/engine";
+
 import pollToPromise from "./pollToPromise.js";
 
 const mockTile = {
@@ -103,106 +102,34 @@ Cesium3DTilesTester.waitForTilesLoaded = function (scene, tileset) {
   });
 };
 
-Cesium3DTilesTester.waitForReady = function (scene, tileset) {
-  return pollToPromise(function () {
-    scene.renderForSpecs();
-    return tileset.ready;
-  }).then(function () {
-    return tileset;
-  });
-};
-
-Cesium3DTilesTester.loadTileset = function (scene, url, options) {
+Cesium3DTilesTester.loadTileset = async function (scene, url, options) {
   options = defaultValue(options, {});
-  options.url = url;
   options.cullRequestsWhileMoving = defaultValue(
     options.cullRequestsWhileMoving,
     false
   );
+
+  const tileset = await Cesium3DTileset.fromUrl(url, options);
+
   // Load all visible tiles
-  const tileset = scene.primitives.add(new Cesium3DTileset(options));
-
-  return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+  scene.primitives.add(tileset);
+  await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+  return tileset;
 };
 
-Cesium3DTilesTester.loadTileExpectError = function (scene, arrayBuffer, type) {
-  const tileset = {};
-  const url = Resource.createIfNeeded("");
-  expect(function () {
-    return Cesium3DTileContentFactory[type](
-      tileset,
-      mockTile,
-      url,
-      arrayBuffer,
-      0
-    );
-  }).toThrowError(RuntimeError);
-};
-
-Cesium3DTilesTester.loadTile = function (scene, arrayBuffer, type) {
-  const tileset = {
-    _statistics: {
-      batchTableByteLength: 0,
-    },
-    root: {},
-  };
-  const url = Resource.createIfNeeded("");
-  const content = Cesium3DTileContentFactory[type](
-    tileset,
-    mockTile,
-    url,
-    arrayBuffer,
-    0
-  );
-  content.update(tileset, scene.frameState);
-  return content;
-};
-
-// Use counter to prevent models from sharing the same cache key,
-// this fixes tests that load a model with the same invalid url
-let counter = 0;
-Cesium3DTilesTester.rejectsReadyPromiseOnError = function (
-  scene,
+Cesium3DTilesTester.createContentForMockTile = async function (
   arrayBuffer,
   type
 ) {
-  const tileset = {
-    basePath: counter++,
-    _statistics: {
-      batchTableByteLength: 0,
-    },
-    imageBasedLighting: new ImageBasedLighting({
-      imageBasedLighting: new Cartesian2(1, 1),
-    }),
-  };
+  const tileset = {};
   const url = Resource.createIfNeeded("");
-  const content = Cesium3DTileContentFactory[type](
+  return Cesium3DTileContentFactory[type](
     tileset,
     mockTile,
     url,
     arrayBuffer,
     0
   );
-  content.update(tileset, scene.frameState);
-
-  return content.readyPromise
-    .then(function (content) {
-      fail("should not resolve");
-    })
-    .catch(function (error) {
-      expect(error).toBeDefined();
-    });
-};
-
-Cesium3DTilesTester.resolvesReadyPromise = function (scene, url, options) {
-  return Cesium3DTilesTester.loadTileset(scene, url, options).then(function (
-    tileset
-  ) {
-    const content = tileset.root.content;
-    return content.readyPromise.then(function (content) {
-      expect(content).toBeDefined();
-    });
-  });
 };
 
 Cesium3DTilesTester.tileDestroys = function (scene, url, options) {
@@ -273,7 +200,7 @@ Cesium3DTilesTester.generateInstancedTileBuffer = function (options) {
     const featuresLength = defaultValue(options.featuresLength, 1);
     featureTableJsonString = JSON.stringify({
       INSTANCES_LENGTH: featuresLength,
-      POSITION: arrayFill(new Array(featuresLength * 3), 0),
+      POSITION: new Array(featuresLength * 3).fill(0),
     });
   }
   featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 8);

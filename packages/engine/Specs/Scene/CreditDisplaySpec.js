@@ -1,0 +1,617 @@
+import { Credit, defined, CreditDisplay } from "../../index.js";
+
+import absolutize from "../../../../Specs/absolutize.js";
+
+describe("Scene/CreditDisplay", function () {
+  let container;
+  let creditDisplay;
+  let imageUrl;
+
+  describe("Scene/CreditDisplay under document.head", function () {
+    beforeEach(function () {
+      imageUrl = absolutize("./Data/Images/Green.png");
+      container = document.createElement("div");
+      container.id = "credit-container";
+      document.body.appendChild(container);
+    });
+
+    afterEach(function () {
+      document.body.removeChild(container);
+      CreditDisplay.cesiumCredit = undefined;
+      CreditDisplay._cesiumCreditInitialized = false;
+      if (defined(creditDisplay)) {
+        creditDisplay.destroy();
+        creditDisplay = undefined;
+      }
+    });
+    runTests();
+  });
+
+  describe("Scene/CreditDisplay under shadowRoot", function () {
+    beforeEach(function () {
+      imageUrl = absolutize("./Data/Images/Green.png");
+      container = document.createElement("div");
+      container.id = "credit-container";
+
+      const outerContainer = document.createElement("div");
+      outerContainer.id = "credit-outer-container";
+
+      const shadowRoot = outerContainer.attachShadow({ mode: "open" });
+      shadowRoot.appendChild(container);
+
+      document.body.appendChild(outerContainer);
+    });
+
+    afterEach(function () {
+      const element = document.querySelector("credit-outer-container");
+      if (defined(element)) {
+        element.remove();
+      }
+      CreditDisplay.cesiumCredit = undefined;
+      CreditDisplay._cesiumCreditInitialized = false;
+      if (defined(creditDisplay)) {
+        creditDisplay.destroy();
+        creditDisplay = undefined;
+      }
+    });
+    runTests();
+  });
+
+  it("credit display throws with no container", function () {
+    expect(function () {
+      return new CreditDisplay();
+    }).toThrowDeveloperError();
+  });
+
+  it("credits have unique ids", function () {
+    const credit1 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
+    const credit2 = new Credit('<a href="http://cesiumjs.org/">credit2</a>');
+    expect(credit1.id).not.toEqual(credit2.id);
+
+    const credit3 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
+    expect(credit1.id).toEqual(credit3.id);
+  });
+
+  it("credit clone works", function () {
+    const credit1 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
+    const credit2 = Credit.clone(credit1);
+    expect(credit1).toEqual(credit2);
+    const credit3 = Credit.clone(undefined);
+    expect(credit3).toBeUndefined();
+  });
+
+  function runTests() {
+    // For the sake of the tests, we remove the logo
+    // credit at the beginning of every frame
+    function beginFrame(creditDisplay) {
+      creditDisplay.beginFrame();
+    }
+
+    it("addCreditToNextFrame throws when credit is undefined", function () {
+      expect(function () {
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.addCreditToNextFrame();
+      }).toThrowDeveloperError();
+    });
+
+    it("addStaticCredit throws when credit is undefined", function () {
+      expect(function () {
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.addStaticCredit();
+      }).toThrowDeveloperError();
+    });
+
+    it("removeStaticCredit throws when credit is undefined", function () {
+      expect(function () {
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.removeStaticCredit();
+      }).toThrowDeveloperError();
+    });
+
+    it("credit display displays a credit", function () {
+      creditDisplay = new CreditDisplay(container);
+      const credit = new Credit(
+        '<a href="http://cesiumjs.org">CesiumJS.org</a>',
+        true
+      );
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit);
+      creditDisplay.endFrame();
+
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(1);
+      const child10 = creditContainer.childNodes[0];
+      expect(child10.childNodes.length).toEqual(1);
+    });
+
+    it("credit display updates html when credits change", function () {
+      const credit1 = new Credit("credit1", true);
+      const credit2 = new Credit("credit2", true);
+
+      creditDisplay = new CreditDisplay(container);
+
+      // add only credit1 during the frame
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.endFrame();
+      const innerHTMLWithCredit1 = container.innerHTML;
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(1);
+      expect(creditContainer.childNodes[0].innerHTML).toEqual("credit1");
+
+      // add only credit2 during the frame
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      const innerHTMLWithCredit2 = container.innerHTML;
+      expect(innerHTMLWithCredit2).not.toEqual(innerHTMLWithCredit1);
+      expect(creditContainer.childNodes.length).toEqual(1);
+      expect(creditContainer.childNodes[0].innerHTML).toEqual("credit2");
+
+      // add both credit1 and credit2 during the frame
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      const innerHTMLWithCredit1AndCredit2 = container.innerHTML;
+      expect(innerHTMLWithCredit1AndCredit2).not.toEqual(innerHTMLWithCredit1);
+      expect(innerHTMLWithCredit1AndCredit2).not.toEqual(innerHTMLWithCredit2);
+      expect(creditContainer.childNodes.length).toEqual(3);
+      expect(creditContainer.childNodes[0].innerHTML).toEqual("credit1");
+      expect(creditContainer.childNodes[2].innerHTML).toEqual("credit2");
+
+      // add neither credit during the frame
+      beginFrame(creditDisplay);
+      creditDisplay.endFrame();
+      expect(container.innerHTML).not.toEqual(innerHTMLWithCredit1);
+      expect(container.innerHTML).not.toEqual(innerHTMLWithCredit2);
+      expect(container.innerHTML).not.toEqual(innerHTMLWithCredit1AndCredit2);
+      expect(creditContainer.childNodes.length).toEqual(0);
+    });
+
+    it("credit display uses delimeter", function () {
+      const credit1 = new Credit("credit1", true);
+      const credit2 = new Credit("credit2", true);
+      const delimiter = ", ";
+      creditDisplay = new CreditDisplay(container, ", ");
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(3);
+      expect(creditContainer.childNodes[0].innerHTML).toEqual("credit1");
+      expect(creditContainer.childNodes[1].innerHTML).toEqual(delimiter);
+      expect(creditContainer.childNodes[2].innerHTML).toEqual("credit2");
+    });
+
+    it("credit display manages delimeters correctly for text credits", function () {
+      const credit1 = new Credit("credit1", true);
+      const credit2 = new Credit("credit2", true);
+      const credit3 = new Credit("credit3", true);
+      const delimiter = ", ";
+      creditDisplay = new CreditDisplay(container, delimiter);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.addCreditToNextFrame(credit3);
+      creditDisplay.endFrame();
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(5);
+      expect(creditContainer.childNodes[0]).toEqual(credit1.element);
+      expect(creditContainer.childNodes[1].innerHTML).toEqual(delimiter);
+      expect(creditContainer.childNodes[2]).toEqual(credit2.element);
+      expect(creditContainer.childNodes[3].innerHTML).toEqual(delimiter);
+      expect(creditContainer.childNodes[4]).toEqual(credit3.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.addCreditToNextFrame(credit3);
+      creditDisplay.endFrame();
+      expect(creditContainer.childNodes.length).toEqual(3);
+      expect(creditContainer.childNodes[0]).toEqual(credit2.element);
+      expect(creditContainer.childNodes[1].innerHTML).toEqual(delimiter);
+      expect(creditContainer.childNodes[2]).toEqual(credit3.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      expect(creditContainer.childNodes.length).toEqual(1);
+      expect(creditContainer.childNodes[0]).toEqual(credit2.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.addCreditToNextFrame(credit3);
+      creditDisplay.endFrame();
+      expect(creditContainer.childNodes.length).toEqual(3);
+      expect(creditContainer.childNodes[0]).toEqual(credit2.element);
+      expect(creditContainer.childNodes[1].innerHTML).toEqual(delimiter);
+      expect(creditContainer.childNodes[2]).toEqual(credit3.element);
+    });
+
+    it("credit display displays a static credit", function () {
+      const defaultCredit = new Credit("default credit", true);
+      const credit1 = new Credit("credit1", true);
+
+      creditDisplay = new CreditDisplay(container, ", ");
+      creditDisplay.addStaticCredit(defaultCredit);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.endFrame();
+
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(3);
+      expect(creditContainer.childNodes[0]).toEqual(defaultCredit.element);
+      expect(creditContainer.childNodes[1].innerHTML).toEqual(", ");
+      expect(creditContainer.childNodes[2]).toEqual(credit1.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.endFrame();
+      expect(creditContainer.childNodes.length).toEqual(1);
+      expect(creditContainer.childNodes[0]).toEqual(defaultCredit.element);
+    });
+
+    it("credit display displays credits when a static credit is removed", function () {
+      const defaultCredit = new Credit("default credit", true);
+      const credit1 = new Credit("credit1", true);
+
+      creditDisplay = new CreditDisplay(container, ", ");
+      creditDisplay.addStaticCredit(defaultCredit);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.endFrame();
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(3);
+      expect(creditContainer.childNodes[0]).toEqual(defaultCredit.element);
+      expect(creditContainer.childNodes[1].innerHTML).toEqual(", ");
+      expect(creditContainer.childNodes[2]).toEqual(credit1.element);
+
+      creditDisplay.removeStaticCredit(defaultCredit);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.endFrame();
+      expect(creditContainer.childNodes.length).toEqual(1);
+      expect(creditContainer.childNodes[0]).toEqual(credit1.element);
+    });
+
+    it("credit display only displays one if two credits are equal", function () {
+      const credit1 = new Credit("credit1", true);
+      const credit2 = new Credit("credit1", true);
+      creditDisplay = new CreditDisplay(container);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(1);
+      expect(creditContainer.childNodes[0].innerHTML).toEqual("credit1");
+    });
+
+    it("credit display keeps count of repeated credits", function () {
+      const repeatedCreditCount = 4;
+      creditDisplay = new CreditDisplay(container);
+      beginFrame(creditDisplay);
+
+      for (let i = 0; i < repeatedCreditCount; i++) {
+        creditDisplay.addCreditToNextFrame(new Credit("credit1", true));
+      }
+      creditDisplay.addCreditToNextFrame(new Credit("credit2", true));
+
+      const credits = creditDisplay._currentFrameCredits.screenCredits.values;
+      expect(credits.length).toEqual(2);
+
+      const firstCredit = credits[0];
+      expect(firstCredit.credit.html).toEqual("credit1");
+      expect(firstCredit.count).toEqual(repeatedCreditCount);
+
+      const secondCredit = credits[1];
+      expect(secondCredit.credit.html).toEqual("credit2");
+      expect(secondCredit.count).toEqual(1);
+    });
+
+    it("credit display sorts credits by frequency", function () {
+      const creditCounts = [2, 10, 6, 1];
+      const credit1 = new Credit("credit1", true);
+      const credit2 = new Credit("credit2", true);
+      const credit3 = new Credit("credit3", true);
+      const credit4 = new Credit("credit4", true);
+
+      creditDisplay = new CreditDisplay(container);
+      beginFrame(creditDisplay);
+
+      for (let i = 0; i < creditCounts.length; i++) {
+        const creditString = "credit".concat((i + 1).toString());
+        const count = creditCounts[i];
+        for (let j = 0; j < count; j++) {
+          creditDisplay.addCreditToNextFrame(new Credit(creditString, true));
+        }
+      }
+      creditDisplay.endFrame();
+
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(7);
+      expect(creditContainer.childNodes[0]).toEqual(credit2.element);
+      expect(creditContainer.childNodes[2]).toEqual(credit3.element);
+      expect(creditContainer.childNodes[4]).toEqual(credit1.element);
+      expect(creditContainer.childNodes[6]).toEqual(credit4.element);
+    });
+
+    it("credit display sorts credits by frequency with static credit", function () {
+      const defaultCredit = new Credit("default credit", true);
+      const creditCounts = [2, 10, 6, 1];
+      const credit1 = new Credit("credit1", true);
+      const credit2 = new Credit("credit2", true);
+      const credit3 = new Credit("credit3", true);
+      const credit4 = new Credit("credit4", true);
+
+      creditDisplay = new CreditDisplay(container);
+      creditDisplay.addStaticCredit(defaultCredit);
+      beginFrame(creditDisplay);
+
+      for (let i = 0; i < creditCounts.length; i++) {
+        const creditString = "credit".concat((i + 1).toString());
+        const count = creditCounts[i];
+        for (let j = 0; j < count; j++) {
+          creditDisplay.addCreditToNextFrame(new Credit(creditString, true));
+        }
+      }
+      creditDisplay.endFrame();
+
+      const creditContainer = container.childNodes[1];
+      expect(creditContainer.childNodes.length).toEqual(9);
+      expect(creditContainer.childNodes[0]).toEqual(defaultCredit.element);
+      expect(creditContainer.childNodes[2]).toEqual(credit2.element);
+      expect(creditContainer.childNodes[4]).toEqual(credit3.element);
+      expect(creditContainer.childNodes[6]).toEqual(credit1.element);
+      expect(creditContainer.childNodes[8]).toEqual(credit4.element);
+    });
+
+    it("displays credits in a lightbox", function () {
+      const credit1 = new Credit("credit1");
+      const credit2 = new Credit(`<img src="${imageUrl}"/>`);
+
+      creditDisplay = new CreditDisplay(container);
+      const creditList = creditDisplay._creditList;
+
+      creditDisplay.showLightbox();
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      let innerHTML = creditList.innerHTML;
+      expect(creditList.childNodes.length).toEqual(1);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.innerHTML).not.toEqual(innerHTML);
+      innerHTML = creditList.innerHTML;
+      expect(creditList.childNodes.length).toEqual(1);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit2.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.innerHTML).not.toEqual(innerHTML);
+      innerHTML = creditList.innerHTML;
+      expect(creditList.childNodes.length).toEqual(2);
+
+      beginFrame(creditDisplay);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.innerHTML).not.toEqual(innerHTML);
+      expect(creditList.childNodes.length).toEqual(0);
+
+      creditDisplay.hideLightbox();
+    });
+
+    it("displays static credits in a lightbox", function () {
+      const credit1 = new Credit("credit1");
+      const credit2 = new Credit(`<img src="${imageUrl}"/>`);
+
+      creditDisplay = new CreditDisplay(container);
+      const creditList = creditDisplay._creditList;
+      creditDisplay.addStaticCredit(credit1);
+
+      creditDisplay.showLightbox();
+
+      beginFrame(creditDisplay);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      let innerHTML = creditList.innerHTML;
+      expect(creditList.childNodes.length).toEqual(1);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.innerHTML).not.toEqual(innerHTML);
+      innerHTML = creditList.innerHTML;
+      expect(creditList.childNodes.length).toEqual(2);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+      expect(creditList.childNodes[1].childNodes[0]).toEqual(credit2.element);
+
+      beginFrame(creditDisplay);
+      creditDisplay.endFrame();
+      expect(creditList.childNodes.length).toEqual(1);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+
+      creditDisplay.hideLightbox();
+    });
+
+    it("credit display displays credits when a static credit is removed from the lightbox", function () {
+      const credit1 = new Credit("credit1");
+      const credit2 = new Credit(`<img src="${imageUrl}"/>`);
+
+      creditDisplay = new CreditDisplay(container, ", ");
+      const creditList = creditDisplay._creditList;
+
+      creditDisplay.showLightbox();
+
+      creditDisplay.addStaticCredit(credit1);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(2);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
+      expect(creditList.childNodes[1].childNodes[0]).toEqual(credit2.element);
+
+      creditDisplay.removeStaticCredit(credit1);
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(1);
+      expect(creditList.childNodes[0].childNodes[0]).toEqual(credit2.element);
+    });
+
+    it("handles showOnScreen toggles at runtime", function () {
+      // Credits are constructed to show on screen
+      const credit1 = new Credit("credit1", true);
+      const credit2 = new Credit("credit2", true);
+
+      creditDisplay = new CreditDisplay(container);
+      creditDisplay.addStaticCredit(credit1);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      const screenCreditContainer = container.childNodes[1];
+      expect(screenCreditContainer.childNodes.length).toEqual(3);
+      expect(screenCreditContainer.childNodes[0]).toEqual(credit1.element);
+      expect(screenCreditContainer.childNodes[2]).toEqual(credit2.element);
+
+      // Show credits in lightbox instead
+      credit1.showOnScreen = false;
+      credit2.showOnScreen = false;
+
+      creditDisplay.showLightbox();
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+
+      const lightboxCreditList = creditDisplay._creditList;
+      expect(lightboxCreditList.childNodes.length).toEqual(2);
+      expect(lightboxCreditList.childNodes[0].childNodes[0]).toEqual(
+        credit1.element
+      );
+      expect(lightboxCreditList.childNodes[1].childNodes[0]).toEqual(
+        credit2.element
+      );
+
+      // Show credits on screen again
+      credit1.showOnScreen = true;
+      credit2.showOnScreen = true;
+
+      creditDisplay.hideLightbox();
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+
+      expect(screenCreditContainer.childNodes.length).toEqual(3);
+      expect(screenCreditContainer.childNodes[0]).toEqual(credit1.element);
+      expect(screenCreditContainer.childNodes[2]).toEqual(credit2.element);
+    });
+
+    it("renders lightbox credits", function () {
+      const credit1 = new Credit("credit1");
+      const credit2 = new Credit(`<img src="${imageUrl}"/>`);
+
+      creditDisplay = new CreditDisplay(container);
+      const creditList = creditDisplay._creditList;
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(2);
+
+      creditDisplay.showLightbox();
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(2);
+
+      creditDisplay.hideLightbox();
+    });
+
+    it("updates lightbox when a new frames are not rendered", function () {
+      const credit1 = new Credit("credit1");
+      const credit2 = new Credit(`<img src="${imageUrl}"/>`);
+
+      creditDisplay = new CreditDisplay(container);
+      const creditList = creditDisplay._creditList;
+
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(0);
+
+      beginFrame(creditDisplay);
+      creditDisplay.addCreditToNextFrame(credit1);
+      creditDisplay.addCreditToNextFrame(credit2);
+      creditDisplay.endFrame();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(2);
+
+      creditDisplay.showLightbox();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(2);
+
+      creditDisplay.hideLightbox();
+      creditDisplay.update();
+
+      expect(creditList.childNodes.length).toEqual(2);
+
+      creditDisplay.hideLightbox();
+    });
+
+    it("works if Cesium credit removed", function () {
+      creditDisplay = new CreditDisplay(container);
+      const cesiumCredit = CreditDisplay.cesiumCredit;
+      CreditDisplay.cesiumCredit = undefined;
+      creditDisplay.beginFrame();
+      creditDisplay.endFrame();
+      expect(creditDisplay._cesiumCreditContainer.childNodes.length).toBe(0);
+      CreditDisplay.cesiumCredit = cesiumCredit;
+    });
+
+    it("each credit display has a unique cesium credit", function () {
+      creditDisplay = new CreditDisplay(container);
+      const container2 = document.createElement("div");
+      const creditDisplay2 = new CreditDisplay(container2);
+      expect(creditDisplay._currentCesiumCredit).toEqual(
+        creditDisplay2._currentCesiumCredit
+      );
+      expect(creditDisplay._currentCesiumCredit).not.toBe(
+        creditDisplay2._currentCesiumCredit
+      );
+    });
+  }
+});

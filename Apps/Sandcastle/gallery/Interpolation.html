@@ -34,14 +34,14 @@
       <div id="interpolationMenu"></div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           infoBox: false, //Disable InfoBox widget
           selectionIndicator: false, //Disable selection indicator
           shouldAnimate: true, // Enable animations
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         //Enable lighting based on the sun position
@@ -200,11 +200,14 @@
           "interpolationMenu"
         );
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -32,15 +32,16 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           shouldAnimate: true,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         const scene = viewer.scene;
         scene.globe.depthTestAgainstTerrain = true;
+
         const resetCameraFunction = function () {
           scene.camera.setView({
             destination: new Cesium.Cartesian3(
@@ -134,39 +135,41 @@
         // button
         Sandcastle.addToolbarButton("Reset Camera", resetCameraFunction);
 
+        function startSnow() {
+          scene.primitives.removeAll();
+          scene.primitives.add(
+            new Cesium.ParticleSystem({
+              modelMatrix: new Cesium.Matrix4.fromTranslation(
+                scene.camera.position
+              ),
+              minimumSpeed: -1.0,
+              maximumSpeed: 0.0,
+              lifetime: 15.0,
+              emitter: new Cesium.SphereEmitter(snowRadius),
+              startScale: 0.5,
+              endScale: 1.0,
+              image: "../../SampleData/snowflake_particle.png",
+              emissionRate: 7000.0,
+              startColor: Cesium.Color.WHITE.withAlpha(0.0),
+              endColor: Cesium.Color.WHITE.withAlpha(1.0),
+              minimumImageSize: minimumSnowImageSize,
+              maximumImageSize: maximumSnowImageSize,
+              updateCallback: snowUpdate,
+            })
+          );
+
+          scene.skyAtmosphere.hueShift = -0.8;
+          scene.skyAtmosphere.saturationShift = -0.7;
+          scene.skyAtmosphere.brightnessShift = -0.33;
+          scene.fog.density = 0.001;
+          scene.fog.minimumBrightness = 0.8;
+        }
+
         // drop down
         const options = [
           {
             text: "Snow",
-            onselect: function () {
-              scene.primitives.removeAll();
-              scene.primitives.add(
-                new Cesium.ParticleSystem({
-                  modelMatrix: new Cesium.Matrix4.fromTranslation(
-                    scene.camera.position
-                  ),
-                  minimumSpeed: -1.0,
-                  maximumSpeed: 0.0,
-                  lifetime: 15.0,
-                  emitter: new Cesium.SphereEmitter(snowRadius),
-                  startScale: 0.5,
-                  endScale: 1.0,
-                  image: "../../SampleData/snowflake_particle.png",
-                  emissionRate: 7000.0,
-                  startColor: Cesium.Color.WHITE.withAlpha(0.0),
-                  endColor: Cesium.Color.WHITE.withAlpha(1.0),
-                  minimumImageSize: minimumSnowImageSize,
-                  maximumImageSize: maximumSnowImageSize,
-                  updateCallback: snowUpdate,
-                })
-              );
-
-              scene.skyAtmosphere.hueShift = -0.8;
-              scene.skyAtmosphere.saturationShift = -0.7;
-              scene.skyAtmosphere.brightnessShift = -0.33;
-              scene.fog.density = 0.001;
-              scene.fog.minimumBrightness = 0.8;
-            },
+            onselect: startSnow,
           },
           {
             text: "Rain",
@@ -200,13 +203,17 @@
           },
         ];
         Sandcastle.addToolbarMenu(options);
+        startSnow();
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
 
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

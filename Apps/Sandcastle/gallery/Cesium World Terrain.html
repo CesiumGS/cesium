@@ -32,19 +32,34 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        // For more information on Cesium World Terrain, see https://cesium.com/content/cesiumworldterrain
+        // For more information on Cesium World Terrain, see https://cesium.com/platform/cesium-ion/content/cesium-world-terrain/
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
+        const target = new Cesium.Cartesian3(
+          -2489625.0836225147,
+          -4393941.44443024,
+          3882535.9454173897
+        );
+        const offset = new Cesium.Cartesian3(
+          -6857.40902037546,
+          412.3284835694358,
+          2147.5545426812023
+        );
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

@@ -1,12 +1,12 @@
 import customizeJasmine from "./customizeJasmine.js";
-import defined from "../Source/Core/defined.js";
-import queryToObject from "../Source/Core/queryToObject.js";
+import { defined, queryToObject } from "../packages/engine/index.js";
 
 const queryString = queryToObject(window.location.search.substring(1));
 
 let webglValidation = false;
 let webglStub = false;
-const built = window.location.search.indexOf("built") !== -1;
+let debugCanvasWidth;
+let debugCanvasHeight;
 const release = window.location.search.indexOf("release") !== -1;
 const categoryString = queryString.category;
 const excludeCategoryString = queryString.not;
@@ -19,14 +19,18 @@ if (defined(queryString.webglStub)) {
   webglStub = true;
 }
 
-if (built) {
-  if (release) {
-    window.CESIUM_BASE_URL = "../Build/Cesium";
-  } else {
-    window.CESIUM_BASE_URL = "../Build/CesiumUnminified";
-  }
+if (defined(queryString.debugCanvasWidth)) {
+  debugCanvasWidth = parseInt(queryString.debugCanvasWidth);
+}
+
+if (defined(queryString.debugCanvasHeight)) {
+  debugCanvasHeight = parseInt(queryString.debugCanvasHeight);
+}
+
+if (release) {
+  window.CESIUM_BASE_URL = "../Build/Cesium";
 } else {
-  window.CESIUM_BASE_URL = "../Source/";
+  window.CESIUM_BASE_URL = "../Build/CesiumUnminified";
 }
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
@@ -61,5 +65,7 @@ customizeJasmine(
   excludeCategoryString,
   webglValidation,
   webglStub,
-  release
+  release,
+  debugCanvasWidth,
+  debugCanvasHeight
 );

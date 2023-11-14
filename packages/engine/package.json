@@ -1,0 +1,76 @@
+{
+  "name": "@cesium/engine",
+  "version": "6.1.0",
+  "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
+  "keywords": [
+    "3D",
+    "webgl",
+    "geospatial",
+    "map",
+    "globe"
+  ],
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "Source",
+    "Build/**",
+    "!Build/Specs/**",
+    "!Build/minifyShaders.state",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "sideEffects": [
+    "./Source/ThirdParty/**/*",
+    "./Source/Widget/*.css",
+    "./Source/Workers/*",
+    "./Specs/**/*"
+  ],
+  "dependencies": {
+    "@tweenjs/tween.js": "^21.0.0",
+    "@zip.js/zip.js": "2.4.x",
+    "autolinker": "^4.0.0",
+    "bitmap-sdf": "^1.0.3",
+    "dompurify": "^3.0.2",
+    "draco3d": "^1.5.1",
+    "earcut": "^2.2.4",
+    "grapheme-splitter": "^1.0.4",
+    "jsep": "^1.3.8",
+    "kdbush": "^4.0.1",
+    "ktx-parse": "^0.6.0",
+    "lerc": "^2.0.0",
+    "mersenne-twister": "^1.1.0",
+    "meshoptimizer": "^0.19.0",
+    "pako": "^2.0.4",
+    "protobufjs": "^7.1.0",
+    "rbush": "^3.0.1",
+    "topojson-client": "^3.1.0",
+    "urijs": "^1.19.7"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "gulp build --workspace @cesium/engine",
+    "build-ts": "gulp buildTs --workspace @cesium/engine",
+    "coverage": "gulp coverage --workspace @cesium/engine",
+    "test": "gulp test --workspace @cesium/engine",
+    "postversion": "gulp postversion --workspace @cesium/engine"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git"
+  },
+  "homepage": "https://cesium.com/cesiumjs/",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Cesium GS, Inc.",
+    "url": "https://cesium.com"
+  },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues"
+  }
+}

@@ -33,43 +33,46 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // An example showing a point cloud tileset classified by a Geometry tileset.
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
-        //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(16421),
-        });
-        viewer.scene.primitives.add(tileset);
+        try {
+          // Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(16421);
+          viewer.scene.primitives.add(tileset);
 
-        // Geometry Tiles are experimental and the format is subject to change in the future.
-        // For more details, see:
-        //    https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/Geometry
-        const classificationTileset = new Cesium.Cesium3DTileset({
-          url:
+          // Geometry Tiles are experimental and the format is subject to change in the future.
+          // For more details, see:
+          //    https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/Geometry
+          const classificationTileset = await Cesium.Cesium3DTileset.fromUrl(
             "../../SampleData/Cesium3DTiles/Classification/PointCloud/tileset.json",
-          classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
-        });
-        viewer.scene.primitives.add(classificationTileset);
+            {
+              classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+            }
+          );
+          viewer.scene.primitives.add(classificationTileset);
 
-        classificationTileset.style = new Cesium.Cesium3DTileStyle({
-          color: {
-            conditions: [
-              ["${id} === 'roof1'", "color('#004FFF', 0.5)"],
-              ["${id} === 'towerBottom1'", "color('#33BB66', 0.5)"],
-              ["${id} === 'towerTop1'", "color('#0099AA', 0.5)"],
-              ["${id} === 'roof2'", "color('#004FFF', 0.5)"],
-              ["${id} === 'tower3'", "color('#FF8833', 0.5)"],
-              ["${id} === 'tower4'", "color('#FFAA22', 0.5)"],
-              ["true", "color('#FFFF00', 0.5)"],
-            ],
-          },
-        });
+          classificationTileset.style = new Cesium.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                ["${id} === 'roof1'", "color('#004FFF', 0.5)"],
+                ["${id} === 'towerBottom1'", "color('#33BB66', 0.5)"],
+                ["${id} === 'towerTop1'", "color('#0099AA', 0.5)"],
+                ["${id} === 'roof2'", "color('#004FFF', 0.5)"],
+                ["${id} === 'tower3'", "color('#FF8833', 0.5)"],
+                ["${id} === 'tower4'", "color('#FFAA22', 0.5)"],
+                ["true", "color('#FFFF00', 0.5)"],
+              ],
+            },
+          });
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
@@ -111,13 +114,15 @@
           Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
           pickedFeature.color = Cesium.Color.YELLOW.withAlpha(0.5);
         },
-        Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+        Cesium.ScreenSpaceEventType.MOUSE_MOVE); //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

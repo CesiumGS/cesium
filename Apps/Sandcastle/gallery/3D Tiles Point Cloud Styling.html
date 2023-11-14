@@ -36,19 +36,22 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-
         const viewer = new Cesium.Viewer("cesiumContainer");
         viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url:
-            "../../SampleData/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json",
-        });
-        viewer.scene.primitives.add(tileset);
-        viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -1.0, 50.0));
+        let tileset;
+        try {
+          tileset = await Cesium.Cesium3DTileset.fromUrl(
+            "../../SampleData/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/tileset.json"
+          );
+          viewer.scene.primitives.add(tileset);
+          viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -1.0, 50.0));
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         const styles = [];
         function addStyle(name, style) {
@@ -59,16 +62,6 @@
           });
         }
 
-        addStyle("No Style", {});
-
-        addStyle("Red", {
-          color: "color('#ff0000')",
-        });
-
-        addStyle("Color Gradient", {
-          color: "color() * ${temperature}",
-        });
-
         addStyle("Step Red/Blue", {
           color: "${temperature} > 0.5 ? color('red') : color('blue')",
         });
@@ -76,6 +69,14 @@
         addStyle("Interpolate Red/Blue", {
           color:
             "color('red') * ${temperature} + color('blue') * (1.0 - ${temperature})",
+        });
+
+        addStyle("Red", {
+          color: "color('#ff0000')",
+        });
+
+        addStyle("Color Gradient", {
+          color: "color() * ${temperature}",
         });
 
         addStyle("Color Ramp", {
@@ -218,8 +219,13 @@
           show: "${length} < 2.0",
         });
 
+        addStyle("No Style", {});
+
         function setStyle(style) {
           return function () {
+            if (!Cesium.defined(tileset)) {
+              return;
+            }
             tileset.style = new Cesium.Cesium3DTileStyle(style);
           };
         }
@@ -235,11 +241,14 @@
 
         Sandcastle.addToolbarMenu(styleOptions);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

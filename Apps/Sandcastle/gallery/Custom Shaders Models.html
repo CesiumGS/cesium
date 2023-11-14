@@ -39,10 +39,9 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-        Cesium.ExperimentalFeatures.enableModelExperimental = true;
         const viewer = new Cesium.Viewer("cesiumContainer", {
           orderIndependentTranslucency: false,
         });
@@ -106,7 +105,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0 + 0.1 * vec2(u_time, 0.0);
-                material.diffuse = texture2D(u_stripes, texCoord).rgb;
+                material.diffuse = texture(u_stripes, texCoord).rgb;
             }
             `,
         });
@@ -157,7 +156,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 material.diffuse = mix(material.diffuse, vec3(0.0), checkerboard.r);
             }
             `,
@@ -172,13 +171,14 @@
               value: checkerboardTexture,
             },
           },
-          // necessary when setting material.alpha
-          isTranslucent: true,
+          // This model normally renders opaque so material.alpha would be ignored.
+          // this setting forces the shader to render in the translucent pass.
+          translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
           fragmentShaderText: `
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 material.diffuse = checkerboard.rgb;
                 material.alpha = checkerboard.a;
             }
@@ -197,7 +197,7 @@
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
                 vec2 texCoord = fsInput.attributes.texCoord_0;
-                vec4 checkerboard = texture2D(u_checkerboard, texCoord);
+                vec4 checkerboard = texture(u_checkerboard, texCoord);
                 if (checkerboard.r > 0.0) {
                     discard;
                 }
@@ -245,7 +245,7 @@
           fragmentShaderText: `
             void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
             {
-                material.diffuse = texture2D(u_gradient, fsInput.attributes.texCoord_0).rgb;
+                material.diffuse = texture(u_gradient, fsInput.attributes.texCoord_0).rgb;
             }
             `,
         });
@@ -393,26 +393,32 @@
           },
         ];
 
-        function selectModel(url, customShader) {
+        async function selectModel(url, customShader) {
           viewer.scene.primitives.removeAll();
-          const model = viewer.scene.primitives.add(
-            Cesium.ModelExperimental.fromGltf({
-              gltf: url,
-              customShader: customShader,
-              modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
-                position,
-                hpr,
-                Cesium.Ellipsoid.WGS84,
-                fixedFrameTransform
-              ),
-            })
-          );
+          try {
+            const model = viewer.scene.primitives.add(
+              await Cesium.Model.fromGltfAsync({
+                url: url,
+                customShader: customShader,
+                modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+                  position,
+                  hpr,
+                  Cesium.Ellipsoid.WGS84,
+                  fixedFrameTransform
+                ),
+              })
+            );
 
-          model.readyPromise.then(function (model) {
-            viewer.camera.flyToBoundingSphere(model.boundingSphere, {
-              duration: 0.5,
+            const removeListener = model.readyEvent.addEventListener(() => {
+              viewer.camera.flyToBoundingSphere(model.boundingSphere, {
+                duration: 0.0,
+              });
+
+              removeListener();
             });
-          });
+          } catch (error) {
+            console.log(`Error loading model: ${error}`);
+          }
         }
         Sandcastle.addToolbarMenu(demos);
 
@@ -476,11 +482,14 @@
         }, Cesium.ScreenSpaceEventType.LEFT_UP);
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

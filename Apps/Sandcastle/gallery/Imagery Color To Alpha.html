@@ -54,7 +54,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -67,12 +67,20 @@
         baseLayer.colorToAlphaThreshold = 0.2;
 
         // Add a bump layer with adjustable threshold
-        const singleTileLayer = layers.addImageryProvider(
-          new Cesium.SingleTileImageryProvider({
-            url: "../images/earthbump1k.jpg",
-            rectangle: Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
-          })
+        const singleTileLayer = Cesium.ImageryLayer.fromProviderAsync(
+          Cesium.SingleTileImageryProvider.fromUrl(
+            "../images/earthbump1k.jpg",
+            {
+              rectangle: Cesium.Rectangle.fromDegrees(
+                -180.0,
+                -90.0,
+                180.0,
+                90.0
+              ),
+            }
+          )
         );
+        layers.add(singleTileLayer);
 
         singleTileLayer.colorToAlpha = new Cesium.Color(0.0, 0.0, 0.0, 1.0);
         singleTileLayer.colorToAlphaThreshold = 0.1;
@@ -93,11 +101,14 @@
               viewModel.threshold
             );
           }); //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

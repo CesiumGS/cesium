@@ -1,9 +1,5 @@
-define(["Workers/createTaskProcessorWorker"], function (
-  createTaskProcessorWorker
-) {
-  "use strict";
+import { createTaskProcessorWorker } from "@cesium/engine";
 
-  return createTaskProcessorWorker(function (parameters, transferableObjects) {
-    return parameters;
-  });
+export default createTaskProcessorWorker(function (parameters) {
+  return parameters;
 });

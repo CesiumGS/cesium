@@ -53,14 +53,12 @@
       <input type="text" size="5" data-bind="value: height" />
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           shadows: true,
         });
-
-        viewer.scene.globe.depthTestAgainstTerrain = true;
 
         const viewModel = {
           height: 0,
@@ -71,31 +69,30 @@
         const toolbar = document.getElementById("toolbar");
         Cesium.knockout.applyBindings(viewModel, toolbar);
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
-        });
-
-        tileset.readyPromise
-          .then(function (tileset) {
-            viewer.scene.primitives.add(tileset);
-            viewer.zoomTo(
-              tileset,
-              new Cesium.HeadingPitchRange(
-                0.0,
-                -0.5,
-                tileset.boundingSphere.radius * 2.0
-              )
-            );
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
+        let tileset;
+        try {
+          tileset = await Cesium.Cesium3DTileset.fromUrl(
+            "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json"
+          );
+          viewer.scene.primitives.add(tileset);
+          viewer.scene.globe.depthTestAgainstTerrain = true;
+          viewer.zoomTo(
+            tileset,
+            new Cesium.HeadingPitchRange(
+              0.0,
+              -0.5,
+              tileset.boundingSphere.radius * 2.0
+            )
+          );
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         Cesium.knockout
           .getObservable(viewModel, "height")
           .subscribe(function (height) {
             height = Number(height);
-            if (isNaN(height)) {
+            if (isNaN(height) || !Cesium.defined(tileset)) {
               return;
             }
 
@@ -121,11 +118,14 @@
           });
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

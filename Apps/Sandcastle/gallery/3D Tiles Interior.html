@@ -33,16 +33,18 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // San Miguel model created by Guillermo M. Leal Llaguno. Cleaned up and hosted by Morgan McGuire: http://graphics.cs.williams.edu/data/meshes.xml
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(125737),
-        });
-        viewer.scene.primitives.add(tileset);
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(125737);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         const initialPosition = new Cesium.Cartesian3(
           -1111583.3721328347,
@@ -60,11 +62,14 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

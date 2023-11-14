@@ -31,8 +31,9 @@ const customShader = new Cesium.CustomShader({
   // either PBR (physically-based rendering) or UNLIT depending on the desired
   // results.
   lightingModel: Cesium.LightingModel.PBR,
-  // required when setting material.alpha in the fragment shader
-  isTranslucent: true,
+  // Force the shader to render as transparent, even if the primitive had
+  // an opaque material
+  translucencyMode: Cesium.CustomShaderTranslucencyMode.TRANSLUCENT,
   // Custom vertex shader. This is a function from model space -> model space.
   // VertexInput is documented below
   vertexShaderText: `
@@ -59,24 +60,22 @@ const customShader = new Cesium.CustomShader({
 
 ## Applying A Custom Shader
 
-Custom shaders can be applied to either 3D Tiles or `ModelExperimental` as
+Custom shaders can be applied to either 3D Tiles or a `Model` as
 follows:
 
 ```js
 const customShader = new Cesium.CustomShader(/* ... */);
 
 // Applying to all tiles in a tileset.
-const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-  url: "http://example.com/tileset.json",
-  customShader: customShader,
-  // This is only needed for b3dm and i3dm tilesets. for glTF,
-  // ModelExperimental is always used.
-  enableModelExperimental: true,
-}));
+const tileset = await Cesium.Cesium3DTileset.fromUrl(
+  "http://example.com/tileset.json", {
+    customShader: customShader
+});
+viewer.scene.primitives.add(tileset);
 
 // Applying to a model directly
-const model = Cesium.ModelExperimental.fromGltf({,
-  gltf: "http://example.com/model.gltf",
+const model = await Cesium.Model.fromGltfAsync({,
+  url: "http://example.com/model.gltf",
   customShader: customShader
 });
 ```
@@ -135,8 +134,8 @@ const textureWithSampler = new Cesium.TextureUniform({
 ## Varyings
 
 Varyings are declared in the `CustomShader` constructor. This automatically
-adds a line such as `varying float v_userDefinedVarying;` to the top of the
-GLSL shader.
+adds lines such as `out float v_userDefinedVarying;` and `in float v_userDefinedVarying;` to the top of the
+GLSL vertex and fragment shaders respectively.
 
 The user is responsible for assigning a value to this varying in
 `vertexShaderText` and using it in `fragmentShaderText`. For example:
@@ -145,12 +144,12 @@ The user is responsible for assigning a value to this varying in
 const customShader = new Cesium.CustomShader({
   // Varying is declared here
   varyings: {
-    v_selectedColor: VaryingType.VEC3,
+    v_selectedColor: Cesium.VaryingType.VEC4,
   },
   // User assigns the varying in the vertex shader
   vertexShaderText: `
     void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
-        float positiveX = step(0.0, positionMC.x);
+        float positiveX = step(0.0, vsOutput.positionMC.x);
         v_selectedColor = mix(
             vsInput.attributes.color_0,
             vsInput.attributes.color_1,
@@ -161,7 +160,7 @@ const customShader = new Cesium.CustomShader({
   // User uses the varying in the fragment shader
   fragmentShaderText: `
     void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
-        material.diffuse = v_selectedColor;
+        material.diffuse = v_selectedColor.rgb;
     }
   `,
 });
@@ -203,6 +202,10 @@ struct VertexInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
+    // Metadata class properties. See the MetadataClass Struct section below.
+    MetadataClass metadataClass;
+    // Metadata statistics. See the Metadata Statistics Struct section below
+    MetadataStatistics metadataStatistics;
 };
 ```
 
@@ -219,6 +222,10 @@ struct FragmentInput {
     FeatureIds featureIds;
     // Metadata properties. See the Metadata Struct section below.
     Metadata metadata;
+    // Metadata class properties. See the MetadataClass Struct section below.
+    MetadataClass metadataClass;
+    // Metadata statistics. See the Metadata Statistics Struct section below
+    MetadataStatistics metadataStatistics;
 };
 ```
 
@@ -246,7 +253,7 @@ with an `N`.
 | `POSITION`                       | `positionWC`       | `vec3`  | No                          | Yes                           | Position in world coordinates (WGS84 ECEF `(x, y, z)`). Low precision.                                                                                                   |
 | `POSITION`                       | `positionEC`       | `vec3`  | No                          | Yes                           | Position in eye coordinates.                                                                                                                                             |
 | `NORMAL`                         | `normalMC`         | `vec3`  | Yes                         | No                            | Unit-length normal vector in model coordinates. Only available in the vertex shader                                                                                      |
-| `NORMAL`                         | `normalEC`         | `vec3`  | No                          | Yes                           | Unit-length normal vector in eye coordinates. Only available in the vertex shader                                                                                        |
+| `NORMAL`                         | `normalEC`         | `vec3`  | No                          | Yes                           | Unit-length normal vector in eye coordinates. Only available in the fragment shader                                                                                      |
 | `TANGENT`                        | `tangentMC`        | `vec3`  | Yes                         | No                            | Unit-length tangent vector in model coordinates. This is always a `vec3`. For models that provide a `w` component, that is removed after computing the bitangent vector. |
 | `TANGENT`                        | `tangentEC`        | `vec3`  | No                          | Yes                           | Unit-length tangent vector in eye coordinates. This is always a `vec3`. For models that provide a `w` component, that is removed after computing the bitangent vector.   |
 | `NORMAL` & `TANGENT`             | `bitangentMC`      | `vec3`  | Yes                         | No                            | Unit-length bitangent vector in model coordinates. Only available when both normal and tangent vectors are available.                                                    |
@@ -571,7 +578,7 @@ The following types of metadata are currently supported:
   types with `componentType: UINT8` are currently supported.
 
 Regardless of the source of metadata, the properties are collected into a single
-struct by property ID. For example, if the metadata class looked like this:
+struct by property ID. Consider the following metadata class:
 
 ```jsonc
 "schema": {
@@ -591,7 +598,7 @@ struct by property ID. For example, if the metadata class looked like this:
 
 This will show up in the shader as the struct field as follows:
 
-```
+```glsl
 struct Metadata {
   float temperature;
 }
@@ -674,9 +681,164 @@ with a value between 0.0 and 100.0, while
 `(vsInput|fsInput).metadata.temperatureFahrenheit` will be a `float` with a
 range of `[32.0, 212.0]`.
 
+### Property ID Sanitization
+
+GLSL only supports alphanumeric identifiers, i.e. identifiers that do not
+start with a number. Additionally, identifiers with consecutive
+underscores (`__`), as well as identifiers with the `gl_` prefix, are
+reserved in GLSL. To circumvent these limitations, the property IDs are
+modified as follows:
+
+1. Replace all sequences of non-alphanumeric characters with a single `_`.
+2. Remove the reserved `gl_` prefix if present.
+3. If the identifier begins with a digit (`[0-9]`), prefix with an `_`
+
+Here are a couple examples of property ID and the resulting variable name in
+the custom shader in the `(vsInput|fsInput).metadata` struct:
+
+- `temperature ℃` -> `metadata.temperature_`
+- `custom__property` -> `metadata.custom_property`
+- `gl_customProperty` -> `metadata.customProperty`
+- `12345` -> `metadata._12345`
+- `gl_12345` -> `metadata._12345`
+
+If the above results in an empty string or a name collision with other
+property IDs, the behavior is undefined. For example:
+
+- `✖️✖️✖️` maps to the empty string, so the behavior is undefined.
+- Two properties with names `temperature ℃` and `temperature ℉` would both
+  map to `metadata.temperature`, so the behavior is undefined
+
+When using the Point Cloud (`.pnts`) format, per-point properties are transcoded
+as property attributes. These property IDs follow the same convention.
+
+## `MetadataClass` struct
+
+This struct contains constants for each metadata property, as defined
+in the class schema.
+
+Regardless of the source of metadata, the properties are collected into a single
+struct by property ID. Consider the following metadata class:
+
+```json
+"schema": {
+  "classes": {
+    "wall": {
+      "properties": {
+        "temperature": {
+          "name": "Surface Temperature",
+          "type": "SCALAR",
+          "componentType": "FLOAT32",
+          "noData": -9999.0,
+          "default": 72.0,
+          "min": -40.0,
+          "max": 500.0,
+        }
+      }
+    }
+  }
+}
+```
+
+This will show up in the shader in the struct field as follows:
+
+```glsl
+struct floatMetadataClass {
+  float noData;
+  float defaultValue; // 'default' is a reserved word in GLSL
+  float minValue; // 'min' is a reserved word in GLSL
+  float maxValue; // 'max' is a reserved word in GLSL
+}
+struct MetadataClass {
+  floatMetadataClass temperature;
+}
+```
+
+The sub-struct for each property will be chosen such that the individual properties
+(such as `noData` and `defaultValue`) will have the same type as the actual values of the
+property.
+
+Now the noData and default values can be accessed as follows in the vertex shader:
+
+```glsl
+float noData = vsInput.metadataClass.temperature.noData;            // == -9999.0
+float defaultTemp = vsInput.metadataClass.temperature.defaultValue; // == 72.0
+float minTemp = vsInput.metadataClass.temperature.minValue;         // == -40.0
+float maxTemp = vsInput.metadataClass.temperature.maxValue;         // == 500.0
+```
+
+or similarly from the `fsInput` struct in the fragment shader.
+
+## `MetadataStatistics` struct
+
+If the model was loaded from a [3D Tiles tileset](https://github.com/CesiumGS/3d-tiles/tree/main/specification), it may have statistics defined in the `statistics` property of the tileset.json. These will be available in a Custom Shader from the `MetadataStatistics` struct.
+
+### Organization
+
+Regardless of the source of the metadata, the properties are collected into a single source by property ID. Consider the following metadata class:
+
+```json
+  "statistics": {
+    "classes": {
+      "exampleMetadataClass": {
+        "count": 29338,
+        "properties": {
+          "intensity": {
+            "min": 0.0,
+            "max": 0.6333333849906921,
+            "mean": 0.28973701532415364,
+            "median": 0.25416669249534607,
+            "standardDeviation": 0.18222664489583626,
+            "variance": 0.03320655011,
+            "sum": 8500.30455558002,
+          },
+          "classification": {
+            "occurrences": {
+              "MediumVegetation": 6876,
+              "Buildings": 22462
+            }
+          }
+        }
+      }
+    }
+  }
+```
+
+This will show up in the shader in the struct field as follows:
+
+```glsl
+struct floatMetadataStatistics {
+  float minValue; // 'min' is a reserved word in GLSL
+  float maxValue; // 'max' is a reserved word in GLSL
+  float mean;
+  float median;
+  float standardDeviation;
+  float variance;
+  float sum;
+}
+struct MetadataStatistics {
+  floatMetadataStatistics intensity;
+}
+```
+
+The statistics values can be accessed from within the vertex shader as follows:
+
+```glsl
+float minValue = vsInput.metadataStatistics.intensity.minValue;
+float mean = vsInput.metadataStatistics.intensity.mean;
+```
+
+or similarly from the `fsInput` struct in the fragment shader.
+
+### Types
+
+For `SCALAR`, `VECN`, and `MATN` type properties, the statistics struct fields `minValue`, `maxValue`, `median`, and `sum` will be declared with the same type as the metadata property they describe. The fields `mean`, `standardDeviation`, and `variance` are declared with a type of the same dimension as the metadata property, but with floating-point components.
+
+For `ENUM` type metadata, the statistics struct for that property should contain an `occurrence` field, but this field is not yet implemented.
+
 ## `czm_modelVertexOutput` struct
 
-This struct is built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelVertexOutput.glsl).
+This struct is built-in, see the [documentation comment](../../packages/engine/Source/Shaders/Builtin/Structs/modelVertexOutput.glsl).
 
 This struct contains the output of the custom vertex shader. This includes:
 
@@ -685,7 +847,8 @@ This struct contains the output of the custom vertex shader. This includes:
   `vsInput.attributes.positionMC`. The custom shader may modify this, and the
   result is used to compute `gl_Position`.
 - `pointSize` - corresponds to `gl_PointSize`. This is only applied for models
-  rendered as `gl.POINTS`, and ignored otherwise.
+  rendered as `gl.POINTS`, and ignored otherwise. This overrides any point size
+  style that is applied to the model by `Cesium3DTileStyle`.
 
 > **Implementation Note**: `positionMC` does not modify the primitive's bounding
 > sphere. If vertices are moved outside the bounding sphere, the primitive may
@@ -693,10 +856,18 @@ This struct contains the output of the custom vertex shader. This includes:
 
 ## `czm_modelMaterial` struct
 
-This struct is a built-in, see the [documentation comment](../../../Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but slightly different fields as this one supports PBR lighting.
+This struct is a built-in, see the [documentation comment](../../packages/engine/Source/Shaders/Builtin/Structs/modelMaterial.glsl). This is similar to `czm_material` from the old Fabric system, but has slightly different fields as this one supports PBR lighting.
 
 This struct serves as the basic input/output of the fragment shader pipeline stages. For example:
 
 - the material stage produces a material
 - the lighting stage takes in a material, computes lighting, and stores the result into `material.diffuse`
 - Custom shaders (regardless of where in the pipeline it is) takes in a material (even if it's a material with default values) and modifies this.
+
+### Material color space
+
+Material colors (such as `material.diffuse`) are always in linear color space,
+even when `lightingModel` is `LightingModel.UNLIT`.
+
+When `scene.highDynamicRange` is `false`, the final computed color
+(after custom shaders and lighting) is converted to `sRGB`.

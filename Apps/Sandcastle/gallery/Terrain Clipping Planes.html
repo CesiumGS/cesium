@@ -58,15 +58,14 @@
       Edge styling enabled
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Use clipping planes to selectively hide parts of the globe surface.
-
         const viewer = new Cesium.Viewer("cesiumContainer", {
           skyAtmosphere: false,
           shouldAnimate: true,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
           scene3DOnly: true,
         });
         const globe = viewer.scene.globe;
@@ -156,7 +155,7 @@
           viewer.trackedEntity = entity;
         }
 
-        function loadStHelens() {
+        async function loadStHelens() {
           // Create clipping planes for polygon around area to be clipped.
           const points = [
             new Cesium.Cartesian3(
@@ -284,51 +283,51 @@
           globe.backFaceCulling = true;
           globe.showSkirts = true;
 
-          // Load tileset
-          tileset = new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(5713),
-          });
-          return tileset.readyPromise
-            .then(function () {
-              // Adjust height so tileset is in terrain
-              const cartographic = Cesium.Cartographic.fromCartesian(
-                tileset.boundingSphere.center
-              );
-              const surface = Cesium.Cartesian3.fromRadians(
-                cartographic.longitude,
-                cartographic.latitude,
-                0.0
-              );
-              const offset = Cesium.Cartesian3.fromRadians(
-                cartographic.longitude,
-                cartographic.latitude,
-                -20.0
-              );
-              const translation = Cesium.Cartesian3.subtract(
-                offset,
-                surface,
-                new Cesium.Cartesian3()
-              );
-              tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+          try {
+            // Load tileset
+            tileset = await Cesium.Cesium3DTileset.fromIonAssetId(5713);
+            if (viewModel.currentExampleType !== exampleTypes[1]) {
+              // Scenario has changed. Discard the result.
+              return;
+            }
+            // Adjust height so tileset is in terrain
+            const cartographic = Cesium.Cartographic.fromCartesian(
+              tileset.boundingSphere.center
+            );
+            const surface = Cesium.Cartesian3.fromRadians(
+              cartographic.longitude,
+              cartographic.latitude,
+              0.0
+            );
+            const offset = Cesium.Cartesian3.fromRadians(
+              cartographic.longitude,
+              cartographic.latitude,
+              -20.0
+            );
+            const translation = Cesium.Cartesian3.subtract(
+              offset,
+              surface,
+              new Cesium.Cartesian3()
+            );
+            tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 
-              tileset.style = new Cesium.Cesium3DTileStyle({
-                color: "rgb(207, 255, 207)",
-              });
-
-              viewer.scene.primitives.add(tileset);
-
-              const boundingSphere = tileset.boundingSphere;
-
-              const radius = boundingSphere.radius;
-              viewer.camera.viewBoundingSphere(
-                boundingSphere,
-                new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0)
-              );
-              viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-            })
-            .catch(function (error) {
-              throw error;
+            tileset.style = new Cesium.Cesium3DTileStyle({
+              color: "rgb(207, 255, 207)",
             });
+
+            viewer.scene.primitives.add(tileset);
+
+            const boundingSphere = tileset.boundingSphere;
+
+            const radius = boundingSphere.radius;
+            viewer.camera.viewBoundingSphere(
+              boundingSphere,
+              new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0)
+            );
+            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+          } catch (error) {
+            console.log(`Error loading tileset: ${error}`);
+          }
         }
 
         function loadGrandCanyon() {
@@ -399,14 +398,15 @@
             } else if (newValue === exampleTypes[2]) {
               loadGrandCanyon();
             }
-          });
-
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+          }); //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

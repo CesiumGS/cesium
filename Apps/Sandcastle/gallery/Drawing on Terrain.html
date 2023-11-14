@@ -43,18 +43,14 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           selectionIndicator: false,
           infoBox: false,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
-
-        if (!viewer.scene.pickPositionSupported) {
-          window.alert("This browser does not support pickPosition.");
-        }
 
         viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
           Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
@@ -98,9 +94,10 @@
         let floatingPoint;
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
         handler.setInputAction(function (event) {
-          // We use `viewer.scene.pickPosition` here instead of `viewer.camera.pickEllipsoid` so that
+          // We use `viewer.scene.globe.pick here instead of `viewer.camera.pickEllipsoid` so that
           // we get the correct point when mousing over terrain.
-          const earthPosition = viewer.scene.pickPosition(event.position);
+          const ray = viewer.camera.getPickRay(event.position);
+          const earthPosition = viewer.scene.globe.pick(ray, viewer.scene);
           // `earthPosition` will be undefined if our mouse is not over the globe.
           if (Cesium.defined(earthPosition)) {
             if (activeShapePoints.length === 0) {
@@ -121,7 +118,8 @@
 
         handler.setInputAction(function (event) {
           if (Cesium.defined(floatingPoint)) {
-            const newPosition = viewer.scene.pickPosition(event.endPosition);
+            const ray = viewer.camera.getPickRay(event.endPosition);
+            const newPosition = viewer.scene.globe.pick(ray, viewer.scene);
             if (Cesium.defined(newPosition)) {
               floatingPoint.position.setValue(newPosition);
               activeShapePoints.pop();
@@ -174,11 +172,14 @@
         );
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

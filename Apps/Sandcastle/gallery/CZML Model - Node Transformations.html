@@ -30,7 +30,7 @@
     <div id="toolbar"></div>
 
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const czml = [
@@ -83,6 +83,7 @@
                     unitQuaternion: [
                       -0.2840422631464792,
                       -0.40211904424847345,
+                      // eslint-disable-next-line no-loss-of-precision
                       0.25175867757399086,
                       0.7063888981321548,
                     ],
@@ -108,11 +109,14 @@
           .catch(function (error) {
             window.alert(error);
           }); //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

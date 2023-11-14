@@ -1,11 +1,10 @@
 import {
   clone,
-  defer,
   ImageryLayer,
   GlobeSurfaceTile,
   TerrainState,
   Texture,
-} from "../Source/Cesium.js";
+} from "@cesium/engine";
 
 function TerrainTileProcessor(
   frameState,
@@ -20,8 +19,6 @@ function TerrainTileProcessor(
 // Processes the given list of tiles until all terrain and imagery states stop changing.
 TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
   const that = this;
-
-  const deferred = defer();
 
   function getState(tile) {
     return [
@@ -57,21 +54,16 @@ TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
     return same;
   }
 
-  let iterations = 0;
+  return new Promise((resolve) => {
+    let iterations = 0;
 
-  function next() {
-    ++iterations;
-    ++that.frameState.frameNumber;
+    function next() {
+      ++iterations;
+      ++that.frameState.frameNumber;
 
-    // Keep going until all terrain and imagery provider are ready and states are no longer changing.
-    let changed = !that.terrainProvider.ready;
+      // Keep going until all terrain and imagery provider are ready and states are no longer changing.
+      let changed = false;
 
-    for (let i = 0; i < that.imageryLayerCollection.length; ++i) {
-      changed =
-        changed || !that.imageryLayerCollection.get(i).imageryProvider.ready;
-    }
-
-    if (that.terrainProvider.ready) {
       tiles.forEach(function (tile) {
         const beforeState = getState(tile);
         GlobeSurfaceTile.processStateMachine(
@@ -87,18 +79,16 @@ TerrainTileProcessor.prototype.process = function (tiles, maxIterations) {
           tile.data.terrainState === TerrainState.TRANSFORMING ||
           !statesAreSame(beforeState, afterState);
       });
+
+      if (!changed || iterations >= maxIterations) {
+        resolve(iterations);
+      } else {
+        setTimeout(next, 0);
+      }
     }
 
-    if (!changed || iterations >= maxIterations) {
-      deferred.resolve(iterations);
-    } else {
-      setTimeout(next, 0);
-    }
-  }
-
-  next();
-
-  return deferred.promise;
+    next();
+  });
 };
 
 TerrainTileProcessor.prototype.mockWebGL = function () {

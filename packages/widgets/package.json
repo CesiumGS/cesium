@@ -1,0 +1,55 @@
+{
+  "name": "@cesium/widgets",
+  "version": "4.3.0",
+  "description": "A widgets library for use with CesiumJS. CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
+  "keywords": [
+    "3D",
+    "webgl",
+    "geospatial",
+    "map",
+    "globe",
+    "widgets"
+  ],
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "Source",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "sideEffects": [
+    "./Source/**/*.css",
+    "./Specs/**/*"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@cesium/engine": "^6.1.0",
+    "nosleep.js": "^0.12.0"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "gulp build --workspace @cesium/widgets",
+    "build-ts": "gulp buildTs --workspace @cesium/widgets",
+    "coverage": "gulp coverage --workspace @cesium/widgets",
+    "test": "gulp test --workspace @cesium/widgets",
+    "postversion": "gulp postversion --workspace @cesium/widgets"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CesiumGS/cesium.git"
+  },
+  "homepage": "https://cesium.com/cesiumjs/",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Cesium GS, Inc.",
+    "url": "https://cesium.com"
+  },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues"
+  }
+}

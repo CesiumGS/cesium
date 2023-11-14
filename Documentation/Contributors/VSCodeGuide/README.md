@@ -21,9 +21,9 @@ The default setting will be copied to your user settings. The default for
 Windows is `"C:\\Windows\\system32\\cmd.exe"`. Change this to point to your
 git bash install. For example:
 
-```
+```json
 {
-    "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe"
+  "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe"
 }
 ```
 

@@ -50,19 +50,18 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
-
         // How to use the 3D Tiles Styling language to style individual features, like buildings.
         // Styling language specification: https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
         // Add Cesium OSM buildings to the scene as our example 3D Tileset.
-        const osmBuildingsTileset = Cesium.createOsmBuildings();
+        const osmBuildingsTileset = await Cesium.createOsmBuildingsAsync();
         viewer.scene.primitives.add(osmBuildingsTileset);
 
         // Set the initial camera to look at Seattle
@@ -206,14 +205,15 @@
           }
         };
 
-        colorByMaterial();
-
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+        colorByMaterial(); //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

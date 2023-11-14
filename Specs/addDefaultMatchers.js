@@ -1,17 +1,19 @@
+import {
+  Cartesian2,
+  defaultValue,
+  defined,
+  DeveloperError,
+  FeatureDetection,
+  PrimitiveType,
+  Buffer,
+  BufferUsage,
+  ClearCommand,
+  DrawCommand,
+  ShaderProgram,
+  VertexArray,
+  Math as CesiumMath,
+} from "@cesium/engine";
 import equals from "./equals.js";
-import { Cartesian2 } from "../Source/Cesium.js";
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { DeveloperError } from "../Source/Cesium.js";
-import { FeatureDetection } from "../Source/Cesium.js";
-import { Math as CesiumMath } from "../Source/Cesium.js";
-import { PrimitiveType } from "../Source/Cesium.js";
-import { Buffer } from "../Source/Cesium.js";
-import { BufferUsage } from "../Source/Cesium.js";
-import { ClearCommand } from "../Source/Cesium.js";
-import { DrawCommand } from "../Source/Cesium.js";
-import { ShaderProgram } from "../Source/Cesium.js";
-import { VertexArray } from "../Source/Cesium.js";
 
 function createMissingFunctionMessageFunction(
   item,
@@ -20,6 +22,69 @@ function createMissingFunctionMessageFunction(
 ) {
   return function () {
     return `Expected function '${item}' to exist on ${actualPrototype.constructor.name} because it should implement interface ${expectedInterfacePrototype.constructor.name}.`;
+  };
+}
+
+function makeAsyncThrowFunction(debug, Type, name) {
+  if (debug) {
+    return function (util) {
+      return {
+        compare: function (actualPromise, message) {
+          // based on the built-in Jasmine toBeRejectedWithError async-matcher
+          if (!defined(actualPromise) || !defined(actualPromise.then)) {
+            throw new Error("Expected function to be called on a promise.");
+          }
+
+          return actualPromise
+            .then(() => {
+              return {
+                pass: false,
+                message:
+                  "Expected a promise to be rejected but it was resolved.",
+              };
+            })
+            .catch((e) => {
+              let result = e instanceof Type || e.name === name;
+              if (defined(message)) {
+                result = result && util.equals(e.message, message);
+              }
+              return {
+                pass: result,
+                message: result
+                  ? `Expected a promise to be rejected with ${name}.`
+                  : `Expected a promise to be rejected with ${
+                      defined(message) ? `${name}: ${message}` : name
+                    }, but it was rejected with ${e}`,
+              };
+            });
+        },
+      };
+    };
+  }
+
+  return function () {
+    return {
+      compare: function (actualPromise) {
+        return Promise.resolve(actualPromise)
+          .then(() => {
+            return { pass: true };
+          })
+          .catch((e) => {
+            // Ignore any error
+            return { pass: true };
+          });
+      },
+      negativeCompare: function (actualPromise) {
+        return Promise.resolve(actualPromise)
+          .then(() => {
+            return { pass: true };
+          })
+          .catch((e) => {
+            // Ignore any error
+            return { pass: true };
+          });
+      },
+    };
   };
 }
 
@@ -625,6 +690,16 @@ function createDefaultMatchers(debug) {
   };
 }
 
+function createDefaultAsyncMatchers(debug) {
+  return {
+    toBeRejectedWithDeveloperError: makeAsyncThrowFunction(
+      debug,
+      DeveloperError,
+      "DeveloperError"
+    ),
+  };
+}
+
 function countRenderedPixels(rgba) {
   const pixelCount = rgba.length / 4;
   let count = 0;
@@ -804,7 +879,7 @@ function contextRenderAndReadPixels(options) {
   if (!defined(sp)) {
     if (!defined(vs)) {
       vs =
-        "attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
+        "in vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }";
     }
     sp = ShaderProgram.fromCache({
       context: context,
@@ -924,6 +999,7 @@ function expectContextToRender(actual, expected, expectEqual) {
 function addDefaultMatchers(debug) {
   return function () {
     this.addMatchers(createDefaultMatchers(debug));
+    this.addAsyncMatchers(createDefaultAsyncMatchers(debug));
   };
 }
 export default addDefaultMatchers;

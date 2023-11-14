@@ -1,7 +1,4 @@
-import { defined } from "../Source/Cesium.js";
-import { Intersect } from "../Source/Cesium.js";
-import { Pass } from "../Source/Cesium.js";
-import { SceneMode } from "../Source/Cesium.js";
+import { defined, Intersect, Pass, SceneMode } from "@cesium/engine";
 
 function executeCommands(frameState, commands) {
   let commandsExecuted = 0;

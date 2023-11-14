@@ -33,12 +33,12 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         // Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -46,12 +46,13 @@
         viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
         const inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(75343),
-        });
-        viewer.scene.primitives.add(tileset);
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343, {
+            enableDebugWireframe: true,
+          });
+          viewer.scene.primitives.add(tileset);
+          tileset.debugColorizeTiles = true;
 
-        tileset.readyPromise.then(function () {
           viewer.zoomTo(
             tileset,
             new Cesium.HeadingPitchRange(
@@ -60,13 +61,17 @@
               tileset.boundingSphere.radius / 4.0
             )
           );
-        });
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        } //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

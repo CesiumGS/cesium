@@ -41,7 +41,7 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
 
@@ -74,13 +74,16 @@
           easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
         });
 
-        // MAXAR OWT WFF 1.2 Base Globe
-        const tileset = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(691510),
+        let tileset;
+        try {
+          // MAXAR OWT WFF 1.2 Base Globe
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(691510, {
             maximumScreenSpaceError: 4,
-          })
-        );
+          });
+          scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // --- Style ---
 
@@ -164,12 +167,12 @@
               tableHtmlScratch =
                 "<table><thead><tr><th><tt>Property</tt></th><th><tt>Value</tt></th></tr></thead><tbody>";
 
-              const propertyNames = feature.getPropertyNames();
-              const length = propertyNames.length;
+              const propertyIds = feature.getPropertyIds();
+              const length = propertyIds.length;
               for (let i = 0; i < length; ++i) {
-                const propertyName = propertyNames[i];
-                const propertyValue = feature.getProperty(propertyName);
-                tableHtmlScratch += `<tr><td><tt>${propertyName}</tt></td><td><tt>${propertyValue}</tt></td></tr>`;
+                const propertyId = propertyIds[i];
+                const propertyValue = feature.getProperty(propertyId);
+                tableHtmlScratch += `<tr><td><tt>${propertyId}</tt></td><td><tt>${propertyValue}</tt></td></tr>`;
               }
               tableHtmlScratch += "</tbody></table>";
               metadataOverlay.innerHTML = tableHtmlScratch;
@@ -228,11 +231,14 @@
         });
 
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

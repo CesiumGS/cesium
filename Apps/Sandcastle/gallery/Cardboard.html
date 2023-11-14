@@ -32,12 +32,12 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
           vrButton: true,
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         // Click the VR button in the bottom right of the screen to switch to VR mode.
 
@@ -181,14 +181,15 @@
             interpolationDegree: 2,
             interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
           });
-        }
-
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+        } //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

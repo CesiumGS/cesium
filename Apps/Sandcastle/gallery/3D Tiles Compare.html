@@ -49,23 +49,24 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
 
-        const left = viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(69380),
-          })
-        );
+        try {
+          const left = await Cesium.Cesium3DTileset.fromIonAssetId(69380);
+          viewer.scene.primitives.add(left);
+          left.splitDirection = Cesium.SplitDirection.LEFT;
 
-        left.splitDirection = Cesium.SplitDirection.LEFT;
+          viewer.zoomTo(left);
 
-        const right = viewer.scene.primitives.add(Cesium.createOsmBuildings());
-        right.splitDirection = Cesium.SplitDirection.RIGHT;
-
-        viewer.zoomTo(left);
+          const right = await Cesium.createOsmBuildingsAsync();
+          viewer.scene.primitives.add(right);
+          right.splitDirection = Cesium.SplitDirection.RIGHT;
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         // Sync the position of the slider with the split position
         const slider = document.getElementById("slider");
@@ -106,11 +107,14 @@
           moveActive = false;
         }, Cesium.ScreenSpaceEventType.PINCH_END);
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

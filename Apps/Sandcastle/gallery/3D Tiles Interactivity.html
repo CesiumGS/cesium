@@ -71,11 +71,11 @@
       </div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const scene = viewer.scene;
@@ -114,16 +114,20 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
+        let style;
         // Load the NYC buildings tileset.
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(75343),
-        });
-        scene.primitives.add(tileset);
-        tileset.style = new Cesium.Cesium3DTileStyle({
-          meta: {
-            description: "'Building ${BIN} has height ${Height}.'",
-          },
-        });
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343);
+          scene.primitives.add(tileset);
+          style = new Cesium.Cesium3DTileStyle({
+            meta: {
+              description: "'Building ${BIN} has height ${Height}.'",
+            },
+          });
+          tileset.style = style;
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
         const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
@@ -177,18 +181,19 @@
 
         function printProperties(movement, feature) {
           console.log("Properties:");
-          const propertyNames = feature.getPropertyNames();
-          const length = propertyNames.length;
+          const propertyIds = feature.getPropertyIds();
+          const length = propertyIds.length;
           for (let i = 0; i < length; ++i) {
-            const propertyName = propertyNames[i];
-            console.log(
-              `  ${propertyName}: ${feature.getProperty(propertyName)}`
-            );
+            const propertyId = propertyIds[i];
+            console.log(`  ${propertyId}: ${feature.getProperty(propertyId)}`);
           }
 
           // Evaluate feature description
+          if (!Cesium.defined(style)) {
+            return;
+          }
           console.log(
-            `Description : ${tileset.style.meta.description.evaluate(feature)}`
+            `Description : ${style.meta.description.evaluate(feature)}`
           );
         }
 
@@ -261,14 +266,15 @@
           Cesium.Cartesian3.negate(offset, offset);
           Cesium.Cartesian3.multiplyByScalar(offset, range, offset);
           return offset;
-        }
-
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+        } //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

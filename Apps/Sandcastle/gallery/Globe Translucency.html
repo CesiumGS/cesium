@@ -81,11 +81,11 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const scene = viewer.scene;
@@ -299,14 +299,16 @@
             -0.22213535190506972,
             6.282786783842843
           ),
-          duration: 5.0,
-        });
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+          duration: 0.0,
+        }); //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

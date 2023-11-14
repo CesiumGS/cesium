@@ -33,18 +33,13 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
-
-        const tileset = new Cesium.Cesium3DTileset({
-          url: Cesium.IonResource.fromAssetId(16421),
-        });
-        viewer.scene.primitives.add(tileset);
 
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
@@ -59,12 +54,20 @@
           ),
         });
 
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(16421);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        } //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

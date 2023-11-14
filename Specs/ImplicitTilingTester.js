@@ -1,4 +1,4 @@
-import { defined, defaultValue } from "../Source/Cesium.js";
+import { defined, defaultValue } from "@cesium/engine";
 import concatTypedArrays from "./concatTypedArrays.js";
 import MetadataTester from "./MetadataTester.js";
 
@@ -6,42 +6,42 @@ import MetadataTester from "./MetadataTester.js";
  * Class to generate implicit subtrees for implicit tiling unit tests
  * @private
  */
-export default function ImplicitTilingTester() {}
+function ImplicitTilingTester() {}
 
 /**
  * Description of a single availability bitstream
- * @typedef {Object} AvailabilityDescription
- * @property {String|Number} descriptor Either a string of <code>0</code>s and <code>1</code>s representing the bitstream values, or an integer <code>0</code> or <code>1</code> to indicate a constant value.
- * @property {Number} lengthBits How many bits are in the bitstream. This must be specified, even if descriptor is a string of <code>0</code>s and <code>1</code>s
- * @property {Boolean} isInternal <code>true</code> if an internal bufferView should be created. <code>false</code> indicates the bufferview is stored in an external buffer instead.
- * @property {Boolean} [shareBuffer=false] This is only used for content availability. If <code>true</code>, then the content availability will share the same buffer as the tile availaibility, as this is a common optimization
- * @property {Boolean} [includeAvailableCount=false] If true, set availableCount
+ * @typedef {object} AvailabilityDescription
+ * @property {string|number} descriptor Either a string of <code>0</code>s and <code>1</code>s representing the bitstream values, or an integer <code>0</code> or <code>1</code> to indicate a constant value.
+ * @property {number} lengthBits How many bits are in the bitstream. This must be specified, even if descriptor is a string of <code>0</code>s and <code>1</code>s
+ * @property {boolean} isInternal <code>true</code> if an internal bufferView should be created. <code>false</code> indicates the bufferview is stored in an external buffer instead.
+ * @property {boolean} [shareBuffer=false] This is only used for content availability. If <code>true</code>, then the content availability will share the same buffer as the tile availaibility, as this is a common optimization
+ * @property {boolean} [includeAvailableCount=false] If true, set availableCount
  */
 
 /**
  * A description of metadata properties stored in the subtree.
- * @typedef {Object} MetadataDescription
- * @property {Boolean} isInternal True if the metadata should be stored in the subtree file, false if the metadata should be stored in an external buffer.
+ * @typedef {object} MetadataDescription
+ * @property {boolean} isInternal True if the metadata should be stored in the subtree file, false if the metadata should be stored in an external buffer.
  * @property {Array} propertyTables Array of property table objects to pass into {@link MetadataTester.createPropertyTables} in order to create the property table buffer views.
  * @private
  */
 
 /**
  * A JSON description of a subtree file for easier generation
- * @typedef {Object} SubtreeDescription
- * @property {Boolean} [useLegacySchema=false] If true, the resulting JSON chunk will use the legacy schema for subtrees and metadata (e.g. use bufferViews rather than bitstream, use 3DTILES_metadata extension rather than tileMetadata or contentMetadata, use 3DTILES_multiple_contents extension rather than contents). Used to test backwards compatibility.
+ * @typedef {object} SubtreeDescription
+ * @property {boolean} [useLegacySchema=false] If true, the resulting JSON chunk will use the legacy schema for subtrees and metadata (e.g. use bufferViews rather than bitstream, use 3DTILES_metadata extension rather than tileMetadata or contentMetadata, use 3DTILES_multiple_contents extension rather than contents). Used to test backwards compatibility.
  * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
  * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
  * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
  * @property {AvailabilityDescription} other A description of another bitstream. This is not used for availability, but rather to simulate extra buffer views.
  * @property {MetadataDescription} [metadata] For testing metadata, additional options can be passed in here.
- * @property {Boolean} [json] If true, return the result as a JSON with external buffers. Should not be true if any of the availability buffers are internal.
+ * @property {boolean} [json] If true, return the result as a JSON with external buffers. Should not be true if any of the availability buffers are internal.
  * @private
  */
 
 /**
  * Results of procedurally generating a subtree.
- * @typedef {Object} GeneratedSubtree
+ * @typedef {object} GeneratedSubtree
  * @property {Uint8Array} [subtreeJson] The JSON portion of the subtree file. Mutually exclusive with subtreeBuffer.
  * @property {Uint8Array} [subtreeBuffer] A typed array storing the contents of the subtree file (including the internal buffer). Mutually exclusive with subtreeJson.
  * @property {Uint8Array} externalBuffer A typed array representing an external .bin file. This is always returned, but it may be an empty typed array.
@@ -51,7 +51,7 @@ export default function ImplicitTilingTester() {}
 /**
  * Generate a subtree buffer
  * @param {SubtreeDescription} subtreeDescription A JSON description of the subtree's structure and values
- * @param {Boolean} constantOnly true if all the bitstreams are constant, i.e. no buffers/bufferViews are needed.
+ * @param {boolean} constantOnly true if all the bitstreams are constant, i.e. no buffers/bufferViews are needed.
  * @return {GeneratedSubtree} The procedurally generated subtree and an external buffer.
  *
  * @example
@@ -602,3 +602,5 @@ function makeBuffers(bufferViewsU8, subtreeJson) {
     external: externalBufferU8,
   };
 }
+
+export default ImplicitTilingTester;

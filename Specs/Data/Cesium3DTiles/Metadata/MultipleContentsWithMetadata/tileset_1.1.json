@@ -21,6 +21,7 @@
     }
   },
   "schema": {
+    "id": "MultipleContentsWithMetadataSchemaId",
     "classes": {
       "batched": {
         "properties": {

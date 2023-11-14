@@ -36,11 +36,11 @@
       <div id="sampleButtons"></div>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         const scene = viewer.scene;
@@ -105,14 +105,15 @@
         billboards.add({
           position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
           image: "../images/Cesium_Logo_overlay.png",
-        });
-
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+        }); //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

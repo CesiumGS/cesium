@@ -54,7 +54,7 @@
       </table>
     </div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer");
@@ -137,16 +137,16 @@
           hpr
         );
 
-        const model = viewer.scene.primitives.add(
-          Cesium.Model.fromGltf({
-            url: modelURL,
-            modelMatrix: modelMatrix,
-            minimumPixelSize: 128,
-          })
-        );
+        try {
+          const model = viewer.scene.primitives.add(
+            await Cesium.Model.fromGltfAsync({
+              url: modelURL,
+              modelMatrix: modelMatrix,
+              minimumPixelSize: 128,
+            })
+          );
 
-        model.readyPromise
-          .then(function (model) {
+          model.readyEvent.addEventListener(() => {
             const camera = viewer.camera;
 
             // Zoom to model
@@ -155,11 +155,7 @@
               2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.5;
 
-            const center = Cesium.Matrix4.multiplyByPoint(
-              model.modelMatrix,
-              model.boundingSphere.center,
-              new Cesium.Cartesian3()
-            );
+            const center = model.boundingSphere.center;
             const heading = Cesium.Math.toRadians(230.0);
             const pitch = Cesium.Math.toRadians(-20.0);
             camera.lookAt(
@@ -168,12 +164,13 @@
             );
             camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-            model.sphericalHarmonicCoefficients = coefficients;
-            model.specularEnvironmentMaps = environmentMapURL;
+            const ibl = model.imageBasedLighting;
+            ibl.sphericalHarmonicCoefficients = coefficients;
+            ibl.specularEnvironmentMaps = environmentMapURL;
 
             // The viewModel tracks the state of our mini application.
             const viewModel = {
-              luminanceAtZenith: model.luminanceAtZenith,
+              luminanceAtZenith: ibl.luminanceAtZenith,
             };
             // Convert the viewModel members into knockout observables.
             Cesium.knockout.track(viewModel);
@@ -186,7 +183,7 @@
               Cesium.knockout
                 .getObservable(viewModel, name)
                 .subscribe(function (newValue) {
-                  model[name] = newValue;
+                  ibl[name] = newValue;
                 });
             }
 
@@ -197,24 +194,27 @@
               false,
               function (checked) {
                 if (!checked) {
-                  model.sphericalHarmonicCoefficients = coefficients;
-                  model.specularEnvironmentMaps = environmentMapURL;
+                  ibl.sphericalHarmonicCoefficients = coefficients;
+                  ibl.specularEnvironmentMaps = environmentMapURL;
                 } else {
-                  model.sphericalHarmonicCoefficients = undefined;
-                  model.specularEnvironmentMaps = undefined;
+                  ibl.sphericalHarmonicCoefficients = undefined;
+                  ibl.specularEnvironmentMaps = undefined;
                 }
               }
             );
-          })
-          .catch(function (error) {
-            window.alert(error);
           });
+        } catch (error) {
+          window.alert(`Error loading model: ${error}`);
+        }
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

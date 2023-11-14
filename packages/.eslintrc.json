@@ -1,0 +1,13 @@
+{
+    "root": true,
+    "extends": [
+        "cesium/browser"
+    ],
+    "plugins": [
+        "html",
+        "es"
+    ],
+    "rules": {
+        "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
+    }
+}

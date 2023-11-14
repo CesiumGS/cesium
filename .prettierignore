@@ -8,7 +8,7 @@
 !.vscode/**/
 !Apps/**/
 !Documentation/**/
-!Source/**/
+!packages/**/
 !Specs/**/
 !Tools/**/
 
@@ -20,14 +20,22 @@
 !**/*.ts
 
 # Re-ignore a few things caught above
-**/*.min.js
-Source/Cesium.js
-Source/Scene/GltfPipeline/**
-Source/Shaders/**/*.js
-Source/ThirdParty/**
-Source/Workers/**/*
-Specs/jasmine/**
-Apps/Sandcastle/ThirdParty
 
-!Source/Workers/cesiumWorkerBootstrapper.js
-!Source/Workers/transferTypedArrayTest.js
+**/*.min.js
+
+packages/engine/Build/**
+packages/engine/index.js
+packages/engine/Source/Scene/GltfPipeline/**
+packages/engine/Source/Shaders/**/*.js
+packages/engine/Source/ThirdParty/**
+
+packages/widgets/Build/**
+packages/widgets/index.js
+packages/widgets/Source/ThirdParty/**
+
+Specs/jasmine/**
+
+Apps/Sandcastle/ThirdParty
+Tools/jsdoc/cesium_template/static/javascript/prism.js
+Tools/jsdoc/cesium_template/static/styles/prism.css
+

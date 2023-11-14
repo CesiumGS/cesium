@@ -1,6 +1,4 @@
-import { defaultValue } from "../Source/Cesium.js";
-import { defined } from "../Source/Cesium.js";
-import { Math as CesiumMath } from "../Source/Cesium.js";
+import { defaultValue, defined, Math as CesiumMath } from "@cesium/engine";
 
 function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
   namePrefix = defaultValue(namePrefix, "");

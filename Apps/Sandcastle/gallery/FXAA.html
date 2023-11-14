@@ -29,11 +29,11 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
 
         viewer.scene.camera.setView({
@@ -50,23 +50,26 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        viewer.scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(75343),
-          })
-        );
-
         viewer.scene.postProcessStages.fxaa.enabled = true;
 
         Sandcastle.addToggleButton("FXAA", true, function (checked) {
           viewer.scene.postProcessStages.fxaa.enabled = checked;
         });
-        //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(75343);
+          viewer.scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        } //Sandcastle_End
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>

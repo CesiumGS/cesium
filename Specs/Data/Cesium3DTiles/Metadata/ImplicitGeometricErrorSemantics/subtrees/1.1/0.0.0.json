@@ -15,15 +15,18 @@
     "tileAvailability": {
         "constant": 1
     },
-    "contentAvailability": {
-        "constant": 0
-    },
+    "contentAvailability": [ 
+        {
+            "constant": 0
+        } 
+    ],
     "childSubtreeAvailability": {
         "constant": 0
     },
     "propertyTables": [
         {
             "class": "tile",
+            "count": 21,
             "properties": {
                 "geometricError": {
                     "values": 0

@@ -32,11 +32,11 @@
     <div id="loadingOverlay"><h1>Loading...</h1></div>
     <div id="toolbar"></div>
     <script id="cesium_sandcastle_script">
-      function startup(Cesium) {
+      window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
         const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
+          terrain: Cesium.Terrain.fromWorldTerrain(),
         });
         const scene = viewer.scene;
 
@@ -45,12 +45,6 @@
             "This browser does not support clampToHeightMostDetailed."
           );
         }
-
-        const tileset = scene.primitives.add(
-          new Cesium.Cesium3DTileset({
-            url: Cesium.IonResource.fromAssetId(40866),
-          })
-        );
 
         scene.camera.setView({
           destination: new Cesium.Cartesian3(
@@ -66,11 +60,14 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        Sandcastle.addToolbarButton("Sample heights", function () {
-          sampleHeights();
-        });
+        try {
+          const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
+          scene.primitives.add(tileset);
+        } catch (error) {
+          console.log(`Error loading tileset: ${error}`);
+        }
 
-        function sampleHeights() {
+        async function sampleHeights() {
           viewer.entities.removeAll();
 
           const cartesian1 = new Cesium.Cartesian3(
@@ -96,42 +93,45 @@
             );
           }
 
-          scene
-            .clampToHeightMostDetailed(cartesians)
-            .then(function (clampedCartesians) {
-              for (let i = 0; i < count; ++i) {
-                viewer.entities.add({
-                  position: clampedCartesians[i],
-                  ellipsoid: {
-                    radii: new Cesium.Cartesian3(0.2, 0.2, 0.2),
-                    material: Cesium.Color.RED,
-                  },
-                });
-              }
+          const clampedCartesians = await scene.clampToHeightMostDetailed(
+            cartesians
+          );
 
-              viewer.entities.add({
-                polyline: {
-                  positions: clampedCartesians,
-                  arcType: Cesium.ArcType.NONE,
-                  width: 2,
-                  material: new Cesium.PolylineOutlineMaterialProperty({
-                    color: Cesium.Color.YELLOW,
-                  }),
-                  depthFailMaterial: new Cesium.PolylineOutlineMaterialProperty(
-                    {
-                      color: Cesium.Color.YELLOW,
-                    }
-                  ),
-                },
-              });
+          for (let i = 0; i < count; ++i) {
+            viewer.entities.add({
+              position: clampedCartesians[i],
+              ellipsoid: {
+                radii: new Cesium.Cartesian3(0.2, 0.2, 0.2),
+                material: Cesium.Color.RED,
+              },
             });
+          }
+
+          viewer.entities.add({
+            polyline: {
+              positions: clampedCartesians,
+              arcType: Cesium.ArcType.NONE,
+              width: 2,
+              material: new Cesium.PolylineOutlineMaterialProperty({
+                color: Cesium.Color.YELLOW,
+              }),
+              depthFailMaterial: new Cesium.PolylineOutlineMaterialProperty({
+                color: Cesium.Color.YELLOW,
+              }),
+            },
+          });
         }
+
+        sampleHeights();
         //Sandcastle_End
-        Sandcastle.finishedLoading();
-      }
+      };
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
-        startup(Cesium);
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
       }
     </script>
   </body>
