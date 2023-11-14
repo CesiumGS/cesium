@@ -1,4 +1,4 @@
-uniform sampler2D u_depthTexture;
+uniform highp sampler2D u_depthTexture;
 
 varying vec2 v_textureCoordinates;
 

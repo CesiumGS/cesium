@@ -1,0 +1,332 @@
+{
+  "asset": {
+    "version": "1.1",
+    "tilesetVersion": "1.2.3"
+  },
+  "schema": {
+    "classes": {
+      "tileset": {
+        "properties": {
+          "author": {
+            "description": "The person or entity that made the tileset",
+            "type": "STRING",
+            "semantic": "AUTHOR"
+          },
+          "date": {
+            "description": "Date of tileset creation in YYYY-MM-DD format",
+            "type": "STRING",
+            "semantic": "DATE_ISO_8601"
+          },
+          "centerCartographic": {
+            "description": "Center of the tileset as [longitude, latitude, height] where longitude and latitude are in radians, and height is in meters].",
+            "type": "VEC3",
+            "componentType": "FLOAT64"
+          },
+          "tileCount": {
+            "description": "Total number of tiles in the tileset",
+            "type": "SCALAR",
+            "componentType": "UINT8"
+          },
+          "color": {
+            "type": "VEC4",
+            "componentType": "UINT8",
+            "semantic": "COLOR"
+          }
+        }
+      },
+      "residential": {
+        "properties": {
+          "population": {
+            "type": "SCALAR",
+            "componentType": "UINT32"
+          },
+          "neighborhoods": {
+            "type": "STRING",
+            "array": true
+          },
+          "name": {
+            "type": "STRING",
+            "semantic": "GROUP_NAME"
+          },
+          "tileCount": {
+            "type": "SCALAR",
+            "componentType": "UINT8"
+          }
+        }
+      },
+      "commercial": {
+        "properties": {
+          "businessCount": {
+            "type": "SCALAR",
+            "componentType": "UINT16"
+          },
+          "majorIndustries": {
+            "type": "STRING",
+            "array": true
+          },
+          "name": {
+            "type": "STRING",
+            "semantic": "GROUP_NAME"
+          }
+        }
+      },
+      "tile": {
+        "properties": {
+          "color": {
+            "type": "VEC4",
+            "componentType": "UINT8",
+            "semantic": "COLOR"
+          },
+          "highlightColor": {
+            "type": "VEC4",
+            "componentType": "UINT8",
+            "semantic": "HIGHLIGHT_COLOR"
+          },
+          "defaultColor": {
+            "type": "VEC4",
+            "componentType": "UINT8",
+            "semantic": "DEFAULT_COLOR",
+            "default": [255, 255, 255, 255]
+          },
+          "averageTemperature": {
+            "type": "SCALAR",
+            "componentType": "FLOAT32",
+            "semantic": "AVERAGE_TEMPERATURE",
+            "noData": -1
+          },
+          "population": {
+            "type": "SCALAR",
+            "componentType": "UINT32"
+          }
+        }
+      },
+      "content": {
+        "properties": {
+          "triangleCount": {
+            "description": "The number of triangles in the glTF content",
+            "type": "SCALAR",
+            "componentType": "UINT32"
+          },
+          "highlightColor": {
+            "type": "VEC4",
+            "componentType": "UINT8",
+            "semantic": "HIGHLIGHT_COLOR"
+          },
+          "author": {
+            "description": "The person or entity that made the content",
+            "type": "STRING",
+            "semantic": "AUTHOR"
+          }
+        }
+      }
+    }
+  },
+  "metadata": {
+    "class": "tileset",
+    "properties": {
+      "author": "Cesium",
+      "date": "2021-04-07",
+      "centerCartographic": [
+        -1.3196816996258511,
+        0.6988767486400521,
+        45.78600543644279
+      ],
+      "color": [255, 0, 255, 1.0],
+      "tileCount": 5
+    }
+  },
+  "groups": [
+    {
+      "class": "residential",
+      "properties": {
+        "name": "residential",
+        "population": 150,
+        "neighborhoods": ["Hillside", "Middletown", "Western Heights"],
+        "tileCount": 2
+      }
+    },
+    {
+      "class": "commercial",
+      "properties": {
+        "name": "commercial",
+        "businessCount": 143,
+        "majorIndustries": ["Finance", "Manufacturing"]
+      }
+    }
+  ],
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "geometricError": 70,
+    "refine": "ADD",
+    "content": {
+      "uri": "parent.b3dm",
+      "boundingVolume": {
+        "region": [
+          -1.3197004795898053,
+          0.6988582109,
+          -1.3196595204101946,
+          0.6988897891,
+          0,
+          88
+        ]
+      }
+    },
+    "metadata": {
+      "class": "tile",
+      "properties": {
+        "color": [127, 0, 255, 1.0],
+        "highlightColor": [255, 255, 255, 1.0],
+        "population": 530,
+        "averageTemperature": -1
+      }
+    },
+    "children": [
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.6988424218,
+            -1.31968,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "uri": "ll.b3dm",
+          "group": 0,
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "triangleCount": 15000,
+              "highlightColor": [255, 0, 0, 1.0],
+              "author": "First Author"
+            }
+          }
+        },
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 255, 0, 1.0],
+            "highlightColor": [255, 0, 255, 1.0],
+            "population": 50,
+            "averageTemperature": 24
+          }
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.6988424218,
+            -1.3196390408203893,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "uri": "lr.b3dm",
+          "group": 1,
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "triangleCount": 20000,
+              "highlightColor": [255, 255, 0, 1.0],
+              "author": "Second Author"
+            }
+          }
+        },
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 0, 127, 1.0],
+            "highlightColor": [0, 255, 255, 1.0],
+            "population": 230,
+            "averageTemperature": 25
+          }
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.698874,
+            -1.3196390408203893,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "uri": "ur.b3dm",
+          "group": 1,
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "triangleCount": 32000,
+              "highlightColor": [0, 255, 0, 1.0],
+              "author": "Third Author"
+            }
+          }
+        },
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 127, 0, 1.0],
+            "highlightColor": [0, 255, 0, 1.0],
+            "population": 150,
+            "averageTemperature": -1
+          }
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.698874,
+            -1.31968,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "uri": "ul.b3dm",
+          "group": 0,
+          "metadata": {
+            "class": "content",
+            "properties": {
+              "triangleCount": 40000,
+              "highlightColor": [0, 0, 255, 1.0],
+              "author": "Fourth Author"
+            }
+          }
+        },
+        "metadata": {
+          "class": "tile",
+          "properties": {
+            "color": [255, 0, 0, 1.0],
+            "highlightColor": [0, 255, 0, 1.0],
+            "population": 100,
+            "averageTemperature": 26
+          }
+        }
+      }
+    ]
+  }
+}

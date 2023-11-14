@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Add clouds to the scene." />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+          infoBox: false,
+          shouldAnimate: true,
+        });
+
+        const scene = viewer.scene;
+        scene.primitives.add(Cesium.createOsmBuildings());
+
+        ///////////////////////////
+        // Create clouds
+        ///////////////////////////
+
+        Cesium.Math.setRandomNumberSeed(2.5);
+        function getRandomNumberInRange(minValue, maxValue) {
+          return (
+            minValue + Cesium.Math.nextRandomNumber() * (maxValue - minValue)
+          );
+        }
+
+        const clouds = new Cesium.CloudCollection();
+
+        // manually position clouds in the mountains
+        function createBackLayerClouds() {
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.6908, 45.496, 300),
+            scale: new Cesium.Cartesian2(1500, 250),
+            maximumSize: new Cesium.Cartesian3(50, 15, 13),
+            slice: 0.3,
+          });
+
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.72, 45.5, 335),
+            scale: new Cesium.Cartesian2(1500, 300),
+            maximumSize: new Cesium.Cartesian3(50, 12, 15),
+            slice: 0.36,
+          });
+
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.72, 45.51, 260),
+            scale: new Cesium.Cartesian2(2000, 300),
+            maximumSize: new Cesium.Cartesian3(50, 12, 15),
+            slice: 0.49,
+          });
+
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.705, 45.52, 250),
+            scale: new Cesium.Cartesian2(230, 110),
+            maximumSize: new Cesium.Cartesian3(13, 13, 13),
+            slice: 0.2,
+          });
+
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.71, 45.522, 270),
+            scale: new Cesium.Cartesian2(1700, 300),
+            maximumSize: new Cesium.Cartesian3(50, 12, 15),
+            slice: 0.6,
+          });
+
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.705, 45.525, 250),
+            scale: new Cesium.Cartesian2(230, 110),
+            maximumSize: new Cesium.Cartesian3(15, 13, 15),
+            slice: 0.35,
+          });
+
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.721, 45.53, 220),
+            scale: new Cesium.Cartesian2(1500, 500),
+            maximumSize: new Cesium.Cartesian3(30, 20, 17),
+            slice: 0.45,
+          });
+        }
+
+        let long,
+          lat,
+          height,
+          scaleX,
+          scaleY,
+          aspectRatio,
+          cloudHeight,
+          depth,
+          slice;
+
+        // randomly generate clouds in a certain area
+        function createRandomClouds(
+          numClouds,
+          startLong,
+          stopLong,
+          startLat,
+          stopLat,
+          minHeight,
+          maxHeight
+        ) {
+          const rangeLong = stopLong - startLong;
+          const rangeLat = stopLat - startLat;
+          for (let i = 0; i < numClouds; i++) {
+            long = startLong + getRandomNumberInRange(0, rangeLong);
+            lat = startLat + getRandomNumberInRange(0, rangeLat);
+            height = getRandomNumberInRange(minHeight, maxHeight);
+            scaleX = getRandomNumberInRange(150, 350);
+            scaleY = scaleX / 2.0 - getRandomNumberInRange(0, scaleX / 4.0);
+            slice = getRandomNumberInRange(0.3, 0.7);
+            depth = getRandomNumberInRange(5, 20);
+            aspectRatio = getRandomNumberInRange(1.5, 2.1);
+            cloudHeight = getRandomNumberInRange(5, 20);
+            clouds.add({
+              position: Cesium.Cartesian3.fromDegrees(long, lat, height),
+              scale: new Cesium.Cartesian2(scaleX, scaleY),
+              maximumSize: new Cesium.Cartesian3(
+                aspectRatio * cloudHeight,
+                cloudHeight,
+                depth
+              ),
+              slice: slice,
+            });
+          }
+        }
+
+        // manually position clouds in front
+        const scratch = new Cesium.Cartesian3();
+        function createFrontLayerClouds() {
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.666, 45.5126, 97),
+            scale: new Cesium.Cartesian2(400, 150),
+            maximumSize: new Cesium.Cartesian3(25, 12, 15),
+            slice: 0.36,
+          });
+
+          clouds.add({
+            position: Cesium.Cartesian3.fromDegrees(-122.6665, 45.5262, 76),
+            scale: new Cesium.Cartesian2(450, 200),
+            maximumSize: new Cesium.Cartesian3(25, 14, 12),
+            slice: 0.3,
+          });
+        }
+
+        createBackLayerClouds();
+        createRandomClouds(8, -122.685, -122.67, 45.51, 45.525, 50, 250);
+        createFrontLayerClouds();
+
+        scene.primitives.add(clouds);
+
+        ///////////////////////////
+        // Create hot air balloons
+        ///////////////////////////
+
+        const start = Cesium.JulianDate.fromDate(new Date(2021, 7, 21, 12));
+        const stop = Cesium.JulianDate.addSeconds(
+          start,
+          90,
+          new Cesium.JulianDate()
+        );
+
+        function computeBalloonFlight(long, lat, height0, height1) {
+          const property = new Cesium.SampledPositionProperty();
+          const time0 = start.clone();
+          const time1 = Cesium.JulianDate.addSeconds(
+            time0,
+            30,
+            new Cesium.JulianDate()
+          );
+          const time2 = Cesium.JulianDate.addSeconds(
+            time1,
+            15,
+            new Cesium.JulianDate()
+          );
+          const time3 = Cesium.JulianDate.addSeconds(
+            time2,
+            30,
+            new Cesium.JulianDate()
+          );
+          const time4 = Cesium.JulianDate.addSeconds(
+            time3,
+            15,
+            new Cesium.JulianDate()
+          );
+
+          const position0 = Cesium.Cartesian3.fromDegrees(long, lat, height0);
+          const position1 = Cesium.Cartesian3.fromDegrees(long, lat, height1);
+
+          property.addSample(time0, position0);
+          property.addSample(time1, position1);
+          property.addSample(time2, position1);
+          property.addSample(time3, position0);
+          property.addSample(time4, position0);
+
+          return property;
+        }
+
+        const balloon0 = viewer.entities.add({
+          position: computeBalloonFlight(-122.661, 45.524, 400, 500),
+          model: {
+            uri: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
+            mininumPixelSize: 128,
+            maximumScale: 20000,
+          },
+        });
+
+        balloon0.position.setInterpolationOptions({
+          interpolationDegree: 2,
+          interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
+        });
+
+        const balloon1 = viewer.entities.add({
+          position: computeBalloonFlight(-122.662, 45.517, 400, 300),
+          model: {
+            uri: "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb",
+            mininumPixelSize: 128,
+            maximumScale: 20000,
+          },
+        });
+
+        balloon1.position.setInterpolationOptions({
+          interpolationDegree: 2,
+          interpolationAlgorithm: Cesium.HermitePolynomialApproximation,
+        });
+
+        viewer.clock.startTime = start.clone();
+        viewer.clock.stopTime = stop.clone();
+        viewer.clock.currentTime = start.clone();
+        viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+        viewer.clock.multiplier = 1.0;
+
+        // Fly to Portland
+        scene.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(-122.6515, 45.5252, 525),
+          orientation: {
+            heading: Cesium.Math.toRadians(-115),
+            pitch: Cesium.Math.toRadians(-12),
+            roll: 0.0,
+          },
+        });
+
+        scene.fog.density = 1.15e-4;
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

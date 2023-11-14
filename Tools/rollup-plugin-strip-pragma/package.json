@@ -2,7 +2,7 @@
   "name": "rollup-plugin-strip-pragma",
   "version": "1.0.0",
   "description": "A Rollup plugin to strip requirejs build pragmas from your code.",
-  "homepage": "http://cesiumjs.org",
+  "homepage": "https://cesium.com",
   "license": "Apache-2.0",
   "author": {
     "name": "Cesium GS, Inc.",
@@ -11,7 +11,7 @@
   "contributors": [
     {
       "name": "Cesium community",
-      "url": "https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTORS.md"
+      "url": "https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md"
     }
   ],
   "keywords": [

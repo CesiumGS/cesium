@@ -1,0 +1,33 @@
+{
+  "buffers": [
+    {
+      "byteLength": 8,
+      "uri": "../availability.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 1
+    }
+  ],
+  "tileAvailability": {
+    "constant": 1
+  },
+  "childSubtreeAvailability": {
+    "constant": 0
+  },
+  "extensions": {
+    "3DTILES_multiple_contents": {
+      "contentAvailability": [
+        {
+          "constant": 1
+        },
+        {
+          "bitstream": 0
+        }
+      ]
+    }
+  }
+}

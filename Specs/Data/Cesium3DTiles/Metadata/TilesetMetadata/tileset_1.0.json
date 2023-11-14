@@ -1,0 +1,154 @@
+{
+  "asset": {
+    "version": "1.0",
+    "tilesetVersion": "1.2.3"
+  },
+  "extensionsUsed": [
+    "3DTILES_metadata"
+  ],
+  "extensionsRequired": [
+    "3DTILES_metadata"
+  ],
+  "extensions": {
+    "3DTILES_metadata": {
+      "schema": {
+        "classes": {
+          "tileset": {
+            "properties": {
+              "author": {
+                "description": "The person or entity that made the tileset",
+                "type": "STRING",
+                "semantic": "AUTHOR"
+              },
+              "date": {
+                "description": "Date of tileset creation in YYYY-MM-DD format",
+                "type": "STRING",
+                "semantic": "DATE_ISO_8601"
+              },
+              "centerCartographic": {
+                "description": "Center of the tileset as (longitude, latitude, height) where longitude and latitude are in radians, and height is in meters.",
+                "type": "VEC3",
+                "componentType": "FLOAT64"
+              },
+              "tileCount": {
+                "description": "Total number of tiles in the tileset",
+                "type": "SCALAR",
+                "componentType": "UINT8"
+              }
+            }
+          }
+        }
+      },
+      "tileset": {
+        "class": "tileset",
+        "properties": {
+          "author": "Cesium",
+          "date": "2021-03-23",
+          "centerCartographic": [
+            -1.3196816996258511,
+            0.6988767486400521,
+            45.78600543644279
+          ],
+          "tileCount": 5
+        }
+      }
+    }
+  },
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "geometricError": 70,
+    "refine": "ADD",
+    "content": {
+      "uri": "parent.b3dm",
+      "boundingVolume": {
+        "region": [
+          -1.3197004795898053,
+          0.6988582109,
+          -1.3196595204101946,
+          0.6988897891,
+          0,
+          88
+        ]
+      }
+    },
+    "children": [
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.6988424218,
+            -1.31968,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "uri": "ll.b3dm"
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.6988424218,
+            -1.3196390408203893,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "uri": "lr.b3dm"
+        },
+        "extras": {
+          "id": "Special Tile"
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.698874,
+            -1.3196390408203893,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "uri": "ur.b3dm"
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.698874,
+            -1.31968,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "uri": "ul.b3dm"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "geometricError": 10000,
+  "root": {
+    "boundingVolume": {
+      "box": [
+        0, 0, 0,
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+      ]
+    },
+    "content": {
+      "uri": "content/{level}/{x}/{y}.b3dm"
+    },
+    "refine": "REPLACE",
+    "geometricError": 100,
+    "implicitTiling": {
+      "subdivisionScheme": "OCTREE",
+      "subtreeLevels": 2,
+      "availableLevels": 6,
+      "subtrees": {
+        "uri": "subtrees/{level}/{x}/{y}/{z}.subtree"
+      }
+    }
+  }
+}

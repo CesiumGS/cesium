@@ -1,0 +1,154 @@
+{
+    "accessors" : [
+        {
+            "bufferView" : 0,
+            "componentType" : 5126,
+            "count" : 96,
+            "max" : [
+                1,
+                1,
+                1
+            ],
+            "min" : [
+                -1,
+                -1,
+                -1
+            ],
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 1,
+            "componentType" : 5126,
+            "count" : 96,
+            "type" : "VEC3"
+        },
+        {
+            "bufferView" : 2,
+            "componentType" : 5123,
+            "count" : 132,
+            "type" : "SCALAR"
+        }
+    ],
+    "asset" : {
+        "copyright": "Copyright 2019 Analytical Graphics, Inc, CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/ - Model by Ed Mackey.",
+        "generator" : "Khronos Blender glTF 2.0 I/O, with hand-edits",
+        "version" : "2.0"
+    },
+    "bufferViews" : [
+        {
+            "buffer" : 0,
+            "byteLength" : 1152,
+            "byteOffset" : 0
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 1152,
+            "byteOffset" : 1152
+        },
+        {
+            "buffer" : 0,
+            "byteLength" : 264,
+            "byteOffset" : 2304
+        }
+    ],
+    "buffers" : [
+        {
+            "byteLength" : 2568,
+            "uri" : "UnlitTest.bin"
+        }
+    ],
+    "materials" : [
+        {
+            "name" : "Orange",
+            "pbrMetallicRoughness" : {
+                "baseColorFactor": [
+                    1,
+                    0.217637640824031,
+                    0,
+                    1
+                ]
+            },
+            "extensions": {
+                "KHR_materials_unlit": {}
+            }
+        },
+        {
+            "name" : "Blue",
+            "pbrMetallicRoughness" : {
+                "baseColorFactor": [
+                    0,
+                    0.217637640824031,
+                    1,
+                    1
+                ]
+            },
+            "extensions": {
+                "KHR_materials_unlit": {}
+            }
+        }
+    ],
+    "meshes" : [
+        {
+            "name" : "Orange Mesh",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "NORMAL" : 1,
+                        "POSITION" : 0
+                    },
+                    "indices" : 2,
+                    "material" : 0
+                }
+            ]
+        },
+        {
+            "name" : "Blue Mesh",
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "NORMAL" : 1,
+                        "POSITION" : 0
+                    },
+                    "indices" : 2,
+                    "material" : 1
+                }
+            ]
+        }
+    ],
+    "nodes" : [
+        {
+            "mesh" : 0,
+            "name" : "Orange Object",
+            "translation": [
+                -1.2,
+                0,
+                0
+            ]
+        },
+        {
+            "mesh" : 1,
+            "name" : "Blue Object",
+            "translation": [
+                1.2,
+                0,
+                0
+            ]
+        }
+    ],
+    "scene" : 0,
+    "scenes" : [
+        {
+            "name" : "Scene",
+            "nodes" : [
+                0,
+                1
+            ]
+        }
+    ],
+    "extensionsUsed": [
+        "KHR_materials_unlit"
+    ],
+    "extensionsRequired": [
+        "KHR_materials_unlit"
+    ]
+}

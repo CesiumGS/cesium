@@ -79,7 +79,7 @@ It is important that you clone recursively for ``dojox``, ``demos`` or ``util``b
 submodules.  You won't be able to submit your changes to the repositories that way though.  If you are working on any of
 these sub-projects, you should contact those project leads to see if their workflow differs.
 
-You should also setup the `upstream` repository.  This will allow you to take changes from the "master" repository
+You should also setup the `upstream` repository.  This will allow you to take changes from the "main" repository
 and merge them into your local clone and then push them to your GitHub fork:
 
 ```bash
@@ -91,7 +91,7 @@ $ git fetch upstream
 Then you can retrieve upstream changes and rebase on them into your code like this:
 
 ```bash
-$ git pull --rebase upstream master
+$ git pull --rebase upstream main
 ```
 
 For more information on maintaining a fork, please see the GitHub Help article [Fork a Repo][] and information on
@@ -99,13 +99,13 @@ For more information on maintaining a fork, please see the GitHub Help article [
 
 ## 3. Create a Branch
 
-The easiest workflow is to keep your master branch in sync with the upstream branch and do not locate any of your own
-commits in that branch.  When you want to work on a new feature, you then ensure you are on the master branch and create
+The easiest workflow is to keep your main branch in sync with the upstream branch and do not locate any of your own
+commits in that branch.  When you want to work on a new feature, you then ensure you are on the main branch and create
 a new branch from there.  While the name of the branch can be anything, it can often be easy to use the ticket number
 you might be working on.  For example:
 
 ```bash
-$ git checkout -b t12345 master
+$ git checkout -b t12345 main
 Switched to a new branch 't12345'
 ```
 
@@ -141,7 +141,7 @@ If you have been working on your contribution for a while, the upstream reposito
 ensure your work is on top of the latest changes so your pull request can be applied cleanly:
 
 ```bash
-$ git pull --rebase upstream master
+$ git pull --rebase upstream main
 ```
 
 When you are ready to push your commit to your GitHub repository for the first time on this branch you would do the

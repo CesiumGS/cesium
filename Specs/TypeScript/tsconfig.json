@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [],
+    "strict": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "index.ts",
+    "../../Source/Cesium.d.ts"
+  ]
+}

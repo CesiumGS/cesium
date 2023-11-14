@@ -1,0 +1,26 @@
+{
+  "classes": {
+    "tileset": {
+      "properties": {
+        "author": {
+          "description": "The person or entity that made the tileset",
+          "type": "STRING"
+        },
+        "date": {
+          "description": "Date of tileset creation in YYYY-MM-DD format",
+          "type": "STRING"
+        },
+        "centerCartographic": {
+          "description": "Center of the tileset as (longitude, latitude, height) where longitude and latitude are in radians, and height is in meters.",
+          "type": "VEC3",
+          "componentType": "FLOAT64"
+        },
+        "tileCount": {
+          "description": "Total number of tiles in the tileset",
+          "type": "SCALAR",
+          "componentType": "UINT8"
+        }
+      }
+    }
+  }
+}

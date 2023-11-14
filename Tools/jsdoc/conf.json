@@ -3,12 +3,19 @@
         "allowUnknownTags": false
     },
     "source": {
-        "include": ["Source"],
-        "exclude": ["Source/ThirdParty", "Source/Workers"],
+        "include": [
+            "Source"
+        ],
+        "exclude": [
+            "Source/ThirdParty",
+            "Source/Workers"
+        ],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
-    "plugins": ["./Tools/jsdoc/cesiumTags"],
+    "plugins": [
+        "./Tools/jsdoc/cesiumTags"
+    ],
     "templates": {
         "cleverLinks": true,
         "default": {

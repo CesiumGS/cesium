@@ -1,4 +1,4 @@
-The official [shareable ESLint config](http://eslint.org/docs/developer-guide/shareable-configs) for the [Cesium](https://cesiumjs.org/) ecosystem.
+The official [shareable ESLint config](http://eslint.org/docs/developer-guide/shareable-configs) for the [Cesium](https://cesium.com/) ecosystem.
 
 ## Usage
 
@@ -24,6 +24,6 @@ To use any of these configs,
 
 1. `npm install eslint-config-cesium --save-dev`
 
-    If using the `browser` config: `npm install eslint-plugin-html --save-dev`
+   If using the `browser` config: `npm install eslint-plugin-html --save-dev`
 
 2. Add `"extends": "cesium"` to your `.eslintrc.*` files

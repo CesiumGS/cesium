@@ -1,0 +1,69 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "schema": {
+    "classes": {
+      "layer": {
+        "properties": {
+          "color": {
+            "type": "VEC3",
+            "componentType": "UINT8"
+          },
+          "priority": {
+            "type": "SCALAR",
+            "componentType": "UINT32"
+          }
+        }
+      }
+    }
+  },
+  "groups": [
+    {
+      "class": "layer",
+      "properties": {
+        "color": [120, 68, 32],
+        "priority": 0
+      }
+    },
+    {
+      "class": "layer",
+      "properties": {
+        "color": [206, 237, 242],
+        "priority": 1
+      }
+    }
+  ],
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197309591796106,
+        0.6988324218,
+        -1.3196290408203893,
+        0.6989155782,
+        0,
+        88
+      ]
+    },
+    "implicitTiling": {
+      "subdivisionScheme": "QUADTREE",
+      "subtreeLevels": 2,
+      "availableLevels": 2,
+      "subtrees": {
+        "uri": "subtrees/1.1/{level}.{x}.{y}.json"
+      }
+    },
+    "contents": [
+      {
+        "uri": "ground/{level}/{x}/{y}.b3dm",
+        "group": 0
+      },
+      {
+        "uri": "sky/{level}/{x}/{y}.b3dm",
+        "group": 1
+      }
+    ],
+    "geometricError": 70,
+    "refine": "ADD"
+  }
+}

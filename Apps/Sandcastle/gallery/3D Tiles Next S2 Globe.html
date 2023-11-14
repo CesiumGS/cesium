@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Load a global scale 3D Tiles Next tileset that uses 3DTILES_bounding_volume_S2."
+    />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      table,
+      th,
+      td {
+        border: 1px solid white;
+        border-collapse: collapse;
+      }
+      tt {
+        padding: 8px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        // One World Terrain Base Globe provided by Maxar
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          globe: false,
+        });
+        const scene = viewer.scene;
+
+        viewer.camera.flyTo({
+          duration: 0,
+          destination: new Cesium.Cartesian3(
+            762079.3157173397,
+            -28363749.882652905,
+            19814354.842565004
+          ),
+          orientation: {
+            direction: new Cesium.Cartesian3(
+              -0.022007098944236157,
+              0.819079900508189,
+              -0.5732571885110153
+            ),
+            up: new Cesium.Cartesian3(
+              -0.015396759850986286,
+              0.5730503851893346,
+              0.8193754913471885
+            ),
+          },
+          easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
+        });
+
+        // MAXAR OWT WFF 1.2 Base Globe
+        const tileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(691510),
+            maximumScreenSpaceError: 4,
+          })
+        );
+
+        // --- Style ---
+
+        const style = new Cesium.Cesium3DTileStyle({
+          defines: {
+            LandCoverColor: "rgb(${color}[0], ${color}[1], ${color}[2])",
+          },
+          color:
+            "${LandCoverColor} === vec4(1.0) ? rgb(254, 254, 254) : ${LandCoverColor}",
+        });
+
+        // --- Custom Shader ---
+
+        const customShader = new Cesium.CustomShader({
+          uniforms: {
+            u_time: {
+              type: Cesium.UniformType.FLOAT,
+              value: 0,
+            },
+          },
+          fragmentShaderText: `
+            void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+            {
+              int featureId = fsInput.featureIds.featureId_0;
+              // Use cartesian coordinates but scale to be roughly [-1, 1]
+              vec3 positionWC = fsInput.attributes.positionWC / 6.3e6;
+              if (featureId == 60)
+              {
+                // Something like FM synthesis to make irregularly spaced waves
+                float wave = sin(14.0 * positionWC.z - u_time);
+                wave = 0.5 + 0.5 * sin(10.0 * wave * positionWC.z - u_time);
+                // mix in an over-saturated version of the diffuse to make shimmering bands of color
+                material.diffuse = mix(material.diffuse, material.diffuse * 3.0, wave);
+              }
+            }
+            `,
+        });
+
+        const startTime = performance.now();
+        const customShaderUpdate = function () {
+          const elapsedTimeSeconds = (performance.now() - startTime) / 1000;
+          customShader.setUniform("u_time", elapsedTimeSeconds);
+        };
+
+        viewer.scene.postUpdate.addEventListener(function () {
+          customShaderUpdate();
+        });
+
+        // --- Picking ---
+
+        let enablePicking = true;
+        const handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+        const metadataOverlay = document.createElement("div");
+        viewer.container.appendChild(metadataOverlay);
+        metadataOverlay.className = "backdrop";
+        metadataOverlay.style.display = "none";
+        metadataOverlay.style.position = "absolute";
+        metadataOverlay.style.bottom = "0";
+        metadataOverlay.style.left = "0";
+        metadataOverlay.style["pointer-events"] = "none";
+        metadataOverlay.style.padding = "4px";
+        metadataOverlay.style.backgroundColor = "#303030";
+        metadataOverlay.style.whiteSpace = "pre-line";
+        metadataOverlay.style.fontSize = "16px";
+        metadataOverlay.style.borderRadius = "4px";
+
+        let tableHtmlScratch;
+        let i;
+
+        handler.setInputAction(function (movement) {
+          if (enablePicking) {
+            const feature = scene.pick(movement.endPosition);
+            if (feature instanceof Cesium.Cesium3DTileFeature) {
+              metadataOverlay.style.display = "block";
+              metadataOverlay.style.bottom = `${
+                viewer.canvas.clientHeight - movement.endPosition.y
+              }px`;
+              metadataOverlay.style.left = `${movement.endPosition.x}px`;
+
+              tableHtmlScratch =
+                "<table><thead><tr><th><tt>Property</tt></th><th><tt>Value</tt></th></tr></thead><tbody>";
+
+              const propertyNames = feature.getPropertyNames();
+              const length = propertyNames.length;
+              for (let i = 0; i < length; ++i) {
+                const propertyName = propertyNames[i];
+                const propertyValue = feature.getProperty(propertyName);
+                tableHtmlScratch += `<tr><td><tt>${propertyName}</tt></td><td><tt>${propertyValue}</tt></td></tr>`;
+              }
+              tableHtmlScratch += "</tbody></table>";
+              metadataOverlay.innerHTML = tableHtmlScratch;
+            } else {
+              metadataOverlay.style.display = "none";
+            }
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        // --- UI ---
+
+        const modes = [
+          {
+            text: "Globe View",
+            onselect: function () {
+              tileset.customShader = undefined;
+              tileset.debugShowBoundingVolume = false;
+              tileset.style = undefined;
+            },
+          },
+          {
+            text: "Show S2 Bounding Volumes",
+            onselect: function () {
+              tileset.customShader = undefined;
+              tileset.debugShowBoundingVolume = true;
+              tileset.style = undefined;
+            },
+          },
+          {
+            text: "Apply Style",
+            onselect: function () {
+              tileset.customShader = undefined;
+              tileset.debugShowBoundingVolume = false;
+              tileset.style = style;
+            },
+          },
+          {
+            text: "Apply Custom Shader",
+            onselect: function () {
+              tileset.customShader = customShader;
+              tileset.debugShowBoundingVolume = false;
+              tileset.style = undefined;
+            },
+          },
+        ];
+
+        Sandcastle.addToolbarMenu(modes);
+        Sandcastle.addToggleButton("Enable picking", enablePicking, function (
+          checked
+        ) {
+          if (enablePicking) {
+            metadataOverlay.style.display = "none";
+          }
+
+          enablePicking = checked;
+        });
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

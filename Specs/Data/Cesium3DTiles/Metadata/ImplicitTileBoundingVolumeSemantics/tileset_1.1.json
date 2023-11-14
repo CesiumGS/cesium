@@ -1,0 +1,59 @@
+{
+  "asset": {
+    "version": "1.1"
+  },
+  "schema": {
+    "classes": {
+      "tile": {
+        "properties": {
+          "tileBounds": {
+            "type": "SCALAR",
+            "componentType": "FLOAT64",
+            "array": true,
+            "count": 12,
+            "semantic": "TILE_BOUNDING_BOX"
+          }
+        }
+      }
+    }
+  },
+  "geometricError": 4096.0,
+  "root": {
+    "transform": [
+      2048, 0, 0, 0,
+      0, 2048, 0, 0,
+      0, 0, 2048, 0,
+      6500000, 0, 0, 1
+    ],
+    "geometricError": 2048.0,
+    "boundingVolume": {
+      "box": [
+        0, 0, 0,
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1
+      ]
+    },
+    "children": [
+      {
+        "geometricError": 2048.0,
+        "boundingVolume": {
+          "box": [
+            0, 0, 0,
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+          ]
+        },
+        "implicitTiling": {
+          "subdivisionScheme": "OCTREE",
+          "subtreeLevels": 4,
+          "availableLevels": 4,
+          "subtrees": {
+            "uri": "subtrees/1.1/{level}.{x}.{y}.json"
+          }
+        }
+      }
+    ]
+  }
+}

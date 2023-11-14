@@ -1,0 +1,204 @@
+{
+   "accessors" : [
+      {
+         "bufferView" : 0,
+         "byteOffset" : 0,
+         "componentType" : 5123,
+         "count" : 6,
+         "max" : [
+            5
+         ],
+         "min" : [
+            0
+         ],
+         "type" : "SCALAR"
+      },
+      {
+         "bufferView" : 1,
+         "byteOffset" : 0,
+         "componentType" : 5126,
+         "count" : 6,
+         "max" : [
+            1.000000,
+            0.000000,
+            1.000000
+         ],
+         "min" : [
+            -1.000000,
+            0.000000,
+            -1.000000
+         ],
+         "type" : "VEC3"
+      },
+      {
+         "bufferView" : 2,
+         "byteOffset" : 0,
+         "componentType" : 5126,
+         "count" : 6,
+         "max" : [
+            -0.000000,
+            1.000000,
+            -0.000000
+         ],
+         "min" : [
+            -0.000000,
+            1.000000,
+            -0.000000
+         ],
+         "type" : "VEC3"
+      },
+      {
+         "bufferView" : 3,
+         "byteOffset" : 0,
+         "componentType" : 5126,
+         "count" : 6,
+         "max" : [
+            0.000000,
+            0.000000,
+            -1.000000,
+            1.000000
+         ],
+         "min" : [
+            0.000000,
+            0.000000,
+            -1.000000,
+            1.000000
+         ],
+         "type" : "VEC4"
+      },
+      {
+         "bufferView" : 4,
+         "byteOffset" : 0,
+         "componentType" : 5126,
+         "count" : 6,
+         "max" : [
+            0.999900,
+            0.999900
+         ],
+         "min" : [
+            0.000100,
+            0.000100
+         ],
+         "type" : "VEC2"
+      }
+   ],
+   "asset" : {
+      "generator" : "VKTS glTF 2.0 exporter",
+      "version" : "2.0"
+   },
+   "bufferViews" : [
+      {
+         "buffer" : 0,
+         "byteLength" : 12,
+         "byteOffset" : 0,
+         "target" : 34963
+      },
+      {
+         "buffer" : 0,
+         "byteLength" : 72,
+         "byteOffset" : 12,
+         "target" : 34962
+      },
+      {
+         "buffer" : 0,
+         "byteLength" : 72,
+         "byteOffset" : 84,
+         "target" : 34962
+      },
+      {
+         "buffer" : 0,
+         "byteLength" : 96,
+         "byteOffset" : 156,
+         "target" : 34962
+      },
+      {
+         "buffer" : 0,
+         "byteLength" : 48,
+         "byteOffset" : 252,
+         "target" : 34962
+      }
+   ],
+   "buffers" : [
+      {
+         "byteLength" : 300,
+         "uri" : "TwoSidedPlane.bin"
+      }
+   ],
+   "images" : [
+      {
+         "uri" : "TwoSidedPlane_BaseColor.png"
+      },
+      {
+         "uri" : "TwoSidedPlane_MetallicRoughness.png"
+      },
+      {
+         "uri" : "TwoSidedPlane_Normal.png"
+      }
+   ],
+   "materials" : [
+      {
+         "doubleSided" : true,
+         "name" : "TwoSidedPlane",
+         "normalTexture" : {
+            "index" : 2
+         },
+         "pbrMetallicRoughness" : {
+            "baseColorTexture" : {
+               "index" : 0
+            },
+            "metallicRoughnessTexture" : {
+               "index" : 1
+            }
+         }
+      }
+   ],
+   "meshes" : [
+      {
+         "name" : "TwoSidedPlane",
+         "primitives" : [
+            {
+               "attributes" : {
+                  "NORMAL" : 2,
+                  "POSITION" : 1,
+                  "TANGENT" : 3,
+                  "TEXCOORD_0" : 4
+               },
+               "indices" : 0,
+               "material" : 0,
+               "mode" : 4
+            }
+         ]
+      }
+   ],
+   "nodes" : [
+      {
+         "mesh" : 0,
+         "name" : "TwoSidedPlane"
+      }
+   ],
+   "samplers" : [
+      {}
+   ],
+   "scene" : 0,
+   "scenes" : [
+      {
+         "nodes" : [
+            0
+         ]
+      }
+   ],
+   "textures" : [
+      {
+         "sampler" : 0,
+         "source" : 0
+      },
+      {
+         "sampler" : 0,
+         "source" : 1
+      },
+      {
+         "sampler" : 0,
+         "source" : 2
+      }
+   ]
+}

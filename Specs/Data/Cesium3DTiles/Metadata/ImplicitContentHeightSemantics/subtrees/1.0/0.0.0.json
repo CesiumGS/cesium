@@ -1,0 +1,42 @@
+{
+    "buffers": [
+        {
+            "uri": "../metadata.bin",
+            "byteLength": 336
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 168
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 168,
+            "byteLength": 168
+        }
+    ],
+    "tileAvailability": {
+        "constant": 1
+    },
+    "contentAvailability": {
+        "constant": 1
+    },
+    "childSubtreeAvailability": {
+        "constant": 0
+    },
+    "extensions": {
+        "3DTILES_metadata": {
+            "class": "tile",
+            "properties": {
+                "minimumHeight": {
+                    "bufferView": 0
+                },
+                "maximumHeight": {
+                    "bufferView": 1
+                }
+            }
+        }
+    }
+}

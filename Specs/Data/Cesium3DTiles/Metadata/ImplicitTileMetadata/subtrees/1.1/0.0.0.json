@@ -1,0 +1,49 @@
+{
+  "buffers": [
+    {
+      "byteLength": 32,
+      "uri": "../shared.bin"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 1
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 8,
+      "byteLength": 5
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 16,
+      "byteLength": 12
+    }
+  ],
+  "tileAvailability": {
+    "bitstream": 0,
+    "availableCount": 4
+  },
+  "contentAvailability": {
+    "constant": 1
+  },
+  "childSubtreeAvailability": {
+    "constant": 0
+  },
+  "propertyTables": [
+    {
+      "class": "tile",
+      "properties": {
+        "quadrant": {
+          "values": 1
+        },
+        "color": {
+          "values": 2
+        }
+      }
+    }
+  ],
+  "tileMetadata": 0
+}

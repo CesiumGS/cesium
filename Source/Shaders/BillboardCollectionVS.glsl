@@ -423,6 +423,7 @@ if (lengthSq < disableDepthTestDistance) {
 
     v_outlineWidth = outlineWidth / 255.0;
     v_outlineColor = outlineColor;
+    v_outlineColor.a *= translucency;
 #endif
 
     v_pickColor = pickColor;
