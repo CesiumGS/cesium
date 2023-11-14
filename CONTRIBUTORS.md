@@ -185,6 +185,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Robert Irving](https://github.com/robert-irving-snc)
 - [General Atomics CCRi](https://www.ga-ccri.com/)
   - [matthias-ccri](https://github.com/matthias-ccri)
+- [Terradepth, Inc.](https://www.terradepth.com/)
+  - [Marc Johnson](https://github.com/marcejohnson)
+  - [Jacob Frazer](https://github.com/coderjake91)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
