@@ -133,7 +133,7 @@ function createObject(geoJson, entityCollection, describe) {
 
     //Check for the simplestyle specified name first.
     const name = properties.title;
-    if (defined(name)) {
+    if (defined(name) && name !== "") {
       entity.name = name;
       nameProperty = "title";
     } else {
