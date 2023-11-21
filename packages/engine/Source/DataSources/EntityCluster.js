@@ -922,12 +922,27 @@ EntityCluster.prototype.update = function (frameState) {
 };
 
 /**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {boolean} True if this object was destroyed; otherwise, false.
+ *
+ * @see EntityCluster#destroy
+ */
+EntityCluster.prototype.isDestroyed = function () {
+  return false;
+};
+
+/**
  * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
  * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
  * <p>
  * Unlike other objects that use WebGL resources, this object can be reused. For example, if a data source is removed
  * from a data source collection and added to another.
  * </p>
+ *  As a result, this object is not destroyed in this function.
  */
 EntityCluster.prototype.destroy = function () {
   this._labelCollection =

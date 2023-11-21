@@ -189,7 +189,7 @@ PrimitiveCollection.prototype.remove = function (primitive) {
 
       delete primitive._external._composites[this._guid];
 
-      if (this.destroyPrimitives) {
+      if (this.destroyPrimitives && !primitive.isDestroyed()) {
         primitive.destroy();
       }
 
@@ -209,7 +209,7 @@ PrimitiveCollection.prototype.remove = function (primitive) {
  */
 PrimitiveCollection.prototype.removeAndDestroy = function (primitive) {
   const removed = this.remove(primitive);
-  if (removed && !this.destroyPrimitives) {
+  if (removed && !this.destroyPrimitives && !primitive.isDestroyed()) {
     primitive.destroy();
   }
   return removed;
