@@ -42,8 +42,9 @@ vec4 getNextRayPosition(inout Ray viewRay, in SampleData sampleData, in RayShape
     #endif
     RayShapeIntersection voxelIntersection = intersectVoxel(viewRay, voxel);
     vec4 exit = intersectionMin(voxelIntersection.exit, shapeIntersection.exit);
-    float dt = clamp(100.0 * currentT * lodStep, 0.01 * lodStep, 0.1 * lodStep);
-    vec3 dPosition = exit.w * viewRay.dir + dt * exit.xyz;
+    float dt = 50.0 * currentT * lodStep / clamp(dot(exit.xyz, viewRay.dir), 0.05, 1.0);
+    dt = clamp(dt, 0.01 * lodStep, 0.5 * lodStep);
+    vec3 dPosition = (exit.w + dt) * viewRay.dir;
     viewRay.pos += dPosition;
     return vec4(-1.0 * normalize(exit.xyz), exit.w);
 #endif
