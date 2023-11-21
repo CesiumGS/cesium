@@ -899,22 +899,11 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
     // Try again when availability data is ready– Otherwise the tile will be marked as failed and never re-requested
     return availabilityPromise.then(() => {
       // handle promise or undefined return
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve=> {
         // defer execution to the next event loop
         setTimeout(() => {
-          const originalResult = this.requestTileGeometry(x, y, level, request);
-          if (originalResult && typeof originalResult.then === "function") {
-            originalResult
-              .then((result) => {
-                resolve(result);
-              })
-              .catch((err) => {
-                reject(err);
-              });
-          } else {
-            // undefined means deferred, wait for the promise to resolve
-            return resolve(this.requestTileGeometry(x, y, level, request));
-          }
+          const promise = this.requestTileGeometry(x, y, level, request);
+          resolve(promise);
         }, 0); // next tick
       });
     });
