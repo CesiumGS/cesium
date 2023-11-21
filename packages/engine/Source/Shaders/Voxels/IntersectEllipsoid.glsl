@@ -194,19 +194,13 @@ float getLatitudeConeShift(in float sinLatitude) {
     return primeVerticalRadius * u_eccentricitySquared * sinLatitude;
 }
 
-/**
- * Compute the angle of a cone of latitude in the space where
- * the ellipsoid has been scaled to a unit sphere.
- */
-float scaleLatitude(in float sinLatitude) {
-    float cosLatitude = sqrt(1.0 - sinLatitude * sinLatitude);
-    vec3 coneSurface = vec3(cosLatitude, 0.0, sinLatitude);
-    return normalize(coneSurface / u_ellipsoidRadiiUv).z;
-}
-
 void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeIntersection intersections[2]) {
-    ray.pos.z += getLatitudeConeShift(cosHalfAngle) / u_ellipsoidRadiiUv.z;
-    cosHalfAngle = scaleLatitude(cosHalfAngle);
+    // Undo the scaling from ellipsoid to sphere
+    ray.pos = ray.pos * u_ellipsoidRadiiUv;
+    ray.dir = ray.dir * u_ellipsoidRadiiUv;
+    // Shift the ray to account for the latitude cone not being centered at the Earth center
+    ray.pos.z += getLatitudeConeShift(cosHalfAngle);
+
     float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
@@ -249,8 +243,9 @@ void intersectFlippedCone(in Ray ray, in float cosHalfAngle, out RayShapeInterse
 }
 
 RayShapeIntersection intersectRegularCone(in Ray ray, in float cosHalfAngle, in bool convex) {
-    ray.pos.z += getLatitudeConeShift(cosHalfAngle) / u_ellipsoidRadiiUv.z;
-    cosHalfAngle = scaleLatitude(cosHalfAngle);
+    ray.pos = ray.pos * u_ellipsoidRadiiUv;
+    ray.dir = ray.dir * u_ellipsoidRadiiUv;
+    ray.pos.z += getLatitudeConeShift(cosHalfAngle);
     float cosSqrHalfAngle = cosHalfAngle * cosHalfAngle;
     vec2 intersect = intersectDoubleEndedCone(ray, cosSqrHalfAngle);
 
