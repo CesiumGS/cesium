@@ -899,7 +899,7 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
     // Try again when availability data is ready– Otherwise the tile will be marked as failed and never re-requested
     return availabilityPromise.then(() => {
       // handle promise or undefined return
-      return new Promise(resolve=> {
+      return new Promise((resolve) => {
         // defer execution to the next event loop
         setTimeout(() => {
           const promise = this.requestTileGeometry(x, y, level, request);
