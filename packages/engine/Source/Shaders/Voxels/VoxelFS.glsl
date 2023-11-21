@@ -75,7 +75,7 @@ void main()
     }
 
     float currT = cellIntersection.w;
-    vec3 dPosition = currT * (viewDirUv - 0.01 * u_stepSize * cellIntersection.xyz);
+    vec3 dPosition = (currT + 0.01 * u_stepSize) * viewDirUv;
     viewRayUv.pos = viewPosUv + dPosition;
 
     // Traverse the tree from the start position
@@ -142,7 +142,7 @@ void main()
                     float dt = cellIntersection.w - currT;
                     currT = cellIntersection.w;
                     cellIntersection.w = dt;
-                    dPosition = currT * (viewDirUv - 0.01 * u_stepSize * cellIntersection.xyz);
+                    dPosition = (currT + 0.01 * u_stepSize) * viewDirUv;
                     viewRayUv.pos = viewPosUv + dPosition;
                 }
             #endif
