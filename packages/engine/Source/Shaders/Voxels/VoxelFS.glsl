@@ -33,7 +33,8 @@ vec4 getNextRayPosition(inout Ray viewRay, in SampleData sampleData, in RayShape
 #if defined(CONSTANT_STEP)
     // Shrink the step size for points closer to the camera
     // float dt = min(lodStep, lodStep * max(0.04, 4.0 * currentT));
-    return vec4(viewRay.dir, currentT + lodStep);
+    viewRay.pos += lodStep * viewRay.dir;
+    return vec4(viewRay.dir, lodStep);
 #else
     #if defined(SHAPE_BOX)
         VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
@@ -84,6 +85,13 @@ void main()
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
 
+    #if defined(JITTER)
+        float noise = hash(screenCoord); // [0,1]
+        float lodStep = u_stepSize / pow(2.0, float(sampleDatas[0].tileCoords.w));
+        currT += noise * lodStep;
+        viewRayUv.pos += noise * lodStep * viewDirUv;
+    #endif
+
     FragmentInput fragmentInput;
     #if defined(STATISTICS)
         setStatistics(fragmentInput.metadata.statistics);
@@ -125,8 +133,12 @@ void main()
         }
 
         // Keep raymarching
-        cellIntersection = getNextRayPosition(viewRayUv, sampleDatas[0], shapeIntersection, currT);
+        cellIntersection = getNextRayPosition(viewRayUv, sampleDatas[0], shapeIntersection, currT);        
         currT += cellIntersection.w;
+        #if defined(CONSTANT_STEP)
+        // Convert to accumulation of dT. Adding small dPositions accumulates direction errors
+        viewRayUv.pos = viewPosUv + currT * viewDirUv;
+        #endif
 
         // Check if there's more intersections.
         if (currT >= shapeIntersection.exit.w) {
@@ -144,6 +156,11 @@ void main()
                     cellIntersection.w = dt;
                     dPosition = (currT + 0.01 * u_stepSize) * viewDirUv;
                     viewRayUv.pos = viewPosUv + dPosition;
+                    #if defined(JITTER)
+                        lodStep = u_stepSize / pow(2.0, float(sampleDatas[0].tileCoords.w));
+                        currT += noise * lodStep;
+                        viewRayUv.pos += noise * lodStep * viewDirUv;
+                    #endif
                 }
             #endif
         }
