@@ -148,7 +148,6 @@ Here's the full set of scripts and what they do.
   - `test-webgl-validation` - Runs all tests with Karma and enables low-level WebGL validation
   - `test-release` - Runs all tests on the minified release version of built Cesium
 - **Deployment scripts**
-  - `deploy-s3` - Deploys the built CesiumJS files, the npm package, and the zip file to Amazon S3. This requires having credentials set up for the S3 bucket to which you are deploying
   - `deploy-status` - Sets the deployment statuses in GitHub, for use in CI
   - `deploy-set-version` - Sets the version of `package.json`, for use in CI
 
@@ -179,7 +178,7 @@ aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Cove
 ```
 
 ```yml
-npm run deploy-s3 -- -b "cesium-public-builds" -d cesium/$BRANCH -c 'no-cache' --confirm
+aws s3 sync Build/unzipped/ s3://cesium-public-builds/cesium/$BRANCH/Build/ --cache-control "no-cache" --delete
 ```
 
 - In `gulpfile.js`, edit the following line:
@@ -188,7 +187,7 @@ npm run deploy-s3 -- -b "cesium-public-builds" -d cesium/$BRANCH -c 'no-cache' -
 const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
 ```
 
-- Edit the URL to match the URL of the S3 bucket specified in the previous step.
+- Edit the URL to match the URL hosting the S3 bucket specified in the previous step.
 
 ### Configure S3 Credentials
 
