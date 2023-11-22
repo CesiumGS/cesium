@@ -97,7 +97,21 @@ jobs:
       - uses: ./.github/actions/verify-package
       - name: deploy to s3
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
-        run: npm run deploy-s3 -- -b "cesium-public-builds" -d cesium/$BRANCH -c 'no-cache' --confirm 
+        run: |
+          aws s3 sync . s3://cesium-public-builds/cesium/$BRANCH/ \
+          --cache-control "no-cache" \
+          --exclude ".git/*" \
+          --exclude ".concierge/*" \
+          --exclude ".github/*" \
+          --exclude ".husky/*" \
+          --exclude ".vscode/*" \
+          --exclude "Build/Coverage/*" \
+          --exclude "Build/CesiumDev/*" \
+          --exclude "Documentation/*" \
+          --exclude "node_modules/*" \
+          --exclude "scripts/*" \
+          --exclude "Tools/*" \
+          --delete 
       - name: set status
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: npm run deploy-status -- --status success --message Deployed
