@@ -2117,6 +2117,8 @@ describe(
           getHeight: function () {
             return 0.0;
           },
+          terrainExaggeration: 1.0,
+          terrainExaggerationRelativeHeight: 0.0,
           _surface: {
             tileProvider: {},
             _tileLoadQueueHigh: [],
@@ -2128,13 +2130,11 @@ describe(
           },
           imageryLayersUpdatedEvent: new Event(),
           destroy: function () {},
+          beginFrame: function () {},
+          endFrame: function () {},
+          terrainProviderChanged: new Event(),
         };
 
-        globe.beginFrame = function () {};
-
-        globe.endFrame = function () {};
-
-        globe.terrainProviderChanged = new Event();
         Object.defineProperties(globe, {
           terrainProvider: {
             set: function (value) {
