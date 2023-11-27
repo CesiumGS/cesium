@@ -14,6 +14,8 @@ function createGlobe(ellipsoid) {
     getHeight: function () {
       return 0.0;
     },
+    terrainExaggeration: 1.0,
+    terrainExaggerationRelativeHeight: 0.0,
     _surface: {},
     imageryLayersUpdatedEvent: new Event(),
     _terrainProvider: undefined,
