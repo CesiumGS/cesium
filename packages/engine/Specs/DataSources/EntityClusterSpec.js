@@ -29,6 +29,8 @@ describe(
       });
       scene.globe = {
         ellipsoid: Ellipsoid.WGS84,
+        terrainExaggeration: 1.0,
+        terrainExaggerationRelativeHeight: 0.0,
         _surface: {
           tileProvider: {},
           _tileLoadQueueHigh: [],
@@ -37,6 +39,7 @@ describe(
           _debug: {
             tilesWaitingForChildren: 0,
           },
+          updateHeight: function () {},
         },
         terrainProviderChanged: new Event(),
         imageryLayersUpdatedEvent: new Event(),
@@ -44,15 +47,12 @@ describe(
         update: function () {},
         render: function () {},
         endFrame: function () {},
+        destroy: function () {},
       };
 
       scene.globe.getHeight = function () {
         return 0.0;
       };
-
-      scene.globe.destroy = function () {};
-
-      scene.globe._surface.updateHeight = function () {};
 
       scene.globe.terrainProviderChanged = new Event();
       Object.defineProperties(scene.globe, {
