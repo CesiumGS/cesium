@@ -28,9 +28,9 @@ describe("Core/sampleTerrainMostDetailed", function () {
     expect(positions[1].height).toBeLessThan(10000);
   });
 
-  it("should throw querying heights from Small Terrain", async function () {
+  it("should throw querying heights from terrain without availability", async function () {
     const terrainProvider = await CesiumTerrainProvider.fromUrl(
-      "https://s3.amazonaws.com/cesiumjs/smallTerrain"
+      "Data/CesiumTerrainTileJson/StandardHeightmap.tile.json"
     );
 
     const positions = [
