@@ -59,25 +59,32 @@ RayShapeIntersection removeNegativeIntersection(in Ray ray, in RayShapeIntersect
         return positive;
     }
 
-    // Assume entry < exit for both intersections.
-
+    // Assume entry.w < exit.w for both intersections.
     if (positive.entry.w < negative.entry.w) {
-        // TODO: if positive.entry < negative.entry < negative.exit < positive.exit,
-        // we have 2 possible intersections, and we want to choose the first one AFTER
-        // the current ray T. This code always returns the first one, regardless of T.
-        vec4 exit = intersectionMin(positive.exit, negative.entry);
-        return RayShapeIntersection(positive.entry, exit);
-    }
-
-    if (positive.exit.w < negative.exit.w) {
+        if (positive.exit.w < negative.exit.w) {
+            // case 1: positive.entry < positive.exit < negative.entry < negative.exit
+            // case 2: positive.entry < negative.entry < positive.exit < negative.exit
+            vec4 exit = intersectionMin(positive.exit, negative.entry);
+            return RayShapeIntersection(positive.entry, exit);
+        } else if (negative.entry.w > 0.0) {
+            // case 3: positive.entry < negative.entry < negative.exit < positive.exit
+            // Two intersections. Use the first one.
+            return RayShapeIntersection(positive.entry, negative.entry);
+        } else {
+            // case 3: positive.entry < negative.entry < negative.exit < positive.exit
+            // Two intersections, but the first one is behind the ray position
+            return RayShapeIntersection(negative.exit, positive.exit);
+        }
+    } else if (positive.exit.w < negative.exit.w) {
+        // case 4: negative.entry < positive.entry < positive.exit < negative.exit
         // Positive shape is entirely inside the negative volume
         return RayShapeIntersection(miss, miss);
+    } else {
+        // case 5: negative.entry < positive.entry < negative.exit < positive.exit
+        // case 6: negative.entry < negative.exit < positive.entry < positive.exit
+        vec4 entry = intersectionMax(positive.entry, negative.exit);
+        return RayShapeIntersection(entry, positive.exit);
     }
-
-    // case: negative.entry < positive.entry < negative.exit < positive.exit
-    // case: negative.entry < negative.exit < positive.entry < positive.exit
-    vec4 entry = intersectionMax(positive.entry, negative.exit);
-    return RayShapeIntersection(entry, positive.exit);
 }
 
 /**

@@ -96,6 +96,7 @@ function VoxelEllipsoidShape() {
    */
   this.shaderUniforms = {
     ellipsoidRadiiUv: new Cartesian3(),
+    eccentricitySquared: 0.0,
     ellipsoidInverseRadiiSquaredUv: new Cartesian3(),
     ellipsoidRenderLongitudeMinMax: new Cartesian2(),
     ellipsoidShapeUvLongitudeMinMaxMid: new Cartesian3(),
@@ -427,6 +428,9 @@ VoxelEllipsoidShape.prototype.update = function (
     shapeMaxExtent,
     shaderUniforms.ellipsoidRadiiUv
   );
+  const axisRatio =
+    Cartesian3.minimumComponent(shapeOuterExtent) / shapeMaxExtent;
+  shaderUniforms.eccentricitySquared = 1.0 - axisRatio * axisRatio;
 
   // Used to compute geodetic surface normal.
   shaderUniforms.ellipsoidInverseRadiiSquaredUv = Cartesian3.divideComponents(

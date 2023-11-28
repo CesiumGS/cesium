@@ -28,12 +28,13 @@ float hash(vec2 p)
 }
 #endif
 
-vec4 getCellIntersection(in SampleData sampleData, in Ray viewRay, in RayShapeIntersection shapeIntersection, in float currentT) {
+vec4 getNextRayPosition(inout Ray viewRay, in SampleData sampleData, in RayShapeIntersection shapeIntersection, in float currentT) {
     float lodStep = u_stepSize / pow(2.0, float(sampleData.tileCoords.w));
 #if defined(CONSTANT_STEP)
     // Shrink the step size for points closer to the camera
     // float dt = min(lodStep, lodStep * max(0.04, 4.0 * currentT));
-    return vec4(viewRay.dir, currentT + lodStep);
+    viewRay.pos += lodStep * viewRay.dir;
+    return vec4(viewRay.dir, lodStep);
 #else
     #if defined(SHAPE_BOX)
         VoxelBounds voxel = constructVoxelBounds(sampleData.tileCoords, sampleData.tileUv);
@@ -41,13 +42,12 @@ vec4 getCellIntersection(in SampleData sampleData, in Ray viewRay, in RayShapeIn
         VoxelCell voxel = constructVoxelCell(sampleData.tileCoords, sampleData.tileUv);
     #endif
     RayShapeIntersection voxelIntersection = intersectVoxel(viewRay, voxel);
-    vec4 entry = intersectionMax(shapeIntersection.entry, voxelIntersection.entry);
-    float exit = min(voxelIntersection.exit.w, shapeIntersection.exit.w);
-    //float dt = (exit - entry.w) * u_stepSize;
-    //dt = clamp(dt, 0.05 * lodStep, lodStep);
-    float dt = exit * lodStep * 100.0;
-    dt = clamp(dt, 0.001 * lodStep, lodStep);
-    return vec4(normalize(entry.xyz), exit + dt);
+    vec4 exit = intersectionMin(voxelIntersection.exit, shapeIntersection.exit);
+    float dt = 50.0 * currentT * lodStep / clamp(dot(exit.xyz, viewRay.dir), 0.05, 1.0);
+    dt = clamp(dt, 0.01 * lodStep, 0.5 * lodStep);
+    vec3 dPosition = (exit.w + dt) * viewRay.dir;
+    viewRay.pos += dPosition;
+    return vec4(-1.0 * normalize(exit.xyz), exit.w);
 #endif
 }
 
@@ -68,30 +68,28 @@ void main()
 
     Intersections ix;
     RayShapeIntersection shapeIntersection = intersectScene(screenCoord, viewRayUv, ix);
+    vec4 cellIntersection = shapeIntersection.entry;
 
     // Exit early if the scene was completely missed.
-    if (shapeIntersection.entry.w == NO_HIT) {
+    if (cellIntersection.w == NO_HIT) {
         discard;
     }
 
-    float currT = shapeIntersection.entry.w;
-    currT += currT * u_stepSize * 0.25;
-    float endT = shapeIntersection.exit.w;
-    vec3 positionUv = viewPosUv + currT * viewDirUv;
-    vec3 positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
+    float currT = cellIntersection.w;
+    vec3 dPosition = (currT + 0.01 * u_stepSize) * viewDirUv;
+    viewRayUv.pos = viewPosUv + dPosition;
 
     // Traverse the tree from the start position
+    vec3 positionUvShapeSpace = convertUvToShapeUvSpace(viewRayUv.pos);
     TraversalData traversalData;
     SampleData sampleDatas[SAMPLE_COUNT];
     traverseOctreeFromBeginning(positionUvShapeSpace, traversalData, sampleDatas);
-    vec4 cellIntersection = getCellIntersection(sampleDatas[0], viewRayUv, shapeIntersection, currT);
-    float dt = cellIntersection.w - currT;
 
     #if defined(JITTER)
         float noise = hash(screenCoord); // [0,1]
-        currT += noise * dt;
-        cellIntersection.w += noise * dt;
-        positionUv += noise * dt * viewDirUv;
+        float lodStep = u_stepSize / pow(2.0, float(sampleDatas[0].tileCoords.w));
+        currT += noise * lodStep;
+        viewRayUv.pos += noise * lodStep * viewDirUv;
     #endif
 
     FragmentInput fragmentInput;
@@ -99,7 +97,7 @@ void main()
         setStatistics(fragmentInput.metadata.statistics);
     #endif
 
-    vec4 colorAccum =vec4(0.0);
+    vec4 colorAccum = vec4(0.0);
 
     for (int stepCount = 0; stepCount < STEP_COUNT_MAX; ++stepCount) {
         // Read properties from the megatexture based on the traversal state
@@ -107,13 +105,14 @@ void main()
 
         // Prepare the custom shader inputs
         copyPropertiesToMetadata(properties, fragmentInput.metadata);
-        fragmentInput.voxel.positionUv = positionUv;
+        fragmentInput.voxel.positionUv = viewRayUv.pos;
         fragmentInput.voxel.positionShapeUv = positionUvShapeSpace;
         fragmentInput.voxel.positionUvLocal = sampleDatas[0].tileUv;
         fragmentInput.voxel.viewDirUv = viewDirUv;
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.surfaceNormal = cellIntersection.xyz;
-        fragmentInput.voxel.travelDistance = dt;
+        fragmentInput.voxel.stepCount = stepCount;
+        fragmentInput.voxel.travelDistance = cellIntersection.w;
 
         // Run the custom shader
         czm_modelMaterial materialOutput;
@@ -133,18 +132,16 @@ void main()
             break;
         }
 
-        if (dt == 0.0) {
-            // Shape is infinitely thin. The ray may have hit the edge of a
-            // foreground voxel. Step ahead slightly to check for more voxels
-            cellIntersection.w += 0.0000001;
-        }
-
         // Keep raymarching
-        currT = cellIntersection.w;
-        positionUv = viewPosUv + currT * viewDirUv;
+        cellIntersection = getNextRayPosition(viewRayUv, sampleDatas[0], shapeIntersection, currT);        
+        currT += cellIntersection.w;
+        #if defined(CONSTANT_STEP)
+        // Convert to accumulation of dT. Adding small dPositions accumulates direction errors
+        viewRayUv.pos = viewPosUv + currT * viewDirUv;
+        #endif
 
         // Check if there's more intersections.
-        if (currT >= endT) {
+        if (currT >= shapeIntersection.exit.w) {
             #if (INTERSECTION_COUNT == 1)
                 break;
             #else
@@ -153,20 +150,25 @@ void main()
                     break;
                 } else {
                     // Found another intersection. Resume raymarching there
-                    currT = shapeIntersection.entry.w;
-                    currT += currT * u_stepSize * 0.25;
-                    endT = shapeIntersection.exit.w;
-                    positionUv = viewPosUv + currT * viewDirUv;
+                    cellIntersection = shapeIntersection.entry;
+                    float dt = cellIntersection.w - currT;
+                    currT = cellIntersection.w;
+                    cellIntersection.w = dt;
+                    dPosition = (currT + 0.01 * u_stepSize) * viewDirUv;
+                    viewRayUv.pos = viewPosUv + dPosition;
+                    #if defined(JITTER)
+                        lodStep = u_stepSize / pow(2.0, float(sampleDatas[0].tileCoords.w));
+                        currT += noise * lodStep;
+                        viewRayUv.pos += noise * lodStep * viewDirUv;
+                    #endif
                 }
             #endif
         }
 
         // Traverse the tree from the current ray position.
         // This is similar to traverseOctreeFromBeginning but is faster when the ray is in the same tile as the previous step.
-        positionUvShapeSpace = convertUvToShapeUvSpace(positionUv);
+        positionUvShapeSpace = convertUvToShapeUvSpace(viewRayUv.pos);
         traverseOctreeFromExisting(positionUvShapeSpace, traversalData, sampleDatas);
-        cellIntersection = getCellIntersection(sampleDatas[0], viewRayUv, shapeIntersection, currT);
-        dt = cellIntersection.w - currT;
     }
 
     // Convert the alpha from [0,ALPHA_ACCUM_MAX] to [0,1]

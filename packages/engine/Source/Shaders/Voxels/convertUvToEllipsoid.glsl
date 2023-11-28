@@ -110,7 +110,7 @@ vec3 convertShapeToShapeUvSpace(in vec3 positionShape) {
     #endif
 
     // Height: scale to the range [0, 1]
-    float height = positionShape.z * u_ellipsoidInverseHeightDifferenceUv;
+    float height = 1.0 + positionShape.z * u_ellipsoidInverseHeightDifferenceUv;
 
     return vec3(longitude, latitude, height);
 }
