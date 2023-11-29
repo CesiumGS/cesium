@@ -1751,6 +1751,10 @@ function createSphere(sphere, transform, result) {
   return new TileBoundingSphere(center, radius);
 }
 
+const scratchBoundingSphere = new BoundingSphere();
+const scratchExaggeratedBox = new Array(OrientedBoundingBox.packedLength);
+const scratchExaggeratedSphere = new Array(BoundingSphere.packedLength);
+
 /**
  * Create a bounding volume from the tile's bounding volume header.
  *
@@ -1793,7 +1797,29 @@ Cesium3DTile.prototype.createBoundingVolume = function (
 
   const { box, region, sphere } = boundingVolumeHeader;
   if (defined(box)) {
-    return createBox(box, transform, result);
+    const exaggeratedCorners = OrientedBoundingBox.unpack(
+      box,
+      0,
+      scratchOrientedBoundingBox
+    )
+      .computeCorners()
+      .map((corner) =>
+        VerticalExaggeration.getPosition(
+          corner,
+          Ellipsoid.WGS84,
+          this._verticalExaggeration,
+          this._verticalExaggerationRelativeHeight,
+          corner
+        )
+      );
+    const exaggeratedBox = OrientedBoundingBox.pack(
+      OrientedBoundingBox.fromPoints(
+        exaggeratedCorners,
+        scratchOrientedBoundingBox
+      ),
+      scratchExaggeratedBox
+    );
+    return createBox(exaggeratedBox, transform, result);
   }
   if (defined(region)) {
     const exaggeratedRegion = region.slice();
@@ -1815,7 +1841,24 @@ Cesium3DTile.prototype.createBoundingVolume = function (
     );
   }
   if (defined(sphere)) {
-    return createSphere(sphere, transform, result);
+    const boundingSphere = BoundingSphere.unpack(
+      sphere,
+      0,
+      scratchBoundingSphere
+    );
+    boundingSphere.center = VerticalExaggeration.getPosition(
+      boundingSphere.center,
+      Ellipsoid.WGS84,
+      this._verticalExaggeration,
+      this._verticalExaggerationRelativeHeight,
+      boundingSphere.center
+    );
+    boundingSphere.radius *= this._verticalExaggeration;
+    const exaggeratedSphere = BoundingSphere.pack(
+      boundingSphere,
+      scratchExaggeratedSphere
+    );
+    return createSphere(exaggeratedSphere, transform, result);
   }
   throw new RuntimeError(
     "boundingVolume must contain a sphere, region, or box"
