@@ -1797,6 +1797,9 @@ Cesium3DTile.prototype.createBoundingVolume = function (
 
   const { box, region, sphere } = boundingVolumeHeader;
   if (defined(box)) {
+    if (this._verticalExaggeration === 1.0) {
+      return createBox(box, transform, result);
+    }
     const exaggeratedCorners = OrientedBoundingBox.unpack(
       box,
       0,
@@ -1841,6 +1844,9 @@ Cesium3DTile.prototype.createBoundingVolume = function (
     );
   }
   if (defined(sphere)) {
+    if (this._verticalExaggeration === 1.0) {
+      return createSphere(sphere, transform, result);
+    }
     const boundingSphere = BoundingSphere.unpack(
       sphere,
       0,
