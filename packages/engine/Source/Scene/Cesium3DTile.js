@@ -1715,6 +1715,16 @@ function createRegion(region, transform, initialTransform, result) {
 
   const rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
 
+  if (defined(result)) {
+    result.rectangle = rectangleRegion;
+    result.minimumHeight = region[4];
+    result.maximumHeight = region[5];
+    // The TileBoundingRegion was already constructed with the default
+    // WGS84 ellipsoid, so keep it consistent when updating.
+    result.computeBoundingVolumes(Ellipsoid.WGS84);
+    return result;
+  }
+
   return new TileBoundingRegion({
     rectangle: rectangleRegion,
     minimumHeight: region[4],
@@ -1750,10 +1760,6 @@ function createSphere(sphere, transform, result) {
   }
   return new TileBoundingSphere(center, radius);
 }
-
-const scratchBoundingSphere = new BoundingSphere();
-const scratchExaggeratedBox = new Array(OrientedBoundingBox.packedLength);
-const scratchExaggeratedSphere = new Array(BoundingSphere.packedLength);
 
 /**
  * Create a bounding volume from the tile's bounding volume header.
@@ -1797,79 +1803,105 @@ Cesium3DTile.prototype.createBoundingVolume = function (
 
   const { box, region, sphere } = boundingVolumeHeader;
   if (defined(box)) {
-    if (this._verticalExaggeration === 1.0) {
-      return createBox(box, transform, result);
-    }
-    const exaggeratedCorners = OrientedBoundingBox.unpack(
-      box,
-      0,
-      scratchOrientedBoundingBox
-    )
-      .computeCorners()
-      .map((corner) =>
-        VerticalExaggeration.getPosition(
-          corner,
-          Ellipsoid.WGS84,
-          this._verticalExaggeration,
-          this._verticalExaggerationRelativeHeight,
-          corner
-        )
+    const tileOrientedBoundingBox = createBox(box, transform, result);
+    if (this._verticalExaggeration !== 1.0) {
+      exaggerateBoundingBox(
+        tileOrientedBoundingBox,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight
       );
-    const exaggeratedBox = OrientedBoundingBox.pack(
-      OrientedBoundingBox.fromPoints(
-        exaggeratedCorners,
-        scratchOrientedBoundingBox
-      ),
-      scratchExaggeratedBox
-    );
-    return createBox(exaggeratedBox, transform, result);
+    }
+    return tileOrientedBoundingBox;
   }
   if (defined(region)) {
-    const exaggeratedRegion = region.slice();
-    exaggeratedRegion[4] = VerticalExaggeration.getHeight(
-      exaggeratedRegion[4],
-      this._verticalExaggeration,
-      this._verticalExaggerationRelativeHeight
-    );
-    exaggeratedRegion[5] = VerticalExaggeration.getHeight(
-      exaggeratedRegion[5],
-      this._verticalExaggeration,
-      this._verticalExaggerationRelativeHeight
-    );
-    return createRegion(
-      exaggeratedRegion,
+    const tileBoundingVolume = createRegion(
+      region,
       transform,
       this._initialTransform,
       result
     );
+    if (this._verticalExaggeration === 1.0) {
+      return tileBoundingVolume;
+    }
+    if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
+      exaggerateBoundingBox(
+        tileBoundingVolume,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight
+      );
+    } else {
+      tileBoundingVolume.minimumHeight = VerticalExaggeration.getHeight(
+        tileBoundingVolume.minimumHeight,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight
+      );
+      tileBoundingVolume.maximumHeight = VerticalExaggeration.getHeight(
+        tileBoundingVolume.maximumHeight,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight
+      );
+      tileBoundingVolume.computeBoundingVolumes(Ellipsoid.WGS84);
+    }
+    return tileBoundingVolume;
   }
   if (defined(sphere)) {
-    if (this._verticalExaggeration === 1.0) {
-      return createSphere(sphere, transform, result);
+    const tileBoundingSphere = createSphere(sphere, transform, result);
+    if (this._verticalExaggeration !== 1.0) {
+      const exaggeratedCenter = VerticalExaggeration.getPosition(
+        tileBoundingSphere.center,
+        Ellipsoid.WGS84,
+        this._verticalExaggeration,
+        this._verticalExaggerationRelativeHeight,
+        scratchCenter
+      );
+      const exaggeratedRadius =
+        tileBoundingSphere.radius * this._verticalExaggeration;
+      tileBoundingSphere.update(exaggeratedCenter, exaggeratedRadius);
     }
-    const boundingSphere = BoundingSphere.unpack(
-      sphere,
-      0,
-      scratchBoundingSphere
-    );
-    boundingSphere.center = VerticalExaggeration.getPosition(
-      boundingSphere.center,
-      Ellipsoid.WGS84,
-      this._verticalExaggeration,
-      this._verticalExaggerationRelativeHeight,
-      boundingSphere.center
-    );
-    boundingSphere.radius *= this._verticalExaggeration;
-    const exaggeratedSphere = BoundingSphere.pack(
-      boundingSphere,
-      scratchExaggeratedSphere
-    );
-    return createSphere(exaggeratedSphere, transform, result);
+    return tileBoundingSphere;
   }
   throw new RuntimeError(
     "boundingVolume must contain a sphere, region, or box"
   );
 };
+
+const scratchExaggeratedCorners = Cartesian3.unpackArray(
+  new Array(8 * 3).fill(0)
+);
+
+/**
+ * Exaggerates the bounding box of a tile based on the provided exaggeration factors.
+ *
+ * @private
+ * @param {TileOrientedBoundingBox} tileOrientedBoundingBox - The oriented bounding box of the tile.
+ * @param {number} exaggeration - The exaggeration factor to apply to the tile's bounding box.
+ * @param {number} exaggerationRelativeHeight - The height relative to which exaggeration will be applied.
+ */
+function exaggerateBoundingBox(
+  tileOrientedBoundingBox,
+  exaggeration,
+  exaggerationRelativeHeight
+) {
+  const exaggeratedCorners = tileOrientedBoundingBox.boundingVolume
+    .computeCorners(scratchExaggeratedCorners)
+    .map((corner) =>
+      VerticalExaggeration.getPosition(
+        corner,
+        Ellipsoid.WGS84,
+        exaggeration,
+        exaggerationRelativeHeight,
+        corner
+      )
+    );
+  const exaggeratedBox = OrientedBoundingBox.fromPoints(
+    exaggeratedCorners,
+    scratchOrientedBoundingBox
+  );
+  tileOrientedBoundingBox.update(
+    exaggeratedBox.center,
+    exaggeratedBox.halfAxes
+  );
+}
 
 /**
  * Update the tile's transform. The transform is applied to the tile's bounding volumes.
