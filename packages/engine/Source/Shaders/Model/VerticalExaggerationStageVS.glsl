@@ -14,8 +14,15 @@ void verticalExaggerationStage(
   vec3 centerToVertex = eyeToCenter * czm_eyeEllipsoidNormalEC + vertexPositionEC;
   vec3 vertexNormal = normalize(centerToVertex);
 
+  // Estimate the (sine of the) angle between the camera direction and the vertex normal
+  float verticalDistance = dot(vertexPositionEC, czm_eyeEllipsoidNormalEC);
+  float horizontalDistance = length(vertexPositionEC - verticalDistance * czm_eyeEllipsoidNormalEC);
+  float sinTheta = horizontalDistance / (eyeToCenter + verticalDistance);
+
   // Approximate the change in height above the ellipsoid, from camera to vertex position.
-  float versine = 1.0 - dot(czm_eyeEllipsoidNormalEC, vertexNormal);
+  float exactVersine = 1.0 - dot(czm_eyeEllipsoidNormalEC, vertexNormal);
+  float smallAngleVersine = 0.5 * sinTheta * sinTheta;
+  float versine = (sinTheta < 0.05) ? smallAngleVersine : exactVersine;
   float dHeight = dot(vertexPositionEC, vertexNormal) - eyeToCenter * versine;
   float vertexHeight = czm_eyeHeight + dHeight;
 
