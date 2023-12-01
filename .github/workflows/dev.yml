@@ -107,6 +107,7 @@ jobs:
           --exclude ".vscode/*" \
           --exclude "Build/Coverage/*" \
           --exclude "Build/CesiumDev/*" \
+          --exclude "Build/Specs/e2e" \
           --exclude "Documentation/*" \
           --exclude "node_modules/*" \
           --exclude "scripts/*" \
