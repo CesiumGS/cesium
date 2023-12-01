@@ -95,7 +95,6 @@
     "karma-spec-reporter": "^0.0.36",
     "markdownlint-cli": "^0.37.0",
     "merge-stream": "^2.0.0",
-    "mime": "^3.0.0",
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
     "open": "^9.1.0",
