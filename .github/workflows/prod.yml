@@ -46,8 +46,8 @@ jobs:
       - name: deploy to cesium.com
         if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         run: |
-          unzip Cesium-$(cat package.json | jq -r '.version' | cut -d '.' -f 1,2).zip -d Build/release/ -x "Apps"
-          aws s3 sync Build/release/ s3://cesium-website/cesiumjs/releases/$(cat package.json | jq -r '.version' | cut -d '.' -f 1,2)/ --cache-control "public, max-age=1800" --delete
+          unzip Cesium-$(cat package.json | jq -r '.version' | sed 's/.0$//').zip -d Build/release/ -x "Apps"
+          aws s3 sync Build/release/ s3://cesium-website/cesiumjs/releases/$(cat package.json | jq -r '.version' | sed 's/.0$//')/ --cache-control "public, max-age=1800" --delete
           aws s3 sync Build/Documentation/ s3://cesium-website/cesiumjs/ref-doc/ --cache-control "public, max-age=1800" --delete
           aws s3 sync Build/CesiumViewer/ s3://cesium-website/cesiumjs/cesium-viewer/ --cache-control "public, max-age=1800" --delete
           aws s3 sync Build/Sandcastle/ s3://cesium-sandcastle-website/ --cache-control "public, max-age=1800" --delete
