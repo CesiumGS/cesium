@@ -1119,7 +1119,6 @@ function setInfiniteProjection(uniformState, matrix) {
 }
 
 const surfacePositionScratch = new Cartesian3();
-const primeVerticalScratch = new Cartesian3();
 const enuTransformScratch = new Matrix4();
 
 function setCamera(uniformState, camera) {
@@ -1197,26 +1196,8 @@ function setCamera(uniformState, camera) {
     return;
   }
 
-  const primeVerticalEndpoint = ellipsoid.getSurfaceNormalIntersectionWithZAxis(
+  uniformState._eyeEllipsoidCurvature = ellipsoid.getLocalCurvature(
     surfacePosition,
-    0.0,
-    primeVerticalScratch
-  );
-  const primeVerticalRadius = Cartesian3.distance(
-    surfacePosition,
-    primeVerticalEndpoint
-  );
-  // meridional radius = (1 - e^2) * primeVerticalRadius^3 / a^2
-  // where 1 - e^2 = b^2 / a^2,
-  // so meridional = b^2 * primeVerticalRadius^3 / a^4
-  //   = (b * primeVerticalRadius / a^2)^2 * primeVertical
-  const radiusRatio =
-    (ellipsoid.minimumRadius * primeVerticalRadius) /
-    ellipsoid.maximumRadius ** 2;
-  const meridionalRadius = primeVerticalRadius * radiusRatio ** 2;
-  uniformState._eyeEllipsoidCurvature = Cartesian2.fromElements(
-    1.0 / primeVerticalRadius,
-    1.0 / meridionalRadius,
     uniformState._eyeEllipsoidCurvature
   );
 }
