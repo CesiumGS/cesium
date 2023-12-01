@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of ` Terrain`` and  `Cesium3DTileset`can be controlled simultaneously via the new`Scene`properties`Scene.verticalExaggeration`and`Scene.verticalExaggerationRelativeHeight`. [#11625](https://github.com/CesiumGS/cesium/pull/11655)
+
 ##### Fixes :wrench:
 
 - Corrected JSDoc and Typescript definitions that marked optional arguments as required in `Cesium3dTileset.fromIonAssetId` [#11623](https://github.com/CesiumGS/cesium/issues/11623), and `IonImageryProvider.fromAssetId` [#11624](https://github.com/CesiumGS/cesium/issues/11624)
