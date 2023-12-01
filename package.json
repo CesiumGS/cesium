@@ -51,8 +51,7 @@
   ],
   "dependencies": {
     "@cesium/engine": "^6.1.0",
-    "@cesium/widgets": "^4.3.0",
-    "meshoptimizer": "^0.20.0"
+    "@cesium/widgets": "^4.3.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.1",
