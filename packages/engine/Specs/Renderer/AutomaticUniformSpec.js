@@ -2174,6 +2174,30 @@ describe(
       expect({ context, fragmentShader }).contextToRender();
     });
 
+    it("has czm_modelToEnu", function () {
+      const { uniformState } = context;
+      const frameState = createFrameState(context, createMockCamera());
+      const ellipsoid = new Ellipsoid(1.0, 1.0, 1.0);
+      frameState.mapProjection = new GeographicProjection(ellipsoid);
+      uniformState.update(frameState);
+      const fragmentShader = `void main() {
+        out_FragColor = vec4(czm_modelToEnu != mat4(0.0));
+      }`;
+      expect({ context, fragmentShader }).contextToRender();
+    });
+
+    it("has czm_enuToModel", function () {
+      const { uniformState } = context;
+      const frameState = createFrameState(context, createMockCamera());
+      const ellipsoid = new Ellipsoid(1.0, 1.0, 1.0);
+      frameState.mapProjection = new GeographicProjection(ellipsoid);
+      uniformState.update(frameState);
+      const fragmentShader = `void main() {
+        out_FragColor = vec4(czm_enuToModel != mat4(0.0));
+      }`;
+      expect({ context, fragmentShader }).contextToRender();
+    });
+
     it("has czm_ellipsoidRadii", function () {
       const us = context.uniformState;
       const frameState = createFrameState(context, createMockCamera());
