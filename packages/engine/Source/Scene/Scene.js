@@ -358,6 +358,24 @@ function Scene(options) {
   this.nearToFarDistance2D = 1.75e6;
 
   /**
+   * The vertical exaggeration of the scene.
+   * When set to 1.0, no exaggeration is applied.
+   *
+   * @type {number}
+   * @default 1.0
+   */
+  this.verticalExaggeration = 1.0;
+
+  /**
+   * The reference height for vertical exaggeration of the scene.
+   * When set to 0.0, the exaggeration is applied relative to the ellipsoid surface.
+   *
+   * @type {number}
+   * @default 0.0
+   */
+  this.verticalExaggerationRelativeHeight = 0.0;
+
+  /**
    * This property is for debugging only; it is not for production use.
    * <p>
    * A function that determines what commands are executed.  As shown in the examples below,
@@ -1938,9 +1956,12 @@ Scene.prototype.updateFrameState = function () {
   frameState.cameraUnderground = this._cameraUnderground;
   frameState.globeTranslucencyState = this._globeTranslucencyState;
 
-  if (defined(this.globe)) {
-    frameState.verticalExaggeration = this.globe.terrainExaggeration;
-    frameState.verticalExaggerationRelativeHeight = this.globe.terrainExaggerationRelativeHeight;
+  frameState.verticalExaggeration = this.verticalExaggeration;
+  frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
+  if (defined(this.globe && this.verticalExaggeration !== 1.0)) {
+    // Update terrain exaggeration to match the rest of the scene
+    this.globe.terrainExaggeration = this.verticalExaggeration;
+    this.globe.terrainExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
   }
 
   if (
