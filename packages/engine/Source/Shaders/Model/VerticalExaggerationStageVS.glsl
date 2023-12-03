@@ -18,11 +18,12 @@ void verticalExaggerationStage(
   float verticalDistance = dot(vertexPositionEC, czm_eyeEllipsoidNormalEC);
   float horizontalDistance = length(vertexPositionEC - verticalDistance * czm_eyeEllipsoidNormalEC);
   float sinTheta = horizontalDistance / (eyeToCenter + verticalDistance);
+  bool isSmallAngle = clamp(sinTheta, 0.0, 0.05) == sinTheta;
 
   // Approximate the change in height above the ellipsoid, from camera to vertex position.
   float exactVersine = 1.0 - dot(czm_eyeEllipsoidNormalEC, vertexNormal);
   float smallAngleVersine = 0.5 * sinTheta * sinTheta;
-  float versine = (sinTheta < 0.05) ? smallAngleVersine : exactVersine;
+  float versine = isSmallAngle ? smallAngleVersine : exactVersine;
   float dHeight = dot(vertexPositionEC, vertexNormal) - eyeToCenter * versine;
   float vertexHeight = czm_eyeHeight + dHeight;
 
