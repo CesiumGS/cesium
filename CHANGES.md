@@ -6,7 +6,7 @@
 
 ##### Additions :tada:
 
-- Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of ` Terrain`` and  `Cesium3DTileset`can be controlled simultaneously via the new`Scene`properties`Scene.verticalExaggeration`and`Scene.verticalExaggerationRelativeHeight`. [#11625](https://github.com/CesiumGS/cesium/pull/11655)
+- Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of `Terrain` and `Cesium3DTileset` can be controlled simultaneously via the new `Scene` properties `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight`. [#11625](https://github.com/CesiumGS/cesium/pull/11655)
 
 ##### Fixes :wrench:
 
