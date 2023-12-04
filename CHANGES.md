@@ -7,6 +7,7 @@
 ##### Fixes :wrench:
 
 - Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
+- Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
 
 ### 1.112 - 2023-12-01
 
