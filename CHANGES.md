@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.113
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
+
 ### 1.112 - 2023-12-01
 
 #### @cesium/engine
