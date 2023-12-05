@@ -29,8 +29,6 @@ describe(
       });
       scene.globe = {
         ellipsoid: Ellipsoid.WGS84,
-        terrainExaggeration: 1.0,
-        terrainExaggerationRelativeHeight: 0.0,
         _surface: {
           tileProvider: {},
           _tileLoadQueueHigh: [],
