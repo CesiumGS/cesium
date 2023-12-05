@@ -12,6 +12,7 @@ function I3SField(parent, storageInfo) {
   this._storageInfo = storageInfo;
   this._parent = parent;
   this._dataProvider = parent._dataProvider;
+  this._loadPromise = undefined;
   const uri = `attributes/${storageInfo.key}/0`;
 
   if (defined(this._parent._nodeIndex)) {
@@ -54,9 +55,16 @@ Object.defineProperties(I3SField.prototype, {
    */
   values: {
     get: function () {
-      return defined(this._values) && defined(this._values.attributeValues)
-        ? this._values.attributeValues
-        : [];
+      if (defined(this._values)) {
+        // attribute data can be stored either as values or as object identifiers
+        if (defined(this._values.attributeValues)) {
+          return this._values.attributeValues;
+        }
+        if (defined(this._values.objectIds)) {
+          return this._values.objectIds;
+        }
+      }
+      return [];
     },
   },
   /**
@@ -92,40 +100,50 @@ function getNumericTypeSize(type) {
   return 0;
 }
 
+function getValueTypeSize(type) {
+  if (type === "String") {
+    return 1;
+  }
+  return getNumericTypeSize(type);
+}
+
+async function load(field) {
+  const data = await field._dataProvider._loadBinary(field._resource);
+
+  // Check if we have a 404
+  const dataView = new DataView(data);
+  if (dataView.getUint8(0) === "{".charCodeAt(0)) {
+    const textContent = new TextDecoder();
+    const str = textContent.decode(data);
+    if (str.includes("404")) {
+      console.error(`Failed to load: ${field.resource.url}`);
+      return;
+    }
+  }
+
+  field._data = data;
+  if (!field._validateHeader(dataView)) {
+    return;
+  }
+  const headerSize = field._parseHeader(dataView);
+  const offset = field._getBodyOffset(headerSize);
+  if (!field._validateBody(dataView, offset)) {
+    return;
+  }
+  field._parseBody(dataView, offset);
+}
+
 /**
  * Loads the content.
  * @returns {Promise<void>} A promise that is resolved when the field data is loaded
  */
 I3SField.prototype.load = function () {
-  const that = this;
-  return this._dataProvider._loadBinary(this._resource).then(function (data) {
-    // Check if we have a 404
-    const dataView = new DataView(data);
-    let success = true;
-    if (dataView.getUint8(0) === "{".charCodeAt(0)) {
-      const textContent = new TextDecoder();
-      const str = textContent.decode(data);
-      if (str.includes("404")) {
-        success = false;
-        console.error(`Failed to load: ${that.resource.url}`);
-      }
-    }
+  if (defined(this._loadPromise)) {
+    return this._loadPromise;
+  }
 
-    if (success) {
-      that._data = data;
-      let offset = that._parseHeader(dataView);
-
-      const valueSize = getNumericTypeSize(
-        that._storageInfo.attributeValues.valueType
-      );
-      if (valueSize > 0) {
-        // Values will be padded to align the addresses with the data size
-        offset = Math.ceil(offset / valueSize) * valueSize;
-      }
-
-      that._parseBody(dataView, offset);
-    }
-  });
+  this._loadPromise = load(this);
+  return this._loadPromise;
 };
 
 /**
@@ -217,7 +235,9 @@ I3SField.prototype._parseBody = function (dataView, offset) {
     itemIndex < this._storageInfo.ordering.length;
     itemIndex++
   ) {
-    const item = this._storageInfo.ordering[itemIndex];
+    const orderingValue = this._storageInfo.ordering[itemIndex];
+    // all strings in the ordering array correspond to the property name, except ObjectIds
+    const item = orderingValue === "ObjectIds" ? "objectIds" : orderingValue;
     const desc = this._storageInfo[item];
     if (defined(desc)) {
       this._values[item] = [];
@@ -250,6 +270,111 @@ I3SField.prototype._parseBody = function (dataView, offset) {
       }
     }
   }
+};
+
+/**
+ * @private
+ */
+I3SField.prototype._getBodyOffset = function (headerSize) {
+  let valueSize = 0;
+  if (defined(this._storageInfo.attributeValues)) {
+    valueSize = getNumericTypeSize(this._storageInfo.attributeValues.valueType);
+  } else if (defined(this._storageInfo.objectIds)) {
+    valueSize = getNumericTypeSize(this._storageInfo.objectIds.valueType);
+  }
+  if (valueSize > 0) {
+    // Values will be padded to align the addresses with the data size
+    return Math.ceil(headerSize / valueSize) * valueSize;
+  }
+  return headerSize;
+};
+
+/**
+ * @private
+ */
+I3SField.prototype._validateHeader = function (dataView) {
+  let headerSize = 0;
+  for (
+    let itemIndex = 0;
+    itemIndex < this._storageInfo.header.length;
+    itemIndex++
+  ) {
+    const item = this._storageInfo.header[itemIndex];
+    headerSize += getValueTypeSize(item.valueType);
+  }
+  if (dataView.byteLength < headerSize) {
+    console.error("Invalid attribute buffer size");
+    console.error(
+      ` (field: ${this.name}, header: ${headerSize}, actual: ${dataView.byteLength})`
+    );
+    return false;
+  }
+  return true;
+};
+
+/**
+ * @private
+ */
+I3SField.prototype._validateBody = function (dataView, offset) {
+  if (!defined(this._header.count)) {
+    console.error("Invalid attribute buffer");
+    console.error(` (field: ${this.name}, count is missing)`);
+    return false;
+  }
+  let attributeByteCountsOffset;
+  for (
+    let itemIndex = 0;
+    itemIndex < this._storageInfo.ordering.length &&
+    offset < dataView.byteLength;
+    itemIndex++
+  ) {
+    const orderingValue = this._storageInfo.ordering[itemIndex];
+    // all strings in the ordering array correspond to the property name, except ObjectIds
+    const item = orderingValue === "ObjectIds" ? "objectIds" : orderingValue;
+    const desc = this._storageInfo[item];
+    if (defined(desc)) {
+      if (desc.valueType !== "String") {
+        if (item === "attributeByteCounts") {
+          attributeByteCountsOffset = offset;
+        }
+        const valueSize = getNumericTypeSize(desc.valueType);
+        offset += valueSize * this._header.count;
+      } else {
+        if (!defined(attributeByteCountsOffset)) {
+          console.error("Invalid attribute buffer");
+          console.error(
+            ` (field: ${this.name}, attributeByteCounts is missing)`
+          );
+          return false;
+        }
+        for (
+          let index = 0;
+          index < this._header.count && offset < dataView.byteLength;
+          ++index
+        ) {
+          const parsedValue = this._parseValue(
+            dataView,
+            this._storageInfo.attributeByteCounts.valueType,
+            attributeByteCountsOffset
+          );
+          offset += parsedValue.value;
+          attributeByteCountsOffset = parsedValue.offset;
+        }
+      }
+    } else {
+      console.error("Invalid attribute buffer");
+      console.error(` (field: ${this.name}, ${item} is missing)`);
+      return false;
+    }
+  }
+  if (dataView.byteLength < offset) {
+    console.error("Invalid attribute buffer size");
+    console.error(
+      ` (field: ${this.name}, expected: ${offset}, actual: ${dataView.byteLength})`
+    );
+    return false;
+  }
+  return true;
 };
 
 export default I3SField;

@@ -50,7 +50,7 @@ Object.defineProperties(I3SFeature.prototype, {
 
 /**
  * Loads the content.
- * @returns {Promise} A promise that is resolved when the data of the I3S feature is loaded
+ * @returns {Promise<object>} A promise that is resolved when the data of the I3S feature is loaded
  * @private
  */
 I3SFeature.prototype.load = async function () {
