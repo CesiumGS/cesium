@@ -1,7 +1,9 @@
 import {
   Cesium3DTileset,
-  I3SLayer,
+  Color,
   I3SDataProvider,
+  I3SLayer,
+  I3SNode,
   Math as CesiumMath,
   Resource,
   RuntimeError,
@@ -70,6 +72,7 @@ describe("Scene/I3SLayer", function () {
 
   const layerData = {
     href: "mockLayerUrl",
+    layerType: "3DObject",
     nodePages: {
       lodSelectionMetricType: "maxScreenThresholdSQ",
       nodesPerPage: 2,
@@ -82,6 +85,8 @@ describe("Scene/I3SLayer", function () {
     spatialReference: { wkid: 4326 },
   };
   const layerData2 = {
+    id: 0,
+    layerType: "3DObject",
     nodePages: {
       lodSelectionMetricType: "maxScreenThresholdSQ",
       nodesPerPage: 2,
@@ -90,14 +95,30 @@ describe("Scene/I3SLayer", function () {
     attributeStorageInfo: [],
     store: { defaultGeometrySchema: {}, extent: [0, 1, 2, 3], version: "1.7" },
     spatialReference: { wkid: 4326 },
+    drawingInfo: {
+      renderer: {
+        type: "simple",
+        symbol: {
+          symbolLayers: [
+            {
+              type: "Fill",
+              edges: {
+                color: [255, 255, 255],
+                tranparency: 0,
+              },
+            },
+          ],
+        },
+      },
+    },
   };
 
   async function createMockI3SProvider(layerData, options) {
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(
+    spyOn(I3SDataProvider, "loadJson").and.returnValue(
       Promise.resolve(layerData)
     );
-    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
-      const tileset = new Cesium3DTileset();
+    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async (url, options) => {
+      const tileset = new Cesium3DTileset(options);
       tileset._root = {}; // Mock the root tile so that i3s property can be appended
       tileset._isI3STileSet = true;
       return tileset;
@@ -179,13 +200,17 @@ describe("Scene/I3SLayer", function () {
     ]);
   });
 
-  it("constructs I3SLayer from index", async function () {
+  it("constructs I3SLayer from id", async function () {
     spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
       Promise.resolve(nodePageResult)
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData2);
-    const testLayer = new I3SLayer(mockI3SProvider, layerData2, 0);
+    const testLayer = new I3SLayer(
+      mockI3SProvider,
+      layerData2,
+      mockI3SProvider
+    );
     expect(testLayer.data).toEqual(layerData2);
 
     expect(testLayer.resource.url).toContain("mockProviderUrl/layers/0/");
@@ -195,6 +220,19 @@ describe("Scene/I3SLayer", function () {
     expect(testLayer._extent.south).toEqual(CesiumMath.toRadians(1));
     expect(testLayer._extent.east).toEqual(CesiumMath.toRadians(2));
     expect(testLayer._extent.north).toEqual(CesiumMath.toRadians(3));
+
+    const spy = spyOn(I3SNode.prototype, "_filterFeatures");
+    await testLayer.filterByAttributes();
+    expect(spy).not.toHaveBeenCalled();
+
+    mockI3SProvider.show = false;
+    testLayer._updateVisibility();
+    expect(testLayer._tileset).toBeUndefined();
+    await testLayer.load();
+    expect(testLayer._tileset.show).toBeFalse();
+
+    await testLayer.filterByAttributes();
+    expect(spy).toHaveBeenCalled();
   });
 
   it("constructs I3SLayer from single layer url", async function () {
@@ -214,14 +252,18 @@ describe("Scene/I3SLayer", function () {
   });
 
   it("loads root node", async function () {
-    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(
       Promise.resolve(nodePageResult)
     );
 
     const mockI3SProvider = await createMockI3SProvider(layerData);
     const testLayer = mockI3SProvider.layers[0];
     expect(testLayer.rootNode).toBeDefined();
-    expect(testLayer.rootNode.data.index).toEqual(0);
+    expect(testLayer.rootNode.data.index).toEqual(rootNodePageEntry.index);
+    expect(testLayer.rootNode.data.children).toEqual(
+      rootNodePageEntry.children
+    );
+    expect(testLayer.rootNode.data.obb).toEqual(rootNodePageEntry.obb);
   });
 
   it("creates 3d tileset", async function () {
@@ -263,6 +305,7 @@ describe("Scene/I3SLayer", function () {
       Promise.resolve(nodePageResult)
     );
     const invalidLayerData = {
+      layerType: "3DObject",
       nodePages: {
         lodSelectionMetricType: "maxScreenThresholdSQ",
         nodesPerPage: 2,
@@ -281,5 +324,44 @@ describe("Scene/I3SLayer", function () {
       RuntimeError,
       `Unsupported spatial reference: ${invalidLayerData.spatialReference.wkid}`
     );
+  });
+
+  it("creates 3d tileset with outline color from symbology", async function () {
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodePageResult)
+    );
+
+    const mockI3SProvider = await createMockI3SProvider(layerData2, {
+      applySymbology: true,
+      cesium3dTilesetOptions: {},
+    });
+    const testLayer = mockI3SProvider.layers[0];
+
+    expect(testLayer.tileset).toBeDefined();
+    expect(testLayer.tileset.outlineColor.red).toEqual(1);
+    expect(testLayer.tileset.outlineColor.green).toEqual(1);
+    expect(testLayer.tileset.outlineColor.blue).toEqual(1);
+    expect(testLayer.tileset.outlineColor.alpha).toEqual(1);
+  });
+
+  it("creates 3d tileset with outline color from options", async function () {
+    const cesium3dTilesetOptions = {
+      outlineColor: new Color(0.5, 0.5, 0.5, 0.5),
+    };
+    spyOn(I3SLayer.prototype, "_loadNodePage").and.returnValue(
+      Promise.resolve(nodePageResult)
+    );
+
+    const mockI3SProvider = await createMockI3SProvider(layerData2, {
+      applySymbology: true,
+      cesium3dTilesetOptions: cesium3dTilesetOptions,
+    });
+    const testLayer = mockI3SProvider.layers[0];
+
+    expect(testLayer.tileset).toBeDefined();
+    expect(testLayer.tileset.outlineColor.red).toEqual(0.5);
+    expect(testLayer.tileset.outlineColor.green).toEqual(0.5);
+    expect(testLayer.tileset.outlineColor.blue).toEqual(0.5);
+    expect(testLayer.tileset.outlineColor.alpha).toEqual(0.5);
   });
 });
