@@ -272,6 +272,15 @@ describe("DataSources/GeoJsonDataSource", function () {
     },
   };
 
+  const featureWithEmptyTitle = {
+    type: "Feature",
+    geometry: point,
+    properties: {
+      title: "",
+      "fallback-title": "Has fallback Title",
+    },
+  };
+
   const featureWithId = {
     id: "myId",
     type: "Feature",
@@ -597,6 +606,17 @@ describe("DataSources/GeoJsonDataSource", function () {
         coordinatesToCartesian(featureWithNullName.geometry.coordinates)
       );
       expect(entity.billboard).toBeDefined();
+    });
+  });
+
+  it("Falls back to name-like property if title is empty", function () {
+    const dataSource = new GeoJsonDataSource();
+    return dataSource.load(featureWithEmptyTitle).then(function () {
+      const entityCollection = dataSource.entities;
+      const entity = entityCollection.values[0];
+      expect(entity.name).toBe(
+        featureWithEmptyTitle.properties["fallback-title"]
+      );
     });
   });
 
