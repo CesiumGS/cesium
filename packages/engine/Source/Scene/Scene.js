@@ -1900,17 +1900,14 @@ Scene.prototype.updateFrameState = function () {
 
   frameState.verticalExaggeration = this.verticalExaggeration;
   frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
-  if (defined(this.globe)) {
-    if (this.verticalExaggeration !== 1.0) {
-      // Update terrain exaggeration to match the rest of the scene
-      this.globe.terrainExaggeration = this.verticalExaggeration;
-      this.globe.terrainExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
-    } else {
-      // The new .verticalExaggeration was not set.
-      // Use the old globe.terrainExaggeration
-      frameState.verticalExaggeration = this.globe.terrainExaggeration;
-      frameState.verticalExaggerationRelativeHeight = this.globe.terrainExaggerationRelativeHeight;
-    }
+  const { globe } = this;
+  if (defined(globe) && globe._terrainExaggerationChanged) {
+    // Honor a user-set value for the old deprecated globe.terrainExaggeration.
+    // This can be removed when Globe.terrainExaggeration is removed.
+    frameState.verticalExaggeration = globe._terrainExaggeration;
+    frameState.verticalExaggerationRelativeHeight =
+      globe._terrainExaggerationRelativeHeight;
+    globe._terrainExaggerationChanged = false;
   }
 
   if (

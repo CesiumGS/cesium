@@ -2117,8 +2117,6 @@ describe(
           getHeight: function () {
             return 0.0;
           },
-          terrainExaggeration: 1.0,
-          terrainExaggerationRelativeHeight: 0.0,
           _surface: {
             tileProvider: {},
             _tileLoadQueueHigh: [],
