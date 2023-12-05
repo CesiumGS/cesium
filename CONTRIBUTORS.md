@@ -185,6 +185,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Robert Irving](https://github.com/robert-irving-snc)
 - [General Atomics CCRi](https://www.ga-ccri.com/)
   - [matthias-ccri](https://github.com/matthias-ccri)
+- [Applied Research Associates](https://www.ara.com)
+  - [mfarmer-ara](https://github.com/mfarmer-ara)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
