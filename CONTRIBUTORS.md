@@ -161,6 +161,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Jeshurun Hembd](https://github.com/jjhembd)
   - [Mia Tang](https://github.com/miatang13)
   - [Mark Dane](https://github.com/angrycat9000)
+  - [jjspace](https://github.com/jjspace)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
