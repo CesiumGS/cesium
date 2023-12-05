@@ -4,10 +4,13 @@
  * Co-authored-by: Anthony Mirabeau anthony.mirabeau@presagis.com
  * Co-authored-by: Elizabeth Rudkin elizabeth.rudkin@presagis.com
  * Co-authored-by: Tamrat Belayneh tbelayneh@esri.com
+ * Co-authored-by: Anton Smirnov anton.smirnov@actionengine.com
+ * Co-authored-by: Maxim Kuznetsov maxim.kuznetsov@actionengine.com
+ 
  *
  * The I3S format has been developed by Esri and is shared under an Apache 2.0 license and is maintained @ https://github.com/Esri/i3s-spec.
  * This implementation supports loading, displaying, and querying an I3S layer (supported versions include Esri github I3S versions 1.6, 1.7/1.8 -
- * whose OGC equivalent are I3S Community Standard Version 1.1 & 1.2) in the CesiumJS viewer.
+ * whose OGC equivalent are I3S Community Standard Version 1.1, 1.2 & 1.3) in the CesiumJS viewer.
  * It enables the user to access an I3S layer via its URL and load it inside of the CesiumJS viewer.
  *
  * When a scene layer is initialized it accomplishes the following:
@@ -57,6 +60,8 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import I3SLayer from "./I3SLayer.js";
+import I3SStatistics from "./I3SStatistics.js";
+import I3SSublayer from "./I3SSublayer.js";
 import Lerc from "lerc";
 import Rectangle from "../Core/Rectangle.js";
 
@@ -70,6 +75,10 @@ import Rectangle from "../Core/Rectangle.js";
  * @property {ArcGISTiledElevationTerrainProvider|Promise<ArcGISTiledElevationTerrainProvider>} [geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
  * @property {boolean} [traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
  * @property {Cesium3DTileset.ConstructorOptions} [cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
+ * @property {boolean} [enableFeatureFiltering=false] Determines if the features will be shown.
+ * @property {boolean} [adjustMaterialAlphaMode=false] The option to adjust the alpha mode of the material based on the transparency of the vertex color. When <code>true</code>, the alpha mode of the material (if not defined) will be set to BLEND for geometry with any transparency in the color vertex attribute.
+ * @property {boolean} [applySymbology=false] Determines if the I3S symbology will be parsed and applied for the layers.
+ * @property {boolean} [calculateNormals=false] Determines if the flat normals will be generated for I3S geometry without normals.
  */
 
 /**
@@ -123,6 +132,16 @@ function I3SDataProvider(options) {
   this._show = defaultValue(options.show, true);
   this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
   this._traceFetches = defaultValue(options.traceFetches, false);
+  this._enableFeatureFiltering = defaultValue(
+    options.enableFeatureFiltering,
+    false
+  );
+  this._adjustMaterialAlphaMode = defaultValue(
+    options.adjustMaterialAlphaMode,
+    false
+  );
+  this._applySymbology = defaultValue(options.applySymbology, false);
+  this._calculateNormals = defaultValue(options.calculateNormals, false);
 
   this._cesium3dTilesetOptions = defaultValue(
     options.cesium3dTilesetOptions,
@@ -130,12 +149,15 @@ function I3SDataProvider(options) {
   );
 
   this._layers = [];
+  this._sublayers = [];
   this._data = undefined;
   this._extent = undefined;
   this._geoidDataPromise = undefined;
   this._geoidDataList = undefined;
   this._decoderTaskProcessor = undefined;
   this._taskProcessorReadyPromise = undefined;
+  this._attributeStatistics = [];
+  this._layersExtent = [];
 }
 
 Object.defineProperties(I3SDataProvider.prototype, {
@@ -167,9 +189,7 @@ Object.defineProperties(I3SDataProvider.prototype, {
 
       this._show = value;
       for (let i = 0; i < this._layers.length; i++) {
-        if (defined(this._layers[i]._tileset)) {
-          this._layers[i]._tileset.show = this._show;
-        }
+        this._layers[i]._updateVisibility();
       }
     },
   },
@@ -217,6 +237,18 @@ Object.defineProperties(I3SDataProvider.prototype, {
   },
 
   /**
+   * Gets the collection of building sublayers.
+   * @memberof I3SDataProvider.prototype
+   * @type {I3SSublayer[]}
+   * @readonly
+   */
+  sublayers: {
+    get: function () {
+      return this._sublayers;
+    },
+  },
+
+  /**
    * Gets the I3S data for this object.
    * @memberof I3SDataProvider.prototype
    * @type {object}
@@ -249,6 +281,54 @@ Object.defineProperties(I3SDataProvider.prototype, {
   resource: {
     get: function () {
       return this._resource;
+    },
+  },
+
+  /**
+   * Determines if the features will be shown.
+   * @memberof I3SDataProvider.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  enableFeatureFiltering: {
+    get: function () {
+      return this._enableFeatureFiltering;
+    },
+  },
+
+  /**
+   * Determines if the alpha mode of the material will be adjusted depending on the color vertex attribute.
+   * @memberof I3SDataProvider.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  adjustMaterialAlphaMode: {
+    get: function () {
+      return this._adjustMaterialAlphaMode;
+    },
+  },
+
+  /**
+   * Determines if the I3S symbology will be parsed and applied for the layers.
+   * @memberof I3SDataProvider.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  applySymbology: {
+    get: function () {
+      return this._applySymbology;
+    },
+  },
+
+  /**
+   * Determines if the flat normals will be generated for I3S geometry without normals.
+   * @memberof I3SDataProvider.prototype
+   * @type {boolean}
+   * @readonly
+   */
+  calculateNormals: {
+    get: function () {
+      return this._calculateNormals;
     },
   },
 });
@@ -335,9 +415,104 @@ I3SDataProvider.prototype.updateForPass = function (frameState, passState) {
   }
 };
 
+function buildLayerUrl(provider, layerId) {
+  const dataProviderUrl = provider.resource.getUrlComponent();
+
+  let layerUrl = "";
+  if (dataProviderUrl.match(/layers\/\d/)) {
+    layerUrl = `${dataProviderUrl}`.replace(/\/+$/, "");
+  } else {
+    // Add '/' to url if needed + `$layers/${layerId}/` if tilesetUrl not already in ../layers/[id] format
+    layerUrl = `${dataProviderUrl}`
+      .replace(/\/?$/, "/")
+      .concat(`layers/${layerId}`);
+  }
+  return layerUrl;
+}
+
+async function addLayers(provider, data, options) {
+  if (data.layerType === "Building") {
+    if (!defined(options.enableFeatureFiltering)) {
+      // The Building Scene Layer requires features to be shown to support filtering
+      provider._enableFeatureFiltering = true;
+    }
+    if (!defined(options.adjustMaterialAlphaMode)) {
+      // The Building Scene Layer enables transparency by default
+      provider._adjustMaterialAlphaMode = true;
+    }
+    if (!defined(options.applySymbology)) {
+      // The Building Scene Layer applies symbology by default
+      provider._applySymbology = true;
+    }
+    if (!defined(options.calculateNormals)) {
+      // The Building Scene Layer calculates flat normals by default
+      provider._calculateNormals = true;
+    }
+
+    const buildingLayerUrl = buildLayerUrl(provider, data.id);
+    if (defined(data.sublayers)) {
+      const promises = [];
+      for (let i = 0; i < data.sublayers.length; i++) {
+        const promise = I3SSublayer._fromData(
+          provider,
+          buildingLayerUrl,
+          data.sublayers[i],
+          provider
+        );
+        promises.push(promise);
+      }
+      const sublayers = await Promise.all(promises);
+      for (let i = 0; i < sublayers.length; i++) {
+        const sublayer = sublayers[i];
+        provider._sublayers.push(sublayer);
+        provider._layers.push(...sublayer._i3sLayers);
+      }
+    }
+
+    if (defined(data.statisticsHRef)) {
+      const uri = buildingLayerUrl.concat(`/${data.statisticsHRef}`);
+      const statistics = new I3SStatistics(provider, uri);
+      await statistics.load();
+      provider._attributeStatistics.push(statistics);
+    }
+
+    if (defined(data.fullExtent)) {
+      const extent = Rectangle.fromDegrees(
+        data.fullExtent.xmin,
+        data.fullExtent.ymin,
+        data.fullExtent.xmax,
+        data.fullExtent.ymax
+      );
+      provider._layersExtent.push(extent);
+    }
+  } else if (
+    data.layerType === "3DObject" ||
+    data.layerType === "IntegratedMesh"
+  ) {
+    if (
+      !defined(options.calculateNormals) &&
+      !defined(data.textureSetDefinitions)
+    ) {
+      // I3S Layers without textures should calculate flat normals by default
+      provider._calculateNormals = true;
+    }
+
+    const newLayer = new I3SLayer(provider, data, provider);
+    provider._layers.push(newLayer);
+    if (defined(newLayer._extent)) {
+      provider._layersExtent.push(newLayer._extent);
+    }
+  } else {
+    // Filter other scene layer types out
+    console.log(
+      `${data.layerType} layer ${data.name} is skipped as not supported.`
+    );
+  }
+}
+
 /**
  * Creates an I3SDataProvider. Currently supported I3S versions are 1.6 and
- * 1.7/1.8 (OGC I3S 1.2).
+ * 1.7/1.8 (OGC I3S 1.3).
  *
  * @param {string|Resource} url The url of the I3S dataset, which should return an I3S scene object
  * @param {I3SDataProvider.ConstructorOptions} options An object describing initialization options
@@ -383,17 +558,14 @@ I3SDataProvider.fromUrl = async function (url, options) {
 
   // Success
   if (defined(data.layers)) {
+    const promises = [];
     for (let layerIndex = 0; layerIndex < data.layers.length; layerIndex++) {
-      const newLayer = new I3SLayer(
-        provider,
-        data.layers[layerIndex],
-        layerIndex
-      );
-      provider._layers.push(newLayer);
+      const promise = addLayers(provider, data.layers[layerIndex], options);
+      promises.push(promise);
     }
+    await Promise.all(promises);
   } else {
-    const newLayer = new I3SLayer(provider, data, data.id);
-    provider._layers.push(newLayer);
+    await addLayers(provider, data, options);
   }
 
   provider._computeExtent();
@@ -631,18 +803,61 @@ I3SDataProvider.prototype._computeExtent = function () {
   let rectangle;
 
   // Compute the extent from all layers
-  for (let layerIndex = 0; layerIndex < this._layers.length; layerIndex++) {
-    if (defined(this._layers[layerIndex]._extent)) {
-      const layerExtent = this._layers[layerIndex]._extent;
-      if (!defined(rectangle)) {
-        rectangle = Rectangle.clone(layerExtent);
-      } else {
-        Rectangle.union(rectangle, layerExtent, rectangle);
-      }
+  for (
+    let layerIndex = 0;
+    layerIndex < this._layersExtent.length;
+    layerIndex++
+  ) {
+    const layerExtent = this._layersExtent[layerIndex];
+    if (!defined(rectangle)) {
+      rectangle = Rectangle.clone(layerExtent);
+    } else {
+      Rectangle.union(rectangle, layerExtent, rectangle);
     }
   }
 
   this._extent = rectangle;
+};
+
+/**
+ * Returns the collection of names for all available attributes
+ * @returns {string[]} The collection of attribute names
+ */
+I3SDataProvider.prototype.getAttributeNames = function () {
+  const attributes = [];
+  for (let i = 0; i < this._attributeStatistics.length; ++i) {
+    attributes.push(...this._attributeStatistics[i].names);
+  }
+  return attributes;
+};
+
+/**
+ * Returns the collection of values for the attribute with the given name
+ * @param {string} name The attribute name
+ * @returns {string[]} The collection of attribute values
+ */
+I3SDataProvider.prototype.getAttributeValues = function (name) {
+  for (let i = 0; i < this._attributeStatistics.length; ++i) {
+    const values = this._attributeStatistics[i]._getValues(name);
+    if (defined(values)) {
+      return values;
+    }
+  }
+  return [];
+};
+
+/**
+ * Filters the drawn elements of a scene to specific attribute names and values
+ * @param {I3SNode.AttributeFilter[]} [filters=[]] The collection of attribute filters
+ * @returns {Promise<void>} A promise that is resolved when the filter is applied
+ */
+I3SDataProvider.prototype.filterByAttributes = function (filters) {
+  const promises = [];
+  for (let i = 0; i < this._layers.length; i++) {
+    const promise = this._layers[i].filterByAttributes(filters);
+    promises.push(promise);
+  }
+  return Promise.all(promises);
 };
 
 export default I3SDataProvider;
