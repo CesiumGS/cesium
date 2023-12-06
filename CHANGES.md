@@ -29,6 +29,8 @@
 ##### Additions :tada:
 
 - Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of `Terrain` and `Cesium3DTileset` can be controlled simultaneously via the new `Scene` properties `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight`. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
+- Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- Added `Cesium3DTileset.enableCameraCollision` to prevent the camera from going below a 3D tileset. Tilesets created with `createGooglePhotorealistic3DTileset` have this option enabled by default. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
 
 ##### Fixes :wrench:
 

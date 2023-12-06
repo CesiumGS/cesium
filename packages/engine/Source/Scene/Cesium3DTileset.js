@@ -3437,7 +3437,7 @@ const scratchIntersection = new Cartesian3();
 const scratchGetHeightCartographic = new Cartographic();
 
 /**
- * Get the height of the loaded surface at a given cartographic.
+ * Get the height of the loaded surface at a given cartographic. This function will only take into account meshes for loaded tiles, not neccisarily the most detailed tiles available for a tileset. This function will always return undefined when sampling a point cloud.
  *
  * @param {Cartographic} cartographic The cartographic for which to find the height.
  * @param {Scene} scene The scene where visualization is taking place.
