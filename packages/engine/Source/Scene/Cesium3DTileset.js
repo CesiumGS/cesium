@@ -154,6 +154,18 @@ import Ray from "../Core/Ray.js";
  * }
  *
  * @example
+ * // Keep camera from going under 3D tileset
+ * try {
+ *   const tileset = await Cesium.Cesium3DTileset.fromUrl(
+ *      "http://localhost:8002/tilesets/Seattle/tileset.json",
+ *      { enableCameraCollision: true }
+ *   );
+ *   scene.primitives.add(tileset);
+ * } catch (error) {
+ *   console.error(`Error creating tileset: ${error}`);
+ * }
+ *
+ * @example
  * // Common setting for the skipLevelOfDetail optimization
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *   "http://localhost:8002/tilesets/Seattle/tileset.json", {
@@ -3442,6 +3454,12 @@ const scratchGetHeightCartographic = new Cartographic();
  * @param {Cartographic} cartographic The cartographic for which to find the height.
  * @param {Scene} scene The scene where visualization is taking place.
  * @returns {number|undefined} The height of the cartographic or undefined if it could not be found.
+ *
+ * @example
+ * const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(124624234);
+ * scene.primitives.add(tileset);
+ *
+ * const height = tileset.getHeight(scene.camera.positionCartographic, scene);
  */
 Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
   //>>includeStart('debug', pragmas.debug);
