@@ -163,7 +163,6 @@ function Scene(options) {
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
   this._groundPrimitives = new PrimitiveCollection();
-  this._terrainTilesets = [];
 
   this._globeHeight = undefined;
   this._cameraUnderground = false;
@@ -3655,44 +3654,21 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
-/**
- * Allow camera collisions, if enabled for the camera, on a tileset surface
- * @param {Cesium3DTileset} tileset Tileset fo which to enable collision.
- */
-Scene.prototype.enableCollisionDetectionForTileset = function (tileset) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("tileset", tileset);
-  //>>includeEnd('debug');
-
-  this._terrainTilesets.push(tileset);
-};
-
-/**
- * Disallow camera collisions on a tileset surface
- * @param {Cesium3DTileset} tileset Tileset for which to disable collision.
- */
-Scene.prototype.disableCollisionDetectionForTileset = function (tileset) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("tileset", tileset);
-  //>>includeEnd('debug');
-
-  const i = this._terrainTilesets.indexOf(tileset);
-  if (i === -1) {
-    return;
-  }
-
-  this._terrainTilesets.splice(i, 1);
-};
-
 function getGlobeHeight(scene) {
   const globe = scene._globe;
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
 
   let maxHeight = Number.NEGATIVE_INFINITY;
-  for (const tileset of scene._terrainTilesets) {
-    const result = tileset.getHeight(cartographic, scene);
-    if (result > maxHeight) {
+  const length = scene.primitives.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = scene.primitives.get(i);
+    if (!primitive.isCesium3DTileset || !primitive.enableCameraCollision) {
+      continue;
+    }
+
+    const result = primitive.getHeight(cartographic, scene);
+    if (defined(result) && result > maxHeight) {
       maxHeight = result;
     }
   }

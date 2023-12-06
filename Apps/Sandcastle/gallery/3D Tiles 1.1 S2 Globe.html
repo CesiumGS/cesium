@@ -79,9 +79,9 @@
           // MAXAR OWT WFF 1.2 Base Globe
           tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1208297, {
             maximumScreenSpaceError: 4,
+            enableCameraCollision: true,
           });
           scene.primitives.add(tileset);
-          scene.enableCollisionDetectionForTileset(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
         }
