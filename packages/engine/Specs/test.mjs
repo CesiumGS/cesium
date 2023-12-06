@@ -1,9 +1,9 @@
-import { Cartographic, CesiumTerrainProvider, sampleTerrain } from "@cesium/engine";
+import { Cartographic, createWorldTerrainAsync, sampleTerrain } from "@cesium/engine";
 import assert from "node:assert";
 
 // NodeJS smoke screen test
 async function test() {
-  const provider = await CesiumTerrainProvider.fromUrl("https://s3.amazonaws.com/cesiumjs/smallTerrain");
+  const provider = await createWorldTerrainAsync();
   const results = await sampleTerrain(provider, 11, [
     Cartographic.fromDegrees(86.925145, 27.988257),
     Cartographic.fromDegrees(87.0, 28.0),
