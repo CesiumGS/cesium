@@ -46,6 +46,7 @@ import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createScene from "../../../../Specs/createScene.js";
 import generateJsonBuffer from "../../../../Specs/generateJsonBuffer.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
+import Ellipsoid from "../../Source/Core/Ellipsoid.js";
 
 describe(
   "Scene/Cesium3DTileset",
@@ -2574,6 +2575,21 @@ describe(
       );
 
       expect(tileset.pick(ray, scene.frameState)).toBeUndefined();
+    });
+
+    it("getHeight samples height at a cartographic position", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
+      viewRootOnly();
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      scene.renderForSpecs();
+
+      const center = Ellipsoid.WGS84.cartesianToCartographic(
+        tileset.boundingSphere.center
+      );
+      const height = tileset.getHeight(center, scene);
+      expect(height).toEqualEpsilon(78.1558019795064, CesiumMath.EPSILON12);
     });
 
     it("destroys", function () {
