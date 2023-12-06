@@ -4,6 +4,11 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- Added `Cesium3DTileset.enableCameraCollision` to prevent the camera from going below a 3D tileset. Tilesets created with `createGooglePhotorealistic3DTileset` have this option enabled by default. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+
 ##### Fixes :wrench:
 
 - Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
