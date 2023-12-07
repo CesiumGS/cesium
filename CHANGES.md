@@ -1,5 +1,28 @@
 # Change Log
 
+### 1.113 - 2024-01-02
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- Added `Cesium3DTileset.enableCameraCollision` to prevent the camera from going below a 3D tileset. Tilesets created with `createGooglePhotorealistic3DTileset` have this option enabled by default. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+
+##### Fixes :wrench:
+
+- Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
+- Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
+
+### 1.112 - 2023-12-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed terrain lockups in `requestTileGeometry` by ensuring promise handling aligns with CesiumJS's expectations. [#11630](https://github.com/CesiumGS/cesium/pull/11630)
+- Corrected JSDoc and Typescript definitions that marked optional arguments as required in `Cesium3dTileset.fromIonAssetId` [#11623](https://github.com/CesiumGS/cesium/issues/11623), and `IonImageryProvider.fromAssetId` [#11624](https://github.com/CesiumGS/cesium/issues/11624)
+
 ### 1.111 - 2023-11-01
 
 #### @cesium/engine
@@ -10,6 +33,9 @@
 
 ##### Fixes :wrench:
 
+- By default, `createGooglePhotorealistic3DTileset` no longer shows credits on screen but links to them instead, as this is compliant with the minimum required attribution. To restore this behavior, pass the option `showCreditsOnScreen: true`. [#11589](https://github.com/CesiumGS/cesium/pull/11589)
+- Fixed an issue with polygon hole rendering. [#11583](https://github.com/CesiumGS/cesium/issues/11583)
+- Fixed error with rhumb lines that have a 0 degree heading. [#11573](https://github.com/CesiumGS/cesium/pull/11573)
 - Fixed `czm_normal`, `czm_normal3D`, `czm_inverseNormal`, and `czm_inverseNormal3D` for cases where the model matrix has non-uniform scale. [#11553](https://github.com/CesiumGS/cesium/pull/11553)
 - Fixed issue with clustered labels when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
 - Fixed inconsistant clustering when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)

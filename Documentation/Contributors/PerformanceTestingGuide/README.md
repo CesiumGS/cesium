@@ -78,7 +78,7 @@ detail will be loaded.
 
 For performance testing, we want a reasonably detailed scene without hitting
 out-of-memory problems or the test taking a long time. Decrease
-`maximumScreenSpaceError` to as needed. For example:
+`maximumScreenSpaceError` as needed. For example:
 
 ```js
 tileset.maximumScreenSpaceError = 4;
@@ -86,7 +86,7 @@ tileset.maximumScreenSpaceError = 4;
 
 ### How to measure elapsed time
 
-In the browser, measuring elapsed time is quite simple using `performance.now()`:
+In the browser, measuring elapsed time is quite simple using [`performance.now()`](https://developer.mozilla.org/en-US/docs/Web/API/Performance/now):
 
 ```js
 const start = performance.now();

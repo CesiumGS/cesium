@@ -163,7 +163,6 @@ function Scene(options) {
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
   this._groundPrimitives = new PrimitiveCollection();
-  this._terrainTilesets = [];
 
   this._globeHeight = undefined;
   this._cameraUnderground = false;
@@ -3568,35 +3567,6 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
-/**
- * Allow camera collisions, if enabled for the camera, on a tileset surface
- * @param {Cesium3DTileset} tileset Tileset fo which to enable collision.
- */
-Scene.prototype.enableCollisionDetectionForTileset = function (tileset) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("tileset", tileset);
-  //>>includeEnd('debug');
-
-  this._terrainTilesets.push(tileset);
-};
-
-/**
- * Disallow camera collisions on a tileset surface
- * @param {Cesium3DTileset} tileset Tileset for which to disable collision.
- */
-Scene.prototype.disableCollisionDetectionForTileset = function (tileset) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("tileset", tileset);
-  //>>includeEnd('debug');
-
-  const i = this._terrainTilesets.indexOf(tileset);
-  if (i === -1) {
-    return;
-  }
-
-  this._terrainTilesets.splice(i, 1);
-};
-
 function getGlobeHeight(scene) {
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
@@ -3623,14 +3593,17 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
     heightReference === HeightReference.RELATIVE_TO_3D_TILE;
 
   let maxHeight = Number.NEGATIVE_INFINITY;
+
   if (!ignore3dTiles) {
-    for (const tileset of this._terrainTilesets) {
-      if (!tileset.show) {
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      if (!primitive.isCesium3DTileset || !primitive.enableCameraCollision) {
         continue;
       }
 
-      const result = tileset.getHeight(cartographic, this);
-      if (result > maxHeight) {
+      const result = primitive.getHeight(cartographic, this);
+      if (defined(result) && result > maxHeight) {
         maxHeight = result;
       }
     }

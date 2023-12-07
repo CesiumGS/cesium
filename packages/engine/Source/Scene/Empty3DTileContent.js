@@ -150,7 +150,7 @@ Empty3DTileContent.prototype.applyStyle = function (style) {};
 
 Empty3DTileContent.prototype.update = function (tileset, frameState) {};
 
-Empty3DTileContent.prototype.pick = function (ray, frameState) {
+Empty3DTileContent.prototype.pick = function (ray, frameState, result) {
   return undefined;
 };
 

@@ -41,11 +41,14 @@ import Resource from "../Core/Resource.js";
  */
 async function createGooglePhotorealistic3DTileset(key, options) {
   options = defaultValue(options, {});
-  options.showCreditsOnScreen = true;
   options.cacheBytes = defaultValue(options.cacheBytes, 1536 * 1024 * 1024);
   options.maximumCacheOverflowBytes = defaultValue(
     options.maximumCacheOverflowBytes,
     1024 * 1024 * 1024
+  );
+  options.enableCameraCollision = defaultValue(
+    options.enableCameraCollision,
+    true
   );
 
   key = defaultValue(key, GoogleMaps.defaultApiKey);

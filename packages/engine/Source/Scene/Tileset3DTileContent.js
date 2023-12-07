@@ -168,6 +168,10 @@ Tileset3DTileContent.prototype.applyStyle = function (style) {};
 
 Tileset3DTileContent.prototype.update = function (tileset, frameState) {};
 
+Tileset3DTileContent.prototype.pick = function (ray, frameState, result) {
+  return undefined;
+};
+
 Tileset3DTileContent.prototype.isDestroyed = function () {
   return false;
 };

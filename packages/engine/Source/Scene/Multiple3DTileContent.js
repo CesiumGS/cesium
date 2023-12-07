@@ -1,3 +1,4 @@
+import Cartesian3 from "../Core/Cartesian3.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
@@ -648,6 +649,47 @@ Multiple3DTileContent.prototype.update = function (tileset, frameState) {
   if (!this._ready && ready) {
     this._ready = true;
   }
+};
+
+/**
+ * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Multiple3DTileContent.prototype.pick = function (ray, frameState, result) {
+  if (!this._ready) {
+    return undefined;
+  }
+
+  let intersection;
+  let minDistance = Number.POSITIVE_INFINITY;
+  const contents = this._contents;
+  const length = contents.length;
+
+  for (let i = 0; i < length; ++i) {
+    const candidate = contents[i].pick(ray, frameState, result);
+
+    if (!defined(candidate)) {
+      continue;
+    }
+
+    const distance = Cartesian3.distance(ray.origin, candidate);
+    if (distance < minDistance) {
+      intersection = candidate;
+      minDistance = distance;
+    }
+  }
+
+  if (!defined(intersection)) {
+    return undefined;
+  }
+
+  return result;
 };
 
 Multiple3DTileContent.prototype.isDestroyed = function () {
