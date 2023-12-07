@@ -1,4 +1,5 @@
 import SceneMode from "./SceneMode.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 
 /**
  * State information about the current frame.  An instance of this class
@@ -272,6 +273,31 @@ function FrameState(context, creditDisplay, jobScheduler) {
     density: undefined,
     sse: undefined,
     minimumBrightness: undefined,
+  };
+
+  /**
+   * @typedef FrameState.Atmosphere
+   * @type {object}
+   * @property {Cartesian3} hsbShift A color shift to apply to the atmosphere color in HSB.
+   * @property {number} lightIntensity The intensity of the light that is used for computing the atmosphere color
+   * @property {Cartesian3} rayleighCoefficient The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   * @property {number} rayleighScaleHeight The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   * @property {Cartesian3} mieCoefficient The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   * @property {number} mieScaleHeight The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   * @property {number} mieAnisotropy The anisotropy of the medium to consider for Mie scattering.
+   */
+
+  /**
+   * @type {FrameState.Atmosphere}
+   */
+  this.atmosphere = {
+    hsbShift: new Cartesian3(),
+    lightIntensity: undefined,
+    rayleighCoefficient: new Cartesian3(),
+    rayleighScaleHeight: undefined,
+    mieCoefficient: new Cartesian3(),
+    mieScaleHeight: undefined,
+    mieAnisotropy: undefined,
   };
 
   /**

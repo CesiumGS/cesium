@@ -1,3 +1,4 @@
+import AtmosphereCommon from "../../Shaders/AtmosphereCommon.js";
 import FogStageFS from "../../Shaders/Model/FogStageFS.js";
 
 /**
@@ -12,7 +13,13 @@ const FogColorPipelineStage = {
 };
 
 FogColorPipelineStage.process = function (renderResources, model, frameState) {
-  renderResources.shaderBuilder.addFragmentLines(FogStageFS);
+  // TODO: AtmosphereCommon.glsl includes uniforms that really should be
+  // added separately to match the Model pipeline paradigm... Maybe that file could
+  // be split into multiple files.
+  renderResources.shaderBuilder.addFragmentLines([
+    AtmosphereCommon,
+    FogStageFS,
+  ]);
 };
 
 export default FogColorPipelineStage;
