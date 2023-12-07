@@ -1,10 +1,16 @@
+vec3 computeFogColor() {
+    //vec4 groundAtmosphereColor = computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
+    //vec3 fogColor = groundAtmosphereColor.rgb;
+    return vec3(1.0);
+}
+
 void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
     const vec4 FOG_COLOR = vec4(0.5, 0.0, 1.0, 1.0);
 
+    //vec3 fogColor = computeFogColor;
+
     // Note: camera is far away (distance > nightFadeOutDistance), scattering is computed in the fragment shader.
     // otherwise in the vertex shader. but for prototyping, I'll do everything in the FS for simplicity
-
-
 
     // Matches the constant in GlobeFS.glsl. This makes the fog falloff
     // more gradual.

@@ -158,6 +158,14 @@ function UniformState() {
 
   this._fogDensity = undefined;
 
+  this._atmosphereHsbShift = undefined;
+  this._atmosphereLightIntensity = undefined;
+  this._atmosphereRayleighCoefficient = new Cartesian3();
+  this._atmosphereRayleighScaleHeight = new Cartesian3();
+  this._atmosphereMieCoefficient = new Cartesian3();
+  this._atmosphereMieScaleHeight = undefined;
+  this._atmosphereMieAnisotropy = undefined;
+
   this._invertClassificationColor = undefined;
 
   this._splitPosition = 0.0;
@@ -866,6 +874,77 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * A color shift to apply to the atmosphere color in HSB.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereHsbShift: {
+    get: function () {
+      return this._atmosphereHsbShift;
+    },
+  },
+  /**
+   * The intensity of the light that is used for computing the atmosphere color
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereLightIntensity: {
+    get: function () {
+      return this._atmosphereLightIntensity;
+    },
+  },
+  /**
+   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereRayleighCoefficient: {
+    get: function () {
+      return this._atmosphereRayleighCoefficient;
+    },
+  },
+  /**
+   * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereRayleighScaleHeight: {
+    get: function () {
+      return this._atmosphereRayleighScaleHeight;
+    },
+  },
+  /**
+   * The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereMieCoefficient: {
+    get: function () {
+      return this._atmosphereMieCoefficient;
+    },
+  },
+  /**
+   * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereMieScaleHeight: {
+    get: function () {
+      return this._atmosphereMieScaleHeight;
+    },
+  },
+  /**
+   * The anisotropy of the medium to consider for Mie scattering.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereAnisotropy: {
+    get: function () {
+      return this._atmosphereAnisotropy;
+    },
+  },
+
+  /**
    * A scalar that represents the geometric tolerance per meter
    * @memberof UniformState.prototype
    * @type {number}
@@ -1293,6 +1372,24 @@ UniformState.prototype.update = function (frameState) {
   }
 
   this._fogDensity = frameState.fog.density;
+
+  this._atmosphereHsbShift = Cartesian3.clone(
+    frameState.atmosphere.hsbShift,
+    this._atmosphereHsbShift
+  );
+  this._atmosphereRayleighCoefficient = Cartesian3.clone(
+    frameState.atmosphere.rayleighCoefficient,
+    this._atmosphereRayleighCoefficient
+  );
+  this._atmosphereMieCoefficient = Cartesian3.clone(
+    frameState.atmosphere.mieCoefficient,
+    this._atmosphereMieCoefficient
+  );
+  this._atmospherelightIntensity = frameState.atmosphere.lightIntensity;
+  this._atmosphereRayleighScaleHeight =
+    frameState.atmosphere.rayleighScaleHeight;
+  this._atmosphereMieScaleHeight = frameState.atmosphere.mieScaleHeight;
+  this._atmosphereMieAnisotropy = frameState.atmosphere.mieAnisotropy;
 
   this._invertClassificationColor = frameState.invertClassificationColor;
 
