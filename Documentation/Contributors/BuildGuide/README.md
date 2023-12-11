@@ -7,10 +7,9 @@
     - [Development Server](#development-server)
     - [Build Output](#build-output)
   - [Build Scripts](#build-scripts)
-  - [Travis and Continuous Integration](#travis-and-continuous-integration)
+  - [Continuous Integration](#continuous-integration)
     - [Configure a Different S3 Bucket](#configure-a-different-s3-bucket)
     - [Configure S3 Credentials](#configure-s3-credentials)
-    - [Configure Statuses](#configure-statuses)
 
 ## Quickstart
 
@@ -95,7 +94,7 @@ npm start -- --help
 
 Cesium offers a few different distributions. When developing, make sure to pick the one that fits your app's architecture.
 
-- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle and optimized for the browser, which defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`. While much of our documentation uses IIFE-style globals for ease-of-use, we do not recommend this approach for production apps.
+- [IIFE (immediately-invoked function expression)](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) - A pre-processed bundle, optimized for the browser, and with web worker code inlined. It defines a `Cesium` global variable upon loading `Build/Cesium/Cesium.js`. This is what is available via the CDN. While much of our documentation uses IIFE-style globals for ease-of-use, we do not recommend this approach for production apps.
 - [ESM (ECMAScript modules)](https://nodejs.org/api/esm.html) - Standard for packaging JS code which is supported by most browsers and NodeJS. Modules use `import` and `export` statements. Unprocessed, individual modules are available in the `Source` directory, accessible by importing `Source/Cesium.js`; A single pre-processed bundle by importing `Build/Cesium/index.js`.
 - [CJS (CommonJS)](https://nodejs.org/api/modules.html) - A pre-processed, bundled module packaged for running in NodeJS accessible by requiring `index.cjs`.
 
@@ -149,66 +148,54 @@ Here's the full set of scripts and what they do.
   - `test-webgl-validation` - Runs all tests with Karma and enables low-level WebGL validation
   - `test-release` - Runs all tests on the minified release version of built Cesium
 - **Deployment scripts**
-  - `deploy-s3` - Deploys the built CesiumJS files, the npm package, and the zip file to Amazon S3. This requires having credentials set up for the S3 bucket to which you are deploying
-  - `deploy-status` - Sets the deployment statuses in GitHub, for use with Travis
-  - `deploy-set-version` - Sets the version of `package.json`, for use with Travis
+  - `deploy-status` - Sets the deployment statuses in GitHub, for use in CI
+  - `deploy-set-version` - Sets the version of `package.json`, for use in CI
 
-## Travis and Continuous Integration
+## Continuous Integration
 
-Cesium uses [Travis](https://travis-ci.com/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesium.com/blog/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explanation of the travis build process.
+Cesium uses [GitHub Actions](https://docs.github.com/en/actions) for continuous integration. Reusable actions are defined in `/.github/actions/` and workflows in `.github/workflows/`.
 
-Travis triggers a build whenever someone opens a pull request or pushes code to the Cesium repository. After the build has completed, at the bottom on the pull request, the status of the build is shown and you can access the build by clicking the "Details" link.
+(Although outdated, the blog post [Cesium Continuous Integration](http://cesium.com/blog/2016/04/07/Cesium-Continuous-Integration/) contains background on the CesiumJS CI process.)
 
-![Checks](checks_failed.jpg)
+A workflow is triggered whenever someone pushes code to the Cesium repository, or an external contributor opens a pull request. After the build has completed, at the bottom of the pull request page the status of the build is shown. In the dropdown menu, individual checks are displayed. Logs and deployed artifacts can be accessed by clicking the "Details" link.
 
-You can also access the build of any branch of CesiumJS by going to the [Cesium Branches](https://github.com/CesiumGS/cesium/branches/all) page, and clicking the icon next to the branch name.
+![GitHub Action Checks](github_action_checks.png)
 
-![Branches](branches.png)
+The build of any branch of CesiumJS can be accessed under the [Branches](https://github.com/CesiumGS/cesium/branches/all) page, and clicking the icon next to the branch name.
+
+![GitHub Branches](github_branches.png)
 
 Additional set up is required for deployment if you do not have commit access to Cesium.
 
 ### Configure a Different S3 Bucket
 
-It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket ([an Amazon Webservices storage unit](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html)). If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+It is possible to configure your development branch of CesiumJS to deploy build artifacts to a different [AWS S3 Bucket](http://docs.aws.amazon.com/AmazonS3/latest/dev/UsingBucket.html). If you are using the cesium-public-builds bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
 
-- In `travis.yml`, edit the following line:
+- In `.gtihub/workflows/dev.yml`, in the following lines, replace "cesium-public-builds" with the name of your S3 bucket.
 
-```bash
-- npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+```yml
+aws s3 sync ./Build/Coverage s3://cesium-public-builds/cesium/$BRANCH/Build/Coverage --delete --color on
 ```
 
-- Edit `cesium-dev` to be the name of the S3 bucket you would like to deploy to
+```yml
+aws s3 sync Build/unzipped/ s3://cesium-public-builds/cesium/$BRANCH/Build/ --cache-control "no-cache" --delete
+```
+
 - In `gulpfile.js`, edit the following line:
 
 ```javascript
-const travisDeployUrl =
-  "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
 ```
 
-- Edit the URL to match the URL of the S3 bucket specified in `travis.yml`
+- Edit the URL to match the URL hosting the S3 bucket specified in the previous step.
 
 ### Configure S3 Credentials
 
-To configure Travis for deployment for a fork of Cesium, you must have valid credentials to the S3 bucket.
+To configure CI for deployment for a fork of Cesium, you must have valid credentials to an S3 bucket.
 
-- Go to [travis-ci.com](https://travis-ci.com/) and select your fork of Cesium
-- Go to "More Options">"Settings"
-- Under the "Environment Variables" section, add two environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, with your access key and secret key
+- Go to your fork of Cesium
+- Click the **Setting** tab
+- In the left sidebar, under the **Security** section, click **Secrets and Variables** > **Actions**
+- Under **Repository secrets** add two environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, with your access key and secret key
 
-![Environment Variables](environment.jpg)
-
-### Configure Statuses
-
-To configure the additional commit statuses on GitHub for your fork of Cesium, you need to generate a personal access token for Travis to use.
-
-- In GitHub, go to "Settings" and "Personal access tokens"
-- Click "Generate new token" and confirm your password when prompted
-- Give a brief description of the token such as "Travis Statuses" and select "repo:status" and click "Generate token"
-  - `repo:status` gives the token access to only commit statuses
-
-![Token Access](token.jpg)
-
-- Copy the token to your clipboard
-- Go to [travis-ci.com](https://travis-ci.com/) and select your fork of Cesium
-- Go to "More Options">"Settings"
-- Under the "Environment Variables" section, add the environment variable `TOKEN` and paste your token for the value
+![GitHub Environment Variables](github_environment_variables.png)

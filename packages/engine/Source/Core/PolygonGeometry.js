@@ -8,6 +8,7 @@ import Check from "./Check.js";
 import ComponentDatatype from "./ComponentDatatype.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import deprecationWarning from "./deprecationWarning.js";
 import DeveloperError from "./DeveloperError.js";
 import Ellipsoid from "./Ellipsoid.js";
 import EllipsoidGeodesic from "./EllipsoidGeodesic.js";
@@ -24,6 +25,7 @@ import PolygonGeometryLibrary from "./PolygonGeometryLibrary.js";
 import PolygonPipeline from "./PolygonPipeline.js";
 import Quaternion from "./Quaternion.js";
 import Rectangle from "./Rectangle.js";
+import Stereographic from "./Stereographic.js";
 import VertexFormat from "./VertexFormat.js";
 import WindingOrder from "./WindingOrder.js";
 
@@ -82,7 +84,8 @@ function computeAttributes(options) {
     // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
     // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
     const boundingRectangle = options.boundingRectangle;
-    const tangentPlane = options.tangentPlane;
+    const rotationAxis = options.rotationAxis;
+    const projectTo2d = options.projectTo2d;
     const ellipsoid = options.ellipsoid;
     const stRotation = options.stRotation;
     const perPositionHeight = options.perPositionHeight;
@@ -122,14 +125,14 @@ function computeAttributes(options) {
     let tangentRotationMatrix = tangentMatrixScratch;
     if (stRotation !== 0.0) {
       let rotation = Quaternion.fromAxisAngle(
-        tangentPlane._plane.normal,
+        rotationAxis,
         stRotation,
         appendTextureCoordinatesQuaternion
       );
       textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrix);
 
       rotation = Quaternion.fromAxisAngle(
-        tangentPlane._plane.normal,
+        rotationAxis,
         -stRotation,
         appendTextureCoordinatesQuaternion
       );
@@ -170,10 +173,7 @@ function computeAttributes(options) {
             scratchPosition
           );
           p = ellipsoid.scaleToGeodeticSurface(p, p);
-          const st = tangentPlane.projectPointOntoPlane(
-            p,
-            appendTextureCoordinatesCartesian2
-          );
+          const st = projectTo2d(p, appendTextureCoordinatesCartesian2);
           Cartesian2.subtract(st, origin, st);
 
           const stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
@@ -636,7 +636,7 @@ function createGeometryFromPositionsExtruded(
   }
 
   let outerRing = hierarchy.outerRing;
-  let tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
+  const tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
   let positions2D = tangentPlane.projectPointsOntoPlane(
     outerRing,
     createGeometryFromPositionsExtrudedPositions
@@ -664,8 +664,6 @@ function createGeometryFromPositionsExtruded(
   const holes = hierarchy.holes;
   for (i = 0; i < holes.length; i++) {
     let hole = holes[i];
-
-    tangentPlane = EllipsoidTangentPlane.fromPoints(hole, ellipsoid);
     positions2D = tangentPlane.projectPointsOntoPlane(
       hole,
       createGeometryFromPositionsExtrudedPositions
@@ -1078,6 +1076,194 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
   return result;
 };
 
+const scratchCartesian0 = new Cartesian2();
+const scratchCartesian1 = new Cartesian2();
+const scratchPolarClosest = new Stereographic();
+function expandRectangle(
+  polar,
+  lastPolar,
+  ellipsoid,
+  arcType,
+  polygon,
+  result
+) {
+  const longitude = polar.longitude;
+  const lonAdjusted =
+    longitude >= 0.0 ? longitude : longitude + CesiumMath.TWO_PI;
+  polygon.westOverIdl = Math.min(polygon.westOverIdl, lonAdjusted);
+  polygon.eastOverIdl = Math.max(polygon.eastOverIdl, lonAdjusted);
+
+  result.west = Math.min(result.west, longitude);
+  result.east = Math.max(result.east, longitude);
+
+  const latitude = polar.getLatitude(ellipsoid);
+  let segmentLatitude = latitude;
+
+  result.south = Math.min(result.south, latitude);
+  result.north = Math.max(result.north, latitude);
+
+  if (arcType !== ArcType.RHUMB) {
+    // Geodesics will need to find the closest point on line. Rhumb lines will not have a latitude greater in magnitude than either of their endpoints.
+    const segment = Cartesian2.subtract(
+      lastPolar.position,
+      polar.position,
+      scratchCartesian0
+    );
+    const t =
+      Cartesian2.dot(lastPolar.position, segment) /
+      Cartesian2.dot(segment, segment);
+    if (t > 0.0 && t < 1.0) {
+      const projected = Cartesian2.add(
+        lastPolar.position,
+        Cartesian2.multiplyByScalar(segment, -t, segment),
+        scratchCartesian1
+      );
+      const closestPolar = Stereographic.clone(lastPolar, scratchPolarClosest);
+      closestPolar.position = projected;
+      const adjustedLatitude = closestPolar.getLatitude(ellipsoid);
+      result.south = Math.min(result.south, adjustedLatitude);
+      result.north = Math.max(result.north, adjustedLatitude);
+
+      if (Math.abs(latitude) > Math.abs(adjustedLatitude)) {
+        segmentLatitude = adjustedLatitude;
+      }
+    }
+  }
+  const direction = lastPolar.x * polar.y - polar.x * lastPolar.y;
+
+  // The total internal angle in either hemisphere determines if the pole is inside or outside the polygon
+  let angle = Math.sign(direction);
+  if (angle !== 0.0) {
+    angle *= Cartesian2.angleBetween(lastPolar.position, polar.position);
+  }
+
+  if (segmentLatitude >= 0.0) {
+    polygon.northAngle += angle;
+  }
+
+  if (segmentLatitude <= 0.0) {
+    polygon.southAngle += angle;
+  }
+}
+
+const scratchPolar = new Stereographic();
+const scratchPolarPrevious = new Stereographic();
+const polygon = {
+  northAngle: 0.0,
+  southAngle: 0.0,
+  westOverIdl: 0.0,
+  eastOverIdl: 0.0,
+};
+
+/**
+ * Computes a rectangle which encloses the polygon defined by the list of positions, including cases over the international date line and the poles.
+ *
+ * @param {Cartesian3[]} positions A linear ring defining the outer boundary of the polygon.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+ * @param {ArcType} [arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+ * @param {Rectangle} [result] An object in which to store the result.
+ *
+ * @returns {Rectangle} The result rectangle
+ */
+PolygonGeometry.computeRectangleFromPositions = function (
+  positions,
+  ellipsoid,
+  arcType,
+  result
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("positions", positions);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Rectangle();
+  }
+
+  if (positions.length < 3) {
+    return result;
+  }
+
+  result.west = Number.POSITIVE_INFINITY;
+  result.east = Number.NEGATIVE_INFINITY;
+  result.south = Number.POSITIVE_INFINITY;
+  result.north = Number.NEGATIVE_INFINITY;
+
+  polygon.northAngle = 0.0;
+  polygon.southAngle = 0.0;
+  polygon.westOverIdl = Number.POSITIVE_INFINITY;
+  polygon.eastOverIdl = Number.NEGATIVE_INFINITY;
+
+  const positionsLength = positions.length;
+  let lastPolarPosition = Stereographic.fromCartesian(
+    positions[0],
+    scratchPolarPrevious
+  );
+  for (let i = 1; i < positionsLength; i++) {
+    const polarPosition = Stereographic.fromCartesian(
+      positions[i],
+      scratchPolar
+    );
+    expandRectangle(
+      polarPosition,
+      lastPolarPosition,
+      ellipsoid,
+      arcType,
+      polygon,
+      result
+    );
+
+    lastPolarPosition = Stereographic.clone(polarPosition, lastPolarPosition);
+  }
+
+  expandRectangle(
+    Stereographic.fromCartesian(positions[0], scratchPolar),
+    lastPolarPosition,
+    ellipsoid,
+    arcType,
+    polygon,
+    result
+  );
+
+  if (result.east - result.west > polygon.eastOverIdl - polygon.westOverIdl) {
+    result.west = polygon.westOverIdl;
+    result.east = polygon.eastOverIdl;
+
+    if (result.east > CesiumMath.PI) {
+      result.east = result.east - CesiumMath.TWO_PI;
+    }
+    if (result.west > CesiumMath.PI) {
+      result.west = result.west - CesiumMath.TWO_PI;
+    }
+  }
+
+  // If either pole is inside the polygon, adjust the rectangle so the pole is included
+  if (
+    CesiumMath.equalsEpsilon(
+      Math.abs(polygon.northAngle),
+      CesiumMath.TWO_PI,
+      CesiumMath.EPSILON10
+    )
+  ) {
+    result.north = CesiumMath.PI_OVER_TWO;
+    result.east = CesiumMath.PI;
+    result.west = -CesiumMath.PI;
+  }
+
+  if (
+    CesiumMath.equalsEpsilon(
+      Math.abs(polygon.southAngle),
+      CesiumMath.TWO_PI,
+      CesiumMath.EPSILON10
+    )
+  ) {
+    result.south = -CesiumMath.PI_OVER_TWO;
+    result.east = CesiumMath.PI;
+    result.west = -CesiumMath.PI;
+  }
+
+  return result;
+};
+
 /**
  * Returns the bounding rectangle given the provided options
  *
@@ -1089,12 +1275,19 @@ PolygonGeometry.unpack = function (array, startingIndex, result) {
  * @param {Rectangle} [result] An object in which to store the result.
  *
  * @returns {Rectangle} The result rectangle
+ *
+ * @deprecated
  */
 PolygonGeometry.computeRectangle = function (options, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options", options);
   Check.typeOf.object("options.polygonHierarchy", options.polygonHierarchy);
   //>>includeEnd('debug');
+
+  deprecationWarning(
+    "PolygonGeometry.computeRectangle",
+    "PolygonGeometry.computeRectangle was deprecated in CesiumJS 1.110.  It will be removed in CesiumJS 1.112. Use PolygonGeometry.computeRectangleFromPositions instead."
+  );
 
   const granularity = defaultValue(
     options.granularity,
@@ -1121,6 +1314,130 @@ PolygonGeometry.computeRectangle = function (options, result) {
   );
 };
 
+const scratchPolarForPlane = new Stereographic();
+function getTangentPlane(rectangle, positions, ellipsoid) {
+  if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
+    const polar = Stereographic.fromCartesian(
+      positions[0],
+      scratchPolarForPlane
+    );
+    return polar.tangentPlane;
+  }
+
+  // Use a local tangent plane for smaller extents
+  return EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+}
+
+const scratchCartographicCyllindrical = new Cartographic();
+function createProjectTo2d(rectangle, outerPositions, ellipsoid) {
+  return (positions, results) => {
+    // If the polygon positions span a large enough extent, use a specialized projection
+    if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
+      // polygons that cross the equator must use cyllindrical coordinates to correctly compute winding order.
+      if (rectangle.south < 0 && rectangle.north > 0) {
+        if (!defined(results)) {
+          results = [];
+        }
+
+        for (let i = 0; i < positions.length; ++i) {
+          const cartographic = ellipsoid.cartesianToCartographic(
+            positions[i],
+            scratchCartographicCyllindrical
+          );
+          results[i] = new Cartesian2(
+            cartographic.longitude / CesiumMath.PI,
+            cartographic.latitude / CesiumMath.PI_OVER_TWO
+          );
+        }
+
+        results.length = positions.length;
+        return results;
+      }
+
+      return Stereographic.fromCartesianArray(positions, results);
+    }
+
+    // Use a local tangent plane for smaller extents
+    const tangentPlane = EllipsoidTangentPlane.fromPoints(
+      outerPositions,
+      ellipsoid
+    );
+    return tangentPlane.projectPointsOntoPlane(positions, results);
+  };
+}
+
+function createProjectPositionTo2d(rectangle, outerRing, ellipsoid) {
+  // If the polygon positions span a large enough extent, use a specialized projection
+  if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
+    return (position, result) => {
+      // polygons that cross the equator must use cyllindrical coordinates to correctly compute winding order.
+      if (rectangle.south < 0 && rectangle.north > 0) {
+        const cartographic = ellipsoid.cartesianToCartographic(
+          position,
+          scratchCartographicCyllindrical
+        );
+        if (!defined(result)) {
+          result = new Cartesian2();
+        }
+        result.x = cartographic.longitude / CesiumMath.PI;
+        result.y = cartographic.latitude / CesiumMath.PI_OVER_TWO;
+
+        return result;
+      }
+
+      return Stereographic.fromCartesian(position, result);
+    };
+  }
+
+  const tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
+  return (position, result) => {
+    // Use a local tangent plane for smaller extents
+    return tangentPlane.projectPointsOntoPlane(position, result);
+  };
+}
+
+function createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight) {
+  return (polygons, results) => {
+    if (
+      !perPositionHeight &&
+      (rectangle.height >= CesiumMath.PI_OVER_TWO ||
+        rectangle.width >= 2 * CesiumMath.PI_OVER_THREE)
+    ) {
+      return PolygonGeometryLibrary.splitPolygonsOnEquator(
+        polygons,
+        ellipsoid,
+        arcType,
+        results
+      );
+    }
+
+    return polygons;
+  };
+}
+
+function computeBoundingRectangle(outerRing, rectangle, ellipsoid, stRotation) {
+  if (rectangle.height >= CesiumMath.PI || rectangle.width >= CesiumMath.PI) {
+    return BoundingRectangle.fromRectangle(
+      rectangle,
+      undefined,
+      scratchBoundingRectangle
+    );
+  }
+
+  const outerPositions = outerRing;
+  const tangentPlane = EllipsoidTangentPlane.fromPoints(
+    outerPositions,
+    ellipsoid
+  );
+  return PolygonGeometryLibrary.computeBoundingRectangle(
+    tangentPlane.plane.normal,
+    tangentPlane.projectPointOntoPlane.bind(tangentPlane),
+    outerPositions,
+    stRotation,
+    scratchBoundingRectangle
+  );
+}
+
 /**
  * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
  *
@@ -1141,22 +1458,19 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
 
   const hasTextureCoordinates = defined(textureCoordinates);
 
-  let outerPositions = polygonHierarchy.positions;
+  const outerPositions = polygonHierarchy.positions;
   if (outerPositions.length < 3) {
     return;
   }
 
-  const tangentPlane = EllipsoidTangentPlane.fromPoints(
-    outerPositions,
-    ellipsoid
-  );
-
+  const rectangle = polygonGeometry.rectangle;
   const results = PolygonGeometryLibrary.polygonsFromHierarchy(
     polygonHierarchy,
     hasTextureCoordinates,
-    tangentPlane.projectPointsOntoPlane.bind(tangentPlane),
+    createProjectTo2d(rectangle, outerPositions, ellipsoid),
     !perPositionHeight,
-    ellipsoid
+    ellipsoid,
+    createSplitPolygons(rectangle, ellipsoid, arcType, perPositionHeight)
   );
 
   const hierarchy = results.hierarchy;
@@ -1171,7 +1485,8 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
         textureCoordinates,
         true,
         dummyFunction,
-        false
+        false,
+        ellipsoid
       ).polygons
     : undefined;
 
@@ -1179,13 +1494,12 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     return;
   }
 
-  outerPositions = hierarchy[0].outerRing;
-  const boundingRectangle = PolygonGeometryLibrary.computeBoundingRectangle(
-    tangentPlane.plane.normal,
-    tangentPlane.projectPointOntoPlane.bind(tangentPlane),
-    outerPositions,
-    stRotation,
-    scratchBoundingRectangle
+  const outerRing = hierarchy[0].outerRing;
+  const boundingRectangle = computeBoundingRectangle(
+    outerRing,
+    rectangle,
+    ellipsoid,
+    stRotation
   );
 
   const geometries = [];
@@ -1200,7 +1514,8 @@ PolygonGeometry.createGeometry = function (polygonGeometry) {
     perPositionHeight: perPositionHeight,
     vertexFormat: vertexFormat,
     geometry: undefined,
-    tangentPlane: tangentPlane,
+    rotationAxis: getTangentPlane(rectangle, outerRing, ellipsoid).plane.normal,
+    projectTo2d: createProjectPositionTo2d(rectangle, outerRing, ellipsoid),
     boundingRectangle: boundingRectangle,
     ellipsoid: ellipsoid,
     stRotation: stRotation,
@@ -1407,11 +1722,10 @@ Object.defineProperties(PolygonGeometry.prototype, {
     get: function () {
       if (!defined(this._rectangle)) {
         const positions = this._polygonHierarchy.positions;
-        this._rectangle = computeRectangle(
+        this._rectangle = PolygonGeometry.computeRectangleFromPositions(
           positions,
           this._ellipsoid,
-          this._arcType,
-          this._granularity
+          this._arcType
         );
       }
 

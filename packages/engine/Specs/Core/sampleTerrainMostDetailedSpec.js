@@ -28,9 +28,9 @@ describe("Core/sampleTerrainMostDetailed", function () {
     expect(positions[1].height).toBeLessThan(10000);
   });
 
-  it("should throw querying heights from Small Terrain", async function () {
+  it("should throw querying heights from terrain without availability", async function () {
     const terrainProvider = await CesiumTerrainProvider.fromUrl(
-      "https://s3.amazonaws.com/cesiumjs/smallTerrain"
+      "Data/CesiumTerrainTileJson/StandardHeightmap.tile.json"
     );
 
     const positions = [
@@ -82,5 +82,19 @@ describe("Core/sampleTerrainMostDetailed", function () {
 
     await sampleTerrainMostDetailed(worldTerrain, positions);
     expect(positions[0].height).toBeDefined();
+  });
+
+  it("rejects on tile error when rejectOnTileFail is set", async function () {
+    const terrainProvider = await createWorldTerrainAsync();
+
+    terrainProvider.requestTileGeometry = function (x, y, level) {
+      return Promise.reject();
+    };
+
+    const positions = [Cartographic.fromDegrees(0.0, 0.0, 0.0)];
+
+    return expectAsync(
+      sampleTerrainMostDetailed(terrainProvider, positions, true)
+    ).toBeRejected();
   });
 });

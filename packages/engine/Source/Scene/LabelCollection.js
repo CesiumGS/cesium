@@ -56,7 +56,7 @@ function addWhitePixelCanvas(textureAtlas) {
 
   // Canvas operations take a frame to draw. Use the asynchronous add function which resolves a promise and allows the draw to complete,
   // but there's no need to wait on the promise before operation can continue
-  textureAtlas.addImage(whitePixelCanvasId, canvas);
+  return textureAtlas.addImage(whitePixelCanvasId, canvas);
 }
 
 // reusable object for calling writeTextToCanvas
@@ -143,7 +143,7 @@ function rebindAllGlyphs(labelCollection, label) {
   glyphs.length = textLength;
 
   const showBackground =
-    label._showBackground && text.split("\n").join("").length > 0;
+    label.show && label._showBackground && text.split("\n").join("").length > 0;
   let backgroundBillboard = label._backgroundBillboard;
   const backgroundBillboardCollection =
     labelCollection._backgroundBillboardCollection;
@@ -181,6 +181,7 @@ function rebindAllGlyphs(labelCollection, label) {
       label._distanceDisplayCondition;
     backgroundBillboard.disableDepthTestDistance =
       label._disableDepthTestDistance;
+    backgroundBillboard.clusterShow = label.clusterShow;
   }
 
   const glyphTextureCache = labelCollection._glyphTextureCache;
@@ -911,6 +912,8 @@ LabelCollection.prototype.update = function (frameState) {
       initialSize: whitePixelSize,
     });
     backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
+
+    // Request a new render in request render mode after the next frame renders
     addWhitePixelCanvas(this._backgroundTextureAtlas);
   }
 

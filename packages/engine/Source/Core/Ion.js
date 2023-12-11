@@ -4,7 +4,7 @@ import Resource from "./Resource.js";
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMmIzZjlhMy1kNzU1LTRmMmQtYTFkNi1jMWQ5NTliM2RmN2YiLCJpZCI6MjU5LCJpYXQiOjE2OTM1ODIzNDJ9.-Tpp8s9ismoMrkKqnNsHFEMZgXDfa2uZfBQRE-kn3gM";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzN2UwMjViMC0xOTJhLTQxMmItOWEzMS1kMjJiNmZiY2E5N2YiLCJpZCI6MjU5LCJpYXQiOjE3MDE0NTc1NjB9.bMNhc7S4cuG1qUnRUiLxr5lunSH1k6-UfkRXSqVFYyM";
 /**
  * Default settings for accessing the Cesium ion API.
  *
@@ -49,7 +49,6 @@ Ion.getDefaultTokenCredit = function (providedKey) {
             You can sign up for a free ion account at <a href="https://cesium.com">https://cesium.com</a>.</b>';
 
     defaultTokenCredit = new Credit(defaultTokenMessage, true);
-    defaultTokenCredit._isDefaultToken = true;
   }
 
   return defaultTokenCredit;

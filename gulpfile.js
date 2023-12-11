@@ -1,11 +1,8 @@
 /*eslint-env node*/
 import { writeFileSync, copyFileSync, readFileSync, existsSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
-import { join, basename, resolve, posix, dirname } from "path";
+import { join, basename, resolve, dirname } from "path";
 import { exec, execSync } from "child_process";
-import { createHash } from "crypto";
-import { gzipSync } from "zlib";
-import { createInterface } from "readline";
 import fetch from "node-fetch";
 import { createRequire } from "module";
 
@@ -22,21 +19,9 @@ import mergeStream from "merge-stream";
 import streamToPromise from "stream-to-promise";
 import karma from "karma";
 import yargs from "yargs";
-import {
-  S3Client,
-  DeleteObjectsCommand,
-  HeadObjectCommand,
-  ListObjectsCommand,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
-import { Upload } from "@aws-sdk/lib-storage";
-import mime from "mime";
 import typeScript from "typescript";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
-import pLimit from "p-limit";
-import download from "download";
-import decompress from "decompress";
 
 import {
   buildCesium,
@@ -47,7 +32,7 @@ import {
   createCombinedSpecList,
   createJsHintOptions,
   defaultESBuildOptions,
-} from "./build.js";
+} from "./scripts/build.js";
 
 // Determines the scope of the workspace packages. If the scope is set to cesium, the workspaces should be @cesium/engine.
 // This should match the scope of the dependencies of the root level package.json.
@@ -61,9 +46,8 @@ if (/\.0$/.test(version)) {
 }
 const karmaConfigFile = resolve("./Specs/karma.conf.cjs");
 
-const travisDeployUrl =
-  "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
-const isProduction = process.env.TRAVIS_BRANCH === "cesium.com";
+const devDeployUrl = "https://ci-builds.cesium.com/cesium/";
+const isProduction = process.env.PROD;
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -253,6 +237,7 @@ export const buildWatch = gulp.series(build, async function () {
     }
 
     specs.dispose();
+    // eslint-disable-next-line n/no-process-exit
     process.exit(0);
   });
 });
@@ -442,6 +427,8 @@ function combineForSandcastle() {
 }
 
 export const websiteRelease = gulp.series(
+  buildEngine,
+  buildWidgets,
   function () {
     return buildCesium({
       development: false,
@@ -516,7 +503,6 @@ async function pruneScriptsForZip(packageJsonPath) {
   delete scripts.prettier;
 
   // Remove deploy tasks
-  delete scripts["deploy-s3"];
   delete scripts["deploy-status"];
   delete scripts["deploy-set-version"];
   delete scripts["website-release"];
@@ -598,6 +584,7 @@ export const makeZip = gulp.series(release, async function () {
       "Build/Documentation/**",
       "Build/Specs/**",
       "!Build/Specs/e2e/**",
+      "!Build/InlineWorkers.js",
       "Build/package.json",
       "packages/engine/Build/**",
       "packages/widgets/Build/**",
@@ -640,7 +627,7 @@ export const makeZip = gulp.series(release, async function () {
       ".eslintignore",
       ".eslintrc.json",
       ".prettierignore",
-      "build.js",
+      "scripts/**",
       "gulpfile.js",
       "server.js",
       "index.cjs",
@@ -687,536 +674,6 @@ export const makeZip = gulp.series(release, async function () {
   );
 });
 
-function isTravisPullRequest() {
-  return (
-    process.env.TRAVIS_PULL_REQUEST !== undefined &&
-    process.env.TRAVIS_PULL_REQUEST !== "false"
-  );
-}
-
-export async function deployS3() {
-  if (isTravisPullRequest()) {
-    console.log("Skipping deployment for non-pull request.");
-    return;
-  }
-
-  const argv = yargs(process.argv)
-    .usage("Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]")
-    .options({
-      bucket: {
-        alias: "b",
-        description: "Bucket name.",
-        type: "string",
-        demandOption: true,
-      },
-      directory: {
-        alias: "d",
-        description: "Upload directory.",
-        type: "string",
-      },
-      "cache-control": {
-        alias: "c",
-        description:
-          "The cache control option set on the objects uploaded to S3.",
-        type: "string",
-        default: "max-age=3600",
-      },
-      "dry-run": {
-        description: "Only print file paths and S3 keys.",
-        type: "boolean",
-        default: false,
-      },
-      confirm: {
-        description: "Skip confirmation step, useful for CI.",
-        type: "boolean",
-        default: false,
-      },
-    }).argv;
-
-  const uploadDirectory = argv.directory;
-  const bucketName = argv.bucket;
-  const dryRun = argv.dryRun;
-  const cacheControl = argv.cacheControl ? argv.cacheControl : "max-age=3600";
-  const skipFiles = process.env.TRAVIS_BRANCH !== "main"; // Always re-upload the file on the main branch. This will ensure the file does not get deleted after a 30-day period
-
-  if (argv.confirm) {
-    return deployCesium(
-      bucketName,
-      uploadDirectory,
-      cacheControl,
-      skipFiles,
-      dryRun
-    );
-  }
-
-  const iface = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    // prompt for confirmation
-    iface.question(
-      `Files from your computer will be published to the ${bucketName} bucket. Continue? [y/n] `,
-      function (answer) {
-        iface.close();
-        if (answer === "y") {
-          resolve(
-            deployCesium(
-              bucketName,
-              uploadDirectory,
-              cacheControl,
-              skipFiles,
-              dryRun
-            )
-          );
-        } else {
-          console.log("Deploy aborted by user.");
-          resolve();
-        }
-      }
-    );
-  });
-}
-
-// Deploy cesium to s3
-async function deployCesium(
-  bucketName,
-  uploadDirectory,
-  cacheControl,
-  skipFiles,
-  dryRun
-) {
-  // Limit promise concurrency since we are reading many
-  // files off disk in parallel
-  const limit = pLimit(2000);
-
-  const refDocPrefix = "cesiumjs/ref-doc/";
-  const sandcastlePrefix = "sandcastle/";
-  const cesiumViewerPrefix = "cesiumjs/cesium-viewer/";
-
-  const s3Client = new S3Client({
-    region: "us-east-1",
-    maxRetries: 10,
-    retryDelayOptions: {
-      base: 500,
-    },
-  });
-
-  const existingBlobs = [];
-  let totalFiles = 0;
-  let uploaded = 0;
-  let skipped = 0;
-  const errors = [];
-
-  if (!isProduction) {
-    await listAll(s3Client, bucketName, `${uploadDirectory}/`, existingBlobs);
-  }
-
-  async function getContents(file, blobName) {
-    const mimeLookup = getMimeType(blobName);
-    const contentType = mimeLookup.type;
-    const compress = mimeLookup.compress;
-    const contentEncoding = compress ? "gzip" : undefined;
-
-    totalFiles++;
-
-    let content = await readFile(file);
-
-    if (compress) {
-      const alreadyCompressed = content[0] === 0x1f && content[1] === 0x8b;
-      if (alreadyCompressed) {
-        if (verbose) {
-          console.log(`Skipping compressing already compressed file: ${file}`);
-        }
-      } else {
-        content = gzipSync(content);
-      }
-    }
-
-    const computeEtag = (content) => {
-      return createHash("md5").update(content).digest("base64");
-    };
-
-    const index = existingBlobs.indexOf(blobName);
-    if (index <= -1) {
-      return {
-        content,
-        etag: computeEtag(content),
-        contentType,
-        contentEncoding,
-      };
-    }
-
-    // remove files from the list to clean later
-    // as we find them on disk
-    existingBlobs.splice(index, 1);
-
-    // get file info
-    const headObjectCommand = new HeadObjectCommand({
-      Bucket: bucketName,
-      Key: blobName,
-    });
-    const data = await s3Client.send(headObjectCommand);
-    const hash = createHash("md5").update(content).digest("hex");
-
-    if (
-      !skipFiles ||
-      data.ETag !== `"${hash}"` ||
-      data.CacheControl !== cacheControl ||
-      data.ContentType !== contentType ||
-      data.ContentEncoding !== contentEncoding
-    ) {
-      return {
-        content,
-        etag: computeEtag(content),
-        contentType,
-        contentEncoding,
-      };
-    }
-
-    // We don't need to upload this file again
-    skipped++;
-  }
-
-  async function readAndUpload(prefix, existingPrefix, file) {
-    const blobName = `${prefix}${file.replace(existingPrefix, "")}`;
-
-    let fileContents;
-    try {
-      fileContents = await getContents(file, blobName);
-    } catch (e) {
-      errors.push(e);
-    }
-
-    if (!fileContents) {
-      return;
-    }
-
-    const content = fileContents.content;
-    const etag = fileContents.etag;
-    const contentType = fileContents.contentType;
-    const contentEncoding = fileContents.contentEncoding;
-
-    if (verbose) {
-      console.log(`Uploading ${blobName}...`);
-    }
-
-    const params = {
-      Bucket: bucketName,
-      Key: blobName,
-      Body: content,
-      ContentMD5: etag,
-      ContentType: contentType,
-      ContentEncoding: contentEncoding,
-      CacheControl: cacheControl,
-    };
-
-    const putObjectCommand = new PutObjectCommand(params);
-
-    if (dryRun) {
-      uploaded++;
-      return;
-    }
-
-    try {
-      await s3Client.send(putObjectCommand);
-      uploaded++;
-    } catch (e) {
-      errors.push(e);
-    }
-  }
-
-  let uploads;
-  if (isProduction) {
-    const uploadSandcastle = async () => {
-      const files = await globby(["Build/Sandcastle/**"]);
-      return Promise.all(
-        files.map((file) => {
-          return limit(() =>
-            readAndUpload(sandcastlePrefix, "Build/Sandcastle/", file)
-          );
-        })
-      );
-    };
-
-    const uploadRefDoc = async () => {
-      const files = await globby(["Build/Documentation/**"]);
-      return Promise.all(
-        files.map((file) => {
-          return limit(() =>
-            readAndUpload(refDocPrefix, "Build/Documentation/", file)
-          );
-        })
-      );
-    };
-
-    const uploadCesiumViewer = async () => {
-      const files = await globby(["Build/CesiumViewer/**"]);
-      return Promise.all(
-        files.map((file) => {
-          return limit(() =>
-            readAndUpload(cesiumViewerPrefix, "Build/CesiumViewer/", file)
-          );
-        })
-      );
-    };
-
-    uploads = [
-      uploadSandcastle(),
-      uploadRefDoc(),
-      uploadCesiumViewer(),
-      deployCesiumRelease(bucketName, s3Client, errors),
-    ];
-  } else {
-    const files = await globby(
-      [
-        "Apps/**",
-        "Build/**",
-        "!Build/CesiumDev/**",
-        "packages/**",
-        "Source/**",
-        "Specs/**",
-        "ThirdParty/**",
-        "*.md",
-        "favicon.ico",
-        "gulpfile.js",
-        "index.html",
-        "package.json",
-        "server.js",
-        "web.config",
-        "*.zip",
-        "*.tgz",
-      ],
-      {
-        dot: true, // include hidden files
-      }
-    );
-
-    uploads = files.map((file) => {
-      return limit(() => readAndUpload(`${uploadDirectory}/`, "", file));
-    });
-  }
-
-  await Promise.all(uploads);
-
-  console.log(
-    `Skipped ${skipped} files and successfully uploaded ${uploaded} files of ${
-      totalFiles - skipped
-    } files.`
-  );
-
-  if (!isProduction && existingBlobs.length >= 0) {
-    const objectsToDelete = [];
-    existingBlobs.forEach(function (file) {
-      // Don't delete generated zip files
-      if (!/\.(zip|tgz)$/.test(file)) {
-        objectsToDelete.push({ Key: file });
-      }
-    });
-
-    if (objectsToDelete.length > 0) {
-      console.log(`Cleaning ${objectsToDelete.length} files...`);
-
-      // If more than 1000 files, we must issue multiple requests
-      const batches = [];
-      while (objectsToDelete.length > 1000) {
-        batches.push(objectsToDelete.splice(0, 1000));
-      }
-      batches.push(objectsToDelete);
-
-      const deleteObjects = async (objects) => {
-        const deleteObjectsCommand = new DeleteObjectsCommand({
-          Bucket: bucketName,
-          Delete: {
-            Objects: objects,
-          },
-        });
-
-        try {
-          if (!dryRun) {
-            await s3Client.send(deleteObjectsCommand);
-          }
-        } catch (e) {
-          errors.push(e);
-        }
-
-        if (verbose) {
-          console.log(`Cleaned ${objects.length} files.`);
-        }
-      };
-
-      await Promise.all(batches.map(deleteObjects));
-    }
-  }
-
-  if (errors.length === 0) {
-    return;
-  }
-
-  console.log("Errors: ");
-  errors.map(console.log);
-  return Promise.reject("There was an error while deploying Cesium");
-}
-
-async function deployCesiumRelease(bucketName, s3Client, errors) {
-  const releaseDir = "cesiumjs/releases";
-  const quiet = process.env.TRAVIS;
-
-  let release;
-  try {
-    // Deploy any new releases
-    const response = await fetch(
-      "https://api.github.com/repos/CesiumGS/cesium/releases/latest",
-      {
-        method: "GET",
-        headers: {
-          Authorization: process.env.TOKEN
-            ? `token ${process.env.TOKEN}`
-            : undefined,
-          "User-Agent": "cesium.com-build",
-        },
-      }
-    );
-
-    const body = await response.json();
-
-    release = {
-      tag: body.tag_name,
-      name: body.name,
-      url: body.assets[0].browser_download_url,
-    };
-
-    const headObjectCommand = new HeadObjectCommand({
-      Bucket: bucketName,
-      Key: posix.join(releaseDir, release.tag, "cesium.zip"),
-    });
-    await s3Client.send(headObjectCommand);
-    console.log(
-      `Cesium version ${release.tag} up to date. Skipping release deployment.`
-    );
-  } catch (error) {
-    if (error.$metadata) {
-      const { httpStatusCode } = error.$metadata;
-      // The current version is not uploaded
-      if (httpStatusCode === 404) {
-        console.log("Updating cesium version...");
-        const data = await download(release.url);
-        // upload and unzip contents
-        const key = posix.join(releaseDir, release.tag, "cesium.zip");
-        await uploadObject(bucketName, s3Client, key, data, quiet);
-        const files = await decompress(data);
-        const limit = pLimit(5);
-        return Promise.all(
-          files.map((file) => {
-            return limit(async () => {
-              if (file.path.startsWith("Apps")) {
-                // skip uploading apps and sandcastle
-                return;
-              }
-
-              // Upload to release directory
-              const key = posix.join(releaseDir, release.tag, file.path);
-              return uploadObject(bucketName, s3Client, key, file.data, quiet);
-            });
-          })
-        );
-      }
-    }
-
-    // else, unexpected error
-    errors.push(error);
-  }
-}
-
-async function uploadObject(bucketName, s3Client, key, contents, quiet) {
-  if (!quiet) {
-    console.log(`Uploading ${key}...`);
-  }
-
-  const upload = new Upload({
-    client: s3Client,
-    params: {
-      Bucket: bucketName,
-      Key: key,
-      Body: contents,
-      ContentType: mime.getType(key) || undefined,
-      CacheControl: "public, max-age=1800",
-    },
-  });
-  return upload.done();
-}
-
-function getMimeType(filename) {
-  //Remove page anchors from documentation, as mime does not properly handle them
-  filename = filename.split("#")[0];
-
-  const mimeType = mime.getType(filename);
-  if (mimeType) {
-    //Compress everything except zipfiles, binary images, and video
-    let compress = !/^(image\/|video\/|application\/zip|application\/gzip)/i.test(
-      mimeType
-    );
-    if (mimeType === "image/svg+xml") {
-      compress = true;
-    }
-    return { type: mimeType, compress: compress };
-  }
-
-  //Non-standard mime types not handled by mime
-  if (/\.(glsl|LICENSE|config|state)$/i.test(filename)) {
-    return { type: "text/plain", compress: true };
-  } else if (/\.(czml|topojson)$/i.test(filename)) {
-    return { type: "application/json", compress: true };
-  } else if (/\.tgz$/i.test(filename)) {
-    return { type: "application/octet-stream", compress: false };
-  }
-
-  // Handle dotfiles, such as .jshintrc
-  const baseName = basename(filename);
-  if (baseName[0] === "." || baseName.indexOf(".") === -1) {
-    return { type: "text/plain", compress: true };
-  }
-
-  // Everything else can be octet-stream compressed but print a warning
-  // if we introduce a type we aren't specifically handling.
-  if (!/\.(terrain|b3dm|geom|pnts|vctr|cmpt|i3dm|metadata)$/i.test(filename)) {
-    console.log(`Unknown mime type for ${filename}`);
-  }
-
-  return { type: "application/octet-stream", compress: true };
-}
-
-// get all files currently in bucket asynchronously
-async function listAll(s3Client, bucketName, prefix, files, marker) {
-  const listObjectsCommand = new ListObjectsCommand({
-    Bucket: bucketName,
-    MaxKeys: 1000,
-    Prefix: prefix,
-    Marker: marker,
-  });
-  const data = await s3Client.send(listObjectsCommand);
-  const items = data.Contents;
-  if (!items) {
-    return;
-  }
-
-  for (let i = 0; i < items.length; i++) {
-    files.push(items[i].Key);
-  }
-
-  if (data.IsTruncated) {
-    // get next page of results
-    return listAll(
-      s3Client,
-      bucketName,
-      prefix,
-      files,
-      files[files.length - 1]
-    );
-  }
-}
-
 export async function deploySetVersion() {
   const buildVersion = argv.buildVersion;
   if (buildVersion) {
@@ -1227,19 +684,14 @@ export async function deploySetVersion() {
 }
 
 export async function deployStatus() {
-  if (isTravisPullRequest()) {
-    console.log("Skipping deployment status for non-pull request.");
-    return;
-  }
-
   const status = argv.status;
   const message = argv.message;
 
-  const deployUrl = `${travisDeployUrl + process.env.TRAVIS_BRANCH}/`;
+  const deployUrl = `${devDeployUrl + process.env.BRANCH}/`;
   const zipUrl = `${deployUrl}Cesium-${version}.zip`;
   const npmUrl = `${deployUrl}cesium-${version}.tgz`;
   const coverageUrl = `${
-    travisDeployUrl + process.env.TRAVIS_BRANCH
+    devDeployUrl + process.env.BRANCH
   }/Build/Coverage/index.html`;
 
   return Promise.all([
@@ -1252,7 +704,7 @@ export async function deployStatus() {
 
 async function setStatus(state, targetUrl, description, context) {
   // skip if the environment does not have the token
-  if (!process.env.TOKEN) {
+  if (!process.env.GITHUB_TOKEN) {
     return;
   }
 
@@ -1264,19 +716,20 @@ async function setStatus(state, targetUrl, description, context) {
   };
 
   const response = await fetch(
-    `https://api.github.com/repos/${process.env.TRAVIS_REPO_SLUG}/statuses/${process.env.TRAVIS_COMMIT}`,
+    `https://api.github.com/repos/${process.env.GITHUB_REPO}/statuses/${process.env.GITHUB_SHA}`,
     {
       method: "post",
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
-        Authorization: `token ${process.env.TOKEN}`,
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
         "User-Agent": "Cesium",
       },
     }
   );
 
-  return response.json();
+  const result = await response.json();
+  return result;
 }
 
 /**
@@ -1469,7 +922,7 @@ export async function runCoverage(options) {
       html += "</ul></body></html>";
       writeFileSync(join(options.coverageDirectory, "index.html"), html);
 
-      if (!process.env.TRAVIS) {
+      if (!process.env.CI) {
         folders.forEach(function (dir) {
           open(join(options.coverageDirectory, `${dir}/index.html`));
         });

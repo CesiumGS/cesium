@@ -1513,7 +1513,6 @@ function cleanNormal(uniformState) {
 
     const m = uniformState._normal;
     Matrix4.getMatrix3(uniformState.inverseModelView, m);
-    Matrix3.getRotation(m, m);
     Matrix3.transpose(m, m);
   }
 }
@@ -1524,7 +1523,6 @@ function cleanNormal3D(uniformState) {
 
     const m = uniformState._normal3D;
     Matrix4.getMatrix3(uniformState.inverseModelView3D, m);
-    Matrix3.getRotation(m, m);
     Matrix3.transpose(m, m);
   }
 }
@@ -1532,28 +1530,20 @@ function cleanNormal3D(uniformState) {
 function cleanInverseNormal(uniformState) {
   if (uniformState._inverseNormalDirty) {
     uniformState._inverseNormalDirty = false;
-    Matrix4.getMatrix3(
-      uniformState.inverseModelView,
-      uniformState._inverseNormal
-    );
-    Matrix3.getRotation(
-      uniformState._inverseNormal,
-      uniformState._inverseNormal
-    );
+
+    const m = uniformState._inverseNormal;
+    Matrix4.getMatrix3(uniformState.modelView, m);
+    Matrix3.transpose(m, m);
   }
 }
 
 function cleanInverseNormal3D(uniformState) {
   if (uniformState._inverseNormal3DDirty) {
     uniformState._inverseNormal3DDirty = false;
-    Matrix4.getMatrix3(
-      uniformState.inverseModelView3D,
-      uniformState._inverseNormal3D
-    );
-    Matrix3.getRotation(
-      uniformState._inverseNormal3D,
-      uniformState._inverseNormal3D
-    );
+
+    const m = uniformState._inverseNormal3D;
+    Matrix4.getMatrix3(uniformState.modelView3D, m);
+    Matrix3.transpose(m, m);
   }
 }
 

@@ -8,7 +8,6 @@
 /.npmignore
 /.project
 /.settings
-/.travis.yml
 /.vscode
 /Apps
 /Build/Apps
@@ -22,7 +21,7 @@
 /cesium-engine-*.tgz
 /cesium-widgets-*.tgz
 /Documentation
-/build.js
+/scripts/
 /favicon.ico
 /gulpfile.js
 /index.html
@@ -32,7 +31,6 @@
 /server.js
 /Source/copyrightHeader.js
 /Specs
-/travis
 /ThirdParty
 /Tools
 /web.config

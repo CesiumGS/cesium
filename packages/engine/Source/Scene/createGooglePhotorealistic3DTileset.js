@@ -1,6 +1,7 @@
 import Cesium3DTileset from "./Cesium3DTileset.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import IonResource from "../Core/IonResource.js";
 import GoogleMaps from "../Core/GoogleMaps.js";
 import Resource from "../Core/Resource.js";
 
@@ -16,6 +17,17 @@ import Resource from "../Core/Resource.js";
  * @see GoogleMaps
  *
  * @example
+ * const viewer = new Cesium.Viewer("cesiumContainer");
+ *
+ * try {
+ *   const tileset = await Cesium.createGooglePhotorealistic3DTileset();
+ *   viewer.scene.primitives.add(tileset));
+ * } catch (error) {
+ *   console.log(`Error creating tileset: ${error}`);
+ * }
+ *
+ * @example
+ * // Use your own Google Maps API key
  * Cesium.GoogleMaps.defaultApiKey = "your-api-key";
  *
  * const viewer = new Cesium.Viewer("cesiumContainer");
@@ -28,21 +40,23 @@ import Resource from "../Core/Resource.js";
  * }
  */
 async function createGooglePhotorealistic3DTileset(key, options) {
-  key = defaultValue(key, GoogleMaps.defaultApiKey);
-
-  let credits;
-  const credit = GoogleMaps.getDefaultApiKeyCredit(key);
-  if (defined(credit)) {
-    credits = [credit];
-  }
-
   options = defaultValue(options, {});
-  options.showCreditsOnScreen = true;
   options.cacheBytes = defaultValue(options.cacheBytes, 1536 * 1024 * 1024);
   options.maximumCacheOverflowBytes = defaultValue(
     options.maximumCacheOverflowBytes,
     1024 * 1024 * 1024
   );
+
+  key = defaultValue(key, GoogleMaps.defaultApiKey);
+  if (!defined(key)) {
+    return requestCachedIonTileset(options);
+  }
+
+  let credits;
+  const credit = GoogleMaps.getDefaultCredit();
+  if (defined(credit)) {
+    credits = [credit];
+  }
 
   const resource = new Resource({
     url: `${GoogleMaps.mapTilesApiEndpoint}3dtiles/root.json`,
@@ -52,6 +66,21 @@ async function createGooglePhotorealistic3DTileset(key, options) {
     credits: credits,
   });
 
+  return Cesium3DTileset.fromUrl(resource, options);
+}
+
+const metadataCache = {};
+async function requestCachedIonTileset(options) {
+  const ionAssetId = 2275207;
+  const cacheKey = ionAssetId;
+
+  let promise = metadataCache[cacheKey];
+  if (!defined(promise)) {
+    promise = IonResource.fromAssetId(ionAssetId);
+    metadataCache[cacheKey] = promise;
+  }
+
+  const resource = await promise;
   return Cesium3DTileset.fromUrl(resource, options);
 }
 

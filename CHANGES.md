@@ -1,12 +1,87 @@
 # Change Log
 
-### 1.110 - 2023-10-01
+### 1.113 - 2024-01-02
 
 #### @cesium/engine
 
 ##### Fixes :wrench:
 
+- Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
+- Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
+
+### 1.112 - 2023-12-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed terrain lockups in `requestTileGeometry` by ensuring promise handling aligns with CesiumJS's expectations. [#11630](https://github.com/CesiumGS/cesium/pull/11630)
+- Corrected JSDoc and Typescript definitions that marked optional arguments as required in `Cesium3dTileset.fromIonAssetId` [#11623](https://github.com/CesiumGS/cesium/issues/11623), and `IonImageryProvider.fromAssetId` [#11624](https://github.com/CesiumGS/cesium/issues/11624)
+
+### 1.111 - 2023-11-01
+
+#### @cesium/engine
+
+##### Additions :tada:
+
+- `BingMapsImageryProvider.fromUrl` now takes an optional `mapLayer` parameter which is a string that maps directly to the [mapLayer template parameters](https://learn.microsoft.com/en-us/bingmaps/rest-services/imagery/get-imagery-metadata#template-parameters) specified in the Bing Maps documentation.
+
+##### Fixes :wrench:
+
+- By default, `createGooglePhotorealistic3DTileset` no longer shows credits on screen but links to them instead, as this is compliant with the minimum required attribution. To restore this behavior, pass the option `showCreditsOnScreen: true`. [#11589](https://github.com/CesiumGS/cesium/pull/11589)
+- Fixed an issue with polygon hole rendering. [#11583](https://github.com/CesiumGS/cesium/issues/11583)
+- Fixed error with rhumb lines that have a 0 degree heading. [#11573](https://github.com/CesiumGS/cesium/pull/11573)
+- Fixed `czm_normal`, `czm_normal3D`, `czm_inverseNormal`, and `czm_inverseNormal3D` for cases where the model matrix has non-uniform scale. [#11553](https://github.com/CesiumGS/cesium/pull/11553)
+- Fixed issue with clustered labels when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
+- Fixed inconsistant clustering when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
+
+### 1.110.1 - 2023-10-25
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- CesiumJS no longer ships with a demo Google Maps API key. `GoogleMaps.defaultApiKey` is no longer defined by default.
+- `createGooglePhotorealistic3DTileset` by default now provides tiles via Cesium ion if the `GoogleMaps.defaultApiKey` is not set.
+- If you wish to continue to use your own Google Maps API key, you can go back to the previous behavior:
+
+  ```javascript
+  Cesium.GoogleMaps.defaultApiKey = "your-api-key";
+
+  const tileset = await Cesium.createGooglePhotorealistic3DTileset();
+  viewer.scene.primitives.add(tileset));
+  ```
+
+### 1.110 - 2023-10-02
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- `Cesium3DTileset.maximumMemoryUsage` has been removed. Use `Cesium3DTileset.cacheBytes` and `Cesium3DTileset.maximumCacheOverflowBytes` instead.
+
+##### Additions :tada:
+
+- Worker files are now embedded in `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js`. [#11519](https://github.com/CesiumGS/cesium/pull/11519)
+- Added `PolygonGeometry.computeRectangleFromPositions` for computing a `Rectangle` that encloses a polygon, including cases over the international date line and the poles.
+- Added `Stereographic` for computing 2D operations in stereographic, or polar, coordinates.
+- Adds events to `PrimitiveCollection` for primitive added/removed. [#11531](https://github.com/CesiumGS/cesium/pull/11531)
+- Adds an optional `rejectOnTileFail` parameter to `sampleTerrain` and `sampleTerrainMostDetailed` to allow handling of tile request failures. [#11530](https://github.com/CesiumGS/cesium/pull/11530)
+
+##### Fixes :wrench:
+
+- Fixed rendering of polygons spanning extents of 90 degrees or more. [#4871](https://github.com/CesiumGS/cesium/issues/4871)
+- Fixed ground primitive polygon visual artifacts at pole. [#8033](https://github.com/CesiumGS/cesium/issues/8033)
+- Fixed bug in `Cesium3DTilePass` affecting the `PRELOAD` pass. [#11525](https://github.com/CesiumGS/cesium/pull/11525)
+- Fixed bug where sky atmosphere could not be shown when `globe.show` is initialized to false. [#11266](https://github.com/CesiumGS/cesium/issues/11266)
+- Fixed issue loading workers in cross-origin `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js` requests. [#11505](https://github.com/CesiumGS/cesium/issues/11505)
+- Fixed `showOnScreen` behavior for `Model` and `Cesium3DTileset` credits. [#11538](https://github.com/CesiumGS/cesium/pull/11538)
 - Remove reading of `import.meta` meta-property because webpack does not support it. [#11511](https://github.com/CesiumGS/cesium/pull/11511)
+- Fixed label background rendering in request render mode. [#11529](https://github.com/CesiumGS/cesium/issues/11529)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `PolygonGeometry.computeRectangle` has been deprecated. It will be removed in 1.112. Use `PolygonGeometry.computeRectangleFromPositions` instead.
 
 ### 1.109 - 2023-09-01
 
