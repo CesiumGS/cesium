@@ -8,7 +8,7 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
     <meta name="description" content="Create 3D models using glTF." />
-    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -52,7 +52,7 @@
         try {
           // MAXAR OWT Muscatatuk photogrammetry dataset with property textures
           // containing horizontal and vertical uncertainty
-          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(905848);
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2342602);
           viewer.scene.primitives.add(tileset);
           viewer.zoomTo(tileset);
         } catch (error) {
