@@ -9,21 +9,21 @@ To ensure your Pull Request is reviewed and accepted quickly, please refer to ou
 
 # Description
 
-<!--- Describe your changes in detail -->
+<!-- Describe your changes in detail -->
 
-<!--- Consider: Why is this change required? What problem does it solve? -->
+<!-- Consider: Why is this change required? What problem does it solve? -->
 
-<!--- Include screenshots if appropriate --->
+<!-- Include screenshots if appropriate -->
 
 ## Issue number and link
 
-<!--- If it fixes an open issue, link to the issue here -->
+<!-- If it fixes an open issue, link to the issue here -->
 
-<!--- Consider: If suggesting a new feature or change, discuss it in an issue first. -->
+<!-- Consider: If suggesting a new feature or change, discuss it in an issue first. -->
 
 ## Testing plan
 
-<!--- Describe in detail how you tested your changes -->
+<!-- Describe in detail how you tested your changes. If this fixes a bug, list the steps to reproduce the original issue. -->
 
 # Author checklist
 
