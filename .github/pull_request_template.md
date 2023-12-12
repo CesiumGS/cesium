@@ -5,7 +5,7 @@ Please review [Contribution Guide](https://github.com/CesiumGS/cesium/blob/main/
 
 To ensure your Pull Request is reviewed and accepted quickly, please refer to our [Pull Request Guidelines](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md#pull-request-guidelines).
 
---->
+-->
 
 # Description
 
