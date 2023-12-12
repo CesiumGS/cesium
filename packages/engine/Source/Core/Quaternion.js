@@ -677,8 +677,12 @@ Quaternion.computeAxis = function (quaternion, result) {
   //>>includeEnd('debug');
 
   const w = quaternion.w;
-  if (Math.abs(w - 1.0) < CesiumMath.EPSILON6) {
-    result.x = result.y = result.z = 0;
+  if (
+    Math.abs(w - 1.0) < CesiumMath.EPSILON6 ||
+    Math.abs(w + 1.0) < CesiumMath.EPSILON6
+  ) {
+    result.x = 1;
+    result.y = result.z = 0;
     return result;
   }
 
