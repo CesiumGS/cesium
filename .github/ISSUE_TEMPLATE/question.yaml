@@ -1,10 +1,10 @@
 name: Ask a question
-description: Please use the community forum (https://community.cesium.com/) for general questions about using Cesium.
+description: Please use the community forum (https://community.cesium.com/) for general questions about using CesiumJS.
 body:
   - type: markdown
     attributes:
       value: |
-        :exclamation: Please use the [community forum](https://community.cesium.com/) for asking questions about how to use Cesium and best practices. The core Cesium team actively monitors the forum and we love seeing what people are working on! :exclamation:
+        :exclamation: Please use the [community forum](https://community.cesium.com/) for asking questions about how to use CesiumJS and best practices. The core CesiumJS team actively monitors the forum and we love seeing what people are working on! :exclamation:
   - type: checkboxes
     id: verify
     attributes:

@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping us improve Cesium! Please describe what the expected behavior is vs what actually happens.
+        Thanks for helping us improve CesiumJS! Please describe what the expected behavior is vs what actually happens.
   - type: textarea
     id: what-happened
     attributes:
@@ -44,7 +44,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        If you can also contribute a fix, we'd absolutely appreciate it! Fixing a bug in Cesium often means fixing a bug for thousands of applications and millions of end users.
+        If you can also contribute a fix, we'd absolutely appreciate it! Fixing a bug in CesiumJS often means fixing a bug for thousands of applications and millions of end users.
 
         Check out the contributor guide to get started: [CONTRIBUTING.md](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTING.md)
 
