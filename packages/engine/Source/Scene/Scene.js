@@ -3584,7 +3584,7 @@ function getGlobeHeight(scene) {
   const length = scene.primitives.length;
   for (let i = 0; i < length; ++i) {
     const primitive = scene.primitives.get(i);
-    if (!primitive.isCesium3DTileset || !primitive.enableCameraCollision) {
+    if (!primitive.isCesium3DTileset || primitive.disableCollision) {
       continue;
     }
 

@@ -82,19 +82,19 @@ export default function pickModel(model, ray, frameState, result) {
       }
     }
 
-    if (frameState.mode !== SceneMode.SCENE3D) {
-      modelMatrix = Transforms.basisTo2D(
-        frameState.mapProjection,
-        modelMatrix,
-        modelMatrix
-      );
-    }
-
-    const computedModelMatrix = Matrix4.multiplyTransformation(
+    let computedModelMatrix = Matrix4.multiplyTransformation(
       modelMatrix,
       nodeComputedTransform,
       scratchcomputedModelMatrix
     );
+
+    if (frameState.mode !== SceneMode.SCENE3D) {
+      computedModelMatrix = Transforms.basisTo2D(
+        frameState.mapProjection,
+        computedModelMatrix,
+        computedModelMatrix
+      );
+    }
 
     const transforms = [];
     if (defined(instances)) {
