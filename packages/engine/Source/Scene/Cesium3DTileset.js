@@ -110,10 +110,9 @@ import Ray from "../Core/Ray.js";
  * @property {string|number} [featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
- * @property {SplitDirection} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
- * @property {boolean} [enableCameraCollision=false] When {@link ScreenSpaceCameraController#enableCollisionDetection} is true, prevents the camera from going below the tileset surface.
+ * @property {boolean} [disableCollision=false] When {@link ScreenSpaceCameraController#enableCollisionDetection} is true, allows the camera to go in or below the tileset surface.
  * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has been created.
- * @property {boolean} [enablePick=false] Whether to allow with CPU picking with <code>pick</code> when not using WebGL 2 or above. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
+ * @property {boolean} [enablePick=false] Whether to allow collision and CPU picking with <code>pick</code> when using WebGL 1. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
  * @property {string} [debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @property {boolean} [debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -154,11 +153,11 @@ import Ray from "../Core/Ray.js";
  * }
  *
  * @example
- * // Keep camera from going under 3D tileset
+ * // Allow camera to go inside and under 3D tileset
  * try {
  *   const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *      "http://localhost:8002/tilesets/Seattle/tileset.json",
- *      { enableCameraCollision: true }
+ *      { disableCollision: true }
  *   );
  *   scene.primitives.add(tileset);
  * } catch (error) {
@@ -861,22 +860,15 @@ function Cesium3DTileset(options) {
   );
 
   /**
-   * When {@link ScreenSpaceCameraController#enableCollisionDetection} is true, prevents the camera from going below the tileset surface.
-   * If using WebGL 1, {@link Cesium3DTileset#ConstructorOptions} <code>enablePick</code> must be true for this behavior to work.
+   * When {@link ScreenSpaceCameraController#enableCollisionDetection} is true, allows the camera to go inside or below the tileset surface.
    *
    * @type {boolean}
    * @default false
    */
-  this.enableCameraCollision = defaultValue(
-    options.enableCameraCollision,
-    false
-  );
+  this.disableCollision = defaultValue(options.disableCollision, false);
 
   this._projectTo2D = defaultValue(options.projectTo2D, false);
-  this._enablePick = defaultValue(
-    options.enablePick,
-    this.enableCameraCollision
-  );
+  this._enablePick = defaultValue(options.enablePick, false);
 
   /**
    * This property is for debugging only; it is not optimized for production use.

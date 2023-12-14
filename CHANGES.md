@@ -26,11 +26,17 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- By default, the screen space camera controller will no longer go inside or under instaces of `Cesium3DTileset`. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+  - This behavior can be disabled by setting `Cesium3DTileset.disableCameraCollision` to true.
+  - This feature is enabled by default only for WebGL 2 and above, but can be enabled for WebGL 1 by setting the `enablePick` option to true when creating the `Cesium3DTileset`.
+
 ##### Additions :tada:
 
 - Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of `Terrain` and `Cesium3DTileset` can be controlled simultaneously via the new `Scene` properties `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight`. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
 - Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
-- Added `Cesium3DTileset.enableCameraCollision` to prevent the camera from going below a 3D tileset. Tilesets created with `createGooglePhotorealistic3DTileset` have this option enabled by default. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- Added `Cesium3DTileset.disableCameraCollision` to allow the camera from to go inside or below a 3D tileset, for instance, to be used with 3D Tiles interiors. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
 
 ##### Fixes :wrench:
 
