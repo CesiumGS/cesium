@@ -3704,7 +3704,11 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
     const length = this.primitives.length;
     for (let i = 0; i < length; ++i) {
       const primitive = this.primitives.get(i);
-      if (!primitive.isCesium3DTileset || primitive.disableCollision) {
+      if (
+        !primitive.isCesium3DTileset ||
+        !primitive.show ||
+        primitive.disableCollision
+      ) {
         continue;
       }
 
