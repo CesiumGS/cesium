@@ -9,6 +9,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
+import Ellipsoid from "../../Core/Ellipsoid.js";
 import Event from "../../Core/Event.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -2043,7 +2044,7 @@ function updateClamping(model) {
   }
 
   const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
+  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;

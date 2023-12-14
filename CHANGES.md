@@ -6,8 +6,10 @@
 
 ##### Additions :tada:
 
-- Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
 - Added `Cesium3DTileset.enableCameraCollision` to prevent the camera from going below a 3D tileset. Tilesets created with `createGooglePhotorealistic3DTileset` have this option enabled by default. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- Clamping to ground, `HeightReference.CLAMP_TO_GROUND`, and `HeightReference.RELATIVE_TO_GROUND` now take into account 3D Tilesets. These opions will clamp to either 3D Tilesets or Terrain, whichever has a greater height. [#11604](https://github.com/CesiumGS/cesium/pull/11604)
+- Added `HeightReference.CLAMP_TO_TERRAIN`, `HeightReference.RELATIVE_TO_TERRAIN`, `HeightReference.CLAMP_TO_3D_TILE`, and `HeightReference.RELATIVE_TO_3D_TILE` to position relatve to terrain or 3D tilesets exclusively.[#11604](https://github.com/CesiumGS/cesium/pull/11604)
+- Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
 
 ##### Fixes :wrench:
 
