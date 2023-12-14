@@ -3701,8 +3701,10 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
   let maxHeight = Number.NEGATIVE_INFINITY;
 
   if (!ignore3dTiles) {
-    for (const tileset of this._terrainTilesets) {
-      if (!tileset.show) {
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      if (!primitive.isCesium3DTileset || primitive.disableCollision) {
         continue;
       }
 
@@ -3775,24 +3777,55 @@ Scene.prototype.updateHeight = function (
     );
   }
 
-  const tilesetRemoveCallbacks = [];
+  let tilesetRemoveCallbacks = {};
   const ellipsoid = this.globe?.ellipsoid;
+  const createPrimitiveEventListener = (primitive) => {
+    if (
+      ignore3dTiles ||
+      !primitive.isCesium3DTileset ||
+      primitive.disableCollision
+    ) {
+      return;
+    }
+
+    const tilesetRemoveCallback = primitive.updateHeight(
+      cartographic,
+      callbackWrapper,
+      ellipsoid
+    );
+    tilesetRemoveCallbacks[primitive.id] = tilesetRemoveCallback;
+  };
+
   if (!ignore3dTiles) {
-    for (const tileset of this._terrainTilesets) {
-      const tilesetRemoveCallback = tileset.updateHeight(
-        cartographic,
-        callbackWrapper,
-        ellipsoid
-      );
-      tilesetRemoveCallbacks.push(tilesetRemoveCallback);
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      createPrimitiveEventListener(primitive);
     }
   }
 
+  const removeAddedListener = this.primitives.primitiveAdded.addEventListener(
+    createPrimitiveEventListener
+  );
+  const removeRemovedListener = this.primitives.primitiveRemoved.addEventListener(
+    (primitive) => {
+      if (!primitive.isCesium3DTileset) {
+        return;
+      }
+
+      tilesetRemoveCallbacks[primitive.id]();
+      delete tilesetRemoveCallbacks[primitive.id];
+    }
+  );
+
   const removeCallback = () => {
     terrainRemoveCallback = terrainRemoveCallback && terrainRemoveCallback();
-    tilesetRemoveCallbacks.forEach((tilesetRemoveCallback) =>
+    Object.values(tilesetRemoveCallbacks).forEach((tilesetRemoveCallback) =>
       tilesetRemoveCallback()
     );
+    tilesetRemoveCallbacks = {};
+    removeAddedListener();
+    removeRemovedListener();
   };
 
   return removeCallback;

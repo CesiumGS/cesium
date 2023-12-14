@@ -3625,7 +3625,7 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
       tile.contentBoundingVolume.boundingSphere,
       scratchSphereIntersection
     );
-    if (!defined(boundsIntersection)) {
+    if (!defined(boundsIntersection) || !defined(tile.content)) {
       continue;
     }
     candidates.push(tile);

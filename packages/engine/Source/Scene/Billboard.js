@@ -10,6 +10,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
+import Ellipsoid from "../Core/Ellipsoid.js";
 import Matrix4 from "../Core/Matrix4.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import Resource from "../Core/Resource.js";
@@ -1060,11 +1061,11 @@ Billboard.prototype._updateClamping = function () {
 const scratchCartographic = new Cartographic();
 Billboard._updateClamping = function (collection, owner) {
   const scene = collection._scene;
-  if (!defined(scene) || !defined(scene.globe)) {
+  if (!defined(scene)) {
     //>>includeStart('debug', pragmas.debug);
     if (owner._heightReference !== HeightReference.NONE) {
       throw new DeveloperError(
-        "Height reference is not supported without a scene and globe."
+        "Height reference is not supported without a scene."
       );
     }
     //>>includeEnd('debug');
@@ -1072,7 +1073,7 @@ Billboard._updateClamping = function (collection, owner) {
   }
 
   const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
+  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
 
   const mode = scene.frameState.mode;
 

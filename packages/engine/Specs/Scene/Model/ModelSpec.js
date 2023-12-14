@@ -2256,8 +2256,6 @@ describe(
 
       function createMockGlobe() {
         const globe = {
-          callback: undefined,
-          removedCallback: false,
           ellipsoid: Ellipsoid.WGS84,
           update: function () {},
           render: function () {},
@@ -2290,10 +2288,8 @@ describe(
         });
 
         globe._surface.updateHeight = function (position, callback) {
-          globe.callback = callback;
           return function () {
-            globe.removedCallback = true;
-            globe.callback = undefined;
+            // TODO
           };
         };
 
@@ -2526,7 +2522,7 @@ describe(
           sceneWithMockGlobe
         ).catch(function (error) {
           expect(error.message).toEqual(
-            "Height reference is not supported without a scene and globe."
+            "Height reference is not supported without a scene."
           );
         });
       });
@@ -2549,40 +2545,20 @@ describe(
         });
       });
 
-      it("throws when initializing height reference with no globe", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: scene,
-          },
-          scene
-        ).catch(function (error) {
-          expect(error.message).toEqual(
-            "Height reference is not supported without a scene and globe."
-          );
-        });
-      });
-
-      it("throws when changing height reference with no globe", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            scene: scene,
-          },
-          scene
-        ).then(function (model) {
-          expect(function () {
-            model.heightReference = HeightReference.CLAMP_TO_GROUND;
-            scene.renderForSpecs();
-          }).toThrowDeveloperError();
-        });
+      it("works when initializing height reference with no globe", function () {
+        return expectAsync(
+          loadAndZoomToModelAsync(
+            {
+              gltf: boxTexturedGltfUrl,
+              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+                Cartesian3.fromDegrees(-72.0, 40.0)
+              ),
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              scene: scene,
+            },
+            scene
+          )
+        ).toBeResolved();
       });
 
       it("destroys height reference callback", function () {

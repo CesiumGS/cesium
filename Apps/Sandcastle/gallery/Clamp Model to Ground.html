@@ -63,9 +63,6 @@
         try {
           tileset = await Cesium.Cesium3DTileset.fromIonAssetId(40866);
           viewer.scene.primitives.add(tileset);
-
-          // This line is needed to clamp to 3D Tiles
-          viewer.scene.enableCollisionDetectionForTileset(tileset);
         } catch (error) {
           console.log(`Error loading tileset: ${error}`);
         }

@@ -3,6 +3,7 @@ import {
   BoundingSphere,
   Cartesian2,
   Cartesian3,
+  Cartographic,
   Color,
   defined,
   DistanceDisplayCondition,
@@ -19,16 +20,12 @@ import {
 } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
-
-import createGlobe from "../../../../Specs/createGlobe.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 describe(
   "Scene/LabelCollection",
   function () {
-    // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
-
     let scene;
     let camera;
     let labels;
@@ -2565,8 +2562,7 @@ describe(
 
     describe("height referenced labels", function () {
       beforeEach(function () {
-        scene.globe = createGlobe();
-
+        scene.globe = new Globe();
         labelsWithHeight = new LabelCollection({
           scene: scene,
         });
@@ -2574,7 +2570,6 @@ describe(
       });
 
       it("explicitly constructs a label with height reference", function () {
-        scene.globe = createGlobe();
         const l = labelsWithHeight.add({
           text: "test",
           heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2584,7 +2579,6 @@ describe(
       });
 
       it("set label height reference property", function () {
-        scene.globe = createGlobe();
         const l = labelsWithHeight.add({
           text: "test",
         });
@@ -2594,68 +2588,127 @@ describe(
       });
 
       it("creating with a height reference creates a height update callback", function () {
-        scene.globe = createGlobe();
+        spyOn(scene, "updateHeight");
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
         labelsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
-        expect(scene.globe.callback).toBeDefined();
+
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
       });
 
       it("set height reference property creates a height update callback", function () {
-        scene.globe = createGlobe();
+        spyOn(scene, "updateHeight");
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
         const l = labelsWithHeight.add({
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
         l.heightReference = HeightReference.CLAMP_TO_GROUND;
-        expect(scene.globe.callback).toBeDefined();
+
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
       });
 
       it("updates the callback when the height reference changes", function () {
-        scene.globe = createGlobe();
+        spyOn(scene, "updateHeight");
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
         const l = labelsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
-        expect(scene.globe.callback).toBeDefined();
+
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
 
         l.heightReference = HeightReference.RELATIVE_TO_GROUND;
-        expect(scene.globe.removedCallback).toEqual(true);
-        expect(scene.globe.callback).toBeDefined();
 
-        scene.globe.removedCallback = false;
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.RELATIVE_TO_GROUND
+        );
+      });
+
+      it("removes the callback when the height reference changes", function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const l = labelsWithHeight.add({
+          heightReference: HeightReference.CLAMP_TO_GROUND,
+          position: position,
+        });
+
         l.heightReference = HeightReference.NONE;
-        expect(scene.globe.removedCallback).toEqual(true);
-        expect(scene.globe.callback).toBeUndefined();
+
+        expect(removeCallback).toHaveBeenCalled();
       });
 
       it("changing the position updates the callback", function () {
-        scene.globe = createGlobe();
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        let position = Cartesian3.fromDegrees(-72.0, 40.0);
         const l = labelsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
-        expect(scene.globe.callback).toBeDefined();
 
-        l.position = Cartesian3.fromDegrees(-73.0, 40.0);
-        expect(scene.globe.removedCallback).toEqual(true);
-        expect(scene.globe.callback).toBeDefined();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+
+        position = l.position = Cartesian3.fromDegrees(-73.0, 40.0);
+
+        expect(removeCallback).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Cartographic.fromCartesian(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
       });
 
       it("callback updates the position", function () {
-        scene.globe = createGlobe();
+        let invokeCallback;
+        spyOn(scene, "updateHeight").and.callFake(
+          (cartographic, updateCallback) => {
+            invokeCallback = (height) => {
+              cartographic.height = height;
+              updateCallback(cartographic);
+            };
+          }
+        );
+
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
         const l = labelsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
-          position: Cartesian3.fromDegrees(-72.0, 40.0),
+          position: position,
         });
-        expect(scene.globe.callback).toBeDefined();
+        expect(scene.updateHeight).toHaveBeenCalled();
 
         let cartographic = scene.globe.ellipsoid.cartesianToCartographic(
           l._clampedPosition
         );
         expect(cartographic.height).toEqual(0.0);
 
-        scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
+        invokeCallback(100.0);
+
         cartographic = scene.globe.ellipsoid.cartesianToCartographic(
           l._clampedPosition
         );
@@ -2663,7 +2716,6 @@ describe(
       });
 
       it("resets the clamped position when HeightReference.NONE", function () {
-        scene.globe = createGlobe();
         spyOn(scene.camera, "update");
         const l = labelsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
@@ -2681,7 +2733,6 @@ describe(
       });
 
       it("clears the billboard height reference callback when the label is removed", function () {
-        scene.globe = createGlobe();
         spyOn(scene.camera, "update");
         const l = labelsWithHeight.add({
           heightReference: HeightReference.CLAMP_TO_GROUND,
