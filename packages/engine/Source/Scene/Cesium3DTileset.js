@@ -3471,6 +3471,10 @@ const scratchPickIntersection = new Cartesian3();
  * @private
  */
 Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
+  if (!frameState.context.webgl2 && !this._enablePick) {
+    return;
+  }
+
   const selectedTiles = this._selectedTiles;
   const selectedLength = selectedTiles.length;
 
