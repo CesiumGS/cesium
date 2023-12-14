@@ -55,7 +55,7 @@
 - The `Quaternion.computeAxis` function created an axis that was `(0,0,0)` for the unit quaternion, and an axis that was `(NaN,NaN,NaN)` for the quaternion `(0,0,0,-1)` (which describes a rotation about 360 degrees). Now, it returns the x-axis `(1,0,0)` in both of these cases. [#11665](https://github.com/CesiumGS/cesium/issues/11665)
 - Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
 - Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
-- Updated the `PolylineGeometryUpdater` destroy function to properly remove destroyed `PolylineCollection` instances from the `Scene`. Additionally, updated `PolylineCollection` to address cases where destroy was invoked on a primitive that had already been destroyed. These changes resolve crashes reported under [#7758] (https://github.com/CesiumGS/cesium/issues/7758) and [#9154] (https://github.com/CesiumGS/cesium/issues/9154)
+- Updated the `PolylineGeometryUpdater` destroy function to properly remove destroyed `PolylineCollection` instances from the `Scene`. Additionally, updated `PolylineCollection` to address cases where destroy was invoked on a primitive that had already been destroyed. These changes resolve crashes reported under [#7758](https://github.com/CesiumGS/cesium/issues/7758) and [#9154](https://github.com/CesiumGS/cesium/issues/9154)
 
 ##### Deprecated :hourglass_flowing_sand:
 
