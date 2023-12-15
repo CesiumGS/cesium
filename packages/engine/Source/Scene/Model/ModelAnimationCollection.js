@@ -550,4 +550,13 @@ ModelAnimationCollection.prototype.update = function (frameState) {
   return animationOccurred;
 };
 
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<ModelAnimation>} The iterator
+ */
+ModelAnimationCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._runtimeAnimations;
+};
+
 export default ModelAnimationCollection;

@@ -768,4 +768,14 @@ ClippingPlaneCollection.prototype.destroy = function () {
     this._clippingPlanesTexture && this._clippingPlanesTexture.destroy();
   return destroyObject(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<ClippingPlane>} The iterator
+ */
+ClippingPlaneCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._planes;
+};
+
 export default ClippingPlaneCollection;

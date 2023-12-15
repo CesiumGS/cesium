@@ -216,4 +216,16 @@ OrderedGroundPrimitiveCollection.prototype.destroy = function () {
   this.removeAll();
   return destroyObject(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<GroundPrimitive>} The iterator
+ */
+OrderedGroundPrimitiveCollection.prototype[Symbol.iterator] = function* () {
+  for (const collection of this._collectionsArray) {
+    yield* collection;
+  }
+};
+
 export default OrderedGroundPrimitiveCollection;

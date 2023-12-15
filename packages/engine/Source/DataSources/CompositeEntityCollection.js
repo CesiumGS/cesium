@@ -589,4 +589,16 @@ CompositeEntityCollection.prototype._onDefinitionChanged = function (
 
   compositeEntity[propertyName] = compositeProperty;
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<Entity>} The iterator
+ */
+CompositeEntityCollection.prototype[Symbol.iterator] = function* () {
+  for (const collection of this._collections) {
+    yield* collection;
+  }
+};
+
 export default CompositeEntityCollection;

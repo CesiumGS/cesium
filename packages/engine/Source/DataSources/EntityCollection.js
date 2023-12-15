@@ -437,4 +437,14 @@ EntityCollection.prototype._onEntityDefinitionChanged = function (entity) {
   }
   fireChangedEvent(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<Entity>} The iterator
+ */
+EntityCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._entities;
+};
+
 export default EntityCollection;

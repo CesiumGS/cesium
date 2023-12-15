@@ -572,6 +572,15 @@ TweenCollection.prototype.update = function (time) {
 };
 
 /**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<Tween>} The iterator
+ */
+TweenCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._tweens;
+};
+
+/**
  * A function that will execute when a tween completes.
  * @callback TweenCollection.TweenCompleteCallback
  */

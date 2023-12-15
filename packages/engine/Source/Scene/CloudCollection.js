@@ -1047,4 +1047,13 @@ CloudCollection.prototype.destroy = function () {
   return destroyObject(this);
 };
 
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<Cloud>} The iterator
+ */
+CloudCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._clouds;
+};
+
 export default CloudCollection;

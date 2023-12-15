@@ -995,4 +995,14 @@ LabelCollection.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<Label>} The iterator
+ */
+LabelCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._labels;
+};
+
 export default LabelCollection;

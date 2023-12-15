@@ -1133,4 +1133,14 @@ TimeIntervalCollection.fromIso8601DurationArray = function (options, result) {
     result
   );
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<TimeInterval>} The iterator
+ */
+TimeIntervalCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._intervals;
+};
+
 export default TimeIntervalCollection;

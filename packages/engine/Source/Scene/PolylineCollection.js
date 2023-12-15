@@ -1954,4 +1954,14 @@ PolylineBucket.prototype.writeUpdate = function (
     );
   }
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<Polyline>} The iterator
+ */
+PolylineCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._polylines;
+};
+
 export default PolylineCollection;

@@ -1214,4 +1214,14 @@ PointPrimitiveCollection.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<PointPrimitive>} The iterator
+ */
+PointPrimitiveCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._pointPrimitives;
+};
+
 export default PointPrimitiveCollection;

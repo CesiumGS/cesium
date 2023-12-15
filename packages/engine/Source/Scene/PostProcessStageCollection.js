@@ -885,4 +885,14 @@ PostProcessStageCollection.prototype.destroy = function () {
   this._textureCache = this._textureCache && this._textureCache.destroy();
   return destroyObject(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<PostProcessStage|PostProcessStageComposite>} The iterator
+ */
+PostProcessStageCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._stages;
+};
+
 export default PostProcessStageCollection;

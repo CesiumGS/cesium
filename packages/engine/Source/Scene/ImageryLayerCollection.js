@@ -644,4 +644,14 @@ ImageryLayerCollection.prototype._update = function () {
     }
   }
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<ImageryLayer>} The iterator
+ */
+ImageryLayerCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._layers;
+};
+
 export default ImageryLayerCollection;

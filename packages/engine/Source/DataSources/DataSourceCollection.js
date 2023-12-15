@@ -333,4 +333,14 @@ DataSourceCollection.prototype.destroy = function () {
   this.removeAll(true);
   return destroyObject(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<DataSource>} The iterator
+ */
+DataSourceCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._dataSources;
+};
+
 export default DataSourceCollection;

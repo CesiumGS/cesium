@@ -2414,4 +2414,14 @@ BillboardCollection.prototype.destroy = function () {
 
   return destroyObject(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<Billboard>} The iterator
+ */
+BillboardCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._billboards;
+};
+
 export default BillboardCollection;

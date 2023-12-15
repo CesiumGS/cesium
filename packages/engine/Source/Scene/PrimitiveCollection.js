@@ -503,4 +503,14 @@ PrimitiveCollection.prototype.destroy = function () {
   this.removeAll();
   return destroyObject(this);
 };
+
+/**
+ * Returns an iterator over the elements of this collection.
+ *
+ * @returns {Iterator<Primitive>} The iterator
+ */
+PrimitiveCollection.prototype[Symbol.iterator] = function* () {
+  yield* this._primitives;
+};
+
 export default PrimitiveCollection;
