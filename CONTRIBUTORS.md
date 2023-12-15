@@ -375,4 +375,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [孙永政](https://github.com/syzdev)
 - [Jared Webber](https://github.com/jaredwebber)
 - [Anne Gropler](https://github.com/anne-gropler)
+- [rropp5](https://github.com/rropp5)
 - [Arturo Espinosa Aldama](https://github.com/pupitetris)
