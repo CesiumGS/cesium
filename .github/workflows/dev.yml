@@ -57,7 +57,7 @@ jobs:
       - name: npm install
         run: npm install
       - name: release build
-        run: npm run build-release
+        run: npm run make-zip
       - name: release tests (chrome)
         run: npm run test -- --browsers ChromeHeadless --failTaskOnError --webgl-stub --release --suppressPassed
       - name: cloc
