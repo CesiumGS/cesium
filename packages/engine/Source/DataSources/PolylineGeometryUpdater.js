@@ -874,7 +874,6 @@ DynamicGeometryUpdater.prototype.destroy = function () {
   if (defined(polylineCollection)) {
     polylineCollection.remove(this._line);
     if (polylineCollection.length === 0) {
-      removePolylineCollection(geometryUpdater._scene.primitives, polylineCollection);
       this._primitives.removeAndDestroy(polylineCollection);
       delete polylineCollections[polylineCollectionId];
     }
@@ -883,17 +882,5 @@ DynamicGeometryUpdater.prototype.destroy = function () {
     this._groundPrimitives.remove(this._groundPolylinePrimitive);
   }
   destroyObject(this);
-};
-
-function removePolylineCollection(primitiveCollection, toRemove) {
-  if (defined(primitiveCollection)) {
-    if (typeof primitiveCollection.remove === "function") {
-      primitiveCollection.remove(toRemove);
-    }
-
-    for (let i = 0; i < primitiveCollection.length; i++) {
-      removePolylineCollection(primitiveCollection.get(i), toRemove);
-    }
-  }
 };
 export default PolylineGeometryUpdater;
