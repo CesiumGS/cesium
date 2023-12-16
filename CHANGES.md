@@ -56,6 +56,7 @@
 - Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
 - Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
 - Updated the `PolylineGeometryUpdater` destroy function to properly remove destroyed `PolylineCollection` instances from the `Scene`. Additionally, updated `PolylineCollection` to address cases where destroy was invoked on a primitive that had already been destroyed. These changes resolve crashes reported under [#7758](https://github.com/CesiumGS/cesium/issues/7758) and [#9154](https://github.com/CesiumGS/cesium/issues/9154)
+- `PolylineGeometryUpdater` now uses a distinct `PolylineCollection` instance per `CustomDataSource`. This resolves the crashes reported under [#7758](https://github.com/CesiumGS/cesium/issues/7758) and [#9154](https://github.com/CesiumGS/cesium/issues/9154). 
 
 ##### Deprecated :hourglass_flowing_sand:
 
