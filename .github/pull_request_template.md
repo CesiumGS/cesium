@@ -30,6 +30,6 @@ To ensure your Pull Request is reviewed and accepted quickly, please refer to ou
 - [ ] I have submitted a Contributor License Agreement
 - [ ] I have added my name to `CONTRIBUTORS.md`
 - [ ] I have updated `CHANGES.md` with a short summary of my change
-- [ ] I have added or updated unit tests to ensure consistant code coverage
+- [ ] I have added or updated unit tests to ensure consistent code coverage
 - [ ] I have update the inline documentation, and included code examples where relevant
 - [ ] I have performed a self-review of my code
