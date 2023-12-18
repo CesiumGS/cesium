@@ -13,11 +13,11 @@ vec3 computeFogColor() {
     vec3 positionWC;
     vec3 lightDirection;
 
-    positionWC = computeEllipsoidPosition();
-    lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(positionWC));
-
     // This is true when dynamic lighting is enabled in the scene.
     bool dynamicLighting = false;
+
+    positionWC = czm_computeEllipsoidPosition();
+    lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(positionWC));
 
     // The fog color is derived from the ground atmosphere color
     czm_computeGroundAtmosphereScattering(
@@ -43,8 +43,6 @@ vec3 computeFogColor() {
 }
 
 void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
-    const vec4 FOG_COLOR = vec4(0.5, 0.0, 1.0, 1.0);
-
     vec3 fogColor = computeFogColor();
 
     // Note: camera is far away (distance > nightFadeOutDistance), scattering is computed in the fragment shader.
@@ -55,7 +53,7 @@ void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
     const float fogModifier = 0.15;
     float distanceToCamera = attributes.positionEC.z;
     // where to get distance?
-    vec3 withFog = czm_fog(distanceToCamera, color.rgb, FOG_COLOR.rgb, fogModifier);
+    vec3 withFog = czm_fog(distanceToCamera, color.rgb, fogColor, fogModifier);
 
     color = vec4(withFog, color.a);
 }
