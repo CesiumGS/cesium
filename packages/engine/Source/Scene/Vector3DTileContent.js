@@ -31,7 +31,14 @@ import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions
  *
  * @private
  */
-function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
+function Vector3DTileContent(
+  tileset,
+  tile,
+  resource,
+  arrayBuffer,
+  byteOffset,
+  scene
+) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -53,7 +60,7 @@ function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
 
   this._ready = false;
 
-  initialize(this, arrayBuffer, byteOffset);
+  initialize(this, arrayBuffer, byteOffset, scene);
 }
 
 Object.defineProperties(Vector3DTileContent.prototype, {
@@ -288,7 +295,7 @@ function createClampedPolylines(options) {
   return new Vector3DTileClampedPolylines(options);
 }
 
-function initialize(content, arrayBuffer, byteOffset) {
+function initialize(content, arrayBuffer, byteOffset, scene) {
   byteOffset = defaultValue(byteOffset, 0);
 
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -528,7 +535,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       modelMatrix: modelMatrix,
     });
   }
-
+  const tileset = content._tileset;
   if (numberOfPolylines > 0) {
     featureTable.featuresLength = numberOfPolylines;
 
@@ -575,7 +582,6 @@ function initialize(content, arrayBuffer, byteOffset) {
     );
     byteOffset += polylinePositionByteLength;
 
-    const tileset = content._tileset;
     const examineVectorLinesFunction = tileset.examineVectorLinesFunction;
     if (defined(examineVectorLinesFunction)) {
       const decodedPositions = decodeVectorPolylinePositions(
@@ -630,6 +636,8 @@ function initialize(content, arrayBuffer, byteOffset) {
       maximumHeight: maxHeight,
       rectangle: rectangle,
       batchTable: batchTable,
+      heightReference: tileset.heightReference,
+      scene: scene,
     });
   }
 }

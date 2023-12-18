@@ -62,13 +62,14 @@ const Cesium3DTileContentFactory = {
       byteOffset
     );
   },
-  vctr: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+  vctr: function (tileset, tile, resource, arrayBuffer, byteOffset, scene) {
     return new Vector3DTileContent(
       tileset,
       tile,
       resource,
       arrayBuffer,
-      byteOffset
+      byteOffset,
+      scene
     );
   },
   subt: function (tileset, tile, resource, arrayBuffer, byteOffset) {

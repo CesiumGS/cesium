@@ -1348,7 +1348,8 @@ async function makeContent(tile, arrayBuffer) {
         tile,
         tile._contentResource,
         preprocessed.binaryPayload.buffer,
-        0
+        0,
+        tileset.scene
       )
     );
   } else {
