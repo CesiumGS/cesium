@@ -86,7 +86,7 @@ Atmosphere.prototype.update = function (frameState) {
     this.rayleighCoefficient,
     atmosphere.rayleighCoefficient
   );
-  atmosphere.rayleightScaleHeight = this.rayleighScaleHeight;
+  atmosphere.rayleighScaleHeight = this.rayleighScaleHeight;
   atmosphere.mieCoefficient = Cartesian3.clone(
     this.mieCoefficient,
     atmosphere.mieCoefficient
