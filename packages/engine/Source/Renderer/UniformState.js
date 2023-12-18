@@ -1377,17 +1377,17 @@ UniformState.prototype.update = function (frameState) {
     frameState.atmosphere.hsbShift,
     this._atmosphereHsbShift
   );
+  this._atmosphereLightIntensity = frameState.atmosphere.lightIntensity;
   this._atmosphereRayleighCoefficient = Cartesian3.clone(
     frameState.atmosphere.rayleighCoefficient,
     this._atmosphereRayleighCoefficient
   );
+  this._atmosphereRayleighScaleHeight =
+    frameState.atmosphere.rayleighScaleHeight;
   this._atmosphereMieCoefficient = Cartesian3.clone(
     frameState.atmosphere.mieCoefficient,
     this._atmosphereMieCoefficient
   );
-  this._atmospherelightIntensity = frameState.atmosphere.lightIntensity;
-  this._atmosphereRayleighScaleHeight =
-    frameState.atmosphere.rayleighScaleHeight;
   this._atmosphereMieScaleHeight = frameState.atmosphere.mieScaleHeight;
   this._atmosphereMieAnisotropy = frameState.atmosphere.mieAnisotropy;
 

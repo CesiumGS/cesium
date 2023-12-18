@@ -1626,7 +1626,7 @@ const AutomaticUniforms = {
     size: 1,
     datatype: WebGLConstants.FLOAT,
     getValue: function (uniformState) {
-      return uniformState.atmosphereAnisotropy;
+      return uniformState.atmosphereMieAnisotropy;
     },
   }),
 
