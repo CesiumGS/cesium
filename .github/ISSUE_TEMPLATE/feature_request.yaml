@@ -1,6 +1,6 @@
 name: Request a feature
 description: New ideas & improvements to CesiumJS are always welcome.
-labels: ["type - enhancement"]
+labels: ["needs triage", "type - enhancement"]
 body:
   - type: markdown
     attributes:
