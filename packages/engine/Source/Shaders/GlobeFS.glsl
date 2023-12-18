@@ -396,7 +396,7 @@ void main()
     materialInput.st = v_textureCoordinates.st;
     materialInput.normalEC = normalize(v_normalEC);
     materialInput.positionToEyeEC = -v_positionEC;
-    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalize(v_normalEC));     
+    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalize(v_normalEC));
     materialInput.slope = v_slope;
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;
@@ -442,7 +442,7 @@ void main()
     {
         bool dynamicLighting = false;
         #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
-            dynamicLighting = true;     
+            dynamicLighting = true;
         #endif
 
         vec3 rayleighColor;
@@ -480,18 +480,18 @@ void main()
         // Fog is applied to tiles selected for fog, close to the Earth.
         #ifdef FOG
             vec3 fogColor = groundAtmosphereColor.rgb;
-            
+
             // If there is lighting, apply that to the fog.
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
                 float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
-                fogColor *= darken;                
+                fogColor *= darken;
             #endif
 
             #ifndef HDR
                 fogColor.rgb = czm_acesTonemapping(fogColor.rgb);
                 fogColor.rgb = czm_inverseGamma(fogColor.rgb);
             #endif
-            
+
             const float modifier = 0.15;
             finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
 
@@ -507,20 +507,20 @@ void main()
             #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
                 float fadeInDist = u_nightFadeDistance.x;
                 float fadeOutDist = u_nightFadeDistance.y;
-            
+
                 float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.05, 1.0);
                 float darken = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
                 vec3 darkenendGroundAtmosphereColor = mix(groundAtmosphereColor.rgb, finalAtmosphereColor.rgb, darken);
 
                 finalAtmosphereColor = mix(darkenendGroundAtmosphereColor, finalAtmosphereColor, sunlitAtmosphereIntensity);
             #endif
-            
+
             #ifndef HDR
                 finalAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * finalAtmosphereColor.rgb);
             #else
                 finalAtmosphereColor.rgb = czm_saturation(finalAtmosphereColor.rgb, 1.6);
             #endif
-            
+
             finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor.rgb, fade);
         #endif
     }
@@ -544,7 +544,7 @@ void main()
       finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
     }
 #endif
-    
+
     out_FragColor =  finalColor;
 }
 
