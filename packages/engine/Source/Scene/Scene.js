@@ -37,6 +37,7 @@ import Context from "../Renderer/Context.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
+import Atmosphere from "./Atmosphere.js";
 import BrdfLutGenerator from "./BrdfLutGenerator.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -512,6 +513,8 @@ function Scene(options) {
    * @private
    */
   this.cameraEventWaitTime = 500.0;
+
+  this.atmosphere = new Atmosphere();
 
   /**
    * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
@@ -3811,6 +3814,7 @@ function render(scene) {
   }
   frameState.backgroundColor = backgroundColor;
 
+  scene.atmosphere.update(frameState);
   scene.fog.update(frameState);
 
   us.update(frameState);

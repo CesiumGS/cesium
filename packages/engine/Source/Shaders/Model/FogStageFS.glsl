@@ -39,7 +39,7 @@ vec3 computeFogColor() {
     fogColor.rgb = czm_inverseGamma(fogColor.rgb);
 #endif
 
-    return vec3(1.0);
+    return fogColor.rgb;
 }
 
 void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
