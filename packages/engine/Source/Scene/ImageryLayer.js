@@ -142,7 +142,7 @@ import TileImagery from "./TileImagery.js";
  * // Add an OpenStreetMaps layer
  * const imageryLayer = new Cesium.ImageryLayer(new Cesium.OpenStreetMapImageryProvider({
  *   url: "https://tile.openstreetmap.org/"
- * })),
+ * }));
  * scene.imageryLayers.add(imageryLayer);
  *
  * @example
