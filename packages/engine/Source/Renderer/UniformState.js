@@ -988,9 +988,9 @@ Object.defineProperties(UniformState.prototype, {
    * @memberof UniformState.prototype
    * @type {number}
    */
-  atmosphereAnisotropy: {
+  atmosphereMieAnisotropy: {
     get: function () {
-      return this._atmosphereAnisotropy;
+      return this._atmosphereMieAnisotropy;
     },
   },
 
