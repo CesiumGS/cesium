@@ -1,4 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3";
+import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType";
 
 function Atmosphere() {
   /**
@@ -46,6 +47,7 @@ function Atmosphere() {
    * <p>
    * Valid values are between -1.0 and 1.0.
    * </p>
+   *
    * @type {number}
    * @default 0.9
    */
@@ -54,6 +56,7 @@ function Atmosphere() {
   /**
    * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A hue shift of 1.0 indicates a complete rotation of the hues available.
+   *
    * @type {number}
    * @default 0.0
    */
@@ -62,6 +65,7 @@ function Atmosphere() {
   /**
    * The saturation shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A saturation shift of -1.0 is monochrome.
+   *
    * @type {number}
    * @default 0.0
    */
@@ -70,10 +74,20 @@ function Atmosphere() {
   /**
    * The brightness shift to apply to the atmosphere. Defaults to 0.0 (no shift).
    * A brightness shift of -1.0 is complete darkness, which will let space show through.
+   *
    * @type {number}
    * @default 0.0
    */
   this.brightnessShift = 0.0;
+
+  /**
+   * When not DynamicAtmosphereLightingType.OFF, the selected light source will
+   * be used for dynamically lighting all atmosphere-related rendering effects.
+   *
+   * @type {DynamicAtmosphereLightingType}
+   * @default DynamicAtmosphereLightingType.OFF
+   */
+  this.dynamicLighting = DynamicAtmosphereLightingType.OFF;
 }
 
 Atmosphere.prototype.update = function (frameState) {
@@ -93,6 +107,8 @@ Atmosphere.prototype.update = function (frameState) {
   );
   atmosphere.mieScaleHeight = this.mieScaleHeight;
   atmosphere.mieAnisotropy = this.mieAnisotropy;
+
+  atmosphere.dynamicLighting = this.dynamicLighting;
 };
 
 export default Atmosphere;

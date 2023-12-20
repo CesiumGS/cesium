@@ -169,6 +169,7 @@ function UniformState() {
   this._atmosphereMieCoefficient = new Cartesian3();
   this._atmosphereMieScaleHeight = undefined;
   this._atmosphereMieAnisotropy = undefined;
+  this._atmosphereDynamicLighting = undefined;
 
   this._invertClassificationColor = undefined;
 
@@ -993,6 +994,17 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereMieAnisotropy;
     },
   },
+  /**
+   * Which light source to use for dynamically lighting the atmosphere
+   *
+   * @memberof UniformState.prototype
+   * @type {DynamicAtmosphereLightingType}
+   */
+  atmosphereDynamicLighting: {
+    get: function () {
+      return this._atmosphereDynamicLighting;
+    },
+  },
 
   /**
    * A scalar that represents the geometric tolerance per meter
@@ -1491,23 +1503,25 @@ UniformState.prototype.update = function (frameState) {
 
   this._fogDensity = frameState.fog.density;
 
+  const atmosphere = frameState.atmosphere;
+
   this._atmosphereHsbShift = Cartesian3.clone(
-    frameState.atmosphere.hsbShift,
+    atmosphere.hsbShift,
     this._atmosphereHsbShift
   );
-  this._atmosphereLightIntensity = frameState.atmosphere.lightIntensity;
+  this._atmosphereLightIntensity = atmosphere.lightIntensity;
   this._atmosphereRayleighCoefficient = Cartesian3.clone(
-    frameState.atmosphere.rayleighCoefficient,
+    atmosphere.rayleighCoefficient,
     this._atmosphereRayleighCoefficient
   );
-  this._atmosphereRayleighScaleHeight =
-    frameState.atmosphere.rayleighScaleHeight;
+  this._atmosphereRayleighScaleHeight = atmosphere.rayleighScaleHeight;
   this._atmosphereMieCoefficient = Cartesian3.clone(
-    frameState.atmosphere.mieCoefficient,
+    atmosphere.mieCoefficient,
     this._atmosphereMieCoefficient
   );
-  this._atmosphereMieScaleHeight = frameState.atmosphere.mieScaleHeight;
-  this._atmosphereMieAnisotropy = frameState.atmosphere.mieAnisotropy;
+  this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
+  this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
+  this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
 
   this._invertClassificationColor = frameState.invertClassificationColor;
 

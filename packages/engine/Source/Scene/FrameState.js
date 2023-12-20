@@ -287,6 +287,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * @property {Cartesian3} mieCoefficient The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
    * @property {number} mieScaleHeight The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
    * @property {number} mieAnisotropy The anisotropy of the medium to consider for Mie scattering.
+   * @property {DynamicAtmosphereLightingType} dynamicLighting An enum value determining what light source to use for dynamic lighting the atmosphere (if enabled)
    */
 
   /**
@@ -300,6 +301,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
     mieCoefficient: new Cartesian3(),
     mieScaleHeight: undefined,
     mieAnisotropy: undefined,
+    dynamicLighting: undefined,
   };
 
   /**

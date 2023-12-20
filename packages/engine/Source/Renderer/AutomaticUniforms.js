@@ -1682,6 +1682,19 @@ const AutomaticUniforms = {
       return uniformState.atmosphereMieAnisotropy;
     },
   }),
+  /**
+   * An automatic uniform representing which light source to use for dynamic lighting
+   *
+   * @example
+   * uniform float czm_atmosphereDynamicLighting
+   */
+  czm_atmosphereDynamicLighting: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereDynamicLighting;
+    },
+  }),
 
   /**
    * An automatic GLSL uniform representing the splitter position to use when rendering with a splitter.
