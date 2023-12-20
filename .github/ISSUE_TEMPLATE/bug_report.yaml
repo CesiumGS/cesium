@@ -11,7 +11,6 @@ body:
     attributes:
       label: What happened?
       description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see
     validations:
       required: true
   - type: textarea
