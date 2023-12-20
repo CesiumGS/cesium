@@ -40,6 +40,7 @@ void czm_computeScattering(
 
     // Return empty colors if no intersection with the atmosphere geometry.
     if (primaryRayAtmosphereIntersect == czm_emptyRaySegment) {
+        rayleighColor = vec3(1.0, 0.0, 1.0);
         return;
     }
 
@@ -78,6 +79,8 @@ void czm_computeScattering(
     vec3 mieAccumulation = vec3(0.0);
     vec2 opticalDepth = vec2(0.0);
     vec2 heightScale = vec2(czm_atmosphereRayleighScaleHeight, czm_atmosphereMieScaleHeight);
+
+    //vec3 lastVals = vec3(0.0);
 
     // Sample positions on the primary ray.
     for (int i = 0; i < PRIMARY_STEPS_MAX; ++i) {
@@ -127,10 +130,15 @@ void czm_computeScattering(
 
             // Increment distance on light ray.
             lightPositionLength += lightStepLength;
+
+            //lastVals = vec3(length(lightPosition));
+            //lastVals = vec3(float(lightHeight < 0.0), lightHeight / 1000.0, lightOpticalDepth);
         }
 
         // Compute attenuation via the primary ray and the light ray.
         vec3 attenuation = exp(-((czm_atmosphereMieCoefficient * (opticalDepth.y + lightOpticalDepth.y)) + (czm_atmosphereRayleighCoefficient * (opticalDepth.x + lightOpticalDepth.x))));
+
+        //lastAttenuation = vec3(rayStepLength, lightStepLength);
 
         // Accumulate the scattering.
         rayleighAccumulation += sampleDensity.x * attenuation;
@@ -146,4 +154,8 @@ void czm_computeScattering(
 
     // Compute the transmittance i.e. how much light is passing through the atmosphere.
     opacity = length(exp(-((czm_atmosphereMieCoefficient * opticalDepth.y) + (czm_atmosphereRayleighCoefficient * opticalDepth.x))));
+
+    //rayleighColor = vec3(atmosphereInnerRadius / 1.0e7, lastVals.x / 1.0e7, 0.0); //lastVals;
+    //vec3(float(PRIMARY_STEPS) / 16.0, float(LIGHT_STEPS) / 4.0, 0.0);//mieAccumulation; //rayleighAccumulation;
+    //rayleighColor = w_stop_gt_lprl /*w_inside_atmosphere*/ * vec3(1.0, 1.0, 0.0); //w_inside_atmosphere, 0.0);
 }
