@@ -12,7 +12,6 @@ body:
     id: new-feature
     attributes:
       label: Feature
-      placeholder: Explain the requested feature
     validations:
       required: true
   - type: markdown
