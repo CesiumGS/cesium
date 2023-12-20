@@ -1,4 +1,5 @@
 import FogStageFS from "../../Shaders/Model/FogStageFS.js";
+import ShaderDestination from "../../Renderer/ShaderDestination.js";
 
 /**
  * The fog color pipeline stage is responsible for applying fog to tiles in the distance in horizon views.
@@ -7,15 +8,15 @@ import FogStageFS from "../../Shaders/Model/FogStageFS.js";
  *
  * @private
  */
-const FogColorPipelineStage = {
+const FogPipelineStage = {
   name: "FogColorPipelineStage", // Helps with debugging
 };
 
-FogColorPipelineStage.process = function (renderResources, model, frameState) {
-  // TODO: AtmosphereCommon.glsl includes uniforms that really should be
-  // added separately to match the Model pipeline paradigm... Maybe that file could
-  // be split into multiple files.
-  renderResources.shaderBuilder.addFragmentLines([FogStageFS]);
+FogPipelineStage.process = function (renderResources, model, frameState) {
+  const shaderBuilder = renderResources.shaderBuilder;
+
+  shaderBuilder.addDefine("HAS_FOG", undefined, ShaderDestination.FRAGMENT);
+  shaderBuilder.addFragmentLines([FogStageFS]);
 };
 
-export default FogColorPipelineStage;
+export default FogPipelineStage;

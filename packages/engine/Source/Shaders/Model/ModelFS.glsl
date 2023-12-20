@@ -79,7 +79,9 @@ void main()
     silhouetteStage(color);
     #endif
 
+    #ifdef HAS_FOG
     fogStage(color, attributes);
+    #endif
 
     out_FragColor = color;
 }
