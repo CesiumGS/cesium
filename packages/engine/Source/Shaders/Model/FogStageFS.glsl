@@ -6,7 +6,7 @@ vec3 computeFogColor() {
 //    vec3 atmosphereLightDirection = czm_lightDirectionWC;
 //#endif
 
-    vec3 rayleighColor;
+    vec3 rayleighColor = vec3(0.0, 0.0, 1.0);
     vec3 mieColor;
     float opacity;
 
@@ -14,7 +14,7 @@ vec3 computeFogColor() {
     vec3 lightDirection;
 
     // This is true when dynamic lighting is enabled in the scene.
-    bool dynamicLighting = false;
+    bool dynamicLighting = true;
 
     positionWC = czm_computeEllipsoidPosition();
     lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(positionWC));
@@ -28,10 +28,20 @@ vec3 computeFogColor() {
         opacity
     );
 
+    //rayleighColor = vec3(1.0, 0.0, 0.0);
+    //mieColor = vec3(0.0, 1.0, 0.0);
+
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
     vec3 fogColor = groundAtmosphereColor.rgb;
 
     // Darken the fog
+
+    // If there is lighting, apply that to the fog.
+//#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+    //const float u_minimumBrightness = 0.03; // TODO: pull this from the light shader
+    //float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
+    //fogColor *= darken;
+//#endif
 
     // Tonemap if HDR rendering is disabled
 #ifndef HDR
@@ -39,7 +49,12 @@ vec3 computeFogColor() {
     fogColor.rgb = czm_inverseGamma(fogColor.rgb);
 #endif
 
+    // TODO: fogColor.a is only used for ground atmosphere... is that needed?
+
+    //return positionWC / 1e7;
+    //return rayleighColor;
     return fogColor.rgb;
+    //return mieColor;
 }
 
 void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
@@ -56,4 +71,5 @@ void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
     vec3 withFog = czm_fog(distanceToCamera, color.rgb, fogColor, fogModifier);
 
     color = vec4(withFog, color.a);
+    //color = mix(color, vec4(fogColor, 1.0), 0.5);
 }

@@ -523,6 +523,8 @@ void main()
 
             finalColor.rgb = mix(finalColor.rgb, finalAtmosphereColor.rgb, fade);
         #endif
+
+        //finalColor.rgb = computeEllipsoidPosition() / 1e7;
     }
 #endif
 
