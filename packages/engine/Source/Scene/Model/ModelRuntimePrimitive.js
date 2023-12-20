@@ -199,6 +199,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const mode = frameState.mode;
   const use2D =
     mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
+  const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
 
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
@@ -297,7 +298,10 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   }
 
   pipelineStages.push(AlphaPipelineStage);
-  pipelineStages.push(FogPipelineStage);
+
+  if (fogRenderable) {
+    pipelineStages.push(FogPipelineStage);
+  }
 
   pipelineStages.push(PrimitiveStatisticsPipelineStage);
 
