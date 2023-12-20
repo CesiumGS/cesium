@@ -1,23 +1,10 @@
 vec3 computeFogColor() {
-
-//#if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
-    vec3 atmosphereLightDirection = czm_sunDirectionWC;
-//#else
-//    vec3 atmosphereLightDirection = czm_lightDirectionWC;
-//#endif
-
     vec3 rayleighColor = vec3(0.0, 0.0, 1.0);
     vec3 mieColor;
     float opacity;
 
-    vec3 positionWC;
-    vec3 lightDirection;
-
-    // This is true when dynamic lighting is enabled in the scene.
-    bool dynamicLighting = true;
-
-    positionWC = czm_computeEllipsoidPosition();
-    lightDirection = czm_branchFreeTernary(dynamicLighting, atmosphereLightDirection, normalize(positionWC));
+    vec3 positionWC = czm_computeEllipsoidPosition();
+    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC);
 
     // The fog color is derived from the ground atmosphere color
     czm_computeGroundAtmosphereScattering(
