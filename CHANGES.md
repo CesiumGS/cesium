@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. TODO: PR link
+
 ##### Fixes :wrench:
 
 - Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
