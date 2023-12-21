@@ -6,7 +6,7 @@
 
 ##### Additions :tada:
 
-- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. TODO: PR link
+- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
 
 ##### Fixes :wrench:
 
