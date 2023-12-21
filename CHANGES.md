@@ -7,6 +7,7 @@
 ##### Additions :tada:
 
 - Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of `Terrain` and `Cesium3DTileset` can be controlled simultaneously via the new `Scene` properties `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight`. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
+- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. TODO: PR link
 
 ##### Fixes :wrench:
 
