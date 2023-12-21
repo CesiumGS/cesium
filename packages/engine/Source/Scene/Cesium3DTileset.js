@@ -75,10 +75,10 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {boolean} [preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
  * @property {boolean} [preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
  * @property {boolean} [preferLeaves=false] Optimization option. Prefer loading of leaves first.
- * @property {boolean} [dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
- * @property {number} [dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
- * @property {number} [dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
- * @property {number} [dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
+ * @property {boolean} [dynamicScreenSpaceError=true] Optimization option. Reduce the screen space error for tiles that are further away from the camera so that lower resolution tiles are used.
+ * @property {number} [dynamicScreenSpaceErrorDensity=0.00278] Similar to fog density, this value determines how far away from the camera that screen space error falls off. Larger values will cause tiles closer to the camera to be affected by dynamicScreenSpaceError.
+ * @property {number} [dynamicScreenSpaceErrorFactor=4.0] The maximum screen space error adjustment in px to apply to a tile for tiles far away on the horizon. Increase this value to make the SSE adjustment stronger, which in turn will select lower LOD tiles near the horizon.
+ * @property {number} [dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height above which the density decreases for dynamic screen space error. This way, dynamicScreenSpaceError has the strongest effect when the camera is close to street level.
  * @property {number} [progressiveResolutionHeightFraction=0.3] Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
  * @property {boolean} [foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
  * @property {number} [foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.
@@ -361,18 +361,18 @@ function Cesium3DTileset(options) {
   this._pass = undefined; // Cesium3DTilePass
 
   /**
-   * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
-   * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
-   * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
-   * The algorithm is biased towards "street views" where the camera is close to the ground plane of the tileset and looking
-   * at the horizon. In addition results are more accurate for tightly fitting bounding volumes like box and region.
+   * Optimization option. Whether the tileset should adjust the screen space error for tiles on the horizon. Tiles that
+   * are far away will be adjusted to render at lower detail than tiles closer at the camera. This improves performance
+   * by loading and rendering fewer tiles, but may result in a slight drop in visual quality in the distance. This
+   * optimization is strongest when the camera is close to the ground plane of the tileset and looking at the horizon.
+   * Furthermore, the results are more accurate for tightly fitting bounding volumes like box and region.
    *
    * @type {boolean}
    * @default false
    */
   this.dynamicScreenSpaceError = defaultValue(
     options.dynamicScreenSpaceError,
-    false
+    true
   );
 
   /**
@@ -416,18 +416,22 @@ function Cesium3DTileset(options) {
   this.foveatedTimeDelay = defaultValue(options.foveatedTimeDelay, 0.2);
 
   /**
-   * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
-   * value has the effect of increasing the maximum screen space error for all tiles, but in a non-linear fashion.
-   * The error starts at 0.0 and increases exponentially until a midpoint is reached, and then approaches 1.0 asymptotically.
-   * This has the effect of keeping high detail in the closer tiles and lower detail in the further tiles, with all tiles
-   * beyond a certain distance all roughly having an error of 1.0.
+   * A parameter that controls how far away from the camera screen space error (SSE) falls off when
+   * <code>dynamicScreenSpaceError</code> is enabled. This is similar to the <code>density</code> parameter of
+   * {@link Fog}. This value must be non-negative.
    * <p>
-   * The dynamic error is in the range [0.0, 1.0) and is multiplied by <code>dynamicScreenSpaceErrorFactor</code> to produce the
-   * final dynamic error. This dynamic error is then subtracted from the tile's actual screen space error.
+   * <code>dynamicScreenSpaceError</code> causes the tile SSE to fall off with distance from the camera like a bell
+   * curve. At the camera, no adjustment is made (peak of bell curve). For tiles further away, the SSE is reduced
+   * up to a limit for tiles on the horizon. The maximum reduction is determined by the
+   * <code>dynamicScreenSpaceErrorFactor</code>. Reducing the SSE allows the rendering algorithm to select
+   * lower-resolution tiles.
    * </p>
    * <p>
-   * Increasing <code>dynamicScreenSpaceErrorDensity</code> has the effect of moving the error midpoint closer to the camera.
-   * It is analogous to moving fog closer to the camera.
+   * Increasing the density makes the bell curve narrower. This means that the SSE adjustment will start happening
+   * closer to the camera. This is analgous to moving fog closer to the camera.
+   * </p>
+   * <p>
+   * When the density is 0, no tiles will have their SSE adjusted.
    * </p>
    *
    * @type {number}
@@ -436,8 +440,19 @@ function Cesium3DTileset(options) {
   this.dynamicScreenSpaceErrorDensity = 0.00278;
 
   /**
-   * A factor used to increase the screen space error of tiles for dynamic screen space error. As this value increases less tiles
-   * are requested for rendering and tiles in the distance will have lower detail. If set to zero, the feature will be disabled.
+   * The maximum screen space error (SSE) reduction when {@link Cesium3DTileset#dynamicScreenSpaceError} is used. The
+   * value must be non-negative.
+   * <p>
+   * Increasing the SSE factor increases the maximum amount to reduce a tile's SSE. This maximum reduction happens
+   * for tiles near the horizon. For tiles closer to the camera, the SSE adjustment can be small as 0 (at the camera).
+   * In between, the SSE falls off like a bell curve. See {@link Cesium3DTileset#dynamicScreenSpaceErrorDensity}
+   * </p>
+   * <p>
+   * When the SSE factor is set to 0, the adjustment will be 0 for all tiles.
+   * </p>
+   * A factor used to increase the screen space error of tiles for dynamic screen space error. As this value increases
+   * less tiles are requested for rendering and tiles in the distance will have lower detail. If set to zero, the
+   * feature will be disabled.
    *
    * @type {number}
    * @default 4.0
@@ -445,9 +460,9 @@ function Cesium3DTileset(options) {
   this.dynamicScreenSpaceErrorFactor = 4.0;
 
   /**
-   * A ratio of the tileset's height at which the density starts to falloff. If the camera is below this height the
-   * full computed density is applied, otherwise the density falls off. This has the effect of higher density at
-   * street level views.
+   * A ratio of the tileset's height above which the effects of {@link Cesium3DTileset#dynamicScreenSpaceError} begin
+   * to fall off. This determines what is considered "street level" for the tileset. The dynamic screen space error
+   * optimization is intended for when the camera is at street level and pointed at the horizon.
    * <p>
    * Valid values are between 0.0 and 1.0.
    * </p>
@@ -457,7 +472,8 @@ function Cesium3DTileset(options) {
    */
   this.dynamicScreenSpaceErrorHeightFalloff = 0.25;
 
-  this._dynamicScreenSpaceErrorComputedDensity = 0.0; // Updated based on the camera position and direction
+  // Updated based on the camera position and direction
+  this._dynamicScreenSpaceErrorComputedDensity = 0.0;
 
   /**
    * Determines whether the tileset casts or receives shadows from light sources.
