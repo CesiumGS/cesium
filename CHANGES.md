@@ -13,6 +13,7 @@
 - Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
 - Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
 - The `Quaternion.computeAxis` function created an axis that was `(0,0,0)` for the unit quaternion, and an axis that was `(NaN,NaN,NaN)` for the quaternion `(0,0,0,-1)` (which describes a rotation about 360 degrees). Now, it returns the x-axis `(1,0,0)` in both of these cases.
+- Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
 
 ### 1.112 - 2023-12-01
 
