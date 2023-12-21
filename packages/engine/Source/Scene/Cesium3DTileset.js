@@ -17,6 +17,7 @@ import IonResource from "../Core/IonResource.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
 import CesiumMath from "../Core/Math.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -437,7 +438,10 @@ function Cesium3DTileset(options) {
    * @type {number}
    * @default 0.00278
    */
-  this.dynamicScreenSpaceErrorDensity = 0.00278;
+  this.dynamicScreenSpaceErrorDensity = defaultValue(
+    options.dynamicScreenSpaceErrorDensity,
+    0.00278
+  );
 
   /**
    * The maximum screen space error (SSE) reduction when {@link Cesium3DTileset#dynamicScreenSpaceError} is used. The
@@ -457,7 +461,10 @@ function Cesium3DTileset(options) {
    * @type {number}
    * @default 4.0
    */
-  this.dynamicScreenSpaceErrorFactor = 4.0;
+  this.dynamicScreenSpaceErrorFactor = defaultValue(
+    options.dynamicScreenSpaceErrorFactor,
+    4.0
+  );
 
   /**
    * A ratio of the tileset's height above which the effects of {@link Cesium3DTileset#dynamicScreenSpaceError} begin
@@ -470,7 +477,10 @@ function Cesium3DTileset(options) {
    * @type {number}
    * @default 0.25
    */
-  this.dynamicScreenSpaceErrorHeightFalloff = 0.25;
+  this.dynamicScreenSpaceErrorHeightFalloff = defaultValue(
+    options.dynamicScreenSpaceErrorHeightFalloff,
+    0.25
+  );
 
   // Updated based on the camera position and direction
   this._dynamicScreenSpaceErrorComputedDensity = 0.0;
@@ -2282,6 +2292,7 @@ const scratchMatrix = new Matrix4();
 const scratchCenter = new Cartesian3();
 const scratchPosition = new Cartesian3();
 const scratchDirection = new Cartesian3();
+const scratchHalfHeight = new Cartesian3();
 
 /**
  * @private
@@ -2346,10 +2357,15 @@ function updateDynamicScreenSpaceError(tileset, frameState) {
       direction = Cartesian3.normalize(direction, direction);
       height = positionLocal.z;
       if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
-        // Assuming z-up, the last component stores the half-height of the box
-        const boxHeight = root._header.boundingVolume.box[11];
-        minimumHeight = centerLocal.z - boxHeight;
-        maximumHeight = centerLocal.z + boxHeight;
+        // Assuming z-up, the last column
+        const halfHeightVector = Matrix3.getColumn(
+          boundingVolume.halfAxes,
+          2,
+          scratchHalfHeight
+        );
+        const halfHeight = Cartesian3.magnitude(halfHeightVector);
+        minimumHeight = centerLocal.z - halfHeight;
+        maximumHeight = centerLocal.z + halfHeight;
       } else if (tileBoundingVolume instanceof TileBoundingSphere) {
         const radius = boundingVolume.radius;
         minimumHeight = centerLocal.z - radius;
