@@ -740,7 +740,11 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
       return Math.pow(dynamicScreenSpaceErrorDensity(), 1 / 6);
     },
     set: function (value) {
-      dynamicScreenSpaceErrorDensity(Math.pow(value, 6));
+      const scaledValue = Math.pow(value, 6);
+      dynamicScreenSpaceErrorDensity(scaledValue);
+      if (defined(that._tileset)) {
+        that._tileset.dynamicScreenSpaceErrorDensity = scaledValue;
+      }
     },
   });
 
