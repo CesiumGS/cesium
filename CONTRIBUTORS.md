@@ -372,4 +372,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [KOBAYASHI Ittoku](https://github.com/kittoku)
 - [王康](https://github.com/yieryi)
 - [Subhajit Saha](https://github.com/subhajits)
+- [孙永政](https://github.com/syzdev)
 - [Arturo Espinosa Aldama](https://github.com/pupitetris)
