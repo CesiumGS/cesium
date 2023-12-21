@@ -134,11 +134,10 @@ describe(
     function createTileset(url) {
       const options = {
         maximumScreenSpaceError: 0,
-        // Since unit tests render to a tiny canvas, tileset rendering is
-        // extremely sensitive to changes in screen space error. Turn the
-        // dynamic screen space error down significantly so we don't cull tiles
-        // needed for the unit tests.
-        dynamicScreenSpaceErrorFactor: 0.0001,
+        // The camera is zoomed pretty far out for these tests, so
+        // turn off dynamicScreenSpaceError so tiles don't get culled
+        // unintentionally.
+        dynamicScreenSpaceError: false,
       };
       return Cesium3DTilesTester.loadTileset(scene, url, options).then(
         function (tileset) {
