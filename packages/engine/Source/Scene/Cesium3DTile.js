@@ -1716,7 +1716,7 @@ function createRegion(region, transform, initialTransform, result) {
   const rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
 
   if (defined(result)) {
-    result.rectangle = rectangleRegion;
+    result.rectangle = Rectangle.clone(rectangleRegion, result.rectangle);
     result.minimumHeight = region[4];
     result.maximumHeight = region[5];
     // The TileBoundingRegion was already constructed with the default
