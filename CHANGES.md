@@ -12,6 +12,7 @@
 
 - Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
 - Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
+- The `Quaternion.computeAxis` function created an axis that was `(0,0,0)` for the unit quaternion, and an axis that was `(NaN,NaN,NaN)` for the quaternion `(0,0,0,-1)` (which describes a rotation about 360 degrees). Now, it returns the x-axis `(1,0,0)` in both of these cases.
 
 ##### Deprecated :hourglass_flowing_sand:
 
@@ -41,7 +42,7 @@
 - Fixed error with rhumb lines that have a 0 degree heading. [#11573](https://github.com/CesiumGS/cesium/pull/11573)
 - Fixed `czm_normal`, `czm_normal3D`, `czm_inverseNormal`, and `czm_inverseNormal3D` for cases where the model matrix has non-uniform scale. [#11553](https://github.com/CesiumGS/cesium/pull/11553)
 - Fixed issue with clustered labels when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
-- Fixed inconsistant clustering when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
+- Fixed inconsistent clustering when `dataSource.show` was toggled. [#11560](https://github.com/CesiumGS/cesium/pull/11560)
 
 ### 1.110.1 - 2023-10-25
 
