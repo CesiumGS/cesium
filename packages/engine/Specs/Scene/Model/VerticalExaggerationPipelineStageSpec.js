@@ -1,4 +1,5 @@
 import {
+  _shadersVerticalExaggerationStageVS,
   Cartesian2,
   RenderState,
   ShaderBuilder,
@@ -25,7 +26,7 @@ describe(
       };
     }
 
-    it("adds defines and uniforms", function () {
+    it("adds shader lines, defines, and uniforms", function () {
       const renderResources = mockRenderResources();
       VerticalExaggerationPipelineStage.process(
         renderResources,
@@ -34,6 +35,9 @@ describe(
       );
 
       const shaderBuilder = renderResources.shaderBuilder;
+      ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
+        _shadersVerticalExaggerationStageVS,
+      ]);
       ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
         "HAS_VERTICAL_EXAGGERATION",
       ]);
