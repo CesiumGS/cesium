@@ -4,11 +4,19 @@
 
 #### @cesium/engine
 
+##### Additions :tada:
+
+- Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of `Terrain` and `Cesium3DTileset` can be controlled simultaneously via the new `Scene` properties `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight`. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
+
 ##### Fixes :wrench:
 
 - Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
 - Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
 - The `Quaternion.computeAxis` function created an axis that was `(0,0,0)` for the unit quaternion, and an axis that was `(NaN,NaN,NaN)` for the quaternion `(0,0,0,-1)` (which describes a rotation about 360 degrees). Now, it returns the x-axis `(1,0,0)` in both of these cases.
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Globe.terrainExaggeration` and `Globe.terrainExaggerationRelativeHeight` have been deprecated in CesiumJS 1.113. They will be removed in 1.116. Use `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight` instead. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
 
 ### 1.112 - 2023-12-01
 

@@ -830,9 +830,9 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   const fill = surfaceTile.fill;
   const rectangle = tile.rectangle;
 
-  const exaggeration = frameState.terrainExaggeration;
+  const exaggeration = frameState.verticalExaggeration;
   const exaggerationRelativeHeight =
-    frameState.terrainExaggerationRelativeHeight;
+    frameState.verticalExaggerationRelativeHeight;
   const hasExaggeration = exaggeration !== 1.0;
 
   const ellipsoid = tile.tilingScheme.ellipsoid;
