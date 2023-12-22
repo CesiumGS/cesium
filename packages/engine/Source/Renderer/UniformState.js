@@ -1192,7 +1192,7 @@ function setCamera(uniformState, camera) {
       CesiumMath.EPSILON15
     )
   ) {
-    // Ellipsoid curvature calculations only work for an ellipsoid of revolution
+    // Ellipsoid curvature calculations assume radii.x === radii.y as is true for WGS84
     return;
   }
 

@@ -1956,17 +1956,17 @@ Scene.prototype.updateFrameState = function () {
   frameState.cameraUnderground = this._cameraUnderground;
   frameState.globeTranslucencyState = this._globeTranslucencyState;
 
-  frameState.verticalExaggeration = this.verticalExaggeration;
-  frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
   const { globe } = this;
   if (defined(globe) && globe._terrainExaggerationChanged) {
     // Honor a user-set value for the old deprecated globe.terrainExaggeration.
     // This can be removed when Globe.terrainExaggeration is removed.
-    frameState.verticalExaggeration = globe._terrainExaggeration;
-    frameState.verticalExaggerationRelativeHeight =
+    this.verticalExaggeration = globe._terrainExaggeration;
+    this.verticalExaggerationRelativeHeight =
       globe._terrainExaggerationRelativeHeight;
     globe._terrainExaggerationChanged = false;
   }
+  frameState.verticalExaggeration = this.verticalExaggeration;
+  frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
 
   if (
     defined(this._specularEnvironmentMapAtlas) &&
