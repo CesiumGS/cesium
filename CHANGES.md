@@ -13,6 +13,7 @@
 - Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
 - Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
 - The `Quaternion.computeAxis` function created an axis that was `(0,0,0)` for the unit quaternion, and an axis that was `(NaN,NaN,NaN)` for the quaternion `(0,0,0,-1)` (which describes a rotation about 360 degrees). Now, it returns the x-axis `(1,0,0)` in both of these cases.
+- Fixed a bug where `GregorianDate` constructor would not validate the input parameters for valid date. [#10075](https://github.com/CesiumGS/cesium/pull/10075)
 
 ##### Deprecated :hourglass_flowing_sand:
 
@@ -228,6 +229,7 @@ try {
 - `Cesium3DTileset` constructor parameter `options.url`, `Cesium3DTileset.ready`, and `Cesium3DTileset.readyPromise` have been removed. Use `Cesium3DTileset.fromUrl` instead.
 - `createOsmBuildings` was removed. Use `createOsmBuildingsAsync` instead.
 - `Model.fromGltf`, `Model.readyPromise`, and `Model.texturesLoadedPromise` have been removed. Use `Model.fromGltfAsync`, `Model.readyEvent`, `Model.errorEvent`, and `Model.texturesReadyEvent` instead. For example:
+
   ```js
   try {
     const model = await Cesium.Model.fromGltfAsync({
@@ -241,6 +243,7 @@ try {
     console.log(`Failed to load model. ${error}`);
   }
   ```
+
 - `I3SDataProvider` construction parameter `options.url`, `I3SDataProvider.ready`, and `I3SDataProvider.readyPromise` have been removed. Use `I3SDataProvider.fromUrl` instead.
 - `TimeDynamicPointCloud.readyPromise` was removed. Use `TimeDynamicPointCloud.frameFailed` to track any errors.
 - `VoxelProvider.ready` and `VoxelProvider.readyPromise` have been removed.
@@ -412,6 +415,7 @@ try {
 - `Cesium3DTileset` constructor parameter `options.url`, `Cesium3DTileset.ready`, and `Cesium3DTileset.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `Cesium3DTileset.fromUrl` instead.
 - `createOsmBuildings` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `createOsmBuildingsAsync` instead.
 - `Model.fromGltf`, `Model.readyPromise`, and `Model.texturesLoadedPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `Model.fromGltfAsync`, `Model.readyEvent`, `Model.errorEvent`, and `Model.texturesReadyEvent` instead. For example:
+
   ```js
   try {
     const model = await Cesium.Model.fromGltfAsync({
@@ -425,6 +429,7 @@ try {
     console.log(`Failed to load model. ${error}`);
   }
   ```
+
 - `I3SDataProvider` construction parameter `options.url`, `I3SDataProvider.ready`, and `I3SDataProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107. Use `I3SDataProvider.fromUrl` instead.
 - `TimeDynamicPointCloud.readyPromise` was deprecated in CesiumJS 1.104. It will be removed in 1.107. Use `TimeDynamicPointCloud.frameFailed` to track any errors.
 - `VoxelProvider.ready` and `VoxelProvider.readyPromise` were deprecated in CesiumJS 1.104. They will be removed in 1.107.
@@ -477,6 +482,7 @@ try {
   - WebGL1 is supported. If WebGL2 is not available, CesiumJS will automatically fall back to WebGL1.
   - In order to work in a WebGL2 context, any custom materials, custom primitives or custom shaders will need to be upgraded to use GLSL 300.
   - Otherwise to request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions` as shown below:
+
     ```js
     const viewer = new Viewer("cesiumContainer", {
       contextOptions: {
@@ -506,6 +512,7 @@ try {
   - WebGL1 will still be supported. If WebGL2 is not available, CesiumJS will automatically fall back to WebGL1.
   - In order to work in a WebGL2 context, any custom materials, custom primitive or custom shaders will need to be upgraded to use GLSL 300.
   - Otherwise to request a WebGL 1 context, set `requestWebgl1` to `true` when providing `ContextOptions` as shown below:
+
     ```js
     const viewer = new Viewer("cesiumContainer", {
       contextOptions: {
@@ -1883,11 +1890,13 @@ _This is an npm-only release to fix a publishing issue_.
 
 - Clipping planes on tilesets now use the root tile's transform, or the root tile's bounding sphere if a transform is not defined. [#7034](https://github.com/CesiumGS/cesium/pull/7034)
   - This is to make clipping planes' coordinates always relative to the object they're attached to. So if you were positioning the clipping planes as in the example below, this is no longer necessary:
+
   ```javascript
   clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
     tileset.boundingSphere.center
   );
   ```
+
   - This also fixes several issues with clipping planes not using the correct transform for tilesets with children.
 
 ##### Additions :tada:
@@ -2124,6 +2133,7 @@ _This is an npm-only release to fix a publishing issue_.
 - `BingMapsImageryProvider` is no longer the default base imagery layer. (Bing imagery itself is still the default, however it is provided through Cesium ion)
 - `BingMapsGeocoderService` is no longer the default geocoding service.
 - If you wish to continue to use your own Bing API key for imagery and geocoding, you can go back to the old default behavior by constructing the Viewer as follows:
+
   ```javascript
   Cesium.BingMapsApi.defaultKey = "yourBingKey";
   var viewer = new Cesium.Viewer("cesiumContainer", {
@@ -2987,11 +2997,13 @@ _This is an npm-only release to fix a publishing issue_.
 - Added `VRButton` which is a simple, single-button widget that toggles VR mode. It is off by default. To enable the button, set the `vrButton` option to `Viewer` to `true`. Only Cardboard for mobile is supported. More VR devices will be supported when the WebVR API is more stable.
 - Added `Scene.useWebVR` to switch the scene to use stereoscopic rendering.
 - Cesium now honors `window.devicePixelRatio` on browsers that support the CSS `imageRendering` attribute. This greatly improves performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage and increases battery life in these cases. To enable the previous behavior, use the following code:
+
   ```javascript
   if (Cesium.FeatureDetection.supportsImageRenderingPixelated()) {
     viewer.resolutionScale = window.devicePixelRatio;
   }
   ```
+
 - `GroundPrimitive` now supports batching geometry for better performance.
 - Improved compatibility with glTF KHR_binary_glTF and KHR_materials_common extensions
 - Added `ImageryLayer.getViewableRectangle` to make it easy to get the effective bounds of an imagery layer.
@@ -3633,12 +3645,14 @@ _This is an npm-only release to fix a publishing issue_.
   - CZML changes:
     - CZML is now versioned using the <major>.<minor> scheme. For example, any CZML 1.0 implementation will be able to load any 1.<minor> document (with graceful degradation). Major version number increases will be reserved for breaking changes. We fully expect these major version increases to happen, as CZML is still in development, but we wanted to give developers a stable target to work with.
     - A `"1.0"` version string is required to be on the document packet, which is required to be the first packet in a CZML file. Previously the `document` packet was optional; it is now mandatory. The simplest document packet is:
+
       ```
       {
         "id":"document",
         "version":"1.0"
       }
       ```
+
     - The `vertexPositions` property has been removed. There is now a `positions` property directly on objects that use it, currently `polyline`, `polygon`, and `wall`.
     - `cone`, `pyramid`, and `vector` have been removed from the core CZML schema. They are now treated as extensions maintained by Analytical Graphics and have been renamed to `agi_conicSensor`, `agi_customPatternSensor`, and `agi_vector` respectively.
     - The `orientation` property has been changed to match Cesium convention. To update existing CZML documents, conjugate the quaternion values.
