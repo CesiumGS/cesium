@@ -1,4 +1,4 @@
-import { GregorianDate } from "../../Source/Cesium.js";
+import { GregorianDate } from "../../Source/Core/Cesium.js";
 
 describe("Core/GregorianDate", function () {
   describe("With valid parameters", function () {

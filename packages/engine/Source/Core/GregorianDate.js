@@ -3,6 +3,8 @@ import defaultValue from "./defaultValue.js";
 import DeveloperError from "./DeveloperError.js";
 import isLeapYear from "./isLeapYear.js";
 
+const DAYS_IN_YEAR = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
 /**
  * Represents a Gregorian date in a more precise format than the JavaScript Date object.
  * In addition to submillisecond precision, this object can also represent leap seconds.
@@ -15,7 +17,7 @@ import isLeapYear from "./isLeapYear.js";
  * @param {number} [hour] The hour as a whole number with range [0, 23].
  * @param {number} [minute] The minute of the hour as a whole number with range [0, 59].
  * @param {number} [second] The second of the minute as a whole number with range [0, 60], with 60 representing a leap second.
- * @param {number} [millisecond] The millisecond of the second as a floating point number with range [0.0, 1000.0).
+ * @param {number} [millisecond] The millisecond of the second as a floating point number with range [0.0, 1000.0]).
  * @param {boolean} [isLeapSecond] Whether this time is during a leap second.
  *
  * @see JulianDate#toGregorianDate
@@ -83,7 +85,7 @@ function GregorianDate(
   this.second = second;
   /**
    * Gets or sets the millisecond of the second as a floating point number with range [0.0, 1000.0]).
-   * @type {Number}
+   * @type {number}
    */
   this.millisecond = millisecond;
   /**
@@ -139,12 +141,13 @@ function GregorianDate(
 
   // Javascript date object supports only dates greater than 1901. Thus validating with custom logic
   function validateDate() {
-    const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (month === 2 && isLeapYear(year)) {
+      DAYS_IN_YEAR[month - 1] += 1;
+    }
 
-    if (month === 2 && isLeapYear(year)) daysInYear[month - 1] += 1;
-
-    if (day > daysInYear[month - 1])
+    if (day > DAYS_IN_YEAR[month - 1]) {
       throw new DeveloperError("Month and Day represents invalid date");
+    }
   }
 }
 export default GregorianDate;
