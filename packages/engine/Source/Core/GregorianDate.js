@@ -3,7 +3,7 @@ import defaultValue from "./defaultValue.js";
 import DeveloperError from "./DeveloperError.js";
 import isLeapYear from "./isLeapYear.js";
 
-const DAYS_IN_YEAR = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 /**
  * Represents a Gregorian date in a more precise format than the JavaScript Date object.
@@ -141,11 +141,12 @@ function GregorianDate(
 
   // Javascript date object supports only dates greater than 1901. Thus validating with custom logic
   function validateDate() {
-    if (month === 2 && isLeapYear(year)) {
-      DAYS_IN_YEAR[month - 1] += 1;
-    }
+    const daysInMonth =
+      month === 2 && isLeapYear(year)
+        ? daysInYear[month - 1] + 1
+        : daysInYear[month - 1];
 
-    if (day > DAYS_IN_YEAR[month - 1]) {
+    if (day > daysInMonth) {
       throw new DeveloperError("Month and Day represents invalid date");
     }
   }

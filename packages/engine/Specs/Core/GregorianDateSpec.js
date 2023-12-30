@@ -1,4 +1,4 @@
-import { GregorianDate } from "../../Source/Core/Cesium.js";
+import { GregorianDate } from "../../index.js";
 
 describe("Core/GregorianDate", function () {
   describe("With valid parameters", function () {
@@ -164,6 +164,7 @@ describe("Core/GregorianDate", function () {
       expect(minimumDate.isLeapSecond).toBe(true);
     });
   });
+
   describe("With invalid parameters", function () {
     it("Should throw error if invalid year is passed", function () {
       expect(function () {
