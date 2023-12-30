@@ -17,7 +17,7 @@ const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
  * @param {number} [hour] The hour as a whole number with range [0, 23].
  * @param {number} [minute] The minute of the hour as a whole number with range [0, 59].
  * @param {number} [second] The second of the minute as a whole number with range [0, 60], with 60 representing a leap second.
- * @param {number} [millisecond] The millisecond of the second as a floating point number with range [0.0, 1000.0]).
+ * @param {number} [millisecond] The millisecond of the second as a floating point number with range [0.0, 1000.0).
  * @param {boolean} [isLeapSecond] Whether this time is during a leap second.
  *
  * @see JulianDate#toGregorianDate
