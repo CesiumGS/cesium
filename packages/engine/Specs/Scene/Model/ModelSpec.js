@@ -3732,6 +3732,7 @@ describe(
         scene.verticalExaggeration = 2.0;
         scene.renderForSpecs();
         expect(resetDrawCommands).toHaveBeenCalled();
+        scene.verticalExaggeration = 1.0;
       });
     });
 
