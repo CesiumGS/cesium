@@ -141,6 +141,7 @@ describe(
       scene.primitives.removeAll();
       scene2D.primitives.removeAll();
       sceneCV.primitives.removeAll();
+      scene.verticalExaggeration = 1.0;
       ResourceCache.clearForSpecs();
     });
 
