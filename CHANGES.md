@@ -2,8 +2,6 @@
 
 ### 1.113 - 2024-01-02
 
-- Added a new Sandcastle example, Bing Maps Labels Only, which demonstrates using the Cesium ion imagery asset of the same name.
-
 #### @cesium/engine
 
 ##### Additions :tada:
