@@ -141,6 +141,7 @@ describe(
       scene.primitives.removeAll();
       scene2D.primitives.removeAll();
       sceneCV.primitives.removeAll();
+      scene.verticalExaggeration = 1.0;
       ResourceCache.clearForSpecs();
     });
 
@@ -3732,6 +3733,7 @@ describe(
         scene.verticalExaggeration = 2.0;
         scene.renderForSpecs();
         expect(resetDrawCommands).toHaveBeenCalled();
+        scene.verticalExaggeration = 1.0;
       });
     });
 
