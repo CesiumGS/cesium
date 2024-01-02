@@ -722,9 +722,9 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * Gets or sets the dynamic screen space error density.  This property is observable.
    *
    * @type {number}
-   * @default 0.00278
+   * @default 2.0e-4
    */
-  this.dynamicScreenSpaceErrorDensity = 0.00278;
+  this.dynamicScreenSpaceErrorDensity = 2.0e-4;
 
   /**
    * Gets or sets the dynamic screen space error density slider value.
@@ -732,7 +732,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * This property is observable.
    *
    * @type {number}
-   * @default 0.00278
+   * @default 2.0e-4
    */
   this.dynamicScreenSpaceErrorDensitySliderValue = undefined;
   knockout.defineProperty(this, "dynamicScreenSpaceErrorDensitySliderValue", {

@@ -77,7 +77,7 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {boolean} [preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
  * @property {boolean} [preferLeaves=false] Optimization option. Prefer loading of leaves first.
  * @property {boolean} [dynamicScreenSpaceError=true] Optimization option. Reduce the screen space error for tiles that are further away from the camera so that lower resolution tiles are used.
- * @property {number} [dynamicScreenSpaceErrorDensity=0.00278] Similar to fog density, this value determines how far away from the camera that screen space error falls off. Larger values will cause tiles closer to the camera to be affected by dynamicScreenSpaceError.
+ * @property {number} [dynamicScreenSpaceErrorDensity=2.0e-4] Similar to fog density, this value determines how far away from the camera that screen space error falls off. Larger values will cause tiles closer to the camera to be affected by dynamicScreenSpaceError.
  * @property {number} [dynamicScreenSpaceErrorFactor=4.0] The maximum screen space error adjustment in px to apply to a tile for tiles far away on the horizon. Increase this value to make the SSE adjustment stronger, which in turn will select lower LOD tiles near the horizon.
  * @property {number} [dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height above which the density decreases for dynamic screen space error. This way, dynamicScreenSpaceError has the strongest effect when the camera is close to street level.
  * @property {number} [progressiveResolutionHeightFraction=0.3] Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
@@ -167,7 +167,7 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *   "http://localhost:8002/tilesets/Seattle/tileset.json", {
  *      dynamicScreenSpaceError: true,
- *      dynamicScreenSpaceErrorDensity: 0.00278,
+ *      dynamicScreenSpaceErrorDensity: 2.0e-4,
  *      dynamicScreenSpaceErrorFactor: 4.0,
  *      dynamicScreenSpaceErrorHeightFalloff: 0.25
  * });
@@ -436,11 +436,11 @@ function Cesium3DTileset(options) {
    * </p>
    *
    * @type {number}
-   * @default 0.00278
+   * @default 2.0e-4
    */
   this.dynamicScreenSpaceErrorDensity = defaultValue(
     options.dynamicScreenSpaceErrorDensity,
-    0.00278
+    2.0e-4
   );
 
   /**
@@ -1991,7 +1991,7 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *   "http://localhost:8002/tilesets/Seattle/tileset.json", {
  *      dynamicScreenSpaceError: true,
- *      dynamicScreenSpaceErrorDensity: 0.00278,
+ *      dynamicScreenSpaceErrorDensity: 2.0e-4,
  *      dynamicScreenSpaceErrorFactor: 4.0,
  *      dynamicScreenSpaceErrorHeightFalloff: 0.25
  * });
