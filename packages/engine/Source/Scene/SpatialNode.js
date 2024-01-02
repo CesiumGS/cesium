@@ -36,6 +36,11 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
 
   /**
    * @ignore
+   * @type {Cartesian3}
+   */
+  this.dimensions = Cartesian3.clone(voxelDimensions);
+  /**
+   * @ignore
    * @type {KeyframeNode[]}
    */
   this.keyframeNodes = [];
@@ -62,19 +67,15 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   this.screenSpaceError = 0.0;
   this.visitedFrameNumber = -1;
 
-  this.computeBoundingVolumes(shape, voxelDimensions);
+  this.computeBoundingVolumes(shape);
 }
 
 const scratchObbHalfScale = new Cartesian3();
 
 /**
  * @param {VoxelShape} shape
- * @param {Cartesian3} voxelDimensions
  */
-SpatialNode.prototype.computeBoundingVolumes = function (
-  shape,
-  voxelDimensions
-) {
+SpatialNode.prototype.computeBoundingVolumes = function (shape) {
   this.orientedBoundingBox = shape.computeOrientedBoundingBoxForTile(
     this.level,
     this.x,
@@ -89,15 +90,14 @@ SpatialNode.prototype.computeBoundingVolumes = function (
   );
   const maximumScale = 2.0 * Cartesian3.maximumComponent(halfScale);
   this.approximateVoxelSize =
-    maximumScale / Cartesian3.minimumComponent(voxelDimensions);
+    maximumScale / Cartesian3.minimumComponent(this.dimensions);
 };
 
 /**
  * @param {VoxelShape} shape The shape of the parent VoxelPrimitive
- * @param {Cartesian3} voxelDimensions
  * @private
  */
-SpatialNode.prototype.constructChildNodes = function (shape, voxelDimensions) {
+SpatialNode.prototype.constructChildNodes = function (shape) {
   const { level, x, y, z } = this;
   const xMin = x * 2;
   const yMin = y * 2;
@@ -119,7 +119,7 @@ SpatialNode.prototype.constructChildNodes = function (shape, voxelDimensions) {
   ];
 
   this.children = childCoords.map(([level, x, y, z]) => {
-    return new SpatialNode(level, x, y, z, this, shape, voxelDimensions);
+    return new SpatialNode(level, x, y, z, this, shape, this.dimensions);
   });
 };
 
