@@ -767,9 +767,9 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * Gets or sets the dynamic screen space error factor.  This property is observable.
    *
    * @type {number}
-   * @default 4.0
+   * @default 24.0
    */
-  this.dynamicScreenSpaceErrorFactor = 4.0;
+  this.dynamicScreenSpaceErrorFactor = 24.0;
 
   const pickTileset = getPickTileset(this);
   const pickActive = knockout.observable();
