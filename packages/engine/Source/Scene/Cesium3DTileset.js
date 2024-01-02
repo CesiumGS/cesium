@@ -78,7 +78,7 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {boolean} [preferLeaves=false] Optimization option. Prefer loading of leaves first.
  * @property {boolean} [dynamicScreenSpaceError=true] Optimization option. For street-level horizon views, use lower resolution tiles far from the camera. This reduces the amount of data loaded and improves tileset loading time with a slight drop in visual quality in the distance.
  * @property {number} [dynamicScreenSpaceErrorDensity=2.0e-4] Similar to {@link Fog#density}, this option controls the camera distance at which the {@link Cesium3DTileset#dynamicScreenSpaceError} optimization applies. Larger values will cause tiles closer to the camera to be affected.
- * @property {number} [dynamicScreenSpaceErrorFactor=4.0] A parameter that controls the intensity of the {@link Cesium3DTileset#dynamicScreenSpaceError} optimization for tiles on the horizon. Larger values cause lower resolution tiles to load, improving runtime performance at a slight reduction of visual quality.
+ * @property {number} [dynamicScreenSpaceErrorFactor=24.0] A parameter that controls the intensity of the {@link Cesium3DTileset#dynamicScreenSpaceError} optimization for tiles on the horizon. Larger values cause lower resolution tiles to load, improving runtime performance at a slight reduction of visual quality.
  * @property {number} [dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height that determines where "street level" camera views occur. When the camera is below this height, the {@link Cesium3DTileset#dynamicScreenSpaceError} optimization will have the maximum effect, and it will roll off above this value.
  * @property {number} [progressiveResolutionHeightFraction=0.3] Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
  * @property {boolean} [foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
@@ -168,7 +168,7 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  *   "http://localhost:8002/tilesets/Seattle/tileset.json", {
  *      dynamicScreenSpaceError: true,
  *      dynamicScreenSpaceErrorDensity: 2.0e-4,
- *      dynamicScreenSpaceErrorFactor: 4.0,
+ *      dynamicScreenSpaceErrorFactor: 24.0,
  *      dynamicScreenSpaceErrorHeightFalloff: 0.25
  * });
  * scene.primitives.add(tileset);
@@ -456,11 +456,11 @@ function Cesium3DTileset(options) {
    * </p>
    *
    * @type {number}
-   * @default 4.0
+   * @default 24.0
    */
   this.dynamicScreenSpaceErrorFactor = defaultValue(
     options.dynamicScreenSpaceErrorFactor,
-    4.0
+    24.0
   );
 
   /**
@@ -1990,7 +1990,7 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  *   "http://localhost:8002/tilesets/Seattle/tileset.json", {
  *      dynamicScreenSpaceError: true,
  *      dynamicScreenSpaceErrorDensity: 2.0e-4,
- *      dynamicScreenSpaceErrorFactor: 4.0,
+ *      dynamicScreenSpaceErrorFactor: 24.0,
  *      dynamicScreenSpaceErrorHeightFalloff: 0.25
  * });
  * scene.primitives.add(tileset);
