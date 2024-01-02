@@ -6,6 +6,7 @@
 
 ##### Additions :tada:
 
+- Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of `Terrain` and `Cesium3DTileset` can be controlled simultaneously via the new `Scene` properties `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight`. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
 - The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
 
 ##### Fixes :wrench:
@@ -14,6 +15,10 @@
 - Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
 - The `Quaternion.computeAxis` function created an axis that was `(0,0,0)` for the unit quaternion, and an axis that was `(NaN,NaN,NaN)` for the quaternion `(0,0,0,-1)` (which describes a rotation about 360 degrees). Now, it returns the x-axis `(1,0,0)` in both of these cases.
 - Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `Globe.terrainExaggeration` and `Globe.terrainExaggerationRelativeHeight` have been deprecated in CesiumJS 1.113. They will be removed in 1.116. Use `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight` instead. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
 
 ### 1.112 - 2023-12-01
 

@@ -2128,13 +2128,11 @@ describe(
           },
           imageryLayersUpdatedEvent: new Event(),
           destroy: function () {},
+          beginFrame: function () {},
+          endFrame: function () {},
+          terrainProviderChanged: new Event(),
         };
 
-        globe.beginFrame = function () {};
-
-        globe.endFrame = function () {};
-
-        globe.terrainProviderChanged = new Event();
         Object.defineProperties(globe, {
           terrainProvider: {
             set: function (value) {
@@ -3715,6 +3713,25 @@ describe(
             );
           });
         });
+      });
+    });
+
+    it("resets draw commands when vertical exaggeration changes", function () {
+      return loadAndZoomToModelAsync(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        const resetDrawCommands = spyOn(
+          model,
+          "resetDrawCommands"
+        ).and.callThrough();
+        expect(model.ready).toBe(true);
+
+        scene.verticalExaggeration = 2.0;
+        scene.renderForSpecs();
+        expect(resetDrawCommands).toHaveBeenCalled();
       });
     });
 
