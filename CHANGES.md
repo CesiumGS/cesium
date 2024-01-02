@@ -10,6 +10,10 @@
 - The default value of `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002 to be more consistent with terrain [#11718](https://github.com/CesiumGS/cesium/pull/11718)
 - The default value of `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24 for improved performance when dynamic screen space error is used. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
 
+##### Fixes :wrench:
+
+- Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
+
 ### 1.113 - 2024-01-02
 
 #### @cesium/engine
@@ -20,10 +24,9 @@
 
 ##### Fixes :wrench:
 
-- Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above [#11627](https://github.com/CesiumGS/cesium/issues/11627)
-- Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor [#11625](https://github.com/CesiumGS/cesium/issues/11625)
-- The `Quaternion.computeAxis` function created an axis that was `(0,0,0)` for the unit quaternion, and an axis that was `(NaN,NaN,NaN)` for the quaternion `(0,0,0,-1)` (which describes a rotation about 360 degrees). Now, it returns the x-axis `(1,0,0)` in both of these cases.
-- Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
+- Changes the default `RequestScheduler.maximumRequestsPerServer` from 6 to 18. This should improve performance on HTTP/2 servers and above. [#11627](https://github.com/CesiumGS/cesium/issues/11627)
+- Corrected JSDoc and Typescript definitions that marked optional arguments as required in `ImageryProvider` constructor. [#11625](https://github.com/CesiumGS/cesium/issues/11625)
+- The `Quaternion.computeAxis` function created an axis that was `(0,0,0)` for the unit quaternion, and an axis that was `(NaN,NaN,NaN)` for the quaternion `(0,0,0,-1)` (which describes a rotation about 360 degrees). Now, it returns the x-axis `(1,0,0)` in both of these cases. [#11665](https://github.com/CesiumGS/cesium/issues/11665)
 
 ##### Deprecated :hourglass_flowing_sand:
 
