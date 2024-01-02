@@ -454,9 +454,6 @@ function Cesium3DTileset(options) {
    * <p>
    * When the SSE factor is set to 0, the adjustment will be 0 for all tiles.
    * </p>
-   * A factor used to increase the screen space error of tiles for dynamic screen space error. As this value increases
-   * less tiles are requested for rendering and tiles in the distance will have lower detail. If set to zero, the
-   * feature will be disabled.
    *
    * @type {number}
    * @default 4.0
@@ -2357,7 +2354,8 @@ function updateDynamicScreenSpaceError(tileset, frameState) {
       direction = Cartesian3.normalize(direction, direction);
       height = positionLocal.z;
       if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
-        // Assuming z-up, the last column
+        // Assuming z-up, the last column is the local z direction and
+        // represents the height of the bounding box.
         const halfHeightVector = Matrix3.getColumn(
           boundingVolume.halfAxes,
           2,
