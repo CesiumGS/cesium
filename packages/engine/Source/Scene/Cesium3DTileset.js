@@ -1902,7 +1902,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  * used for streaming massive heterogeneous 3D geospatial datasets, from a Cesium ion asset ID.
  *
  * @param {number} assetId The Cesium ion asset id.
- * @param {Cesium3DTileset.ConstructorOptions} options An object describing initialization options
+ * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.

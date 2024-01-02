@@ -897,11 +897,18 @@ CesiumTerrainProvider.prototype.requestTileGeometry = function (
 
   if (!defined(layerToUse) && unknownAvailability) {
     // Try again when availability data is ready– Otherwise the tile will be marked as failed and never re-requested
-    return availabilityPromise.then(() =>
-      this.requestTileGeometry(x, y, level, request)
-    );
+    return availabilityPromise.then(() => {
+      // handle promise or undefined return
+      return new Promise((resolve) => {
+        // defer execution to the next event loop
+        setTimeout(() => {
+          const promise = this.requestTileGeometry(x, y, level, request);
+          resolve(promise);
+        }, 0); // next tick
+      });
+    });
   }
-
+  // call overridden function below
   return requestTileGeometry(this, x, y, level, layerToUse, request);
 };
 
