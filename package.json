@@ -94,7 +94,7 @@
     "merge-stream": "^2.0.0",
     "mkdirp": "^3.0.1",
     "node-fetch": "^3.2.10",
-    "open": "^9.1.0",
+    "open": "^10.0.2",
     "prettier": "2.1.2",
     "prismjs": "^1.28.0",
     "request": "^2.79.0",
