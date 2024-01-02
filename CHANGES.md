@@ -6,14 +6,17 @@
 
 ##### Breaking Changes :mega:
 
-- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
-- The default value of `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002 to be more consistent with terrain [#11718](https://github.com/CesiumGS/cesium/pull/11718)
-- The default value of `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24 for improved performance when dynamic screen space error is used. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
+- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. Furthermore, the default settings of this feature were tuned for improved performance. `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002. `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
+
+##### Fixes :wrench:
+
+- Fixed a bug where the `Cesium3DTileset` constructor was ignoring the options `dynamicScreenSpaceError`, `dynamicScreenSpaceErrorDensity`, `dynamicScreenSpaceErrorFactor` and `dynamicScreenSpaceErrorHeightFalloff`. [#11677](https://github.com/CesiumGS/cesium/issues/11677)
+
+#### @cesium/widgets
 
 ##### Fixes :wrench:
 
 - Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
-- Fixed a bug where the `Cesium3DTileset` constructor was ignoring the options `dynamicScreenSpaceError`, `dynamicScreenSpaceErrorDensity`, `dynamicScreenSpaceErrorFactor` and `dynamicScreenSpaceErrorHeightFalloff`. [#11677](https://github.com/CesiumGS/cesium/issues/11677)
 
 ### 1.113 - 2024-01-02
 
