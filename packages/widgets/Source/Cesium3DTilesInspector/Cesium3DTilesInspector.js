@@ -215,7 +215,7 @@ function Cesium3DTilesInspector(container, scene) {
       "Screen Space Error Factor",
       "dynamicScreenSpaceErrorFactor",
       1,
-      10,
+      32,
       0.1
     )
   );
