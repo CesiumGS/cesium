@@ -1,5 +1,15 @@
 # Change Log
 
+### 1.114 - 2024-02-01
+
+#### @cesium/engine
+
+##### Breaking Changes :mega:
+
+- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
+- The default value of `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002 to be more consistent with terrain [#11718](https://github.com/CesiumGS/cesium/pull/11718)
+- The default value of `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24 for improved performance when dynamic screen space error is used. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
+
 ### 1.113 - 2024-01-02
 
 #### @cesium/engine
@@ -7,7 +17,6 @@
 ##### Additions :tada:
 
 - Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of `Terrain` and `Cesium3DTileset` can be controlled simultaneously via the new `Scene` properties `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight`. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
-- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
 
 ##### Fixes :wrench:
 
