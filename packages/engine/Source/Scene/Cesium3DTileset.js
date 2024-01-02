@@ -369,7 +369,7 @@ function Cesium3DTileset(options) {
    * Furthermore, the results are more accurate for tightly fitting bounding volumes like box and region.
    *
    * @type {boolean}
-   * @default false
+   * @default true
    */
   this.dynamicScreenSpaceError = defaultValue(
     options.dynamicScreenSpaceError,
