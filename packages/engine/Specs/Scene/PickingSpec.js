@@ -134,10 +134,6 @@ describe(
     function createTileset(url) {
       const options = {
         maximumScreenSpaceError: 0,
-        // The camera is zoomed pretty far out for these tests, so
-        // turn off dynamicScreenSpaceError so tiles don't get culled
-        // unintentionally.
-        dynamicScreenSpaceError: false,
       };
       return Cesium3DTilesTester.loadTileset(scene, url, options).then(
         function (tileset) {
