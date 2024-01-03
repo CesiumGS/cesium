@@ -113,6 +113,70 @@ async function createModelPrimitive(
   }
 }
 
+ModelVisualizer.prototype.postUpdate = function(time){
+  if (!defined(time)) {
+    throw new DeveloperError("time is required.");
+  }
+  const entities = this._entitiesToVisualize.values;
+  const modelHash = this._modelHash;
+  const primitives = this._primitives;
+  for (let i = 0, len = entities.length; i < len; i++) {
+    const entity = entities[i];
+    const modelGraphics = entity._model;
+    let resource;
+    let modelData = modelHash[entity.id];
+    let show =
+      entity.isShowing &&
+      entity.isAvailable(time) &&
+      Property.getValueOrDefault(modelGraphics._show, time, true);
+
+    if(!show || !defined(modelData) || !defined(modelData.modelPrimitive)) continue;
+    let model = modelData.modelPrimitive;
+    if(!model.ready) continue;
+
+    let selfPosition = Property.getValueOrUndefined(entity._position, time, new Cartesian3());
+    let cameraPosition = this._scene.camera.positionWC;
+    let distance = 0;
+    if(defined(selfPosition) && defined(cameraPosition)){
+      distance = Cartesian3.distance(selfPosition, cameraPosition);
+    }
+    resource = Resource.createIfNeeded(
+        Property.getValueOrUndefined((defined(modelGraphics._uriCriticalDistance) && (distance > modelGraphics._uriCriticalDistance.getValue(time)))? modelGraphics._uriLowRes:modelGraphics._uri, time)
+      );
+    if(!defined(resource)) continue;
+    if(resource.url !== modelData.url){
+      if (defined(modelData?.modelPrimitive)) {
+        primitives.removeAndDestroy(modelData.modelPrimitive);
+        delete modelHash[entity.id];
+      }
+
+      modelData = {
+        modelPrimitive: undefined,
+        url: resource.url,
+        animationsRunning: false,
+        nodeTransformationsScratch: {},
+        articulationsScratch: {},
+        loadFailed: false,
+        modelUpdated: false,
+        awaitingSampleTerrain: false,
+        clampedBoundingSphere: undefined,
+        sampleTerrainFailed: false,
+      };
+      modelHash[entity.id] = modelData;
+
+      const incrementallyLoadTextures = Property.getValueOrDefault(
+        modelGraphics._incrementallyLoadTextures,
+        time,
+        defaultIncrementallyLoadTextures
+      );
+
+      createModelPrimitive(this, entity, resource, incrementallyLoadTextures);
+    }
+  }
+  return true;
+
+};
+
 /**
  * Updates models created this visualizer to match their
  * Entity counterpart at the given time.
@@ -158,7 +222,7 @@ ModelVisualizer.prototype.update = function (time) {
       continue;
     }
 
-    if (!defined(modelData) || resource.url !== modelData.url) {
+    if (!defined(modelData)) {
       if (defined(modelData?.modelPrimitive)) {
         primitives.removeAndDestroy(modelData.modelPrimitive);
         delete modelHash[entity.id];

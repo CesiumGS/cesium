@@ -1878,6 +1878,15 @@ Viewer.prototype._onTick = function (clock) {
     }
   }
 
+  const dataSources = this._dataSourceDisplay._dataSourceCollection;
+  for (let i = 0; i < dataSources.length; i++) {
+    const dataSource = dataSources.get(i);
+    let visualizers = dataSource._visualizers;
+    for(let x = 0; x < visualizers.length; x++){
+      if(defined(visualizers[x].postUpdate)) visualizers[x].postUpdate(time);
+    }
+  }
+
   let position;
   let enableCamera = false;
   const selectedEntity = this.selectedEntity;

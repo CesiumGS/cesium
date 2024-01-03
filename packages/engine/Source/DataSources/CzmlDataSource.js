@@ -3285,6 +3285,24 @@ function processModel(entity, packet, entityCollection, sourceUri) {
     entityCollection
   );
   processPacketData(
+    Uri,
+    model,
+    "uriLowRes",
+    modelData.uriLowRes,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Number,
+    model,
+    "uriCriticalDistance",
+    modelData.uriCriticalDistance,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
     Number,
     model,
     "scale",

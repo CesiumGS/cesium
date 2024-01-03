@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects."
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>isUriLowRes</td>
+            <td>
+              <input type="checkbox" data-bind="checked: isUriLowRes">
+            </td>
+          </tr>
+          <tr>
+            <td>uriCriticalDistance</td>
+            <td>
+              <input type="text" size="1" data-bind="value: uriCriticalDistance, enable: isUriLowRes">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: false,
+        });
+        viewer.dataSources.add(
+          Cesium.CzmlDataSource.load("../../SampleData/UriLowRes.czml")
+        );
+
+        viewer.scene.debugShowFramesPerSecond = true;
+
+        const uriLowResParameter = {
+          isUriLowRes: true,
+          uriCriticalDistance: 5000
+        };
+
+        Cesium.knockout.track(uriLowResParameter);
+        const toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(uriLowResParameter, toolbar);
+
+        Cesium.knockout
+          .getObservable(uriLowResParameter, "isUriLowRes")
+          .subscribe(function(newValue){
+            if(Boolean(newValue)){
+              for(var i in viewer.dataSources.get(0).entities.values){
+                let entity = viewer.dataSources.get(0).entities.values[i];
+                entity.model.uriCriticalDistance = uriLowResParameter.uriCriticalDistance;
+              }
+            }else{
+              for(var i in viewer.dataSources.get(0).entities.values){
+                let entity = viewer.dataSources.get(0).entities.values[i];
+                entity.model.uriCriticalDistance = undefined;
+              }
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(uriLowResParameter, "uriCriticalDistance")
+          .subscribe(function(newValue){
+              for(var i in viewer.dataSources.get(0).entities.values){
+                let entity = viewer.dataSources.get(0).entities.values[i];
+                entity.model.uriCriticalDistance = uriLowResParameter.uriCriticalDistance;
+              }
+          });
+
+        //Sandcastle_End
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+        Sandcastle.finishedLoading();
+      }
+    </script>
+  </body>
+</html>
