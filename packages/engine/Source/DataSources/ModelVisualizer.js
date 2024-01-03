@@ -139,7 +139,6 @@ ModelVisualizer.prototype.postUpdate = function(time){
     let distance = 0;
     if(defined(selfPosition) && defined(cameraPosition)){
       distance = Cartesian3.distance(selfPosition, cameraPosition);
-      console.log(time, selfPosition, cameraPosition);
     }
     resource = Resource.createIfNeeded(
         Property.getValueOrUndefined((defined(modelGraphics._uriCriticalDistance) && (distance > modelGraphics._uriCriticalDistance.getValue(time)))? modelGraphics._uriLowRes:modelGraphics._uri, time)
