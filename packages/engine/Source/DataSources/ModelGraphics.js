@@ -68,6 +68,10 @@ function ModelGraphics(options) {
   this._showSubscription = undefined;
   this._uri = undefined;
   this._uriSubscription = undefined;
+  this._uriLowRes = undefined;
+  this._uriSubscription = undefined;
+  this._uriCriticalDistance = undefined;
+  this._uriCriticalDistanceSubscription = undefined;
   this._scale = undefined;
   this._scaleSubscription = undefined;
   this._minimumPixelSize = undefined;
@@ -139,6 +143,20 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   uri: createPropertyDescriptor("uri"),
+
+  /**
+   * Gets or sets the string Property specifying the URI of the glTF asset in low resolution which will be displayed when the distance between model and camera farther than the uriCriticalDistance.
+   * @memberof ModelGraphics.prototype
+   * @type {Property|undefined}
+   */
+  uriLowRes: createPropertyDescriptor("uriLowRes"),
+
+  /**
+   * Gets or sets the numeric Property specifying the critical distance which determined the displayed model: the lower resolution model or higher resolution model.
+   * @memberof ModelGraphics.prototype
+   * @type {Property|undefined}
+   */
+  uriCriticalDistance: createPropertyDescriptor("uriCriticalDistance"),
 
   /**
    * Gets or sets the numeric Property specifying a uniform linear scale
