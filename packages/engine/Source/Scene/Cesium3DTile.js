@@ -943,6 +943,8 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
       const factor = tileset.dynamicScreenSpaceErrorFactor;
       const dynamicError = CesiumMath.fog(distance, density) * factor;
       error -= dynamicError;
+
+      error = Math.max(error, 0);
     }
   }
 
