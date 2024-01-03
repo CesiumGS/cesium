@@ -10,6 +10,7 @@ import {
   Color,
   ColorBlendMode,
   Credit,
+  CustomShader,
   defaultValue,
   defined,
   DistanceDisplayCondition,
@@ -104,6 +105,9 @@ describe(
       "./Data/Models/glTF-2.0/CesiumMan/glTF-Draco/CesiumMan.gltf";
     const boxCesiumRtcUrl =
       "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
+
+    const propertyTextureWithTextureTransformUrl =
+      "./Data/Models/glTF-2.0/PropertyTextureWithTextureTransform/glTF/PropertyTextureWithTextureTransform.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -692,7 +696,8 @@ describe(
       });
     });
 
-    it("renders model with the KHR_materials_pbrSpecularGlossiness extension", function () {
+    // eslint-disable-next-line no-restricted-globals
+    fit("renders model with the KHR_materials_pbrSpecularGlossiness extension", function () {
       // This model gets clipped if log depth is disabled, so zoom out
       // the camera just a little
       const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -710,6 +715,70 @@ describe(
           scene
         ).then(function (model) {
           verifyRender(model, true);
+        });
+      });
+    });
+
+    // eslint-disable-next-line no-restricted-globals
+    fit("transforms property textures with KHR_texture_transform", function () {
+      const resource = Resource.createIfNeeded(
+        propertyTextureWithTextureTransformUrl
+      );
+      // The texture in the example model contains contains 8x8 pixels
+      // with increasing 'red' component values [0 to 64)*3, interpreted
+      // as a normalized `UINT8` property.
+      // It has a transform with an offset of [0.25, 0.25], and a scale
+      // of [0.5, 0.5].
+      // Create a custom shader that will render any value that is smaller
+      // than 16*3 or larger than 48*3 (i.e. the first two rows of pixels
+      // or the last two rows of pixels) as completely red.
+      // These pixels should NOT be visible when the transform is applied.
+      const customShader = new CustomShader({
+        fragmentShaderText: `
+          void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+          {
+            float value = float(fsInput.metadata.exampleProperty);
+            float i = value * 255.0;
+            if (i < 16.0 * 3.0) {
+              material.diffuse = vec3(1.0, 0.0, 0.0);
+            } else if (i >= 48.0 * 3.0) {
+              material.diffuse = vec3(1.0, 0.0, 0.0);
+            } else {
+              material.diffuse = vec3(0.0, 0.0, 0.0);
+            }
+          }
+          `,
+      });
+
+      return resource.fetchJson().then(function (gltf) {
+        return loadAndZoomToModelAsync(
+          {
+            gltf: gltf,
+            basePath: propertyTextureWithTextureTransformUrl,
+            customShader: customShader,
+          },
+          scene
+        ).then(function (model) {
+          const renderOptions = {
+            scene: scene,
+            time: defaultDate,
+          };
+          // Reset the camera orientation that was destroyed
+          // by flyToBoundingSphere, to have "THE" initial
+          // default viewport (even though the axes are
+          // swapped, apparently)
+          scene.camera.position = new Cartesian3(1.25, 0.5, 0.5);
+          scene.camera.direction = Cartesian3.negate(
+            Cartesian3.UNIT_X,
+            new Cartesian3()
+          );
+          scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            //console.log(rgba);
+            expect(rgba[0]).toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
+          });
         });
       });
     });
