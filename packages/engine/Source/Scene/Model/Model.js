@@ -333,6 +333,8 @@ function Model(options) {
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
+  this._verticalExaggerationOn = false;
+
   this._clampedModelMatrix = undefined; // For use with height reference
 
   const scene = options.scene;
@@ -1792,6 +1794,7 @@ Model.prototype.update = function (frameState) {
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
   updateFog(this, frameState);
+  updateVerticalExaggeration(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -1991,6 +1994,14 @@ function updateFog(model, frameState) {
   if (fogRenderable !== model._fogRenderable) {
     model.resetDrawCommands();
     model._fogRenderable = fogRenderable;
+  }
+}
+
+function updateVerticalExaggeration(model, frameState) {
+  const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
+  if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
+    model.resetDrawCommands();
+    model._verticalExaggerationOn = verticalExaggerationNeeded;
   }
 }
 

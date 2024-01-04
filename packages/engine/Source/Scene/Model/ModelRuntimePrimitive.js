@@ -25,6 +25,7 @@ import PrimitiveStatisticsPipelineStage from "./PrimitiveStatisticsPipelineStage
 import SceneMode2DPipelineStage from "./SceneMode2DPipelineStage.js";
 import SelectedFeatureIdPipelineStage from "./SelectedFeatureIdPipelineStage.js";
 import SkinningPipelineStage from "./SkinningPipelineStage.js";
+import VerticalExaggerationPipelineStage from "./VerticalExaggerationPipelineStage.js";
 import WireframePipelineStage from "./WireframePipelineStage.js";
 
 /**
@@ -200,6 +201,7 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const use2D =
     mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
   const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
+  const exaggerateTerrain = frameState.verticalExaggeration !== 1.0;
 
   const hasMorphTargets =
     defined(primitive.morphTargets) && primitive.morphTargets.length > 0;
@@ -281,6 +283,10 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
     pipelineStages.push(SelectedFeatureIdPipelineStage);
     pipelineStages.push(BatchTexturePipelineStage);
     pipelineStages.push(CPUStylingPipelineStage);
+  }
+
+  if (exaggerateTerrain) {
+    pipelineStages.push(VerticalExaggerationPipelineStage);
   }
 
   if (hasCustomShader) {
