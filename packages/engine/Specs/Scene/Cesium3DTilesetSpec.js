@@ -1096,30 +1096,27 @@ describe(
       });
     });
 
-    function testDynamicScreenSpaceError(url, distance) {
-      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
-        tileset
-      ) {
-        const statistics = tileset._statistics;
+    async function testDynamicScreenSpaceError(url, distance) {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, url);
+      const statistics = tileset._statistics;
 
-        // Horizon view, only root is visible
-        const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
+      // Horizon view, only root is visible
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
 
-        // Turn off dynamic SSE
-        tileset.dynamicScreenSpaceError = false;
-        scene.renderForSpecs();
-        expect(statistics.visited).toEqual(1);
-        expect(statistics.numberOfCommands).toEqual(1);
+      // Turn off dynamic SSE
+      tileset.dynamicScreenSpaceError = false;
+      scene.renderForSpecs();
+      expect(statistics.visited).toEqual(1);
+      expect(statistics.numberOfCommands).toEqual(1);
 
-        // Turn on dynamic SSE, now the root is not rendered
-        tileset.dynamicScreenSpaceError = true;
-        tileset.dynamicScreenSpaceErrorDensity = 1.0;
-        tileset.dynamicScreenSpaceErrorFactor = 10.0;
-        scene.renderForSpecs();
-        expect(statistics.visited).toEqual(0);
-        expect(statistics.numberOfCommands).toEqual(0);
-      });
+      // Turn on dynamic SSE, now the root is not rendered
+      tileset.dynamicScreenSpaceError = true;
+      tileset.dynamicScreenSpaceErrorDensity = 1.0;
+      tileset.dynamicScreenSpaceErrorFactor = 10.0;
+      scene.renderForSpecs();
+      expect(statistics.visited).toEqual(0);
+      expect(statistics.numberOfCommands).toEqual(0);
     }
 
     function numberOfChildrenWithoutContent(tile) {
@@ -1153,7 +1150,7 @@ describe(
       return testDynamicScreenSpaceError(withTransformSphereUrl, 144.0);
     });
 
-    it("dynamic screen space error constructor options work", function () {
+    it("dynamic screen space error constructor options work", async function () {
       const options = {
         dynamicScreenSpaceError: true,
         dynamicScreenSpaceErrorDensity: 1.0,
@@ -1161,29 +1158,29 @@ describe(
         dynamicScreenSpaceErrorHeightFalloff: 0.5,
       };
       const distance = 103.0;
-      return Cesium3DTilesTester.loadTileset(
+      const tileset = await Cesium3DTilesTester.loadTileset(
         scene,
         withTransformBoxUrl,
         options
-      ).then(function (tileset) {
-        // Make sure the values match the constructor, not hard-coded defaults
-        // like in https://github.com/CesiumGS/cesium/issues/11677
-        expect(tileset.dynamicScreenSpaceError).toBe(true);
-        expect(tileset.dynamicScreenSpaceErrorDensity).toBe(1.0);
-        expect(tileset.dynamicScreenSpaceErrorFactor).toBe(10.0);
-        expect(tileset.dynamicScreenSpaceErrorHeightFalloff).toBe(0.5);
+      );
 
-        const statistics = tileset._statistics;
+      // Make sure the values match the constructor, not hard-coded defaults
+      // like in https://github.com/CesiumGS/cesium/issues/11677
+      expect(tileset.dynamicScreenSpaceError).toBe(true);
+      expect(tileset.dynamicScreenSpaceErrorDensity).toBe(1.0);
+      expect(tileset.dynamicScreenSpaceErrorFactor).toBe(10.0);
+      expect(tileset.dynamicScreenSpaceErrorHeightFalloff).toBe(0.5);
 
-        // Horizon view, only root is in view, however due to dynamic SSE,
-        // it will not render.
-        const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
+      const statistics = tileset._statistics;
 
-        scene.renderForSpecs();
-        expect(statistics.visited).toEqual(0);
-        expect(statistics.numberOfCommands).toEqual(0);
-      });
+      // Horizon view, only root is in view, however due to dynamic SSE,
+      // it will not render.
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, distance));
+
+      scene.renderForSpecs();
+      expect(statistics.visited).toEqual(0);
+      expect(statistics.numberOfCommands).toEqual(0);
     });
 
     it("additive refinement - selects root when sse is met", function () {
