@@ -1635,7 +1635,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
    *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
    *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
-   *     <li>Meshes must be watertight</li>
+   *     <li>Meshes must be watertight.</li>
    *     <li>The <code>POSITION</code> semantic is required.</li>
    *     <li>If <code>_BATCHID</code>s and an index buffer are both present, all indices with the same batch id must occupy contiguous sections of the index buffer.</li>
    *     <li>If <code>_BATCHID</code>s are present with no index buffer, all positions with the same batch id must occupy contiguous sections of the position buffer.</li>
