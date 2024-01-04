@@ -6,7 +6,7 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
-import TerrainExaggeration from "./TerrainExaggeration.js";
+import VerticalExaggeration from "./VerticalExaggeration.js";
 import TerrainQuantization from "./TerrainQuantization.js";
 
 const cartesian3Scratch = new Cartesian3();
@@ -386,7 +386,7 @@ TerrainEncoding.prototype.getExaggeratedPosition = function (
     );
     const rawHeight = this.decodeHeight(buffer, index);
     const heightDifference =
-      TerrainExaggeration.getHeight(
+      VerticalExaggeration.getHeight(
         rawHeight,
         exaggeration,
         exaggerationRelativeHeight

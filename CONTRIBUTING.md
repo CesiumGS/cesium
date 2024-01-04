@@ -70,8 +70,7 @@ Our code is our lifeblood so maintaining CesiumJS's high code quality is importa
 - If this is your first contribution to CesiumJS, add your name to [CONTRIBUTORS.md](https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md).
 - For an overview of our workflow see [github pull request workflows](https://cesium.com/blog/2013/10/08/github-pull-request-workflows/).
 - Pull request tips
-  - After you open a pull request, the friendly [cesium-concierge](https://github.com/CesiumGS/cesium-concierge) bot will comment with a short automated review. At least one human will also review your pull request.
-  - If your pull request fixes an existing issue, include a link to the issue in the description (like this: [#1](https://github.com/CesiumGS/cesium/issues/1)). Likewise, if your pull request fixes an issue reported on the Cesium forum, include a link to the thread.
+  - If your pull request fixes an existing issue, include a link to the issue in the description (like this: "Fixes [#1](https://github.com/CesiumGS/cesium/issues/1)"). Likewise, if your pull request fixes an issue reported on the Cesium forum, include a link to the thread.
   - If your pull request needs additional work, include a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments).
   - Once you are done making new commits to address feedback, add a comment to the pull request such as `"this is ready"` since GitHub doesn't notify us about commits.
 - Code and tests

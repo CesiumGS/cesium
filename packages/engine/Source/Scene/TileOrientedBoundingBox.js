@@ -106,7 +106,7 @@ Object.defineProperties(TileOrientedBoundingBox.prototype, {
    *
    * @memberof TileOrientedBoundingBox.prototype
    *
-   * @type {object}
+   * @type {OrientedBoundingBox}
    * @readonly
    */
   boundingVolume: {

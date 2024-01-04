@@ -366,7 +366,7 @@ Megatexture.getApproximateTextureMemoryByteLength = function (
   const voxelCountTotal =
     tileCount * dimensions.x * dimensions.y * dimensions.z;
 
-  const sliceCountPerRegionX = Math.ceil(Math.sqrt(dimensions.z));
+  const sliceCountPerRegionX = Math.ceil(Math.sqrt(dimensions.x));
   const sliceCountPerRegionY = Math.ceil(dimensions.z / sliceCountPerRegionX);
   const voxelCountPerRegionX = sliceCountPerRegionX * dimensions.x;
   const voxelCountPerRegionY = sliceCountPerRegionY * dimensions.y;
