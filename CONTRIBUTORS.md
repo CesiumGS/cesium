@@ -371,5 +371,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [hongfaqiu](https://github.com/hongfaqiu)
 - [KOBAYASHI Ittoku](https://github.com/kittoku)
 - [王康](https://github.com/yieryi)
+- [孙永政](https://github.com/syzdev)
 - [Subhajit Saha](https://github.com/subhajits)
 - [Jared Webber](https://github.com/jaredwebber)
