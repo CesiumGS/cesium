@@ -2,6 +2,7 @@ import {
   pickModel,
   Cartesian2,
   Cartesian3,
+  Ellipsoid,
   HeadingPitchRange,
   Math as CesiumMath,
   Model,
@@ -339,7 +340,15 @@ describe("Scene/Model/pickModel", function () {
 
     const result = new Cartesian3();
     const expected = new Cartesian3(0.5, 0, 0.5);
-    const returned = pickModel(model, ray, scene.frameState, result);
+    const returned = pickModel(
+      model,
+      ray,
+      scene.frameState,
+      undefined,
+      undefined,
+      undefined,
+      result
+    );
     expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON12);
     expect(returned).toBe(result);
   });
@@ -361,5 +370,32 @@ describe("Scene/Model/pickModel", function () {
 
     scene.frameState.mode = SceneMode.MORPHING;
     expect(pickModel(model, ray, scene.frameState)).toBeUndefined();
+  });
+
+  it("returns position with vertical exaggeration", async function () {
+    const model = await loadAndZoomToModelAsync(
+      {
+        url: boxTexturedGltfUrl,
+        enablePick: !scene.frameState.context.webgl2,
+      },
+      scene
+    );
+    const ray = scene.camera.getPickRay(
+      new Cartesian2(
+        scene.drawingBufferWidth / 2.0,
+        scene.drawingBufferHeight / 2.0
+      )
+    );
+
+    const expected = new Cartesian3(-8197.676413311, 0, -8197.676413312);
+    expect(
+      pickModel(
+        model,
+        ray,
+        scene.frameState,
+        2.0,
+        -Ellipsoid.WGS84.minimumRadius
+      )
+    ).toEqualEpsilon(expected, CesiumMath.EPSILON8);
   });
 });

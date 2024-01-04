@@ -3,6 +3,7 @@ import combine from "../../Core/combine.js";
 import defined from "../../Core/defined.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DeveloperError from "../../Core/DeveloperError.js";
+import Ellipsoid from "../../Core/Ellipsoid.js";
 import Pass from "../../Renderer/Pass.js";
 import ModelAnimationLoop from "../ModelAnimationLoop.js";
 import Model from "./Model.js";
@@ -431,7 +432,18 @@ Model3DTileContent.prototype.pick = function (ray, frameState, result) {
     return undefined;
   }
 
-  return this._model.pick(ray, frameState, result);
+  const verticalExaggeration = frameState.verticalExaggeration;
+  const relativeHeight = frameState.verticalExaggerationRelativeHeight;
+
+  // All tilesets assume a WGS84 ellipsoid
+  return this._model.pick(
+    ray,
+    frameState,
+    verticalExaggeration,
+    relativeHeight,
+    Ellipsoid.WGS84,
+    result
+  );
 };
 
 function makeModelOptions(tileset, tile, content, additionalOptions) {
