@@ -345,10 +345,9 @@ function Model(options) {
   const scene = options.scene;
   if (defined(scene) && defined(scene.terrainProviderChanged)) {
     this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(
-      function () {
+      () => {
         this._heightDirty = true;
-      },
-      this
+      }
     );
   }
   this._scene = scene;
