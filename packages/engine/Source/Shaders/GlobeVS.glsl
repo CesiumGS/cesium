@@ -11,7 +11,7 @@ in vec3 geodeticSurfaceNormal;
 #endif
 
 #ifdef EXAGGERATION
-uniform vec2 u_terrainExaggerationAndRelativeHeight;
+uniform vec2 u_verticalExaggerationAndRelativeHeight;
 #endif
 
 uniform vec3 u_center3D;
@@ -173,8 +173,8 @@ void main()
 #endif
 
 #if defined(EXAGGERATION) && defined(GEODETIC_SURFACE_NORMALS)
-    float exaggeration = u_terrainExaggerationAndRelativeHeight.x;
-    float relativeHeight = u_terrainExaggerationAndRelativeHeight.y;
+    float exaggeration = u_verticalExaggerationAndRelativeHeight.x;
+    float relativeHeight = u_verticalExaggerationAndRelativeHeight.y;
     float newHeight = (height - relativeHeight) * exaggeration + relativeHeight;
 
     // stop from going through center of earth

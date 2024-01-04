@@ -159,11 +159,9 @@ function constructRectangle(geometry, computedOptions) {
 }
 
 function constructExtrudedRectangle(rectangleGeometry, computedOptions) {
-  const surfaceHeight = rectangleGeometry._surfaceHeight;
-  const extrudedHeight = rectangleGeometry._extrudedHeight;
+  const maxHeight = rectangleGeometry._surfaceHeight;
+  const minHeight = rectangleGeometry._extrudedHeight;
   const ellipsoid = rectangleGeometry._ellipsoid;
-  const minHeight = extrudedHeight;
-  const maxHeight = surfaceHeight;
   const geo = constructRectangle(rectangleGeometry, computedOptions);
 
   const height = computedOptions.height;
