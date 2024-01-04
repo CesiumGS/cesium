@@ -10,7 +10,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Rectangle from "../Core/Rectangle.js";
-import TerrainExaggeration from "../Core/TerrainExaggeration.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import ClassificationPrimitive from "./ClassificationPrimitive.js";
 import ClassificationType from "./ClassificationType.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
@@ -763,15 +763,15 @@ GroundPrimitive.prototype.update = function (frameState) {
 
     // Now compute the min/max heights for the primitive
     setMinMaxTerrainHeights(this, rectangle, ellipsoid);
-    const exaggeration = frameState.terrainExaggeration;
+    const exaggeration = frameState.verticalExaggeration;
     const exaggerationRelativeHeight =
-      frameState.terrainExaggerationRelativeHeight;
-    this._minHeight = TerrainExaggeration.getHeight(
+      frameState.verticalExaggerationRelativeHeight;
+    this._minHeight = VerticalExaggeration.getHeight(
       this._minTerrainHeight,
       exaggeration,
       exaggerationRelativeHeight
     );
-    this._maxHeight = TerrainExaggeration.getHeight(
+    this._maxHeight = VerticalExaggeration.getHeight(
       this._maxTerrainHeight,
       exaggeration,
       exaggerationRelativeHeight

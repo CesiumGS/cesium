@@ -93,6 +93,10 @@ void main()
     MetadataStatistics metadataStatistics;
     metadataStage(metadata, metadataClass, metadataStatistics, attributes);
 
+    #ifdef HAS_VERTICAL_EXAGGERATION
+    verticalExaggerationStage(attributes);
+    #endif
+
     #ifdef HAS_CUSTOM_VERTEX_SHADER
     czm_modelVertexOutput vsOutput = defaultVertexOutput(attributes.positionMC);
     customShaderStage(vsOutput, attributes, featureIds, metadata, metadataClass, metadataStatistics);
