@@ -954,7 +954,8 @@ const AutomaticUniforms = {
 
   /**
    * An automatic GLSL uniform containing the ellipsoid radii of curvature at the camera position.
-   * The .x component is the prime vertical radius, .y is the meridional.
+   * The .x component is the prime vertical radius of curvature (east-west direction)
+   * .y is the meridional radius of curvature (north-south direction)
    * This uniform is only valid when the {@link SceneMode} is <code>SCENE3D</code>.
    */
   czm_eyeEllipsoidCurvature: new AutomaticUniform({
