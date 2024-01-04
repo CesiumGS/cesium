@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.114 - 2024-02-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
+
 ### 1.113 - 2024-01-02
 
 #### @cesium/engine
