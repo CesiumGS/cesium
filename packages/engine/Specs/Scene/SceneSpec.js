@@ -523,6 +523,19 @@ describe(
       scene.destroyForSpecs();
     });
 
+    it("sets verticalExaggeration and verticalExaggerationRelativeHeight", function () {
+      const scene = createScene();
+
+      expect(scene.verticalExaggeration).toEqual(1.0);
+      expect(scene.verticalExaggerationRelativeHeight).toEqual(0.0);
+
+      scene.verticalExaggeration = 2.0;
+      scene.verticalExaggerationRelativeHeight = 100000.0;
+
+      expect(scene.verticalExaggeration).toEqual(2.0);
+      expect(scene.verticalExaggerationRelativeHeight).toEqual(100000.0);
+    });
+
     it("destroys primitive on set globe", function () {
       const scene = createScene();
       const globe = new Globe(Ellipsoid.UNIT_SPHERE);
