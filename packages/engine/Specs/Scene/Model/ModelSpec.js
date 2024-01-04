@@ -2393,7 +2393,7 @@ describe(
             },
             scene
           )
-        ).toBeRejectedWithError(
+        ).toBeRejectedWithDeveloperError(
           "Height reference is not supported without a scene."
         );
       });
