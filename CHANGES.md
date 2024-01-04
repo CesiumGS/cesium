@@ -10,6 +10,7 @@
 
 ##### Fixes :wrench:
 
+- Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
 - Fixed a bug where the `Cesium3DTileset` constructor was ignoring the options `dynamicScreenSpaceError`, `dynamicScreenSpaceErrorDensity`, `dynamicScreenSpaceErrorFactor` and `dynamicScreenSpaceErrorHeightFalloff`. [#11677](https://github.com/CesiumGS/cesium/issues/11677)
 
 #### @cesium/widgets

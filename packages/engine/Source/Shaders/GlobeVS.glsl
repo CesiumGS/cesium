@@ -128,7 +128,7 @@ void main()
     height = height * (u_minMaxHeight.y - u_minMaxHeight.x) + u_minMaxHeight.x;
     position = (u_scaleAndBias * vec4(position, 1.0)).xyz;
 
-#if (defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)) && defined(INCLUDE_WEB_MERCATOR_Y)
+#if (defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)) && defined(INCLUDE_WEB_MERCATOR_Y) || defined(APPLY_MATERIAL)
     float webMercatorT = czm_decompressTextureCoordinates(compressed0.w).x;
     float encodedNormal = compressed1;
 #elif defined(INCLUDE_WEB_MERCATOR_Y)
