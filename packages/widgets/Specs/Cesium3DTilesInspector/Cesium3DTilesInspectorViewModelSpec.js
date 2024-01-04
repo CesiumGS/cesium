@@ -1,4 +1,9 @@
-import { Cesium3DTileset, Cesium3DTileStyle, Globe } from "@cesium/engine";
+import {
+  Cesium3DTileset,
+  Cesium3DTileStyle,
+  Globe,
+  Math as CesiumMath,
+} from "@cesium/engine";
 import { Cesium3DTilesInspectorViewModel } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -254,6 +259,23 @@ describe(
         expect(viewModel.tileset.dynamicScreenSpaceError).toBe(true);
         expect(viewModel.tileset.dynamicScreenSpaceErrorFactor).toBe(2);
         expect(viewModel.tileset.dynamicScreenSpaceErrorDensity).toBe(0.1);
+      });
+
+      it("dynamicScreenSpaceErrorDensity slider uses an exponential scale", function () {
+        // The HTML slider produces a linear range, but the actual density value
+        // varies exponentially.
+        const rawSliderValue = 0.2;
+        const scaledValue = Math.pow(rawSliderValue, 6);
+
+        viewModel.dynamicScreenSpaceErrorDensitySliderValue = rawSliderValue;
+        expect(
+          viewModel.dynamicScreenSpaceErrorDensitySliderValue
+        ).toEqualEpsilon(rawSliderValue, CesiumMath.EPSILON8);
+
+        expect(viewModel.tileset.dynamicScreenSpaceErrorDensity).toEqualEpsilon(
+          scaledValue,
+          CesiumMath.EPSILON8
+        );
       });
     });
 
