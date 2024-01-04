@@ -548,6 +548,7 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     options.radii = Cartesian3.clone(in3D ? unitSphere : radii, options.radii);
     if (defined(innerRadii)) {
       if (in3D) {
+        // TEMP
         const mag =
           Cartesian3.magnitude(radii) * Math.tan(CesiumMath.PI_OVER_SIX);
         options.innerRadii = Cartesian3.fromElements(
