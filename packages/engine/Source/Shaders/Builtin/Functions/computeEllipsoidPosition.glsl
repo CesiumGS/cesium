@@ -4,6 +4,8 @@
  *
  * @return {vec3} The position in world coordinates.
  */
+
+ /*
 vec3 czm_computeEllipsoidPosition()
 {
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0), 1.0);
@@ -19,4 +21,10 @@ vec3 czm_computeEllipsoidPosition()
 
     vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
     return (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;
+}
+*/
+
+vec3 czm_computeEllipsoidPosition()
+{
+    return vec3(0.0);
 }

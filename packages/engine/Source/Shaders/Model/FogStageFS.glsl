@@ -1,9 +1,41 @@
-vec3 computeFogColor() {
+vec3 computeEllipsoidPosition(vec3 positionMC) {
+    // Compute the distance from the camera to the local center of curvature.
+  vec4 vertexPositionENU = czm_modelToEnu * vec4(positionMC, 1.0);
+  vec2 vertexAzimuth = normalize(vertexPositionENU.xy);
+  // Curvature = 1 / radius of curvature.
+  float azimuthalCurvature = dot(vertexAzimuth * vertexAzimuth, czm_eyeEllipsoidCurvature);
+  float eyeToCenter = 1.0 / azimuthalCurvature + czm_eyeHeight;
+
+  // Compute the approximate ellipsoid normal at the vertex position.
+  // Uses a circular approximation for the Earth curvature along the geodesic.
+  vec3 vertexPositionEC = (czm_modelView * vec4(positionMC, 1.0)).xyz;
+  vec3 centerToVertex = eyeToCenter * czm_eyeEllipsoidNormalEC + vertexPositionEC;
+  vec3 vertexNormal = normalize(centerToVertex);
+
+  // Estimate the (sine of the) angle between the camera direction and the vertex normal
+  float verticalDistance = dot(vertexPositionEC, czm_eyeEllipsoidNormalEC);
+  float horizontalDistance = length(vertexPositionEC - verticalDistance * czm_eyeEllipsoidNormalEC);
+  float sinTheta = horizontalDistance / (eyeToCenter + verticalDistance);
+  bool isSmallAngle = clamp(sinTheta, 0.0, 0.05) == sinTheta;
+
+  // Approximate the change in height above the ellipsoid, from camera to vertex position.
+  float exactVersine = 1.0 - dot(czm_eyeEllipsoidNormalEC, vertexNormal);
+  float smallAngleVersine = 0.5 * sinTheta * sinTheta;
+  float versine = isSmallAngle ? smallAngleVersine : exactVersine;
+  float dHeight = dot(vertexPositionEC, vertexNormal) - eyeToCenter * versine;
+  float vertexHeight = czm_eyeHeight + dHeight;
+
+  vec3 ellipsoidPositionEC = vertexPositionEC - vertexHeight * vertexNormal;
+  return (czm_inverseView * vec4(ellipsoidPositionEC, 1.0)).xyz;
+
+}
+
+vec3 computeFogColor(vec3 positionMC) {
     vec3 rayleighColor = vec3(0.0, 0.0, 1.0);
     vec3 mieColor;
     float opacity;
 
-    vec3 positionWC = czm_computeEllipsoidPosition();
+    vec3 positionWC = computeEllipsoidPosition(positionMC);
     vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC);
 
     // The fog color is derived from the ground atmosphere color
@@ -45,7 +77,7 @@ vec3 computeFogColor() {
 }
 
 void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
-    vec3 fogColor = computeFogColor();
+    vec3 fogColor = computeFogColor(attributes.positionMC);
 
     // Note: camera is far away (distance > nightFadeOutDistance), scattering is computed in the fragment shader.
     // otherwise in the vertex shader. but for prototyping, I'll do everything in the FS for simplicity
