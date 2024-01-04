@@ -6,11 +6,13 @@ import Check from "../../Core/Check.js";
 import ComponentDatatype from "../../Core/ComponentDatatype.js";
 import defaultValue from "../../Core/defaultValue.js";
 import defined from "../../Core/defined.js";
+import Ellipsoid from "../../Core/Ellipsoid.js";
 import IndexDatatype from "../../Core/IndexDatatype.js";
 import IntersectionTests from "../../Core/IntersectionTests.js";
 import Ray from "../../Core/Ray.js";
 import Matrix4 from "../../Core/Matrix4.js";
 import Transforms from "../../Core/Transforms.js";
+import VerticalExaggeration from "../../Core/VerticalExaggeration.js";
 import AttributeType from "../AttributeType.js";
 import SceneMode from "../SceneMode.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -19,11 +21,13 @@ import ModelUtility from "./ModelUtility.js";
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
 const scratchV2 = new Cartesian3();
+const scratchNormal = new Cartesian3();
 const scratchNodeComputedTransform = new Matrix4();
 const scratchModelMatrix = new Matrix4();
 const scratchcomputedModelMatrix = new Matrix4();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
+const scratchHeightCartographic = new Cartographic();
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
@@ -31,12 +35,23 @@ const scratchBoundingSphere = new BoundingSphere();
  * @param {Model} model The model to pick.
  * @param {Ray} ray The ray to test for intersection.
  * @param {FrameState} frameState The frame state.
+ * @param {number} [verticalExaggeration=1.0] A scalar used to exaggerate the height of a position relative to the ellipsoid. If the value is 1.0 there will be no effect.
+ * @param {number} [relativeHeight=0.0] The ellipsoid height relative to which a position is exaggerated. If the value is 0.0 the position will be exaggerated relative to the ellipsoid surface.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the exaggerated position is relative.
  * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
  *
  * @private
  */
-export default function pickModel(model, ray, frameState, result) {
+export default function pickModel(
+  model,
+  ray,
+  frameState,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
+  result
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
   Check.typeOf.object("ray", ray);
@@ -253,6 +268,10 @@ export default function pickModel(model, ray, frameState, result) {
         return;
       }
 
+      ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+      verticalExaggeration = defaultValue(verticalExaggeration, 1.0);
+      relativeHeight = defaultValue(relativeHeight, 0.0);
+
       const indicesLength = indices.length;
       for (let i = 0; i < indicesLength; i += 3) {
         const i0 = indices[i];
@@ -266,6 +285,9 @@ export default function pickModel(model, ray, frameState, result) {
             numComponents,
             quantization,
             instanceTransform,
+            verticalExaggeration,
+            relativeHeight,
+            ellipsoid,
             scratchV0
           );
           const v1 = getVertexPosition(
@@ -274,6 +296,9 @@ export default function pickModel(model, ray, frameState, result) {
             numComponents,
             quantization,
             instanceTransform,
+            verticalExaggeration,
+            relativeHeight,
+            ellipsoid,
             scratchV1
           );
           const v2 = getVertexPosition(
@@ -282,6 +307,9 @@ export default function pickModel(model, ray, frameState, result) {
             numComponents,
             quantization,
             instanceTransform,
+            verticalExaggeration,
+            relativeHeight,
+            ellipsoid,
             scratchV2
           );
 
@@ -327,6 +355,9 @@ function getVertexPosition(
   numComponents,
   quantization,
   instanceTransform,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
   result
 ) {
   const i = index * numComponents;
@@ -364,6 +395,28 @@ function getVertexPosition(
   }
 
   result = Matrix4.multiplyByPoint(instanceTransform, result, result);
+
+  if (verticalExaggeration !== 1.0) {
+    const geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
+      result,
+      scratchNormal
+    );
+    const rawHeight = ellipsoid.cartesianToCartographic(
+      result,
+      scratchHeightCartographic
+    ).height;
+    const heightDifference =
+      VerticalExaggeration.getHeight(
+        rawHeight,
+        verticalExaggeration,
+        relativeHeight
+      ) - rawHeight;
+
+    // some math is unrolled for better performance
+    result.x += geodeticSurfaceNormal.x * heightDifference;
+    result.y += geodeticSurfaceNormal.y * heightDifference;
+    result.z += geodeticSurfaceNormal.z * heightDifference;
+  }
 
   return result;
 }

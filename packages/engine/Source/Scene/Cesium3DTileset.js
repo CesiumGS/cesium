@@ -3491,7 +3491,7 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
       continue;
     }
 
-    const candidate = tile.content.pick(
+    const candidate = tile.content?.pick(
       ray,
       frameState,
       scratchPickIntersection
