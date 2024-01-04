@@ -25,7 +25,7 @@
 ##### Additions :tada:
 
 - Vertical exaggeration can now be applied to a `Cesium3DTileset`. Exaggeration of `Terrain` and `Cesium3DTileset` can be controlled simultaneously via the new `Scene` properties `Scene.verticalExaggeration` and `Scene.verticalExaggerationRelativeHeight`. [#11655](https://github.com/CesiumGS/cesium/pull/11655)
-- Added documentation for `Cesium3DTileset.classificationType` and `Model.classificationType` to clarify additional requirements. The classification tileset must be watertight, and the receiving tileset/terrain must be opaque.
+- Added documentation for `Cesium3DTileset.classificationType` and `Model.classificationType` to clarify additional requirements. The classification tileset must be watertight, and the receiving tileset/terrain must be opaque. [#11739](https://github.com/CesiumGS/cesium/pull/11739)
 
 ##### Fixes :wrench:
 
