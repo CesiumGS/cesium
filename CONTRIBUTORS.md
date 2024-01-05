@@ -373,4 +373,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [王康](https://github.com/yieryi)
 - [Subhajit Saha](https://github.com/subhajits)
 - [孙永政](https://github.com/syzdev)
+- [Jared Webber](https://github.com/jaredwebber)
+- [Anne Gropler](https://github.com/anne-gropler)
 - [Arturo Espinosa Aldama](https://github.com/pupitetris)
