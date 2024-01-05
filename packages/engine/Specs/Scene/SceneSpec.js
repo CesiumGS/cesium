@@ -1187,7 +1187,7 @@ describe(
       s.destroyForSpecs();
     });
 
-    it("alwayas raises preUpdate event prior to updating", function () {
+    it("always raises preUpdate event prior to updating", function () {
       const s = createScene();
 
       const spyListener = jasmine.createSpy("listener");
@@ -1207,11 +1207,11 @@ describe(
       s.destroyForSpecs();
     });
 
-    it("always raises preUpdate event after updating", function () {
+    it("always raises postUpdate event after updating", function () {
       const s = createScene();
 
       const spyListener = jasmine.createSpy("listener");
-      s.preUpdate.addEventListener(spyListener);
+      s.postUpdate.addEventListener(spyListener);
 
       s.render();
 
