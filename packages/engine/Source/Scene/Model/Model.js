@@ -1552,10 +1552,14 @@ Object.defineProperties(Model.prototype, {
    *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
    *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
    *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
-   *     <li>The position attribute is required.</li>
+   *     <li>The meshes must be watertight.</li>
+   *     <li>The POSITION attribute is required.</li>
    *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
    *     <li>If feature IDs are present without an index buffer, all positions with the same feature id must occupy contiguous sections of the position buffer.</li>
    * </ul>
+   * </p>
+   * <p>
+   * The 3D Tiles or terrain receiving the classification must be opaque.
    * </p>
    *
    * @memberof Model.prototype
