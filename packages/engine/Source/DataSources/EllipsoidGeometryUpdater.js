@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
@@ -548,13 +547,10 @@ DynamicEllipsoidGeometryUpdater.prototype.update = function (time) {
     options.radii = Cartesian3.clone(in3D ? unitSphere : radii, options.radii);
     if (defined(innerRadii)) {
       if (in3D) {
-        // TEMP
-        const mag =
-          Cartesian3.magnitude(radii) * Math.tan(CesiumMath.PI_OVER_SIX);
         options.innerRadii = Cartesian3.fromElements(
-          innerRadii.x / mag,
-          innerRadii.y / mag,
-          innerRadii.z / mag,
+          innerRadii.x / radii.x,
+          innerRadii.y / radii.y,
+          innerRadii.z / radii.z,
           options.innerRadii
         );
       } else {
