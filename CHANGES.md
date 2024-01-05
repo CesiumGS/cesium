@@ -14,6 +14,7 @@
 - Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
 - Fixed a bug where `GregorianDate` constructor would not validate the input parameters for valid date. [#10075](https://github.com/CesiumGS/cesium/pull/10075)
 - Fixed a bug where transforms that had been defined with the `KHR_texture_transform` extension had not been applied to Property Textures in `EXT_structural_metadata`. [#11708](https://github.com/CesiumGS/cesium/issues/11708)
+- Fixed improper scaling of ellipsoid inner radii in 3D mode. [#11656](https://github.com/CesiumGS/cesium/issues/11656 and [#10245](https://github.com/CesiumGS/cesium/issues/10245)
 
 #### @cesium/widgets
 
