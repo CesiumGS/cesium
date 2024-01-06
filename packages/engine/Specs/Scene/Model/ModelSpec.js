@@ -696,8 +696,7 @@ describe(
       });
     });
 
-    // eslint-disable-next-line no-restricted-globals
-    fit("renders model with the KHR_materials_pbrSpecularGlossiness extension", function () {
+    it("renders model with the KHR_materials_pbrSpecularGlossiness extension", function () {
       // This model gets clipped if log depth is disabled, so zoom out
       // the camera just a little
       const offset = new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 2);
@@ -719,8 +718,7 @@ describe(
       });
     });
 
-    // eslint-disable-next-line no-restricted-globals
-    fit("transforms property textures with KHR_texture_transform", function () {
+    it("transforms property textures with KHR_texture_transform", function () {
       const resource = Resource.createIfNeeded(
         propertyTextureWithTextureTransformUrl
       );
@@ -763,21 +761,25 @@ describe(
             scene: scene,
             time: defaultDate,
           };
-          // Reset the camera orientation that was destroyed
-          // by flyToBoundingSphere, to have "THE" initial
-          // default viewport (even though the axes are
-          // swapped, apparently)
-          scene.camera.position = new Cartesian3(1.25, 0.5, 0.5);
+          // Move the camera to look at the point (0.1, 0.1) of
+          // the plane at a distance of 0.15. (Note that the axes
+          // are swapped, apparently - 'x' is the distance)
+          scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
           scene.camera.direction = Cartesian3.negate(
             Cartesian3.UNIT_X,
             new Cartesian3()
           );
           scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+          scene.camera.frustum.near = 0.01;
+          scene.camera.frustum.far = 5.0;
+
+          // When the texture transform was applied, then the
+          // resulting pixels should be nearly black (or at
+          // least not red)
           expect(renderOptions).toRenderAndCall(function (rgba) {
-            //console.log(rgba);
-            expect(rgba[0]).toEqual(0);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toEqual(0);
+            expect(rgba[0]).toBeLessThan(50);
+            expect(rgba[1]).toBeLessThan(50);
+            expect(rgba[2]).toBeLessThan(50);
           });
         });
       });
