@@ -557,6 +557,7 @@ function destroyLabel(labelCollection, label) {
  * and {@link LabelCollection#remove}.
  *
  * @alias LabelCollection
+ * @implements {Iterable<Label>}
  * @constructor
  *
  * @param {object} [options] Object with the following properties:

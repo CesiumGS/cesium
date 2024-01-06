@@ -16,6 +16,7 @@ import ModelAnimationState from ".././ModelAnimationState.js";
  * A collection of active model animations.
  *
  * @alias ModelAnimationCollection
+ * @implements {Iterable<ModelAnimation>}
  * @internalConstructor
  * @class
  *

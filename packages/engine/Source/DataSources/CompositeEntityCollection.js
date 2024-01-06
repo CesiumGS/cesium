@@ -123,6 +123,7 @@ function recomposite(that) {
  * EntityCollection is used.
  *
  * @alias CompositeEntityCollection
+ * @implements {Iterable<Entity>}
  * @constructor
  *
  * @param {EntityCollection[]} [collections] The initial list of EntityCollection instances to merge.

@@ -16,6 +16,7 @@ function compareIntervalStartTimes(left, right) {
 /**
  * A non-overlapping collection of {@link TimeInterval} instances sorted by start time.
  * @alias TimeIntervalCollection
+ * @implements {Iterable<TimeInterval>}
  * @constructor
  *
  * @param {TimeInterval[]} [intervals] An array of intervals to add to the collection.

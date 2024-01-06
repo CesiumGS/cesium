@@ -7,6 +7,7 @@ import PrimitiveCollection from "./PrimitiveCollection.js";
 /**
  * A primitive collection for helping maintain the order or ground primitives based on a z-index
  *
+ * @implements {Iterable<GroundPrimitive>}
  * @private
  */
 function OrderedGroundPrimitiveCollection() {

@@ -103,6 +103,7 @@ const attributeLocationsInstanced = {
  * for images with the same identifier.
  *
  * @alias BillboardCollection
+ * @implements {Iterable<Billboard>}
  * @constructor
  *
  * @param {object} [options] Object with the following properties:

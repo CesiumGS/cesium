@@ -75,6 +75,7 @@ const attributeLocations = {
  * and {@link PolylineCollection#remove}.
  *
  * @alias PolylineCollection
+ * @implements {Iterable<Polyline>}
  * @constructor
  *
  * @param {object} [options] Object with the following properties:

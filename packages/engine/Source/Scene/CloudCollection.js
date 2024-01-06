@@ -74,6 +74,7 @@ const COLOR_INDEX = CumulusCloud.COLOR_INDEX;
  * Clouds are added and removed from the collection using {@link CloudCollection#add}
  * and {@link CloudCollection#remove}.
  * @alias CloudCollection
+ * @implements {Iterable<CumulusCloud>}
  * @constructor
  *
  * @param {object} [options] Object with the following properties:
@@ -1050,7 +1051,7 @@ CloudCollection.prototype.destroy = function () {
 /**
  * Returns an iterator over the elements of this collection.
  *
- * @returns {Iterator<Cloud>} The iterator
+ * @returns {Iterator<CumulusCloud>} The iterator
  */
 CloudCollection.prototype[Symbol.iterator] = function* () {
   yield* this._clouds;

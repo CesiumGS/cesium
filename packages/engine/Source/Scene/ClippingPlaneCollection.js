@@ -31,6 +31,7 @@ import ClippingPlane from "./ClippingPlane.js";
  * </p>
  *
  * @alias ClippingPlaneCollection
+ * @implements {Iterable<ClippingPlane>}
  * @constructor
  *
  * @param {object} [options] Object with the following properties:

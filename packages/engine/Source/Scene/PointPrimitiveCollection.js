@@ -56,6 +56,7 @@ const attributeLocations = {
  * and {@link PointPrimitiveCollection#remove}.
  *
  * @alias PointPrimitiveCollection
+ * @implements {Iterable<PointPrimitive>}
  * @constructor
  *
  * @param {object} [options] Object with the following properties:

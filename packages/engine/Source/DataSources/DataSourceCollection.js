@@ -8,6 +8,7 @@ import CesiumMath from "../Core/Math.js";
 /**
  * A collection of {@link DataSource} instances.
  * @alias DataSourceCollection
+ * @implements {Iterable<DataSource>}
  * @constructor
  */
 function DataSourceCollection() {

@@ -30,6 +30,7 @@ const stackScratch = [];
  * </p>
  *
  * @alias PostProcessStageCollection
+ * @implements {Iterable<PostProcessStage>}
  * @constructor
  */
 function PostProcessStageCollection() {

@@ -171,6 +171,7 @@ Tween.prototype.cancelTween = function () {
  * A collection of tweens for animating properties.  Commonly accessed using {@link Scene#tweens}.
  *
  * @alias TweenCollection
+ * @implements {Iterable<Tween>}
  * @constructor
  *
  * @private

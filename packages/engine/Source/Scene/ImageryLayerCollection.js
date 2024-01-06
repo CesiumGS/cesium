@@ -11,6 +11,7 @@ import ImageryLayer from "./ImageryLayer.js";
  * An ordered collection of imagery layers.
  *
  * @alias ImageryLayerCollection
+ * @implements {Iterable<ImageryLayer>}
  * @constructor
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}

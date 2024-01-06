@@ -11,6 +11,7 @@ import Event from "../Core/Event.js";
  * be added to collections forming a hierarchy.
  *
  * @alias PrimitiveCollection
+ * @implements {Iterable<Primitive>}
  * @constructor
  *
  * @param {object} [options] Object with the following properties:

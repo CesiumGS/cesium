@@ -50,6 +50,7 @@ import {
   ImageryProvider,
   IonImageryProvider,
   KmlDataSource,
+  LabelCollection,
   MapboxImageryProvider,
   MapboxStyleImageryProvider,
   MaterialProperty,
@@ -400,4 +401,21 @@ function consumeDefined(pos: Cartesian3) {
 pos = undefined;
 if (defined(pos)) {
   consumeDefined(pos);
+}
+
+
+// Verify that a collection (like LabelCollection) is iterable
+// and can be used in a for-of loop
+const labels = new LabelCollection();
+labels.add({
+  position : new Cartesian3(1.0, 2.0, 3.0),
+  text : 'A label'
+});
+labels.add({
+  position : new Cartesian3(4.0, 5.0, 6.0),
+  text : 'Another label'
+});
+
+for (const label of labels) {
+  console.log(label.text);
 }

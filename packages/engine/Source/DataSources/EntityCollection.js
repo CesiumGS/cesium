@@ -49,6 +49,7 @@ function fireChangedEvent(collection) {
 /**
  * An observable collection of {@link Entity} instances where each entity has a unique id.
  * @alias EntityCollection
+ * @implements {Iterable<Entity>}
  * @constructor
  *
  * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
