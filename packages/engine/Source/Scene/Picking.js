@@ -246,20 +246,17 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   scratchRectangleWidth = defaultValue(width, 3.0);
   scratchRectangleHeight = defaultValue(height, scratchRectangleWidth);
 
-  const context = scene.context;
-  const us = context.uniformState;
-  const frameState = scene.frameState;
+  const { context, frameState, defaultView } = scene;
+  const { viewport, pickFramebuffer } = defaultView;
 
-  const view = scene.defaultView;
-  scene.view = view;
+  scene.view = defaultView;
 
-  const viewport = view.viewport;
   viewport.x = 0;
   viewport.y = 0;
   viewport.width = context.drawingBufferWidth;
   viewport.height = context.drawingBufferHeight;
 
-  let passState = view.passState;
+  let passState = defaultView.passState;
   passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
   const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
@@ -282,7 +279,7 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   frameState.passes.pick = true;
   frameState.tilesetPassState = pickTilesetPassState;
 
-  us.update(frameState);
+  context.uniformState.update(frameState);
 
   scene.updateEnvironment();
 
@@ -294,32 +291,29 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
     (scratchRectangleHeight - 1.0) * 0.5;
   scratchRectangle.width = scratchRectangleWidth;
   scratchRectangle.height = scratchRectangleHeight;
-  passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
+  passState = pickFramebuffer.begin(scratchRectangle, viewport);
 
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
-  const object = view.pickFramebuffer.end(scratchRectangle);
+  const object = pickFramebuffer.end(scratchRectangle);
   context.endFrame();
   return object;
 };
 
 function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
   // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
-  const context = scene.context;
-  const frameState = scene.frameState;
-  const environmentState = scene.environmentState;
+  const { defaultView, context, frameState, environmentState } = scene;
+  const { viewport, pickDepthFramebuffer } = defaultView;
 
-  const view = scene.defaultView;
-  scene.view = view;
+  scene.view = defaultView;
 
-  const viewport = view.viewport;
   viewport.x = 0;
   viewport.y = 0;
   viewport.width = context.drawingBufferWidth;
   viewport.height = context.drawingBufferHeight;
 
-  let passState = view.passState;
+  let passState = defaultView.passState;
   passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
   scene.clearPasses(frameState.passes);
@@ -336,7 +330,7 @@ function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
 
   scene.updateEnvironment();
   environmentState.renderTranslucentDepthForPick = true;
-  passState = view.pickDepthFramebuffer.update(
+  passState = pickDepthFramebuffer.update(
     context,
     drawingBufferPosition,
     viewport
@@ -382,12 +376,10 @@ Picking.prototype.pickPositionWorldCoordinates = function (
     return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
   }
 
-  const frameState = scene.frameState;
-  const context = scene.context;
-  const uniformState = context.uniformState;
+  const { context, frameState, camera, defaultView } = scene;
+  const { uniformState } = context;
 
-  const view = scene.defaultView;
-  scene.view = view;
+  scene.view = defaultView;
 
   const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
     scene,
@@ -403,8 +395,6 @@ Picking.prototype.pickPositionWorldCoordinates = function (
   }
   drawingBufferPosition.y = scene.drawingBufferHeight - drawingBufferPosition.y;
 
-  const camera = scene.camera;
-
   // Create a working frustum from the original camera frustum.
   let frustum;
   if (defined(camera.frustum.fov)) {
@@ -417,7 +407,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
     frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
   }
 
-  const frustumCommandsList = view.frustumCommandsList;
+  const frustumCommandsList = defaultView.frustumCommandsList;
   const numFrustums = frustumCommandsList.length;
   for (let i = 0; i < numFrustums; ++i) {
     const pickDepth = this.getPickDepth(scene, i);
@@ -636,9 +626,7 @@ function updateOffscreenCameraFromRay(picking, ray, width, camera) {
 function updateMostDetailedRayPick(picking, scene, rayPick) {
   const frameState = scene.frameState;
 
-  const ray = rayPick.ray;
-  const width = rayPick.width;
-  const tilesets = rayPick.tilesets;
+  const { ray, width, tilesets } = rayPick;
 
   const camera = picking._pickOffscreenView.camera;
   const cullingVolume = updateOffscreenCameraFromRay(
@@ -682,8 +670,7 @@ Picking.prototype.updateMostDetailedRayPicks = function (scene) {
 };
 
 function getTilesets(primitives, objectsToExclude, tilesets) {
-  const length = primitives.length;
-  for (let i = 0; i < length; ++i) {
+  for (let i = 0; i < primitives.length; ++i) {
     const primitive = primitives.get(i);
     if (primitive.show) {
       if (defined(primitive.isCesium3DTileset)) {
@@ -745,9 +732,8 @@ function getRayIntersection(
   requirePosition,
   mostDetailed
 ) {
-  const context = scene.context;
+  const { context, frameState } = scene;
   const uniformState = context.uniformState;
-  const frameState = scene.frameState;
 
   const view = picking._pickOffscreenView;
   scene.view = view;
