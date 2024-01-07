@@ -49,16 +49,14 @@ function VoxelTraversal(
    */
   this._primitive = primitive;
 
-  const length = types.length;
-
   /**
    * @type {Megatexture[]}
    * @readonly
    */
-  this.megatextures = new Array(length);
+  this.megatextures = new Array(types.length);
 
   // TODO make sure to split the maximumTextureMemoryByteLength across all the megatextures
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < types.length; i++) {
     const type = types[i];
     const componentCount = MetadataType.getComponentCount(type);
     const componentType = componentTypes[i];
