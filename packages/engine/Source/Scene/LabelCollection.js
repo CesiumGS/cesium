@@ -23,6 +23,20 @@ import GraphemeSplitter from "grapheme-splitter";
 // not have a billboard, depending on whether the texture info has an index into
 // the the label collection's texture atlas.  Invisible characters have no texture, and
 // no billboard.  However, it always has a valid dimensions object.
+//
+// A valid 'dimensions' object is an object that has the properties that are
+// derived from a https://developer.mozilla.org/en-US/docs/Web/API/TextMetrics
+// object (in pixels)
+// - width: The width of the glyph, as given by TextMetrics.width
+// - ascent: The the distance from the 'textBaseline' attribute to
+//   the top of the bounding rectangle of the glyph, as given by
+//   TextMetrics.actualBoundingBoxAscent
+// - descent: The the distance from the 'textBaseline' attribute to
+//   the bottom of the bounding rectangle of the glyph, as given by
+//   TextMetrics.actualBoundingBoxDescent
+// - minx: The distance of the alignment point given by the 'textAlign'
+//   property to the left side of the bounding rectangle of the glyph,
+//   as given by TextMetrics.actualBoundingBoxLeft
 function Glyph() {
   this.textureInfo = undefined;
   this.dimensions = undefined;
@@ -33,6 +47,7 @@ function Glyph() {
 // shared and reference counted across all labels.  It may or may not have an
 // index into the label collection's texture atlas, depending on whether the character
 // has both width and height, but it always has a valid dimensions object.
+// (See notes above about what that means)
 function GlyphTextureInfo(labelCollection, index, dimensions) {
   this.labelCollection = labelCollection;
   this.index = index;
