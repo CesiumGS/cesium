@@ -294,7 +294,7 @@ describe("Scene/Model/pickModel", function () {
     expect(pickModel(model, ray, scene.frameState)).toBeUndefined();
   });
 
-  it("includes back faces results when model disbales backface culling", async function () {
+  it("includes back faces results when model disables backface culling", async function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxBackFaceCullingUrl,
