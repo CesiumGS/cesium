@@ -6,7 +6,7 @@
 
 ##### Breaking Changes :mega:
 
-- By default, the screen space camera controller will no longer go inside or under instaces of `Cesium3DTileset`. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- By default, the screen space camera controller will no longer go inside or under instances of `Cesium3DTileset`. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
   - This behavior can be disabled by setting `Cesium3DTileset.disableCameraCollision` to true.
   - This feature is enabled by default only for WebGL 2 and above, but can be enabled for WebGL 1 by setting the `enablePick` option to true when creating the `Cesium3DTileset`.
 
