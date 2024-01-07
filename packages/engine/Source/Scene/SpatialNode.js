@@ -353,7 +353,6 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
   for (let i = 0; i < megatextures.length; i++) {
     const megatexture = megatextures[i];
     keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadatas[i]);
-    keyframeNode.metadatas[i] = undefined; // data is in megatexture so no need to hold onto it
   }
 
   keyframeNode.state = KeyframeNode.LoadState.LOADED;
