@@ -219,25 +219,12 @@ function VoxelTraversal(
 /**
  * Finds a keyframe node in the traversal
  *
- * @param {object} coordinates An object with the following properties:
- * @param {number} coordinates.level
- * @param {number} coordinates.x
- * @param {number} coordinates.y
- * @param {number} coordinates.z
- * @param {number} [coordinates.keyframe=0]
+ * @param {number} megatextureIndex
  * @returns {KeyframeNode}
  */
-VoxelTraversal.prototype.findKeyframeNode = function (coordinates) {
-  const { level, x, y, z, keyframe = 0 } = coordinates;
+VoxelTraversal.prototype.findKeyframeNode = function (megatextureIndex) {
   return this._keyframeNodesInMegatexture.find(function (keyframeNode) {
-    const { spatialNode } = keyframeNode;
-    return (
-      spatialNode.level === level &&
-      spatialNode.x === x &&
-      spatialNode.y === y &&
-      spatialNode.z === z &&
-      keyframeNode.keyframe === keyframe
-    );
+    return (keyframeNode.megatextureIndex = megatextureIndex);
   });
 };
 
