@@ -112,7 +112,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @internalConstructor
  *
  * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
- * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally. 
+ * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally.
  * @privateParam {object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
@@ -154,7 +154,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @privateParam {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
- 
+
  *
  * @see Model.fromGltfAsync
  *
@@ -192,7 +192,7 @@ function Model(options) {
    * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
-   * 
+   *
    * @type {Matrix4}
 
    * @default {@link Matrix4.IDENTITY}
@@ -1550,10 +1550,14 @@ Object.defineProperties(Model.prototype, {
    *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
    *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
    *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
-   *     <li>The position attribute is required.</li>
+   *     <li>The meshes must be watertight.</li>
+   *     <li>The POSITION attribute is required.</li>
    *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
    *     <li>If feature IDs are present without an index buffer, all positions with the same feature id must occupy contiguous sections of the position buffer.</li>
    * </ul>
+   * </p>
+   * <p>
+   * The 3D Tiles or terrain receiving the classification must be opaque.
    * </p>
    *
    * @memberof Model.prototype
