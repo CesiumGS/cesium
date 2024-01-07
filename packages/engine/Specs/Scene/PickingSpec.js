@@ -134,9 +134,16 @@ describe(
     function createTileset(url) {
       const options = {
         maximumScreenSpaceError: 0,
+        // Dynamic screen space error seems to cause a race condition in
+        // waitForTilesLoaded.
+        // See https://github.com/CesiumGS/cesium/issues/11732
+        dynamicScreenSpaceError: false,
       };
       return Cesium3DTilesTester.loadTileset(scene, url, options).then(
         function (tileset) {
+          // The tilesets used in these tests have transforms that are not
+          // what we want for our camera setup. Re-position the tileset
+          // in view of the camera
           const cartographic = Rectangle.center(largeRectangle);
           const cartesian = Cartographic.toCartesian(cartographic);
           tileset.root.transform = Matrix4.IDENTITY;

@@ -1,3 +1,10 @@
+import Check from "./Check.js";
+import defaultValue from "./defaultValue.js";
+import DeveloperError from "./DeveloperError.js";
+import isLeapYear from "./isLeapYear.js";
+
+const daysInYear = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
 /**
  * Represents a Gregorian date in a more precise format than the JavaScript Date object.
  * In addition to submillisecond precision, this object can also represent leap seconds.
@@ -25,6 +32,27 @@ function GregorianDate(
   millisecond,
   isLeapSecond
 ) {
+  const minimumYear = 1;
+  const minimumMonth = 1;
+  const minimumDay = 1;
+  const minimumHour = 0;
+  const minimumMinute = 0;
+  const minimumSecond = 0;
+  const minimumMillisecond = 0;
+
+  year = defaultValue(year, minimumYear);
+  month = defaultValue(month, minimumMonth);
+  day = defaultValue(day, minimumDay);
+  hour = defaultValue(hour, minimumHour);
+  minute = defaultValue(minute, minimumMinute);
+  second = defaultValue(second, minimumSecond);
+  millisecond = defaultValue(millisecond, minimumMillisecond);
+  isLeapSecond = defaultValue(isLeapSecond, false);
+  //>>includeStart('debug', pragmas.debug);
+  validateRange();
+  validateDate();
+  //>>includeEnd('debug');
+
   /**
    * Gets or sets the year as a whole number.
    * @type {number}
@@ -65,5 +93,62 @@ function GregorianDate(
    * @type {boolean}
    */
   this.isLeapSecond = isLeapSecond;
+
+  function validateRange() {
+    const maximumYear = 9999;
+    const maximumMonth = 12;
+    const maximumDay = 31;
+    const maximumHour = 23;
+    const maximumMinute = 59;
+    const maximumSecond = 59;
+    const excludedMaximumMilisecond = 1000;
+
+    Check.typeOf.number.greaterThanOrEquals("Year", year, minimumYear);
+    Check.typeOf.number.lessThanOrEquals("Year", year, maximumYear);
+
+    Check.typeOf.number.greaterThanOrEquals("Month", month, minimumMonth);
+    Check.typeOf.number.lessThanOrEquals("Month", month, maximumMonth);
+
+    Check.typeOf.number.greaterThanOrEquals("Day", day, minimumDay);
+    Check.typeOf.number.lessThanOrEquals("Day", day, maximumDay);
+
+    Check.typeOf.number.greaterThanOrEquals("Hour", hour, minimumHour);
+    Check.typeOf.number.lessThanOrEquals("Hour", hour, maximumHour);
+
+    Check.typeOf.number.greaterThanOrEquals("Minute", minute, minimumMinute);
+    Check.typeOf.number.lessThanOrEquals("Minute", minute, maximumMinute);
+
+    Check.typeOf.bool("IsLeapSecond", isLeapSecond);
+
+    Check.typeOf.number.greaterThanOrEquals("Second", second, minimumSecond);
+    Check.typeOf.number.lessThanOrEquals(
+      "Second",
+      second,
+      isLeapSecond ? maximumSecond + 1 : maximumSecond
+    );
+
+    Check.typeOf.number.greaterThanOrEquals(
+      "Millisecond",
+      millisecond,
+      minimumMillisecond
+    );
+    Check.typeOf.number.lessThan(
+      "Millisecond",
+      millisecond,
+      excludedMaximumMilisecond
+    );
+  }
+
+  // Javascript date object supports only dates greater than 1901. Thus validating with custom logic
+  function validateDate() {
+    const daysInMonth =
+      month === 2 && isLeapYear(year)
+        ? daysInYear[month - 1] + 1
+        : daysInYear[month - 1];
+
+    if (day > daysInMonth) {
+      throw new DeveloperError("Month and Day represents invalid date");
+    }
+  }
 }
 export default GregorianDate;
