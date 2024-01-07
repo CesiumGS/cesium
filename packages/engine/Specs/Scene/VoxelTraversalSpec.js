@@ -11,6 +11,7 @@ import {
   Cesium3DTilesVoxelProvider,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 const towardPrimitive = Cartesian3.fromElements(1.0, 1.0, 1.0);
 
@@ -145,16 +146,23 @@ describe(
       expect(traversal.isDestroyed()).toBe(true);
     });
 
-    xit("loads tiles into megatexture", function () {
+    xit("loads tiles into megatexture", async function () {
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
       const pauseUpdate = false;
-      traversal.update(
-        scene.frameState,
-        keyFrameLocation,
-        recomputeBoundingVolumes,
-        pauseUpdate
-      );
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        traversal.update(
+          scene.frameState,
+          keyFrameLocation,
+          recomputeBoundingVolumes,
+          pauseUpdate
+        );
+        return traversal.megatextures[0].occupiedCount > 0;
+      }).then(function () {
+        scene.renderForSpecs();
+        return traversal;
+      });
 
       const megatexture = traversal.megatextures[0];
       let tilesInMegatextureCount = megatexture.occupiedCount;
