@@ -227,6 +227,16 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
   this._radiiAndDynamicAtmosphereColor.z = lightEnum;
 };
 
+/**
+ * Set the dynamic lighting enum value for the shader
+ * @param {DynamicAtmosphereLightingType} lightingEnum
+ *
+ * @private
+ */
+SkyAtmosphere.prototype.setDynamicLighting = function (lightingEnum) {
+  this._radiiAndDynamicAtmosphereColor.z = lightingEnum;
+};
+
 const scratchModelMatrix = new Matrix4();
 
 /**

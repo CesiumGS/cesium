@@ -31,4 +31,26 @@ const DynamicAtmosphereLightingType = {
   SUNLIGHT: 2,
 };
 
+/**
+ * Get the lighting enum from the older globe flags
+ *
+ * @param {Globe} globe The globe
+ * @return {DynamicAtmosphereLightingType} The corresponding enum value
+ *
+ * @private
+ */
+DynamicAtmosphereLightingType.fromGlobeFlags = function (globe) {
+  const lightingOn = globe.enableLighting && globe.dynamicAtmosphereLighting;
+  if (!lightingOn) {
+    return DynamicAtmosphereLightingType.OFF;
+  }
+
+  // Force sunlight
+  if (globe.dynamicAtmosphereLightingFromSun) {
+    return DynamicAtmosphereLightingType.SUNLIGHT;
+  }
+
+  return DynamicAtmosphereLightingType.SCENE_LIGHT;
+};
+
 export default Object.freeze(DynamicAtmosphereLightingType);
