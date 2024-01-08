@@ -1697,6 +1697,14 @@ const AutomaticUniforms = {
     },
   }),
 
+  czm_atmosphereMethod: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereMethod;
+    },
+  }),
+
   /**
    * An automatic GLSL uniform representing the splitter position to use when rendering with a splitter.
    * This will be in pixel coordinates relative to the canvas.

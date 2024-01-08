@@ -59,6 +59,32 @@ vec2 nearestPointOnEllipse(vec2 pos, vec2 radii) {
     return v * sign(pos);
 }
 
+vec2 nearestPointOnEllipse1Iter(vec2 pos, vec2 radii) {
+    vec2 p = abs(pos);
+    vec2 inverseRadii = 1.0 / radii;
+    vec2 evoluteScale = (radii.x * radii.x - radii.y * radii.y) * vec2(1.0, -1.0) * inverseRadii;
+
+    // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
+    // but store the cos and sin of t in a vec2 for efficiency.
+    // Initial guess: t = cos(pi/4)
+    vec2 tTrigs = vec2(0.70710678118);
+    vec2 v = radii * tTrigs;
+
+    const int iterations = 1;
+    for (int i = 0; i < iterations; ++i) {
+        // Find the evolute of the ellipse (center of curvature) at v.
+        vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
+        // Find the (approximate) intersection of p - evolute with the ellipsoid.
+        vec2 q = normalize(p - evolute) * length(v - evolute);
+        // Update the estimate of t.
+        tTrigs = (q + evolute) * inverseRadii;
+        tTrigs = normalize(clamp(tTrigs, 0.0, 1.0));
+        v = radii * tTrigs;
+    }
+
+    return v * sign(pos);
+}
+
 vec3 computeEllipsoidPositionIterative(vec3 positionMC) {
     // Get the world-space position and project onto a meridian plane of
     // the ellipsoid
@@ -71,6 +97,18 @@ vec3 computeEllipsoidPositionIterative(vec3 positionMC) {
     return vec3(nearestPoint.x * normalize(positionWC.xy), nearestPoint.y);
 }
 
+vec3 computeEllipsoidPositionIterative1Iter(vec3 positionMC) {
+    // Get the world-space position and project onto a meridian plane of
+    // the ellipsoid
+    vec3 positionWC = (czm_model * vec4(positionMC, 1.0)).xyz;
+
+    vec2 positionEllipse = vec2(length(positionWC.xy), positionWC.z);
+    vec2 nearestPoint = nearestPointOnEllipse1Iter(positionEllipse, czm_ellipsoidRadii.xz);
+
+    // Reconstruct a 3D point in world space
+    return vec3(nearestPoint.x * normalize(positionWC.xy), nearestPoint.y);
+}
+
 #define USE_ITERATIVE_METHOD
 
 vec3 computeFogColor(vec3 positionMC) {
@@ -78,11 +116,24 @@ vec3 computeFogColor(vec3 positionMC) {
     vec3 mieColor;
     float opacity;
 
-#ifdef USE_ITERATIVE_METHOD
-    vec3 ellipsoidPositionWC = computeEllipsoidPositionIterative(positionMC);
-#else
-    vec3 ellipsoidPositionWC = computeEllipsoidPositionCurvature(positionMC);
-#endif
+    // Measuring performance is difficult in the shader, so run the code many times
+    // so the difference is noticeable in the FPS counter
+    const float N = 200.0;
+    const float WEIGHT = 1.0 / N;
+    vec3 ellipsoidPositionWC = vec3(0.0);
+    for (float i = 0.0; i < N; i++) {
+        if (czm_atmosphereMethod == 0.0) {
+            // Baseline for comparison - just use the vertex position in WC
+            ellipsoidPositionWC += WEIGHT * (czm_model * vec4(positionMC, 1.0)).xyz;
+        } else if (czm_atmosphereMethod == 1.0) {
+            // Use the curvature method
+            ellipsoidPositionWC += WEIGHT * computeEllipsoidPositionCurvature(positionMC);
+        } else {
+            // use the 2D iterative method
+            ellipsoidPositionWC += WEIGHT * computeEllipsoidPositionIterative1Iter(positionMC);
+        }
+    }
+
     vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(ellipsoidPositionWC);
 
     // The fog color is derived from the ground atmosphere color
@@ -138,4 +189,12 @@ void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
 
     color = vec4(withFog, color.a);
     //color = mix(color, vec4(fogColor, 1.0), 0.5);
+
+    // Compare the two methods.
+    vec3 curvature = computeEllipsoidPositionCurvature(attributes.positionMC);
+    vec3 iterative = computeEllipsoidPositionIterative(attributes.positionMC);
+    vec3 iterative1 = computeEllipsoidPositionIterative1Iter(attributes.positionMC);
+
+    //color = vec4(abs(curvature - iterative) / 1e3, 1.0);
+    //color = vec4(abs(iterative - iterative1) / 1e2, 1.0);
 }
