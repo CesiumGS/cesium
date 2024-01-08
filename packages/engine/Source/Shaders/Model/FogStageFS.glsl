@@ -1,4 +1,4 @@
-vec3 computeEllipsoidPosition(vec3 positionMC) {
+vec3 computeEllipsoidPositionCurvature(vec3 positionMC) {
     // Compute the distance from the camera to the local center of curvature.
   vec4 vertexPositionENU = czm_modelToEnu * vec4(positionMC, 1.0);
   vec2 vertexAzimuth = normalize(vertexPositionENU.xy);
@@ -30,17 +30,64 @@ vec3 computeEllipsoidPosition(vec3 positionMC) {
 
 }
 
+// robust iterative solution without trig functions
+// https://github.com/0xfaded/ellipse_demo/issues/1
+// https://stackoverflow.com/questions/22959698/distance-from-given-point-to-given-ellipse
+vec2 nearestPointOnEllipse(vec2 pos, vec2 radii) {
+    vec2 p = abs(pos);
+    vec2 inverseRadii = 1.0 / radii;
+    vec2 evoluteScale = (radii.x * radii.x - radii.y * radii.y) * vec2(1.0, -1.0) * inverseRadii;
+
+    // We describe the ellipse parametrically: v = radii * vec2(cos(t), sin(t))
+    // but store the cos and sin of t in a vec2 for efficiency.
+    // Initial guess: t = cos(pi/4)
+    vec2 tTrigs = vec2(0.70710678118);
+    vec2 v = radii * tTrigs;
+
+    const int iterations = 3;
+    for (int i = 0; i < iterations; ++i) {
+        // Find the evolute of the ellipse (center of curvature) at v.
+        vec2 evolute = evoluteScale * tTrigs * tTrigs * tTrigs;
+        // Find the (approximate) intersection of p - evolute with the ellipsoid.
+        vec2 q = normalize(p - evolute) * length(v - evolute);
+        // Update the estimate of t.
+        tTrigs = (q + evolute) * inverseRadii;
+        tTrigs = normalize(clamp(tTrigs, 0.0, 1.0));
+        v = radii * tTrigs;
+    }
+
+    return v * sign(pos);
+}
+
+vec3 computeEllipsoidPositionIterative(vec3 positionMC) {
+    // Get the world-space position and project onto a meridian plane of
+    // the ellipsoid
+    vec3 positionWC = (czm_model * vec4(positionMC, 1.0)).xyz;
+
+    vec2 positionEllipse = vec2(length(positionWC.xy), positionWC.z);
+    vec2 nearestPoint = nearestPointOnEllipse(positionEllipse, czm_ellipsoidRadii.xz);
+
+    // Reconstruct a 3D point in world space
+    return vec3(nearestPoint.x * normalize(positionWC.xy), nearestPoint.y);
+}
+
+#define USE_ITERATIVE_METHOD
+
 vec3 computeFogColor(vec3 positionMC) {
     vec3 rayleighColor = vec3(0.0, 0.0, 1.0);
     vec3 mieColor;
     float opacity;
 
-    vec3 positionWC = computeEllipsoidPosition(positionMC);
-    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC);
+#ifdef USE_ITERATIVE_METHOD
+    vec3 ellipsoidPositionWC = computeEllipsoidPositionIterative(positionMC);
+#else
+    vec3 ellipsoidPositionWC = computeEllipsoidPositionCurvature(positionMC);
+#endif
+    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(ellipsoidPositionWC);
 
     // The fog color is derived from the ground atmosphere color
     czm_computeGroundAtmosphereScattering(
-        positionWC,
+        ellipsoidPositionWC,
         lightDirection,
         rayleighColor,
         mieColor,
@@ -50,7 +97,7 @@ vec3 computeFogColor(vec3 positionMC) {
     //rayleighColor = vec3(1.0, 0.0, 0.0);
     //mieColor = vec3(0.0, 1.0, 0.0);
 
-    vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
+    vec4 groundAtmosphereColor = czm_computeAtmosphereColor(ellipsoidPositionWC, lightDirection, rayleighColor, mieColor, opacity);
     vec3 fogColor = groundAtmosphereColor.rgb;
 
     // Darken the fog
