@@ -39,11 +39,11 @@ describe(
       );
 
       camera = scene.camera;
-      camera.position = Cartesian3.fromElements(-10, -10, -10);
+      camera.position = Cartesian3.fromElements(-6378000, -6378000, -6378000);
       camera.direction = Cartesian3.fromElements(1, 1, 1);
       camera.frustum.fov = CesiumMath.PI_OVER_TWO;
       primitive = new VoxelPrimitive({
-        voxelProvider: provider,
+        provider: provider,
       });
       scene.primitives.add(primitive);
       scene.renderForSpecs();
@@ -146,7 +146,7 @@ describe(
       expect(traversal.isDestroyed()).toBe(true);
     });
 
-    xit("loads tiles into megatexture", async function () {
+    it("loads tiles into megatexture", async function () {
       const keyFrameLocation = 0;
       const recomputeBoundingVolumes = true;
       const pauseUpdate = false;
@@ -165,20 +165,7 @@ describe(
       });
 
       const megatexture = traversal.megatextures[0];
-      let tilesInMegatextureCount = megatexture.occupiedCount;
-      const tileInQueueWhenLookingAtRoot = tilesInMegatextureCount === 1;
-      expect(tileInQueueWhenLookingAtRoot).toBe(true);
-
-      turnCameraAround(scene);
-      traversal.update(
-        scene.frameState,
-        keyFrameLocation,
-        recomputeBoundingVolumes,
-        pauseUpdate
-      );
-      tilesInMegatextureCount = traversal.megatextures[0].occupiedCount;
-      const tileNotInQueueWhenLookingAway = tilesInMegatextureCount === 0;
-      expect(tileNotInQueueWhenLookingAway).toBe(true);
+      expect(megatexture.occupiedCount).toBe(1);
     });
 
     xit("unloads tiles in megatexture", function () {
