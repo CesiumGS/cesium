@@ -47,6 +47,7 @@ import DebugCameraPrimitive from "./DebugCameraPrimitive.js";
 import DepthPlane from "./DepthPlane.js";
 import DerivedCommand from "./DerivedCommand.js";
 import DeviceOrientationCameraController from "./DeviceOrientationCameraController.js";
+import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
@@ -3170,6 +3171,7 @@ Scene.prototype.updateEnvironment = function () {
   const environmentState = this._environmentState;
   const renderPass = frameState.passes.render;
   const offscreenPass = frameState.passes.offscreen;
+  const atmosphere = this.atmosphere;
   const skyAtmosphere = this.skyAtmosphere;
   const globe = this.globe;
   const globeTranslucencyState = this._globeTranslucencyState;
@@ -3188,17 +3190,19 @@ Scene.prototype.updateEnvironment = function () {
   } else {
     if (defined(skyAtmosphere)) {
       if (defined(globe)) {
-        skyAtmosphere.setDynamicAtmosphereColor(
-          globe.enableLighting && globe.dynamicAtmosphereLighting,
-          globe.dynamicAtmosphereLightingFromSun
+        skyAtmosphere.setDynamicLighting(
+          DynamicAtmosphereLightingType.fromGlobeFlags(globe)
         );
         environmentState.isReadyForAtmosphere =
           environmentState.isReadyForAtmosphere ||
           !globe.show ||
           globe._surface._tilesToRender.length > 0;
       } else {
+        const dynamicLighting = atmosphere.dynamicLighting;
+        skyAtmosphere.setDynamicAtmosphereColor(dynamicLighting);
         environmentState.isReadyForAtmosphere = true;
       }
+
       environmentState.skyAtmosphereCommand = skyAtmosphere.update(
         frameState,
         globe
