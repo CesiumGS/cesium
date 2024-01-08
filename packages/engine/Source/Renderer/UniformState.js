@@ -171,6 +171,8 @@ function UniformState() {
   this._atmosphereMieAnisotropy = undefined;
   this._atmosphereDynamicLighting = undefined;
 
+  this._atmosphereMethod = undefined;
+
   this._invertClassificationColor = undefined;
 
   this._splitPosition = 0.0;
@@ -1006,6 +1008,12 @@ Object.defineProperties(UniformState.prototype, {
     },
   },
 
+  atmosphereMethod: {
+    get: function () {
+      return this._atmosphereMethod;
+    },
+  },
+
   /**
    * A scalar that represents the geometric tolerance per meter
    * @memberof UniformState.prototype
@@ -1522,6 +1530,7 @@ UniformState.prototype.update = function (frameState) {
   this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
   this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
   this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
+  this._atmosphereMethod = atmosphere.method;
 
   this._invertClassificationColor = frameState.invertClassificationColor;
 
