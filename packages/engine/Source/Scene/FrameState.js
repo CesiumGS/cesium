@@ -302,8 +302,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
     mieScaleHeight: undefined,
     mieAnisotropy: undefined,
     dynamicLighting: undefined,
-
-    method: 1,
   };
 
   /**

@@ -88,12 +88,6 @@ function Atmosphere() {
    * @default DynamicAtmosphereLightingType.OFF
    */
   this.dynamicLighting = DynamicAtmosphereLightingType.OFF;
-
-  // TEMPORARY! Just for side-by-side-comparisons for the PR
-  // 0 = positionWC = czm_model * positionMC
-  // 1 = positionWC = computeEllipsoidPositionCurvature(positionMC)
-  // 2 = positionWC = computeEllipsoidPositionIterative(positionMC)
-  this.method = 1;
 }
 
 Atmosphere.prototype.update = function (frameState) {
@@ -115,8 +109,6 @@ Atmosphere.prototype.update = function (frameState) {
   atmosphere.mieAnisotropy = this.mieAnisotropy;
 
   atmosphere.dynamicLighting = this.dynamicLighting;
-
-  atmosphere.method = this.method;
 };
 
 export default Atmosphere;
