@@ -1593,6 +1593,19 @@ const AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform scalar used to set a minimum brightness when dynamic lighting is applied to fog.
+   *
+   * @see czm_fog
+   */
+  czm_fogMinimumBrightness: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.fogMinimumBrightness;
+    },
+  }),
+
+  /**
    * An automatic uniform representing the color shift for the atmosphere in HSB color space
    *
    * @example

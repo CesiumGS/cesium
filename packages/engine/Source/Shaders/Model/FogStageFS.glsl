@@ -62,14 +62,12 @@ vec3 computeFogColor(vec3 positionMC) {
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(ellipsoidPositionWC, lightDirection, rayleighColor, mieColor, opacity);
     vec3 fogColor = groundAtmosphereColor.rgb;
 
-    // Darken the fog
-
-    // If there is lighting, apply that to the fog.
-//#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
-    //const float u_minimumBrightness = 0.03; // TODO: pull this from the light shader
-    //float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
-    //fogColor *= darken;
-//#endif
+    // If there is dynamic lighting, apply that to the fog.
+    const float OFF = 0.0;
+    if (czm_atmosphereDynamicLighting != OFF) {
+        float darken = clamp(dot(normalize(czm_viewerPositionWC), lightDirection), czm_fogMinimumBrightness, 1.0);
+        fogColor *= darken;
+    }
 
     // Tonemap if HDR rendering is disabled
 #ifndef HDR
