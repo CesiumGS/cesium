@@ -80,8 +80,6 @@ void czm_computeScattering(
     vec2 opticalDepth = vec2(0.0);
     vec2 heightScale = vec2(czm_atmosphereRayleighScaleHeight, czm_atmosphereMieScaleHeight);
 
-    //vec3 lastVals = vec3(0.0);
-
     // Sample positions on the primary ray.
     for (int i = 0; i < PRIMARY_STEPS_MAX; ++i) {
 
@@ -130,9 +128,6 @@ void czm_computeScattering(
 
             // Increment distance on light ray.
             lightPositionLength += lightStepLength;
-
-            //lastVals = vec3(length(lightPosition));
-            //lastVals = vec3(float(lightHeight < 0.0), lightHeight / 1000.0, lightOpticalDepth);
         }
 
         // Compute attenuation via the primary ray and the light ray.
