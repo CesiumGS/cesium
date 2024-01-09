@@ -14,10 +14,20 @@
 
 - Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
 - Added `Cesium3DTileset.disableCameraCollision` to allow the camera from to go inside or below a 3D tileset, for instance, to be used with 3D Tiles interiors. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
+- The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. Furthermore, the default settings of this feature were tuned for improved performance. `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002. `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
 
 ##### Fixes :wrench:
 
+- Fixed a bug where the `Cesium3DTileset` constructor was ignoring the options `dynamicScreenSpaceError`, `dynamicScreenSpaceErrorDensity`, `dynamicScreenSpaceErrorFactor` and `dynamicScreenSpaceErrorHeightFalloff`. [#11677](https://github.com/CesiumGS/cesium/issues/11677)
 - Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
+- Fixed a bug where `GregorianDate` constructor would not validate the input parameters for valid date. [#10075](https://github.com/CesiumGS/cesium/pull/10075)
+- Fixed improper scaling of ellipsoid inner radii in 3D mode. [#11656](https://github.com/CesiumGS/cesium/issues/11656 and [#10245](https://github.com/CesiumGS/cesium/issues/10245)
+
+#### @cesium/widgets
+
+##### Fixes :wrench:
+
+- Fixed a bug where the 3D Tiles Inspector's `dynamicScreenSpaceErrorDensity` slider did not update the tileset [#6143](https://github.com/CesiumGS/cesium/issues/6143)
 
 ### 1.113 - 2024-01-02
 
