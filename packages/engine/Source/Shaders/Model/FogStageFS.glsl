@@ -77,8 +77,6 @@ vec3 computeFogColor(vec3 positionMC) {
 
 void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
     if (!u_isInFog) {
-        // Debugging
-        //color.rgb = vec3(1.0, 1.0, 0.0);
         return;
     }
 
