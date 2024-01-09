@@ -4,13 +4,11 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import PolygonGeometry from "../Core/PolygonGeometry.js";
 
 /**
- * TODO
- * No holes or complex polygons
- *
+ * No holes or complex polygons. TODO
  * @alias ClippingPolygon
  * @constructor
  *
- * TODO: Params
+ * @param {object} [options] Object with the following properties:
  *
  * TODO: Example
  */

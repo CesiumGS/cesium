@@ -412,7 +412,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.clippingPlanesDirty = false;
 
   /**
-   * Tracks if the tile's relationship with a ClippingPolygonsCollection has changed with regards
+   * Tracks if the tile's relationship with a ClippingPolygonCollection has changed with regards
    * to the ClippingPolygonCollection's state.
    *
    * @type {boolean}

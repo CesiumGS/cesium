@@ -27,8 +27,7 @@ import ClippingPolygon from "./ClippingPolygon.js";
  * @param {boolean} [options.enabled=true] Determines whether the clipping polyongs are active.
  * @param {boolean} [options.inverse=false]
  *
- * @example
- * // TODO
+ * // TODO: Example
  */
 function ClippingPolygonCollection(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -195,7 +194,6 @@ Object.defineProperties(ClippingPolygonCollection.prototype, {
  *
  * @param {ClippingPolygon} polygon The ClippingPolygon to add to the collection.
  *
- * @see ClippingPolygonCollection#unionClippingRegions
  * @see ClippingPolygonCollection#remove
  * @see ClippingPolygonCollection#removeAll
  */
