@@ -56,9 +56,6 @@ vec3 computeFogColor(vec3 positionMC) {
         opacity
     );
 
-    //rayleighColor = vec3(1.0, 0.0, 0.0);
-    //mieColor = vec3(0.0, 1.0, 0.0);
-
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(ellipsoidPositionWC, lightDirection, rayleighColor, mieColor, opacity);
     vec3 fogColor = groundAtmosphereColor.rgb;
 
@@ -75,12 +72,7 @@ vec3 computeFogColor(vec3 positionMC) {
     fogColor.rgb = czm_inverseGamma(fogColor.rgb);
 #endif
 
-    // TODO: fogColor.a is only used for ground atmosphere... is that needed?
-
-    //return positionWC / 1e7;
-    //return rayleighColor;
     return fogColor.rgb;
-    //return mieColor;
 }
 
 void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
@@ -97,5 +89,4 @@ void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
     vec3 withFog = czm_fog(distanceToCamera, color.rgb, fogColor, fogModifier);
 
     color = vec4(withFog, color.a);
-    //color = mix(color, vec4(fogColor, 1.0), 0.5);
 }
