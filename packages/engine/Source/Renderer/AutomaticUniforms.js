@@ -1696,6 +1696,7 @@ const AutomaticUniforms = {
       return uniformState.atmosphereMieAnisotropy;
     },
   }),
+
   /**
    * An automatic uniform representing which light source to use for dynamic lighting
    *
