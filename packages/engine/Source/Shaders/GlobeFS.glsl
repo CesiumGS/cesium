@@ -496,6 +496,8 @@ void main()
             finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor.rgb, modifier), finalColor.a);
 
         #else
+            // Apply ground atmosphere. This happens when the camera is far away from the earth.
+
             // The transmittance is based on optical depth i.e. the length of segment of the ray inside the atmosphere.
             // This value is larger near the "circumference", as it is further away from the camera. We use it to
             // brighten up that area of the ground atmosphere.

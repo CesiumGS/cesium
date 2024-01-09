@@ -2,6 +2,7 @@ import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import FogStageFS from "../../Shaders/Model/FogStageFS.js";
+import FogStageVS from "../../Shaders/Model/FogStageVS.js";
 
 /**
  * The fog color pipeline stage is responsible for applying fog to tiles in the distance in horizon views.
@@ -17,7 +18,18 @@ const FogPipelineStage = {
 FogPipelineStage.process = function (renderResources, model, frameState) {
   const shaderBuilder = renderResources.shaderBuilder;
 
-  shaderBuilder.addDefine("HAS_FOG", undefined, ShaderDestination.FRAGMENT);
+  shaderBuilder.addDefine(
+    "COMPUTE_POSITION_WC_ATMOSPHERE",
+    undefined,
+    ShaderDestination.BOTH
+  );
+
+  shaderBuilder.addVarying("vec3", "v_atmosphereRayleighColor");
+  shaderBuilder.addVarying("vec3", "v_atmosphereMieColor");
+  shaderBuilder.addVarying("float", "v_atmosphereOpacity");
+
+  shaderBuilder.addDefine("HAS_FOG", undefined, ShaderDestination.BOTH);
+  shaderBuilder.addVertexLines([FogStageVS]);
   shaderBuilder.addFragmentLines([FogStageFS]);
 
   // Add a uniform so fog is only calculated when the effect would
