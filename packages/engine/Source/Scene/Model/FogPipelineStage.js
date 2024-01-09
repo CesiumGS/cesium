@@ -9,7 +9,7 @@ import ShaderDestination from "../../Renderer/ShaderDestination.js";
  * @private
  */
 const FogPipelineStage = {
-  name: "FogColorPipelineStage", // Helps with debugging
+  name: "FogPipelineStage", // Helps with debugging
 };
 
 FogPipelineStage.process = function (renderResources, model, frameState) {
