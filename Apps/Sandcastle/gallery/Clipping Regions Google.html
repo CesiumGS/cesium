@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use Viewer to start building new applications or easily embed Cesium into existing applications."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      window.startup = async function (Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          timeline: false,
+          animation: false,
+          sceneModePicker: false,
+          baseLayerPicker: false,
+          // The globe does not need to be displayed,
+          // since the Photorealistic 3D Tiles include terrain
+          globe: false,
+        });
+
+        // Enable rendering the sky
+        viewer.scene.skyAtmosphere.show = true;
+        // Add a clipping region of target lot for development
+
+        const clippingPolygons = new Cesium.ClippingPolygonCollection({
+          polygons: [
+            new Cesium.ClippingPolygon({
+              positions: Cesium.Cartesian3.fromDegreesArray(
+                [
+                  [-105.0077102972673, 39.75198671798765],
+                  [-105.0095858062031, 39.75049417970743],
+                  [-105.00969000114443, 39.75035082687128],
+                  [-105.00972838875393, 39.75013579705808],
+                  [-105.00971742086537, 39.74997136204101],
+                  [-105.00962967775735, 39.749768979944236],
+                  [-105.00932806082336, 39.74928832007956],
+                  [-105.00887837739427, 39.749444324087904],
+                  [-105.00854934073887, 39.749663572365904],
+                  [-105.00822578802776, 39.749967145754084],
+                  [-105.00715641889735, 39.751312128419926],
+                  [-105.00715641889735, 39.75135429046085],
+                  [-105.0077102972673, 39.75198671798765],
+                ].flat(2)
+              ),
+            }),
+          ],
+        });
+
+        // Add Photorealistic 3D Tiles
+        try {
+          const googleTileset = await Cesium.createGooglePhotorealistic3DTileset(
+            undefined,
+            {
+              clippingPolygons: clippingPolygons,
+            }
+          );
+          viewer.scene.primitives.add(googleTileset);
+        } catch (error) {
+          console.log(`Error loading Photorealistic 3D Tiles tileset.
+  ${error}`);
+        }
+
+        // Add tileset of proposed new building
+        let buildingTileset;
+        try {
+          buildingTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
+            1670818
+          );
+          viewer.scene.primitives.add(buildingTileset);
+        } catch (error) {
+          console.log(`Error loading building tileset.
+  ${error}`);
+        }
+
+        // Zoom to the new building location
+        const cameraOffset = new Cesium.HeadingPitchRange(
+          Cesium.Math.toRadians(95.0),
+          Cesium.Math.toRadians(-18.0),
+          600.0
+        );
+        viewer.zoomTo(buildingTileset, cameraOffset);
+
+        // Enable toggling of new building visibility
+        Sandcastle.addToggleButton("Show proposed building", true, function (
+          checked
+        ) {
+          buildingTileset.show = checked;
+        });
+
+        // Enable toggling of target location highlight
+        Sandcastle.addToggleButton("Clip target location", true, function (
+          checked
+        ) {
+          clippingPolygons.enabled = checked;
+        });
+
+        Sandcastle.addToggleButton("Inverse clip", false, function (checked) {
+          clippingPolygons.inverse = checked;
+        });
+
+        viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
+          Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+        );
+        function createPoint(worldPosition) {
+          const point = viewer.entities.add({
+            position: worldPosition,
+            point: {
+              color: Cesium.Color.WHITE,
+              pixelSize: 5,
+            },
+          });
+          return point;
+        }
+        const drawingMode = "polygon";
+        function drawShape(positionData) {
+          let shape;
+          if (drawingMode === "line") {
+            shape = viewer.entities.add({
+              polyline: {
+                positions: positionData,
+                width: 3,
+              },
+            });
+          } else if (drawingMode === "polygon") {
+            shape = viewer.entities.add({
+              polygon: {
+                hierarchy: positionData,
+                material: new Cesium.ColorMaterialProperty(
+                  Cesium.Color.WHITE.withAlpha(0.7)
+                ),
+              },
+            });
+          }
+          return shape;
+        }
+        let activeShapePoints = [];
+        let activeShape;
+        let floatingPoint;
+        const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+        handler.setInputAction(function (event) {
+          // We use `viewer.scene.globe.pick here instead of `viewer.camera.pickEllipsoid` so that
+          // we get the correct point when mousing over terrain.
+          const ray = viewer.camera.getPickRay(event.position);
+          const earthPosition = viewer.scene.pickPosition(event.position);
+
+          // `earthPosition` will be undefined if our mouse is not over the globe.
+          if (Cesium.defined(earthPosition)) {
+            if (activeShapePoints.length === 0) {
+              floatingPoint = createPoint(earthPosition);
+              activeShapePoints.push(earthPosition);
+              const dynamicPositions = new Cesium.CallbackProperty(function () {
+                if (drawingMode === "polygon") {
+                  return new Cesium.PolygonHierarchy(activeShapePoints);
+                }
+                return activeShapePoints;
+              }, false);
+              activeShape = drawShape(dynamicPositions);
+            }
+            activeShapePoints.push(earthPosition);
+            createPoint(earthPosition);
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        handler.setInputAction(function (event) {
+          if (Cesium.defined(floatingPoint)) {
+            const ray = viewer.camera.getPickRay(event.endPosition);
+            const newPosition = viewer.scene.pickPosition(event.endPosition);
+            if (Cesium.defined(newPosition)) {
+              floatingPoint.position.setValue(newPosition);
+              activeShapePoints.pop();
+              activeShapePoints.push(newPosition);
+            }
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        // Redraw the shape so it's not dynamic and remove the dynamic shape.
+
+        function createClippingPolygon(positions) {
+          clippingPolygons.add(
+            new Cesium.ClippingPolygon({
+              positions: positions,
+            })
+          );
+        }
+
+        function terminateShape() {
+          activeShapePoints.pop();
+          createClippingPolygon(activeShapePoints);
+          viewer.entities.remove(floatingPoint);
+          viewer.entities.remove(activeShape);
+          floatingPoint = undefined;
+          activeShape = undefined;
+          activeShapePoints = [];
+        }
+        handler.setInputAction(function (event) {
+          terminateShape();
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK); //Sandcastle_End
+        Sandcastle.finishedLoading();
+      };
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        window.startup(Cesium).catch((error) => {
+          "use strict";
+          console.error(error);
+        });
+      }
+    </script>
+  </body>
+</html>

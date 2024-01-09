@@ -75,6 +75,11 @@ void main()
     modelClippingPlanesStage(color);
     #endif
 
+    #ifdef HAS_CLIPPING_POLYGONS
+    modelClippingPolygonsStage();
+    #endif
+
+
     #if defined(HAS_SILHOUETTE) && defined(HAS_NORMALS)
     silhouetteStage(color);
     #endif

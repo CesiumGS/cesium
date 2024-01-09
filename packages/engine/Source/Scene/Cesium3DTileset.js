@@ -38,6 +38,7 @@ import Cesium3DTilesetHeatmap from "./Cesium3DTilesetHeatmap.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import ClippingPolygonCollection from "./ClippingPolygonCollection.js";
 import hasExtension from "./hasExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
@@ -93,6 +94,7 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {boolean} [immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
  * @property {boolean} [loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
  * @property {ClippingPlaneCollection} [clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+ * @property {ClippingPolygonCollection} [clippingPolygons] The {@link ClippingPolygonCollection} used to selectively disable rendering the tileset.
  * @property {ClassificationType} [classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
  * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
  * @property {object} [pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
@@ -782,6 +784,9 @@ function Cesium3DTileset(options) {
   this._clippingPlanes = undefined;
   this.clippingPlanes = options.clippingPlanes;
 
+  this._clippingPolygons = undefined;
+  this.clippingPolygons = options.clippingPolygons;
+
   if (defined(options.imageBasedLighting)) {
     this._imageBasedLighting = options.imageBasedLighting;
     this._shouldDestroyImageBasedLighting = false;
@@ -1089,6 +1094,22 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
+    },
+  },
+
+  /**
+   * The {@link ClippingPolygonCollection} used to selectively disable rendering the tileset.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {ClippingPolygonCollection}
+   */
+  clippingPolygons: {
+    get: function () {
+      return this._clippingPolygons;
+    },
+    set: function (value) {
+      ClippingPolygonCollection.setOwner(value, this, "_clippingPolygons");
     },
   },
 
@@ -2484,6 +2505,12 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
   this._clippingPlanesOriginMatrixDirty = true;
   if (defined(clippingPlanes) && clippingPlanes.enabled) {
     clippingPlanes.update(frameState);
+  }
+
+  // Update clipping polygons
+  const clippingPolygons = this._clippingPolygons;
+  if (defined(clippingPolygons) && clippingPolygons.enabled) {
+    clippingPolygons.update(frameState);
   }
 
   if (!defined(this._loadTimestamp)) {
