@@ -11,8 +11,9 @@ in float v_translucent;
 
 void main (void)
 {
-    vec3 lightDirection = getLightDirection(v_outerPositionWC);
-   
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
+    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(v_outerPositionWC, lightEnum);
+
     vec3 mieColor;
     vec3 rayleighColor;
     float opacity;

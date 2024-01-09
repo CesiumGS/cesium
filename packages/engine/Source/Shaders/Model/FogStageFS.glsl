@@ -45,7 +45,7 @@ vec3 computeFogColor(vec3 positionMC) {
     float opacity;
 
     vec3 ellipsoidPositionWC = computeEllipsoidPositionWC(positionMC);
-    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(ellipsoidPositionWC);
+    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(ellipsoidPositionWC, czm_atmosphereDynamicLighting);
 
     // The fog color is derived from the ground atmosphere color
     czm_computeGroundAtmosphereScattering(
