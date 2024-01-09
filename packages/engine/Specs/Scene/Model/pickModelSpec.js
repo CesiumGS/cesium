@@ -387,7 +387,7 @@ describe("Scene/Model/pickModel", function () {
       )
     );
 
-    const expected = new Cartesian3(-8197.676413311, 0, -8197.676413312);
+    const expected = new Cartesian3(-65.51341504, 0, -65.51341504);
     expect(
       pickModel(
         model,

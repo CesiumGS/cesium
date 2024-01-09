@@ -2622,6 +2622,22 @@ describe(
       expect(height).toEqualEpsilon(78.1558019795064, CesiumMath.EPSILON12);
     });
 
+    it("getHeight samples height accounting for vertical exaggeration", async function () {
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        enablePick: !scene.frameState.context.webgl2,
+      });
+      viewRootOnly();
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      scene.verticalExaggeration = 2.0;
+      scene.renderForSpecs();
+
+      const center = Ellipsoid.WGS84.cartesianToCartographic(
+        tileset.boundingSphere.center
+      );
+      const height = tileset.getHeight(center, scene);
+      expect(height).toEqualEpsilon(156.31161477299992, CesiumMath.EPSILON12);
+    });
+
     it("destroys", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
