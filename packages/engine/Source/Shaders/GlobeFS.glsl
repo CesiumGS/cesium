@@ -472,8 +472,10 @@ void main()
             opacity = v_atmosphereOpacity;
         #endif
 
-        rayleighColor = colorCorrect(rayleighColor);
-        mieColor = colorCorrect(mieColor);
+        #ifdef COLOR_CORRECT
+            rayleighColor = czm_applyHSBShift(rayleighColor, u_hsbShift);
+            mieColor = czm_applyHSBShift(mieColor, u_hsbShift);
+        #endif
 
         vec4 groundAtmosphereColor = computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
 
