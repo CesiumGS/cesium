@@ -217,17 +217,6 @@ Object.defineProperties(SkyAtmosphere.prototype, {
 });
 
 /**
- * @private
- */
-SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
-  enableLighting,
-  useSunDirection
-) {
-  const lightEnum = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
-  this._radiiAndDynamicAtmosphereColor.z = lightEnum;
-};
-
-/**
  * Set the dynamic lighting enum value for the shader
  * @param {DynamicAtmosphereLightingType} lightingEnum
  *
