@@ -11,7 +11,6 @@ import CustomShaderMode from "./CustomShaderMode.js";
 import CustomShaderPipelineStage from "./CustomShaderPipelineStage.js";
 import DequantizationPipelineStage from "./DequantizationPipelineStage.js";
 import FeatureIdPipelineStage from "./FeatureIdPipelineStage.js";
-import FogPipelineStage from "./FogPipelineStage.js";
 import GeometryPipelineStage from "./GeometryPipelineStage.js";
 import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
@@ -200,7 +199,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const mode = frameState.mode;
   const use2D =
     mode !== SceneMode.SCENE3D && !frameState.scene3DOnly && model._projectTo2D;
-  const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
   const exaggerateTerrain = frameState.verticalExaggeration !== 1.0;
 
   const hasMorphTargets =
@@ -304,10 +302,6 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   }
 
   pipelineStages.push(AlphaPipelineStage);
-
-  if (fogRenderable) {
-    pipelineStages.push(FogPipelineStage);
-  }
 
   pipelineStages.push(PrimitiveStatisticsPipelineStage);
 
