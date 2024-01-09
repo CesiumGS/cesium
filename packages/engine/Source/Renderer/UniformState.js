@@ -161,6 +161,7 @@ function UniformState() {
   this._specularEnvironmentMapsMaximumLOD = undefined;
 
   this._fogDensity = undefined;
+  this._fogMinimumBrightness = undefined;
 
   this._atmosphereHsbShift = undefined;
   this._atmosphereLightIntensity = undefined;
@@ -921,6 +922,17 @@ Object.defineProperties(UniformState.prototype, {
   fogDensity: {
     get: function () {
       return this._fogDensity;
+    },
+  },
+
+  /**
+   * A scalar used as a minimum value when brightening fog
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  fogMinimumBrightness: {
+    get: function () {
+      return this._fogMinimumBrightness;
     },
   },
 

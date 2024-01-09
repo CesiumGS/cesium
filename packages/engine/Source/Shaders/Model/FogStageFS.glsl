@@ -39,24 +39,8 @@ vec3 computeEllipsoidPositionWC(vec3 positionMC) {
     return vec3(nearestPoint.x * normalize(positionWC.xy), nearestPoint.y);
 }
 
-vec3 computeFogColor(vec3 positionMC) {
-    vec3 rayleighColor = vec3(0.0, 0.0, 1.0);
-    vec3 mieColor;
-    float opacity;
+void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirection, float distanceToCamera) {
 
-    vec3 ellipsoidPositionWC = computeEllipsoidPositionWC(positionMC);
-    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(ellipsoidPositionWC, czm_atmosphereDynamicLighting);
-
-    // The fog color is derived from the ground atmosphere color
-    czm_computeGroundAtmosphereScattering(
-        ellipsoidPositionWC,
-        lightDirection,
-        rayleighColor,
-        mieColor,
-        opacity
-    );
-
-    vec4 groundAtmosphereColor = czm_computeAtmosphereColor(ellipsoidPositionWC, lightDirection, rayleighColor, mieColor, opacity);
     vec3 fogColor = groundAtmosphereColor.rgb;
 
     // If there is dynamic lighting, apply that to the fog.
@@ -67,30 +51,58 @@ vec3 computeFogColor(vec3 positionMC) {
     }
 
     // Tonemap if HDR rendering is disabled
-#ifndef HDR
-    fogColor.rgb = czm_acesTonemapping(fogColor.rgb);
-    fogColor.rgb = czm_inverseGamma(fogColor.rgb);
-#endif
-
-    return fogColor.rgb;
-}
-
-void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
-    if (!u_isInFog) {
-        return;
-    }
-
-    vec3 fogColor = computeFogColor(attributes.positionMC);
-
-    // Note: camera is far away (distance > nightFadeOutDistance), scattering is computed in the fragment shader.
-    // otherwise in the vertex shader. but for prototyping, I'll do everything in the FS for simplicity
+    #ifndef HDR
+        fogColor.rgb = czm_acesTonemapping(fogColor.rgb);
+        fogColor.rgb = czm_inverseGamma(fogColor.rgb);
+    #endif
 
     // Matches the constant in GlobeFS.glsl. This makes the fog falloff
     // more gradual.
     const float fogModifier = 0.15;
-    float distanceToCamera = attributes.positionEC.z;
-    // where to get distance?
     vec3 withFog = czm_fog(distanceToCamera, color.rgb, fogColor, fogModifier);
-
     color = vec4(withFog, color.a);
+}
+
+void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
+    vec3 rayleighColor;
+    vec3 mieColor;
+    float opacity;
+
+    vec3 positionWC;
+    vec3 lightDirection;
+
+    // When the camera is in space, compute the position per-fragment for
+    // more accurate ground atmosphere. All other cases will use
+    //
+    // The if condition will be added in https://github.com/CesiumGS/cesium/issues/11717
+    if (false) {
+        positionWC = computeEllipsoidPositionWC(attributes.positionMC);
+        lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC, czm_atmosphereDynamicLighting);
+
+        // The fog color is derived from the ground atmosphere color
+        czm_computeGroundAtmosphereScattering(
+            positionWC,
+            lightDirection,
+            rayleighColor,
+            mieColor,
+            opacity
+        );
+    } else {
+        positionWC = attributes.positionWC;
+        lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC, czm_atmosphereDynamicLighting);
+        rayleighColor = v_atmosphereRayleighColor;
+        mieColor = v_atmosphereMieColor;
+        opacity = v_atmosphereOpacity;
+    }
+
+    //color correct rayleigh and mie colors
+
+    vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
+
+    if (u_isInFog) {
+        float distanceToCamera = length(attributes.positionEC);
+        applyFog(color, groundAtmosphereColor, lightDirection, distanceToCamera);
+    } else {
+        // Ground atmosphere
+    }
 }
