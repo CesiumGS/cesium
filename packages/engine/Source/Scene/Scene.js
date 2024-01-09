@@ -3253,7 +3253,7 @@ Scene.prototype.updateEnvironment = function () {
           globe._surface._tilesToRender.length > 0;
       } else {
         const dynamicLighting = atmosphere.dynamicLighting;
-        skyAtmosphere.setDynamicAtmosphereColor(dynamicLighting);
+        skyAtmosphere.setDynamicLighting(dynamicLighting);
         environmentState.isReadyForAtmosphere = true;
       }
 
