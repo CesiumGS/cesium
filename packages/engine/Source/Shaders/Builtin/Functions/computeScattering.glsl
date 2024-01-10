@@ -133,8 +133,6 @@ void czm_computeScattering(
         // Compute attenuation via the primary ray and the light ray.
         vec3 attenuation = exp(-((czm_atmosphereMieCoefficient * (opticalDepth.y + lightOpticalDepth.y)) + (czm_atmosphereRayleighCoefficient * (opticalDepth.x + lightOpticalDepth.x))));
 
-        //lastAttenuation = vec3(rayStepLength, lightStepLength);
-
         // Accumulate the scattering.
         rayleighAccumulation += sampleDensity.x * attenuation;
         mieAccumulation += sampleDensity.y * attenuation;

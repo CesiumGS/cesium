@@ -218,7 +218,7 @@ Object.defineProperties(SkyAtmosphere.prototype, {
 
 /**
  * Set the dynamic lighting enum value for the shader
- * @param {DynamicAtmosphereLightingType} lightingEnum
+ * @param {DynamicAtmosphereLightingType} lightingEnum The enum that determines the dynamic atmosphere light source
  *
  * @private
  */
