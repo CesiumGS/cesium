@@ -18,6 +18,7 @@ const FogPipelineStage = {
 FogPipelineStage.process = function (renderResources, model, frameState) {
   const shaderBuilder = renderResources.shaderBuilder;
 
+  shaderBuilder.addDefine("HAS_FOG", undefined, ShaderDestination.BOTH);
   shaderBuilder.addDefine(
     "COMPUTE_POSITION_WC_ATMOSPHERE",
     undefined,
@@ -28,11 +29,10 @@ FogPipelineStage.process = function (renderResources, model, frameState) {
   shaderBuilder.addVarying("vec3", "v_atmosphereMieColor");
   shaderBuilder.addVarying("float", "v_atmosphereOpacity");
 
-  shaderBuilder.addDefine("HAS_FOG", undefined, ShaderDestination.BOTH);
   shaderBuilder.addVertexLines([FogStageVS]);
   shaderBuilder.addFragmentLines([FogStageFS]);
 
-  // Add a uniform so fog is only calculated when the effect would
+  // Add a uniform so fog is only calculated when the efcfect would
   // be non-negligible For example when the camera is in space, fog density decreases
   // to 0 so fog shouldn't be rendered. Since this state may change rapidly if
   // the camera is moving, this is implemented as a uniform, not a define.
