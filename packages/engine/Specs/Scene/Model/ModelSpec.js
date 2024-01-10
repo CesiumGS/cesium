@@ -4411,6 +4411,28 @@ describe(
       });
     });
 
+    it("pick returns position of intersection between ray and model surface", async function () {
+      const model = await loadAndZoomToModelAsync(
+        {
+          url: boxTexturedGltfUrl,
+          enablePick: !scene.frameState.context.webgl2,
+        },
+        scene
+      );
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(0.5, 0, 0.5);
+      expect(model.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
+    });
+
     it("destroy works", function () {
       spyOn(ShaderProgram.prototype, "destroy").and.callThrough();
       return loadAndZoomToModelAsync({ gltf: boxTexturedGlbUrl }, scene).then(
