@@ -1793,7 +1793,7 @@ describe(
           undefined,
           undefined,
           undefined,
-          // Explicit position and direction as the default position of (0, 0, 0)
+          // Provide position and direction because the default position of (0, 0, 0)
           // will lead to a divide by zero when updating fog below.
           new Cartesian3(1.0, 0.0, 0.0),
           new Cartesian3(0.0, 1.0, 0.0)
@@ -1809,6 +1809,36 @@ describe(
       const fs =
         "void main() {" +
         "  out_FragColor = vec4(czm_fogDensity != 0.0);" +
+        "}";
+      expect({
+        context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_fogMinimumBrightness", function () {
+      const frameState = createFrameState(
+        context,
+        createMockCamera(
+          undefined,
+          undefined,
+          undefined,
+          // Provide position and direction because the default position of (0, 0, 0)
+          // will lead to a divide by zero when updating fog below
+          new Cartesian3(1.0, 0.0, 0.0),
+          new Cartesian3(0.0, 1.0, 0.0)
+        )
+      );
+      const fog = new Fog();
+      fog.minimumBrightness = 0.25;
+      fog.update(frameState);
+
+      const us = context.uniformState;
+      us.update(frameState);
+
+      const fs =
+        "void main() {" +
+        "  out_FragColor = vec4(czm_fogMinimumBrightness == 0.25);" +
         "}";
       expect({
         context,
