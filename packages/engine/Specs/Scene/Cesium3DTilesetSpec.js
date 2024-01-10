@@ -212,6 +212,7 @@ describe(
     });
 
     afterEach(function () {
+      scene.verticalExaggeration = 1.0;
       scene.primitives.removeAll();
       ResourceCache.clearForSpecs();
     });
