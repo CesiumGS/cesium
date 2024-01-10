@@ -388,20 +388,19 @@ describe(
       });
     });
 
-    it("adds FogPipelineStage when fog is enabled and renderable", function () {
+    it("adds fog stage when fog is enabled and renderable", async function () {
       spyOn(FogPipelineStage, "process");
       scene.fog.enabled = true;
       scene.fog.renderable = true;
-      return loadAndZoomToModelAsync(
+      const model = await loadAndZoomToModelAsync(
         {
           gltf: buildingsMetadata,
         },
         scene
-      ).then(function (model) {
-        model.customShader = new CustomShader();
-        model.update(scene.frameState);
-        expect(FogPipelineStage.process).toHaveBeenCalled();
-      });
+      );
+      model.customShader = new CustomShader();
+      model.update(scene.frameState);
+      expect(FogPipelineStage.process).toHaveBeenCalled();
     });
 
     it("pushDrawCommands ignores hidden nodes", function () {
