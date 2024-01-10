@@ -1,13 +1,13 @@
 import {
-  _shadersFogStageFS,
-  _shadersFogStageVS,
+  _shadersAtmosphereStageFS,
+  _shadersAtmosphereStageVS,
   Cartesian3,
-  FogPipelineStage,
+  AtmospherePipelineStage,
   ShaderBuilder,
 } from "../../../index.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
 
-describe("Scene/Model/FogPipelineStage", function () {
+describe("Scene/Model/AtmospherePipelineStage", function () {
   const mockModel = {
     boundingSphere: {
       center: Cartesian3.fromDegrees(0, 0, 0),
@@ -34,20 +34,20 @@ describe("Scene/Model/FogPipelineStage", function () {
     };
   }
 
-  it("Configures shader", function () {
+  it("configures shader", function () {
     const renderResources = mockRenderResources();
     const frameState = mockFrameState();
 
-    FogPipelineStage.process(renderResources, mockModel, frameState);
+    AtmospherePipelineStage.process(renderResources, mockModel, frameState);
 
     const shaderBuilder = renderResources.shaderBuilder;
 
     ShaderBuilderTester.expectHasVertexDefines(shaderBuilder, [
-      "HAS_FOG",
+      "HAS_ATMOSPHERE",
       "COMPUTE_POSITION_WC_ATMOSPHERE",
     ]);
     ShaderBuilderTester.expectHasFragmentDefines(shaderBuilder, [
-      "HAS_FOG",
+      "HAS_ATMOSPHERE",
       "COMPUTE_POSITION_WC_ATMOSPHERE",
     ]);
 
@@ -58,10 +58,10 @@ describe("Scene/Model/FogPipelineStage", function () {
     ]);
 
     ShaderBuilderTester.expectVertexLinesEqual(shaderBuilder, [
-      _shadersFogStageVS,
+      _shadersAtmosphereStageVS,
     ]);
     ShaderBuilderTester.expectFragmentLinesEqual(shaderBuilder, [
-      _shadersFogStageFS,
+      _shadersAtmosphereStageFS,
     ]);
 
     ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
@@ -79,7 +79,7 @@ describe("Scene/Model/FogPipelineStage", function () {
       frameState.camera.position
     );
 
-    FogPipelineStage.process(renderResources, mockModel, frameState);
+    AtmospherePipelineStage.process(renderResources, mockModel, frameState);
 
     const uniformMap = renderResources.uniformMap;
     expect(uniformMap.u_isInFog()).toBe(false);
@@ -95,7 +95,7 @@ describe("Scene/Model/FogPipelineStage", function () {
     frameState.camera.position = Cartesian3.fromDegrees(0.001, 0, 100000);
     frameState.fog.density = 0;
 
-    FogPipelineStage.process(renderResources, mockModel, frameState);
+    AtmospherePipelineStage.process(renderResources, mockModel, frameState);
 
     const uniformMap = renderResources.uniformMap;
     expect(uniformMap.u_isInFog()).toBe(false);
@@ -105,7 +105,7 @@ describe("Scene/Model/FogPipelineStage", function () {
     const renderResources = mockRenderResources();
     const frameState = mockFrameState();
 
-    FogPipelineStage.process(renderResources, mockModel, frameState);
+    AtmospherePipelineStage.process(renderResources, mockModel, frameState);
 
     const uniformMap = renderResources.uniformMap;
     expect(uniformMap.u_isInFog()).toBe(true);

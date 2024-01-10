@@ -1,24 +1,29 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
-import FogStageFS from "../../Shaders/Model/FogStageFS.js";
-import FogStageVS from "../../Shaders/Model/FogStageVS.js";
+import AtmosphereStageFS from "../../Shaders/Model/AtmosphereStageFS.js";
+import AtmosphereStageVS from "../../Shaders/Model/AtmosphereStageVS.js";
 
 /**
- * The fog color pipeline stage is responsible for applying fog to tiles in the distance in horizon views.
+ * The atmosphere pipeline stage applies all earth atmosphere effects that apply
+ * to models, including fog.
  *
- * @namespace FogColorPipelineStage
+ * @namespace AtmospherePipelineStage
  *
  * @private
  */
-const FogPipelineStage = {
-  name: "FogPipelineStage", // Helps with debugging
+const AtmospherePipelineStage = {
+  name: "AtmospherePipelineStage", // Helps with debugging
 };
 
-FogPipelineStage.process = function (renderResources, model, frameState) {
+AtmospherePipelineStage.process = function (
+  renderResources,
+  model,
+  frameState
+) {
   const shaderBuilder = renderResources.shaderBuilder;
 
-  shaderBuilder.addDefine("HAS_FOG", undefined, ShaderDestination.BOTH);
+  shaderBuilder.addDefine("HAS_ATMOSPHERE", undefined, ShaderDestination.BOTH);
   shaderBuilder.addDefine(
     "COMPUTE_POSITION_WC_ATMOSPHERE",
     undefined,
@@ -29,8 +34,8 @@ FogPipelineStage.process = function (renderResources, model, frameState) {
   shaderBuilder.addVarying("vec3", "v_atmosphereMieColor");
   shaderBuilder.addVarying("float", "v_atmosphereOpacity");
 
-  shaderBuilder.addVertexLines([FogStageVS]);
-  shaderBuilder.addFragmentLines([FogStageFS]);
+  shaderBuilder.addVertexLines([AtmosphereStageVS]);
+  shaderBuilder.addFragmentLines([AtmosphereStageFS]);
 
   // Add a uniform so fog is only calculated when the efcfect would
   // be non-negligible For example when the camera is in space, fog density decreases
@@ -51,4 +56,4 @@ FogPipelineStage.process = function (renderResources, model, frameState) {
   };
 };
 
-export default FogPipelineStage;
+export default AtmospherePipelineStage;

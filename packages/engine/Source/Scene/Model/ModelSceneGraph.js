@@ -9,7 +9,7 @@ import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import buildDrawCommand from "./buildDrawCommand.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
-import FogPipelineStage from "./FogPipelineStage.js";
+import AtmospherePipelineStage from "./AtmospherePipelineStage.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
@@ -642,7 +642,7 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
   }
 
   if (fogRenderable) {
-    modelPipelineStages.push(FogPipelineStage);
+    modelPipelineStages.push(AtmospherePipelineStage);
   }
 };
 
