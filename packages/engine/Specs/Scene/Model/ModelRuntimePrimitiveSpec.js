@@ -7,7 +7,6 @@ import {
   CustomShaderMode,
   CustomShaderPipelineStage,
   FeatureIdPipelineStage,
-  FogPipelineStage,
   CPUStylingPipelineStage,
   DequantizationPipelineStage,
   GeometryPipelineStage,
@@ -987,82 +986,6 @@ describe("Scene/Model/ModelRuntimePrimitive", function () {
       LightingPipelineStage,
       PickingPipelineStage,
       AlphaPipelineStage,
-      PrimitiveStatisticsPipelineStage,
-    ];
-
-    primitive.configurePipeline(frameState);
-    verifyExpectedStages(primitive.pipelineStages, expectedStages);
-  });
-
-  it("does not add fog stage when fog is not enabled", function () {
-    const primitive = new ModelRuntimePrimitive({
-      primitive: mockPrimitive,
-      node: mockNode,
-      model: mockModel,
-    });
-    const frameState = createFrameState(mockWebgl2Context);
-    frameState.fog.enabled = false;
-    frameState.fog.renderable = false;
-
-    const expectedStages = [
-      GeometryPipelineStage,
-      MaterialPipelineStage,
-      FeatureIdPipelineStage,
-      MetadataPipelineStage,
-      LightingPipelineStage,
-      PickingPipelineStage,
-      AlphaPipelineStage,
-      PrimitiveStatisticsPipelineStage,
-    ];
-
-    primitive.configurePipeline(frameState);
-    verifyExpectedStages(primitive.pipelineStages, expectedStages);
-  });
-
-  it("does not add fog stage when fog is not renderable", function () {
-    const primitive = new ModelRuntimePrimitive({
-      primitive: mockPrimitive,
-      node: mockNode,
-      model: mockModel,
-    });
-    const frameState = createFrameState(mockWebgl2Context);
-    frameState.fog.enabled = true;
-    frameState.fog.renderable = false;
-
-    const expectedStages = [
-      GeometryPipelineStage,
-      MaterialPipelineStage,
-      FeatureIdPipelineStage,
-      MetadataPipelineStage,
-      LightingPipelineStage,
-      PickingPipelineStage,
-      AlphaPipelineStage,
-      PrimitiveStatisticsPipelineStage,
-    ];
-
-    primitive.configurePipeline(frameState);
-    verifyExpectedStages(primitive.pipelineStages, expectedStages);
-  });
-
-  it("configures pipeline stages when fog is enabled and renderable", function () {
-    const primitive = new ModelRuntimePrimitive({
-      primitive: mockPrimitive,
-      node: mockNode,
-      model: mockModel,
-    });
-    const frameState = createFrameState(mockWebgl2Context);
-    frameState.fog.enabled = true;
-    frameState.fog.renderable = true;
-
-    const expectedStages = [
-      GeometryPipelineStage,
-      MaterialPipelineStage,
-      FeatureIdPipelineStage,
-      MetadataPipelineStage,
-      LightingPipelineStage,
-      PickingPipelineStage,
-      AlphaPipelineStage,
-      FogPipelineStage,
       PrimitiveStatisticsPipelineStage,
     ];
 

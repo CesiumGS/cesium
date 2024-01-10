@@ -4,6 +4,8 @@ import {
   Color,
   CustomShader,
   CustomShaderPipelineStage,
+  Fog,
+  FogPipelineStage,
   Math as CesiumMath,
   Matrix4,
   ModelColorPipelineStage,
@@ -41,6 +43,7 @@ describe(
 
     afterEach(function () {
       scene.primitives.removeAll();
+      scene.fog = new Fog();
       ResourceCache.clearForSpecs();
     });
 
@@ -350,6 +353,54 @@ describe(
         model.customShader = new CustomShader();
         model.update(scene.frameState);
         expect(CustomShaderPipelineStage.process).toHaveBeenCalled();
+      });
+    });
+
+    it("does not add fog stage when fog is not enabled", function () {
+      spyOn(FogPipelineStage, "process");
+      scene.fog.enabled = false;
+      scene.fog.renderable = false;
+      return loadAndZoomToModelAsync(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        model.customShader = new CustomShader();
+        model.update(scene.frameState);
+        expect(FogPipelineStage.process).not.toHaveBeenCalled();
+      });
+    });
+
+    it("does not add fog stage when fog is not renderable", function () {
+      spyOn(FogPipelineStage, "process");
+      scene.fog.enabled = true;
+      scene.fog.renderable = false;
+      return loadAndZoomToModelAsync(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        model.customShader = new CustomShader();
+        model.update(scene.frameState);
+        expect(FogPipelineStage.process).not.toHaveBeenCalled();
+      });
+    });
+
+    it("adds FogPipelineStage when fog is enabled and renderable", function () {
+      spyOn(FogPipelineStage, "process");
+      scene.fog.enabled = true;
+      scene.fog.renderable = true;
+      return loadAndZoomToModelAsync(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      ).then(function (model) {
+        model.customShader = new CustomShader();
+        model.update(scene.frameState);
+        expect(FogPipelineStage.process).toHaveBeenCalled();
       });
     });
 
