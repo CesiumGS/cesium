@@ -107,8 +107,8 @@ void main()
     vec4 positionClip = geometryStage(attributes, modelView, normal);
 
     // This must go after the geometry stage as it needs v_positionWC
-    #ifdef HAS_FOG
-    fogStage(attributes);
+    #ifdef HAS_ATMOSPHERE
+    atmosphereStage(attributes);
     #endif
 
     #ifdef HAS_SILHOUETTE

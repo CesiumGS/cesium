@@ -5,7 +5,7 @@ import {
   CustomShader,
   CustomShaderPipelineStage,
   Fog,
-  FogPipelineStage,
+  AtmospherePipelineStage,
   Math as CesiumMath,
   Matrix4,
   ModelColorPipelineStage,
@@ -344,7 +344,7 @@ describe(
     });
 
     it("does not add fog stage when fog is not enabled", async function () {
-      spyOn(FogPipelineStage, "process");
+      spyOn(AtmospherePipelineStage, "process");
       scene.fog.enabled = false;
       scene.fog.renderable = false;
       const model = await loadAndZoomToModelAsync(
@@ -355,11 +355,11 @@ describe(
       );
       model.customShader = new CustomShader();
       model.update(scene.frameState);
-      expect(FogPipelineStage.process).not.toHaveBeenCalled();
+      expect(AtmospherePipelineStage.process).not.toHaveBeenCalled();
     });
 
     it("does not add fog stage when fog is not renderable", async function () {
-      spyOn(FogPipelineStage, "process");
+      spyOn(AtmospherePipelineStage, "process");
       scene.fog.enabled = true;
       scene.fog.renderable = false;
       const model = await loadAndZoomToModelAsync(
@@ -370,11 +370,11 @@ describe(
       );
       model.customShader = new CustomShader();
       model.update(scene.frameState);
-      expect(FogPipelineStage.process).not.toHaveBeenCalled();
+      expect(AtmospherePipelineStage.process).not.toHaveBeenCalled();
     });
 
     it("adds fog stage when fog is enabled and renderable", async function () {
-      spyOn(FogPipelineStage, "process");
+      spyOn(AtmospherePipelineStage, "process");
       scene.fog.enabled = true;
       scene.fog.renderable = true;
       const model = await loadAndZoomToModelAsync(
@@ -385,7 +385,7 @@ describe(
       );
       model.customShader = new CustomShader();
       model.update(scene.frameState);
-      expect(FogPipelineStage.process).toHaveBeenCalled();
+      expect(AtmospherePipelineStage.process).toHaveBeenCalled();
     });
 
     it("pushDrawCommands ignores hidden nodes", async function () {

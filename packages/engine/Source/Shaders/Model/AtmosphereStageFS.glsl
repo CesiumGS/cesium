@@ -63,7 +63,7 @@ void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirection,
     color = vec4(withFog, color.a);
 }
 
-void fogStage(inout vec4 color, in ProcessedAttributes attributes) {
+void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     vec3 rayleighColor;
     vec3 mieColor;
     float opacity;

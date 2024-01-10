@@ -1,4 +1,4 @@
-void fogStage(ProcessedAttributes attributes) {
+void atmosphereStage(ProcessedAttributes attributes) {
     vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(v_positionWC, czm_atmosphereDynamicLighting);
 
     czm_computeGroundAtmosphereScattering(
