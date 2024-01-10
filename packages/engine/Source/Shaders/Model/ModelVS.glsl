@@ -106,6 +106,7 @@ void main()
     // This returns the value that will be assigned to gl_Position.
     vec4 positionClip = geometryStage(attributes, modelView, normal);
 
+    // This must go after the geometry stage as it needs v_positionWC
     #ifdef HAS_FOG
     fogStage(attributes);
     #endif
