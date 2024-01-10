@@ -131,6 +131,22 @@ describe(
       leafNode._transformDirty = true;
     }
 
+    function applyTransform(node, transform) {
+      const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
+      expect(node._transformDirty).toEqual(false);
+
+      node.transform = Matrix4.multiplyTransformation(
+        node.transform,
+        transform,
+        new Matrix4()
+      );
+      expect(node._transformDirty).toEqual(true);
+
+      expect(
+        Matrix4.equals(node.originalTransform, expectedOriginalTransform)
+      ).toBe(true);
+    }
+
     it("updates leaf nodes using node transform setter", function () {
       return loadAndZoomToModelAsync(
         {
@@ -138,24 +154,16 @@ describe(
         },
         scene
       ).then(function (model) {
+        scene.renderForSpecs();
+
         const sceneGraph = model.sceneGraph;
         const node = getStaticLeafNode(model);
         const primitive = node.runtimePrimitives[0];
-        const drawCommand = primitive.drawCommand;
 
-        const expectedOriginalTransform = Matrix4.clone(node.transform);
-        expect(node._transformDirty).toEqual(false);
+        let drawCommand = getDrawCommand(node);
 
-        const translation = new Cartesian3(0, 5, 0);
-        node.transform = Matrix4.multiplyByTranslation(
-          node.transform,
-          translation,
-          new Matrix4()
-        );
-        expect(node._transformDirty).toEqual(true);
-        expect(
-          Matrix4.equals(node.originalTransform, expectedOriginalTransform)
-        ).toBe(true);
+        const transform = Matrix4.fromTranslation(new Cartesian3(0, 5, 0));
+        applyTransform(node, transform);
 
         const expectedComputedTransform = Matrix4.multiplyTransformation(
           sceneGraph.computedModelMatrix,
@@ -163,9 +171,9 @@ describe(
           new Matrix4()
         );
 
-        const expectedModelMatrix = Matrix4.multiplyByTranslation(
+        const expectedModelMatrix = Matrix4.multiplyTransformation(
           drawCommand.modelMatrix,
-          translation,
+          transform,
           new Matrix4()
         );
 
@@ -176,6 +184,7 @@ describe(
         );
 
         scene.renderForSpecs();
+        drawCommand = getDrawCommand(node);
 
         expect(
           Matrix4.equalsEpsilon(
@@ -192,22 +201,6 @@ describe(
         ).toBe(true);
       });
     });
-
-    function applyTransform(node, transform) {
-      const expectedOriginalTransform = Matrix4.clone(node.originalTransform);
-      expect(node._transformDirty).toEqual(false);
-
-      node.transform = Matrix4.multiplyTransformation(
-        node.transform,
-        transform,
-        new Matrix4()
-      );
-      expect(node._transformDirty).toEqual(true);
-
-      expect(
-        Matrix4.equals(node.originalTransform, expectedOriginalTransform)
-      ).toBe(true);
-    }
 
     it("updates nodes with children using node transform setter", function () {
       return loadAndZoomToModelAsync(
@@ -406,6 +399,8 @@ describe(
 
         model.modelMatrix = Matrix4.fromUniformScale(-1);
         scene.renderForSpecs();
+
+        expect(rootPrimitive.drawCommand).toBe(rootDrawCommand);
 
         expect(rootDrawCommand.cullFace).toBe(CullFace.FRONT);
         expect(childDrawCommand.cullFace).toBe(CullFace.FRONT);
