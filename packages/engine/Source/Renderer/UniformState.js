@@ -1514,6 +1514,7 @@ UniformState.prototype.update = function (frameState) {
   }
 
   this._fogDensity = frameState.fog.density;
+  this._fogMinimumBrightness = frameState.fog.minimumBrightness;
 
   const atmosphere = frameState.atmosphere;
 
