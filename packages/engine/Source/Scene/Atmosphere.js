@@ -1,5 +1,5 @@
-import Cartesian3 from "../Core/Cartesian3";
-import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType";
+import Cartesian3 from "../Core/Cartesian3.js";
+import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
 function Atmosphere() {
   /**
