@@ -4,6 +4,7 @@ import {
   I3SField,
   I3SNode,
   Resource,
+  RuntimeError,
 } from "../../index.js";
 
 describe("Scene/I3SField", function () {
@@ -186,7 +187,7 @@ describe("Scene/I3SField", function () {
 
     const field = new I3SField(rootNode, { key: "test_key" });
     expect(
-      field.resource.url.endsWith("mockUrl/attributes/test_key/0")
+      field.resource.url.includes("mockUrl/attributes/test_key/0?")
     ).toEqual(true);
   });
 
@@ -245,7 +246,9 @@ describe("Scene/I3SField", function () {
     const field = new I3SField(rootNode, { header: [{ valueType: "String" }] });
     field["_header"] = { count: 1 };
 
-    expect(field._validateHeader({ byteLength: 0 })).toEqual(false);
+    expect(function () {
+      field._validateHeader({ byteLength: 0 });
+    }).toThrowError(RuntimeError);
   });
 
   it("validate field body with empty header", async function () {
@@ -258,7 +261,9 @@ describe("Scene/I3SField", function () {
     const field = new I3SField(rootNode, {});
     field["_header"] = {};
 
-    expect(field._validateBody(undefined, undefined)).toEqual(false);
+    expect(function () {
+      field._validateBody(undefined, undefined);
+    }).toThrowError(RuntimeError);
   });
 
   it("validate field body with invalid attribute buffer", async function () {
@@ -274,7 +279,9 @@ describe("Scene/I3SField", function () {
     });
     field["_header"] = { count: 1 };
 
-    expect(field._validateBody({ byteLength: 5 }, 4)).toEqual(false);
+    expect(function () {
+      field._validateBody({ byteLength: 5 }, 4);
+    }).toThrowError(RuntimeError);
   });
 
   it("validate field body with invalid offset", async function () {
@@ -287,7 +294,9 @@ describe("Scene/I3SField", function () {
     const field = new I3SField(rootNode, { ordering: [] });
     field["_header"] = { count: 1 };
 
-    expect(field._validateBody({ byteLength: 3 }, 4)).toEqual(false);
+    expect(function () {
+      field._validateBody({ byteLength: 3 }, 4);
+    }).toThrowError(RuntimeError);
   });
 
   it("validate field body with missing property", async function () {
@@ -300,7 +309,9 @@ describe("Scene/I3SField", function () {
     const field = new I3SField(rootNode, { ordering: ["ObjectIds"] });
     field["_header"] = { count: 0 };
 
-    expect(field._validateBody({ byteLength: 5 }, 4)).toEqual(false);
+    expect(function () {
+      field._validateBody({ byteLength: 5 }, 4);
+    }).toThrowError(RuntimeError);
   });
 
   it("load field with unavailable resource", async function () {
@@ -308,10 +319,7 @@ describe("Scene/I3SField", function () {
       "mockProviderUrl",
       layerDataWithoutNodePages
     );
-    const spy = spyOn(
-      mockI3SLayerWithoutNodePages._dataProvider,
-      "_loadBinary"
-    );
+    const spy = spyOn(Resource.prototype, "fetchArrayBuffer");
     spy.and.callFake(function () {
       const text = "{404}";
       const buffer = new ArrayBuffer(text.length);
@@ -329,7 +337,7 @@ describe("Scene/I3SField", function () {
     await field.load();
     expect(spy).toHaveBeenCalledTimes(1);
 
-    expect(field.data).toBeUndefined();
+    expect(field._data).toBeUndefined();
   });
 
   it("load field with invalid header", async function () {

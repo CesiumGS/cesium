@@ -271,7 +271,8 @@ I3SGeometry.prototype.getClosestPointIndexOnTriangle = function (px, py, pz) {
 
 function convertColorFactor(factor) {
   const convertedFactor = [];
-  for (let i = 0; i < factor.length; i++) {
+  const length = factor.length;
+  for (let i = 0; i < length; i++) {
     if (i < 3) {
       convertedFactor.push(srgbToLinear(factor[i]));
     } else {
@@ -418,11 +419,13 @@ I3SGeometry.prototype._generateGltf = function (
   }
 
   const gltfMaterials = [];
-  for (let meshIndex = 0; meshIndex < meshes.length; meshIndex++) {
+  const meshesLength = meshes.length;
+  for (let meshIndex = 0; meshIndex < meshesLength; meshIndex++) {
     const primitives = meshes[meshIndex].primitives;
+    const primitivesLength = primitives.length;
     for (
       let primitiveIndex = 0;
-      primitiveIndex < primitives.length;
+      primitiveIndex < primitivesLength;
       primitiveIndex++
     ) {
       const primitive = primitives[primitiveIndex];

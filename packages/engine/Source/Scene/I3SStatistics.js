@@ -69,10 +69,7 @@ Object.defineProperties(I3SStatistics.prototype, {
  * @private
  */
 I3SStatistics.prototype.load = async function () {
-  this._data = await I3SDataProvider.loadJson(
-    this._resource,
-    this._dataProvider._traceFetches
-  );
+  this._data = await I3SDataProvider.loadJson(this._resource);
   return this._data;
 };
 

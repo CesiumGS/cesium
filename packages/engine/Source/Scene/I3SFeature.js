@@ -54,10 +54,7 @@ Object.defineProperties(I3SFeature.prototype, {
  * @private
  */
 I3SFeature.prototype.load = async function () {
-  this._data = await I3SDataProvider.loadJson(
-    this._resource,
-    this._dataProvider._traceFetches
-  );
+  this._data = await I3SDataProvider.loadJson(this._resource);
   return this._data;
 };
 

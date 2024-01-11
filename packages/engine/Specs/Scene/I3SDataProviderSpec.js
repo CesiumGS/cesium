@@ -283,7 +283,6 @@ describe("Scene/I3SDataProvider", function () {
   };
   const i3sOptions = {
     name: "testProvider",
-    traceFetches: true, // for tracing I3S fetches
     geoidTiledTerrainProvider: geoidService, // pass the geoid service
     cesium3dTilesetOptions: cesium3dTilesetOptions,
   };
@@ -303,7 +302,6 @@ describe("Scene/I3SDataProvider", function () {
     );
 
     expect(testProvider.name).toEqual("testProvider");
-    expect(testProvider.traceFetches).toEqual(true);
     expect(testProvider.geoidTiledTerrainProvider).toEqual(geoidService);
   });
 
@@ -334,7 +332,6 @@ describe("Scene/I3SDataProvider", function () {
     );
 
     expect(testProvider.name).toEqual("testProvider");
-    expect(testProvider.traceFetches).toEqual(true);
     expect(testProvider.geoidTiledTerrainProvider).toEqual(geoidService);
 
     expect(testProvider.sublayers[0].name).toEqual("Full Model");
@@ -408,9 +405,8 @@ describe("Scene/I3SDataProvider", function () {
     const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl");
 
     expect(testProvider.name).toBeUndefined();
-    expect(testProvider.traceFetches).toEqual(false);
     expect(testProvider.geoidTiledTerrainProvider).toBeUndefined();
-    expect(testProvider.enableFeatureFiltering).toEqual(false);
+    expect(testProvider.showFeatures).toEqual(false);
     expect(testProvider.adjustMaterialAlphaMode).toEqual(false);
     expect(testProvider.applySymbology).toEqual(false);
     expect(testProvider.calculateNormals).toEqual(false);
@@ -428,9 +424,8 @@ describe("Scene/I3SDataProvider", function () {
     const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl");
 
     expect(testProvider.name).toBeUndefined();
-    expect(testProvider.traceFetches).toEqual(false);
     expect(testProvider.geoidTiledTerrainProvider).toBeUndefined();
-    expect(testProvider.enableFeatureFiltering).toEqual(false);
+    expect(testProvider.showFeatures).toEqual(false);
     expect(testProvider.adjustMaterialAlphaMode).toEqual(false);
     expect(testProvider.applySymbology).toEqual(false);
     expect(testProvider.calculateNormals).toEqual(true);
@@ -447,16 +442,15 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       ...i3sOptions,
-      enableFeatureFiltering: true,
+      showFeatures: true,
       adjustMaterialAlphaMode: true,
       applySymbology: true,
       calculateNormals: false,
     });
 
     expect(testProvider.name).toEqual("testProvider");
-    expect(testProvider.traceFetches).toEqual(true);
     expect(testProvider.geoidTiledTerrainProvider).toEqual(geoidService);
-    expect(testProvider.enableFeatureFiltering).toEqual(true);
+    expect(testProvider.showFeatures).toEqual(true);
     expect(testProvider.adjustMaterialAlphaMode).toEqual(true);
     expect(testProvider.applySymbology).toEqual(true);
     expect(testProvider.calculateNormals).toEqual(false);
@@ -486,9 +480,8 @@ describe("Scene/I3SDataProvider", function () {
     const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl");
 
     expect(testProvider.name).toBeUndefined();
-    expect(testProvider.traceFetches).toEqual(false);
     expect(testProvider.geoidTiledTerrainProvider).toBeUndefined();
-    expect(testProvider.enableFeatureFiltering).toEqual(true);
+    expect(testProvider.showFeatures).toEqual(true);
     expect(testProvider.adjustMaterialAlphaMode).toEqual(true);
     expect(testProvider.applySymbology).toEqual(true);
     expect(testProvider.calculateNormals).toEqual(true);
@@ -517,16 +510,15 @@ describe("Scene/I3SDataProvider", function () {
     });
     const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
       ...i3sOptions,
-      enableFeatureFiltering: false,
+      showFeatures: false,
       adjustMaterialAlphaMode: false,
       applySymbology: false,
       calculateNormals: false,
     });
 
     expect(testProvider.name).toEqual("testProvider");
-    expect(testProvider.traceFetches).toEqual(true);
     expect(testProvider.geoidTiledTerrainProvider).toEqual(geoidService);
-    expect(testProvider.enableFeatureFiltering).toEqual(false);
+    expect(testProvider.showFeatures).toEqual(false);
     expect(testProvider.adjustMaterialAlphaMode).toEqual(false);
     expect(testProvider.applySymbology).toEqual(false);
     expect(testProvider.calculateNormals).toEqual(false);
@@ -548,24 +540,6 @@ describe("Scene/I3SDataProvider", function () {
 
     expect(testProvider.sublayers.length).toEqual(0);
     expect(testProvider._attributeStatistics.length).toEqual(0);
-  });
-
-  it("sets properties", async function () {
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
-    );
-    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
-      const tileset = new Cesium3DTileset();
-      tileset._root = {}; // Mock the root tile so that i3s property can be appended
-      return tileset;
-    });
-    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
-      name: "testProvider",
-    });
-
-    testProvider.traceFetches = true;
-
-    expect(testProvider.traceFetches).toEqual(true);
   });
 
   it("wraps update", async function () {
@@ -775,33 +749,6 @@ describe("Scene/I3SDataProvider", function () {
     });
   });
 
-  it("loads binary with traceFetches", async function () {
-    const mockBinaryResponse = new ArrayBuffer(1);
-
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      Promise.resolve(mockProviderData)
-    );
-    spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
-      const tileset = new Cesium3DTileset();
-      tileset._root = {}; // Mock the root tile so that i3s property can be appended
-      return tileset;
-    });
-    const testProvider = await I3SDataProvider.fromUrl("mockProviderUrl", {
-      name: "testProvider",
-      traceFetches: true,
-    });
-
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      Promise.resolve(mockBinaryResponse)
-    );
-
-    const resource = Resource.createIfNeeded("mockBinaryUri");
-    return testProvider._loadBinary(resource).then(function (result) {
-      expect(Resource.prototype.fetchArrayBuffer).toHaveBeenCalled();
-      expect(result).toBe(mockBinaryResponse);
-    });
-  });
-
   it("loads binary with invalid uri", async function () {
     spyOn(Resource.prototype, "fetchJson").and.returnValue(
       Promise.resolve(mockProviderData)
@@ -971,11 +918,11 @@ describe("Scene/I3SDataProvider", function () {
   it("loads i3s provider", async function () {
     spyOn(I3SDataProvider, "_fetchJson").and.callFake(function (resource) {
       if (
-        resource.url.endsWith("mockProviderUrl/layers/0/mockRootNodeUrl/") ||
-        resource.url.endsWith("mockProviderUrl/layers/1/mockRootNodeUrl/")
+        resource.url.includes("mockProviderUrl/layers/0/mockRootNodeUrl/?") ||
+        resource.url.includes("mockProviderUrl/layers/1/mockRootNodeUrl/?")
       ) {
         return Promise.resolve(mockRootNodeData);
-      } else if (resource.url.endsWith("mockProviderUrl")) {
+      } else if (resource.url.includes("mockProviderUrl?")) {
         return Promise.resolve(mockProviderData);
       }
 
@@ -1005,9 +952,9 @@ describe("Scene/I3SDataProvider", function () {
 
   it("loads i3s provider from single layer url", async function () {
     spyOn(I3SDataProvider, "_fetchJson").and.callFake(function (resource) {
-      if (resource.url.endsWith("mockProviderUrl/layers/0/mockRootNodeUrl/")) {
+      if (resource.url.includes("mockProviderUrl/layers/0/mockRootNodeUrl/?")) {
         return Promise.resolve(mockRootNodeData);
-      } else if (resource.url.endsWith("mockProviderUrl/layers/0/")) {
+      } else if (resource.url.includes("mockProviderUrl/layers/0/?")) {
         return Promise.resolve(mockLayerData);
       }
 
@@ -1159,8 +1106,8 @@ describe("Scene/I3SDataProvider", function () {
     );
 
     expect(
-      testProvider._attributeStatistics[0].resource.url.endsWith(
-        `${mockBuildingLayerData.statisticsHRef}/`
+      testProvider._attributeStatistics[0].resource.url.includes(
+        `${mockBuildingLayerData.statisticsHRef}/?`
       )
     ).toEqual(true);
     expect(testProvider._attributeStatistics[0].data).toEqual(

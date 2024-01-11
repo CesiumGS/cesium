@@ -1,4 +1,5 @@
 import Cartographic from "../Core/Cartographic.js";
+import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
@@ -203,10 +204,7 @@ I3SNode.prototype.load = async function () {
 
   // If we don't have a nodepage index load from json
   if (!defined(this._nodeIndex)) {
-    const data = await I3SDataProvider.loadJson(
-      this._resource,
-      this._dataProvider._traceFetches
-    );
+    const data = await I3SDataProvider.loadJson(this._resource);
     that._data = data;
     processData();
     return;
@@ -264,6 +262,10 @@ I3SNode.prototype.loadFields = function () {
  * @returns {Promise<void>} A promise that is resolved when the I3S Node field is loaded
  */
 I3SNode.prototype.loadField = function (name) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("name", name);
+  //>>includeEnd('debug');
+
   const field = this._fields[name];
   if (defined(field)) {
     return field.load();

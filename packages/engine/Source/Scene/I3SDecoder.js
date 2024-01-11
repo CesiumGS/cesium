@@ -120,7 +120,7 @@ I3SDecoder.decode = async function (
       cartographicCenter: cartographicCenter,
       cartesianCenter: cartesianCenter,
       parentRotation: parentRotation,
-      enableFeatures: geometryData._dataProvider.enableFeatureFiltering,
+      enableFeatures: geometryData._dataProvider.showFeatures,
       splitGeometryByColorTransparency:
         geometryData._dataProvider.adjustMaterialAlphaMode,
       symbologyData: symbologyData,

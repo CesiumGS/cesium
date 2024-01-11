@@ -1,3 +1,5 @@
+import Check from "./Check.js";
+
 /**
  * Converts the value from sRGB color space to linear color space.
  *
@@ -13,6 +15,10 @@
  * });
  */
 function srgbToLinear(value) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("value", value);
+  //>>includeEnd('debug');
+
   if (value <= 0.04045) {
     // eslint-disable-next-line no-loss-of-precision
     return value * 0.07739938080495356037151702786378;
