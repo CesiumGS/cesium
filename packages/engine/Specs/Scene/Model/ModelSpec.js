@@ -1,4 +1,5 @@
 import {
+  Atmosphere,
   Axis,
   Cartesian2,
   Cartesian3,
@@ -4420,6 +4421,7 @@ describe(
       const darkDate = JulianDate.fromIso8601("2024-01-11T00:00:00Z");
 
       afterEach(function () {
+        scene.atmosphere = new Atmosphere();
         scene.fog = new Fog();
         scene.light = new SunLight();
         scene.camera.switchToPerspectiveFrustum();
