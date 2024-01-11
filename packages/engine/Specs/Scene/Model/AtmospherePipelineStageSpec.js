@@ -19,7 +19,7 @@ describe("Scene/Model/AtmospherePipelineStage", function () {
       camera: {
         // position the camera a little bit east of the model
         // and slightly above
-        position: Cartesian3.fromDegrees(0.01, 0, 1),
+        positionWC: Cartesian3.fromDegrees(0.01, 0, 1),
       },
       fog: {
         density: 2e-4,
@@ -74,9 +74,9 @@ describe("Scene/Model/AtmospherePipelineStage", function () {
     const renderResources = mockRenderResources();
     const frameState = mockFrameState();
 
-    frameState.camera.position = Cartesian3.clone(
+    frameState.camera.positionWC = Cartesian3.clone(
       mockModel.boundingSphere.center,
-      frameState.camera.position
+      frameState.camera.positionWC
     );
 
     AtmospherePipelineStage.process(renderResources, mockModel, frameState);
@@ -92,7 +92,7 @@ describe("Scene/Model/AtmospherePipelineStage", function () {
     // For this case, the fact that Fog decreases the density to 0 when
     // the camera is far above the model is what causes u_isInFog to
     // be false.
-    frameState.camera.position = Cartesian3.fromDegrees(0.001, 0, 100000);
+    frameState.camera.positionWC = Cartesian3.fromDegrees(0.001, 0, 100000);
     frameState.fog.density = 0;
 
     AtmospherePipelineStage.process(renderResources, mockModel, frameState);
