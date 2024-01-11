@@ -357,6 +357,24 @@ function Scene(options) {
   this.nearToFarDistance2D = 1.75e6;
 
   /**
+   * The vertical exaggeration of the scene.
+   * When set to 1.0, no exaggeration is applied.
+   *
+   * @type {number}
+   * @default 1.0
+   */
+  this.verticalExaggeration = 1.0;
+
+  /**
+   * The reference height for vertical exaggeration of the scene.
+   * When set to 0.0, the exaggeration is applied relative to the ellipsoid surface.
+   *
+   * @type {number}
+   * @default 0.0
+   */
+  this.verticalExaggerationRelativeHeight = 0.0;
+
+  /**
    * This property is for debugging only; it is not for production use.
    * <p>
    * A function that determines what commands are executed.  As shown in the examples below,
@@ -1880,10 +1898,17 @@ Scene.prototype.updateFrameState = function () {
   frameState.cameraUnderground = this._cameraUnderground;
   frameState.globeTranslucencyState = this._globeTranslucencyState;
 
-  if (defined(this.globe)) {
-    frameState.terrainExaggeration = this.globe.terrainExaggeration;
-    frameState.terrainExaggerationRelativeHeight = this.globe.terrainExaggerationRelativeHeight;
+  const { globe } = this;
+  if (defined(globe) && globe._terrainExaggerationChanged) {
+    // Honor a user-set value for the old deprecated globe.terrainExaggeration.
+    // This can be removed when Globe.terrainExaggeration is removed.
+    this.verticalExaggeration = globe._terrainExaggeration;
+    this.verticalExaggerationRelativeHeight =
+      globe._terrainExaggerationRelativeHeight;
+    globe._terrainExaggerationChanged = false;
   }
+  frameState.verticalExaggeration = this.verticalExaggeration;
+  frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
 
   if (
     defined(this._specularEnvironmentMapAtlas) &&
@@ -3579,16 +3604,38 @@ function getGlobeHeight(scene) {
   const globe = scene._globe;
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
-  if (defined(globe) && globe.show && defined(cartographic)) {
-    return globe.getHeight(cartographic);
+
+  let maxHeight = Number.NEGATIVE_INFINITY;
+  const length = scene.primitives.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = scene.primitives.get(i);
+    if (!primitive.isCesium3DTileset || primitive.disableCollision) {
+      continue;
+    }
+
+    const result = primitive.getHeight(cartographic, scene);
+    if (defined(result) && result > maxHeight) {
+      maxHeight = result;
+    }
   }
+
+  if (defined(globe) && globe.show && defined(cartographic)) {
+    const result = globe.getHeight(cartographic);
+    if (result > maxHeight) {
+      maxHeight = result;
+    }
+  }
+
+  if (maxHeight > Number.NEGATIVE_INFINITY) {
+    return maxHeight;
+  }
+
   return undefined;
 }
 
 function isCameraUnderground(scene) {
   const camera = scene.camera;
   const mode = scene._mode;
-  const globe = scene.globe;
   const cameraController = scene._screenSpaceCameraController;
   const cartographic = camera.positionCartographic;
 
@@ -3602,12 +3649,7 @@ function isCameraUnderground(scene) {
     return true;
   }
 
-  if (
-    !defined(globe) ||
-    !globe.show ||
-    mode === SceneMode.SCENE2D ||
-    mode === SceneMode.MORPHING
-  ) {
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return false;
   }
 

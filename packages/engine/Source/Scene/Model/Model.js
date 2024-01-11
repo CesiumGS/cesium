@@ -37,6 +37,7 @@ import ModelUtility from "./ModelUtility.js";
 import oneTimeWarning from "../../Core/oneTimeWarning.js";
 import PntsLoader from "./PntsLoader.js";
 import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
+import pickModel from "./pickModel.js";
 
 /**
  * <div class="notice">
@@ -112,7 +113,7 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @internalConstructor
  *
  * @privateParam {ResourceLoader} options.loader The loader used to load resources for this model.
- * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally. 
+ * @privateParam {ModelType} options.type Type of this model, to distinguish individual glTF files from 3D Tiles internally.
  * @privateParam {object} options Object with the following properties:
  * @privateParam {Resource} options.resource The Resource to the 3D model.
  * @privateParam {boolean} [options.show=true] Whether or not to render the model.
@@ -150,11 +151,12 @@ import StyleCommandsNeeded from "./StyleCommandsNeeded.js";
  * @privateParam {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @privateParam {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @privateParam {boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @privateParam {boolean} [options.enablePick=false] Whether to allow CPU picking with <code>pick</code> when not using WebGL 2 or above. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the model has loaded.
  * @privateParam {string|number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @privateParam {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
  * @privateParam {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this model. This cannot be set after the model has loaded.
- 
+
  *
  * @see Model.fromGltfAsync
  *
@@ -192,7 +194,7 @@ function Model(options) {
    * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's Cartesian WGS84 coordinates.
    * Local reference frames can be used by providing a different transformation matrix, like that returned
    * by {@link Transforms.eastNorthUpToFixedFrame}.
-   * 
+   *
    * @type {Matrix4}
 
    * @default {@link Matrix4.IDENTITY}
@@ -333,6 +335,8 @@ function Model(options) {
   this._heightDirty = this._heightReference !== HeightReference.NONE;
   this._removeUpdateHeightCallback = undefined;
 
+  this._verticalExaggerationOn = false;
+
   this._clampedModelMatrix = undefined; // For use with height reference
 
   const scene = options.scene;
@@ -453,6 +457,7 @@ function Model(options) {
 
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
+  this._enablePick = defaultValue(options.enablePick, false);
 
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
@@ -1548,10 +1553,14 @@ Object.defineProperties(Model.prototype, {
    *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
    *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
    *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
-   *     <li>The position attribute is required.</li>
+   *     <li>The meshes must be watertight.</li>
+   *     <li>The POSITION attribute is required.</li>
    *     <li>If feature IDs and an index buffer are both present, all indices with the same feature id must occupy contiguous sections of the index buffer.</li>
    *     <li>If feature IDs are present without an index buffer, all positions with the same feature id must occupy contiguous sections of the position buffer.</li>
    * </ul>
+   * </p>
+   * <p>
+   * The 3D Tiles or terrain receiving the classification must be opaque.
    * </p>
    *
    * @memberof Model.prototype
@@ -1789,6 +1798,7 @@ Model.prototype.update = function (frameState) {
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
+  updateVerticalExaggeration(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
 
@@ -1980,6 +1990,14 @@ function updateSceneMode(model, frameState) {
       model._updateModelMatrix = true;
     }
     model._sceneMode = frameState.mode;
+  }
+}
+
+function updateVerticalExaggeration(model, frameState) {
+  const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
+  if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
+    model.resetDrawCommands();
+    model._verticalExaggerationOn = verticalExaggerationNeeded;
   }
 }
 
@@ -2482,6 +2500,35 @@ Model.prototype.isClippingEnabled = function () {
 };
 
 /**
+ * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {number} [verticalExaggeration=1.0] A scalar used to exaggerate the height of a position relative to the ellipsoid. If the value is 1.0 there will be no effect.
+ * @param {number} [relativeHeight=0.0] The height above the ellipsoid relative to which a position is exaggerated. If the value is 0.0 the position will be exaggerated relative to the ellipsoid surface.
+ * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Model.prototype.pick = function (
+  ray,
+  frameState,
+  verticalExaggeration,
+  relativeHeight,
+  result
+) {
+  return pickModel(
+    this,
+    ray,
+    frameState,
+    verticalExaggeration,
+    relativeHeight,
+    result
+  );
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
@@ -2640,6 +2687,7 @@ Model.prototype.destroyModelResources = function () {
  * @param {boolean} [options.showCreditsOnScreen=false] Whether to display the credits of this model on screen.
  * @param {SplitDirection} [options.splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this model.
  * @param {boolean} [options.projectTo2D=false] Whether to accurately project the model's positions in 2D. If this is true, the model will be projected accurately to 2D, but it will use more memory to do so. If this is false, the model will use less memory and will still render in 2D / CV mode, but its positions may be inaccurate. This disables minimumPixelSize and prevents future modification to the model matrix. This also cannot be set after the model has loaded.
+ * @param {boolean} [options.enablePick=false] Whether to allow with CPU picking with <code>pick</code> when not using WebGL 2 or above. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the model has loaded.
  * @param {string|number} [options.featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {string|number} [options.instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @param {object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation and lighting.
@@ -2734,6 +2782,7 @@ Model.fromGltfAsync = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
@@ -2810,6 +2859,7 @@ Model.fromB3dm = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
     loadForClassification: defined(options.classificationType),
@@ -2865,6 +2915,7 @@ Model.fromI3dm = async function (options) {
     upAxis: options.upAxis,
     forwardAxis: options.forwardAxis,
     loadAttributesFor2D: options.projectTo2D,
+    enablePick: options.enablePick,
     loadIndicesForWireframe: options.enableDebugWireframe,
     loadPrimitiveOutline: options.enableShowOutline,
   };
@@ -2998,6 +3049,7 @@ function makeModelOptions(loader, modelType, options) {
     showCreditsOnScreen: options.showCreditsOnScreen,
     splitDirection: options.splitDirection,
     projectTo2D: options.projectTo2D,
+    enablePick: options.enablePick,
     featureIdLabel: options.featureIdLabel,
     instanceFeatureIdLabel: options.instanceFeatureIdLabel,
     pointCloudShading: options.pointCloudShading,

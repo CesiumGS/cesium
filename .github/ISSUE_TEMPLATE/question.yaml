@@ -1,0 +1,15 @@
+name: Ask a question
+description: Please use the community forum (https://community.cesium.com/) for general questions about using CesiumJS.
+labels: ["needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        :exclamation: Please use the [community forum](https://community.cesium.com/) for asking questions about how to use CesiumJS and best practices. The core CesiumJS team actively monitors the forum and we love seeing what people are working on! :exclamation:
+  - type: checkboxes
+    id: verify
+    attributes:
+      label: Verification
+      description: Confirm you will ask your question on our forums linked above
+      options:
+        - label: "Yes"
