@@ -3,44 +3,53 @@ import {
   _shadersAtmosphereStageVS,
   Cartesian3,
   AtmospherePipelineStage,
-  ShaderBuilder,
+  ModelRenderResources,
+  Transforms,
 } from "../../../index.js";
+import createScene from "../../../../../Specs/createScene.js";
 import ShaderBuilderTester from "../../../../../Specs/ShaderBuilderTester.js";
+import loadAndZoomToModelAsync from "./loadAndZoomToModelAsync.js";
 
 describe(
   "Scene/Model/AtmospherePipelineStage",
   function () {
-    const mockModel = {
-      boundingSphere: {
-        center: Cartesian3.fromDegrees(0, 0, 0),
-      },
-    };
+    const boxTexturedGlbUrl =
+      "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb";
 
-    function mockFrameState() {
-      return {
-        camera: {
-          // position the camera a little bit east of the model
-          // and slightly above
-          positionWC: Cartesian3.fromDegrees(0.01, 0, 1),
-        },
-        fog: {
-          density: 2e-4,
-        },
-      };
-    }
+    let scene;
+    let model;
+    beforeAll(async function () {
+      scene = createScene();
 
-    function mockRenderResources() {
-      return {
-        shaderBuilder: new ShaderBuilder(),
-        uniformMap: {},
-      };
-    }
+      const center = Cartesian3.fromDegrees(0, 0, 0);
+      model = await loadAndZoomToModelAsync(
+        {
+          url: boxTexturedGlbUrl,
+          modelMatrix: Transforms.eastNorthUpToFixedFrame(center),
+        },
+        scene
+      );
+    });
+
+    let renderResources;
+    beforeEach(async function () {
+      renderResources = new ModelRenderResources(model);
+
+      // position the camera a little bit east of the model
+      // and slightly above it.
+      scene.frameState.camera.position = Cartesian3.fromDegrees(0.01, 0, 1000);
+      scene.frameState.camera.direction = new Cartesian3(0, -1, 0);
+
+      // Reset the fog density
+      scene.fog.density = 2e-4;
+    });
+
+    afterAll(async function () {
+      scene.destroyForSpecs();
+    });
 
     it("configures shader", function () {
-      const renderResources = mockRenderResources();
-      const frameState = mockFrameState();
-
-      AtmospherePipelineStage.process(renderResources, mockModel, frameState);
+      AtmospherePipelineStage.process(renderResources, model, scene.frameState);
 
       const shaderBuilder = renderResources.shaderBuilder;
 
@@ -73,41 +82,35 @@ describe(
     });
 
     it("u_isInFog() is false if the camera is at the model center", function () {
-      const renderResources = mockRenderResources();
-      const frameState = mockFrameState();
-
-      frameState.camera.positionWC = Cartesian3.clone(
-        mockModel.boundingSphere.center,
-        frameState.camera.positionWC
+      const frameState = scene.frameState;
+      frameState.camera.position = Cartesian3.clone(
+        model.boundingSphere.center,
+        frameState.camera.position
       );
+      scene.renderForSpecs();
 
-      AtmospherePipelineStage.process(renderResources, mockModel, frameState);
+      AtmospherePipelineStage.process(renderResources, model, frameState);
 
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.u_isInFog()).toBe(false);
     });
 
     it("u_isInFog() is false if the camera is in space", function () {
-      const renderResources = mockRenderResources();
-      const frameState = mockFrameState();
+      const frameState = scene.frameState;
 
-      // For this case, the fact that Fog decreases the density to 0 when
-      // the camera is far above the model is what causes u_isInFog to
-      // be false.
-      frameState.camera.positionWC = Cartesian3.fromDegrees(0.001, 0, 100000);
-      frameState.fog.density = 0;
+      frameState.camera.position = Cartesian3.fromDegrees(0.01, 0, 900000);
+      scene.renderForSpecs();
 
-      AtmospherePipelineStage.process(renderResources, mockModel, frameState);
+      AtmospherePipelineStage.process(renderResources, model, frameState);
 
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.u_isInFog()).toBe(false);
     });
 
     it("u_isInFog() is true when the tile is in fog", function () {
-      const renderResources = mockRenderResources();
-      const frameState = mockFrameState();
+      scene.renderForSpecs();
 
-      AtmospherePipelineStage.process(renderResources, mockModel, frameState);
+      AtmospherePipelineStage.process(renderResources, model, scene.frameState);
 
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.u_isInFog()).toBe(true);
