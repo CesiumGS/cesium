@@ -10,6 +10,7 @@
   - This behavior can be disabled by setting `Cesium3DTileset.disableCollision` to true.
   - This feature is enabled by default only for WebGL 2 and above, but can be enabled for WebGL 1 by setting the `enablePick` option to true when creating the `Cesium3DTileset`.
 - The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. Furthermore, the default settings of this feature were tuned for improved performance. `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002. `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
+- Fog rendering now applies to glTF models and 3D Tiles. This can be configured using `scene.fog` and the new `scene.atmosphere`. [#11744](https://github.com/CesiumGS/cesium/pull/11744)
 
 ##### Additions :tada:
 
