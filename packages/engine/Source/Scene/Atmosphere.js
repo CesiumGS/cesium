@@ -14,6 +14,9 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
  * While the atmosphere settings affect the color of fog, see {@link Fog} to control how fog is rendered.
  * </p>
  *
+ * @alias Atmosphere
+ * @constructor
+ *
  * @example
  * // Turn on dynamic atmosphere lighting using the sun direction
  * scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.SUNLIGHT;
@@ -21,7 +24,7 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
  * @example
  * // Turn on dynamic lighting using whatever light source is in the scene
  * scene.light = new Cesium.DirectionalLight({
- *   direction: new Cesium.Cartesian3(1, 0, 0);
+ *   direction: new Cesium.Cartesian3(1, 0, 0)
  * });
  * scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.SCENE_LIGHT;
  *
