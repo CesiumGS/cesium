@@ -46,7 +46,7 @@ AtmospherePipelineStage.process = function (
     // We only need a rough measure of distance to the model, so measure
     // from the camera to the bounding sphere center.
     const distance = Cartesian3.distance(
-      frameState.camera.position,
+      frameState.camera.positionWC,
       model.boundingSphere.center
     );
 

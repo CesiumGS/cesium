@@ -13,11 +13,14 @@ import {
   CustomShader,
   defaultValue,
   defined,
+  DirectionalLight,
   DistanceDisplayCondition,
+  DynamicAtmosphereLightingType,
   DracoLoader,
   Ellipsoid,
   Event,
   FeatureDetection,
+  Fog,
   HeadingPitchRange,
   HeadingPitchRoll,
   HeightReference,
@@ -40,6 +43,7 @@ import {
   ShadowMode,
   SplitDirection,
   StyleCommandsNeeded,
+  SunLight,
   Transforms,
   WireframeIndexGenerator,
 } from "../../../index.js";
@@ -4548,6 +4552,440 @@ describe(
           // The model's bounding sphere doesn't account for animations,
           // so the camera will not account for the node's new transform.
           verifyRender(model, false);
+        });
+      });
+    });
+
+    describe("fog", function () {
+      const sunnyDate = JulianDate.fromIso8601("2024-01-11T15:00:00Z");
+      const darkDate = JulianDate.fromIso8601("2024-01-11T00:00:00Z");
+
+      afterEach(function () {
+        scene.fog = new Fog();
+        scene.light = new SunLight();
+        scene.camera.switchToPerspectiveFrustum();
+      });
+
+      function viewFog(scene, model) {
+        // In order for fog to create a visible change, the camera needs to be
+        // further away from the model. This would make the box sub-pixel
+        // so to make it fill the canvas, use an ortho camera the same
+        // width of the box to make the scene look 2D.
+        const center = model.boundingSphere.center;
+        scene.camera.lookAt(center, new Cartesian3(1000, 0, 0));
+        scene.camera.switchToOrthographicFrustum();
+        scene.camera.frustum.width = 1;
+      }
+
+      it("renders a model in fog", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more for this test
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // First, turn off the fog to capture the original color
+        let originalColor;
+        scene.fog.enabled = false;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(originalColor).not.toEqual([0, 0, 0, 255]);
+        });
+
+        // Now turn on fog. The result should be bluish
+        // than before due to scattering.
+        scene.fog.enabled = true;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+
+          // The result should have a bluish tint
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+      });
+
+      it("renders a model in fog (sunlight)", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more for this test
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        // In order for fog to render, the camera needs to be
+        // further away from the model. This would make the box sub-pixel
+        // so to make it fill the canvas, use an ortho camera the same
+        // width of the box to make the scene look 2D.
+        const center = model.boundingSphere.center;
+        scene.camera.lookAt(center, new Cartesian3(1000, 0, 0));
+        scene.camera.switchToOrthographicFrustum();
+        scene.camera.frustum.width = 1;
+
+        // Grab the color when dynamic lighting is off for comparison
+        scene.atmosphere.dynamicLighting = DynamicAtmosphereLightingType.OFF;
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(originalColor).not.toEqual([0, 0, 0, 255]);
+        });
+
+        // switch the lighting model to sunlight
+        scene.atmosphere.dynamicLighting =
+          DynamicAtmosphereLightingType.SUNLIGHT;
+
+        // Render in the sun, it should be a different color than the
+        // original
+        let sunnyColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          sunnyColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+        });
+
+        // Render in the dark, it should be a different color and
+        // darker than in sun
+        renderOptions.time = darkDate;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+          expect(rgba).not.toEqual(sunnyColor);
+
+          const [sunR, sunG, sunB, sunA] = sunnyColor;
+          const [r, g, b, a] = rgba;
+          expect(r).toBeLessThan(sunR);
+          expect(g).toBeLessThan(sunG);
+          expect(b).toBeLessThan(sunB);
+          expect(a).toBe(sunA);
+        });
+      });
+
+      it("renders a model in fog (scene light)", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more for this test
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        // Grab the color when dynamic lighting is off for comparison
+        scene.atmosphere.dynamicLighting = DynamicAtmosphereLightingType.OFF;
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(originalColor).not.toEqual([0, 0, 0, 255]);
+        });
+
+        // Also grab the color in sunlight for comparison
+        scene.atmosphere.dynamicLighting =
+          DynamicAtmosphereLightingType.SUNLIGHT;
+        let sunnyColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          sunnyColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+        });
+
+        // Set a light on the scene, but since dynamicLighting is SUNLIGHT,
+        // it should have no effect yet
+        scene.light = new DirectionalLight({
+          direction: new Cartesian3(0, 1, 0),
+        });
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual(sunnyColor);
+        });
+
+        // Set dynamic lighting to use the scene light, now it should
+        // render a different color from the other light sources
+        scene.atmosphere.dynamicLighting =
+          DynamicAtmosphereLightingType.SCENE_LIGHT;
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+          expect(rgba).not.toEqual(sunnyColor);
+        });
+      });
+
+      it("adjusts atmosphere light intensity", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more. We'll use the light intensity to
+        // modulate this.
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // Grab the original color.
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          // The result should have a bluish tint from the atmosphere
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+
+        // Turn down the light intensity
+        scene.atmosphere.lightIntensity = 5.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+
+          // Check that each component (except alpha) is darker than before
+          const [oldR, oldG, oldB, oldA] = originalColor;
+          const [r, g, b, a] = rgba;
+          expect(r).toBeLessThan(oldR);
+          expect(g).toBeLessThan(oldG);
+          expect(b).toBeLessThan(oldB);
+          expect(a).toBe(oldA);
+        });
+      });
+
+      it("applies a hue shift", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        // Increase the brightness to make the fog color
+        // stand out more for this test
+        scene.atmosphere.brightnessShift = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // Grab the original color.
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          // The result should have a bluish tint from the atmosphere
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+
+        // Shift the fog color to be reddish
+        scene.atmosphere.hueShift = 0.4;
+        let redColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          redColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(redColor).not.toEqual(originalColor);
+
+          // Check for a reddish tint
+          const [r, g, b, a] = rgba;
+          expect(r).toBeGreaterThan(g);
+          expect(r).toBeGreaterThan(b);
+          expect(a).toBe(255);
+        });
+
+        // ...now greenish
+        scene.atmosphere.hueShift = 0.7;
+        let greenColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          greenColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(greenColor).not.toEqual(originalColor);
+          expect(greenColor).not.toEqual(redColor);
+
+          // Check for a greenish tint
+          const [r, g, b, a] = rgba;
+          expect(g).toBeGreaterThan(r);
+          expect(g).toBeGreaterThan(b);
+          expect(a).toBe(255);
+        });
+
+        // ...and all the way around the color wheel back to bluish
+        scene.atmosphere.hueShift = 1.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).toEqual(originalColor);
+        });
+      });
+
+      it("applies a brightness shift", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // Grab the original color.
+        let originalColor;
+        scene.atmosphere.brightnessShift = 1.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          // The result should have a bluish tint from the atmosphere
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+
+        // Turn down the brightness
+        scene.atmosphere.brightnessShift = 0.5;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+
+          // Check that each component (except alpha) is darker than before
+          const [oldR, oldG, oldB, oldA] = originalColor;
+          const [r, g, b, a] = rgba;
+          expect(r).toBeLessThan(oldR);
+          expect(g).toBeLessThan(oldG);
+          expect(b).toBeLessThan(oldB);
+          expect(a).toBe(oldA);
+        });
+      });
+
+      it("applies a saturation shift", async function () {
+        // Move the fog very close to the camera;
+        scene.fog.density = 1.0;
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            url: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(
+              Cartesian3.fromDegrees(0, 0, 10.0)
+            ),
+          },
+          scene
+        );
+
+        viewFog(scene, model);
+
+        const renderOptions = {
+          scene,
+          time: sunnyDate,
+        };
+
+        // Grab the original color.
+        let originalColor;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          originalColor = rgba;
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+
+          // The result should have a bluish tint from the atmosphere
+          const [r, g, b, a] = rgba;
+          expect(b).toBeGreaterThan(r);
+          expect(b).toBeGreaterThan(g);
+          expect(a).toBe(255);
+        });
+
+        // Turn down the saturation all the way
+        scene.atmosphere.saturationShift = -1.0;
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+          expect(rgba).not.toEqual(originalColor);
+
+          // Check that each component (except alpha) is the same
+          // as grey values have R = G = B
+          const [r, g, b, a] = rgba;
+          expect(g).toBe(r);
+          expect(b).toBe(g);
+          expect(a).toBe(255);
         });
       });
     });
