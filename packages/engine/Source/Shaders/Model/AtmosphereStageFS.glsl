@@ -63,6 +63,42 @@ void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirection,
     color = vec4(withFog, color.a);
 }
 
+void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, float cameraDist) {
+    // Apply ground atmosphere. This happens when the camera is far away from the earth.
+
+    float fadeInDist = u_nightFadeDistance.x;
+        float fadeOutDist = u_nightFadeDistance.y;
+    const fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+
+    // The transmittance is based on optical depth i.e. the length of segment of the ray inside the atmosphere.
+    // This value is larger near the "circumference", as it is further away from the camera. We use it to
+    // brighten up that area of the ground atmosphere.
+    const float transmittanceModifier = 0.5;
+    float transmittance = transmittanceModifier + clamp(1.0 - groundAtmosphereColor.a, 0.0, 1.0);
+
+    vec3 finalAtmosphereColor = color.rgb + groundAtmosphereColor.rgb * transmittance;
+
+    // TODO: When are these defines set?
+    //#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+
+
+        float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.05, 1.0);
+        float darken = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
+        vec3 darkenendGroundAtmosphereColor = mix(groundAtmosphereColor.rgb, finalAtmosphereColor.rgb, darken);
+
+        finalAtmosphereColor = mix(darkenendGroundAtmosphereColor, finalAtmosphereColor, sunlitAtmosphereIntensity);
+    //#endif
+
+    #ifndef HDR
+        const float fExposure = 2.0;
+        finalAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * finalAtmosphereColor.rgb);
+    #else
+        finalAtmosphereColor.rgb = czm_saturation(finalAtmosphereColor.rgb, 1.6);
+    #endif
+
+    color.rgb = mix(color.rgb, finalAtmosphereColor.rgb, fade);
+}
+
 void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     vec3 rayleighColor;
     vec3 mieColor;
@@ -75,7 +111,7 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     // more accurate ground atmosphere. All other cases will use
     //
     // The if condition will be added in https://github.com/CesiumGS/cesium/issues/11717
-    if (false) {
+    if (u_usePerFragmentGroundAtmosphere) {
         positionWC = computeEllipsoidPositionWC(attributes.positionMC);
         lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC, czm_atmosphereDynamicLighting);
 
@@ -101,10 +137,11 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
 
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
 
+    float distanceToCamera = length(attributes.positionEC);
     if (u_isInFog) {
-        float distanceToCamera = length(attributes.positionEC);
+
         applyFog(color, groundAtmosphereColor, lightDirection, distanceToCamera);
     } else {
-        // Ground atmosphere
+        applyGroundAtmosphere(color, groundAtmosphereColor, lightDirection, distanceToCamera);
     }
 }
