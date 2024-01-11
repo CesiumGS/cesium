@@ -31,14 +31,7 @@ import decodeVectorPolylinePositions from "../Core/decodeVectorPolylinePositions
  *
  * @private
  */
-function Vector3DTileContent(
-  tileset,
-  tile,
-  resource,
-  arrayBuffer,
-  byteOffset,
-  scene
-) {
+function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
@@ -60,7 +53,7 @@ function Vector3DTileContent(
 
   this._ready = false;
 
-  initialize(this, arrayBuffer, byteOffset, scene);
+  initialize(this, arrayBuffer, byteOffset, tileset.scene);
 }
 
 Object.defineProperties(Vector3DTileContent.prototype, {
