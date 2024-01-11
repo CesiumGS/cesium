@@ -45,6 +45,8 @@
       window.startup = async function (Cesium) {
         "use strict";
         //Sandcastle_Begin
+        // Cesium World Terrain height system doesn't match to I3S datasets height system in some locations even with geoid conversion.
+        // Set ArcGIS Tiled Elevation Terrain gravity related height system to get closer results.
         const viewer = new Cesium.Viewer("cesiumContainer", {
           terrain: new Cesium.Terrain(
             Cesium.ArcGISTiledElevationTerrainProvider.fromUrl(
@@ -54,38 +56,21 @@
           animation: false,
           timeline: false,
           orderIndependentTranslucency: false,
-          msaaSamples: 4, // enables Multisample anti-aliasing for improved visual quality
+          msaaSamples: 4, // enables multisample antialiasing for improved visual quality
         });
 
         // More datasets to tour can be added here...
         // The url passed to I3SDataProvider supports loading a single Indexed 3D Scene (I3S) layer (.<host>/SceneServer/layers/<id>) or a collection of scene layers (.<host>/SceneServer) from a SceneServer.
-        const resource = new Cesium.Resource(
-          "https://tiles.arcgis.com/tiles/cFEFS0EWrhfDeVw9/arcgis/rest/services/Turanga_Library/SceneServer"
-        );
-        // Set a query parameter for json to avoid failure on html pages
-        resource.setQueryParameters(
-          {
-            f: "pjson",
-          },
-          true
-        );
         const tours = {
-          "Turanga Library": resource.url,
+          "Turanga Library":
+            "https://tiles.arcgis.com/tiles/cFEFS0EWrhfDeVw9/arcgis/rest/services/Turanga_Library/SceneServer",
         };
 
         try {
-          // Create i3s and Cesium3DTileset options to pass optional parameters useful for debugging and visualizing
-          const cesium3dTilesetOptions = {
-            skipLevelOfDetail: false,
-            debugShowBoundingVolume: false,
-            // maximumScreenSpaceError: 1, //setting to lower values will improve (quality-wise) the level of detail refinement by forcing higher lod tile descendants to 'show up sooner'.
-            // outlineColor: Cesium.Color.BLUE, // To replace/override the outline color defined in I3S symbology
-          };
+          // Create i3s options to pass optional parameters useful for debugging and visualizing
           const i3sOptions = {
-            traceFetches: false, // for tracing I3S fetches
-            cesium3dTilesetOptions: cesium3dTilesetOptions, // options for internal Cesium3dTileset
             adjustMaterialAlphaMode: true, // force the alpha mode to be set for transparent geometry
-            enableFeatureFiltering: true, // Enables feature filtering and allows to display (popup) feature attributes
+            showFeatures: true, // creates 3D object for each feature and allows to apply attributes filter
             applySymbology: true, // applies outlines based on the I3S layer renderer details
             calculateNormals: true, // generates flat normals if they are missing in I3S buffers
           };

@@ -4,13 +4,10 @@
  * Co-authored-by: Anthony Mirabeau anthony.mirabeau@presagis.com
  * Co-authored-by: Elizabeth Rudkin elizabeth.rudkin@presagis.com
  * Co-authored-by: Tamrat Belayneh tbelayneh@esri.com
- * Co-authored-by: Anton Smirnov anton.smirnov@actionengine.com
- * Co-authored-by: Maxim Kuznetsov maxim.kuznetsov@actionengine.com
- 
  *
  * The I3S format has been developed by Esri and is shared under an Apache 2.0 license and is maintained @ https://github.com/Esri/i3s-spec.
  * This implementation supports loading, displaying, and querying an I3S layer (supported versions include Esri github I3S versions 1.6, 1.7/1.8 -
- * whose OGC equivalent are I3S Community Standard Version 1.1, 1.2 & 1.3) in the CesiumJS viewer.
+ * whose OGC equivalent are I3S Community Standard Version 1.1 & 1.2) in the CesiumJS viewer.
  * It enables the user to access an I3S layer via its URL and load it inside of the CesiumJS viewer.
  *
  * When a scene layer is initialized it accomplishes the following:
@@ -73,12 +70,30 @@ import Rectangle from "../Core/Rectangle.js";
  * @property {string} [name] The name of the I3S dataset.
  * @property {boolean} [show=true] Determines if the dataset will be shown.
  * @property {ArcGISTiledElevationTerrainProvider|Promise<ArcGISTiledElevationTerrainProvider>} [geoidTiledTerrainProvider] Tiled elevation provider describing an Earth Gravitational Model. If defined, geometry will be shifted based on the offsets given by this provider. Required to position I3S data sets with gravity-related height at the correct location.
- * @property {boolean} [traceFetches=false] Debug option. When true, log a message whenever an I3S tile is fetched.
  * @property {Cesium3DTileset.ConstructorOptions} [cesium3dTilesetOptions] Object containing options to pass to an internally created {@link Cesium3DTileset}. See {@link Cesium3DTileset} for list of valid properties. All options can be used with the exception of <code>url</code> and <code>show</code> which are overridden by values from I3SDataProvider.
- * @property {boolean} [enableFeatureFiltering=false] Determines if the features will be shown.
+ * @property {boolean} [showFeatures=false] Determines if the features will be shown.
  * @property {boolean} [adjustMaterialAlphaMode=false] The option to adjust the alpha mode of the material based on the transparency of the vertex color. When <code>true</code>, the alpha mode of the material (if not defined) will be set to BLEND for geometry with any transparency in the color vertex attribute.
  * @property {boolean} [applySymbology=false] Determines if the I3S symbology will be parsed and applied for the layers.
  * @property {boolean} [calculateNormals=false] Determines if the flat normals will be generated for I3S geometry without normals.
+ *
+ * @example
+ * // Increase LOD by reducing SSE
+ * const cesium3dTilesetOptions = {
+ *   maximumScreenSpaceError: 1,
+ * };
+ * const i3sOptions = {
+ *   cesium3dTilesetOptions: cesium3dTilesetOptions,
+ * };
+ *
+ * @example
+ * // Set a custom outline color to replace the color defined in I3S symbology
+ * const cesium3dTilesetOptions = {
+ *   outlineColor: Cesium.Color.BLUE,
+ * };
+ * const i3sOptions = {
+ *   cesium3dTilesetOptions: cesium3dTilesetOptions,
+ *   applySymbology: true,
+ * };
  */
 
 /**
@@ -131,11 +146,7 @@ function I3SDataProvider(options) {
   this._name = options.name;
   this._show = defaultValue(options.show, true);
   this._geoidTiledTerrainProvider = options.geoidTiledTerrainProvider;
-  this._traceFetches = defaultValue(options.traceFetches, false);
-  this._enableFeatureFiltering = defaultValue(
-    options.enableFeatureFiltering,
-    false
-  );
+  this._showFeatures = defaultValue(options.showFeatures, false);
   this._adjustMaterialAlphaMode = defaultValue(
     options.adjustMaterialAlphaMode,
     false
@@ -191,24 +202,6 @@ Object.defineProperties(I3SDataProvider.prototype, {
       for (let i = 0; i < this._layers.length; i++) {
         this._layers[i]._updateVisibility();
       }
-    },
-  },
-
-  /**
-   * Gets or sets debugging and tracing of I3S fetches.
-   * @memberof I3SDataProvider.prototype
-   * @type {boolean}
-   */
-  traceFetches: {
-    get: function () {
-      return this._traceFetches;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.defined("value", value);
-      //>>includeEnd('debug');
-
-      this._traceFetches = value;
     },
   },
 
@@ -290,9 +283,9 @@ Object.defineProperties(I3SDataProvider.prototype, {
    * @type {boolean}
    * @readonly
    */
-  enableFeatureFiltering: {
+  showFeatures: {
     get: function () {
-      return this._enableFeatureFiltering;
+      return this._showFeatures;
     },
   },
 
@@ -432,9 +425,9 @@ function buildLayerUrl(provider, layerId) {
 
 async function addLayers(provider, data, options) {
   if (data.layerType === "Building") {
-    if (!defined(options.enableFeatureFiltering)) {
+    if (!defined(options.showFeatures)) {
       // The Building Scene Layer requires features to be shown to support filtering
-      provider._enableFeatureFiltering = true;
+      provider._showFeatures = true;
     }
     if (!defined(options.adjustMaterialAlphaMode)) {
       // The Building Scene Layer enables transparency by default
@@ -512,7 +505,7 @@ async function addLayers(provider, data, options) {
 
 /**
  * Creates an I3SDataProvider. Currently supported I3S versions are 1.6 and
- * 1.7/1.8 (OGC I3S 1.3).
+ * 1.7/1.8 (OGC I3S 1.2).
  *
  * @param {string|Resource} url The url of the I3S dataset, which should return an I3S scene object
  * @param {I3SDataProvider.ConstructorOptions} options An object describing initialization options
@@ -550,6 +543,8 @@ I3SDataProvider.fromUrl = async function (url, options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   const resource = Resource.createIfNeeded(url);
+  // Set a query parameter for json to avoid failure on html pages
+  resource.setQueryParameters({ f: "pjson" }, true);
   const data = await I3SDataProvider.loadJson(resource);
 
   const provider = new I3SDataProvider(options);
@@ -593,14 +588,9 @@ I3SDataProvider._fetchJson = function (resource) {
  * @private
  *
  * @param {Resource} resource The JSON resource to request
- * @param {boolean} [trace=false] Log the resource
  * @returns {Promise<object>} The fetched data
  */
-I3SDataProvider.loadJson = async function (resource, trace) {
-  if (trace) {
-    console.log("I3S FETCH:", resource.url);
-  }
-
+I3SDataProvider.loadJson = async function (resource) {
   const data = await I3SDataProvider._fetchJson(resource);
   if (defined(data.error)) {
     console.error("Failed to fetch I3S ", resource.url);
@@ -622,11 +612,20 @@ I3SDataProvider.loadJson = async function (resource, trace) {
 /**
  * @private
  */
-I3SDataProvider.prototype._loadBinary = function (resource) {
-  if (this._traceFetches) {
-    console.log("I3S FETCH:", resource.url);
+I3SDataProvider.prototype._loadBinary = async function (resource) {
+  const buffer = await resource.fetchArrayBuffer();
+  if (buffer.byteLength > 0) {
+    // Check if we have a JSON response with 404
+    const array = new Uint8Array(buffer);
+    if (array[0] === "{".charCodeAt(0)) {
+      const textContent = new TextDecoder();
+      const str = textContent.decode(buffer);
+      if (str.includes("404")) {
+        throw new RuntimeError(`Failed to load binary: ${resource.url}`);
+      }
+    }
   }
-  return resource.fetchArrayBuffer();
+  return buffer;
 };
 
 /**
@@ -837,6 +836,10 @@ I3SDataProvider.prototype.getAttributeNames = function () {
  * @returns {string[]} The collection of attribute values
  */
 I3SDataProvider.prototype.getAttributeValues = function (name) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("name", name);
+  //>>includeEnd('debug');
+
   for (let i = 0; i < this._attributeStatistics.length; ++i) {
     const values = this._attributeStatistics[i]._getValues(name);
     if (defined(values)) {

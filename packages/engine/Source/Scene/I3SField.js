@@ -1,4 +1,5 @@
 import defined from "../Core/defined.js";
+import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * This class implements an I3S Field which is custom data attached
@@ -109,27 +110,12 @@ function getValueTypeSize(type) {
 
 async function load(field) {
   const data = await field._dataProvider._loadBinary(field._resource);
-
-  // Check if we have a 404
   const dataView = new DataView(data);
-  if (dataView.getUint8(0) === "{".charCodeAt(0)) {
-    const textContent = new TextDecoder();
-    const str = textContent.decode(data);
-    if (str.includes("404")) {
-      console.error(`Failed to load: ${field.resource.url}`);
-      return;
-    }
-  }
-
   field._data = data;
-  if (!field._validateHeader(dataView)) {
-    return;
-  }
+  field._validateHeader(dataView);
   const headerSize = field._parseHeader(dataView);
   const offset = field._getBodyOffset(headerSize);
-  if (!field._validateBody(dataView, offset)) {
-    return;
-  }
+  field._validateBody(dataView, offset);
   field._parseBody(dataView, offset);
 }
 
@@ -142,7 +128,9 @@ I3SField.prototype.load = function () {
     return this._loadPromise;
   }
 
-  this._loadPromise = load(this);
+  this._loadPromise = load(this).catch(function (error) {
+    console.error(error);
+  });
   return this._loadPromise;
 };
 
@@ -303,13 +291,10 @@ I3SField.prototype._validateHeader = function (dataView) {
     headerSize += getValueTypeSize(item.valueType);
   }
   if (dataView.byteLength < headerSize) {
-    console.error("Invalid attribute buffer size");
-    console.error(
-      ` (field: ${this.name}, header: ${headerSize}, actual: ${dataView.byteLength})`
+    throw new RuntimeError(
+      `Invalid attribute buffer size (field: ${this.name}, header: ${headerSize}, actual: ${dataView.byteLength})`
     );
-    return false;
   }
-  return true;
 };
 
 /**
@@ -317,9 +302,9 @@ I3SField.prototype._validateHeader = function (dataView) {
  */
 I3SField.prototype._validateBody = function (dataView, offset) {
   if (!defined(this._header.count)) {
-    console.error("Invalid attribute buffer");
-    console.error(` (field: ${this.name}, count is missing)`);
-    return false;
+    throw new RuntimeError(
+      `Invalid attribute buffer (field: ${this.name}, count is missing)`
+    );
   }
   let attributeByteCountsOffset;
   for (
@@ -341,11 +326,9 @@ I3SField.prototype._validateBody = function (dataView, offset) {
         offset += valueSize * this._header.count;
       } else {
         if (!defined(attributeByteCountsOffset)) {
-          console.error("Invalid attribute buffer");
-          console.error(
-            ` (field: ${this.name}, attributeByteCounts is missing)`
+          throw new RuntimeError(
+            `Invalid attribute buffer (field: ${this.name}, attributeByteCounts is missing)`
           );
-          return false;
         }
         for (
           let index = 0;
@@ -362,19 +345,16 @@ I3SField.prototype._validateBody = function (dataView, offset) {
         }
       }
     } else {
-      console.error("Invalid attribute buffer");
-      console.error(` (field: ${this.name}, ${item} is missing)`);
-      return false;
+      throw new RuntimeError(
+        `Invalid attribute buffer (field: ${this.name}, ${item} is missing)`
+      );
     }
   }
   if (dataView.byteLength < offset) {
-    console.error("Invalid attribute buffer size");
-    console.error(
-      ` (field: ${this.name}, expected: ${offset}, actual: ${dataView.byteLength})`
+    throw new RuntimeError(
+      `Invalid attribute buffer size (field: ${this.name}, expected: ${offset}, actual: ${dataView.byteLength})`
     );
-    return false;
   }
-  return true;
 };
 
 export default I3SField;

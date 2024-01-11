@@ -643,7 +643,7 @@ describe("Scene/I3SNode", function () {
     );
 
     return rootNode.load().then(function () {
-      expect(spy).toHaveBeenCalledWith(rootNode.resource, false);
+      expect(spy).toHaveBeenCalledWith(rootNode.resource);
       expect(rootNode.data.children.length).toEqual(2);
     });
   });
@@ -665,7 +665,7 @@ describe("Scene/I3SNode", function () {
         return childNode.load();
       })
       .then(function () {
-        expect(spy).toHaveBeenCalledWith(childNode.resource, false);
+        expect(spy).toHaveBeenCalledWith(childNode.resource);
         expect(childNode.data.children.length).toEqual(0);
         expect(childNode.tile).toBeDefined();
         expect(childNode.tile.i3sNode).toBe(childNode);
@@ -1570,10 +1570,7 @@ describe("Scene/I3SNode", function () {
         expect(nodeWithMesh.featureData[0].data.featureData).toEqual([]);
         expect(nodeWithMesh.featureData[0].data.geometryData).toEqual([]);
 
-        expect(spy).toHaveBeenCalledWith(
-          nodeWithMesh.featureData[0].resource,
-          false
-        );
+        expect(spy).toHaveBeenCalledWith(nodeWithMesh.featureData[0].resource);
       });
   });
 

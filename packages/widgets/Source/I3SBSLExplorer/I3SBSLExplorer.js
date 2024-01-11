@@ -1,4 +1,4 @@
-import { defined, DeveloperError } from "@cesium/engine";
+import { Check } from "@cesium/engine";
 import knockout from "../ThirdParty/knockout.js";
 import I3SBSLExplorerViewModel from "./I3SBSLExplorerViewModel.js";
 
@@ -16,13 +16,10 @@ import I3SBSLExplorerViewModel from "./I3SBSLExplorerViewModel.js";
 function I3SBSLExplorer(containerId, i3sProvider) {
   const container = document.getElementById(containerId);
 
-  if (!defined(container)) {
-    throw new DeveloperError("container is required.");
-  }
-
-  if (!defined(i3sProvider)) {
-    throw new DeveloperError("i3sProvider is required.");
-  }
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("container", container);
+  Check.defined("i3sProvider", i3sProvider);
+  //>>includeEnd('debug');
 
   const htmlWrapper = document.createElement("div");
   htmlWrapper.innerHTML = `
