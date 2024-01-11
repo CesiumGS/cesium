@@ -1,6 +1,40 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
+/**
+ * Common atmosphere settings used by sky atmosphere, ground atmosphere, and fog.
+ *
+ * <p>
+ * This class is not to be confused with {@link SkyAtmosphere}, which is responsible for rendering the sky.
+ * </p>
+ * <p>
+ * Currently, these settings only apply to 3D Tiles and models, but will eventually affect the sky atmosphere and globe. See {@link https://github.com/CesiumGS/cesium/issues/11681|issue #11681}.
+ * </p>
+ * <p>
+ * While the atmosphere settings affect the color of fog, see {@link Fog} to control how fog is rendered.
+ * </p>
+ *
+ * @example
+ * // Turn on dynamic atmosphere lighting using the sun direction
+ * scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.SUNLIGHT;
+ *
+ * @example
+ * // Turn on dynamic lighting using whatever light source is in the scene
+ * scene.light = new Cesium.DirectionalLight({
+ *   direction: new Cesium.Cartesian3(1, 0, 0);
+ * });
+ * scene.atmosphere.dynamicLighting = Cesium.DynamicAtmosphereLightingType.SCENE_LIGHT;
+ *
+ * @example
+ * // Adjust the color of the atmosphere effects.
+ * scene.atmosphere.hueShift = 0.4; // Cycle 40% around the color wheel
+ * scene.atmosphere.brightnessShift = 0.25; // Increase the brightness
+ * scene.atmosphere.saturationShift = -0.1; // Desaturate the colors
+ *
+ * @see SkyAtmosphere
+ * @see Globe
+ * @see Fog
+ */
 function Atmosphere() {
   /**
    * The intensity of the light that is used for computing the ground atmosphere color.
