@@ -514,6 +514,15 @@ function Scene(options) {
    */
   this.cameraEventWaitTime = 500.0;
 
+  /**
+   * Settings for atmosphere lighting effects. This is not to be confused with
+   * {@link Scene#skyAtmosphere} which is responsible for rendering the sky.
+   * <p>
+   * Currently these settings only apply to 3D Tiles and models. In the future this will apply to the globe as well, see {@link https://github.com/CesiumGS/cesium/issues/11681|issue #11681}.
+   * </p>
+   *
+   * @type {Atmosphere}
+   */
   this.atmosphere = new Atmosphere();
 
   /**

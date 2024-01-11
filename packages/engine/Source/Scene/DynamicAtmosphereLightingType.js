@@ -7,8 +7,8 @@
  */
 const DynamicAtmosphereLightingType = {
   /**
-   * Do not use dynamic atmosphere lighting. Anything that uses atmosphere
-   * lighting will be lit from directly above the vertex/fragment
+   * Do not use dynamic atmosphere lighting. Atmosphere lighting effects will
+   * be lit from directly above rather than using the scene's light source.
    *
    * @type {number}
    * @constant
