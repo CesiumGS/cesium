@@ -52,7 +52,7 @@ describe(
       refine: "REPLACE",
       children: [],
       boundingVolume: {
-        region: [-1.2, -1.2, 0.0, 0.0, -30, -34],
+        region: [-1.2, -1.2, 0.0, 0.0, -34, -30],
       },
     };
 
@@ -131,8 +131,12 @@ describe(
     const centerLongitude = -1.31968;
     const centerLatitude = 0.698874;
 
-    function getTileTransform(longitude, latitude) {
-      const transformCenter = Cartesian3.fromRadians(longitude, latitude, 0.0);
+    function getTileTransform(longitude, latitude, height = 0.0) {
+      const transformCenter = Cartesian3.fromRadians(
+        longitude,
+        latitude,
+        height
+      );
       const hpr = new HeadingPitchRoll();
       const transformMatrix = Transforms.headingPitchRollToFixedFrame(
         transformCenter,
@@ -569,6 +573,166 @@ describe(
         const expectedHalfAxes = Matrix3.IDENTITY;
         expect(boundingBox.center).toEqual(expectedCenter);
         expect(boundingBox.halfAxes).toEqual(expectedHalfAxes);
+      });
+    });
+
+    describe("vertical exaggeration", function () {
+      let scene;
+      beforeEach(function () {
+        scene = createScene();
+        scene.frameState.passes.render = true;
+      });
+
+      afterEach(function () {
+        scene.destroyForSpecs();
+      });
+
+      it("applies vertical exaggeration to bounding box", function () {
+        const header = clone(tileWithContentBoundingBox, true);
+        header.transform = getTileTransform(0.0, 0.0, 100.0);
+        const tile = new Cesium3DTile(
+          mockTileset,
+          "/some_url",
+          header,
+          undefined
+        );
+        const boundingBox = tile.boundingVolume.boundingVolume;
+        const boundingVolumeCenter = Cartesian3.fromRadians(0.0, 0.0, 101.0);
+        expect(boundingBox.center).toEqualEpsilon(
+          boundingVolumeCenter,
+          CesiumMath.EPSILON7
+        );
+        const boundingVolumeHalfAxes = Matrix3.fromArray([
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          2.0,
+          0.0,
+          0.0,
+        ]);
+        expect(boundingBox.halfAxes).toEqualEpsilon(
+          boundingVolumeHalfAxes,
+          CesiumMath.EPSILON7
+        );
+
+        scene.verticalExaggeration = 2.0;
+        scene.updateFrameState();
+        tile.updateTransform(undefined, scene.frameState);
+
+        const exaggeratedCenter = Cartesian3.fromRadians(0.0, 0.0, 202.0);
+        expect(boundingBox.center).toEqualEpsilon(
+          exaggeratedCenter,
+          CesiumMath.EPSILON7
+        );
+        // Note orientation flip due to re-computing the box after exaggeration
+        const exaggeratedHalfAxes = Matrix3.fromArray([
+          4.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+        ]);
+        expect(boundingBox.halfAxes).toEqualEpsilon(
+          exaggeratedHalfAxes,
+          CesiumMath.EPSILON4
+        );
+      });
+
+      it("applies vertical exaggeration to bounding region", function () {
+        const tile = new Cesium3DTile(
+          mockTileset,
+          "/some_url",
+          tileWithBoundingRegion,
+          undefined
+        );
+        const tileBoundingRegion = tile.boundingVolume;
+        expect(tileBoundingRegion.minimumHeight).toEqualEpsilon(
+          -34.0,
+          CesiumMath.EPSILON7
+        );
+        expect(tileBoundingRegion.maximumHeight).toEqualEpsilon(
+          -30.0,
+          CesiumMath.EPSILON7
+        );
+        const rectangle = Rectangle.pack(
+          tileBoundingRegion.rectangle,
+          new Array(4)
+        );
+        expect(rectangle).toEqualEpsilon(
+          [-1.2, -1.2, 0.0, 0.0],
+          CesiumMath.EPSILON7
+        );
+
+        scene.verticalExaggeration = 2.0;
+        scene.verticalExaggerationRelativeHeight = -34.0;
+        scene.updateFrameState();
+        tile.updateTransform(undefined, scene.frameState);
+
+        expect(tileBoundingRegion.minimumHeight).toEqualEpsilon(
+          -34.0,
+          CesiumMath.EPSILON7
+        );
+        expect(tileBoundingRegion.maximumHeight).toEqualEpsilon(
+          -26.0,
+          CesiumMath.EPSILON7
+        );
+        const exaggeratedRectangle = Rectangle.pack(
+          tileBoundingRegion.rectangle,
+          new Array(4)
+        );
+        expect(exaggeratedRectangle).toEqualEpsilon(
+          [-1.2, -1.2, 0.0, 0.0],
+          CesiumMath.EPSILON7
+        );
+      });
+
+      it("applies vertical exaggeration to bounding sphere", function () {
+        const header = clone(tileWithBoundingSphere, true);
+        header.transform = getTileTransform(
+          centerLongitude,
+          centerLatitude,
+          100.0
+        );
+        const tile = new Cesium3DTile(
+          mockTileset,
+          "/some_url",
+          header,
+          undefined
+        );
+        const boundingSphere = tile.boundingVolume.boundingVolume;
+
+        const boundingVolumeCenter = Cartesian3.fromRadians(
+          centerLongitude,
+          centerLatitude,
+          100.0
+        );
+        expect(boundingSphere.center).toEqualEpsilon(
+          boundingVolumeCenter,
+          CesiumMath.EPSILON7
+        );
+        expect(boundingSphere.radius).toEqualEpsilon(5.0, CesiumMath.EPSILON7);
+
+        scene.verticalExaggeration = 2.0;
+        scene.updateFrameState();
+        tile.updateTransform(undefined, scene.frameState);
+
+        const exaggeratedCenter = Cartesian3.fromRadians(
+          centerLongitude,
+          centerLatitude,
+          200.0
+        );
+        expect(boundingSphere.center).toEqualEpsilon(
+          exaggeratedCenter,
+          CesiumMath.EPSILON7
+        );
+        expect(boundingSphere.radius).toEqualEpsilon(10.0, CesiumMath.EPSILON7);
       });
     });
 

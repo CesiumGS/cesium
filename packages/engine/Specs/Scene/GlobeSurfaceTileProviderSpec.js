@@ -12,6 +12,7 @@ import {
   GeographicProjection,
   HeadingPitchRoll,
   Rectangle,
+  Resource,
   WebMercatorProjection,
   ContextLimits,
   RenderState,
@@ -104,6 +105,8 @@ describe(
     afterEach(function () {
       scene.imageryLayers.removeAll();
       scene.primitives.removeAll();
+      Resource._Implementations.loadWithXhr =
+        Resource._DefaultImplementations.loadWithXhr;
     });
 
     it("conforms to QuadtreeTileProvider interface", function () {
@@ -902,8 +905,41 @@ describe(
       scene.imageryLayers.addImageryProvider(provider);
 
       const terrainCredit = new Credit("terrain credit");
+
+      // Mock terrain tile loading
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        if (defined(url.match(/\/\d+\/\d+\/\d+\.terrain/))) {
+          Resource._DefaultImplementations.loadWithXhr(
+            "Data/CesiumTerrainTileJson/tile.32bitIndices.terrain",
+            responseType,
+            method,
+            data,
+            headers,
+            deferred
+          );
+          return;
+        }
+
+        Resource._DefaultImplementations.loadWithXhr(
+          url,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        );
+      };
       scene.terrainProvider = await CesiumTerrainProvider.fromUrl(
-        "https://s3.amazonaws.com/cesiumjs/smallTerrain",
+        "Data/CesiumTerrainTileJson/QuantizedMesh.tile.json",
         {
           credit: terrainCredit,
         }
@@ -1388,6 +1424,64 @@ describe(
 
           scene.globe.terrainExaggeration = 1.0;
           scene.globe.terrainExaggerationRelativeHeight = 0.0;
+
+          return updateUntilDone(scene.globe).then(function () {
+            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+              tile
+            ) {
+              const surfaceTile = tile.data;
+              const encoding = surfaceTile.mesh.encoding;
+              const boundingSphere =
+                surfaceTile.tileBoundingRegion.boundingSphere;
+              expect(encoding.exaggeration).toEqual(1.0);
+              expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
+              expect(boundingSphere.radius).toBeLessThan(7000000.0);
+            });
+          });
+        });
+      });
+    });
+
+    it("Detects change in vertical exaggeration", function () {
+      switchViewMode(
+        SceneMode.SCENE3D,
+        new GeographicProjection(Ellipsoid.WGS84)
+      );
+      scene.camera.flyHome(0.0);
+
+      scene.verticalExaggeration = 1.0;
+      scene.verticalExaggerationRelativeHeight = 0.0;
+
+      return updateUntilDone(scene.globe).then(function () {
+        forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+          tile
+        ) {
+          const surfaceTile = tile.data;
+          const encoding = surfaceTile.mesh.encoding;
+          const boundingSphere = surfaceTile.tileBoundingRegion.boundingSphere;
+          expect(encoding.exaggeration).toEqual(1.0);
+          expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
+          expect(boundingSphere.radius).toBeLessThan(7000000.0);
+        });
+
+        scene.verticalExaggeration = 2.0;
+        scene.verticalExaggerationRelativeHeight = -1000000.0;
+
+        return updateUntilDone(scene.globe).then(function () {
+          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+            tile
+          ) {
+            const surfaceTile = tile.data;
+            const encoding = surfaceTile.mesh.encoding;
+            const boundingSphere =
+              surfaceTile.tileBoundingRegion.boundingSphere;
+            expect(encoding.exaggeration).toEqual(2.0);
+            expect(encoding.hasGeodeticSurfaceNormals).toEqual(true);
+            expect(boundingSphere.radius).toBeGreaterThan(7000000.0);
+          });
+
+          scene.verticalExaggeration = 1.0;
+          scene.verticalExaggerationRelativeHeight = 0.0;
 
           return updateUntilDone(scene.globe).then(function () {
             forEachRenderedTile(scene.globe._surface, 1, undefined, function (

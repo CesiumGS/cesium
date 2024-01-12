@@ -35,6 +35,8 @@ describe("Scene/ScreenSpaceCameraController", function () {
     this.canvas = canvas;
     this.camera = camera;
     this.globe = undefined;
+    this.verticalExaggeration = 1.0;
+    this.verticalExaggerationRelativeHeight = 0.0;
     this.mapProjection = new GeographicProjection(ellipsoid);
     this.screenSpaceCameraController = undefined;
     this.cameraUnderground = false;
@@ -58,9 +60,6 @@ describe("Scene/ScreenSpaceCameraController", function () {
         tilesWaitingForChildren: 0,
       },
     };
-
-    this.terrainExaggeration = 1.0;
-    this.terrainExaggerationRelativeHeight = 0.0;
 
     this.show = true;
   }

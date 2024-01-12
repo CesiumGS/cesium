@@ -6,7 +6,7 @@ import {
   Ellipsoid,
   Matrix4,
   TerrainEncoding,
-  TerrainExaggeration,
+  VerticalExaggeration,
   TerrainQuantization,
   Transforms,
 } from "../../index.js";
@@ -217,7 +217,7 @@ describe("Core/TerrainEncoding", function () {
 
     const exaggeration = 2.0;
     const exaggerationRelativeHeight = 10.0;
-    const exaggeratedHeight = TerrainExaggeration.getHeight(
+    const exaggeratedHeight = VerticalExaggeration.getHeight(
       height,
       exaggeration,
       exaggerationRelativeHeight

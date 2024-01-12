@@ -314,7 +314,11 @@ describe("Core/GoogleEarthEnterpriseTerrainProvider", function () {
       const promises = [];
       return pollToPromise(function () {
         let b = true;
-        for (let i = 0; i < 10; ++i) {
+        for (
+          let i = 0;
+          i < RequestScheduler.maximumRequestsPerServer + 2;
+          ++i
+        ) {
           b = b && terrainProvider.getTileDataAvailable(i, i, i);
         }
         return b && terrainProvider.getTileDataAvailable(1, 2, 3);

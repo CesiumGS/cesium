@@ -43,8 +43,8 @@ function createFrameState(context, camera, frameNumber, time) {
     camera.up
   );
 
-  frameState.terrainExaggeration = 1.0;
-  frameState.terrainExaggerationRelativeHeight = 0.0;
+  frameState.verticalExaggeration = 1.0;
+  frameState.verticalExaggerationRelativeHeight = 0.0;
 
   frameState.passes.render = true;
   frameState.passes.pick = false;
