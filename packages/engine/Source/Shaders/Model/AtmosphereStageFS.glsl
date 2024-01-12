@@ -159,7 +159,7 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
 
     float distanceToCamera = length(attributes.positionEC);
-    if (/*u_isInFog*/false) {
+    if (u_isInFog) {
         applyFog(color, groundAtmosphereColor, lightDirection, distanceToCamera);
     } else {
         applyGroundAtmosphere(color, groundAtmosphereColor, positionWC, lightDirection, /*attributes.normalEC, */distanceToCamera);
