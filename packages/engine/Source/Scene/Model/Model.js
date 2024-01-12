@@ -1997,11 +1997,13 @@ function updateSceneMode(model, frameState) {
 }
 
 function updateFog(model, frameState) {
+  /*
   const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
   if (fogRenderable !== model._fogRenderable) {
     model.resetDrawCommands();
     model._fogRenderable = fogRenderable;
   }
+  */
 }
 
 function updateVerticalExaggeration(model, frameState) {

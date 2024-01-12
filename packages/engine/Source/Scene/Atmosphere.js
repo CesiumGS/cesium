@@ -125,6 +125,11 @@ function Atmosphere() {
    * @default DynamicAtmosphereLightingType.OFF
    */
   this.dynamicLighting = DynamicAtmosphereLightingType.OFF;
+
+  this.lightingFadeOutDistance = 1.0e7;
+  this.lightingFadeInDistance = 2.0e7;
+  this.nightFadeInDistance = 5.0e7;
+  this.nightFadeOutDistance = 1.0e7;
 }
 
 Atmosphere.prototype.update = function (frameState) {
@@ -146,6 +151,11 @@ Atmosphere.prototype.update = function (frameState) {
   atmosphere.mieAnisotropy = this.mieAnisotropy;
 
   atmosphere.dynamicLighting = this.dynamicLighting;
+
+  atmosphere.lightingFadeDistance.x = this.lightingFadeOutDistance;
+  atmosphere.lightingFadeDistance.y = this.lightingFadeInDistance;
+  atmosphere.nightFadeDistance.x = this.nightFadeOutDistance;
+  atmosphere.nightFadeDistance.y = this.nightFadeInDistance;
 };
 
 export default Atmosphere;

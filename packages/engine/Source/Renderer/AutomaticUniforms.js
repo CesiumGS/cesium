@@ -1711,6 +1711,22 @@ const AutomaticUniforms = {
     },
   }),
 
+  czm_atmosphereLightingFadeDistance: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC2,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereLightingFadeDistance;
+    },
+  }),
+
+  czm_atmosphereNightFadeDistance: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT_VEC2,
+    getValue: function (uniformState) {
+      return uniformState.atmosphereNightFadeDistance;
+    },
+  }),
+
   /**
    * An automatic GLSL uniform representing the splitter position to use when rendering with a splitter.
    * This will be in pixel coordinates relative to the canvas.

@@ -172,6 +172,10 @@ function UniformState() {
   this._atmosphereMieAnisotropy = undefined;
   this._atmosphereDynamicLighting = undefined;
 
+  // (fadeOutDistance, fadeInDistance)
+  this._atmosphereLightingFadeDistance = new Cartesian2();
+  this._atmosphereNightFadeDistance = new Cartesian2();
+
   this._invertClassificationColor = undefined;
 
   this._splitPosition = 0.0;
@@ -1017,6 +1021,16 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereDynamicLighting;
     },
   },
+  atmosphereLightingFadeDistance: {
+    get: function () {
+      return this._atmosphereLightingFadeDistance;
+    },
+  },
+  atmosphereNightFadeDistance: {
+    get: function () {
+      return this._atmosphereNightFadeDistance;
+    },
+  },
 
   /**
    * A scalar that represents the geometric tolerance per meter
@@ -1535,6 +1549,9 @@ UniformState.prototype.update = function (frameState) {
   this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
   this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
   this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
+
+  this._atmosphereLightingFadeDistance = atmosphere.lightingFadeDistance;
+  this._atmosphereNightFadeDistance = atmosphere.nightFadeDistance;
 
   this._invertClassificationColor = frameState.invertClassificationColor;
 

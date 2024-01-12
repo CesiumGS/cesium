@@ -1,4 +1,5 @@
 import SceneMode from "./SceneMode.js";
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 
 /**
@@ -302,6 +303,9 @@ function FrameState(context, creditDisplay, jobScheduler) {
     mieScaleHeight: undefined,
     mieAnisotropy: undefined,
     dynamicLighting: undefined,
+
+    lightingFadeDistance: new Cartesian2(),
+    nightFadeDistance: new Cartesian2(),
   };
 
   /**

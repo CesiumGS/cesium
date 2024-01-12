@@ -63,40 +63,61 @@ void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirection,
     color = vec4(withFog, color.a);
 }
 
-void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, float cameraDist) {
-    // Apply ground atmosphere. This happens when the camera is far away from the earth.
+#line 1010000
 
-    float fadeInDist = u_nightFadeDistance.x;
-        float fadeOutDist = u_nightFadeDistance.y;
-    const fade = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+float fade(float x, vec2 range, vec2 clampRange) {
+    return clamp((x - range.y) / (range.y - range.x), clampRange.x, clampRange.y);
+}
+
+
+void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 positionWC, vec3 atmosphereLightDirection, /*vec3 normalEC,*/ float cameraDist) {
+    // Blend between constant lighting when the camera is near the earth
+    // and Lambert diffuse shading when the camera is further away.
+    float lightingFade = fade(cameraDist, czm_atmosphereLightingFadeDistance, vec2(0.0, 1.0));
+
+    // TODO: Would this work if there weren't normals?
+    float diffuseIntensity = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
+    //float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    diffuseIntensity = mix(1.0, diffuseIntensity, lightingFade);
+    vec4 diffuseColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
+
 
     // The transmittance is based on optical depth i.e. the length of segment of the ray inside the atmosphere.
     // This value is larger near the "circumference", as it is further away from the camera. We use it to
     // brighten up that area of the ground atmosphere.
     const float transmittanceModifier = 0.5;
     float transmittance = transmittanceModifier + clamp(1.0 - groundAtmosphereColor.a, 0.0, 1.0);
+    vec3 diffuseAndGroundAtmosphere = diffuseColor.rgb + groundAtmosphereColor.rgb * transmittance;
 
-    vec3 finalAtmosphereColor = color.rgb + groundAtmosphereColor.rgb * transmittance;
+    vec3 finalAtmosphereColor;
 
     // TODO: When are these defines set?
     //#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 
 
-        float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.05, 1.0);
-        float darken = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
-        vec3 darkenendGroundAtmosphereColor = mix(groundAtmosphereColor.rgb, finalAtmosphereColor.rgb, darken);
+    // Use a dot product (similar to Lambert shading) to create a mask that's positive on the
+    // daytime side of the globe and 0 on the nighttime side of the globe.
+    //
+    // Use this to select the diffuse + ground atmosphere on the daytime side of the globe,
+    // and just the ground atmosphere (which is much darker) on the nighttime side.
+    float dayNightMask = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
+    vec3 dayNightColor = mix(groundAtmosphereColor.rgb, diffuseAndGroundAtmosphere, dayNightMask);
 
-        finalAtmosphereColor = mix(darkenendGroundAtmosphereColor, finalAtmosphereColor, sunlitAtmosphereIntensity);
+    // Fade in the day/night color in as the camera height increases towards space.
+    float nightFade = fade(cameraDist, czm_atmosphereNightFadeDistance, vec2(0.05, 1.0));
+    finalAtmosphereColor = mix(diffuseAndGroundAtmosphere, dayNightColor, nightFade);
+
     //#endif
 
     #ifndef HDR
         const float fExposure = 2.0;
-        finalAtmosphereColor.rgb = vec3(1.0) - exp(-fExposure * finalAtmosphereColor.rgb);
+        finalAtmosphereColor = vec3(1.0) - exp(-fExposure * finalAtmosphereColor);
     #else
-        finalAtmosphereColor.rgb = czm_saturation(finalAtmosphereColor.rgb, 1.6);
+        finalAtmosphereColor = czm_saturation(finalAtmosphereColor, 1.6);
     #endif
 
-    color.rgb = mix(color.rgb, finalAtmosphereColor.rgb, fade);
+    color.rgb = mix(color.rgb, finalAtmosphereColor.rgb, lightingFade);
+    //color.rgb = finalAtmosphereColor.rgb;
 }
 
 void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
@@ -111,7 +132,7 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     // more accurate ground atmosphere. All other cases will use
     //
     // The if condition will be added in https://github.com/CesiumGS/cesium/issues/11717
-    if (u_usePerFragmentGroundAtmosphere) {
+    if (true) {
         positionWC = computeEllipsoidPositionWC(attributes.positionMC);
         lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC, czm_atmosphereDynamicLighting);
 
@@ -138,10 +159,9 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
 
     float distanceToCamera = length(attributes.positionEC);
-    if (u_isInFog) {
-
+    if (/*u_isInFog*/false) {
         applyFog(color, groundAtmosphereColor, lightDirection, distanceToCamera);
     } else {
-        applyGroundAtmosphere(color, groundAtmosphereColor, lightDirection, distanceToCamera);
+        applyGroundAtmosphere(color, groundAtmosphereColor, positionWC, lightDirection, /*attributes.normalEC, */distanceToCamera);
     }
 }

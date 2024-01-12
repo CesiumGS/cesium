@@ -607,7 +607,7 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
   modelPipelineStages.length = 0;
 
   const model = this._model;
-  const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
+  //const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
 
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
@@ -641,9 +641,9 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
     modelPipelineStages.push(TilesetPipelineStage);
   }
 
-  if (fogRenderable) {
-    modelPipelineStages.push(AtmospherePipelineStage);
-  }
+  //if (fogRenderable) {
+  modelPipelineStages.push(AtmospherePipelineStage);
+  //}
 };
 
 ModelSceneGraph.prototype.update = function (frameState, updateForAnimations) {
