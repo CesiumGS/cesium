@@ -3604,16 +3604,38 @@ function getGlobeHeight(scene) {
   const globe = scene._globe;
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
-  if (defined(globe) && globe.show && defined(cartographic)) {
-    return globe.getHeight(cartographic);
+
+  let maxHeight = Number.NEGATIVE_INFINITY;
+  const length = scene.primitives.length;
+  for (let i = 0; i < length; ++i) {
+    const primitive = scene.primitives.get(i);
+    if (!primitive.isCesium3DTileset || primitive.disableCollision) {
+      continue;
+    }
+
+    const result = primitive.getHeight(cartographic, scene);
+    if (defined(result) && result > maxHeight) {
+      maxHeight = result;
+    }
   }
+
+  if (defined(globe) && globe.show && defined(cartographic)) {
+    const result = globe.getHeight(cartographic);
+    if (result > maxHeight) {
+      maxHeight = result;
+    }
+  }
+
+  if (maxHeight > Number.NEGATIVE_INFINITY) {
+    return maxHeight;
+  }
+
   return undefined;
 }
 
 function isCameraUnderground(scene) {
   const camera = scene.camera;
   const mode = scene._mode;
-  const globe = scene.globe;
   const cameraController = scene._screenSpaceCameraController;
   const cartographic = camera.positionCartographic;
 
@@ -3627,12 +3649,7 @@ function isCameraUnderground(scene) {
     return true;
   }
 
-  if (
-    !defined(globe) ||
-    !globe.show ||
-    mode === SceneMode.SCENE2D ||
-    mode === SceneMode.MORPHING
-  ) {
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return false;
   }
 
