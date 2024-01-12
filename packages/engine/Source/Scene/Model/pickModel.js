@@ -21,13 +21,11 @@ import ModelUtility from "./ModelUtility.js";
 const scratchV0 = new Cartesian3();
 const scratchV1 = new Cartesian3();
 const scratchV2 = new Cartesian3();
-const scratchNormal = new Cartesian3();
 const scratchNodeComputedTransform = new Matrix4();
 const scratchModelMatrix = new Matrix4();
 const scratchcomputedModelMatrix = new Matrix4();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
-const scratchHeightCartographic = new Cartographic();
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
@@ -397,25 +395,13 @@ function getVertexPosition(
   result = Matrix4.multiplyByPoint(instanceTransform, result, result);
 
   if (verticalExaggeration !== 1.0) {
-    const geodeticSurfaceNormal = ellipsoid.geodeticSurfaceNormal(
+    VerticalExaggeration.getPosition(
       result,
-      scratchNormal
+      ellipsoid,
+      verticalExaggeration,
+      relativeHeight,
+      result
     );
-    const rawHeight = ellipsoid.cartesianToCartographic(
-      result,
-      scratchHeightCartographic
-    ).height;
-    const heightDifference =
-      VerticalExaggeration.getHeight(
-        rawHeight,
-        verticalExaggeration,
-        relativeHeight
-      ) - rawHeight;
-
-    // some math is unrolled for better performance
-    result.x += geodeticSurfaceNormal.x * heightDifference;
-    result.y += geodeticSurfaceNormal.y * heightDifference;
-    result.z += geodeticSurfaceNormal.z * heightDifference;
   }
 
   return result;

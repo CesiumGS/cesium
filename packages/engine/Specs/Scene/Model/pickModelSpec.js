@@ -294,7 +294,7 @@ describe("Scene/Model/pickModel", function () {
     expect(pickModel(model, ray, scene.frameState)).toBeUndefined();
   });
 
-  it("includes back faces results when model disbales backface culling", async function () {
+  it("includes back faces results when model disables backface culling", async function () {
     const model = await loadAndZoomToModelAsync(
       {
         url: boxBackFaceCullingUrl,
@@ -387,7 +387,7 @@ describe("Scene/Model/pickModel", function () {
       )
     );
 
-    const expected = new Cartesian3(-8197.676413311, 0, -8197.676413312);
+    const expected = new Cartesian3(-65.51341504, 0, -65.51341504);
     expect(
       pickModel(
         model,
