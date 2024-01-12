@@ -749,7 +749,7 @@ describe(
           `,
       });
 
-      const gltf = resource.fetchJson();
+      const gltf = await resource.fetchJson();
       await loadAndZoomToModelAsync(
         {
           gltf: gltf,
