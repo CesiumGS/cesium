@@ -719,7 +719,7 @@ describe(
       });
     });
 
-    it("transforms property textures with KHR_texture_transform", function () {
+    it("transforms property textures with KHR_texture_transform", async function () {
       const resource = Resource.createIfNeeded(
         propertyTextureWithTextureTransformUrl
       );
@@ -749,40 +749,38 @@ describe(
           `,
       });
 
-      return resource.fetchJson().then(function (gltf) {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: gltf,
-            basePath: propertyTextureWithTextureTransformUrl,
-            customShader: customShader,
-          },
-          scene
-        ).then(function (model) {
-          const renderOptions = {
-            scene: scene,
-            time: defaultDate,
-          };
-          // Move the camera to look at the point (0.1, 0.1) of
-          // the plane at a distance of 0.15. (Note that the axes
-          // are swapped, apparently - 'x' is the distance)
-          scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
-          scene.camera.direction = Cartesian3.negate(
-            Cartesian3.UNIT_X,
-            new Cartesian3()
-          );
-          scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-          scene.camera.frustum.near = 0.01;
-          scene.camera.frustum.far = 5.0;
+      const gltf = resource.fetchJson();
+      await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: propertyTextureWithTextureTransformUrl,
+          customShader: customShader,
+        },
+        scene
+      );
+      const renderOptions = {
+        scene: scene,
+        time: defaultDate,
+      };
+      // Move the camera to look at the point (0.1, 0.1) of
+      // the plane at a distance of 0.15. (Note that the axes
+      // are swapped, apparently - 'x' is the distance)
+      scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
+      scene.camera.direction = Cartesian3.negate(
+        Cartesian3.UNIT_X,
+        new Cartesian3()
+      );
+      scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+      scene.camera.frustum.near = 0.01;
+      scene.camera.frustum.far = 5.0;
 
-          // When the texture transform was applied, then the
-          // resulting pixels should be nearly black (or at
-          // least not red)
-          expect(renderOptions).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).toBeLessThan(50);
-            expect(rgba[1]).toBeLessThan(50);
-            expect(rgba[2]).toBeLessThan(50);
-          });
-        });
+      // When the texture transform was applied, then the
+      // resulting pixels should be nearly black (or at
+      // least not red)
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThan(50);
+        expect(rgba[1]).toBeLessThan(50);
+        expect(rgba[2]).toBeLessThan(50);
       });
     });
 
