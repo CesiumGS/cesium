@@ -73,6 +73,7 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     frameState.mode !== SceneMode.SCENE3D &&
     !frameState.scene3DOnly &&
     model._projectTo2D;
+  const keepTypedArray = model._enablePick && !frameState.context.webgl2;
 
   const instancingVertexAttributes = [];
 
@@ -81,7 +82,8 @@ InstancingPipelineStage.process = function (renderResources, node, frameState) {
     frameState,
     instances,
     instancingVertexAttributes,
-    use2D
+    use2D,
+    keepTypedArray
   );
 
   processFeatureIdAttributes(
@@ -697,7 +699,8 @@ function processTransformAttributes(
   frameState,
   instances,
   instancingVertexAttributes,
-  use2D
+  use2D,
+  keepTypedArray
 ) {
   const rotationAttribute = ModelUtility.getAttributeBySemantic(
     instances,
@@ -711,7 +714,8 @@ function processTransformAttributes(
       instances,
       instancingVertexAttributes,
       frameState,
-      use2D
+      use2D,
+      keepTypedArray
     );
   } else {
     processTransformVec3Attributes(
@@ -729,7 +733,8 @@ function processTransformMatrixAttributes(
   instances,
   instancingVertexAttributes,
   frameState,
-  use2D
+  use2D,
+  keepTypedArray
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const count = instances.attributes[0].count;
@@ -754,6 +759,10 @@ function processTransformMatrixAttributes(
     const transformsTypedArray = transformsToTypedArray(transforms);
     buffer = createVertexBuffer(transformsTypedArray, frameState);
     model._modelResources.push(buffer);
+
+    if (keepTypedArray) {
+      runtimeNode.transformsTypedArray = transformsTypedArray;
+    }
 
     runtimeNode.instancingTransformsBuffer = buffer;
   }
@@ -812,7 +821,8 @@ function processTransformVec3Attributes(
   instances,
   instancingVertexAttributes,
   frameState,
-  use2D
+  use2D,
+  keepTypedArray
 ) {
   const shaderBuilder = renderResources.shaderBuilder;
   const runtimeNode = renderResources.runtimeNode;
@@ -872,7 +882,7 @@ function processTransformVec3Attributes(
     attributeString
   );
 
-  if (!use2D) {
+  if (!use2D && !keepTypedArray) {
     return;
   }
 
@@ -898,12 +908,20 @@ function processTransformVec3Attributes(
     );
     const projectedTypedArray = translationsToTypedArray(projectedTranslations);
 
+    if (keepTypedArray) {
+      runtimeNode.transformsTypedArray = projectedTypedArray;
+    }
+
     // This memory is counted during the statistics stage at the end
     // of the pipeline.
     buffer2D = createVertexBuffer(projectedTypedArray, frameState);
     renderResources.model._modelResources.push(buffer2D);
 
     runtimeNode.instancingTranslationBuffer2D = buffer2D;
+  }
+
+  if (!use2D) {
+    return;
   }
 
   const byteOffset = 0;

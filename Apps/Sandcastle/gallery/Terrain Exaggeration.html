@@ -82,8 +82,8 @@
 
         const scene = viewer.scene;
         const globe = scene.globe;
-        globe.terrainExaggeration = 2.0;
-        globe.terrainExaggerationRelativeHeight = 2400.0;
+        scene.verticalExaggeration = 2.0;
+        scene.verticalExaggerationRelativeHeight = 2400.0;
 
         scene.camera.setView({
           destination: new Cesium.Cartesian3(
@@ -115,8 +115,8 @@
 
         function updateMaterial() {
           if (visualizeRelativeHeight) {
-            const height = globe.terrainExaggerationRelativeHeight;
-            const exaggeration = globe.terrainExaggeration;
+            const height = scene.verticalExaggerationRelativeHeight;
+            const exaggeration = scene.verticalExaggeration;
             const alpha = Math.min(1.0, exaggeration * 0.25);
             const layer = {
               extendUpwards: true,
@@ -155,13 +155,13 @@
         updateMaterial();
 
         const viewModel = {
-          exaggeration: globe.terrainExaggeration,
-          relativeHeight: globe.terrainExaggerationRelativeHeight,
+          exaggeration: scene.verticalExaggeration,
+          relativeHeight: scene.verticalExaggerationRelativeHeight,
         };
 
         function updateExaggeration() {
-          globe.terrainExaggeration = Number(viewModel.exaggeration);
-          globe.terrainExaggerationRelativeHeight = Number(
+          scene.verticalExaggeration = Number(viewModel.exaggeration);
+          scene.verticalExaggerationRelativeHeight = Number(
             viewModel.relativeHeight
           );
           updateMaterial();

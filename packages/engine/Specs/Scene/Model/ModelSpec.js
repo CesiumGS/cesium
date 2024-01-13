@@ -141,6 +141,7 @@ describe(
       scene.primitives.removeAll();
       scene2D.primitives.removeAll();
       sceneCV.primitives.removeAll();
+      scene.verticalExaggeration = 1.0;
       ResourceCache.clearForSpecs();
     });
 
@@ -2128,13 +2129,11 @@ describe(
           },
           imageryLayersUpdatedEvent: new Event(),
           destroy: function () {},
+          beginFrame: function () {},
+          endFrame: function () {},
+          terrainProviderChanged: new Event(),
         };
 
-        globe.beginFrame = function () {};
-
-        globe.endFrame = function () {};
-
-        globe.terrainProviderChanged = new Event();
         Object.defineProperties(globe, {
           terrainProvider: {
             set: function (value) {
@@ -3718,6 +3717,26 @@ describe(
       });
     });
 
+    it("resets draw commands when vertical exaggeration changes", function () {
+      return loadAndZoomToModelAsync(
+        {
+          gltf: boxTexturedGltfUrl,
+        },
+        scene
+      ).then(function (model) {
+        const resetDrawCommands = spyOn(
+          model,
+          "resetDrawCommands"
+        ).and.callThrough();
+        expect(model.ready).toBe(true);
+
+        scene.verticalExaggeration = 2.0;
+        scene.renderForSpecs();
+        expect(resetDrawCommands).toHaveBeenCalled();
+        scene.verticalExaggeration = 1.0;
+      });
+    });
+
     it("does not issue draw commands when ignoreCommands is true", function () {
       return loadAndZoomToModelAsync(
         {
@@ -4390,6 +4409,28 @@ describe(
           verifyRender(model, false);
         });
       });
+    });
+
+    it("pick returns position of intersection between ray and model surface", async function () {
+      const model = await loadAndZoomToModelAsync(
+        {
+          url: boxTexturedGltfUrl,
+          enablePick: !scene.frameState.context.webgl2,
+        },
+        scene
+      );
+      const ray = scene.camera.getPickRay(
+        new Cartesian2(
+          scene.drawingBufferWidth / 2.0,
+          scene.drawingBufferHeight / 2.0
+        )
+      );
+
+      const expected = new Cartesian3(0.5, 0, 0.5);
+      expect(model.pick(ray, scene.frameState)).toEqualEpsilon(
+        expected,
+        CesiumMath.EPSILON12
+      );
     });
 
     it("destroy works", function () {

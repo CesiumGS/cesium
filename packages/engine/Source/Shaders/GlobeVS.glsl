@@ -11,7 +11,7 @@ in vec3 geodeticSurfaceNormal;
 #endif
 
 #ifdef EXAGGERATION
-uniform vec2 u_terrainExaggerationAndRelativeHeight;
+uniform vec2 u_verticalExaggerationAndRelativeHeight;
 #endif
 
 uniform vec3 u_center3D;
@@ -128,7 +128,7 @@ void main()
     height = height * (u_minMaxHeight.y - u_minMaxHeight.x) + u_minMaxHeight.x;
     position = (u_scaleAndBias * vec4(position, 1.0)).xyz;
 
-#if (defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)) && defined(INCLUDE_WEB_MERCATOR_Y)
+#if (defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)) && defined(INCLUDE_WEB_MERCATOR_Y) || defined(APPLY_MATERIAL)
     float webMercatorT = czm_decompressTextureCoordinates(compressed0.w).x;
     float encodedNormal = compressed1;
 #elif defined(INCLUDE_WEB_MERCATOR_Y)
@@ -173,8 +173,8 @@ void main()
 #endif
 
 #if defined(EXAGGERATION) && defined(GEODETIC_SURFACE_NORMALS)
-    float exaggeration = u_terrainExaggerationAndRelativeHeight.x;
-    float relativeHeight = u_terrainExaggerationAndRelativeHeight.y;
+    float exaggeration = u_verticalExaggerationAndRelativeHeight.x;
+    float relativeHeight = u_verticalExaggerationAndRelativeHeight.y;
     float newHeight = (height - relativeHeight) * exaggeration + relativeHeight;
 
     // stop from going through center of earth

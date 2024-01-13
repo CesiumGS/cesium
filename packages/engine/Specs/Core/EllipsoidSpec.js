@@ -1,6 +1,11 @@
-import { Cartesian3, Cartographic, Ellipsoid, Rectangle } from "../../index.js";
-
-import { Math as CesiumMath } from "../../index.js";
+import {
+  Cartesian2,
+  Cartesian3,
+  Cartographic,
+  Ellipsoid,
+  Rectangle,
+  Math as CesiumMath,
+} from "../../index.js";
 
 import createPackableSpecs from "../../../../Specs/createPackableSpecs.js";
 
@@ -719,6 +724,44 @@ describe("Core/Ellipsoid", function () {
       cartographic,
       CesiumMath.EPSILON8
     );
+  });
+
+  it("getLocalCurvature throws with no position", function () {
+    expect(function () {
+      Ellipsoid.WGS84.getLocalCurvature(undefined);
+    }).toThrowDeveloperError();
+  });
+
+  it("getLocalCurvature returns expected values at the equator", function () {
+    const ellipsoid = Ellipsoid.WGS84;
+    const cartographic = Cartographic.fromDegrees(0.0, 0.0);
+    const cartesianOnTheSurface = ellipsoid.cartographicToCartesian(
+      cartographic
+    );
+    const returnedResult = ellipsoid.getLocalCurvature(cartesianOnTheSurface);
+    const expectedResult = new Cartesian2(
+      1.0 / ellipsoid.maximumRadius,
+      ellipsoid.maximumRadius /
+        (ellipsoid.minimumRadius * ellipsoid.minimumRadius)
+    );
+    expect(returnedResult).toEqualEpsilon(expectedResult, CesiumMath.EPSILON8);
+  });
+
+  it("getLocalCurvature returns expected values at the north pole", function () {
+    const ellipsoid = Ellipsoid.WGS84;
+    const cartographic = Cartographic.fromDegrees(0.0, 90.0);
+    const cartesianOnTheSurface = ellipsoid.cartographicToCartesian(
+      cartographic
+    );
+    const returnedResult = ellipsoid.getLocalCurvature(cartesianOnTheSurface);
+    const semiLatusRectum =
+      (ellipsoid.maximumRadius * ellipsoid.maximumRadius) /
+      ellipsoid.minimumRadius;
+    const expectedResult = new Cartesian2(
+      1.0 / semiLatusRectum,
+      1.0 / semiLatusRectum
+    );
+    expect(returnedResult).toEqualEpsilon(expectedResult, CesiumMath.EPSILON8);
   });
 
   it("ellipsoid is initialized with _squaredXOverSquaredZ property", function () {
