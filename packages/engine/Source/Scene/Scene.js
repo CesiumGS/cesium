@@ -1849,10 +1849,12 @@ function getOccluder(scene) {
 
 /**
  * @private
+ * @param {FrameState.Passes} passes
  */
 Scene.prototype.clearPasses = function (passes) {
   passes.render = false;
   passes.pick = false;
+  passes.pickVoxel = false;
   passes.depth = false;
   passes.postProcess = false;
   passes.offscreen = false;
@@ -2111,6 +2113,7 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
   const passes = frameState.passes;
   if (
     !passes.pick &&
+    !passes.pickVoxel &&
     !passes.depth &&
     scene._hdr &&
     defined(command.derivedCommands) &&
@@ -2289,7 +2292,7 @@ function executeCommands(scene, passState) {
   uniformState.updatePass(Pass.ENVIRONMENT);
 
   const passes = frameState.passes;
-  const picking = passes.pick;
+  const picking = passes.pick || passes.pickVoxel;
   const environmentState = scene._environmentState;
   const view = scene._view;
   const renderTranslucentDepthForPick =
@@ -3315,7 +3318,10 @@ function updateShadowMaps(scene) {
   const length = shadowMaps.length;
 
   const shadowsEnabled =
-    length > 0 && !frameState.passes.pick && scene.mode === SceneMode.SCENE3D;
+    length > 0 &&
+    !frameState.passes.pick &&
+    !frameState.passes.pickVoxel &&
+    scene.mode === SceneMode.SCENE3D;
   if (shadowsEnabled !== frameState.shadowState.shadowsEnabled) {
     // Update derived commands when shadowsEnabled changes
     ++frameState.shadowState.lastDirtyTime;
@@ -3379,7 +3385,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
   const view = scene._view;
 
   const passes = scene._frameState.passes;
-  const picking = passes.pick;
+  const picking = passes.pick || passes.pickVoxel;
   if (defined(view.globeDepth)) {
     view.globeDepth.picking = picking;
   }
@@ -3959,6 +3965,20 @@ Scene.prototype.clampLineWidth = function (width) {
  */
 Scene.prototype.pick = function (windowPosition, width, height) {
   return this._picking.pick(this, windowPosition, width, height);
+};
+
+/**
+ * Returns an object with information about the voxel sample rendered at
+ * a particular window coordinate. Returns <code>undefined</code> if there is no
+ * voxel at that position.
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {object} Object containing information about the voxel.
+ */
+Scene.prototype.pickVoxel = function (windowPosition, width, height) {
+  return this._picking.pickVoxel(this, windowPosition, width, height);
 };
 
 /**

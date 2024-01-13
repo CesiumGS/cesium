@@ -236,6 +236,19 @@ let scratchRectangle = new BoundingRectangle(
 const scratchPosition = new Cartesian2();
 const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 
+/**
+ * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
+ * at a particular window coordinate or undefined if nothing is at the location. Other properties may
+ * potentially be set depending on the type of primitive and may be used to further identify the picked object.
+ * <p>
+ * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
+ * </p>
+ * @param {Scene} scene
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {object} Object containing the picked primitive.
+ */
 Picking.prototype.pick = function (scene, windowPosition, width, height) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(windowPosition)) {
@@ -256,6 +269,9 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   viewport.width = context.drawingBufferWidth;
   viewport.height = context.drawingBufferHeight;
 
+  // TODO: Why do we change the defaultView passState?
+  // We don't use this passState. We get a new one from pickFramebuffer.begin.
+  // Is this just to update the passState attached to scene.view? Is that one used somewhere?
   let passState = defaultView.passState;
   passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
@@ -299,6 +315,82 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   const object = pickFramebuffer.end(scratchRectangle);
   context.endFrame();
   return object;
+};
+
+/**
+ * Returns an object with information about the voxel sample rendered at
+ * a particular window coordinate. Returns <code>undefined</code> if there is no
+ * voxel at that position.
+ *
+ * @param {Scene} scene
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {object} Object containing the picked primitive.
+ */
+Picking.prototype.pickVoxel = function (scene, windowPosition, width, height) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(windowPosition)) {
+    throw new DeveloperError("windowPosition is undefined.");
+  }
+  //>>includeEnd('debug');
+
+  scratchRectangleWidth = defaultValue(width, 3.0);
+  scratchRectangleHeight = defaultValue(height, scratchRectangleWidth);
+
+  const { context, frameState, defaultView } = scene;
+  const { viewport, pickFramebuffer } = defaultView;
+
+  scene.view = defaultView;
+
+  viewport.x = 0;
+  viewport.y = 0;
+  viewport.width = context.drawingBufferWidth;
+  viewport.height = context.drawingBufferHeight;
+
+  let passState = defaultView.passState;
+  passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
+
+  const drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(
+    scene,
+    windowPosition,
+    scratchPosition
+  );
+
+  scene.jobScheduler.disableThisFrame();
+
+  scene.updateFrameState();
+  frameState.cullingVolume = getPickCullingVolume(
+    scene,
+    drawingBufferPosition,
+    scratchRectangleWidth,
+    scratchRectangleHeight,
+    viewport
+  );
+  frameState.invertClassification = false;
+  frameState.passes.pickVoxel = true;
+  frameState.tilesetPassState = pickTilesetPassState;
+
+  context.uniformState.update(frameState);
+
+  scene.updateEnvironment();
+
+  scratchRectangle.x =
+    drawingBufferPosition.x - (scratchRectangleWidth - 1.0) * 0.5;
+  scratchRectangle.y =
+    scene.drawingBufferHeight -
+    drawingBufferPosition.y -
+    (scratchRectangleHeight - 1.0) * 0.5;
+  scratchRectangle.width = scratchRectangleWidth;
+  scratchRectangle.height = scratchRectangleHeight;
+  passState = pickFramebuffer.begin(scratchRectangle, viewport);
+
+  scene.updateAndExecuteCommands(passState, scratchColorZero);
+  scene.resolveFramebuffers(passState);
+
+  const voxelInfo = pickFramebuffer.readVoxelInfo(scratchRectangle);
+  context.endFrame();
+  return voxelInfo;
 };
 
 function renderTranslucentDepthForPick(scene, drawingBufferPosition) {

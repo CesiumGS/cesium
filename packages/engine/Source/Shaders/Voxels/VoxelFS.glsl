@@ -9,7 +9,11 @@
 // See Megatexture.glsl for the definition of accumulatePropertiesFromMegatexture
 
 #define STEP_COUNT_MAX 1000 // Harcoded value because GLSL doesn't like variable length loops
-#define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
+#if defined(PICKING_VOXEL)
+    #define ALPHA_ACCUM_MAX 0.1
+#else
+    #define ALPHA_ACCUM_MAX 0.98 // Must be > 0.0 and <= 1.0
+#endif
 
 uniform mat3 u_transformDirectionViewToLocal;
 uniform vec3 u_cameraPositionUv;
@@ -40,6 +44,19 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     float dimAtLevel = pow(2.0, float(sampleData.tileCoords.w));
     return vec4(viewRay.dir, u_stepSize / dimAtLevel);
 #endif
+}
+
+vec2 packIntToVec2(int value) {
+    float shifted = float(value) / 256.0;
+    float lowBits = fract(shifted);
+    float highBits = floor(shifted) / 256.0;
+    return vec2(highBits, lowBits);
+}
+
+vec2 packFloatToVec2(float value) {
+    float lowBits = fract(value);
+    float highBits = floor(value) / 256.0;
+    return vec2(highBits, lowBits);
 }
 
 void main()
@@ -164,6 +181,14 @@ void main()
             discard;
         }
         out_FragColor = u_pickColor;
+    #elif defined(PICKING_VOXEL)
+        // If alpha is 0.0 there is nothing to pick
+        if (colorAccum.a == 0.0) {
+            discard;
+        }
+        vec2 megatextureId = packIntToVec2(sampleDatas[0].megatextureIndex);
+        vec2 rayDistance = packFloatToVec2(currT);
+        out_FragColor = vec4(megatextureId, rayDistance);
     #else
         out_FragColor = colorAccum;
     #endif
