@@ -71,7 +71,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {boolean} [show] A boolean value indicating if the entity and its children are displayed.
  * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
  * @property {PositionProperty | Cartesian3} [position] A Property specifying the entity position.
- * @property {Property} [orientation] A Property specifying the entity orientation.
+ * @property {Property} [orientation=Transforms.eastNorthUpToFixedFrame(position)] A Property specifying the entity orientation in respect to Earth-fixed-Earth-centered (ECEF). If undefined, east-north-up at entity position is used.
  * @property {Property} [viewFrom] A suggested initial offset for viewing this object.
  * @property {Entity} [parent] A parent entity to associate with this entity.
  * @property {BillboardGraphics | BillboardGraphics.ConstructorOptions} [billboard] A billboard to associate with this entity.
@@ -413,7 +413,8 @@ Object.defineProperties(Entity.prototype, {
    */
   tileset: createPropertyTypeDescriptor("tileset", Cesium3DTilesetGraphics),
   /**
-   * Gets or sets the orientation.
+   * Gets or sets the orientation in respect to Earth-fixed-Earth-centered (ECEF).
+   * Defaults to east-north-up at entity position.
    * @memberof Entity.prototype
    * @type {Property|undefined}
    */

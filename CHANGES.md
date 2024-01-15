@@ -22,6 +22,7 @@
 - Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
 - Fixed a bug where `GregorianDate` constructor would not validate the input parameters for valid date. [#10075](https://github.com/CesiumGS/cesium/pull/10075)
 - Fixed improper scaling of ellipsoid inner radii in 3D mode. [#11656](https://github.com/CesiumGS/cesium/issues/11656) and [#10245](https://github.com/CesiumGS/cesium/issues/10245)
+- Fixed `Entity` documentation for `orientation` property. [#11762](https://github.com/CesiumGS/cesium/pull/11762)
 
 #### @cesium/widgets
 
