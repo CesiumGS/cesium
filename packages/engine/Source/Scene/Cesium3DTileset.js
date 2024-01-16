@@ -3648,7 +3648,7 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
   let intersection;
   for (let i = 0; i < length; ++i) {
     const tile = candidates[i];
-    const candidate = tile.content?.pick(
+    const candidate = tile.content.pick(
       ray,
       frameState,
       scratchPickIntersection

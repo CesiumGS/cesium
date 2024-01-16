@@ -80,6 +80,7 @@ Cesium3DTilesetTraversal.selectTile = function (tile, frameState) {
   }
 
   tile._wasSelectedLastFrame = true;
+
   const { content, tileset } = tile;
   if (content.featurePropertiesDirty) {
     // A feature's property in this tile changed, the tile needs to be re-styled.

@@ -2577,9 +2577,9 @@ describe(
       );
 
       const expected = new Cartesian3(
-        1215013.1035421258,
-        -4736313.911345668,
-        4081605.961099667
+        1215013.1035421563,
+        -4736313.911345786,
+        4081605.96109977
       );
       expect(tileset.pick(ray, scene.frameState)).toEqualEpsilon(
         expected,
