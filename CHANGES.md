@@ -21,6 +21,7 @@
 - Fixed a bug where the `Cesium3DTileset` constructor was ignoring the options `dynamicScreenSpaceError`, `dynamicScreenSpaceErrorDensity`, `dynamicScreenSpaceErrorFactor` and `dynamicScreenSpaceErrorHeightFalloff`. [#11677](https://github.com/CesiumGS/cesium/issues/11677)
 - Fix globe materials when lighting is false. Slope/Aspect material no longer rely on turning on lighting or shadows. [#11563](https://github.com/CesiumGS/cesium/issues/11563)
 - Fixed a bug where `GregorianDate` constructor would not validate the input parameters for valid date. [#10075](https://github.com/CesiumGS/cesium/pull/10075)
+- Fixed a bug where transforms that had been defined with the `KHR_texture_transform` extension had not been applied to Property Textures in `EXT_structural_metadata`. [#11708](https://github.com/CesiumGS/cesium/issues/11708)
 - Fixed improper scaling of ellipsoid inner radii in 3D mode. [#11656](https://github.com/CesiumGS/cesium/issues/11656) and [#10245](https://github.com/CesiumGS/cesium/issues/10245)
 - Fixed `Entity` documentation for `orientation` property. [#11762](https://github.com/CesiumGS/cesium/pull/11762)
 - Fixed an issue where `DataSource` objects incorrectly shared a single `PolylineCollection` in the `PolylineGeometryUpdater`. Updated `PolylineGeometryUpdater` to create a distinct `PolylineCollection` instance per `DataSource`. This resolves the crashes reported under [#7758](https://github.com/CesiumGS/cesium/issues/7758) and [#9154](https://github.com/CesiumGS/cesium/issues/9154).
