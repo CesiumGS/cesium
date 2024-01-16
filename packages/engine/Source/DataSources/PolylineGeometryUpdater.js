@@ -662,7 +662,8 @@ function getLine(dynamicGeometryUpdater) {
   }
 
   const primitives = dynamicGeometryUpdater._primitives;
-  const polylineCollectionId = dynamicGeometryUpdater._geometryUpdater._scene.id + primitives._guid;
+  const polylineCollectionId =
+    dynamicGeometryUpdater._geometryUpdater._scene.id + primitives._guid;
   let polylineCollection = polylineCollections[polylineCollectionId];
   if (!defined(polylineCollection) || polylineCollection.isDestroyed()) {
     polylineCollection = new PolylineCollection();
@@ -869,7 +870,8 @@ DynamicGeometryUpdater.prototype.isDestroyed = function () {
 
 DynamicGeometryUpdater.prototype.destroy = function () {
   const geometryUpdater = this._geometryUpdater;
-  const polylineCollectionId = geometryUpdater._scene.id + this._primitives._guid;
+  const polylineCollectionId =
+    geometryUpdater._scene.id + this._primitives._guid;
   const polylineCollection = polylineCollections[polylineCollectionId];
   if (defined(polylineCollection)) {
     polylineCollection.remove(this._line);
