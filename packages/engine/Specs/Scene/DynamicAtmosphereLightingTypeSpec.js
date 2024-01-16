@@ -13,19 +13,19 @@ describe("Scene/DynamicAtmosphereLightingType", function () {
     const globe = mockGlobe();
 
     expect(DynamicAtmosphereLightingType.fromGlobeFlags(globe)).toBe(
-      DynamicAtmosphereLightingType.OFF
+      DynamicAtmosphereLightingType.NONE
     );
 
     globe.enableLighting = true;
 
     expect(DynamicAtmosphereLightingType.fromGlobeFlags(globe)).toBe(
-      DynamicAtmosphereLightingType.OFF
+      DynamicAtmosphereLightingType.NONE
     );
 
     globe.enableLighting = false;
     globe.dynamicAtmosphereLighting = true;
     expect(DynamicAtmosphereLightingType.fromGlobeFlags(globe)).toBe(
-      DynamicAtmosphereLightingType.OFF
+      DynamicAtmosphereLightingType.NONE
     );
   });
 

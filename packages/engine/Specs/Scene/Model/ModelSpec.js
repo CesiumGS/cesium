@@ -4514,7 +4514,7 @@ describe(
         scene.camera.frustum.width = 1;
 
         // Grab the color when dynamic lighting is off for comparison
-        scene.atmosphere.dynamicLighting = DynamicAtmosphereLightingType.OFF;
+        scene.atmosphere.dynamicLighting = DynamicAtmosphereLightingType.NONE;
         const renderOptions = {
           scene,
           time: sunnyDate,
@@ -4576,7 +4576,7 @@ describe(
         viewFog(scene, model);
 
         // Grab the color when dynamic lighting is off for comparison
-        scene.atmosphere.dynamicLighting = DynamicAtmosphereLightingType.OFF;
+        scene.atmosphere.dynamicLighting = DynamicAtmosphereLightingType.NONE;
         const renderOptions = {
           scene,
           time: sunnyDate,
