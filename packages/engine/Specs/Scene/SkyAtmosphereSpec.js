@@ -85,7 +85,7 @@ describe(
 
     it("draws sky with dynamic lighting off", function () {
       const s = new SkyAtmosphere();
-      s.setDynamicLighting(DynamicAtmosphereLightingType.OFF);
+      s.setDynamicLighting(DynamicAtmosphereLightingType.NONE);
 
       expect(scene).toRender([0, 0, 0, 255]);
       scene.render();

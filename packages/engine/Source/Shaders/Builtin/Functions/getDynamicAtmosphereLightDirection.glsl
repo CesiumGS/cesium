@@ -10,12 +10,12 @@
  * @return {vec3} The normalized light direction vector. Depending on the enum value, it is either positionWC, czm_lightDirectionWC or czm_sunDirectionWC
  */
 vec3 czm_getDynamicAtmosphereLightDirection(vec3 positionWC, float lightEnum) {
-    const float OFF = 0.0;
+    const float NONE = 0.0;
     const float SCENE_LIGHT = 1.0;
     const float SUNLIGHT = 2.0;
 
     vec3 lightDirection =
-        positionWC * float(lightEnum == OFF) +
+        positionWC * float(lightEnum == NONE) +
         czm_lightDirectionWC * float(lightEnum == SCENE_LIGHT) +
         czm_sunDirectionWC * float(lightEnum == SUNLIGHT);
     return normalize(lightDirection);

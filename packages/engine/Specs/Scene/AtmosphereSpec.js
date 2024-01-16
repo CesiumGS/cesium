@@ -34,7 +34,7 @@ describe(
       expect(frameStateAtmosphere.mieScaleHeight).toEqual(3200.0);
       expect(frameStateAtmosphere.mieAnisotropy).toEqual(0.9);
       expect(frameStateAtmosphere.dynamicLighting).toEqual(
-        DynamicAtmosphereLightingType.OFF
+        DynamicAtmosphereLightingType.NONE
       );
 
       // Now change the settings, render again and check that
