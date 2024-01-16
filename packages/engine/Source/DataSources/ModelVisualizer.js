@@ -455,12 +455,6 @@ ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
       scratchCartographic
     );
 
-    // Regardless of what the original model's position is set to, when clamping we reset it to 0
-    // when computing the position to zoom/fly to.
-    if (isHeightReferenceClamp(model.heightReference)) {
-      cartoPosition.height = 0;
-    }
-
     const height = scene.getHeight(cartoPosition, model.heightReference);
     if (defined(height)) {
       if (isHeightReferenceClamp(model.heightReference)) {
