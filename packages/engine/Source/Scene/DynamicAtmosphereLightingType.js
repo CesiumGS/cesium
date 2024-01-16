@@ -13,7 +13,7 @@ const DynamicAtmosphereLightingType = {
    * @type {number}
    * @constant
    */
-  OFF: 0,
+  NONE: 0,
   /**
    * Use the scene's current light source for dynamic atmosphere lighting.
    *
@@ -42,7 +42,7 @@ const DynamicAtmosphereLightingType = {
 DynamicAtmosphereLightingType.fromGlobeFlags = function (globe) {
   const lightingOn = globe.enableLighting && globe.dynamicAtmosphereLighting;
   if (!lightingOn) {
-    return DynamicAtmosphereLightingType.OFF;
+    return DynamicAtmosphereLightingType.NONE;
   }
 
   // Force sunlight
