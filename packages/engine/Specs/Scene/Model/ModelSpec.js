@@ -757,6 +757,9 @@ describe(
           gltf: gltf,
           basePath: propertyTextureWithTextureTransformUrl,
           customShader: customShader,
+          // This is important to make sure that the property
+          // texture is fully loaded when the model is rendered!
+          incrementallyLoadTextures: false,
         },
         scene
       );
