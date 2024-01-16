@@ -1,3 +1,4 @@
+import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
@@ -692,6 +693,50 @@ Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function (
   }
 
   return result;
+};
+
+const scratchEndpoint = new Cartesian3();
+
+/**
+ * Computes the ellipsoid curvatures at a given position on the surface.
+ *
+ * @param {Cartesian3} surfacePosition The position on the ellipsoid surface where curvatures will be calculated.
+ * @param {Cartesian2} [result] The cartesian to which to copy the result, or undefined to create and return a new instance.
+ * @returns {Cartesian2} The local curvature of the ellipsoid surface at the provided position, in east and north directions.
+ *
+ * @exception {DeveloperError} position is required.
+ */
+Ellipsoid.prototype.getLocalCurvature = function (surfacePosition, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("surfacePosition", surfacePosition);
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Cartesian2();
+  }
+
+  const primeVerticalEndpoint = this.getSurfaceNormalIntersectionWithZAxis(
+    surfacePosition,
+    0.0,
+    scratchEndpoint
+  );
+  const primeVerticalRadius = Cartesian3.distance(
+    surfacePosition,
+    primeVerticalEndpoint
+  );
+  // meridional radius = (1 - e^2) * primeVerticalRadius^3 / a^2
+  // where 1 - e^2 = b^2 / a^2,
+  // so meridional = b^2 * primeVerticalRadius^3 / a^4
+  //   = (b * primeVerticalRadius / a^2)^2 * primeVertical
+  const radiusRatio =
+    (this.minimumRadius * primeVerticalRadius) / this.maximumRadius ** 2;
+  const meridionalRadius = primeVerticalRadius * radiusRatio ** 2;
+
+  return Cartesian2.fromElements(
+    1.0 / primeVerticalRadius,
+    1.0 / meridionalRadius,
+    result
+  );
 };
 
 const abscissas = [

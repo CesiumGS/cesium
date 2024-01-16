@@ -215,7 +215,8 @@ function createSplines(times, points, interpolation, path, count) {
   return splines;
 }
 
-let scratchVariable;
+const scratchCartesian3 = new Cartesian3();
+const scratchQuaternion = new Quaternion();
 
 function initialize(runtimeChannel) {
   const channel = runtimeChannel._channel;
@@ -236,19 +237,6 @@ function initialize(runtimeChannel) {
 
   runtimeChannel._splines = splines;
   runtimeChannel._path = path;
-
-  switch (path) {
-    case AnimatedPropertyType.TRANSLATION:
-    case AnimatedPropertyType.SCALE:
-      scratchVariable = new Cartesian3();
-      break;
-    case AnimatedPropertyType.ROTATION:
-      scratchVariable = new Quaternion();
-      break;
-    case AnimatedPropertyType.WEIGHTS:
-      // This is unused when setting a node's morph weights.
-      break;
-  }
 }
 
 /**
@@ -286,7 +274,20 @@ ModelAnimationChannel.prototype.animate = function (time) {
       : spline.wrapTime(time);
 
     // This sets the translate, rotate, and scale properties.
-    runtimeNode[path] = spline.evaluate(localAnimationTime, scratchVariable);
+    if (
+      path === AnimatedPropertyType.TRANSLATION ||
+      path === AnimatedPropertyType.SCALE
+    ) {
+      runtimeNode[path] = spline.evaluate(
+        localAnimationTime,
+        scratchCartesian3
+      );
+    } else if (path === AnimatedPropertyType.ROTATION) {
+      runtimeNode[path] = spline.evaluate(
+        localAnimationTime,
+        scratchQuaternion
+      );
+    }
   }
 };
 

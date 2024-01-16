@@ -13,10 +13,13 @@ import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
+import Interval from "../Core/Interval.js";
+import IntersectionTests from "../Core/IntersectionTests.js";
 import IonResource from "../Core/IonResource.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
 import CesiumMath from "../Core/Math.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -55,6 +58,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedTraversal.js";
 import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
+import Ray from "../Core/Ray.js";
 
 /**
  * @typedef {Object} Cesium3DTileset.ConstructorOptions
@@ -75,10 +79,10 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {boolean} [preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
  * @property {boolean} [preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
  * @property {boolean} [preferLeaves=false] Optimization option. Prefer loading of leaves first.
- * @property {boolean} [dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
- * @property {number} [dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
- * @property {number} [dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
- * @property {number} [dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
+ * @property {boolean} [dynamicScreenSpaceError=true] Optimization option. For street-level horizon views, use lower resolution tiles far from the camera. This reduces the amount of data loaded and improves tileset loading time with a slight drop in visual quality in the distance.
+ * @property {number} [dynamicScreenSpaceErrorDensity=2.0e-4] Similar to {@link Fog#density}, this option controls the camera distance at which the {@link Cesium3DTileset#dynamicScreenSpaceError} optimization applies. Larger values will cause tiles closer to the camera to be affected.
+ * @property {number} [dynamicScreenSpaceErrorFactor=24.0] A parameter that controls the intensity of the {@link Cesium3DTileset#dynamicScreenSpaceError} optimization for tiles on the horizon. Larger values cause lower resolution tiles to load, improving runtime performance at a slight reduction of visual quality.
+ * @property {number} [dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height that determines where "street level" camera views occur. When the camera is below this height, the {@link Cesium3DTileset#dynamicScreenSpaceError} optimization will have the maximum effect, and it will roll off above this value.
  * @property {number} [progressiveResolutionHeightFraction=0.3] Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
  * @property {boolean} [foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
  * @property {number} [foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.
@@ -109,11 +113,13 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @property {SplitDirection} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
- * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has loaded.
+ * @property {boolean} [disableCollision=false] Whether to turn off collisions for camera collisions or picking. While this is <code>true</code> the camera will be allowed to go in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
+ * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has been created.
+ * @property {boolean} [enablePick=false] Whether to allow collision and CPU picking with <code>pick</code> when using WebGL 1. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
  * @property {string} [debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @property {boolean} [debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
- * @property {boolean} [enableDebugWireframe] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has loaded.
+ * @property {boolean} [enableDebugWireframe=false] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has been created.
  * @property {boolean} [debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
  * @property {boolean} [debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @property {boolean} [debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
@@ -150,6 +156,18 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * }
  *
  * @example
+ * // Allow camera to go inside and under 3D tileset
+ * try {
+ *   const tileset = await Cesium.Cesium3DTileset.fromUrl(
+ *      "http://localhost:8002/tilesets/Seattle/tileset.json",
+ *      { disableCollision: true }
+ *   );
+ *   scene.primitives.add(tileset);
+ * } catch (error) {
+ *   console.error(`Error creating tileset: ${error}`);
+ * }
+ *
+ * @example
  * // Common setting for the skipLevelOfDetail optimization
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *   "http://localhost:8002/tilesets/Seattle/tileset.json", {
@@ -168,8 +186,8 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *   "http://localhost:8002/tilesets/Seattle/tileset.json", {
  *      dynamicScreenSpaceError: true,
- *      dynamicScreenSpaceErrorDensity: 0.00278,
- *      dynamicScreenSpaceErrorFactor: 4.0,
+ *      dynamicScreenSpaceErrorDensity: 2.0e-4,
+ *      dynamicScreenSpaceErrorFactor: 24.0,
  *      dynamicScreenSpaceErrorHeightFalloff: 0.25
  * });
  * scene.primitives.add(tileset);
@@ -365,18 +383,18 @@ function Cesium3DTileset(options) {
   this._pass = undefined; // Cesium3DTilePass
 
   /**
-   * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
-   * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
-   * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
-   * The algorithm is biased towards "street views" where the camera is close to the ground plane of the tileset and looking
-   * at the horizon. In addition results are more accurate for tightly fitting bounding volumes like box and region.
+   * Optimization option. For street-level horizon views, use lower resolution tiles far from the camera. This reduces
+   * the amount of data loaded and improves tileset loading time with a slight drop in visual quality in the distance.
+   * <p>
+   * This optimization is strongest when the camera is close to the ground plane of the tileset and looking at the
+   * horizon. Furthermore, the results are more accurate for tightly fitting bounding volumes like box and region.
    *
    * @type {boolean}
-   * @default false
+   * @default true
    */
   this.dynamicScreenSpaceError = defaultValue(
     options.dynamicScreenSpaceError,
-    false
+    true
   );
 
   /**
@@ -420,48 +438,68 @@ function Cesium3DTileset(options) {
   this.foveatedTimeDelay = defaultValue(options.foveatedTimeDelay, 0.2);
 
   /**
-   * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
-   * value has the effect of increasing the maximum screen space error for all tiles, but in a non-linear fashion.
-   * The error starts at 0.0 and increases exponentially until a midpoint is reached, and then approaches 1.0 asymptotically.
-   * This has the effect of keeping high detail in the closer tiles and lower detail in the further tiles, with all tiles
-   * beyond a certain distance all roughly having an error of 1.0.
+   * Similar to {@link Fog#density}, this option controls the camera distance at which the {@link Cesium3DTileset#dynamicScreenSpaceError}
+   * optimization applies. Larger values will cause tiles closer to the camera to be affected. This value must be
+   * non-negative.
    * <p>
-   * The dynamic error is in the range [0.0, 1.0) and is multiplied by <code>dynamicScreenSpaceErrorFactor</code> to produce the
-   * final dynamic error. This dynamic error is then subtracted from the tile's actual screen space error.
+   * This optimization works by rolling off the tile screen space error (SSE) with camera distance like a bell curve.
+   * This has the effect of selecting lower resolution tiles far from the camera. Near the camera, no adjustment is
+   * made. For tiles further away, the SSE is reduced by up to {@link Cesium3DTileset#dynamicScreenSpaceErrorFactor}
+   * (measured in pixels of error).
    * </p>
    * <p>
-   * Increasing <code>dynamicScreenSpaceErrorDensity</code> has the effect of moving the error midpoint closer to the camera.
-   * It is analogous to moving fog closer to the camera.
+   * Increasing the density makes the bell curve narrower so tiles closer to the camera are affected. This is analagous
+   * to moving fog closer to the camera.
+   * </p>
+   * <p>
+   * When the density is 0, the optimization will have no effect on the tileset.
    * </p>
    *
    * @type {number}
-   * @default 0.00278
+   * @default 2.0e-4
    */
-  this.dynamicScreenSpaceErrorDensity = 0.00278;
+  this.dynamicScreenSpaceErrorDensity = defaultValue(
+    options.dynamicScreenSpaceErrorDensity,
+    2.0e-4
+  );
 
   /**
-   * A factor used to increase the screen space error of tiles for dynamic screen space error. As this value increases less tiles
-   * are requested for rendering and tiles in the distance will have lower detail. If set to zero, the feature will be disabled.
+   * A parameter that controls the intensity of the {@link Cesium3DTileset#dynamicScreenSpaceError} optimization for
+   * tiles on the horizon. Larger values cause lower resolution tiles to load, improving runtime performance at a slight
+   * reduction of visual quality. The value must be non-negative.
+   * <p>
+   * More specifically, this parameter represents the maximum adjustment to screen space error (SSE) in pixels for tiles
+   * far away from the camera. See {@link Cesium3DTileset#dynamicScreenSpaceErrorDensity} for more details about how
+   * this optimization works.
+   * </p>
+   * <p>
+   * When the SSE factor is set to 0, the optimization will have no effect on the tileset.
+   * </p>
    *
    * @type {number}
-   * @default 4.0
+   * @default 24.0
    */
-  this.dynamicScreenSpaceErrorFactor = 4.0;
+  this.dynamicScreenSpaceErrorFactor = defaultValue(
+    options.dynamicScreenSpaceErrorFactor,
+    24.0
+  );
 
   /**
-   * A ratio of the tileset's height at which the density starts to falloff. If the camera is below this height the
-   * full computed density is applied, otherwise the density falls off. This has the effect of higher density at
-   * street level views.
+   * A ratio of the tileset's height that determines "street level" for the {@link Cesium3DTileset#dynamicScreenSpaceError}
+   * optimization. When the camera is below this height, the dynamic screen space error optimization will have the maximum
+   * effect, and it will roll off above this value. Valid values are between 0.0 and 1.0.
    * <p>
-   * Valid values are between 0.0 and 1.0.
-   * </p>
    *
    * @type {number}
    * @default 0.25
    */
-  this.dynamicScreenSpaceErrorHeightFalloff = 0.25;
+  this.dynamicScreenSpaceErrorHeightFalloff = defaultValue(
+    options.dynamicScreenSpaceErrorHeightFalloff,
+    0.25
+  );
 
-  this._dynamicScreenSpaceErrorComputedDensity = 0.0; // Updated based on the camera position and direction
+  // Updated based on the camera position and direction
+  this._dynamicScreenSpaceErrorComputedDensity = 0.0;
 
   /**
    * Determines whether the tileset casts or receives shadows from light sources.
@@ -826,7 +864,16 @@ function Cesium3DTileset(options) {
     SplitDirection.NONE
   );
 
+  /**
+   * Whether to turn off collisions for camera collisions or picking. While this is  <code>true</code> the camera will be allowed to go in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  this.disableCollision = defaultValue(options.disableCollision, false);
+
   this._projectTo2D = defaultValue(options.projectTo2D, false);
+  this._enablePick = defaultValue(options.enablePick, false);
 
   /**
    * This property is for debugging only; it is not optimized for production use.
@@ -1639,6 +1686,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *     <li>The glTF cannot contain morph targets, skins, or animations.</li>
    *     <li>The glTF cannot contain the <code>EXT_mesh_gpu_instancing</code> extension.</li>
    *     <li>Only meshes with TRIANGLES can be used to classify other assets.</li>
+   *     <li>The meshes must be watertight.</li>
    *     <li>The <code>POSITION</code> semantic is required.</li>
    *     <li>If <code>_BATCHID</code>s and an index buffer are both present, all indices with the same batch id must occupy contiguous sections of the index buffer.</li>
    *     <li>If <code>_BATCHID</code>s are present with no index buffer, all positions with the same batch id must occupy contiguous sections of the position buffer.</li>
@@ -1647,6 +1695,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * <p>
    * Additionally, classification is not supported for points or instanced 3D
    * models.
+   * </p>
+   * <p>
+   * The 3D Tiles or terrain receiving the classification must be opaque.
    * </p>
    *
    * @memberof Cesium3DTileset.prototype
@@ -2008,8 +2059,8 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *   "http://localhost:8002/tilesets/Seattle/tileset.json", {
  *      dynamicScreenSpaceError: true,
- *      dynamicScreenSpaceErrorDensity: 0.00278,
- *      dynamicScreenSpaceErrorFactor: 4.0,
+ *      dynamicScreenSpaceErrorDensity: 2.0e-4,
+ *      dynamicScreenSpaceErrorFactor: 24.0,
  *      dynamicScreenSpaceErrorHeightFalloff: 0.25
  * });
  * scene.primitives.add(tileset);
@@ -2306,6 +2357,7 @@ const scratchMatrix = new Matrix4();
 const scratchCenter = new Cartesian3();
 const scratchPosition = new Cartesian3();
 const scratchDirection = new Cartesian3();
+const scratchHalfHeight = new Cartesian3();
 
 /**
  * @private
@@ -2370,10 +2422,16 @@ function updateDynamicScreenSpaceError(tileset, frameState) {
       direction = Cartesian3.normalize(direction, direction);
       height = positionLocal.z;
       if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
-        // Assuming z-up, the last component stores the half-height of the box
-        const boxHeight = root._header.boundingVolume.box[11];
-        minimumHeight = centerLocal.z - boxHeight;
-        maximumHeight = centerLocal.z + boxHeight;
+        // Assuming z-up, the last column is the local z direction and
+        // represents the height of the bounding box.
+        const halfHeightVector = Matrix3.getColumn(
+          boundingVolume.halfAxes,
+          2,
+          scratchHalfHeight
+        );
+        const halfHeight = Cartesian3.magnitude(halfHeightVector);
+        minimumHeight = centerLocal.z - halfHeight;
+        maximumHeight = centerLocal.z + halfHeight;
       } else if (tileBoundingVolume instanceof TileBoundingSphere) {
         const radius = boundingVolume.radius;
         minimumHeight = centerLocal.z - radius;
@@ -3417,6 +3475,117 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
       );
     }
   }
+};
+
+const scratchGetHeightRay = new Ray();
+const scratchIntersection = new Cartesian3();
+const scratchGetHeightCartographic = new Cartographic();
+
+/**
+ * Get the height of the loaded surface at a given cartographic. This function will only take into account meshes for loaded tiles, not neccisarily the most detailed tiles available for a tileset. This function will always return undefined when sampling a point cloud.
+ *
+ * @param {Cartographic} cartographic The cartographic for which to find the height.
+ * @param {Scene} scene The scene where visualization is taking place.
+ * @returns {number|undefined} The height of the cartographic or undefined if it could not be found.
+ *
+ * @example
+ * const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(124624234);
+ * scene.primitives.add(tileset);
+ *
+ * const height = tileset.getHeight(scene.camera.positionCartographic, scene);
+ */
+Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartographic", cartographic);
+  Check.typeOf.object("scene", scene);
+  //>>includeEnd('debug');
+
+  let ellipsoid = scene.globe?.ellipsoid;
+  if (!defined(ellipsoid)) {
+    ellipsoid = Ellipsoid.WGS84;
+  }
+
+  const ray = scratchGetHeightRay;
+  const position = ellipsoid.cartographicToCartesian(
+    cartographic,
+    ray.direction
+  );
+
+  ray.direction = Cartesian3.normalize(position, ray.direction);
+  ray.direction = Cartesian3.negate(position, ray.direction);
+  ray.origin = Cartesian3.multiplyByScalar(
+    ray.direction,
+    -2 * ellipsoid.maximumRadius,
+    ray.origin
+  );
+
+  const intersection = this.pick(ray, scene.frameState, scratchIntersection);
+  if (!defined(intersection)) {
+    return;
+  }
+
+  return ellipsoid.cartesianToCartographic(
+    intersection,
+    scratchGetHeightCartographic
+  )?.height;
+};
+
+const scratchSphereIntersection = new Interval();
+const scratchPickIntersection = new Cartesian3();
+
+/**
+ * Find an intersection between a ray and the tileset surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
+  if (!frameState.context.webgl2 && !this._enablePick) {
+    return;
+  }
+
+  const selectedTiles = this._selectedTiles;
+  const selectedLength = selectedTiles.length;
+
+  let intersection;
+  let minDistance = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < selectedLength; ++i) {
+    const tile = selectedTiles[i];
+    const boundsIntersection = IntersectionTests.raySphere(
+      ray,
+      tile.boundingSphere,
+      scratchSphereIntersection
+    );
+    if (!defined(boundsIntersection)) {
+      continue;
+    }
+
+    const candidate = tile.content?.pick(
+      ray,
+      frameState,
+      scratchPickIntersection
+    );
+
+    if (!defined(candidate)) {
+      continue;
+    }
+
+    const distance = Cartesian3.distance(ray.origin, candidate);
+    if (distance < minDistance) {
+      intersection = Cartesian3.clone(candidate, result);
+      minDistance = distance;
+    }
+  }
+
+  if (!defined(intersection)) {
+    return undefined;
+  }
+
+  return intersection;
 };
 
 /**

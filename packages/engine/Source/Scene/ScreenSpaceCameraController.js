@@ -17,7 +17,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import Plane from "../Core/Plane.js";
 import Quaternion from "../Core/Quaternion.js";
 import Ray from "../Core/Ray.js";
-import TerrainExaggeration from "../Core/TerrainExaggeration.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import Transforms from "../Core/Transforms.js";
 import CameraEventAggregator from "./CameraEventAggregator.js";
 import CameraEventType from "./CameraEventType.js";
@@ -2861,16 +2861,12 @@ function adjustHeightForTerrain(controller) {
   const mode = scene.mode;
   const globe = scene.globe;
 
-  if (
-    !defined(globe) ||
-    mode === SceneMode.SCENE2D ||
-    mode === SceneMode.MORPHING
-  ) {
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return;
   }
 
   const camera = scene.camera;
-  const ellipsoid = globe.ellipsoid;
+  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
   const projection = scene.mapProjection;
 
   let transform;
@@ -2948,9 +2944,7 @@ const scratchPreviousDirection = new Cartesian3();
  */
 ScreenSpaceCameraController.prototype.update = function () {
   const scene = this._scene;
-  const camera = scene.camera;
-  const globe = scene.globe;
-  const mode = scene.mode;
+  const { camera, globe, mode } = scene;
 
   if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
     this._globe = undefined;
@@ -2962,26 +2956,21 @@ ScreenSpaceCameraController.prototype.update = function () {
       : scene.mapProjection.ellipsoid;
   }
 
-  const exaggeration = defined(this._globe)
-    ? this._globe.terrainExaggeration
-    : 1.0;
-  const exaggerationRelativeHeight = defined(this._globe)
-    ? this._globe.terrainExaggerationRelativeHeight
-    : 0.0;
-  this._minimumCollisionTerrainHeight = TerrainExaggeration.getHeight(
+  const { verticalExaggeration, verticalExaggerationRelativeHeight } = scene;
+  this._minimumCollisionTerrainHeight = VerticalExaggeration.getHeight(
     this.minimumCollisionTerrainHeight,
-    exaggeration,
-    exaggerationRelativeHeight
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight
   );
-  this._minimumPickingTerrainHeight = TerrainExaggeration.getHeight(
+  this._minimumPickingTerrainHeight = VerticalExaggeration.getHeight(
     this.minimumPickingTerrainHeight,
-    exaggeration,
-    exaggerationRelativeHeight
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight
   );
-  this._minimumTrackBallHeight = TerrainExaggeration.getHeight(
+  this._minimumTrackBallHeight = VerticalExaggeration.getHeight(
     this.minimumTrackBallHeight,
-    exaggeration,
-    exaggerationRelativeHeight
+    verticalExaggeration,
+    verticalExaggerationRelativeHeight
   );
 
   this._cameraUnderground = scene.cameraUnderground && defined(this._globe);

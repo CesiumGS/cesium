@@ -1,7 +1,7 @@
 name: main
 on: 
   workflow_run:
-    workflows: [dev]
+    workflows: [dev, prod]
     types: [completed]
     branches: 
       - main
