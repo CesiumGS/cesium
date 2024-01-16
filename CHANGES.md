@@ -10,6 +10,7 @@
   - This behavior can be disabled by setting `Cesium3DTileset.disableCollision` to true.
   - This feature is enabled by default only for WebGL 2 and above, but can be enabled for WebGL 1 by setting the `enablePick` option to true when creating the `Cesium3DTileset`.
 - Clamping to ground, `HeightReference.CLAMP_TO_GROUND`, and `HeightReference.RELATIVE_TO_GROUND` now take into account 3D Tilesets. These opions will clamp to either 3D Tilesets or Terrain, whichever has a greater height. [#11604](https://github.com/CesiumGS/cesium/pull/11604)
+  - To restore previous behavior where an entity is clamped only to terrain or relative only to terrain, set `heightReference` to `HeightReference.CLAMP_TO_TERRAIN` or `HeightReference.RELATIVE_TO_TERRAIN` respectively.
 
 ##### Additions :tada:
 
