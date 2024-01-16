@@ -69,16 +69,30 @@ float fade(float x, vec2 range, vec2 clampRange) {
     return clamp((x - range.y) / (range.y - range.x), clampRange.x, clampRange.y);
 }
 
+float getCameraHeight() {
+    if (czm_sceneMode == czm_sceneMode2D) {
+        return max(czm_frustumPlanes.x - czm_frustumPlanes.y, czm_frustumPlanes.w - czm_frustumPlanes.z) * 0.5;
+    } else if (czm_sceneMode == czm_sceneModeColumbusView) {
+        return -czm_view[3].z;
+    }
 
-void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 positionWC, vec3 atmosphereLightDirection, /*vec3 normalEC,*/ float cameraDist) {
+    return length(czm_view[3]);
+}
+
+void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 positionWC, vec3 atmosphereLightDirection /*vec3 normalEC,*/) {
+    float cameraHeight = getCameraHeight();
+
+    // TODO: subtract the maximum radius of the earth from the fade distance when in 2D mode.
+
     // Blend between constant lighting when the camera is near the earth
     // and Lambert diffuse shading when the camera is further away.
-    float lightingFade = fade(cameraDist, czm_atmosphereLightingFadeDistance, vec2(0.0, 1.0));
+    float lightingFade = fade(cameraHeight, czm_atmosphereLightingFadeDistance, vec2(0.0, 1.0));
 
     // TODO: Would this work if there weren't normals?
     float diffuseIntensity = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
     //float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, lightingFade);
+    //diffuseIntensity = 1.0;
     vec4 diffuseColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 
 
@@ -104,7 +118,7 @@ void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 po
     vec3 dayNightColor = mix(groundAtmosphereColor.rgb, diffuseAndGroundAtmosphere, dayNightMask);
 
     // Fade in the day/night color in as the camera height increases towards space.
-    float nightFade = fade(cameraDist, czm_atmosphereNightFadeDistance, vec2(0.05, 1.0));
+    float nightFade = fade(cameraHeight, czm_atmosphereNightFadeDistance, vec2(0.05, 1.0));
     finalAtmosphereColor = mix(diffuseAndGroundAtmosphere, dayNightColor, nightFade);
 
     //#endif
@@ -118,6 +132,7 @@ void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 po
 
     color.rgb = mix(color.rgb, finalAtmosphereColor.rgb, lightingFade);
     //color.rgb = finalAtmosphereColor.rgb;
+    //color.rgb = diffuseColor.rgb;
 }
 
 void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
@@ -162,6 +177,6 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     if (u_isInFog) {
         applyFog(color, groundAtmosphereColor, lightDirection, distanceToCamera);
     } else {
-        applyGroundAtmosphere(color, groundAtmosphereColor, positionWC, lightDirection, /*attributes.normalEC, */distanceToCamera);
+        applyGroundAtmosphere(color, groundAtmosphereColor, positionWC, lightDirection/*, attributes.normalEC*/);
     }
 }
