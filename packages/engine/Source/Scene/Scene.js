@@ -3676,7 +3676,7 @@ function getGlobeHeight(scene) {
 }
 
 /**
- * Gets the height of the loaded surface ar the cartographic position.
+ * Gets the height of the loaded surface at the cartographic position.
  * @param {Cartographic} cartographic The cartographic position.
  * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
  * @private
