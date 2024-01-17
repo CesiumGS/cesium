@@ -459,7 +459,7 @@ function Model(options) {
   this._projectTo2D = defaultValue(options.projectTo2D, false);
   this._enablePick = defaultValue(options.enablePick, false);
 
-  this._fogRenderable = undefined;
+  this._atmosphereEffectsEnabled = undefined;
 
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
@@ -1800,7 +1800,7 @@ Model.prototype.update = function (frameState) {
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
-  updateFog(this, frameState);
+  updateAtmosphereEffects(this, frameState);
   updateVerticalExaggeration(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
@@ -1996,14 +1996,16 @@ function updateSceneMode(model, frameState) {
   }
 }
 
-function updateFog(model, frameState) {
-  /*
+function updateAtmosphereEffects(model, frameState) {
+  // The AtmospherePipelineStage handles both fog and ground atmosphere.
+  // It is enabled when at least one of these two features is enabled.
   const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
-  if (fogRenderable !== model._fogRenderable) {
+  const showGroundAtmosphere = frameState.atmosphere.showGroundAtmosphere;
+  const atmosphereEffectsEnabled = fogRenderable || showGroundAtmosphere;
+  if (atmosphereEffectsEnabled !== model._atmosphereEffectsEnabled) {
     model.resetDrawCommands();
-    model._fogRenderable = fogRenderable;
+    model._atmosphereEffectsEnabled = atmosphereEffectsEnabled;
   }
-  */
 }
 
 function updateVerticalExaggeration(model, frameState) {

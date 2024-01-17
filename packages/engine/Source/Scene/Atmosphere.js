@@ -115,7 +115,7 @@ function Atmosphere() {
   this.brightnessShift = 0.0;
 
   /**
-   * When not DynamicAtmosphereLightingType.NONE, the selected light source will
+   * When not {@link DynamicAtmosphereLightingType.NONE}, the selected light source will
    * be used for dynamically lighting all atmosphere-related rendering effects.
    *
    * @type {DynamicAtmosphereLightingType}
@@ -127,6 +127,18 @@ function Atmosphere() {
   this.lightingFadeInDistance = 2.0e7;
   this.nightFadeInDistance = 5.0e7;
   this.nightFadeOutDistance = 1.0e7;
+
+  /**
+   * Enable the ground atmosphere for 3D Tiles and models. The ground atmosphere
+   * is drawn over the globe when viewed from a distance between
+   * <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
+   * The ground atmosphere makes the globe's surface appear brighter near the
+   * edges when viewed from space.
+   *
+   * @type {boolean}
+   * @default true
+   */
+  this.showGroundAtmosphere = true;
 }
 
 Atmosphere.prototype.update = function (frameState) {
@@ -153,6 +165,8 @@ Atmosphere.prototype.update = function (frameState) {
   atmosphere.lightingFadeDistance.y = this.lightingFadeInDistance;
   atmosphere.nightFadeDistance.x = this.nightFadeOutDistance;
   atmosphere.nightFadeDistance.y = this.nightFadeInDistance;
+
+  atmosphere.showGroundAtmosphere = this.showGroundAtmosphere;
 };
 
 export default Atmosphere;

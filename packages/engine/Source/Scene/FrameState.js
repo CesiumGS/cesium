@@ -306,6 +306,8 @@ function FrameState(context, creditDisplay, jobScheduler) {
 
     lightingFadeDistance: new Cartesian2(),
     nightFadeDistance: new Cartesian2(),
+
+    showGroundAtmosphere: undefined,
   };
 
   /**
