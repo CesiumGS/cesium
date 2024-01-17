@@ -108,7 +108,6 @@ void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 po
     // TODO: When are these defines set?
     //#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 
-
     // Use a dot product (similar to Lambert shading) to create a mask that's positive on the
     // daytime side of the globe and 0 on the nighttime side of the globe.
     //
@@ -136,6 +135,10 @@ void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 po
 }
 
 void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
+    if (czm_backFacing()) {
+        color.rgb = vec3(1.0, 0.0, 1.0);
+        return;
+    }
     vec3 rayleighColor;
     vec3 mieColor;
     float opacity;
@@ -147,7 +150,7 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     // more accurate ground atmosphere. All other cases will use
     //
     // The if condition will be added in https://github.com/CesiumGS/cesium/issues/11717
-    if (true) {
+    if (u_perFragmentGroundAtmosphere) {
         positionWC = computeEllipsoidPositionWC(attributes.positionMC);
         lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC, czm_atmosphereDynamicLighting);
 

@@ -43,6 +43,11 @@ AtmospherePipelineStage.process = function (
   // the camera is moving, this is implemented as a uniform, not a define.
   shaderBuilder.addUniform("bool", "u_isInFog", ShaderDestination.FRAGMENT);
   renderResources.uniformMap.u_isInFog = function () {
+    const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
+    if (!fogRenderable) {
+      return false;
+    }
+
     // We only need a rough measure of distance to the model, so measure
     // from the camera to the bounding sphere center.
     const distance = Cartesian3.distance(
@@ -53,6 +58,13 @@ AtmospherePipelineStage.process = function (
     return (
       CesiumMath.fog(distance, frameState.fog.density) > CesiumMath.EPSILON3
     );
+  };
+
+  shaderBuilder.addUniform("bool", "u_perFragmentGroundAtmosphere");
+  renderResources.uniformMap.u_perFragmentGroundAtmosphere = function () {
+    const cameraDistance = Cartesian3.magnitude(frameState.camera.positionWC);
+    const nightFadeOutDistance = frameState.atmosphere.nightFadeDistance.x;
+    return cameraDistance > nightFadeOutDistance;
   };
 };
 
