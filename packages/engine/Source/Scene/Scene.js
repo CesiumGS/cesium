@@ -533,6 +533,7 @@ function Scene(options) {
   });
 
   /**
+   * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally and
    * unclassified 3D Tile geometry will render with the color multiplied by {@link Scene#invertClassificationColor}.
    * @type {boolean}
    * @default false
@@ -541,6 +542,7 @@ function Scene(options) {
 
   /**
    * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
+   * <p>When the color's alpha is less than 1.0, the unclassified portions of the 3D Tiles will not blend correctly with the classified positions of the 3D Tiles.</p>
    * <p>Also, when the color's alpha is less than 1.0, the WEBGL_depth_texture and EXT_frag_depth WebGL extensions must be supported.</p>
    * @type {Color}
    * @default Color.WHITE
@@ -2466,6 +2468,9 @@ function executeCommands(scene, passState) {
       picking ||
       environmentState.renderTranslucentDepthForPick
     ) {
+      // Common/fastest path. Draw 3D Tiles and classification normally.
+
+      // Draw 3D Tiles
       us.updatePass(Pass.CESIUM_3D_TILE);
       commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
       length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -2486,6 +2491,7 @@ function executeCommands(scene, passState) {
           );
         }
 
+        // Draw classifications. Modifies 3D Tiles color.
         if (!environmentState.renderTranslucentDepthForPick) {
           us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
           commands =
@@ -2502,6 +2508,7 @@ function executeCommands(scene, passState) {
       //    Invert classification FBO (FBO2) : Invert_Color + Main_DepthStencil
       //
       //    1. Clear FBO2 color to vec4(0.0) for each frustum
+      //    2. Draw 3D Tiles to FBO2
       //    3. Draw classification to FBO2
       //    4. Fullscreen pass to FBO1, draw Invert_Color when:
       //           * Main_DepthStencil has the stencil bit set > 0 (classified)
@@ -2515,6 +2522,7 @@ function executeCommands(scene, passState) {
       //    IsClassified FBO (FBO3):          IsClassified_Color + Invert_DepthStencil
       //
       //    1. Clear FBO2 and FBO3 color to vec4(0.0), stencil to 0, and depth to 1.0
+      //    2. Draw 3D Tiles to FBO2
       //    3. Draw classification to FBO2
       //    4. Fullscreen pass to FBO3, draw any color when
       //           * Invert_DepthStencil has the stencil bit set > 0 (classified)
@@ -2630,6 +2638,7 @@ function executeCommands(scene, passState) {
       invertClassification
     );
 
+    // Classification for translucent 3D Tiles
     const has3DTilesClassificationCommands =
       frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
     if (
@@ -4080,6 +4089,7 @@ Scene.prototype.clampLineWidth = function (width) {
  * at a particular window coordinate or undefined if nothing is at the location. Other properties may
  * potentially be set depending on the type of primitive and may be used to further identify the picked object.
  * <p>
+ * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
  * </p>
  *
  * @example
@@ -4211,12 +4221,14 @@ function updateRequestRenderModeDeferCheckPass(scene) {
  * property that contains the intersected primitive. Other properties may be set depending on the type of primitive
  * and may be used to further identify the picked object. The ray must be given in world coordinates.
  * <p>
+ * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
  * primitives regardless of their visibility.
  * </p>
  *
  * @private
  *
  * @param {Ray} ray The ray.
+ * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {object} An object containing the object and position of the first intersection.
  *
@@ -4233,6 +4245,7 @@ Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
  * The primitives in the list are ordered by first intersection to last intersection. The ray must be given in
  * world coordinates.
  * <p>
+ * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
  * primitives regardless of their visibility.
  * </p>
  *
@@ -4240,6 +4253,7 @@ Scene.prototype.pickFromRay = function (ray, objectsToExclude, width) {
  *
  * @param {Ray} ray The ray.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
+ * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Object[]} List of objects containing the object and position of each intersection.
  *
@@ -4267,6 +4281,7 @@ Scene.prototype.drillPickFromRay = function (
  * @private
  *
  * @param {Ray} ray The ray.
+ * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<object>} A promise that resolves to an object containing the object and position of the first intersection.
  *
@@ -4293,6 +4308,7 @@ Scene.prototype.pickFromRayMostDetailed = function (
  *
  * @param {Ray} ray The ray.
  * @param {number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
+ * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
  *
@@ -4316,11 +4332,14 @@ Scene.prototype.drillPickFromRayMostDetailed = function (
 /**
  * Returns the height of scene geometry at the given cartographic position or <code>undefined</code> if there was no
  * scene geometry to sample height from. The height of the input position is ignored. May be used to clamp objects to
+ * the globe, 3D Tiles, or primitives in the scene.
  * <p>
+ * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. Samples height
  * from all other primitives regardless of their visibility.
  * </p>
  *
  * @param {Cartographic} position The cartographic position to sample height from.
+ * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {number} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
  *
@@ -4343,11 +4362,14 @@ Scene.prototype.sampleHeight = function (position, objectsToExclude, width) {
 /**
  * Clamps the given cartesian position to the scene geometry along the geodetic surface normal. Returns the
  * clamped position or <code>undefined</code> if there was no scene geometry to clamp to. May be used to clamp
+ * objects to the globe, 3D Tiles, or primitives in the scene.
  * <p>
+ * This function only clamps to globe tiles and 3D Tiles that are rendered in the current view. Clamps to
  * all other primitives regardless of their visibility.
  * </p>
  *
  * @param {Cartesian3} cartesian The cartesian position.
+ * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @param {Cartesian3} [result] An optional object to return the clamped position.
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
@@ -4387,6 +4409,7 @@ Scene.prototype.clampToHeight = function (
  * the height is set to undefined.
  *
  * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
+ * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Cartographic[]>} A promise that resolves to the provided list of positions when the query has completed.
  *
@@ -4426,6 +4449,7 @@ Scene.prototype.sampleHeightMostDetailed = function (
  * can be sampled at that location, or another error occurs, the element in the array is set to undefined.
  *
  * @param {Cartesian3[]} cartesians The cartesian positions to update with clamped positions.
+ * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
  * @param {number} [width=0.1] Width of the intersection volume in meters.
  * @returns {Promise<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
  *
