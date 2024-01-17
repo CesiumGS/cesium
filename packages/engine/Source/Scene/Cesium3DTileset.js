@@ -3546,7 +3546,7 @@ Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
 
 /**
  * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
- * is the cartesian position on the tile.
+ * is the cartographic position on the tile.
  *
  * @private
  *
