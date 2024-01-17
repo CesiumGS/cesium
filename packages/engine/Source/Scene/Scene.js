@@ -3602,6 +3602,10 @@ function callAfterRenderFunctions(scene) {
 }
 
 function getGlobeHeight(scene) {
+  if (scene.mode === SceneMode.MORPHING) {
+    return;
+  }
+
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
   return scene.getHeight(cartographic);
