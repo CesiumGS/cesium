@@ -1518,8 +1518,10 @@ UniformState.prototype.update = function (frameState) {
 
   const atmosphere = frameState.atmosphere;
 
-  this._atmosphereHsbShift = Cartesian3.clone(
-    atmosphere.hsbShift,
+  this._atmosphereHsbShift = Cartesian3.fromElements(
+    atmosphere.hueShift,
+    atmosphere.saturationShift,
+    atmosphere.brightnessShift,
     this._atmosphereHsbShift
   );
   this._atmosphereLightIntensity = atmosphere.lightIntensity;
