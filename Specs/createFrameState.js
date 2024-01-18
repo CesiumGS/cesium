@@ -1,4 +1,5 @@
 import {
+  Atmosphere,
   defaultValue,
   GeographicProjection,
   JulianDate,
@@ -50,6 +51,8 @@ function createFrameState(context, camera, frameNumber, time) {
   frameState.passes.pick = false;
 
   frameState.minimumDisableDepthTestDistance = 0.0;
+
+  frameState.atmosphere = new Atmosphere();
 
   return frameState;
 }

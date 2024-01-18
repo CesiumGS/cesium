@@ -1,19 +1,10 @@
-uniform vec3 u_radiiAndDynamicAtmosphereColor;
-
-uniform float u_atmosphereLightIntensity;
-uniform float u_atmosphereRayleighScaleHeight;
-uniform float u_atmosphereMieScaleHeight;
-uniform float u_atmosphereMieAnisotropy;
-uniform vec3 u_atmosphereRayleighCoefficient;
-uniform vec3 u_atmosphereMieCoefficient;
-
-const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in meters.
-const int PRIMARY_STEPS_MAX = 16; // Maximum number of times the ray from the camera to the world position (primary ray) is sampled.
-const int LIGHT_STEPS_MAX = 4; // Maximum number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
-
 /**
  * This function computes the colors contributed by Rayliegh and Mie scattering on a given ray, as well as
- * the transmittance value for the ray.
+ * the transmittance value for the ray. This function uses automatic uniforms
+ * so the atmosphere settings are always synced with the current scene.
+ *
+ * @name czm_computeScattering
+ * @glslfunction
  *
  * @param {czm_ray} primaryRay The ray from the camera to the position.
  * @param {float} primaryRayLength The length of the primary ray.
@@ -21,9 +12,8 @@ const int LIGHT_STEPS_MAX = 4; // Maximum number of times the light is sampled f
  * @param {vec3} rayleighColor The variable the Rayleigh scattering will be written to.
  * @param {vec3} mieColor The variable the Mie scattering will be written to.
  * @param {float} opacity The variable the transmittance will be written to.
- * @glslFunction
  */
-void computeScattering(
+void czm_computeScattering(
     czm_ray primaryRay,
     float primaryRayLength,
     vec3 lightDirection,
@@ -32,6 +22,9 @@ void computeScattering(
     out vec3 mieColor,
     out float opacity
 ) {
+    const float ATMOSPHERE_THICKNESS = 111e3; // The thickness of the atmosphere in meters.
+    const int PRIMARY_STEPS_MAX = 16; // Maximum number of times the ray from the camera to the world position (primary ray) is sampled.
+    const int LIGHT_STEPS_MAX = 4; // Maximum number of times the light is sampled from the light source's intersection with the atmosphere to a sample position on the primary ray.
 
     // Initialize the default scattering amounts to 0.
     rayleighColor = vec3(0.0);
@@ -47,6 +40,7 @@ void computeScattering(
 
     // Return empty colors if no intersection with the atmosphere geometry.
     if (primaryRayAtmosphereIntersect == czm_emptyRaySegment) {
+        rayleighColor = vec3(1.0, 0.0, 1.0);
         return;
     }
 
@@ -84,7 +78,7 @@ void computeScattering(
     vec3 rayleighAccumulation = vec3(0.0);
     vec3 mieAccumulation = vec3(0.0);
     vec2 opticalDepth = vec2(0.0);
-    vec2 heightScale = vec2(u_atmosphereRayleighScaleHeight, u_atmosphereMieScaleHeight);
+    vec2 heightScale = vec2(czm_atmosphereRayleighScaleHeight, czm_atmosphereMieScaleHeight);
 
     // Sample positions on the primary ray.
     for (int i = 0; i < PRIMARY_STEPS_MAX; ++i) {
@@ -137,7 +131,7 @@ void computeScattering(
         }
 
         // Compute attenuation via the primary ray and the light ray.
-        vec3 attenuation = exp(-((u_atmosphereMieCoefficient * (opticalDepth.y + lightOpticalDepth.y)) + (u_atmosphereRayleighCoefficient * (opticalDepth.x + lightOpticalDepth.x))));
+        vec3 attenuation = exp(-((czm_atmosphereMieCoefficient * (opticalDepth.y + lightOpticalDepth.y)) + (czm_atmosphereRayleighCoefficient * (opticalDepth.x + lightOpticalDepth.x))));
 
         // Accumulate the scattering.
         rayleighAccumulation += sampleDensity.x * attenuation;
@@ -148,40 +142,9 @@ void computeScattering(
     }
 
     // Compute the scattering amount.
-    rayleighColor = u_atmosphereRayleighCoefficient * rayleighAccumulation;
-    mieColor = u_atmosphereMieCoefficient * mieAccumulation;
+    rayleighColor = czm_atmosphereRayleighCoefficient * rayleighAccumulation;
+    mieColor = czm_atmosphereMieCoefficient * mieAccumulation;
 
     // Compute the transmittance i.e. how much light is passing through the atmosphere.
-    opacity = length(exp(-((u_atmosphereMieCoefficient * opticalDepth.y) + (u_atmosphereRayleighCoefficient * opticalDepth.x))));
-}
-
-vec4 computeAtmosphereColor(
-    vec3 positionWC,
-    vec3 lightDirection,
-    vec3 rayleighColor,
-    vec3 mieColor,
-    float opacity
-) {
-    // Setup the primary ray: from the camera position to the vertex position.
-    vec3 cameraToPositionWC = positionWC - czm_viewerPositionWC;
-    vec3 cameraToPositionWCDirection = normalize(cameraToPositionWC);
-
-    float cosAngle = dot(cameraToPositionWCDirection, lightDirection);
-    float cosAngleSq = cosAngle * cosAngle;
-
-    float G = u_atmosphereMieAnisotropy;
-    float GSq = G * G;
-
-    // The Rayleigh phase function.
-    float rayleighPhase = 3.0 / (50.2654824574) * (1.0 + cosAngleSq);
-    // The Mie phase function.
-    float miePhase = 3.0 / (25.1327412287) * ((1.0 - GSq) * (cosAngleSq + 1.0)) / (pow(1.0 + GSq - 2.0 * cosAngle * G, 1.5) * (2.0 + GSq));
-
-    // The final color is generated by combining the effects of the Rayleigh and Mie scattering.
-    vec3 rayleigh = rayleighPhase * rayleighColor;
-    vec3 mie = miePhase * mieColor;
-
-    vec3 color = (rayleigh + mie) * u_atmosphereLightIntensity;
-
-    return vec4(color, opacity);
+    opacity = length(exp(-((czm_atmosphereMieCoefficient * opticalDepth.y) + (czm_atmosphereRayleighCoefficient * opticalDepth.x))));
 }
