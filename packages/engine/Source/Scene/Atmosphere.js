@@ -124,25 +124,4 @@ function Atmosphere() {
   this.dynamicLighting = DynamicAtmosphereLightingType.NONE;
 }
 
-Atmosphere.prototype.update = function (frameState) {
-  const atmosphere = frameState.atmosphere;
-  atmosphere.hsbShift.x = this.hueShift;
-  atmosphere.hsbShift.y = this.saturationShift;
-  atmosphere.hsbShift.z = this.brightnessShift;
-  atmosphere.lightIntensity = this.lightIntensity;
-  atmosphere.rayleighCoefficient = Cartesian3.clone(
-    this.rayleighCoefficient,
-    atmosphere.rayleighCoefficient
-  );
-  atmosphere.rayleighScaleHeight = this.rayleighScaleHeight;
-  atmosphere.mieCoefficient = Cartesian3.clone(
-    this.mieCoefficient,
-    atmosphere.mieCoefficient
-  );
-  atmosphere.mieScaleHeight = this.mieScaleHeight;
-  atmosphere.mieAnisotropy = this.mieAnisotropy;
-
-  atmosphere.dynamicLighting = this.dynamicLighting;
-};
-
 export default Atmosphere;

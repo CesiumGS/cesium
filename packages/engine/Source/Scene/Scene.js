@@ -3770,7 +3770,7 @@ function render(scene) {
   }
   frameState.backgroundColor = backgroundColor;
 
-  scene.atmosphere.update(frameState);
+  frameState.atmosphere = scene.atmosphere;
   scene.fog.update(frameState);
 
   us.update(frameState);
