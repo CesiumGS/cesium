@@ -26,6 +26,7 @@
 - Fixed `Entity` documentation for `orientation` property. [#11762](https://github.com/CesiumGS/cesium/pull/11762)
 - Fixed an issue where `DataSource` objects incorrectly shared a single `PolylineCollection` in the `PolylineGeometryUpdater`. Updated `PolylineGeometryUpdater` to create a distinct `PolylineCollection` instance per `DataSource`. This resolves the crashes reported under [#7758](https://github.com/CesiumGS/cesium/issues/7758) and [#9154](https://github.com/CesiumGS/cesium/issues/9154).
 - Fixed a bug where transforms that had been defined with the `KHR_texture_transform` extension had not been applied to Feature ID Textures in `EXT_mesh_features`. [#11731](https://github.com/CesiumGS/cesium/issues/11731)
+- Updated heading docs to correctly reference east-based origin [#11523](https://github.com/CesiumGS/cesium/issues/11523)
 
 #### @cesium/widgets
 
