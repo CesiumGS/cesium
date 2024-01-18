@@ -1711,6 +1711,13 @@ const AutomaticUniforms = {
     },
   }),
 
+  /**
+   * An automatic uniform representing the range of camera distances used for
+   * fading in ground atmosphere lighting.
+   *
+   * @example
+   * uniform vec2 czm_atmosphereLightingFadeRange
+   */
   czm_atmosphereLightingFadeRange: new AutomaticUniform({
     size: 1,
     datatype: WebGLConstants.FLOAT_VEC2,
@@ -1719,6 +1726,13 @@ const AutomaticUniforms = {
     },
   }),
 
+  /**
+   * An automatic uniform representing the range of camera distances used for
+   * fading in night time shading.
+   *
+   * @example
+   * uniform vec2 czm_atmosphereNightFadeRange
+   */
   czm_atmosphereNightFadeRange: new AutomaticUniform({
     size: 1,
     datatype: WebGLConstants.FLOAT_VEC2,

@@ -67,7 +67,7 @@ void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirectionW
 #line 1010000
 
 float fade(float x, vec2 range, vec2 outputRange) {
-    return clamp((x - range.y) / (range.y - range.x), outputRange.x, outputRange.y);
+    return clamp((x - range.x) / (range.y - range.x), outputRange.x, outputRange.y);
 }
 
 float getCameraHeight() {
