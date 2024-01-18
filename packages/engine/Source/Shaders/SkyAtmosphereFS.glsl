@@ -43,7 +43,7 @@ void main (void)
     #endif
 
     #ifdef COLOR_CORRECT
-        const float ignoreBlackPixels = true;
+        const bool ignoreBlackPixels = true;
         color.rgb = czm_applyHSBShift(color.rgb, u_hsbShift, ignoreBlackPixels);
     #endif
 
