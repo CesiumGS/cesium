@@ -171,8 +171,9 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     }
 
     //color correct rayleigh and mie colors
-    rayleighColor = czm_applyHSBShift(rayleighColor, czm_atmosphereHsbShift);
-    mieColor = czm_applyHSBShift(mieColor, czm_atmosphereHsbShift);
+    const bool ignoreBlackPixels = true;
+    rayleighColor = czm_applyHSBShift(rayleighColor, czm_atmosphereHsbShift, ignoreBlackPixels);
+    mieColor = czm_applyHSBShift(mieColor, czm_atmosphereHsbShift, ignoreBlackPixels);
 
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
 

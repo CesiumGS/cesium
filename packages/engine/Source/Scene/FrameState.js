@@ -1,6 +1,4 @@
 import SceneMode from "./SceneMode.js";
-import Cartesian2 from "../Core/Cartesian2.js";
-import Cartesian3 from "../Core/Cartesian3.js";
 
 /**
  * State information about the current frame.  An instance of this class
@@ -279,36 +277,10 @@ function FrameState(context, creditDisplay, jobScheduler) {
   };
 
   /**
-   * @typedef FrameState.Atmosphere
-   * @type {object}
-   * @property {Cartesian3} hsbShift A color shift to apply to the atmosphere color in HSB.
-   * @property {number} lightIntensity The intensity of the light that is used for computing the atmosphere color
-   * @property {Cartesian3} rayleighCoefficient The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
-   * @property {number} rayleighScaleHeight The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
-   * @property {Cartesian3} mieCoefficient The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
-   * @property {number} mieScaleHeight The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
-   * @property {number} mieAnisotropy The anisotropy of the medium to consider for Mie scattering.
-   * @property {DynamicAtmosphereLightingType} dynamicLighting An enum value determining what light source to use for dynamic lighting the atmosphere (if enabled)
+   * The current Atmosphere
+   * @type {Atmosphere}
    */
-
-  /**
-   * @type {FrameState.Atmosphere}
-   */
-  this.atmosphere = {
-    hsbShift: new Cartesian3(),
-    lightIntensity: undefined,
-    rayleighCoefficient: new Cartesian3(),
-    rayleighScaleHeight: undefined,
-    mieCoefficient: new Cartesian3(),
-    mieScaleHeight: undefined,
-    mieAnisotropy: undefined,
-    dynamicLighting: undefined,
-
-    lightingFadeDistance: new Cartesian2(),
-    nightFadeDistance: new Cartesian2(),
-
-    showGroundAtmosphere: undefined,
-  };
+  this.atmosphere = undefined;
 
   /**
    * A scalar used to vertically exaggerate the scene

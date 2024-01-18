@@ -43,7 +43,8 @@ void main (void)
     #endif
 
     #ifdef COLOR_CORRECT
-        color.rgb = czm_applyHSBShift(color.rgb, u_hsbShift);
+        const bool ignoreBlackPixels = true;
+        color.rgb = czm_applyHSBShift(color.rgb, u_hsbShift, ignoreBlackPixels);
     #endif
 
     // For the parts of the sky atmosphere that are not behind a translucent globe,

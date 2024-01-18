@@ -1531,24 +1531,27 @@ UniformState.prototype.update = function (frameState) {
   this._fogMinimumBrightness = frameState.fog.minimumBrightness;
 
   const atmosphere = frameState.atmosphere;
-
-  this._atmosphereHsbShift = Cartesian3.clone(
-    atmosphere.hsbShift,
-    this._atmosphereHsbShift
-  );
-  this._atmosphereLightIntensity = atmosphere.lightIntensity;
-  this._atmosphereRayleighCoefficient = Cartesian3.clone(
-    atmosphere.rayleighCoefficient,
-    this._atmosphereRayleighCoefficient
-  );
-  this._atmosphereRayleighScaleHeight = atmosphere.rayleighScaleHeight;
-  this._atmosphereMieCoefficient = Cartesian3.clone(
-    atmosphere.mieCoefficient,
-    this._atmosphereMieCoefficient
-  );
-  this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
-  this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
-  this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
+  if (defined(atmosphere)) {
+    this._atmosphereHsbShift = Cartesian3.fromElements(
+      atmosphere.hueShift,
+      atmosphere.saturationShift,
+      atmosphere.brightnessShift,
+      this._atmosphereHsbShift
+    );
+    this._atmosphereLightIntensity = atmosphere.lightIntensity;
+    this._atmosphereRayleighCoefficient = Cartesian3.clone(
+      atmosphere.rayleighCoefficient,
+      this._atmosphereRayleighCoefficient
+    );
+    this._atmosphereRayleighScaleHeight = atmosphere.rayleighScaleHeight;
+    this._atmosphereMieCoefficient = Cartesian3.clone(
+      atmosphere.mieCoefficient,
+      this._atmosphereMieCoefficient
+    );
+    this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
+    this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
+    this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
+  }
 
   this._atmosphereLightingFadeDistance = atmosphere.lightingFadeDistance;
   this._atmosphereNightFadeDistance = atmosphere.nightFadeDistance;

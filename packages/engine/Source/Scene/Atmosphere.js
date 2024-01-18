@@ -141,32 +141,4 @@ function Atmosphere() {
   this.showGroundAtmosphere = true;
 }
 
-Atmosphere.prototype.update = function (frameState) {
-  const atmosphere = frameState.atmosphere;
-  atmosphere.hsbShift.x = this.hueShift;
-  atmosphere.hsbShift.y = this.saturationShift;
-  atmosphere.hsbShift.z = this.brightnessShift;
-  atmosphere.lightIntensity = this.lightIntensity;
-  atmosphere.rayleighCoefficient = Cartesian3.clone(
-    this.rayleighCoefficient,
-    atmosphere.rayleighCoefficient
-  );
-  atmosphere.rayleighScaleHeight = this.rayleighScaleHeight;
-  atmosphere.mieCoefficient = Cartesian3.clone(
-    this.mieCoefficient,
-    atmosphere.mieCoefficient
-  );
-  atmosphere.mieScaleHeight = this.mieScaleHeight;
-  atmosphere.mieAnisotropy = this.mieAnisotropy;
-
-  atmosphere.dynamicLighting = this.dynamicLighting;
-
-  atmosphere.lightingFadeDistance.x = this.lightingFadeOutDistance;
-  atmosphere.lightingFadeDistance.y = this.lightingFadeInDistance;
-  atmosphere.nightFadeDistance.x = this.nightFadeOutDistance;
-  atmosphere.nightFadeDistance.y = this.nightFadeInDistance;
-
-  atmosphere.showGroundAtmosphere = this.showGroundAtmosphere;
-};
-
 export default Atmosphere;

@@ -1,5 +1,4 @@
 import {
-  Atmosphere,
   Cartesian2,
   Cartesian3,
   Cartographic,
@@ -1848,11 +1847,10 @@ describe(
 
     it("has czm_atmosphereHsbShift", function () {
       const frameState = createFrameState(context, createMockCamera());
-      const atmosphere = new Atmosphere();
+      const atmosphere = frameState.atmosphere;
       atmosphere.hueShift = 1.0;
       atmosphere.saturationShift = 2.0;
       atmosphere.brightnessShift = 3.0;
-      atmosphere.update(frameState);
 
       const us = context.uniformState;
       us.update(frameState);
@@ -1869,9 +1867,8 @@ describe(
 
     it("has czm_atmosphereLightIntensity", function () {
       const frameState = createFrameState(context, createMockCamera());
-      const atmosphere = new Atmosphere();
+      const atmosphere = frameState.atmosphere;
       atmosphere.lightIntensity = 2.0;
-      atmosphere.update(frameState);
 
       const us = context.uniformState;
       us.update(frameState);
@@ -1888,9 +1885,8 @@ describe(
 
     it("has czm_atmosphereRayleighCoefficient", function () {
       const frameState = createFrameState(context, createMockCamera());
-      const atmosphere = new Atmosphere();
+      const atmosphere = frameState.atmosphere;
       atmosphere.rayleighCoefficient = new Cartesian3(1.0, 2.0, 3.0);
-      atmosphere.update(frameState);
 
       const us = context.uniformState;
       us.update(frameState);
@@ -1907,9 +1903,8 @@ describe(
 
     it("has czm_atmosphereRayleighScaleHeight", function () {
       const frameState = createFrameState(context, createMockCamera());
-      const atmosphere = new Atmosphere();
+      const atmosphere = frameState.atmosphere;
       atmosphere.rayleighScaleHeight = 100.0;
-      atmosphere.update(frameState);
 
       const us = context.uniformState;
       us.update(frameState);
@@ -1926,9 +1921,8 @@ describe(
 
     it("has czm_atmosphereMieCoefficient", function () {
       const frameState = createFrameState(context, createMockCamera());
-      const atmosphere = new Atmosphere();
+      const atmosphere = frameState.atmosphere;
       atmosphere.mieCoefficient = new Cartesian3(1.0, 2.0, 3.0);
-      atmosphere.update(frameState);
 
       const us = context.uniformState;
       us.update(frameState);
@@ -1945,9 +1939,8 @@ describe(
 
     it("has czm_atmosphereMieScaleHeight", function () {
       const frameState = createFrameState(context, createMockCamera());
-      const atmosphere = new Atmosphere();
+      const atmosphere = frameState.atmosphere;
       atmosphere.mieScaleHeight = 100.0;
-      atmosphere.update(frameState);
 
       const us = context.uniformState;
       us.update(frameState);
@@ -1964,9 +1957,8 @@ describe(
 
     it("has czm_atmosphereMieAnisotropy", function () {
       const frameState = createFrameState(context, createMockCamera());
-      const atmosphere = new Atmosphere();
+      const atmosphere = frameState.atmosphere;
       atmosphere.mieAnisotropy = 100.0;
-      atmosphere.update(frameState);
 
       const us = context.uniformState;
       us.update(frameState);
@@ -1983,10 +1975,9 @@ describe(
 
     it("has czm_atmosphereDynamicLighting", function () {
       const frameState = createFrameState(context, createMockCamera());
-      const atmosphere = new Atmosphere();
+      const atmosphere = frameState.atmosphere;
       const enumValue = DynamicAtmosphereLightingType.SCENE_LIGHT;
       atmosphere.dynamicLighting = enumValue;
-      atmosphere.update(frameState);
 
       const us = context.uniformState;
       us.update(frameState);
