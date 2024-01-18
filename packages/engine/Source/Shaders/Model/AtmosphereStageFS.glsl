@@ -65,8 +65,8 @@ void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirection,
 
 #line 1010000
 
-float fade(float x, vec2 range, vec2 clampRange) {
-    return clamp((x - range.y) / (range.y - range.x), clampRange.x, clampRange.y);
+float fade(float x, vec2 range, vec2 outputRange) {
+    return clamp((x - range.y) / (range.y - range.x), outputRange.x, outputRange.y);
 }
 
 float getCameraHeight() {
@@ -86,7 +86,7 @@ void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 po
 
     // Blend between constant lighting when the camera is near the earth
     // and Lambert diffuse shading when the camera is further away.
-    float lightingFade = fade(cameraHeight, czm_atmosphereLightingFadeDistance, vec2(0.0, 1.0));
+    float lightingFade = fade(cameraHeight, czm_atmosphereLightingFadeRange, vec2(0.0, 1.0));
 
     // TODO: Would this work if there weren't normals?
     float diffuseIntensity = clamp(dot(normalize(positionWC), atmosphereLightDirection), 0.0, 1.0);
@@ -117,7 +117,7 @@ void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 po
     vec3 dayNightColor = mix(groundAtmosphereColor.rgb, diffuseAndGroundAtmosphere, dayNightMask);
 
     // Fade in the day/night color in as the camera height increases towards space.
-    float nightFade = fade(cameraHeight, czm_atmosphereNightFadeDistance, vec2(0.05, 1.0));
+    float nightFade = fade(cameraHeight, czm_atmosphereNightFadeRange, vec2(0.05, 1.0));
     finalAtmosphereColor = mix(diffuseAndGroundAtmosphere, dayNightColor, nightFade);
 
     //#endif
@@ -170,10 +170,11 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
         opacity = v_atmosphereOpacity;
     }
 
-    //color correct rayleigh and mie colors
-    const bool ignoreBlackPixels = true;
-    rayleighColor = czm_applyHSBShift(rayleighColor, czm_atmosphereHsbShift, ignoreBlackPixels);
-    mieColor = czm_applyHSBShift(mieColor, czm_atmosphereHsbShift, ignoreBlackPixels);
+    if (u_shouldColorCorrect) {
+        const bool ignoreBlackPixels = true;
+        rayleighColor = czm_applyHSBShift(rayleighColor, czm_atmosphereHsbShift, ignoreBlackPixels);
+        mieColor = czm_applyHSBShift(mieColor, czm_atmosphereHsbShift, ignoreBlackPixels);
+    }
 
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirection, rayleighColor, mieColor, opacity);
 

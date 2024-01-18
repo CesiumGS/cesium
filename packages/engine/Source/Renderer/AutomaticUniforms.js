@@ -1711,19 +1711,19 @@ const AutomaticUniforms = {
     },
   }),
 
-  czm_atmosphereLightingFadeDistance: new AutomaticUniform({
+  czm_atmosphereLightingFadeRange: new AutomaticUniform({
     size: 1,
     datatype: WebGLConstants.FLOAT_VEC2,
     getValue: function (uniformState) {
-      return uniformState.atmosphereLightingFadeDistance;
+      return uniformState.atmosphereLightingFadeRange;
     },
   }),
 
-  czm_atmosphereNightFadeDistance: new AutomaticUniform({
+  czm_atmosphereNightFadeRange: new AutomaticUniform({
     size: 1,
     datatype: WebGLConstants.FLOAT_VEC2,
     getValue: function (uniformState) {
-      return uniformState.atmosphereNightFadeDistance;
+      return uniformState.atmosphereNightFadeRange;
     },
   }),
 

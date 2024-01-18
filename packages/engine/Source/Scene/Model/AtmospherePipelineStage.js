@@ -60,11 +60,37 @@ AtmospherePipelineStage.process = function (
     );
   };
 
-  shaderBuilder.addUniform("bool", "u_perFragmentGroundAtmosphere");
+  shaderBuilder.addUniform(
+    "bool",
+    "u_perFragmentGroundAtmosphere",
+    ShaderDestination.FRAGMENT
+  );
   renderResources.uniformMap.u_perFragmentGroundAtmosphere = function () {
     const cameraDistance = Cartesian3.magnitude(frameState.camera.positionWC);
-    const nightFadeOutDistance = frameState.atmosphere.nightFadeDistance.x;
-    return cameraDistance > nightFadeOutDistance;
+    const nightFadeStart = frameState.atmosphere.nightFadeRange.x;
+    return cameraDistance > nightFadeStart;
+  };
+
+  shaderBuilder.addUniform(
+    "bool",
+    "u_shouldColorCorrect",
+    ShaderDestination.FRAGMENT
+  );
+  renderResources.uniformMap.u_shouldColorCorrect = function () {
+    const atmosphere = frameState.atmosphere;
+    return !(
+      CesiumMath.equalsEpsilon(atmosphere.hueShift, 0.0, CesiumMath.EPSILON7) &&
+      CesiumMath.equalsEpsilon(
+        atmosphere.saturationShift,
+        0.0,
+        CesiumMath.EPSILON7
+      ) &&
+      CesiumMath.equalsEpsilon(
+        atmosphere.brightnessShift,
+        0.0,
+        CesiumMath.EPSILON7
+      )
+    );
   };
 };
 

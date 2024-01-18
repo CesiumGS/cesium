@@ -173,8 +173,8 @@ function UniformState() {
   this._atmosphereDynamicLighting = undefined;
 
   // (fadeOutDistance, fadeInDistance)
-  this._atmosphereLightingFadeDistance = new Cartesian2();
-  this._atmosphereNightFadeDistance = new Cartesian2();
+  this._atmosphereLightingFadeRange = new Cartesian2();
+  this._atmosphereNightFadeRange = new Cartesian2();
 
   this._invertClassificationColor = undefined;
 
@@ -950,6 +950,7 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereHsbShift;
     },
   },
+
   /**
    * The intensity of the light that is used for computing the atmosphere color
    * @memberof UniformState.prototype
@@ -960,6 +961,7 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereLightIntensity;
     },
   },
+
   /**
    * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
    * @memberof UniformState.prototype
@@ -970,6 +972,7 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereRayleighCoefficient;
     },
   },
+
   /**
    * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
    * @memberof UniformState.prototype
@@ -980,6 +983,7 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereRayleighScaleHeight;
     },
   },
+
   /**
    * The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
    * @memberof UniformState.prototype
@@ -990,6 +994,7 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereMieCoefficient;
     },
   },
+
   /**
    * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
    * @memberof UniformState.prototype
@@ -1000,6 +1005,7 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereMieScaleHeight;
     },
   },
+
   /**
    * The anisotropy of the medium to consider for Mie scattering.
    * @memberof UniformState.prototype
@@ -1010,6 +1016,7 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereMieAnisotropy;
     },
   },
+
   /**
    * Which light source to use for dynamically lighting the atmosphere
    *
@@ -1021,14 +1028,28 @@ Object.defineProperties(UniformState.prototype, {
       return this._atmosphereDynamicLighting;
     },
   },
-  atmosphereLightingFadeDistance: {
+
+  /**
+   * The range of camera distances between which atmosphere lighting fades in/out
+   *
+   * @memberof UniformState.prototype
+   * @type {Cartesian2}
+   */
+  atmosphereLightingFadeRange: {
     get: function () {
-      return this._atmosphereLightingFadeDistance;
+      return this._atmosphereLightingFadeRange;
     },
   },
-  atmosphereNightFadeDistance: {
+
+  /**
+   * The range of camera distances between which day/night shading fades in/out
+   *
+   * @memberof UniformState.prototype
+   * @type {Cartesian2}
+   */
+  atmosphereNightFadeRange: {
     get: function () {
-      return this._atmosphereNightFadeDistance;
+      return this._atmosphereNightFadeRange;
     },
   },
 
@@ -1553,8 +1574,8 @@ UniformState.prototype.update = function (frameState) {
     this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
   }
 
-  this._atmosphereLightingFadeDistance = atmosphere.lightingFadeDistance;
-  this._atmosphereNightFadeDistance = atmosphere.nightFadeDistance;
+  this._atmosphereLightingFadeRange = atmosphere.lightingFadeRange;
+  this._atmosphereNightFadeRange = atmosphere.nightFadeRange;
 
   this._invertClassificationColor = frameState.invertClassificationColor;
 

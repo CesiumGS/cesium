@@ -1,3 +1,4 @@
+import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 
@@ -123,10 +124,41 @@ function Atmosphere() {
    */
   this.dynamicLighting = DynamicAtmosphereLightingType.NONE;
 
-  this.lightingFadeOutDistance = 1.0e7;
-  this.lightingFadeInDistance = 2.0e7;
-  this.nightFadeInDistance = 5.0e7;
-  this.nightFadeOutDistance = 1.0e7;
+  /**
+   * The range of camera distances <code>[startDist, endDist]</code>
+   * between which ground atmosphere lighting fades in. When the camera is at or
+   * below startDist, no ground atmosphere lighting is applied. When the camera
+   * is at or above endDist,the lighting is at maximum intensity.
+   * <p>
+   * Ground atmosphere lighting only applies when {@link Atmosphere#showGroundAtmosphere}
+   * is <code>true.</code>
+   * </p>
+   * <p>
+   * Camera distances are measured from the center of the earth in meters.
+   * </p>
+   *
+   * @type {Cartesian2}
+   * @default Cartesian2(1.0e7, 2.0e7)
+   */
+  this.lightingFadeRange = new Cartesian2(1.0e7, 2.0e7);
+  /**
+   * The range of camera distances <code>[startDist, endDist]</code>
+   * between which nighttime shading fades in. When the camera is at or below
+   * startDist, the entire globe is lit at full brightness. When the camera is
+   * at or above endDist, the side of the globe facing away from the sun
+   * will be in total darkness.
+   * <p>
+   * Nighttime shading only applies when {@link Atmosphere#showGroundAtmosphere}
+   * is <code>true</code>, and {@link Atmosphere#dynamicLighting} is not {@link DynamicAtmosphereLightingType.NONE}.
+   * </p>
+   * <p>
+   * Camera distances are measured from the center of the earth in meters.
+   * </p>
+   *
+   * @type {Cartesian2}
+   * @default Cartesian2(5.0e7, 1.0e7)
+   */
+  this.nightFadeRange = new Cartesian2(1.0e7, 5.0e7);
 
   /**
    * Enable the ground atmosphere for 3D Tiles and models. The ground atmosphere
