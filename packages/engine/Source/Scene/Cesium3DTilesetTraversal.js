@@ -92,6 +92,7 @@ Cesium3DTilesetTraversal.selectTile = function (tile, frameState) {
     tileset._selectedTilesToStyle.push(tile);
     tile._wasSelectedLastFrame = false;
   }
+
   tile._selectedFrame = frameState.frameNumber;
   tileset._selectedTiles.push(tile);
 };

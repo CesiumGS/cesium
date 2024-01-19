@@ -90,6 +90,7 @@
             //
             text: "Draw Point with Label",
             onselect: function () {
+              viewer.entities.removeAll();
               const pointAndLabel = viewer.entities.add({
                 position: Cesium.Cartesian3.fromDegrees(-122.1965, 46.1915),
                 point: {
@@ -120,6 +121,7 @@
           {
             text: "Draw Billboard",
             onselect: function () {
+              viewer.entities.removeAll();
               const e = viewer.entities.add({
                 position: Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
                 billboard: {
@@ -139,6 +141,7 @@
             //
             text: "Draw Corridor",
             onselect: function () {
+              viewer.entities.removeAll();
               const e = viewer.entities.add({
                 corridor: {
                   positions: Cesium.Cartesian3.fromDegreesArray([
@@ -160,6 +163,7 @@
           {
             text: "Draw Polygon",
             onselect: function () {
+              viewer.entities.removeAll();
               const e = viewer.entities.add({
                 polygon: {
                   hierarchy: {
@@ -207,6 +211,7 @@
                 return;
               }
 
+              viewer.entities.removeAll();
               const e = viewer.entities.add({
                 polygon: {
                   hierarchy: {
@@ -245,6 +250,7 @@
           {
             text: "Draw Rectangle",
             onselect: function () {
+              viewer.entities.removeAll();
               const e = viewer.entities.add({
                 rectangle: {
                   coordinates: Cesium.Rectangle.fromDegrees(
@@ -263,6 +269,7 @@
           {
             text: "Draw Model",
             onselect: function () {
+              viewer.entities.removeAll();
               const e = viewer.entities.add({
                 position: Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
                 model: {
@@ -285,6 +292,7 @@
                 );
               }
 
+              viewer.entities.removeAll();
               viewer.entities.add({
                 polyline: {
                   positions: Cesium.Cartesian3.fromDegreesArray([
@@ -320,10 +328,6 @@
             },
           },
         ]);
-
-        Sandcastle.reset = function () {
-          viewer.entities.removeAll();
-        };
         //Sandcastle_End
       };
       if (typeof Cesium !== "undefined") {
