@@ -91,6 +91,13 @@ vec2 getLightingFadeRange() {
 void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 positionWC, vec3 atmosphereLightDirectionWC) {
     float cameraHeight = getCameraHeight();
 
+    // If the camera is inside the earth, skip rendering the ground atmosphere
+    vec3 radii = czm_ellipsoidRadii;
+    float minRadius = min(radii.x, min(radii.y, radii.z));
+    if (cameraHeight < minRadius) {
+        return;
+    }
+
     // Approximate normal at this point on the globe.
     vec3 normalWC = normalize(positionWC);
 
@@ -144,6 +151,9 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     if (czm_backFacing()) {
         return;
     }
+
+
+
     vec3 rayleighColor;
     vec3 mieColor;
     float opacity;
@@ -183,8 +193,8 @@ void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
 
     vec4 groundAtmosphereColor = czm_computeAtmosphereColor(positionWC, lightDirectionWC, rayleighColor, mieColor, opacity);
 
-    float distanceToCamera = length(attributes.positionEC);
     if (u_isInFog) {
+        float distanceToCamera = length(attributes.positionEC);
         applyFog(color, groundAtmosphereColor, lightDirectionWC, distanceToCamera);
     } else {
         applyGroundAtmosphere(color, groundAtmosphereColor, positionWC, lightDirectionWC);

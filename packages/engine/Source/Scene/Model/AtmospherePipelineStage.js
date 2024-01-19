@@ -1,5 +1,6 @@
 import Cartesian3 from "../../Core/Cartesian3.js";
 import CesiumMath from "../../Core/Math.js";
+import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import AtmosphereStageFS from "../../Shaders/Model/AtmosphereStageFS.js";
 import AtmosphereStageVS from "../../Shaders/Model/AtmosphereStageVS.js";
@@ -60,17 +61,24 @@ AtmospherePipelineStage.process = function (
     );
   };
 
+  // When the
   shaderBuilder.addUniform(
     "bool",
     "u_perFragmentGroundAtmosphere",
-    ShaderDestination.FRAGMENT
+    ShaderDestination.BOTH
   );
   renderResources.uniformMap.u_perFragmentGroundAtmosphere = function () {
+    if (!defined(frameState.atmosphere)) {
+      return false;
+    }
+
     const cameraDistance = Cartesian3.magnitude(frameState.camera.positionWC);
     const nightFadeStart = frameState.atmosphere.nightFadeRange.x;
     return cameraDistance > nightFadeStart;
   };
 
+  // Only apply the color correction math in the shader if one of the
+  // HSB color shift options are set.
   shaderBuilder.addUniform(
     "bool",
     "u_shouldColorCorrect",
@@ -78,6 +86,10 @@ AtmospherePipelineStage.process = function (
   );
   renderResources.uniformMap.u_shouldColorCorrect = function () {
     const atmosphere = frameState.atmosphere;
+    if (!defined(atmosphere)) {
+      return false;
+    }
+
     return !(
       CesiumMath.equalsEpsilon(atmosphere.hueShift, 0.0, CesiumMath.EPSILON7) &&
       CesiumMath.equalsEpsilon(

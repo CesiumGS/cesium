@@ -78,7 +78,9 @@ describe(
         _shadersAtmosphereStageFS,
       ]);
 
-      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
+      ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, [
+        "uniform bool u_perFragmentGroundAtmosphere;",
+      ]);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform bool u_isInFog;",
         "uniform bool u_perFragmentGroundAtmosphere;",

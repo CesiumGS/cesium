@@ -4566,6 +4566,9 @@ describe(
         scene.fog = new Fog();
         scene.light = new SunLight();
         scene.camera.switchToPerspectiveFrustum();
+
+        // Ensure frameState.atmosphere gets updated to the new object
+        scene.renderForSpecs();
       });
 
       function viewFog(scene, model) {
@@ -4630,6 +4633,8 @@ describe(
       it("renders a model in fog (sunlight)", async function () {
         // Move the fog very close to the camera;
         scene.fog.density = 1.0;
+
+        scene.atmosphere.showGroundAtmosphere = false;
 
         // Increase the brightness to make the fog color
         // stand out more for this test
@@ -4731,6 +4736,7 @@ describe(
         // Also grab the color in sunlight for comparison
         scene.atmosphere.dynamicLighting =
           DynamicAtmosphereLightingType.SUNLIGHT;
+
         let sunnyColor;
         expect(renderOptions).toRenderAndCall(function (rgba) {
           sunnyColor = rgba;
