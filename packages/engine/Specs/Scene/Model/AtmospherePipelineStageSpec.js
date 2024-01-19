@@ -1,6 +1,7 @@
 import {
   _shadersAtmosphereStageFS,
   _shadersAtmosphereStageVS,
+  Atmosphere,
   Cartesian3,
   AtmospherePipelineStage,
   ModelRenderResources,
@@ -42,6 +43,8 @@ describe(
 
       // Reset the fog density
       scene.fog.density = 2e-4;
+
+      scene.atmosphere = new Atmosphere();
     });
 
     afterAll(async function () {
@@ -78,6 +81,8 @@ describe(
       ShaderBuilderTester.expectHasVertexUniforms(shaderBuilder, []);
       ShaderBuilderTester.expectHasFragmentUniforms(shaderBuilder, [
         "uniform bool u_isInFog;",
+        "uniform bool u_perFragmentGroundAtmosphere;",
+        "uniform bool u_shouldColorCorrect;",
       ]);
     });
 
@@ -114,6 +119,56 @@ describe(
 
       const uniformMap = renderResources.uniformMap;
       expect(uniformMap.u_isInFog()).toBe(true);
+    });
+
+    it("u_perFragmentGroundAtmosphere() depends on camera height", function () {
+      scene.renderForSpecs();
+      AtmospherePipelineStage.process(renderResources, model, scene.frameState);
+
+      const frameState = scene.frameState;
+      const nightFadeStart = frameState.atmosphere.nightFadeRange.x;
+      const uniformMap = renderResources.uniformMap;
+
+      // Below the night fade range, the vertex shader is used for performance
+      frameState.camera.position = new Cartesian3(nightFadeStart - 1000, 0, 0);
+      scene.renderForSpecs();
+      expect(uniformMap.u_perFragmentGroundAtmosphere()).toBe(false);
+
+      // Above the night fade range, the fragment shader is used for accuracy
+      frameState.camera.position = new Cartesian3(nightFadeStart + 1000, 0, 0);
+      scene.renderForSpecs();
+      expect(uniformMap.u_perFragmentGroundAtmosphere()).toBe(true);
+    });
+
+    it("u_shouldColorCorrect is true if any of the atmosphere HSB shift settings are set", function () {
+      scene.renderForSpecs();
+      AtmospherePipelineStage.process(renderResources, model, scene.frameState);
+
+      // The default shift is 0, so the color correction code should not be
+      // called.
+      const shouldColorCorrect =
+        renderResources.uniformMap.u_shouldColorCorrect;
+      expect(shouldColorCorrect()).toBe(false);
+
+      // If any individual parameter is nonzero, the uniform will return true
+      const frameState = scene.frameState;
+      const atmosphere = frameState.atmosphere;
+      atmosphere.hueShift = 1.0;
+      expect(shouldColorCorrect()).toBe(true);
+
+      atmosphere.hueShift = 0.0;
+      atmosphere.saturationShift = -1.0;
+      expect(shouldColorCorrect()).toBe(true);
+
+      atmosphere.saturationShift = 0.0;
+      atmosphere.brightnessShift = 0.5;
+      expect(shouldColorCorrect()).toBe(true);
+
+      // Setting all of the parameters should work too.
+      atmosphere.hueShift = 0.1;
+      atmosphere.saturationShift = 0.2;
+      atmosphere.brightnessShift = 0.3;
+      expect(shouldColorCorrect()).toBe(true);
     });
   },
   "WebGL"

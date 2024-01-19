@@ -1572,10 +1572,10 @@ UniformState.prototype.update = function (frameState) {
     this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
     this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
     this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
-  }
 
-  this._atmosphereLightingFadeRange = atmosphere.lightingFadeRange;
-  this._atmosphereNightFadeRange = atmosphere.nightFadeRange;
+    this._atmosphereLightingFadeRange = atmosphere.lightingFadeRange;
+    this._atmosphereNightFadeRange = atmosphere.nightFadeRange;
+  }
 
   this._invertClassificationColor = frameState.invertClassificationColor;
 

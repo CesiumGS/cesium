@@ -343,10 +343,11 @@ describe(
       expect(CustomShaderPipelineStage.process).toHaveBeenCalled();
     });
 
-    it("does not add fog stage when fog is not enabled", async function () {
+    it("does not add atmosphere stage when no atmosphere lighting effects are enabled", async function () {
       spyOn(AtmospherePipelineStage, "process");
       scene.fog.enabled = false;
       scene.fog.renderable = false;
+      scene.atmosphere.showGroundAtmosphere = false;
       const model = await loadAndZoomToModelAsync(
         {
           gltf: buildingsMetadata,
@@ -358,10 +359,11 @@ describe(
       expect(AtmospherePipelineStage.process).not.toHaveBeenCalled();
     });
 
-    it("does not add fog stage when fog is not renderable", async function () {
+    it("does not add atmosphere stage when fog is enabled but not renderable", async function () {
       spyOn(AtmospherePipelineStage, "process");
       scene.fog.enabled = true;
       scene.fog.renderable = false;
+      scene.atmosphere.showGroundAtmosphere = false;
       const model = await loadAndZoomToModelAsync(
         {
           gltf: buildingsMetadata,
@@ -373,10 +375,27 @@ describe(
       expect(AtmospherePipelineStage.process).not.toHaveBeenCalled();
     });
 
-    it("adds fog stage when fog is enabled and renderable", async function () {
+    it("adds atmosphere stage when fog is enabled and renderable", async function () {
       spyOn(AtmospherePipelineStage, "process");
       scene.fog.enabled = true;
       scene.fog.renderable = true;
+      scene.atmosphere.showGroundAtmosphere = false;
+      const model = await loadAndZoomToModelAsync(
+        {
+          gltf: buildingsMetadata,
+        },
+        scene
+      );
+      model.customShader = new CustomShader();
+      model.update(scene.frameState);
+      expect(AtmospherePipelineStage.process).toHaveBeenCalled();
+    });
+
+    it("adds atmosphere stage when ground atmosphere is enabled", async function () {
+      spyOn(AtmospherePipelineStage, "process");
+      scene.fog.enabled = false;
+      scene.fog.renderable = false;
+      scene.atmosphere.showGroundAtmosphere = true;
       const model = await loadAndZoomToModelAsync(
         {
           gltf: buildingsMetadata,
