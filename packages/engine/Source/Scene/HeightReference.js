@@ -57,9 +57,9 @@ const HeightReference = {
 export default Object.freeze(HeightReference);
 
 /**
- * Returns true if the height should be offset relative to the surface
+ * Returns true if the height should be clamped to the surface
  * @param {HeightReference} heightReference
- * @returns true if the height should be offset relative to the surface
+ * @returns true if the height should be clamped to the surface
  * @private
  */
 export function isHeightReferenceClamp(heightReference) {
@@ -71,9 +71,9 @@ export function isHeightReferenceClamp(heightReference) {
 }
 
 /**
- * Returns true if the height should be clamped to the surface
+ * Returns true if the height should be offset relative to the surface
  * @param {HeightReference} heightReference
- * @returns true if the height should be clamped to the surface
+ * @returns true if the height should be offset relative to the surface
  * @private
  */
 export function isHeightReferenceRelative(heightReference) {

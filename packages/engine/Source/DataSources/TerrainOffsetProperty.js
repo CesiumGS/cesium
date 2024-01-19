@@ -143,7 +143,7 @@ TerrainOffsetProperty.prototype._updateClamping = function () {
   this._removeCallbackFunc = scene.updateHeight(
     cartographicPosition,
     updateFunction,
-    this._updateClamping
+    this._heightReference
   );
 };
 

@@ -1096,14 +1096,14 @@ Billboard._updateClamping = function (collection, owner) {
     return;
   }
 
+  if (defined(owner._removeCallbackFunc)) {
+    owner._removeCallbackFunc();
+  }
+
   const position = ellipsoid.cartesianToCartographic(owner._position);
   if (!defined(position)) {
     owner._actualClampedPosition = undefined;
     return;
-  }
-
-  if (defined(owner._removeCallbackFunc)) {
-    owner._removeCallbackFunc();
   }
 
   function updateFunction(clampedPosition) {

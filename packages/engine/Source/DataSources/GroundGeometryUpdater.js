@@ -169,6 +169,7 @@ GroundGeometryUpdater.getGeometryHeight = function (height, heightReference) {
   if (!isHeightReferenceClamp(heightReference)) {
     return height;
   }
+
   return 0.0;
 };
 
