@@ -3561,9 +3561,7 @@ Cesium3DTileset.prototype.updateHeight = function (
   callback,
   ellipsoid
 ) {
-  if (!defined(ellipsoid)) {
-    ellipsoid = Ellipsoid.WGS84;
-  }
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
   const object = {
     positionCartographic: cartographic,
