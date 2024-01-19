@@ -4634,8 +4634,6 @@ describe(
         // Move the fog very close to the camera;
         scene.fog.density = 1.0;
 
-        scene.atmosphere.showGroundAtmosphere = false;
-
         // Increase the brightness to make the fog color
         // stand out more for this test
         scene.atmosphere.brightnessShift = 1.0;

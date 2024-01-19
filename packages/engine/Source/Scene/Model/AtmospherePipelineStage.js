@@ -61,7 +61,9 @@ AtmospherePipelineStage.process = function (
     );
   };
 
-  // When the
+  // When the camera is near the earth, compute the atmosphere scattering
+  // in the vertex shader for performance. When the camera is far away,
+  // compute it in the fragment shader instead for better accuracy
   shaderBuilder.addUniform(
     "bool",
     "u_perFragmentGroundAtmosphere",
