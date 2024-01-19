@@ -461,6 +461,8 @@ function Model(options) {
   this._projectTo2D = defaultValue(options.projectTo2D, false);
   this._enablePick = defaultValue(options.enablePick, false);
 
+  this._fogRenderable = undefined;
+
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
 
@@ -1800,6 +1802,7 @@ Model.prototype.update = function (frameState) {
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
+  updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
@@ -1992,6 +1995,14 @@ function updateSceneMode(model, frameState) {
       model._updateModelMatrix = true;
     }
     model._sceneMode = frameState.mode;
+  }
+}
+
+function updateFog(model, frameState) {
+  const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
+  if (fogRenderable !== model._fogRenderable) {
+    model.resetDrawCommands();
+    model._fogRenderable = fogRenderable;
   }
 }
 

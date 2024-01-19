@@ -38,6 +38,7 @@ import Context from "../Renderer/Context.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
+import Atmosphere from "./Atmosphere.js";
 import BrdfLutGenerator from "./BrdfLutGenerator.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -47,6 +48,7 @@ import DebugCameraPrimitive from "./DebugCameraPrimitive.js";
 import DepthPlane from "./DepthPlane.js";
 import DerivedCommand from "./DerivedCommand.js";
 import DeviceOrientationCameraController from "./DeviceOrientationCameraController.js";
+import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
@@ -512,6 +514,14 @@ function Scene(options) {
    * @private
    */
   this.cameraEventWaitTime = 500.0;
+
+  /**
+   * Settings for atmosphere lighting effects affecting 3D Tiles and model rendering. This is not to be confused with
+   * {@link Scene#skyAtmosphere} which is responsible for rendering the sky.
+   *
+   * @type {Atmosphere}
+   */
+  this.atmosphere = new Atmosphere();
 
   /**
    * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
@@ -3168,6 +3178,7 @@ Scene.prototype.updateEnvironment = function () {
   const environmentState = this._environmentState;
   const renderPass = frameState.passes.render;
   const offscreenPass = frameState.passes.offscreen;
+  const atmosphere = this.atmosphere;
   const skyAtmosphere = this.skyAtmosphere;
   const globe = this.globe;
   const globeTranslucencyState = this._globeTranslucencyState;
@@ -3186,17 +3197,19 @@ Scene.prototype.updateEnvironment = function () {
   } else {
     if (defined(skyAtmosphere)) {
       if (defined(globe)) {
-        skyAtmosphere.setDynamicAtmosphereColor(
-          globe.enableLighting && globe.dynamicAtmosphereLighting,
-          globe.dynamicAtmosphereLightingFromSun
+        skyAtmosphere.setDynamicLighting(
+          DynamicAtmosphereLightingType.fromGlobeFlags(globe)
         );
         environmentState.isReadyForAtmosphere =
           environmentState.isReadyForAtmosphere ||
           !globe.show ||
           globe._surface._tilesToRender.length > 0;
       } else {
+        const dynamicLighting = atmosphere.dynamicLighting;
+        skyAtmosphere.setDynamicLighting(dynamicLighting);
         environmentState.isReadyForAtmosphere = true;
       }
+
       environmentState.skyAtmosphereCommand = skyAtmosphere.update(
         frameState,
         globe
@@ -3891,6 +3904,7 @@ function render(scene) {
   }
   frameState.backgroundColor = backgroundColor;
 
+  frameState.atmosphere = scene.atmosphere;
   scene.fog.update(frameState);
 
   us.update(frameState);
