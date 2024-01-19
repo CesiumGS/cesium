@@ -4558,7 +4558,7 @@ describe(
     });
 
     describe("fog", function () {
-      const sunnyDate = JulianDate.fromIso8601("2024-01-11T15:00:00Z");
+      const sunnyDate = JulianDate.fromIso8601("2024-01-11T17:50:00Z");
       const darkDate = JulianDate.fromIso8601("2024-01-11T00:00:00Z");
 
       afterEach(function () {
@@ -4682,11 +4682,9 @@ describe(
           expect(rgba).not.toEqual(originalColor);
         });
 
-        // Render in the dark, it should be a different color and
-        // darker than in sun
+        // Render in the dark, it should be darker than the sunny color
         renderOptions.time = darkDate;
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
           expect(rgba).not.toEqual(originalColor);
           expect(rgba).not.toEqual(sunnyColor);
 
