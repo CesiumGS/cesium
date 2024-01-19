@@ -17,6 +17,7 @@
 - The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. Furthermore, the default settings of this feature were tuned for improved performance. `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002. `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24. [#11718](https://github.com/CesiumGS/cesium/pull/11718)
 - Fog rendering now applies to glTF models and 3D Tiles. This can be configured using `scene.fog` and `scene.atmosphere`. [#11744](https://github.com/CesiumGS/cesium/pull/11744)
 - Added `scene.atmosphere` to store common atmosphere lighting parameters. [#11744](https://github.com/CesiumGS/cesium/pull/11744) and [#11681](https://github.com/CesiumGS/cesium/issues/11681)
+- Added ground atmosphere to glTF models and 3D Tiles. This can be toggled with `scene.atmosphere.showGroundAtmosphere`. [#11765](https://github.com/CesiumGS/cesium/pull/11765)
 
 ##### Fixes :wrench:
 
