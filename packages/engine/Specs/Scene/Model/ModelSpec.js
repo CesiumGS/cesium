@@ -11,6 +11,7 @@ import {
   Color,
   ColorBlendMode,
   Credit,
+  CustomShader,
   defaultValue,
   defined,
   DirectionalLight,
@@ -109,6 +110,11 @@ describe(
       "./Data/Models/glTF-2.0/CesiumMan/glTF-Draco/CesiumMan.gltf";
     const boxCesiumRtcUrl =
       "./Data/Models/glTF-2.0/BoxCesiumRtc/glTF/BoxCesiumRtc.gltf";
+
+    const propertyTextureWithTextureTransformUrl =
+      "./Data/Models/glTF-2.0/PropertyTextureWithTextureTransform/glTF/PropertyTextureWithTextureTransform.gltf";
+    const featureIdTextureWithTextureTransformUrl =
+      "./Data/Models/glTF-2.0/FeatureIdTextureWithTextureTransform/glTF/FeatureIdTextureWithTextureTransform.gltf";
 
     const fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator(
       "north",
@@ -717,6 +723,141 @@ describe(
         ).then(function (model) {
           verifyRender(model, true);
         });
+      });
+    });
+
+    it("transforms property textures with KHR_texture_transform", async function () {
+      const resource = Resource.createIfNeeded(
+        propertyTextureWithTextureTransformUrl
+      );
+      // The texture in the example model contains contains 8x8 pixels
+      // with increasing 'red' component values [0 to 64)*3, interpreted
+      // as a normalized `UINT8` property.
+      // It has a transform with an offset of [0.25, 0.25], and a scale
+      // of [0.5, 0.5].
+      // Create a custom shader that will render any value that is smaller
+      // than 16*3 or larger than 48*3 (i.e. the first two rows of pixels
+      // or the last two rows of pixels) as completely red.
+      // These pixels should NOT be visible when the transform is applied.
+      const customShader = new CustomShader({
+        fragmentShaderText: `
+          void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+          {
+            float value = float(fsInput.metadata.exampleProperty);
+            float i = value * 255.0;
+            if (i < 16.0 * 3.0) {
+              material.diffuse = vec3(1.0, 0.0, 0.0);
+            } else if (i >= 48.0 * 3.0) {
+              material.diffuse = vec3(1.0, 0.0, 0.0);
+            } else {
+              material.diffuse = vec3(0.0, 0.0, 0.0);
+            }
+          }
+          `,
+      });
+
+      const gltf = await resource.fetchJson();
+      await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: propertyTextureWithTextureTransformUrl,
+          customShader: customShader,
+          // This is important to make sure that the property
+          // texture is fully loaded when the model is rendered!
+          incrementallyLoadTextures: false,
+        },
+        scene
+      );
+      const renderOptions = {
+        scene: scene,
+        time: defaultDate,
+      };
+      // Move the camera to look at the point (0.1, 0.1) of
+      // the plane at a distance of 0.15. (Note that the axes
+      // are swapped, apparently - 'x' is the distance)
+      scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
+      scene.camera.direction = Cartesian3.negate(
+        Cartesian3.UNIT_X,
+        new Cartesian3()
+      );
+      scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+      scene.camera.frustum.near = 0.01;
+      scene.camera.frustum.far = 5.0;
+
+      // When the texture transform was applied, then the
+      // resulting pixels should be nearly black (or at
+      // least not red)
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThan(50);
+        expect(rgba[1]).toBeLessThan(50);
+        expect(rgba[2]).toBeLessThan(50);
+      });
+    });
+
+    it("transforms feature ID textures with KHR_texture_transform", async function () {
+      const resource = Resource.createIfNeeded(
+        featureIdTextureWithTextureTransformUrl
+      );
+      // The texture in the example model contains contains 8x8 pixels
+      // with increasing 'red' component values [0 to 64)*3.
+      // It has a transform with an offset of [0.25, 0.25], and a scale
+      // of [0.5, 0.5].
+      // Create a custom shader that will render any value that is smaller
+      // than 16*3 or larger than 48*3 (i.e. the first two rows of pixels
+      // or the last two rows of pixels) as completely red.
+      // These pixels should NOT be visible when the transform is applied.
+      const customShader = new CustomShader({
+        fragmentShaderText: `
+        void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material)
+        {
+          int id = fsInput.featureIds.featureId_0;
+          if (id < 16 * 3) {
+            material.diffuse = vec3(1.0, 0.0, 0.0);
+          } else if (id >= 48 * 3) {
+            material.diffuse = vec3(1.0, 0.0, 0.0);
+          } else {
+            material.diffuse = vec3(0.0, 0.0, 0.0);
+          }
+        }
+      `,
+      });
+
+      const gltf = await resource.fetchJson();
+      await loadAndZoomToModelAsync(
+        {
+          gltf: gltf,
+          basePath: featureIdTextureWithTextureTransformUrl,
+          customShader: customShader,
+          // This is important to make sure that the feature ID
+          // texture is fully loaded when the model is rendered!
+          incrementallyLoadTextures: false,
+        },
+        scene
+      );
+      const renderOptions = {
+        scene: scene,
+        time: defaultDate,
+      };
+      // Move the camera to look at the point (0.1, 0.1) of
+      // the plane at a distance of 0.15. (Note that the axes
+      // are swapped, apparently - 'x' is the distance)
+      //scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
+      scene.camera.position = new Cartesian3(0.15, 0.1, 0.1);
+      scene.camera.direction = Cartesian3.negate(
+        Cartesian3.UNIT_X,
+        new Cartesian3()
+      );
+      scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+      scene.camera.frustum.near = 0.01;
+      scene.camera.frustum.far = 5.0;
+
+      // When the texture transform was applied, then the
+      // resulting pixels should be nearly black (or at
+      // least not red)
+      expect(renderOptions).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeLessThan(50);
+        expect(rgba[1]).toBeLessThan(50);
+        expect(rgba[2]).toBeLessThan(50);
       });
     });
 
