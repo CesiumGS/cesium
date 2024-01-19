@@ -64,8 +64,6 @@ void applyFog(inout vec4 color, vec4 groundAtmosphereColor, vec3 lightDirectionW
     color = vec4(withFog, color.a);
 }
 
-#line 1010000
-
 float fade(float x, vec2 range, vec2 outputRange) {
     return clamp((x - range.x) / (range.y - range.x), outputRange.x, outputRange.y);
 }
@@ -144,7 +142,6 @@ void applyGroundAtmosphere(inout vec4 color, vec4 groundAtmosphereColor, vec3 po
 
 void atmosphereStage(inout vec4 color, in ProcessedAttributes attributes) {
     if (czm_backFacing()) {
-        color.rgb = vec3(1.0, 0.0, 1.0);
         return;
     }
     vec3 rayleighColor;
