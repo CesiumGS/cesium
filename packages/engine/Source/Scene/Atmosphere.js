@@ -32,6 +32,10 @@ import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
  * scene.atmosphere.brightnessShift = 0.25; // Increase the brightness
  * scene.atmosphere.saturationShift = -0.1; // Desaturate the colors
  *
+ * @example
+ * // Turn off ground atmosphere
+ * scene.atmosphere.showGroundAtmosphere = false;
+ *
  * @see SkyAtmosphere
  * @see Globe
  * @see Fog
