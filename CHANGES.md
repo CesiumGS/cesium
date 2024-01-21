@@ -4,6 +4,11 @@
 
 #### @cesium/engine
 
+##### Fixes :type:
+
+- Added a uninon type undefined for camera.constrainedAxis to fix the issue [#11475](https://github.com/CesiumGS/cesium/issues/11475)
+- By adding a union type undefined to camera.constrainedAxis, it will allow typescript user to assign undefined value to it.
+
 ##### Breaking Changes :mega:
 
 - By default, the screen space camera controller will no longer go inside or under instances of `Cesium3DTileset`. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
