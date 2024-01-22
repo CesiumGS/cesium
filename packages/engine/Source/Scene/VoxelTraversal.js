@@ -502,7 +502,6 @@ function loadAndUnload(that, frameState) {
   const priorityQueue = that._priorityQueue;
   const keyframeCount = that._keyframeCount;
 
-  // Some values are constant because of incomplete support for time-dynamic data
   const previousKeyframe = CesiumMath.clamp(
     Math.floor(that._keyframeLocation),
     0,
