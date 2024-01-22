@@ -9,6 +9,8 @@
 - By default, the screen space camera controller will no longer go inside or under instances of `Cesium3DTileset`. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
   - This behavior can be disabled by setting `Cesium3DTileset.disableCollision` to true.
   - This feature is enabled by default only for WebGL 2 and above, but can be enabled for WebGL 1 by setting the `enablePick` option to true when creating the `Cesium3DTileset`.
+- Remove the need for node internal packages `http`, `https`, `url` and `zlib` in the `Resource` class. This means they do not need to be marked external by build tools anymore. [#11773](https://github.com/CesiumGS/cesium/pull/11773)
+  - This slightly changed the contents of the `RequestErrorEvent` error that is thrown in node environments when a request fails. The `response` property is now a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object instead of an [`http.IncomingMessage`](https://nodejs.org/docs/latest-v20.x/api/http.html#class-httpincomingmessage)
 
 ##### Additions :tada:
 
