@@ -944,9 +944,9 @@ VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
  */
 VoxelEllipsoidShape.DefaultMaxBounds = Object.freeze(
   new Cartesian3(
-    +CesiumMath.PI,
-    +CesiumMath.PI_OVER_TWO,
-    +10.0 * Ellipsoid.WGS84.maximumRadius
+    CesiumMath.PI,
+    CesiumMath.PI_OVER_TWO,
+    10.0 * Ellipsoid.WGS84.maximumRadius
   )
 );
 

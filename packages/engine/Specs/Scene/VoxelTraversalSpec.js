@@ -151,17 +151,14 @@ describe(
       const recomputeBoundingVolumes = true;
       const pauseUpdate = false;
       await pollToPromise(function () {
-        scene.renderForSpecs();
         traversal.update(
           scene.frameState,
           keyFrameLocation,
           recomputeBoundingVolumes,
           pauseUpdate
         );
-        return traversal.megatextures[0].occupiedCount > 0;
-      }).then(function () {
         scene.renderForSpecs();
-        return traversal;
+        return traversal.megatextures[0].occupiedCount > 0;
       });
 
       const megatexture = traversal.megatextures[0];
