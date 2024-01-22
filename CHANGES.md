@@ -30,6 +30,8 @@
 - Fixed a bug where transforms that had been defined with the `KHR_texture_transform` extension had not been applied to Feature ID Textures in `EXT_mesh_features`. [#11731](https://github.com/CesiumGS/cesium/issues/11731)
 - Fixed `Entity` documentation for `orientation` property. [#11762](https://github.com/CesiumGS/cesium/pull/11762)
 - Updated heading docs to correctly reference east-based origin [#11523](https://github.com/CesiumGS/cesium/issues/11523)
+- The `EntityCollection#add` method was documented to throw a `DeveloperError` for duplicate IDs, but did throw a `RuntimeError` in this case. This is now changed to throw a `DeveloperError`. [#11776](https://github.com/CesiumGS/cesium/pull/11776)
+- Parts of the documentation have been updated to resolve potential issues with the generated TypedScript definitions. [#11776](https://github.com/CesiumGS/cesium/pull/11776)
 
 #### @cesium/widgets
 
