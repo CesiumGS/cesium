@@ -2066,7 +2066,6 @@ function loadWithHttpRequest(
           responseHeaders[key] = value;
         });
         deferred.reject(
-          // TODO: there is not directly equivalent to http.IncomingMessage, is the full obj ok as the second arg here?
           new RequestErrorEvent(response.status, response, responseHeaders)
         );
         return;
@@ -2203,7 +2202,7 @@ Resource._Implementations.loadWithXhr = function (
     } else if (
       (browserResponseType === "" || browserResponseType === "document") &&
       defined(xhr.responseXML) &&
-      xhr.responseXML?.hasChildNodes()
+      xhr.responseXML.hasChildNodes()
     ) {
       deferred.resolve(xhr.responseXML);
     } else if (
