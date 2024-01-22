@@ -1,14 +1,15 @@
 import {
+  Cartesian3,
+  Cesium3DTilesVoxelProvider,
+  CullingVolume,
+  KeyframeNode,
+  Math as CesiumMath,
   Matrix4,
+  MetadataType,
+  OrientedBoundingBox,
   VoxelEllipsoidShape,
   VoxelTraversal,
   VoxelPrimitive,
-  Cartesian3,
-  OrientedBoundingBox,
-  Math as CesiumMath,
-  MetadataType,
-  CullingVolume,
-  Cesium3DTilesVoxelProvider,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -163,6 +164,29 @@ describe(
 
       const megatexture = traversal.megatextures[0];
       expect(megatexture.occupiedCount).toBe(1);
+    });
+
+    it("finds keyframe node with expected metadata values", async function () {
+      const keyFrameLocation = 0;
+      const recomputeBoundingVolumes = true;
+      const pauseUpdate = false;
+      await pollToPromise(function () {
+        traversal.update(
+          scene.frameState,
+          keyFrameLocation,
+          recomputeBoundingVolumes,
+          pauseUpdate
+        );
+        scene.renderForSpecs();
+        return traversal.megatextures[0].occupiedCount > 0;
+      });
+
+      const megatextureIndex = 1;
+      const keyframeNode = traversal.findKeyframeNode(megatextureIndex);
+      expect(keyframeNode).toBeDefined();
+      expect(keyframeNode.state).toBe(KeyframeNode.LoadState.LOADED);
+      const expectedMetadata = new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]);
+      expect(keyframeNode.metadatas[0]).toEqual(expectedMetadata);
     });
 
     xit("unloads tiles in megatexture", function () {
