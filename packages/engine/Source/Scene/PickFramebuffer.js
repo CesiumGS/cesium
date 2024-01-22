@@ -29,8 +29,7 @@ function PickFramebuffer(context) {
 }
 PickFramebuffer.prototype.begin = function (screenSpaceRectangle, viewport) {
   const context = this._context;
-  const width = viewport.width;
-  const height = viewport.height;
+  const { width, height } = viewport;
 
   BoundingRectangle.clone(
     screenSpaceRectangle,

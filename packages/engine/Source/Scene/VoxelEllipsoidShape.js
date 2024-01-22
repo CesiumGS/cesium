@@ -928,7 +928,11 @@ function getEllipsoidChunkObb(
  * @readonly
  */
 VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
-  new Cartesian3(-CesiumMath.PI, -CesiumMath.PI_OVER_TWO, -Number.MAX_VALUE)
+  new Cartesian3(
+    -CesiumMath.PI,
+    -CesiumMath.PI_OVER_TWO,
+    -Ellipsoid.WGS84.minimumRadius
+  )
 );
 
 /**
@@ -939,7 +943,11 @@ VoxelEllipsoidShape.DefaultMinBounds = Object.freeze(
  * @readonly
  */
 VoxelEllipsoidShape.DefaultMaxBounds = Object.freeze(
-  new Cartesian3(+CesiumMath.PI, +CesiumMath.PI_OVER_TWO, +Number.MAX_VALUE)
+  new Cartesian3(
+    CesiumMath.PI,
+    CesiumMath.PI_OVER_TWO,
+    10.0 * Ellipsoid.WGS84.maximumRadius
+  )
 );
 
 export default VoxelEllipsoidShape;
