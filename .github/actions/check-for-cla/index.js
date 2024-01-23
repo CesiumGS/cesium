@@ -6,8 +6,8 @@
 const PULL_REQUST_INFO = {
     id: process.env.PR_NUMBER,
     repoName: process.env.GITHUB_REPOSITORY.split('/')[1],
-    username: process.env.GITHUB_ACTOR || 'siddheshranade',
-    gitHubToken: process.env.GITHUB_TOKEN
+    username: process.env.GITHUB_ACTOR || 'siddheshranade'
+    // gitHubToken: process.env.GITHUB_TOKEN
 };
 
 /* TODO: Store in repo secrets */
