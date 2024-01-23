@@ -33,7 +33,7 @@ const main = async () => {
     try {
         hasSignedCLA = await checkIfUserHasSignedAnyCLA();
     } catch (error) {
-      console.log('ERROR ', error);
+      console.log('ERROR2 ', error);
       errorFoundOnCLACheck = error.toString();
     }
 
