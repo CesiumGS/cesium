@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 
-// TODO: id: process.env.PR_NUMBER
+// TODO: remove hardcoded id; `id: process.env.PR_NUMBER`
 const PULL_REQUST_INFO = {
   id: 11781,
   owner: process.env.GITHUB_REPOSITORY.split('/')[0],
@@ -9,8 +9,8 @@ const PULL_REQUST_INFO = {
   gitHubToken: process.env.GITHUB_TOKEN
 };
 
-/* TODO: Store in repo secrets */
 /* TODO: Replace with actual Cesium spreadsheet Ids - these are test sheets that I'll delete, so okay to git push */
+/* TODO: Then store in repo secrets */
 const GOOGLE_SHEETS_INFO = {
   individualCLASheetId: '1oRRS8OG4MfXaQ8uA4uWQWukaOqxEE3N-JuqzrqGGeaE',
   corporateCLASheetId: '1dnoqifzpXB81G1V4bsVJYM3D19gXuwyVZZ-IgNgCkC8'
@@ -31,7 +31,7 @@ const main = async () => {
   }
 
   console.log('pre-comment...');
-  // const response = await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
+  const response = await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
   console.log('post-comment, response: ', response);
 };
 
@@ -52,7 +52,7 @@ const checkIfUserHasSignedAnyCLA = async () => {
 const getGoogleSheetsApiClient = async () => {
   const auth = new google.auth.GoogleAuth({
       // TODO: get from GitHub secrets
-      // (JSON contains keys for my personal Service account, so okay to git push)
+      // (JSON contains keys for my personal Service account that isn't used for anything else, so okay to git push)
       keyFile: 'TempGoogleConfig.json',
       scopes: ['https://www.googleapis.com/auth/spreadsheets']
   });
@@ -109,6 +109,38 @@ const checkIfCorporateCLAFound = async (googleSheetsApi) => {
   }
 
   return false;
+};
+
+const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
+  console.log('adding comment...');
+
+    const octokit = new Octokit();  
+    return octokit.request(`POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/comments`, {
+        owner: PULL_REQUST_INFO.username,
+        repo: PULL_REQUST_INFO.repoName,
+        issue_number: PULL_REQUST_INFO.id,
+        body: getCommentBody(hasSignedCLA, errorFoundOnCLACheck),
+        headers: {
+            authorization: `bearer ${PULL_REQUST_INFO.gitHubToken}`,
+            accept: 'application/vnd.github+json',    
+            'X-GitHub-Api-Version': '2022-11-28'
+        }
+    });
+};
+
+const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
+  console.log('getting comment template...');
+
+  const commentTemplate = fs.readFileSync('./.github/actions/check-for-cla/templates/pullRequestComment.hbs', 'utf-8');
+  const getTemplate = Handlebars.compile(commentTemplate);
+  const commentBody = getTemplate({ 
+      errorCla: errorFoundOnCLACheck,
+      hasCla: hasSignedCLA,
+      username: PULL_REQUST_INFO.username,
+      contributorsUrl: LINKS.contributorsListURL
+   });
+
+  return commentBody;
 };
 
 main();
