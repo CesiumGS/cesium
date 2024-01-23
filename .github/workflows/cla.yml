@@ -1,7 +1,6 @@
 name: CLA Checking
 on:
-  workflow_dispatch:
-  issue_comment:
+  push:
 
 jobs:
   check-cla:

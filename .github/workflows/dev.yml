@@ -18,12 +18,8 @@ jobs:
           node-version: '20'
       - name: npm install
         run: npm install
-      - name: lint *.js
-        run: npm run eslint
-      - name: lint *.md
-        run: npm run markdownlint
-      - name: format code
-        run: npm run prettier-check
+      - name: run cla script
+        run: node ./github/actions/check-for-cla/index.js
   coverage:
     runs-on: ubuntu-latest
     env:
