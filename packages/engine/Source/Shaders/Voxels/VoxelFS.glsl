@@ -59,6 +59,16 @@ vec2 packFloatToVec2(float value) {
     return vec2(highBits, lowBits);
 }
 
+int getSampleIndex(in vec3 tileUv) {
+    ivec3 voxelDimensions = u_dimensions;
+    ivec3 tileIndex = ivec3(clamp(tileUv, 0.0, 1.0) * vec3(voxelDimensions));
+    #if defined(PADDING)
+        voxelDimensions += u_paddingBefore + u_paddingAfter;
+        tileIndex += u_paddingBefore;
+    #endif
+    return tileIndex.x + voxelDimensions.x * (tileIndex.y + voxelDimensions.y * tileIndex.z);
+}
+
 void main()
 {
     vec4 fragCoord = gl_FragCoord;
@@ -187,8 +197,8 @@ void main()
             discard;
         }
         vec2 megatextureId = packIntToVec2(sampleDatas[0].megatextureIndex);
-        vec2 rayDistance = packFloatToVec2(currT);
-        out_FragColor = vec4(megatextureId, rayDistance);
+        vec2 sampleIndex = packIntToVec2(getSampleIndex(sampleDatas[0].tileUv));
+        out_FragColor = vec4(megatextureId, sampleIndex);
     #else
         out_FragColor = colorAccum;
     #endif
