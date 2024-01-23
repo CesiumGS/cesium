@@ -1045,21 +1045,30 @@ Transforms.basisTo2D = function (projection, matrix, result) {
   const rtcCenter = Matrix4.getTranslation(matrix, scratchCenter);
   const ellipsoid = projection.ellipsoid;
 
-  // Get the 2D Center
-  const cartographic = ellipsoid.cartesianToCartographic(
-    rtcCenter,
-    scratchCartographic
-  );
-  const projectedPosition = projection.project(
-    cartographic,
-    scratchCartesian3Projection
-  );
-  Cartesian3.fromElements(
-    projectedPosition.z,
-    projectedPosition.x,
-    projectedPosition.y,
-    projectedPosition
-  );
+  let projectedPosition;
+  if (Cartesian3.equals(rtcCenter, Cartesian3.ZERO)) {
+    projectedPosition = Cartesian3.clone(
+      Cartesian3.ZERO,
+      scratchCartesian3Projection
+    );
+  } else {
+    // Get the 2D Center
+    const cartographic = ellipsoid.cartesianToCartographic(
+      rtcCenter,
+      scratchCartographic
+    );
+
+    projectedPosition = projection.project(
+      cartographic,
+      scratchCartesian3Projection
+    );
+    Cartesian3.fromElements(
+      projectedPosition.z,
+      projectedPosition.x,
+      projectedPosition.y,
+      projectedPosition
+    );
+  }
 
   // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
   const fromENU = Transforms.eastNorthUpToFixedFrame(

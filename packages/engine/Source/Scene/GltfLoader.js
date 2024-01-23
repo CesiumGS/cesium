@@ -179,6 +179,7 @@ const GltfLoaderState = {
  * @param {Axis} [options.forwardAxis=Axis.Z] The forward-axis of the glTF model.
  * @param {boolean} [options.loadAttributesAsTypedArray=false] Load all attributes and indices as typed arrays instead of GPU buffers. If the attributes are interleaved in the glTF they will be de-interleaved in the typed array.
  * @param {boolean} [options.loadAttributesFor2D=false] If <code>true</code>, load the positions buffer and any instanced attribute buffers as typed arrays for accurately projecting models to 2D.
+ * @param {boolean} [options.enablePick=false]  If <code>true</code>, load the positions buffer, any instanced attribute buffers, and index buffer as typed arrays for CPU-enabled picking in WebGL1.
  * @param {boolean} [options.loadIndicesForWireframe=false] If <code>true</code>, load the index buffer as both a buffer and typed array. The latter is useful for creating wireframe indices in WebGL1.
  * @param {boolean} [options.loadPrimitiveOutline=true] If <code>true</code>, load outlines from the {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/CESIUM_primitive_outline|CESIUM_primitive_outline} extension. This can be set false to avoid post-processing geometry at load time.
  * @param {boolean} [options.loadForClassification=false] If <code>true</code> and if the model has feature IDs, load the feature IDs and indices as typed arrays. This is useful for batching features for classification.
@@ -203,6 +204,7 @@ function GltfLoader(options) {
     false
   );
   const loadAttributesFor2D = defaultValue(options.loadAttributesFor2D, false);
+  const enablePick = defaultValue(options.enablePick);
   const loadIndicesForWireframe = defaultValue(
     options.loadIndicesForWireframe,
     false
@@ -234,6 +236,7 @@ function GltfLoader(options) {
   this._forwardAxis = forwardAxis;
   this._loadAttributesAsTypedArray = loadAttributesAsTypedArray;
   this._loadAttributesFor2D = loadAttributesFor2D;
+  this._enablePick = enablePick;
   this._loadIndicesForWireframe = loadIndicesForWireframe;
   this._loadPrimitiveOutline = loadPrimitiveOutline;
   this._loadForClassification = loadForClassification;
@@ -1241,6 +1244,8 @@ function loadVertexAttribute(
     !hasInstances &&
     loader._loadAttributesFor2D &&
     !frameState.scene3DOnly;
+  const loadTypedArrayForPicking =
+    isPositionAttribute && loader._enablePick && !frameState.context.webgl2;
 
   const loadTypedArrayForClassification =
     loader._loadForClassification && isFeatureIdAttribute;
@@ -1252,6 +1257,7 @@ function loadVertexAttribute(
   const outputTypedArray =
     outputTypedArrayOnly ||
     loadTypedArrayFor2D ||
+    loadTypedArrayForPicking ||
     loadTypedArrayForClassification;
 
   // Determine what to load right now:
@@ -1319,6 +1325,8 @@ function loadInstancedAttribute(
     loader._loadAttributesAsTypedArray ||
     (hasRotation && isTransformAttribute) ||
     !frameState.context.instancedArrays;
+  const loadTypedArrayForPicking =
+    loader._enablePick && !frameState.context.webgl2;
 
   const loadBuffer = !loadAsTypedArrayOnly;
 
@@ -1328,7 +1336,8 @@ function loadInstancedAttribute(
   // - the model will be projected to 2D.
   const loadFor2D = loader._loadAttributesFor2D && !frameState.scene3DOnly;
   const loadTranslationAsTypedArray =
-    isTranslationAttribute && (!hasTranslationMinMax || loadFor2D);
+    isTranslationAttribute &&
+    (!hasTranslationMinMax || loadFor2D || loadTypedArrayForPicking);
 
   const loadTypedArray = loadAsTypedArrayOnly || loadTranslationAsTypedArray;
 
@@ -1365,9 +1374,10 @@ function loadIndices(
   indices.count = accessor.count;
 
   const loadAttributesAsTypedArray = loader._loadAttributesAsTypedArray;
-  // Load the index buffer as a typed array to generate wireframes in WebGL1.
-  const loadForWireframe =
-    loader._loadIndicesForWireframe && !frameState.context.webgl2;
+  // Load the index buffer as a typed array to generate wireframes or pick in WebGL1.
+  const loadForCpuOperations =
+    (loader._loadIndicesForWireframe || loader._enablePick) &&
+    !frameState.context.webgl2;
 
   // Load the index buffer as a typed array to batch features together for classification.
   const loadForClassification = loader._loadForClassification && hasFeatureIds;
@@ -1377,7 +1387,7 @@ function loadIndices(
   const outputTypedArrayOnly = loadAttributesAsTypedArray;
   const outputBuffer = !outputTypedArrayOnly;
   const outputTypedArray =
-    loadAttributesAsTypedArray || loadForWireframe || loadForClassification;
+    loadAttributesAsTypedArray || loadForCpuOperations || loadForClassification;
 
   // Determine what to load right now:
   //
