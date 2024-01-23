@@ -8,7 +8,7 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  lint:
+  cla-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,10 +16,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-      - name: npm install
-        run: npm install
       - name: run cla script
-        run: node ./github/actions/check-for-cla/index.js
+        run: node .github/actions/check-for-cla/index.js
   coverage:
     runs-on: ubuntu-latest
     env:
