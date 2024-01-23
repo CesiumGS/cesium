@@ -4,7 +4,7 @@ import Handlebars from "handlebars";
 import fs from "fs-extra";
 
 const PULL_REQUST_INFO = {
-    id: process.env.PR_NUMBER,
+    id: 11781,
     repoName: process.env.GITHUB_REPOSITORY.split('/')[1],
     username: process.env.GITHUB_ACTOR,
     gitHubToken: process.env.GITHUB_TOKEN
@@ -23,7 +23,9 @@ const LINKS = {
 };
 
 const main = async () => {
-    // console.log('--PULL_REQUST_INFO-- ', PULL_REQUST_INFO);
+    console.log('main()');
+    console.log(PULL_REQUST_INFO.repoName, PULL_REQUST_INFO.username);
+
     let hasSignedCLA;
     let errorFoundOnCLACheck;
 
@@ -34,15 +36,15 @@ const main = async () => {
       errorFoundOnCLACheck = error.toString();
     }
 
-    // const response = await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
+    const response = await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
 };
 
 const checkIfUserHasSignedAnyCLA = async () => {    
     const googleSheetsApi = await getGoogleSheetsApiClient();
 
     let foundIndividualCLA = await checkIfIndividualCLAFound(googleSheetsApi);
+    console.log('CLA #1 ', foundIndividualCLA);
     if (foundIndividualCLA) {
-      console.log('CLA #1 ', foundIndividualCLA);
         return true;
     }
 
@@ -114,8 +116,9 @@ const checkIfCorporateCLAFound = async (googleSheetsApi) => {
 };
 
 const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
-    const octokit = new Octokit();
+  console.log('adding comment...');
 
+    const octokit = new Octokit();  
     return octokit.request(`POST /repos/${PULL_REQUST_INFO.username}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/comments`, {
         owner: PULL_REQUST_INFO.username,
         repo: PULL_REQUST_INFO.repoName,
@@ -130,7 +133,9 @@ const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
 };
 
 const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
-    const commentTemplate = fs.readFileSync('./.github/scripts/templates/pullRequestComment.hbs', 'utf-8');
+    console.log('getting comment template...');
+
+    const commentTemplate = fs.readFileSync('./.github/actions/check-for-cla/templates/pullRequestComment.hbs', 'utf-8');
     const getTemplate = Handlebars.compile(commentTemplate);
     const commentBody = getTemplate({ 
         errorCla: errorFoundOnCLACheck,
