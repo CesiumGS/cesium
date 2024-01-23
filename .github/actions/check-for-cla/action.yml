@@ -6,7 +6,6 @@ on:
 jobs:
   check-cla:
     runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'cla-main' }}
     steps:
       - uses: actions/checkout@v3
       - name: install node 20
