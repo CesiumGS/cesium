@@ -1,4 +1,7 @@
+import { Octokit } from "@octokit/core";
 import { google } from "googleapis";
+import Handlebars from "handlebars";
+import fs from "fs-extra";
 
 // TODO: remove hardcoded id; `id: process.env.PR_NUMBER`
 const PULL_REQUST_INFO = {
@@ -14,6 +17,11 @@ const PULL_REQUST_INFO = {
 const GOOGLE_SHEETS_INFO = {
   individualCLASheetId: '1oRRS8OG4MfXaQ8uA4uWQWukaOqxEE3N-JuqzrqGGeaE',
   corporateCLASheetId: '1dnoqifzpXB81G1V4bsVJYM3D19gXuwyVZZ-IgNgCkC8'
+};
+
+/* TODO: Change to actual link */
+const LINKS = {
+  contributorsListURL: 'https://google.com'
 };
 
 const main = async () => {
