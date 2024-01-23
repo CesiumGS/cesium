@@ -51,7 +51,10 @@
   ],
   "dependencies": {
     "@cesium/engine": "^6.1.1",
-    "@cesium/widgets": "^4.3.1"
+    "@cesium/widgets": "^4.3.1",
+    "googleapis": "^131.0.0",
+    "handlebars": "^4.7.8",
+    "octokit": "^3.1.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.1",
