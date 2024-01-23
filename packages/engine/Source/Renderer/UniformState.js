@@ -161,6 +161,16 @@ function UniformState() {
   this._specularEnvironmentMapsMaximumLOD = undefined;
 
   this._fogDensity = undefined;
+  this._fogMinimumBrightness = undefined;
+
+  this._atmosphereHsbShift = undefined;
+  this._atmosphereLightIntensity = undefined;
+  this._atmosphereRayleighCoefficient = new Cartesian3();
+  this._atmosphereRayleighScaleHeight = new Cartesian3();
+  this._atmosphereMieCoefficient = new Cartesian3();
+  this._atmosphereMieScaleHeight = undefined;
+  this._atmosphereMieAnisotropy = undefined;
+  this._atmosphereDynamicLighting = undefined;
 
   this._invertClassificationColor = undefined;
 
@@ -916,6 +926,99 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
+   * A scalar used as a minimum value when brightening fog
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  fogMinimumBrightness: {
+    get: function () {
+      return this._fogMinimumBrightness;
+    },
+  },
+
+  /**
+   * A color shift to apply to the atmosphere color in HSB.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereHsbShift: {
+    get: function () {
+      return this._atmosphereHsbShift;
+    },
+  },
+  /**
+   * The intensity of the light that is used for computing the atmosphere color
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereLightIntensity: {
+    get: function () {
+      return this._atmosphereLightIntensity;
+    },
+  },
+  /**
+   * The Rayleigh scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereRayleighCoefficient: {
+    get: function () {
+      return this._atmosphereRayleighCoefficient;
+    },
+  },
+  /**
+   * The Rayleigh scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereRayleighScaleHeight: {
+    get: function () {
+      return this._atmosphereRayleighScaleHeight;
+    },
+  },
+  /**
+   * The Mie scattering coefficient used in the atmospheric scattering equations for the sky atmosphere.
+   * @memberof UniformState.prototype
+   * @type {Cartesian3}
+   */
+  atmosphereMieCoefficient: {
+    get: function () {
+      return this._atmosphereMieCoefficient;
+    },
+  },
+  /**
+   * The Mie scale height used in the atmospheric scattering equations for the sky atmosphere, in meters.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereMieScaleHeight: {
+    get: function () {
+      return this._atmosphereMieScaleHeight;
+    },
+  },
+  /**
+   * The anisotropy of the medium to consider for Mie scattering.
+   * @memberof UniformState.prototype
+   * @type {number}
+   */
+  atmosphereMieAnisotropy: {
+    get: function () {
+      return this._atmosphereMieAnisotropy;
+    },
+  },
+  /**
+   * Which light source to use for dynamically lighting the atmosphere
+   *
+   * @memberof UniformState.prototype
+   * @type {DynamicAtmosphereLightingType}
+   */
+  atmosphereDynamicLighting: {
+    get: function () {
+      return this._atmosphereDynamicLighting;
+    },
+  },
+
+  /**
    * A scalar that represents the geometric tolerance per meter
    * @memberof UniformState.prototype
    * @type {number}
@@ -1411,6 +1514,30 @@ UniformState.prototype.update = function (frameState) {
   }
 
   this._fogDensity = frameState.fog.density;
+  this._fogMinimumBrightness = frameState.fog.minimumBrightness;
+
+  const atmosphere = frameState.atmosphere;
+  if (defined(atmosphere)) {
+    this._atmosphereHsbShift = Cartesian3.fromElements(
+      atmosphere.hueShift,
+      atmosphere.saturationShift,
+      atmosphere.brightnessShift,
+      this._atmosphereHsbShift
+    );
+    this._atmosphereLightIntensity = atmosphere.lightIntensity;
+    this._atmosphereRayleighCoefficient = Cartesian3.clone(
+      atmosphere.rayleighCoefficient,
+      this._atmosphereRayleighCoefficient
+    );
+    this._atmosphereRayleighScaleHeight = atmosphere.rayleighScaleHeight;
+    this._atmosphereMieCoefficient = Cartesian3.clone(
+      atmosphere.mieCoefficient,
+      this._atmosphereMieCoefficient
+    );
+    this._atmosphereMieScaleHeight = atmosphere.mieScaleHeight;
+    this._atmosphereMieAnisotropy = atmosphere.mieAnisotropy;
+    this._atmosphereDynamicLighting = atmosphere.dynamicLighting;
+  }
 
   this._invertClassificationColor = frameState.invertClassificationColor;
 

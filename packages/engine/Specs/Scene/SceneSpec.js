@@ -1,4 +1,5 @@
 import {
+  Atmosphere,
   BoundingSphere,
   Cartesian2,
   Cartesian3,
@@ -577,7 +578,7 @@ describe(
         });
       });
 
-      it("renders sky atmopshere without a globe", function () {
+      it("renders sky atmosphere without a globe", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.globe.show = false;
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
@@ -2470,6 +2471,26 @@ describe(
         expect(scene).toPickPrimitive(primitive);
         scene.destroyForSpecs();
       });
+    });
+
+    it("updates frameState.atmosphere", function () {
+      const scene = createScene();
+      const frameState = scene.frameState;
+
+      // Before the first render, the atmosphere has not yet been set
+      expect(frameState.atmosphere).toBeUndefined();
+
+      // On the first render, the atmosphere settings are propagated to the
+      // frame state
+      const originalAtmosphere = scene.atmosphere;
+      scene.renderForSpecs();
+      expect(frameState.atmosphere).toBe(originalAtmosphere);
+
+      // If we change the atmosphere to a new object
+      const anotherAtmosphere = new Atmosphere();
+      scene.atmosphere = anotherAtmosphere;
+      scene.renderForSpecs();
+      expect(frameState.atmosphere).toBe(anotherAtmosphere);
     });
   },
 

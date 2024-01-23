@@ -12,7 +12,8 @@ out float v_translucent;
 void main(void)
 {
     vec4 positionWC = czm_model * position;
-    vec3 lightDirection = getLightDirection(positionWC.xyz);
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
+    vec3 lightDirection = czm_getDynamicAtmosphereLightDirection(positionWC.xyz, lightEnum);
 
     #ifndef PER_FRAGMENT_ATMOSPHERE
         computeAtmosphereScattering(
@@ -24,7 +25,7 @@ void main(void)
             v_translucent
         );
     #endif
-    
+
     v_outerPositionWC = positionWC.xyz;
     gl_Position = czm_modelViewProjection * position;
 }
