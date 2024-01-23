@@ -12,8 +12,7 @@ const PULL_REQUST_INFO = {
   gitHubToken: process.env.GITHUB_TOKEN
 };
 
-/* TODO: Replace with actual Cesium spreadsheet Ids - these are test sheets that I'll delete, so okay to git push */
-/* TODO: Then store in repo secrets */
+/* TODO: 1. Replace with actual Cesium CLA spreadsheet Ids, 2. Retrieve Ids from GitHub Secrets, not expose */
 const GOOGLE_SHEETS_INFO = {
   individualCLASheetId: '1oRRS8OG4MfXaQ8uA4uWQWukaOqxEE3N-JuqzrqGGeaE',
   corporateCLASheetId: '1dnoqifzpXB81G1V4bsVJYM3D19gXuwyVZZ-IgNgCkC8'
@@ -59,8 +58,7 @@ const checkIfUserHasSignedAnyCLA = async () => {
 
 const getGoogleSheetsApiClient = async () => {
   const auth = new google.auth.GoogleAuth({
-      // TODO: get from GitHub secrets
-      // (JSON contains keys for my personal Service account that isn't used for anything else, so okay to git push)
+      // TODO: 1. Get similar config file for Cesium Google account, 2. Retrive file from secrets and remove from source control
       keyFile: 'TempGoogleConfig.json',
       scopes: ['https://www.googleapis.com/auth/spreadsheets']
   });
@@ -139,7 +137,7 @@ const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
 const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
   console.log('getting comment template...');
 
-  const commentTemplate = fs.readFileSync('./.github/actions/check-for-cla/templates/pullRequestComment.hbs', 'utf-8');
+  const commentTemplate = fs.readFileSync('./.github/actions/check-for-CLA/templates/pullRequestComment.hbs', 'utf-8');
   const getTemplate = Handlebars.compile(commentTemplate);
   const commentBody = getTemplate({ 
       errorCla: errorFoundOnCLACheck,
