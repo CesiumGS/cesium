@@ -1,0 +1,22 @@
+name: CLA Checking
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  check-cla:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'cla-main' }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: install node 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - name: install npm packages
+        run: npm install
+      - name: run script
+        run: node .github/actions/check-for-cla/index.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
