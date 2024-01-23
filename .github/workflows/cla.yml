@@ -14,5 +14,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20'
+      - name: install npm packages
+        run: npm install googleapis          
       - name: run script
         run: node .github/actions/check-for-CLA/index.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}        
