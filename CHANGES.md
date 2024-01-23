@@ -4,11 +4,6 @@
 
 #### @cesium/engine
 
-##### Fixes :type:
-
-- Added a uninon type undefined for camera.constrainedAxis to fix the issue [#11475](https://github.com/CesiumGS/cesium/issues/11475)
-- By adding a union type undefined to camera.constrainedAxis, it will allow typescript user to assign undefined value to it.
-
 ##### Breaking Changes :mega:
 
 - By default, the screen space camera controller will no longer go inside or under instances of `Cesium3DTileset`. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
@@ -33,6 +28,7 @@
 - Fixed `Entity` documentation for `orientation` property. [#11762](https://github.com/CesiumGS/cesium/pull/11762)
 - Fixed an issue where `DataSource` objects incorrectly shared a single `PolylineCollection` in the `PolylineGeometryUpdater`. Updated `PolylineGeometryUpdater` to create a distinct `PolylineCollection` instance per `DataSource`. This resolves the crashes reported under [#7758](https://github.com/CesiumGS/cesium/issues/7758) and [#9154](https://github.com/CesiumGS/cesium/issues/9154).
 - Fixed a bug where transforms that had been defined with the `KHR_texture_transform` extension had not been applied to Feature ID Textures in `EXT_mesh_features`. [#11731](https://github.com/CesiumGS/cesium/issues/11731)
+- Fixed type definition for `Camera.constrainedAxis`. [#11475](https://github.com/CesiumGS/cesium/issues/11475)
 
 #### @cesium/widgets
 
