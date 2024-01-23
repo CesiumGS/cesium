@@ -27,11 +27,12 @@ const main = async () => {
     let hasSignedCLA;
     let errorFoundOnCLACheck;
 
-    // try {
-    //     hasSignedCLA = await checkIfUserHasSignedAnyCLA();
-    // } catch (error) {
-    //     errorFoundOnCLACheck = error.toString();
-    // }
+    try {
+        hasSignedCLA = await checkIfUserHasSignedAnyCLA();
+    } catch (error) {
+      console.log('ERROR ', error);
+      errorFoundOnCLACheck = error.toString();
+    }
 
     // const response = await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
 };
@@ -41,10 +42,12 @@ const checkIfUserHasSignedAnyCLA = async () => {
 
     let foundIndividualCLA = await checkIfIndividualCLAFound(googleSheetsApi);
     if (foundIndividualCLA) {
+      console.log('CLA #1 ', foundIndividualCLA);
         return true;
     }
 
     let foundCorporateCLA = await checkIfCorporateCLAFound(googleSheetsApi);
+    console.log('CLA #2 ', foundCorporateCLA);
     return foundCorporateCLA;
 };
 
