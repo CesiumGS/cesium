@@ -1,0 +1,18 @@
+name: CLA Checking
+on:
+  push:
+
+jobs:
+  check-cla:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: install node 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - name: run script
+        run: node .github/actions/check-for-cla/index.js
