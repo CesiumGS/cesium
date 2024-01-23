@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: '20'
       - name: install npm packages
-        run: npm install googleapis @octokit/core handlebars          
+        run: npm install googleapis @octokit/core handlebars fs-extra        
       - name: run script
         run: node .github/actions/check-for-CLA/index.js
         env:
