@@ -1,7 +1,7 @@
-import { Octokit } from "@octokit/core";
-import { google } from "googleapis";
-import Handlebars from "handlebars";
-import fs from "fs-extra";
+// import { Octokit } from "@octokit/core";
+// import { google } from "googleapis";
+// import Handlebars from "handlebars";
+// import fs from "fs-extra";
 
 const PULL_REQUST_INFO = {
     id: process.env.PR_NUMBER,
@@ -78,10 +78,6 @@ const checkIfIndividualCLAFound = async (googleSheetsApi) => {
 
     return false;
 };
-
-const testMethod = () => {
-    return true;
-}
 
 const checkIfCorporateCLAFound = async (googleSheetsApi) => {
     const response = await googleSheetsApi.spreadsheets.values.get({
