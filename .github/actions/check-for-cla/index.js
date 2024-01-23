@@ -5,6 +5,7 @@ import fs from "fs-extra";
 
 const PULL_REQUST_INFO = {
     id: 11781,
+    owner: process.env.GITHUB_REPOSITORY.split('/')[0],
     repoName: process.env.GITHUB_REPOSITORY.split('/')[1],
     username: process.env.GITHUB_ACTOR,
     gitHubToken: process.env.GITHUB_TOKEN
@@ -24,7 +25,7 @@ const LINKS = {
 
 const main = async () => {
     console.log('main()');
-    console.log(PULL_REQUST_INFO.repoName, PULL_REQUST_INFO.username);
+    console.log(PULL_REQUST_INFO.repoName, PULL_REQUST_INFO.owner, PULL_REQUST_INFO.username);
 
     let hasSignedCLA;
     let errorFoundOnCLACheck;
@@ -36,7 +37,9 @@ const main = async () => {
       errorFoundOnCLACheck = error.toString();
     }
 
+    console.log('pre-comment...');
     const response = await postCommentOnPullRequest(hasSignedCLA, errorFoundOnCLACheck);
+    console.log('post-comment, response: ', response);
 };
 
 const checkIfUserHasSignedAnyCLA = async () => {    
@@ -119,7 +122,7 @@ const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
   console.log('adding comment...');
 
     const octokit = new Octokit();  
-    return octokit.request(`POST /repos/${PULL_REQUST_INFO.username}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/comments`, {
+    return octokit.request(`POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/comments`, {
         owner: PULL_REQUST_INFO.username,
         repo: PULL_REQUST_INFO.repoName,
         issue_number: PULL_REQUST_INFO.id,
