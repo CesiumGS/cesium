@@ -11,6 +11,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20'
+      - name: install npm packages
+        run: npm install @octokit/core googleapis handlebars
       - name: run script
         run: node .github/actions/check-for-cla/index.js
         env:

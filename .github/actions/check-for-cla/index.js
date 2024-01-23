@@ -1,13 +1,13 @@
-// import { Octokit } from "@octokit/core";
-// import { google } from "googleapis";
-// import Handlebars from "handlebars";
-// import fs from "fs-extra";
+import { Octokit } from "@octokit/core";
+import { google } from "googleapis";
+import Handlebars from "handlebars";
+import fs from "fs-extra";
 
 const PULL_REQUST_INFO = {
     id: process.env.PR_NUMBER,
     repoName: process.env.GITHUB_REPOSITORY.split('/')[1],
-    username: process.env.GITHUB_ACTOR
-    // gitHubToken: process.env.GITHUB_TOKEN
+    username: process.env.GITHUB_ACTOR,
+    gitHubToken: process.env.GITHUB_TOKEN
 };
 
 /* TODO: Store in repo secrets */
@@ -23,7 +23,7 @@ const LINKS = {
 };
 
 const main = async () => {
-    console.log('--PULL_REQUST_INFO-- ', PULL_REQUST_INFO);
+    // console.log('--PULL_REQUST_INFO-- ', PULL_REQUST_INFO);
     let hasSignedCLA;
     let errorFoundOnCLACheck;
 
