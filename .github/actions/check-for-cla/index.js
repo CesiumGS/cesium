@@ -53,7 +53,9 @@ const checkIfUserHasSignedAnyCLA = async () => {
 
 const getGoogleSheetsApiClient = async () => {
     const auth = new google.auth.GoogleAuth({
-        keyFile: 'GoogleConfig.json',
+        // This json contains keys for my personal Google Sheets with no sensitive company data 
+        // and I'm fine with exposing those for now
+        keyFile: 'TempGoogleConfig.json',
         scopes: ['https://www.googleapis.com/auth/spreadsheets']
     });
     const googleAuthClient = await auth.getClient();
