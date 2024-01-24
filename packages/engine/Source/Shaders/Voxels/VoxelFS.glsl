@@ -47,21 +47,22 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
 }
 
 vec2 packIntToVec2(int value) {
-    float shifted = float(value) / 256.0;
+    float shifted = float(value) / 255.0;
     float lowBits = fract(shifted);
-    float highBits = floor(shifted) / 256.0;
+    float highBits = floor(shifted) / 255.0;
     return vec2(highBits, lowBits);
 }
 
 vec2 packFloatToVec2(float value) {
     float lowBits = fract(value);
-    float highBits = floor(value) / 256.0;
+    float highBits = floor(value) / 255.0;
     return vec2(highBits, lowBits);
 }
 
 int getSampleIndex(in vec3 tileUv) {
     ivec3 voxelDimensions = u_dimensions;
-    ivec3 tileIndex = ivec3(clamp(tileUv, 0.0, 1.0) * vec3(voxelDimensions));
+    vec3 tileCoordinate = clamp(tileUv, 0.0, 1.0) * vec3(voxelDimensions);
+    ivec3 tileIndex = ivec3(floor(tileCoordinate));
     #if defined(PADDING)
         voxelDimensions += u_paddingBefore + u_paddingAfter;
         tileIndex += u_paddingBefore;

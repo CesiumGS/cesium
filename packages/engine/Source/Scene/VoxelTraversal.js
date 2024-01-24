@@ -224,7 +224,7 @@ function VoxelTraversal(
  */
 VoxelTraversal.prototype.findKeyframeNode = function (megatextureIndex) {
   return this._keyframeNodesInMegatexture.find(function (keyframeNode) {
-    return (keyframeNode.megatextureIndex = megatextureIndex);
+    return keyframeNode.megatextureIndex === megatextureIndex;
   });
 };
 
