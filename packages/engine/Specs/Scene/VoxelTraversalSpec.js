@@ -181,7 +181,7 @@ describe(
         return traversal.megatextures[0].occupiedCount > 0;
       });
 
-      const megatextureIndex = 1;
+      const megatextureIndex = 0;
       const keyframeNode = traversal.findKeyframeNode(megatextureIndex);
       expect(keyframeNode).toBeDefined();
       expect(keyframeNode.state).toBe(KeyframeNode.LoadState.LOADED);
