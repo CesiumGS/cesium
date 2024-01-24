@@ -296,6 +296,15 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   scratchRectangle.height = scratchRectangleHeight;
   passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
 
+  /**
+   *
+   * Passes update.
+   *
+   */
+  if (scene.primitives.show) {
+    const primitives = scene.primitives;
+    primitives.prePassesUpdate(frameState);
+  }
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
