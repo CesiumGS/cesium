@@ -3,7 +3,7 @@ import defined from "./defined.js";
 
 /**
  * Defines a heading angle, pitch angle, and range in a local frame.
- * Heading is the rotation from the local north direction where a positive angle is increasing eastward.
+ * Heading is the rotation from the local east direction where a positive angle is increasing southward.
  * Pitch is the rotation from the local xy-plane. Positive pitch angles are above the plane. Negative pitch
  * angles are below the plane. Range is the distance from the center of the frame.
  * @alias HeadingPitchRange
@@ -15,7 +15,7 @@ import defined from "./defined.js";
  */
 function HeadingPitchRange(heading, pitch, range) {
   /**
-   * Heading is the rotation from the local north direction where a positive angle is increasing eastward.
+   * Heading is the rotation from the local east direction where a positive angle is increasing southward.
    * @type {number}
    * @default 0.0
    */
