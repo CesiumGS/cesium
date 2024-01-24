@@ -14,8 +14,8 @@ const PULL_REQUST_INFO = {
 
 /* TODO: 1. Replace with actual Cesium CLA spreadsheet Ids, 2. Retrieve Ids from GitHub Secrets, not expose */
 const GOOGLE_SHEETS_INFO = {
-  individualCLASheetId: '1oRRS8OG4MfXaQ8uA4uWQWukaOqxEE3N-JuqzrqGGeaE',
-  corporateCLASheetId: '1dnoqifzpXB81G1V4bsVJYM3D19gXuwyVZZ-IgNgCkC8'
+  individualCLASheetId: 'abcd',
+  corporateCLASheetId: 'efgh'
 };
 
 /* TODO: Change to actual link */
@@ -31,7 +31,7 @@ const main = async () => {
   let errorFoundOnCLACheck;
 
   try {
-      hasSignedCLA = await checkIfUserHasSignedAnyCLA();
+    hasSignedCLA = await checkIfUserHasSignedAnyCLA();
   } catch (error) {
     console.log('ERROR2 ', error);
     errorFoundOnCLACheck = error.toString();
