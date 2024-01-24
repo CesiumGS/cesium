@@ -23,7 +23,6 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  */
 function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   /**
-   * @ignore
    * @type {SpatialNode[]}
    */
   this.children = undefined;
@@ -35,29 +34,24 @@ function SpatialNode(level, x, y, z, parent, shape, voxelDimensions) {
   this.z = z;
 
   /**
-   * @ignore
    * @type {Cartesian3}
    */
   this.dimensions = Cartesian3.clone(voxelDimensions);
   /**
-   * @ignore
    * @type {KeyframeNode[]}
    */
   this.keyframeNodes = [];
   /**
-   * @ignore
    * @type {KeyframeNode[]}
    */
   this.renderableKeyframeNodes = [];
 
   this.renderableKeyframeNodeLerp = 0.0;
   /**
-   * @ignore
    * @type {KeyframeNode}
    */
   this.renderableKeyframeNodePrevious = undefined;
   /**
-   * @ignore
    * @type {KeyframeNode}
    */
   this.renderableKeyframeNodeNext = undefined;

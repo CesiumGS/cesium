@@ -722,9 +722,9 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * Gets or sets the dynamic screen space error density.  This property is observable.
    *
    * @type {number}
-   * @default 0.00278
+   * @default 2.0e-4
    */
-  this.dynamicScreenSpaceErrorDensity = 0.00278;
+  this.dynamicScreenSpaceErrorDensity = 2.0e-4;
 
   /**
    * Gets or sets the dynamic screen space error density slider value.
@@ -732,7 +732,7 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * This property is observable.
    *
    * @type {number}
-   * @default 0.00278
+   * @default 2.0e-4
    */
   this.dynamicScreenSpaceErrorDensitySliderValue = undefined;
   knockout.defineProperty(this, "dynamicScreenSpaceErrorDensitySliderValue", {
@@ -740,7 +740,11 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
       return Math.pow(dynamicScreenSpaceErrorDensity(), 1 / 6);
     },
     set: function (value) {
-      dynamicScreenSpaceErrorDensity(Math.pow(value, 6));
+      const scaledValue = Math.pow(value, 6);
+      dynamicScreenSpaceErrorDensity(scaledValue);
+      if (defined(that._tileset)) {
+        that._tileset.dynamicScreenSpaceErrorDensity = scaledValue;
+      }
     },
   });
 
@@ -763,9 +767,9 @@ function Cesium3DTilesInspectorViewModel(scene, performanceContainer) {
    * Gets or sets the dynamic screen space error factor.  This property is observable.
    *
    * @type {number}
-   * @default 4.0
+   * @default 24.0
    */
-  this.dynamicScreenSpaceErrorFactor = 4.0;
+  this.dynamicScreenSpaceErrorFactor = 24.0;
 
   const pickTileset = getPickTileset(this);
   const pickActive = knockout.observable();
