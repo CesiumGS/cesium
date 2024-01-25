@@ -269,9 +269,6 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
   viewport.width = context.drawingBufferWidth;
   viewport.height = context.drawingBufferHeight;
 
-  // TODO: Why do we change the defaultView passState?
-  // We don't use this passState. We get a new one from pickFramebuffer.begin.
-  // Is this just to update the passState attached to scene.view? Is that one used somewhere?
   let passState = defaultView.passState;
   passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 

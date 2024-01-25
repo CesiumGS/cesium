@@ -121,7 +121,9 @@ PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
 };
 
 /**
- * TODO
+ * Return voxel tile and sample information as rendered by a pickVoxel pass,
+ * within a given rectangle.
+ *
  * @param {BoundingRectangle} screenSpaceRectangle
  * @returns {TypedArray}
  */
@@ -154,4 +156,5 @@ PickFramebuffer.prototype.destroy = function () {
   this._fb.destroy();
   return destroyObject(this);
 };
+
 export default PickFramebuffer;
