@@ -1,6 +1,8 @@
 import {
+  Cartesian2,
   Cartesian3,
   Cartographic,
+  Cesium3DTilesVoxelProvider,
   Color,
   Ellipsoid,
   GeometryInstance,
@@ -18,6 +20,7 @@ import {
   PointPrimitiveCollection,
   Primitive,
   SceneMode,
+  VoxelPrimitive,
 } from "../../index.js";
 
 import { Math as CesiumMath } from "../../index.js";
@@ -57,6 +60,8 @@ describe(
       "Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json";
     const pointCloudTilesetUrl =
       "Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/tileset.json";
+    const voxelTilesetUrl =
+      "Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
 
     beforeAll(function () {
       scene = createScene({
@@ -228,6 +233,27 @@ describe(
         const rectangle = createLargeRectangle(0.0);
         scene.renderForSpecs();
         expect(scene).toPickPrimitive(rectangle);
+      });
+    });
+
+    describe("_pickVoxelCoordinate", function () {
+      it("does not pick undefined window positions", function () {
+        expect(function () {
+          scene._pickVoxelCoordinate(undefined);
+        }).toThrowDeveloperError();
+      });
+
+      it("picks a voxel coordinate from a VoxelPrimitive", async function () {
+        const provider = await Cesium3DTilesVoxelProvider.fromUrl(
+          voxelTilesetUrl
+        );
+        const primitive = new VoxelPrimitive({ provider });
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
+        const voxelCoordinate = scene._pickVoxelCoordinate(
+          new Cartesian2(0, 0)
+        );
+        expect(voxelCoordinate).toEqual(new Uint8Array(4));
       });
     });
 
