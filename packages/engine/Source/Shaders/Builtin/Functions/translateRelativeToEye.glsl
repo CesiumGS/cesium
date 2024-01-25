@@ -34,6 +34,7 @@
 vec4 czm_translateRelativeToEye(vec3 high, vec3 low)
 {
     vec3 highDifference = high - czm_encodedCameraPositionMCHigh;
+    if (length(highDifference) == 0.0) highDifference = vec3(0);
     vec3 lowDifference = low - czm_encodedCameraPositionMCLow;
 
     return vec4(highDifference + lowDifference, 1.0);
