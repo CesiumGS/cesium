@@ -237,7 +237,7 @@ const scratchPosition = new Cartesian2();
 const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 
 /**
- * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
+ * Returns an object with a <code>primitive</code> property that contains the first (top) primitive in the scene
  * at a particular window coordinate or undefined if nothing is at the location. Other properties may
  * potentially be set depending on the type of primitive and may be used to further identify the picked object.
  * <p>
@@ -251,9 +251,7 @@ const scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
  */
 Picking.prototype.pick = function (scene, windowPosition, width, height) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(windowPosition)) {
-    throw new DeveloperError("windowPosition is undefined.");
-  }
+  Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
   scratchRectangleWidth = defaultValue(width, 3.0);
@@ -323,13 +321,11 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object} Object containing the picked primitive.
+ * @returns {object|undefined} Object containing the picked primitive.
  */
 Picking.prototype.pickVoxel = function (scene, windowPosition, width, height) {
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(windowPosition)) {
-    throw new DeveloperError("windowPosition is undefined.");
-  }
+  Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
 
   scratchRectangleWidth = defaultValue(width, 3.0);
@@ -446,9 +442,7 @@ Picking.prototype.pickPositionWorldCoordinates = function (
   }
 
   //>>includeStart('debug', pragmas.debug);
-  if (!defined(windowPosition)) {
-    throw new DeveloperError("windowPosition is undefined.");
-  }
+  Check.defined("windowPosition", windowPosition);
   if (!scene.context.depthTexture) {
     throw new DeveloperError(
       "Picking from the depth buffer is not supported. Check pickPositionSupported."

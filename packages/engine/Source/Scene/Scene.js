@@ -3977,7 +3977,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object} Object containing information about the voxel.
+ * @returns {object|undefined} Object containing information about the voxel.
  */
 Scene.prototype._pickVoxelCoordinate = function (
   windowPosition,
