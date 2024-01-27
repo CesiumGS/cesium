@@ -74,6 +74,8 @@ import TweenCollection from "./TweenCollection.js";
 import View from "./View.js";
 import VRPose from "./VRPose.js";
 import DebugInspector from "./DebugInspector.js";
+import VoxelCell from "./VoxelCell.js";
+import VoxelPrimitive from "./VoxelPrimitive.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -4221,6 +4223,52 @@ Scene.prototype._pickVoxelCoordinate = function (
   height
 ) {
   return this._picking.pickVoxel(this, windowPosition, width, height);
+};
+
+/**
+ * Returns a VoxelCell for the voxel sample rendered at a particular window coordinate,
+ * or undefined if no voxel is rendered at that position.
+ *
+ * @example
+ * On left click, report the value of the "color" property at that voxel sample.
+ * handler.setInputAction(function(movement) {
+ *   const voxelCell = scene.pickVoxel(movement.position);
+ *   if (defined(voxelCell)) {
+ *     console.log(voxelCell.getProperty("color"));
+ *   }
+ * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+ *
+ * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+ * @param {number} [width=3] Width of the pick rectangle.
+ * @param {number} [height=3] Height of the pick rectangle.
+ * @returns {VoxelCell} Information about the voxel cell rendered at the picked position.
+ */
+Scene.prototype.pickVoxel = function (windowPosition, width, height) {
+  const pickedObject = this.pick(windowPosition, width, height);
+  if (!defined(pickedObject)) {
+    return;
+  }
+  const voxelPrimitive = pickedObject.primitive;
+  if (!(voxelPrimitive instanceof VoxelPrimitive)) {
+    return;
+  }
+  const voxelCoordinate = this._picking.pickVoxel(
+    this,
+    windowPosition,
+    width,
+    height
+  );
+  // Look up the keyframeNode containing this picked cell
+  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
+  // Look up the metadata for the picked cell
+  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  return new VoxelCell(
+    voxelPrimitive,
+    tileIndex,
+    sampleIndex,
+    keyframeNode.metadatas
+  );
 };
 
 /**
