@@ -2278,6 +2278,7 @@ describe(
           beginFrame: function () {},
           endFrame: function () {},
           terrainProviderChanged: new Event(),
+          tileLoadProgressEvent: new Event(),
         };
 
         Object.defineProperties(globe, {

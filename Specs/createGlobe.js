@@ -18,6 +18,7 @@ function createGlobe(ellipsoid) {
     imageryLayersUpdatedEvent: new Event(),
     _terrainProvider: undefined,
     terrainProviderChanged: new Event(),
+    tileLoadProgressEvent: new Event(),
     destroy: function () {},
   };
 

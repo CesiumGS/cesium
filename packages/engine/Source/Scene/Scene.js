@@ -166,6 +166,7 @@ function Scene(options) {
   this._groundPrimitives = new PrimitiveCollection();
 
   this._globeHeight = undefined;
+  this._globeHeightDirty = undefined;
   this._cameraUnderground = false;
 
   this._logDepthBuffer = context.fragmentDepth;
@@ -747,6 +748,11 @@ function updateGlobeListeners(scene, globe) {
       globe.terrainProviderChanged.addEventListener(
         requestRenderAfterFrame(scene)
       )
+    );
+    removeGlobeCallbacks.push(
+      globe.tileLoadProgressEvent.addEventListener(() => {
+        scene._globeHeightDirty = true;
+      })
     );
   }
   scene._removeGlobeCallbacks = removeGlobeCallbacks;
@@ -3614,9 +3620,17 @@ function callAfterRenderFunctions(scene) {
 }
 
 function getGlobeHeight(scene) {
+  if (scene.mode === SceneMode.MORPHING) {
+    return;
+  }
+
   const globe = scene._globe;
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
+
+  if (!defined(cartographic)) {
+    return;
+  }
 
   let maxHeight = Number.NEGATIVE_INFINITY;
   const length = scene.primitives.length;
@@ -3632,7 +3646,7 @@ function getGlobeHeight(scene) {
     }
   }
 
-  if (defined(globe) && globe.show && defined(cartographic)) {
+  if (defined(globe) && globe.show) {
     const result = globe.getHeight(cartographic);
     if (result > maxHeight) {
       maxHeight = result;
@@ -3643,7 +3657,7 @@ function getGlobeHeight(scene) {
     return maxHeight;
   }
 
-  return undefined;
+  return;
 }
 
 function isCameraUnderground(scene) {
@@ -3683,7 +3697,10 @@ Scene.prototype.initializeFrame = function () {
 
   this._tweens.update();
 
-  this._globeHeight = getGlobeHeight(this);
+  if (this._globeHeightDirty) {
+    this._globeHeight = getGlobeHeight(this);
+    this._globeHeightDirty = false;
+  }
   this._cameraUnderground = isCameraUnderground(this);
   this._globeTranslucencyState.update(this);
 
@@ -3859,8 +3876,12 @@ Scene.prototype.render = function (time) {
     time = JulianDate.now();
   }
 
-  // Determine if shouldRender
   const cameraChanged = this._view.checkForCameraUpdates(this);
+  if (cameraChanged) {
+    this._globeHeightDirty = true;
+  }
+
+  // Determine if should render a new frame in request render mode
   let shouldRender =
     !this.requestRenderMode ||
     this._renderRequested ||
