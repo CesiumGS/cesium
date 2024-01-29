@@ -3520,10 +3520,6 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
 
   for (let i = 0; i < selectedLength; ++i) {
     const tile = selectedTiles[i];
-    // if (!tile.content.hasRenderableContent) {
-    //   continue;
-    // }
-
     const boundsIntersection = IntersectionTests.raySphere(
       ray,
       tile.contentBoundingVolume.boundingSphere,
