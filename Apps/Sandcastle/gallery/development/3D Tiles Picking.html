@@ -76,7 +76,9 @@
             onselect: async () => {
               scene.primitives.remove(tileset);
               try {
-                tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1240402);
+                tileset = await Cesium.Cesium3DTileset.fromIonAssetId(1240402, {
+                  disableCollision: true,
+                });
                 scene.primitives.add(tileset);
                 viewer.zoomTo(tileset);
               } catch (error) {

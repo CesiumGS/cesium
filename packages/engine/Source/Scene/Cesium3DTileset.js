@@ -1,4 +1,5 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -3515,42 +3516,53 @@ Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
 
   const selectedTiles = this._selectedTiles;
   const selectedLength = selectedTiles.length;
+  const candidates = [];
 
-  let intersection;
-  let minDistance = Number.POSITIVE_INFINITY;
   for (let i = 0; i < selectedLength; ++i) {
     const tile = selectedTiles[i];
+    // if (!tile.content.hasRenderableContent) {
+    //   continue;
+    // }
+
     const boundsIntersection = IntersectionTests.raySphere(
       ray,
-      tile.boundingSphere,
+      tile.contentBoundingVolume.boundingSphere,
       scratchSphereIntersection
     );
     if (!defined(boundsIntersection)) {
       continue;
     }
+    candidates.push(tile);
+  }
 
+  const length = candidates.length;
+  candidates.sort((a, b) => {
+    const aDist = BoundingSphere.distanceSquaredTo(
+      a.contentBoundingVolume.boundingSphere,
+      ray.origin
+    );
+    const bDist = BoundingSphere.distanceSquaredTo(
+      b.contentBoundingVolume.boundingSphere,
+      ray.origin
+    );
+
+    return aDist - bDist;
+  });
+
+  let intersection;
+  for (let i = 0; i < length; ++i) {
+    const tile = candidates[i];
     const candidate = tile.content?.pick(
       ray,
       frameState,
       scratchPickIntersection
     );
 
-    if (!defined(candidate)) {
-      continue;
-    }
-
-    const distance = Cartesian3.distance(ray.origin, candidate);
-    if (distance < minDistance) {
+    if (defined(candidate)) {
       intersection = Cartesian3.clone(candidate, result);
-      minDistance = distance;
+      return intersection;
     }
   }
-
-  if (!defined(intersection)) {
-    return undefined;
-  }
-
-  return intersection;
 };
 
 /**
