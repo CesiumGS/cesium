@@ -1959,7 +1959,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
- * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @see Cesium3DTileset#fromUrl
  *
@@ -1989,7 +1990,8 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
- * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @see Cesium3DTileset#fromIonAssetId
  *
@@ -2131,6 +2133,9 @@ Cesium3DTileset.prototype.makeStyleDirty = function () {
 
 /**
  * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
+ *
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @private
  */

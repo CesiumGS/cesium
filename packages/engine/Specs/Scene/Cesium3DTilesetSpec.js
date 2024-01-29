@@ -269,7 +269,7 @@ describe(
     it("loads json with static loadJson method", async function () {
       const tilesetJson = {
         asset: {
-          version: 2.0,
+          version: 1.1,
         },
       };
 

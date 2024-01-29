@@ -2045,17 +2045,6 @@ Resource.createImageBitmapFromBlob = function (blob, options) {
   });
 };
 
-function decodeResponse(loadWithHttpResponse, responseType) {
-  switch (responseType) {
-    case "text":
-      return loadWithHttpResponse.toString("utf8");
-    case "json":
-      return JSON.parse(loadWithHttpResponse.toString("utf8"));
-    default:
-      return new Uint8Array(loadWithHttpResponse).buffer;
-  }
-}
-
 function loadWithHttpRequest(
   url,
   responseType,
@@ -2066,64 +2055,36 @@ function loadWithHttpRequest(
   overrideMimeType
 ) {
   // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-  let URL;
-  let zlib;
-  Promise.all([import("url"), import("zlib")])
-    .then(([urlImport, zlibImport]) => {
-      URL = urlImport.parse(url);
-      zlib = zlibImport;
+  fetch(url, {
+    method,
+    headers,
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        const responseHeaders = {};
+        response.headers.forEach((value, key) => {
+          responseHeaders[key] = value;
+        });
+        deferred.reject(
+          new RequestErrorEvent(response.status, response, responseHeaders)
+        );
+        return;
+      }
 
-      return URL.protocol === "https:" ? import("https") : import("http");
+      switch (responseType) {
+        case "text":
+          deferred.resolve(response.text());
+          break;
+        case "json":
+          deferred.resolve(response.json());
+          break;
+        default:
+          deferred.resolve(new Uint8Array(await response.arrayBuffer()).buffer);
+          break;
+      }
     })
-    .then((http) => {
-      const options = {
-        protocol: URL.protocol,
-        hostname: URL.hostname,
-        port: URL.port,
-        path: URL.path,
-        query: URL.query,
-        method: method,
-        headers: headers,
-      };
-      http
-        .request(options)
-        .on("response", function (res) {
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            deferred.reject(
-              new RequestErrorEvent(res.statusCode, res, res.headers)
-            );
-            return;
-          }
-
-          const chunkArray = [];
-          res.on("data", function (chunk) {
-            chunkArray.push(chunk);
-          });
-
-          res.on("end", function () {
-            // eslint-disable-next-line no-undef
-            const result = Buffer.concat(chunkArray);
-            if (res.headers["content-encoding"] === "gzip") {
-              zlib.gunzip(result, function (error, resultUnzipped) {
-                if (error) {
-                  deferred.reject(
-                    new RuntimeError("Error decompressing response.")
-                  );
-                } else {
-                  deferred.resolve(
-                    decodeResponse(resultUnzipped, responseType)
-                  );
-                }
-              });
-            } else {
-              deferred.resolve(decodeResponse(result, responseType));
-            }
-          });
-        })
-        .on("error", function (e) {
-          deferred.reject(new RequestErrorEvent());
-        })
-        .end();
+    .catch(() => {
+      deferred.reject(new RequestErrorEvent());
     });
 }
 
@@ -2226,7 +2187,7 @@ Resource._Implementations.loadWithXhr = function (
     //or do not support the xhr.response property.
     if (xhr.status === 204) {
       // accept no content
-      deferred.resolve();
+      deferred.resolve(undefined);
     } else if (
       defined(response) &&
       (!defined(responseType) || browserResponseType === responseType)

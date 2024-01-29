@@ -249,8 +249,7 @@ Object.defineProperties(PolylineGeometryUpdater.prototype, {
   },
   /**
    * Gets a value indicating if the geometry is time-varying.
-   * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
-   * returned by GeometryUpdater#createDynamicUpdater.
+   *
    * @memberof PolylineGeometryUpdater.prototype
    *
    * @type {boolean}
