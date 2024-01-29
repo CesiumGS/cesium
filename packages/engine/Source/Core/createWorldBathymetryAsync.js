@@ -2,7 +2,7 @@ import CesiumTerrainProvider from "./CesiumTerrainProvider.js";
 import defaultValue from "./defaultValue.js";
 
 /**
- * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-terrain | Cesium World Terrain}.
+ * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-bathymetry | Cesium World Bathymetry}.
  *
  * @function
  *
@@ -14,20 +14,20 @@ import defaultValue from "./defaultValue.js";
  * @see Ion
  *
  * @example
- * // Create Cesium World Terrain with default settings
+ * // Create Cesium World Bathymetry with default settings
  * try {
  *   const viewer = new Cesium.Viewer("cesiumContainer", {
- *     terrainProvider: await Cesium.createWorldTerrainAsync();
+ *     terrainProvider: await Cesium.createWorldBathymetryAsync();
  *   });
  * } catch (error) {
  *   console.log(error);
  * }
  *
  * @example
- * // Create Cesium World Terrain with water and normals.
+ * // Create Cesium World Bathymetry with water and normals.
  * try {
  *   const viewer1 = new Cesium.Viewer("cesiumContainer", {
- *     terrainProvider: await Cesium.createWorldTerrainAsync({
+ *     terrainProvider: await Cesium.createWorldBathymetryAsync({
  *       requestWaterMask: true,
  *       requestVertexNormals: true
  *     });
@@ -37,12 +37,12 @@ import defaultValue from "./defaultValue.js";
  * }
  *
  */
-function createWorldTerrainAsync(options) {
+function createWorldBathymetryAsync(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-  return CesiumTerrainProvider.fromIonAssetId(1, {
+  return CesiumTerrainProvider.fromIonAssetId(2426648, {
     requestVertexNormals: defaultValue(options.requestVertexNormals, false),
     requestWaterMask: defaultValue(options.requestWaterMask, false),
   });
 }
-export default createWorldTerrainAsync;
+export default createWorldBathymetryAsync;
