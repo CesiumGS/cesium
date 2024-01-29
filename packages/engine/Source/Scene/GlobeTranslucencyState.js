@@ -930,7 +930,7 @@ GlobeTranslucencyState.prototype.pushDerivedCommands = function (
   isBlendCommand,
   frameState
 ) {
-  const picking = frameState.passes.pick;
+  const picking = frameState.passes.pick || frameState.passes.pickVoxel;
   if (picking && isBlendCommand) {
     // No need to push blend commands in the pick pass
     return;
