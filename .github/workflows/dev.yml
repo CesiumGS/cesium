@@ -3,6 +3,7 @@ on:
   push:
     branches: 
       - main
+      - 11410-drawCommand-use-old-clippingPlanes
   pull_request:
 concurrency:
   group: dev-${{ github.ref }}
