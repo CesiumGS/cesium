@@ -163,10 +163,10 @@ describe(
     it("constructor sets options", function () {
       const webglOptions = {
         alpha: true,
-        depth: true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
+        depth: false,
         stencil: true,
         antialias: false,
-        premultipliedAlpha: true, // Workaround IE 11.0.8, which does not honor false.
+        premultipliedAlpha: false,
         preserveDrawingBuffer: true,
       };
       const mapProjection = new WebMercatorProjection();
