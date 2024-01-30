@@ -8,6 +8,5 @@ describe("Core/createWorldBathymetryAsync", function () {
     const provider = await createWorldBathymetryAsync();
     expect(provider).toBeInstanceOf(CesiumTerrainProvider);
     expect(provider.requestVertexNormals).toBe(false);
-    expect(provider.requestWaterMask).toBe(false);
   });
 });

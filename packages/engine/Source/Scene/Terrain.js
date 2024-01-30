@@ -164,7 +164,6 @@ Terrain.fromWorldTerrain = function (options) {
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
- * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
  * @returns {Terrain} An asynchronous helper object for a CesiumTerrainProvider
  *
  * @see Ion
@@ -177,10 +176,9 @@ Terrain.fromWorldTerrain = function (options) {
  * });
  *
  * @example
- * // Create Cesium World Terrain with water and normals.
+ * // Create Cesium World Terrain with normals.
  * const viewer1 = new Cesium.Viewer("cesiumContainer", {
  *   terrain: Cesium.Terrain.fromWorldBathymetry({
- *      requestWaterMask: true,
  *      requestVertexNormals: true
  *    });
  * });
