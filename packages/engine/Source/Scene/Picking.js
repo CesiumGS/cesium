@@ -301,10 +301,6 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
    * Passes update.
    *
    */
-  if (scene.primitives.show) {
-    const primitives = scene.primitives;
-    primitives.prePassesUpdate(frameState);
-  }
   scene.updateAndExecuteCommands(passState, scratchColorZero);
   scene.resolveFramebuffers(passState);
 
