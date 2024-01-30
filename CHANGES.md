@@ -19,7 +19,7 @@
 - Added `Cesium3DTileset.disableCollision` to allow the camera from to go inside or below a 3D tileset, for instance, to be used with 3D Tiles interiors. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
 - Fog rendering now applies to glTF models and 3D Tiles. This can be configured using `scene.fog` and the new `scene.atmosphere`. [#11744](https://github.com/CesiumGS/cesium/pull/11744)
 - Added `scene.atmosphere` to store common atmosphere lighting parameters. [#11744](https://github.com/CesiumGS/cesium/pull/11744) and [#11681](https://github.com/CesiumGS/cesium/issues/11681)
-- Added `createWorldBathymetryAsync` helper function to make it easier to load Bathymetry terrain like `createWorldTerrainAsync` does for CWT [#11790](https://github.com/CesiumGS/cesium/pull/11790)
+- Added `createWorldBathymetryAsync` helper function to make it easier to load Bathymetry terrain. [#11790](https://github.com/CesiumGS/cesium/issues/11790)
 
 ##### Fixes :wrench:
 
