@@ -377,3 +377,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jared Webber](https://github.com/jaredwebber)
 - [Anne Gropler](https://github.com/anne-gropler)
 - [Harsh Lakhara](https://github.com/harshlakhara)
+- [dslming](https://github.com/dslming)
