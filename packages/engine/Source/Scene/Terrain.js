@@ -108,7 +108,7 @@ Object.defineProperties(Terrain.prototype, {
   },
 });
 /**
- * Creates a {@link Terrain} instance for {@link https://cesium.com/content/#cesium-world-terrain | Cesium World Terrain}.
+ * Creates a {@link Terrain} instance for {@link https://cesium.com/content/#cesium-world-terrain|Cesium World Terrain}.
  *
  * @function
  *
@@ -158,7 +158,7 @@ Terrain.fromWorldTerrain = function (options) {
 };
 
 /**
- * Creates a {@link Terrain} instance for {@link https://cesium.com/content/#cesium-world-bathymetry | Cesium World Bathymetry}.
+ * Creates a {@link Terrain} instance for {@link https://cesium.com/content/#cesium-world-bathymetry|Cesium World Bathymetry}.
  *
  * @function
  *
@@ -195,12 +195,12 @@ Terrain.fromWorldTerrain = function (options) {
  *   scene.globe.enableLighting = true;
  *
  *   bathymetry.provider.errorEvent.addEventListener(error => {
- *     alert(`Encountered an error while loading bathymetry terrain tiles! ${error}`);
+ *     alert(`Encountered an error while loading bathymetric terrain tiles! ${error}`);
  *   });
  * });
  *
  * bathymetry.errorEvent.addEventListener(error => {
- *   alert(`Encountered an error while creating bathymetry terrain! ${error}`);
+ *   alert(`Encountered an error while creating bathymetric terrain! ${error}`);
  * });
  */
 Terrain.fromWorldBathymetry = function (options) {
