@@ -5,6 +5,7 @@ on:
     types: [completed]
     branches: 
       - main
+      - 11410-drawCommand-use-old-clippingPlanes
       - 'cesium.com'
       - production
 jobs:
