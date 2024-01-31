@@ -55,7 +55,7 @@ const colorScratch = new Color();
  * Return the picked object rendered within a given rectangle.
  *
  * @param {BoundingRectangle} screenSpaceRectangle
- * @returns {object} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
+ * @returns {object|undefined} The object rendered in the middle of the rectangle, or undefined if nothing was rendered.
  */
 PickFramebuffer.prototype.end = function (screenSpaceRectangle) {
   const width = defaultValue(screenSpaceRectangle.width, 1.0);

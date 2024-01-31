@@ -3985,7 +3985,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {VoxelCell} Information about the voxel cell rendered at the picked position.
+ * @returns {VoxelCell|undefined} Information about the voxel cell rendered at the picked position.
  */
 Scene.prototype.pickVoxel = function (windowPosition, width, height) {
   const pickedObject = this.pick(windowPosition, width, height);
