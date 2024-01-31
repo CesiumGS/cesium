@@ -19,8 +19,8 @@ import {
   DynamicAtmosphereLightingType,
   DracoLoader,
   Ellipsoid,
-  Event,
   FeatureDetection,
+  Globe,
   Fog,
   HeadingPitchRange,
   HeadingPitchRoll,
@@ -2252,286 +2252,299 @@ describe(
     });
 
     describe("height reference", function () {
-      let sceneWithMockGlobe;
-
-      function createMockGlobe() {
-        const globe = {
-          callback: undefined,
-          removedCallback: false,
-          ellipsoid: Ellipsoid.WGS84,
-          update: function () {},
-          render: function () {},
-          getHeight: function () {
-            return 0.0;
-          },
-          _surface: {
-            tileProvider: {},
-            _tileLoadQueueHigh: [],
-            _tileLoadQueueMedium: [],
-            _tileLoadQueueLow: [],
-            _debug: {
-              tilesWaitingForChildren: 0,
-            },
-          },
-          imageryLayersUpdatedEvent: new Event(),
-          destroy: function () {},
-          beginFrame: function () {},
-          endFrame: function () {},
-          terrainProviderChanged: new Event(),
-        };
-
-        Object.defineProperties(globe, {
-          terrainProvider: {
-            set: function (value) {
-              this.terrainProviderChanged.raiseEvent(value);
-            },
-          },
-        });
-
-        globe._surface.updateHeight = function (position, callback) {
-          globe.callback = callback;
-          return function () {
-            globe.removedCallback = true;
-            globe.callback = undefined;
-          };
-        };
-
-        return globe;
-      }
-
-      beforeAll(function () {
-        sceneWithMockGlobe = createScene();
+      beforeEach(() => {
+        scene.globe = new Globe();
       });
 
-      beforeEach(function () {
-        sceneWithMockGlobe.globe = createMockGlobe();
+      afterEach(() => {
+        scene.globe = undefined;
       });
 
-      afterEach(function () {
-        sceneWithMockGlobe.primitives.removeAll();
-      });
-
-      afterAll(function () {
-        sceneWithMockGlobe.destroyForSpecs();
-      });
-
-      it("initializes with height reference", function () {
-        return loadAndZoomToModelAsync(
+      it("initializes with height reference", async function () {
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model.heightReference).toEqual(
-            HeightReference.CLAMP_TO_GROUND
-          );
-          expect(model._scene).toBe(sceneWithMockGlobe);
-          expect(model._clampedModelMatrix).toBeDefined();
-        });
-      });
-
-      it("changing height reference works", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            heightReference: HeightReference.NONE,
-            scene: sceneWithMockGlobe,
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model.heightReference).toEqual(HeightReference.NONE);
-          expect(model._clampedModelMatrix).toBeUndefined();
-
-          model.heightReference = HeightReference.CLAMP_TO_GROUND;
-          expect(model._heightDirty).toBe(true);
-
-          sceneWithMockGlobe.renderForSpecs();
-          expect(model._heightDirty).toBe(false);
-          expect(model.heightReference).toEqual(
-            HeightReference.CLAMP_TO_GROUND
-          );
-          expect(model._clampedModelMatrix).toBeDefined();
-        });
-      });
-
-      it("creates height update callback when initializing with height reference", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model.heightReference).toEqual(
-            HeightReference.CLAMP_TO_GROUND
-          );
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-        });
-      });
-
-      it("creates height update callback after setting height reference", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.NONE,
-            scene: sceneWithMockGlobe,
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model.heightReference).toEqual(HeightReference.NONE);
-          expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
-
-          model.heightReference = HeightReference.CLAMP_TO_GROUND;
-          expect(model.heightReference).toEqual(
-            HeightReference.CLAMP_TO_GROUND
-          );
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-        });
-      });
-
-      it("updates height reference callback when the height reference changes", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
-          },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-
-          model.heightReference = HeightReference.RELATIVE_TO_GROUND;
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-
-          sceneWithMockGlobe.globe.removedCallback = false;
-          model.heightReference = HeightReference.NONE;
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
-        });
-      });
-
-      it("updates height reference callback when the model matrix changes", function () {
-        const modelMatrix = Transforms.eastNorthUpToFixedFrame(
-          Cartesian3.fromDegrees(-72.0, 40.0)
+          scene
         );
-        return loadAndZoomToModelAsync(
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(model._scene).toBe(scene);
+        expect(model._clampedModelMatrix).toBeDefined();
+      });
+
+      it("changing height reference works", async function () {
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            heightReference: HeightReference.NONE,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            scene: scene,
+          },
+          scene
+        );
+        expect(model.heightReference).toEqual(HeightReference.NONE);
+        expect(model._clampedModelMatrix).toBeUndefined();
+
+        model.heightReference = HeightReference.CLAMP_TO_GROUND;
+        expect(model._heightDirty).toBe(true);
+
+        scene.renderForSpecs();
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(model._clampedModelMatrix).toBeDefined();
+      });
+
+      it("creates height update callback when initializing with height reference", async function () {
+        spyOn(scene, "updateHeight");
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            scene: scene,
+          },
+          scene
+        );
+
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+      });
+
+      it("creates height update callback after setting height reference", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            heightReference: HeightReference.NONE,
+            scene: scene,
+          },
+          scene
+        );
+
+        model.heightReference = HeightReference.CLAMP_TO_GROUND;
+        expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+
+        scene.renderForSpecs();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+      });
+
+      it("removes height update callback after changing height reference", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            scene: scene,
+          },
+          scene
+        );
+
+        model.heightReference = HeightReference.NONE;
+        expect(model.heightReference).toEqual(HeightReference.NONE);
+
+        scene.renderForSpecs();
+        expect(removeCallback).toHaveBeenCalled();
+      });
+
+      it("updates height reference callback when the height reference changes", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+        const position = Cartesian3.fromDegrees(-72.0, 40.0);
+
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            scene: scene,
+          },
+          scene
+        );
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+
+        model.heightReference = HeightReference.RELATIVE_TO_GROUND;
+        scene.renderForSpecs();
+
+        expect(removeCallback).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.RELATIVE_TO_GROUND
+        );
+      });
+
+      it("updates height reference callback when the model matrix changes", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        let position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Matrix4.clone(modelMatrix),
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+          scene
+        );
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
 
-          // Modify the model matrix in place
-          const position = Cartesian3.fromDegrees(-73.0, 40.0);
-          model.modelMatrix[12] = position.x;
-          model.modelMatrix[13] = position.y;
-          model.modelMatrix[14] = position.z;
+        // Modify the model matrix in place
+        position = Cartesian3.fromDegrees(-73.0, 40.0);
+        model.modelMatrix[12] = position.x;
+        model.modelMatrix[13] = position.y;
+        model.modelMatrix[14] = position.z;
 
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-
-          // Replace the model matrix entirely
-          model.modelMatrix = modelMatrix;
-
-          sceneWithMockGlobe.renderForSpecs();
-          expect(sceneWithMockGlobe.globe.removedCallback).toEqual(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
-        });
+        scene.renderForSpecs();
+        expect(removeCallback).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
       });
 
-      it("height reference callback updates the position", function () {
-        return loadAndZoomToModelAsync(
+      it("updates height reference callback when the model matrix is set", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        let position = Cartesian3.fromDegrees(-72.0, 40.0);
+        const modelMatrix = Transforms.eastNorthUpToFixedFrame(position);
+        const model = await loadAndZoomToModelAsync(
+          {
+            gltf: boxTexturedGltfUrl,
+            modelMatrix: Matrix4.clone(modelMatrix),
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            scene: scene,
+          },
+          scene
+        );
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+
+        position = Cartesian3.fromDegrees(-73.0, 40.0);
+        modelMatrix[12] = position.x;
+        modelMatrix[13] = position.y;
+        modelMatrix[14] = position.z;
+        model.modelMatrix = modelMatrix;
+
+        scene.renderForSpecs();
+        expect(removeCallback).toHaveBeenCalled();
+        expect(scene.updateHeight).toHaveBeenCalledWith(
+          Ellipsoid.WGS84.cartesianToCartographic(position),
+          jasmine.any(Function),
+          HeightReference.CLAMP_TO_GROUND
+        );
+      });
+
+      it("height reference callback updates the position", async function () {
+        let invokeCallback;
+        spyOn(scene, "updateHeight").and.callFake(
+          (cartographic, updateCallback) => {
+            invokeCallback = (height) => {
+              cartographic.height = height;
+              updateCallback(cartographic);
+            };
+          }
+        );
+
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0)
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+          scene
+        );
 
-          sceneWithMockGlobe.globe.callback(
-            Cartesian3.fromDegrees(-72.0, 40.0, 100.0)
-          );
-          const matrix = model._clampedModelMatrix;
-          const position = new Cartesian3(matrix[12], matrix[13], matrix[14]);
-          const ellipsoid = sceneWithMockGlobe.globe.ellipsoid;
-          const cartographic = ellipsoid.cartesianToCartographic(position);
-          expect(cartographic.height).toEqualEpsilon(
-            100.0,
-            CesiumMath.EPSILON9
-          );
-        });
+        invokeCallback(100.0);
+
+        const matrix = model._clampedModelMatrix;
+        const position = new Cartesian3(matrix[12], matrix[13], matrix[14]);
+        const cartographic = Ellipsoid.WGS84.cartesianToCartographic(position);
+        expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
       });
 
-      it("height reference accounts for change in terrain provider", function () {
-        return loadAndZoomToModelAsync(
+      it("height reference accounts for change in terrain provider", async function () {
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0)
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(model._heightDirty).toBe(false);
-          const terrainProvider = new CesiumTerrainProvider({
-            url: "made/up/url",
-            requestVertexNormals: true,
-          });
-          sceneWithMockGlobe.terrainProvider = terrainProvider;
-
-          expect(model._heightDirty).toBe(true);
-          sceneWithMockGlobe.terrainProvider = undefined;
+          scene
+        );
+        expect(model._heightDirty).toBe(false);
+        const terrainProvider = new CesiumTerrainProvider({
+          url: "made/up/url",
+          requestVertexNormals: true,
         });
+        scene.terrainProvider = terrainProvider;
+
+        expect(model._heightDirty).toBe(true);
+        scene.terrainProvider = undefined;
       });
 
-      it("throws when initializing height reference with no scene", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: undefined,
-          },
-          sceneWithMockGlobe
-        ).catch(function (error) {
-          expect(error.message).toEqual(
-            "Height reference is not supported without a scene and globe."
-          );
-        });
+      it("throws when initializing height reference with no scene", async function () {
+        await expectAsync(
+          loadAndZoomToModelAsync(
+            {
+              gltf: boxTexturedGltfUrl,
+              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+                Cartesian3.fromDegrees(-72.0, 40.0)
+              ),
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              scene: undefined,
+            },
+            scene
+          )
+        ).toBeRejectedWithDeveloperError(
+          "Height reference is not supported without a scene."
+        );
       });
 
-      it("throws when changing height reference with no scene", function () {
-        return loadAndZoomToModelAsync(
+      it("throws when changing height reference with no scene", async function () {
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGltfUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
@@ -2539,69 +2552,50 @@ describe(
             ),
             heightReference: HeightReference.NONE,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(function () {
-            model.heightReference = HeightReference.CLAMP_TO_GROUND;
-            sceneWithMockGlobe.renderForSpecs();
-          }).toThrowDeveloperError();
-        });
-      });
-
-      it("throws when initializing height reference with no globe", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: scene,
-          },
           scene
-        ).catch(function (error) {
-          expect(error.message).toEqual(
-            "Height reference is not supported without a scene and globe."
-          );
-        });
+        );
+
+        expect(function () {
+          model.heightReference = HeightReference.CLAMP_TO_GROUND;
+          scene.renderForSpecs();
+        }).toThrowDeveloperError();
       });
 
-      it("throws when changing height reference with no globe", function () {
-        return loadAndZoomToModelAsync(
-          {
-            gltf: boxTexturedGltfUrl,
-            modelMatrix: Transforms.eastNorthUpToFixedFrame(
-              Cartesian3.fromDegrees(-72.0, 40.0)
-            ),
-            scene: scene,
-          },
-          scene
-        ).then(function (model) {
-          expect(function () {
-            model.heightReference = HeightReference.CLAMP_TO_GROUND;
-            scene.renderForSpecs();
-          }).toThrowDeveloperError();
-        });
+      it("works when initializing height reference with no globe", function () {
+        return expectAsync(
+          loadAndZoomToModelAsync(
+            {
+              gltf: boxTexturedGltfUrl,
+              modelMatrix: Transforms.eastNorthUpToFixedFrame(
+                Cartesian3.fromDegrees(-72.0, 40.0)
+              ),
+              heightReference: HeightReference.CLAMP_TO_GROUND,
+              scene: scene,
+            },
+            scene
+          )
+        ).toBeResolved();
       });
 
-      it("destroys height reference callback", function () {
-        return loadAndZoomToModelAsync(
+      it("destroys height reference callback", async function () {
+        const removeCallback = jasmine.createSpy();
+        spyOn(scene, "updateHeight").and.returnValue(removeCallback);
+
+        const model = await loadAndZoomToModelAsync(
           {
             gltf: boxTexturedGlbUrl,
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
               Cartesian3.fromDegrees(-72.0, 40.0)
             ),
             heightReference: HeightReference.CLAMP_TO_GROUND,
-            scene: sceneWithMockGlobe,
+            scene: scene,
           },
-          sceneWithMockGlobe
-        ).then(function (model) {
-          expect(sceneWithMockGlobe.globe.callback).toBeDefined();
+          scene
+        );
 
-          sceneWithMockGlobe.primitives.remove(model);
-          expect(model.isDestroyed()).toBe(true);
-          expect(sceneWithMockGlobe.globe.callback).toBeUndefined();
-        });
+        scene.primitives.remove(model);
+        expect(model.isDestroyed()).toBe(true);
+        expect(removeCallback).toHaveBeenCalled();
       });
     });
 

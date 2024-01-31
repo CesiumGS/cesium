@@ -9,12 +9,15 @@
 - By default, the screen space camera controller will no longer go inside or under instances of `Cesium3DTileset`. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
   - This behavior can be disabled by setting `Cesium3DTileset.disableCollision` to true.
   - This feature is enabled by default only for WebGL 2 and above, but can be enabled for WebGL 1 by setting the `enablePick` option to true when creating the `Cesium3DTileset`.
+- Clamping to ground, `HeightReference.CLAMP_TO_GROUND`, and `HeightReference.RELATIVE_TO_GROUND` now take into account 3D Tilesets. These opions will clamp to either 3D Tilesets or Terrain, whichever has a greater height. [#11604](https://github.com/CesiumGS/cesium/pull/11604)
+  - To restore previous behavior where an entity is clamped only to terrain or relative only to terrain, set `heightReference` to `HeightReference.CLAMP_TO_TERRAIN` or `HeightReference.RELATIVE_TO_TERRAIN` respectively.
 - Remove the need for node internal packages `http`, `https`, `url` and `zlib` in the `Resource` class. This means they do not need to be marked external by build tools anymore. [#11773](https://github.com/CesiumGS/cesium/pull/11773)
   - This slightly changed the contents of the `RequestErrorEvent` error that is thrown in node environments when a request fails. The `response` property is now a [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object instead of an [`http.IncomingMessage`](https://nodejs.org/docs/latest-v20.x/api/http.html#class-httpincomingmessage)
 - `PolygonGeometry.computeRectangle` has been removed. Use `PolygonGeometry.computeRectangleFromPositions` instead.
 
 ##### Additions :tada:
 
+- Added `HeightReference.CLAMP_TO_TERRAIN`, `HeightReference.RELATIVE_TO_TERRAIN`, `HeightReference.CLAMP_TO_3D_TILE`, and `HeightReference.RELATIVE_TO_3D_TILE` to position relatve to terrain or 3D tilesets exclusively.[#11604](https://github.com/CesiumGS/cesium/pull/11604)
 - Added `Cesium3DTileset.getHeight` to sample height values of the loaded tiles. If using WebGL 1, the `enablePick` option must be set to true to use this function. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
 - Added `Cesium3DTileset.disableCollision` to allow the camera from to go inside or below a 3D tileset, for instance, to be used with 3D Tiles interiors. [#11581](https://github.com/CesiumGS/cesium/pull/11581)
 - The `Cesium3DTileset.dynamicScreenSpaceError` optimization is now enabled by default, as this improves performance for street-level horizon views. Furthermore, the default settings of this feature were tuned for improved performance. `Cesium3DTileset.dynamicScreenSpaceErrorDensity` was changed from 0.00278 to 0.0002. `Cesium3DTileset.dynamicScreenSpaceErrorFactor` was changed from 4 to 24. [#11718](https://github.com/CesiumGS/cesium/pull/11718)

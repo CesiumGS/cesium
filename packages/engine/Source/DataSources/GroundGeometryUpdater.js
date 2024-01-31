@@ -5,7 +5,9 @@ import DeveloperError from "../Core/DeveloperError.js";
 import GeometryOffsetAttribute from "../Core/GeometryOffsetAttribute.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import GroundPrimitive from "../Scene/GroundPrimitive.js";
-import HeightReference from "../Scene/HeightReference.js";
+import HeightReference, {
+  isHeightReferenceClamp,
+} from "../Scene/HeightReference.js";
 import CallbackProperty from "./CallbackProperty.js";
 import ConstantProperty from "./ConstantProperty.js";
 import GeometryUpdater from "./GeometryUpdater.js";
@@ -164,9 +166,10 @@ GroundGeometryUpdater.getGeometryHeight = function (height, heightReference) {
     return;
   }
 
-  if (heightReference !== HeightReference.CLAMP_TO_GROUND) {
+  if (!isHeightReferenceClamp(heightReference)) {
     return height;
   }
+
   return 0.0;
 };
 
@@ -186,7 +189,7 @@ GroundGeometryUpdater.getGeometryExtrudedHeight = function (
     }
     return;
   }
-  if (extrudedHeightReference !== HeightReference.CLAMP_TO_GROUND) {
+  if (!isHeightReferenceClamp(extrudedHeightReference)) {
     return extrudedHeight;
   }
 
