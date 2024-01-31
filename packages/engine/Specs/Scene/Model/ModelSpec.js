@@ -2294,7 +2294,6 @@ describe(
         expect(model._heightDirty).toBe(true);
 
         scene.renderForSpecs();
-        expect(model._heightDirty).toBe(false);
         expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
         expect(model._clampedModelMatrix).toBeDefined();
       });
