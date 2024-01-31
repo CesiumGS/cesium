@@ -14,9 +14,9 @@ import MetadataType from "./MetadataType.js";
  * @constructor
  *
  * @example
- * // On mouse over, display all the properties for a voxel cell in the console log.
+ * // On left click, display all the properties for a voxel cell in the console log.
  * handler.setInputAction(function(movement) {
- *   const voxelCell = scene.pickVoxel(movement.endPosition);
+ *   const voxelCell = scene.pickVoxel(movement.position);
  *   if (voxelCell instanceof Cesium.VoxelCell) {
  *     const propertyIds = voxelCell.getPropertyIds();
  *     const length = propertyIds.length;
@@ -25,7 +25,7 @@ import MetadataType from "./MetadataType.js";
  *       console.log(`{propertyId}: ${voxelCell.getProperty(propertyId)}`);
  *     }
  *   }
- * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+ * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
  */
 function VoxelCell(primitive, tileIndex, sampleIndex, metadatas) {
   this._primitive = primitive;
