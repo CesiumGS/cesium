@@ -33,7 +33,7 @@
   ],
   "dependencies": {
     "@tweenjs/tween.js": "^23.1.1",
-    "@zip.js/zip.js": "2.4.x",
+    "@zip.js/zip.js": "^2.7.34",
     "autolinker": "^4.0.0",
     "bitmap-sdf": "^1.0.3",
     "dompurify": "^3.0.2",
