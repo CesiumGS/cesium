@@ -261,7 +261,7 @@ with an `N`.
 | `TEXCOORD_N`                     | `texCoord_N`       | `vec2`  | Yes                         | Yes                           | `N`-th set of texture coordinates.                                                                                                                                       |
 | `COLOR_N`                        | `color_N`          | `vec4`  | Yes                         | Yes                           | `N`-th set of vertex colors. This is always a `vec4`; if the model does not specify an alpha value, it is assumed to be 1.                                               |
 | `JOINTS_N`                       | `joints_N`         | `ivec4` | Yes                         | Yes                           | `N`-th set of joint indices                                                                                                                                              |
-| `WEIGHTS_N`                      | `weights_N`        | `vec4`  |
+| `WEIGHTS_N`                      | `weights_N`        | `vec4`  | Yes                         | Yes                           | `N`-th set of weights                                                                                                                                                    |
 
 Custom attributes are also available, though they are renamed to use lowercase
 letters and underscores. For example, an attribute called `_SURFACE_TEMPERATURE`
