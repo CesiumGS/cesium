@@ -34,6 +34,7 @@
 - Parts of the documentation have been updated to resolve potential issues with the generated TypedScript definitions. [#11776](https://github.com/CesiumGS/cesium/pull/11776)
 - Fixed type definition for `Camera.constrainedAxis`. [#11475](https://github.com/CesiumGS/cesium/issues/11475)
 - Fixed a geometry displacement on iOS devices that was caused by NaN value in `czm_translateRelativeToEye` function. [#7100](https://github.com/CesiumGS/cesium/issues/7100)
+- Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
 
 #### @cesium/widgets
 
