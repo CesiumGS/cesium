@@ -3970,26 +3970,6 @@ Scene.prototype.pick = function (windowPosition, width, height) {
 };
 
 /**
- * Returns an object with cordinates of the voxel sample rendered at
- * a particular window coordinate. Returns <code>undefined</code> if there is no
- * voxel at that position.
- *
- * @private
- *
- * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
- * @param {number} [width=3] Width of the pick rectangle.
- * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object} Object containing information about the voxel.
- */
-Scene.prototype._pickVoxelCoordinate = function (
-  windowPosition,
-  width,
-  height
-) {
-  return this._picking.pickVoxel(this, windowPosition, width, height);
-};
-
-/**
  * Returns a VoxelCell for the voxel sample rendered at a particular window coordinate,
  * or undefined if no voxel is rendered at that position.
  *
@@ -4016,7 +3996,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
   if (!(voxelPrimitive instanceof VoxelPrimitive)) {
     return;
   }
-  const voxelCoordinate = this._picking.pickVoxel(
+  const voxelCoordinate = this._picking.pickVoxelCoordinate(
     this,
     windowPosition,
     width,

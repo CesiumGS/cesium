@@ -236,10 +236,10 @@ describe(
       });
     });
 
-    describe("_pickVoxelCoordinate", function () {
+    describe("pickVoxelCoordinate", function () {
       it("does not pick undefined window positions", function () {
         expect(function () {
-          scene._pickVoxelCoordinate(undefined);
+          scene._picking.pickVoxelCoordinate(undefined);
         }).toThrowDeveloperError();
       });
 
@@ -250,10 +250,37 @@ describe(
         const primitive = new VoxelPrimitive({ provider });
         scene.primitives.add(primitive);
         scene.renderForSpecs();
-        const voxelCoordinate = scene._pickVoxelCoordinate(
+        const voxelCoordinate = scene._picking.pickVoxelCoordinate(
+          scene,
           new Cartesian2(0, 0)
         );
         expect(voxelCoordinate).toEqual(new Uint8Array(4));
+      });
+    });
+
+    describe("pickVoxel", function () {
+      it("does not pick undefined window positions", function () {
+        expect(function () {
+          scene.pickVoxel(undefined);
+        }).toThrowDeveloperError();
+      });
+
+      it("picks a voxel cell from a VoxelPrimitive", async function () {
+        const provider = await Cesium3DTilesVoxelProvider.fromUrl(
+          voxelTilesetUrl
+        );
+        const primitive = new VoxelPrimitive({ provider });
+        scene.primitives.add(primitive);
+        await pollToPromise(function () {
+          scene.renderForSpecs();
+          const traversal = primitive._traversal;
+          return traversal.isRenderable(traversal.rootNode);
+        });
+        const voxelCell = scene.pickVoxel(new Cartesian2(0, 0));
+        expect(voxelCell.tileIndex).toBe(0);
+        expect(voxelCell.sampleIndex).toBe(0);
+        expect(voxelCell.hasProperty("a")).toBe(true);
+        expect(voxelCell.getProperty("a")).toEqual(new Float32Array(1));
       });
     });
 
