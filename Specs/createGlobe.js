@@ -4,8 +4,8 @@ function createGlobe(ellipsoid) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
   const globe = {
-    callback: undefined,
-    removedCallback: false,
+    _callback: undefined,
+    _removedCallback: false,
     ellipsoid: ellipsoid,
     beginFrame: function () {},
     endFrame: function () {},
@@ -23,10 +23,10 @@ function createGlobe(ellipsoid) {
   };
 
   globe._surface.updateHeight = function (position, callback) {
-    globe.callback = callback;
+    globe._callback = callback;
     return function () {
-      globe.removedCallback = true;
-      globe.callback = undefined;
+      globe._removedCallback = true;
+      globe._callback = undefined;
     };
   };
 

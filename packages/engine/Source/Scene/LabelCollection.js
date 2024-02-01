@@ -10,7 +10,7 @@ import writeTextToCanvas from "../Core/writeTextToCanvas.js";
 import bitmapSDF from "bitmap-sdf";
 import BillboardCollection from "./BillboardCollection.js";
 import BlendOption from "./BlendOption.js";
-import HeightReference from "./HeightReference.js";
+import { isHeightReferenceClamp } from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
 import Label from "./Label.js";
 import LabelStyle from "./LabelStyle.js";
@@ -510,7 +510,7 @@ function repositionAllGlyphs(label) {
     );
   }
 
-  if (label.heightReference === HeightReference.CLAMP_TO_GROUND) {
+  if (isHeightReferenceClamp(label.heightReference)) {
     for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
       glyph = glyphs[glyphIndex];
       const billboard = glyph.billboard;

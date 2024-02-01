@@ -69,10 +69,10 @@ polygon.material.uniforms.color = Cesium.Color.WHITE;
 
 CesiumJS has several built-in materials. Two widely used ones are:
 
-| Name    | Screenshot                                      | Description                                                                                                                  |
-| :------ | :---------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
-| `Color` | <img src="Color.png" width="200" height="92" /> | A single color, including alpha for translucency.                                                                            |
-| `Image` | <img src="Image.png" width="200" height="92" /> | An image with or without an alpha channel such as .png or .jpg; a combination of diffuse, `rgb`, and alpha, `a`, components. |
+| Name    | Screenshot                                                  | Description                                                                                                                  |
+| :------ | :---------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------- |
+| `Color` | <img src="Color.png" width="200" height="92" alt="Color" /> | A single color, including alpha for translucency.                                                                            |
+| `Image` | <img src="Image.png" width="200" height="92" alt="Image" /> | An image with or without an alpha channel such as .png or .jpg; a combination of diffuse, `rgb`, and alpha, `a`, components. |
 
 All built-in materials can be created similar to how we used `Color` above. For example:
 
@@ -98,44 +98,44 @@ polygon.material = new Cesium.Material({
 
 Procedural texture materials procedurally compute patterns on the GPU so they do not rely on external image files. They represent both diffuse and alpha components.
 
-| Name           | Screenshot                                             | Description                                               |
-| :------------- | :----------------------------------------------------- | :-------------------------------------------------------- |
-| `Checkerboard` | <img src="Checkerboard.png" width="200" height="92" /> | Checkerboard with alternating light and dark colors.      |
-| `Stripe`       | <img src="Stripe.png" width="200" height="92" />       | Alternating light and dark horizontal or vertical stripes |
-| `Dot`          | <img src="Dot.png" width="200" height="92" />          | A pattern of dots organized by row and column.            |
-| `Grid`         | <img src="Grid.png" width="200" height="92" />         | A grid of lines, useful for displaying 3D volumes.        |
+| Name           | Screenshot                                                                | Description                                               |
+| :------------- | :------------------------------------------------------------------------ | :-------------------------------------------------------- |
+| `Checkerboard` | <img src="Checkerboard.png" width="200" height="92" alt="Checkerboard" /> | Checkerboard with alternating light and dark colors.      |
+| `Stripe`       | <img src="Stripe.png" width="200" height="92" alt="Stripe" />             | Alternating light and dark horizontal or vertical stripes |
+| `Dot`          | <img src="Dot.png" width="200" height="92" alt="Dot" />                   | A pattern of dots organized by row and column.            |
+| `Grid`         | <img src="Grid.png" width="200" height="92" alt="Grid" />                 | A grid of lines, useful for displaying 3D volumes.        |
 
 ### Base Materials
 
 Base materials represent fine-grain fundamental material characteristics, such as how much incoming light is reflected in a single direction, i.e., the _specular intensity_, or how much light is emitted, i.e., the _emission_. These materials can be used as is, but are more commonly [combined](#combining-materials) using Fabric to create a more complex material.
 
-| Name          | Screenshot                                            | Description                                                                                                                                                                                                        |
-| :------------ | :---------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DiffuseMap`  | <img src="DiffuseMap.png" width="200" height="92" />  | An image with `vec3` components defining incoming light that scatters evenly in all directions.                                                                                                                    |
-| `SpecularMap` | <img src="SpecularMap.png" width="200" height="92" /> | An image with a scalar component defining the intensity of incoming light reflecting in a single direction. This is used to make parts of the surface shiny, e.g., water vs. land.                                 |
-| `AlphaMap`    | <img src="AlphaMap.png" width="200" height="92" />    | An image with a scalar component defining the opacity of the material. This is used to make parts of the surface translucent or transparent, e.g., a fence.                                                        |
-| `NormalMap`   | <img src="NormalMap.png" width="200" height="92" />   | An image with `vec3` components defining the surface's normal in tangent coordinates. Normal mapping is used to add surface detail without adding geometry.                                                        |
-| `BumpMap`     | <img src="BumpMap.png" width="200" height="92" />     | An image with a scalar component defining heights. Like normal mapping, bump mapping is used to add surface detail without adding geometry by perturbing the normal based on differences in adjacent image pixels. |
-| `EmissionMap` | <img src="EmissionMap.png" width="200" height="92" /> | An image with `vec3` components defining light emitted by the material equally in all directions, e.g., lights in a long hallway.                                                                                  |
+| Name          | Screenshot                                                              | Description                                                                                                                                                                                                        |
+| :------------ | :---------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DiffuseMap`  | <img src="DiffuseMap.png" width="200" height="92" alt="DiffuseMap" />   | An image with `vec3` components defining incoming light that scatters evenly in all directions.                                                                                                                    |
+| `SpecularMap` | <img src="SpecularMap.png" width="200" height="92" alt="SpecularMap" /> | An image with a scalar component defining the intensity of incoming light reflecting in a single direction. This is used to make parts of the surface shiny, e.g., water vs. land.                                 |
+| `AlphaMap`    | <img src="AlphaMap.png" width="200" height="92" alt="AlphaMap" />       | An image with a scalar component defining the opacity of the material. This is used to make parts of the surface translucent or transparent, e.g., a fence.                                                        |
+| `NormalMap`   | <img src="NormalMap.png" width="200" height="92" alt="NormalMap" />     | An image with `vec3` components defining the surface's normal in tangent coordinates. Normal mapping is used to add surface detail without adding geometry.                                                        |
+| `BumpMap`     | <img src="BumpMap.png" width="200" height="92" alt="BumpMap" />         | An image with a scalar component defining heights. Like normal mapping, bump mapping is used to add surface detail without adding geometry by perturbing the normal based on differences in adjacent image pixels. |
+| `EmissionMap` | <img src="EmissionMap.png" width="200" height="92" alt="EmissionMap" /> | An image with `vec3` components defining light emitted by the material equally in all directions, e.g., lights in a long hallway.                                                                                  |
 
 ## Polyline Materials
 
 Polyline materials are materials that can only be added to lines.
 
-| Name              | Screenshot                        | Description                                      |
-| :---------------- | :-------------------------------- | :----------------------------------------------- |
-| `PolylineArrow`   | <img src="PolylineArrow.png" />   | Places an arrow head at the end point of a line. |
-| `PolylineGlow`    | <img src="PolylineGlow.png" />    | Makes glowing lines.                             |
-| `PolylineOutline` | <img src="PolylineOutline.png" /> | Line outline.                                    |
+| Name              | Screenshot                                              | Description                                      |
+| :---------------- | :------------------------------------------------------ | :----------------------------------------------- |
+| `PolylineArrow`   | <img src="PolylineArrow.png" alt="PolylineArrow" />     | Places an arrow head at the end point of a line. |
+| `PolylineGlow`    | <img src="PolylineGlow.png" alt="PolylineGlow" />       | Makes glowing lines.                             |
+| `PolylineOutline` | <img src="PolylineOutline.png" alt="PolylineOutline" /> | Line outline.                                    |
 
 ### Misc Materials
 
 There are a few materials that do not fit into any other category.
 
-| Name          | Screenshot                                            | Description                             |
-| :------------ | :---------------------------------------------------- | :-------------------------------------- |
-| `Water`       | <img src="Water.png" width="200" height="92" />       | Animating water with waves and ripples. |
-| `RimLighting` | <img src="RimLighting.png" width="200" height="92" /> | Highlights the rim or silhouette.       |
+| Name          | Screenshot                                                              | Description                             |
+| :------------ | :---------------------------------------------------------------------- | :-------------------------------------- |
+| `Water`       | <img src="Water.png" width="200" height="92" alt="Water" />             | Animating water with waves and ripples. |
+| `RimLighting` | <img src="RimLighting.png" width="200" height="92" alt="RimLighting" /> | Highlights the rim or silhouette.       |
 
 For more materials, see the [CesiumJS Materials Plugin](https://github.com/CesiumGS/cesium-materials-pack).
 
