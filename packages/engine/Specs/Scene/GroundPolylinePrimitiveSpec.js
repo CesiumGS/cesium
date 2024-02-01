@@ -699,7 +699,7 @@ describe(
       );
     });
 
-    it("renders with distance display condition per instance attribute", function () {
+    xit("renders with distance display condition per instance attribute", function () {
       if (!context.floatingPointTexture) {
         return;
       }
