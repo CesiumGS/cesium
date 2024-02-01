@@ -18,6 +18,7 @@ import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
+import HeightReference from "./HeightReference.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
@@ -3614,25 +3615,57 @@ function callAfterRenderFunctions(scene) {
 }
 
 function getGlobeHeight(scene) {
-  const globe = scene._globe;
+  if (scene.mode === SceneMode.MORPHING) {
+    return;
+  }
+
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
+  return scene.getHeight(cartographic);
+}
+
+/**
+ * Gets the height of the loaded surface at the cartographic position.
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
+ * @private
+ */
+Scene.prototype.getHeight = function (cartographic, heightReference) {
+  if (!defined(cartographic)) {
+    return undefined;
+  }
+
+  const ignore3dTiles =
+    heightReference === HeightReference.CLAMP_TO_TERRAIN ||
+    heightReference === HeightReference.RELATIVE_TO_TERRAIN;
+
+  const ignoreTerrain =
+    heightReference === HeightReference.CLAMP_TO_3D_TILE ||
+    heightReference === HeightReference.RELATIVE_TO_3D_TILE;
 
   let maxHeight = Number.NEGATIVE_INFINITY;
-  const length = scene.primitives.length;
-  for (let i = 0; i < length; ++i) {
-    const primitive = scene.primitives.get(i);
-    if (!primitive.isCesium3DTileset || primitive.disableCollision) {
-      continue;
-    }
 
-    const result = primitive.getHeight(cartographic, scene);
-    if (defined(result) && result > maxHeight) {
-      maxHeight = result;
+  if (!ignore3dTiles) {
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      if (
+        !primitive.isCesium3DTileset ||
+        !primitive.show ||
+        primitive.disableCollision
+      ) {
+        continue;
+      }
+
+      const result = primitive.getHeight(cartographic, this);
+      if (defined(result) && result > maxHeight) {
+        maxHeight = result;
+      }
     }
   }
 
-  if (defined(globe) && globe.show && defined(cartographic)) {
+  const globe = this._globe;
+  if (!ignoreTerrain && defined(globe) && globe.show) {
     const result = globe.getHeight(cartographic);
     if (result > maxHeight) {
       maxHeight = result;
@@ -3644,7 +3677,108 @@ function getGlobeHeight(scene) {
   }
 
   return undefined;
-}
+};
+
+const updateHeightScratchCartographic = new Cartographic();
+/**
+ * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+ * is the cartesian position on the tile.
+ *
+ * @private
+ *
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {Function} callback The function to be called when a new tile is loaded containing the updated cartographic.
+ * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
+ * @returns {Function} The function to remove this callback from the quadtree.
+ */
+Scene.prototype.updateHeight = function (
+  cartographic,
+  callback,
+  heightReference
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("callback", callback);
+  //>>includeEnd('debug');
+
+  const callbackWrapper = () => {
+    Cartographic.clone(cartographic, updateHeightScratchCartographic);
+
+    const height = this.getHeight(cartographic, heightReference);
+    if (defined(height)) {
+      updateHeightScratchCartographic.height = height;
+      callback(updateHeightScratchCartographic);
+    }
+  };
+
+  const ignore3dTiles =
+    heightReference === HeightReference.CLAMP_TO_TERRAIN ||
+    heightReference === HeightReference.RELATIVE_TO_TERRAIN;
+
+  const ignoreTerrain =
+    heightReference === HeightReference.CLAMP_TO_3D_TILE ||
+    heightReference === HeightReference.RELATIVE_TO_3D_TILE;
+
+  let terrainRemoveCallback;
+  if (!ignoreTerrain && defined(this.globe)) {
+    terrainRemoveCallback = this.globe._surface.updateHeight(
+      cartographic,
+      callbackWrapper
+    );
+  }
+
+  let tilesetRemoveCallbacks = {};
+  const ellipsoid = this.globe?.ellipsoid;
+  const createPrimitiveEventListener = (primitive) => {
+    if (
+      ignore3dTiles ||
+      !primitive.isCesium3DTileset ||
+      primitive.disableCollision
+    ) {
+      return;
+    }
+
+    const tilesetRemoveCallback = primitive.updateHeight(
+      cartographic,
+      callbackWrapper,
+      ellipsoid
+    );
+    tilesetRemoveCallbacks[primitive.id] = tilesetRemoveCallback;
+  };
+
+  if (!ignore3dTiles) {
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      createPrimitiveEventListener(primitive);
+    }
+  }
+
+  const removeAddedListener = this.primitives.primitiveAdded.addEventListener(
+    createPrimitiveEventListener
+  );
+  const removeRemovedListener = this.primitives.primitiveRemoved.addEventListener(
+    (primitive) => {
+      if (!primitive.isCesium3DTileset) {
+        return;
+      }
+
+      tilesetRemoveCallbacks[primitive.id]();
+      delete tilesetRemoveCallbacks[primitive.id];
+    }
+  );
+
+  const removeCallback = () => {
+    terrainRemoveCallback = terrainRemoveCallback && terrainRemoveCallback();
+    Object.values(tilesetRemoveCallbacks).forEach((tilesetRemoveCallback) =>
+      tilesetRemoveCallback()
+    );
+    tilesetRemoveCallbacks = {};
+    removeAddedListener();
+    removeRemovedListener();
+  };
+
+  return removeCallback;
+};
 
 function isCameraUnderground(scene) {
   const camera = scene.camera;
