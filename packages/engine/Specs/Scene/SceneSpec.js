@@ -2211,6 +2211,7 @@ describe(
       scene.morphToColumbusView(0.0);
 
       return updateGlobeUntilDone(scene).then(function () {
+        scene.renderForSpecs();
         expect(scene.cameraUnderground).toBe(true);
         scene.destroyForSpecs();
       });
@@ -2261,6 +2262,7 @@ describe(
           return updateGlobeUntilDone(scene);
         })
         .then(function () {
+          scene.renderForSpecs();
           expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
           scene.destroyForSpecs();
         });

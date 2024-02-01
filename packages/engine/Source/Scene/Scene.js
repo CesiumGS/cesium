@@ -167,6 +167,7 @@ function Scene(options) {
   this._groundPrimitives = new PrimitiveCollection();
 
   this._globeHeight = undefined;
+  this._globeHeightDirty = undefined;
   this._cameraUnderground = false;
 
   this._logDepthBuffer = context.fragmentDepth;
@@ -748,6 +749,11 @@ function updateGlobeListeners(scene, globe) {
       globe.terrainProviderChanged.addEventListener(
         requestRenderAfterFrame(scene)
       )
+    );
+    removeGlobeCallbacks.push(
+      globe.tileLoadProgressEvent.addEventListener(() => {
+        scene._globeHeightDirty = true;
+      })
     );
   }
   scene._removeGlobeCallbacks = removeGlobeCallbacks;
@@ -3643,6 +3649,10 @@ Scene.prototype.getHeight = function (cartographic, heightReference) {
     heightReference === HeightReference.CLAMP_TO_3D_TILE ||
     heightReference === HeightReference.RELATIVE_TO_3D_TILE;
 
+  if (!defined(cartographic)) {
+    return;
+  }
+
   let maxHeight = Number.NEGATIVE_INFINITY;
 
   if (!ignore3dTiles) {
@@ -3817,7 +3827,10 @@ Scene.prototype.initializeFrame = function () {
 
   this._tweens.update();
 
-  this._globeHeight = getGlobeHeight(this);
+  if (this._globeHeightDirty) {
+    this._globeHeight = getGlobeHeight(this);
+    this._globeHeightDirty = false;
+  }
   this._cameraUnderground = isCameraUnderground(this);
   this._globeTranslucencyState.update(this);
 
@@ -3993,8 +4006,12 @@ Scene.prototype.render = function (time) {
     time = JulianDate.now();
   }
 
-  // Determine if shouldRender
   const cameraChanged = this._view.checkForCameraUpdates(this);
+  if (cameraChanged) {
+    this._globeHeightDirty = true;
+  }
+
+  // Determine if should render a new frame in request render mode
   let shouldRender =
     !this.requestRenderMode ||
     this._renderRequested ||
