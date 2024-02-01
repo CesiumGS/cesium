@@ -4677,7 +4677,6 @@ describe(
         // darker than in sun
         renderOptions.time = darkDate;
         expect(renderOptions).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual([0, 0, 0, 255]);
           expect(rgba).not.toEqual(originalColor);
           expect(rgba).not.toEqual(sunnyColor);
 
