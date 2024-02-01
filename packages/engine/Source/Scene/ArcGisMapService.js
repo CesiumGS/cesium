@@ -8,7 +8,7 @@ const cesiumWebsiteToken =
 
 let defaultTokenCredit;
 const defaultAccessToken =
-  "AAPK2b93071721df4cc78be0d8b3d79b1fd54YMocOcx2NxlbYTDkyO5gPk8XsDnguQgeMdFKepFwLwTgb8vHfPvSTdjy_KlMHlS";
+  "AAPK997c8ac9b63f486188c3bede0b85ba5b2SiLv1qk7ZCEiBYZ_1i90XplcyGpzezMhO7wTadCKmemjXjb1Mtj112fAt6gbfL-";
 /**
  * Default options for accessing the ArcGIS image tile service.
  *

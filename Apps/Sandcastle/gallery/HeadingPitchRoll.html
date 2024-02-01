@@ -170,8 +170,8 @@
           });
 
           document.addEventListener("keydown", function (e) {
-            switch (e.keyCode) {
-              case 40:
+            switch (e.code) {
+              case "ArrowDown":
                 if (e.shiftKey) {
                   // speed down
                   speed = Math.max(--speed, 1);
@@ -183,7 +183,7 @@
                   }
                 }
                 break;
-              case 38:
+              case "ArrowUp":
                 if (e.shiftKey) {
                   // speed up
                   speed = Math.min(++speed, 100);
@@ -195,7 +195,7 @@
                   }
                 }
                 break;
-              case 39:
+              case "ArrowRight":
                 if (e.shiftKey) {
                   // roll right
                   hpRoll.roll += deltaRadians;
@@ -210,7 +210,7 @@
                   }
                 }
                 break;
-              case 37:
+              case "ArrowLeft":
                 if (e.shiftKey) {
                   // roll left until
                   hpRoll.roll -= deltaRadians;

@@ -9,6 +9,7 @@ import SceneMode from "../SceneMode.js";
 import SplitDirection from "../SplitDirection.js";
 import buildDrawCommand from "./buildDrawCommand.js";
 import TilesetPipelineStage from "./TilesetPipelineStage.js";
+import AtmospherePipelineStage from "./AtmospherePipelineStage.js";
 import ImageBasedLightingPipelineStage from "./ImageBasedLightingPipelineStage.js";
 import ModelArticulation from "./ModelArticulation.js";
 import ModelColorPipelineStage from "./ModelColorPipelineStage.js";
@@ -606,6 +607,7 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
   modelPipelineStages.length = 0;
 
   const model = this._model;
+  const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
 
   if (defined(model.color)) {
     modelPipelineStages.push(ModelColorPipelineStage);
@@ -637,6 +639,10 @@ ModelSceneGraph.prototype.configurePipeline = function (frameState) {
 
   if (ModelType.is3DTiles(model.type)) {
     modelPipelineStages.push(TilesetPipelineStage);
+  }
+
+  if (fogRenderable) {
+    modelPipelineStages.push(AtmospherePipelineStage);
   }
 };
 

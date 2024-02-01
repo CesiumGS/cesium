@@ -8,7 +8,7 @@ let defaultTokenCredit;
 const cesiumWebsiteToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ODZkMDQzOS03ZGJjLTQzZWUtYjlmYy04ZmM5Y2UwNzNhMmYiLCJpZCI6MjU5LCJpYXQiOjE2MzgyMDYwMDB9.cK1hsaFBgz0l2dG9Ry5vBFHWp-HF2lwjLC0tcK8Z8tY";
 const defaultAccessToken =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkNzEwOTRhMi05YmYyLTQyY2EtYTU2My04YTM1MWE2YjhjNjAiLCJpZCI6MjU5LCJpYXQiOjE3MDQyMTcxMzh9.rE7KTaFyZydhuP1Z7ohzClO3J1tMOvaHODzt3_5jo7s";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiOGQ5NjRhYy1lYzBmLTRjYjktODA5MC01M2FhYmE4YjliZTIiLCJpZCI6MjU5LCJpYXQiOjE3MDY4MDU1MTR9.3b1XUfaoUwtY0Mi87tOQUGTnU4oMyyzSwAYqkDENcHo";
 /**
  * Default settings for accessing the Cesium ion API.
  *

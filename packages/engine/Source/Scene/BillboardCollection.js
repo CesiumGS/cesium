@@ -28,7 +28,7 @@ import BillboardCollectionVS from "../Shaders/BillboardCollectionVS.js";
 import Billboard from "./Billboard.js";
 import BlendingState from "./BlendingState.js";
 import BlendOption from "./BlendOption.js";
-import HeightReference from "./HeightReference.js";
+import HeightReference, { isHeightReferenceClamp } from "./HeightReference.js";
 import HorizontalOrigin from "./HorizontalOrigin.js";
 import SceneMode from "./SceneMode.js";
 import SDFSettings from "./SDFSettings.js";
@@ -1375,7 +1375,7 @@ function writeCompressedAttribute3(
 
   let disableDepthTestDistance = billboard.disableDepthTestDistance;
   const clampToGround =
-    billboard.heightReference === HeightReference.CLAMP_TO_GROUND &&
+    isHeightReferenceClamp(billboard.heightReference) &&
     frameState.context.depthTexture;
   if (!defined(disableDepthTestDistance)) {
     disableDepthTestDistance = clampToGround ? 5000.0 : 0.0;
@@ -1448,7 +1448,7 @@ function writeTextureCoordinateBoundsOrLabelTranslate(
   vafWriters,
   billboard
 ) {
-  if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
+  if (isHeightReferenceClamp(billboard.heightReference)) {
     const scene = billboardCollection._scene;
     const context = frameState.context;
     const globeTranslucent = frameState.globeTranslucencyState.translucent;

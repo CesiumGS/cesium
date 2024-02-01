@@ -805,7 +805,6 @@ export async function runCoverage(options) {
     sourcemap: true,
     format: "esm",
     target: "es2020",
-    external: ["https", "http", "url", "zlib"],
     outfile: karmaBundle,
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
   });
@@ -819,7 +818,6 @@ export async function runCoverage(options) {
     sourcemap: true,
     format: "esm",
     target: "es2020",
-    external: ["https", "http", "url", "zlib"],
     outfile: specListBundle,
     plugins: [instrumentPlugin],
     logLevel: "error", // print errors immediately, and collect warnings so we can filter out known ones
@@ -1704,7 +1702,6 @@ async function buildCesiumViewer() {
   config.format = "iife";
   // Configure Cesium base path to use built
   config.define = { CESIUM_BASE_URL: `"."` };
-  config.external = ["https", "http", "url", "zlib"];
   config.outdir = cesiumViewerOutputDirectory;
   config.outbase = "Apps/CesiumViewer";
   config.logLevel = "error"; // print errors immediately, and collect warnings so we can filter out known ones

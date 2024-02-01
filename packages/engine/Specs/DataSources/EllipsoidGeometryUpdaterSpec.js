@@ -416,6 +416,33 @@ describe(
       );
     });
 
+    it("Inner radii should be scaled when in 3D mode", function () {
+      const ellipsoid = new EllipsoidGraphics();
+      ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
+      ellipsoid.innerRadii = createDynamicProperty(new Cartesian3(0.5, 1, 1.5));
+
+      const entity = new Entity();
+      entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
+      entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
+      entity.ellipsoid = ellipsoid;
+
+      const updater = new EllipsoidGeometryUpdater(entity, scene);
+      const primitives = scene.primitives;
+
+      const dynamicUpdater = updater.createDynamicUpdater(
+        primitives,
+        new PrimitiveCollection()
+      );
+      dynamicUpdater.update(time);
+
+      scene.initializeFrame();
+      scene.render();
+
+      expect(dynamicUpdater._options.innerRadii.x).toEqual(0.5);
+      expect(dynamicUpdater._options.innerRadii.y).toEqual(0.5);
+      expect(dynamicUpdater._options.innerRadii.z).toEqual(0.5);
+    });
+
     it("dynamic ellipsoid fast path updates attributes", function () {
       const ellipsoid = new EllipsoidGraphics();
       ellipsoid.show = createDynamicProperty(true);
