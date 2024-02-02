@@ -100,9 +100,11 @@ Object.defineProperties(I3SSublayer.prototype, {
       Check.defined("value", value);
       //>>includeEnd('debug');
 
-      this._visibility = value;
-      for (let i = 0; i < this._i3sLayers.length; i++) {
-        this._i3sLayers[i]._updateVisibility();
+      if (this._visibility !== value) {
+        this._visibility = value;
+        for (let i = 0; i < this._i3sLayers.length; i++) {
+          this._i3sLayers[i]._updateVisibility();
+        }
       }
     },
   },
@@ -159,10 +161,7 @@ I3SSublayer._fromData = async function (
     resource.appendForwardSlash();
     sublayer._resource = resource;
 
-    const layerData = await I3SDataProvider.loadJson(
-      sublayer._resource,
-      dataProvider._traceFetches
-    );
+    const layerData = await I3SDataProvider.loadJson(sublayer._resource);
     const layer = new I3SLayer(dataProvider, layerData, sublayer);
     sublayer._i3sLayers.push(layer);
   } else {

@@ -198,9 +198,11 @@ Object.defineProperties(I3SDataProvider.prototype, {
       Check.defined("value", value);
       //>>includeEnd('debug');
 
-      this._show = value;
-      for (let i = 0; i < this._layers.length; i++) {
-        this._layers[i]._updateVisibility();
+      if (this._show !== value) {
+        this._show = value;
+        for (let i = 0; i < this._layers.length; i++) {
+          this._layers[i]._updateVisibility();
+        }
       }
     },
   },
