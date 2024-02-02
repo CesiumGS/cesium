@@ -196,22 +196,22 @@
         });
 
         document.addEventListener("keydown", function (e) {
-          switch (e.keyCode) {
-            case 40:
+          switch (e.code) {
+            case "ArrowDown":
               // pitch down
               hpRoll.pitch -= deltaRadians;
               if (hpRoll.pitch < -Cesium.Math.TWO_PI) {
                 hpRoll.pitch += Cesium.Math.TWO_PI;
               }
               break;
-            case 38:
+            case "ArrowUp":
               // pitch up
               hpRoll.pitch += deltaRadians;
               if (hpRoll.pitch > Cesium.Math.TWO_PI) {
                 hpRoll.pitch -= Cesium.Math.TWO_PI;
               }
               break;
-            case 39:
+            case "ArrowRight":
               if (e.shiftKey) {
                 // roll right
                 hpRoll.roll += deltaRadians;
@@ -226,7 +226,7 @@
                 }
               }
               break;
-            case 37:
+            case "ArrowLeft":
               if (e.shiftKey) {
                 // roll left until
                 hpRoll.roll -= deltaRadians;

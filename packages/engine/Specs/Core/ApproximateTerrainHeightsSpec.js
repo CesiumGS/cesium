@@ -26,7 +26,7 @@ describe("Core/ApproximateTerrainHeights", function () {
       Rectangle.fromDegrees(-121.0, 10.0, -120.0, 11.0)
     );
     expect(result.minimumTerrainHeight).toEqualEpsilon(
-      -476.12571188755,
+      -5269.86,
       CesiumMath.EPSILON8
     );
     expect(result.maximumTerrainHeight).toEqualEpsilon(

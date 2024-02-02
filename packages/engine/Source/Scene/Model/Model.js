@@ -9,6 +9,7 @@ import defaultValue from "../../Core/defaultValue.js";
 import DeveloperError from "../../Core/DeveloperError.js";
 import destroyObject from "../../Core/destroyObject.js";
 import DistanceDisplayCondition from "../../Core/DistanceDisplayCondition.js";
+import Ellipsoid from "../../Core/Ellipsoid.js";
 import Event from "../../Core/Event.js";
 import Matrix3 from "../../Core/Matrix3.js";
 import Matrix4 from "../../Core/Matrix4.js";
@@ -18,7 +19,9 @@ import Pass from "../../Renderer/Pass.js";
 import ClippingPlaneCollection from "../ClippingPlaneCollection.js";
 import ColorBlendMode from "../ColorBlendMode.js";
 import GltfLoader from "../GltfLoader.js";
-import HeightReference from "../HeightReference.js";
+import HeightReference, {
+  isHeightReferenceRelative,
+} from "../HeightReference.js";
 import ImageBasedLighting from "../ImageBasedLighting.js";
 import PointCloudShading from "../PointCloudShading.js";
 import SceneMode from "../SceneMode.js";
@@ -342,10 +345,9 @@ function Model(options) {
   const scene = options.scene;
   if (defined(scene) && defined(scene.terrainProviderChanged)) {
     this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(
-      function () {
+      () => {
         this._heightDirty = true;
-      },
-      this
+      }
     );
   }
   this._scene = scene;
@@ -458,6 +460,8 @@ function Model(options) {
   this._sceneMode = undefined;
   this._projectTo2D = defaultValue(options.projectTo2D, false);
   this._enablePick = defaultValue(options.enablePick, false);
+
+  this._fogRenderable = undefined;
 
   this._skipLevelOfDetail = false;
   this._ignoreCommands = defaultValue(options.ignoreCommands, false);
@@ -1798,6 +1802,7 @@ Model.prototype.update = function (frameState) {
   updateSkipLevelOfDetail(this, frameState);
   updateClippingPlanes(this, frameState);
   updateSceneMode(this, frameState);
+  updateFog(this, frameState);
   updateVerticalExaggeration(this, frameState);
 
   this._defaultTexture = frameState.context.defaultTexture;
@@ -1993,6 +1998,14 @@ function updateSceneMode(model, frameState) {
   }
 }
 
+function updateFog(model, frameState) {
+  const fogRenderable = frameState.fog.enabled && frameState.fog.renderable;
+  if (fogRenderable !== model._fogRenderable) {
+    model.resetDrawCommands();
+    model._fogRenderable = fogRenderable;
+  }
+}
+
 function updateVerticalExaggeration(model, frameState) {
   const verticalExaggerationNeeded = frameState.verticalExaggeration !== 1.0;
   if (model._verticalExaggerationOn !== verticalExaggerationNeeded) {
@@ -2043,15 +2056,11 @@ function updateClamping(model) {
   }
 
   const scene = model._scene;
-  if (
-    !defined(scene) ||
-    !defined(scene.globe) ||
-    model.heightReference === HeightReference.NONE
-  ) {
+  if (!defined(scene) || model.heightReference === HeightReference.NONE) {
     //>>includeStart('debug', pragmas.debug);
     if (model.heightReference !== HeightReference.NONE) {
       throw new DeveloperError(
-        "Height reference is not supported without a scene and globe."
+        "Height reference is not supported without a scene."
       );
     }
     //>>includeEnd('debug');
@@ -2060,7 +2069,7 @@ function updateClamping(model) {
   }
 
   const globe = scene.globe;
-  const ellipsoid = globe.ellipsoid;
+  const ellipsoid = defaultValue(globe?.ellipsoid, Ellipsoid.WGS84);
 
   // Compute cartographic position so we don't recompute every update
   const modelMatrix = model.modelMatrix;
@@ -2074,14 +2083,14 @@ function updateClamping(model) {
   }
 
   // Install callback to handle updating of terrain tiles
-  const surface = globe._surface;
-  model._removeUpdateHeightCallback = surface.updateHeight(
+  model._removeUpdateHeightCallback = scene.updateHeight(
     cartoPosition,
-    getUpdateHeightCallback(model, ellipsoid, cartoPosition)
+    getUpdateHeightCallback(model, ellipsoid, cartoPosition),
+    model.heightReference
   );
 
   // Set the correct height now
-  const height = globe.getHeight(cartoPosition);
+  const height = scene.getHeight(cartoPosition, model.heightReference);
   if (defined(height)) {
     // Get callback with cartoPosition being the non-clamped position
     const callback = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
@@ -2089,8 +2098,7 @@ function updateClamping(model) {
     // Compute the clamped cartesian and call updateHeight callback
     Cartographic.clone(cartoPosition, scratchCartographic);
     scratchCartographic.height = height;
-    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-    callback(scratchPosition);
+    callback(scratchCartographic);
   }
 
   model._heightDirty = false;
@@ -2347,24 +2355,25 @@ function scaleInPixels(positionWC, radius, frameState) {
   );
 }
 
-function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
+const scratchUpdateHeightCartesian = new Cartesian3();
+function getUpdateHeightCallback(model, ellipsoid, originalPostition) {
   return function (clampedPosition) {
-    if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
-      const clampedCart = ellipsoid.cartesianToCartographic(
-        clampedPosition,
-        scratchCartographic
-      );
-      clampedCart.height += cartoPosition.height;
-      ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+    if (isHeightReferenceRelative(model.heightReference)) {
+      clampedPosition.height += originalPostition.height;
     }
+
+    ellipsoid.cartographicToCartesian(
+      clampedPosition,
+      scratchUpdateHeightCartesian
+    );
 
     const clampedModelMatrix = model._clampedModelMatrix;
 
     // Modify clamped model matrix to use new height
     Matrix4.clone(model.modelMatrix, clampedModelMatrix);
-    clampedModelMatrix[12] = clampedPosition.x;
-    clampedModelMatrix[13] = clampedPosition.y;
-    clampedModelMatrix[14] = clampedPosition.z;
+    clampedModelMatrix[12] = scratchUpdateHeightCartesian.x;
+    clampedModelMatrix[13] = scratchUpdateHeightCartesian.y;
+    clampedModelMatrix[14] = scratchUpdateHeightCartesian.z;
 
     model._heightDirty = true;
   };
