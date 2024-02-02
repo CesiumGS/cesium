@@ -1018,11 +1018,22 @@ describe("Scene/I3SDataProvider", function () {
       testProvider.sublayers[0].sublayers[0].sublayers[0].visibility
     ).toEqual(false);
 
-    testProvider.sublayers[0].sublayers[0].sublayers[0].visibility = true;
+    const spy = spyOn(
+      testProvider.sublayers[0].sublayers[0].sublayers[0]._i3sLayers[0],
+      "_updateVisibility"
+    );
 
+    testProvider.sublayers[0].sublayers[0].sublayers[0].visibility = false;
+    expect(
+      testProvider.sublayers[0].sublayers[0].sublayers[0].visibility
+    ).toEqual(false);
+    expect(spy).not.toHaveBeenCalled();
+
+    testProvider.sublayers[0].sublayers[0].sublayers[0].visibility = true;
     expect(
       testProvider.sublayers[0].sublayers[0].sublayers[0].visibility
     ).toEqual(true);
+    expect(spy).toHaveBeenCalled();
   });
 
   it("BSL get sublayers", async function () {
