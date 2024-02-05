@@ -85,7 +85,7 @@ const checkIfCorporateCLAFound = async () => {
     const words = rowScheduleA.split(" ");
 
     for (let j = 0; j < words.length; j++) {
-      // Checking for substrings cause many GitHub usernames added as "github.com/username".
+      // Checking for substrings because many GitHub usernames added as "github.com/username".
       if (words[j].includes(PULL_REQUST_INFO.username.toLowerCase())) {
         return true;
       }
