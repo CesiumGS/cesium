@@ -1,6 +1,6 @@
 name: CLA Checking
 on:
-  push: # TODO: change event trigger to be pull request
+  pull_request:
 
 jobs:
   check-cla:
@@ -20,4 +20,7 @@ jobs:
         run: node .github/actions/check-for-CLA/index.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.number }}        
+          PULL_REQUEST_ID: ${{ github.event.number }}      
+          GOOGLE_KEYS: ${{ secrets.GOOGLE_KEYS }}
+          INDIVIDUAL_CLA_SHEET_ID: ${{ secrets.INDIVIDUAL_CLA_SHEET_ID }}  
+          CORPORATE_CLA_SHEET_ID: ${{ secrets.CORPORATE_CLA_SHEET_ID }}  
