@@ -25,7 +25,7 @@ import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import Rectangle from "../Core/Rectangle.js";
 import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
-import TerrainExaggeration from "../Core/TerrainExaggeration.js";
+import VerticalExaggeration from "../Core/VerticalExaggeration.js";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
 import Visibility from "../Core/Visibility.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
@@ -179,8 +179,8 @@ function GlobeSurfaceTileProvider(options) {
   this._hasLoadedTilesThisFrame = false;
   this._hasFillTilesThisFrame = false;
 
-  this._oldTerrainExaggeration = undefined;
-  this._oldTerrainExaggerationRelativeHeight = undefined;
+  this._oldVerticalExaggeration = undefined;
+  this._oldVerticalExaggerationRelativeHeight = undefined;
 }
 
 Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -448,7 +448,7 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
     );
   }
 
-  // When terrain exaggeration changes, all of the loaded tiles need to generate
+  // When vertical exaggeration changes, all of the loaded tiles need to generate
   // geodetic surface normals so they can scale properly when rendered.
   // When exaggeration is reset, geodetic surface normals are removed to decrease
   // memory usage. Some tiles might have been constructed with the correct
@@ -460,16 +460,16 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
   // exaggeration changes.
 
   const quadtree = this.quadtree;
-  const exaggeration = frameState.terrainExaggeration;
+  const exaggeration = frameState.verticalExaggeration;
   const exaggerationRelativeHeight =
-    frameState.terrainExaggerationRelativeHeight;
+    frameState.verticalExaggerationRelativeHeight;
   const exaggerationChanged =
-    this._oldTerrainExaggeration !== exaggeration ||
-    this._oldTerrainExaggerationRelativeHeight !== exaggerationRelativeHeight;
+    this._oldVerticalExaggeration !== exaggeration ||
+    this._oldVerticalExaggerationRelativeHeight !== exaggerationRelativeHeight;
 
   // Keep track of the next time there is a change in exaggeration
-  this._oldTerrainExaggeration = exaggeration;
-  this._oldTerrainExaggerationRelativeHeight = exaggerationRelativeHeight;
+  this._oldVerticalExaggeration = exaggeration;
+  this._oldVerticalExaggerationRelativeHeight = exaggerationRelativeHeight;
 
   if (exaggerationChanged) {
     quadtree.forEachLoadedTile(function (tile) {
@@ -1258,18 +1258,18 @@ function updateTileBoundingRegion(tile, tileProvider, frameState) {
 
   // Update bounding regions from the min and max heights
   if (sourceTile !== undefined) {
-    const exaggeration = frameState.terrainExaggeration;
+    const exaggeration = frameState.verticalExaggeration;
     const exaggerationRelativeHeight =
-      frameState.terrainExaggerationRelativeHeight;
+      frameState.verticalExaggerationRelativeHeight;
     const hasExaggeration = exaggeration !== 1.0;
     if (hasExaggeration) {
       hasBoundingVolumesFromMesh = false;
-      tileBoundingRegion.minimumHeight = TerrainExaggeration.getHeight(
+      tileBoundingRegion.minimumHeight = VerticalExaggeration.getHeight(
         tileBoundingRegion.minimumHeight,
         exaggeration,
         exaggerationRelativeHeight
       );
-      tileBoundingRegion.maximumHeight = TerrainExaggeration.getHeight(
+      tileBoundingRegion.maximumHeight = VerticalExaggeration.getHeight(
         tileBoundingRegion.maximumHeight,
         exaggeration,
         exaggerationRelativeHeight
@@ -1625,8 +1625,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_center3D: function () {
       return this.properties.center3D;
     },
-    u_terrainExaggerationAndRelativeHeight: function () {
-      return this.properties.terrainExaggerationAndRelativeHeight;
+    u_verticalExaggerationAndRelativeHeight: function () {
+      return this.properties.verticalExaggerationAndRelativeHeight;
     },
     u_tileRectangle: function () {
       return this.properties.tileRectangle;
@@ -1808,7 +1808,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       modifiedModelView: new Matrix4(),
       tileRectangle: new Cartesian4(),
 
-      terrainExaggerationAndRelativeHeight: new Cartesian2(1.0, 0.0),
+      verticalExaggerationAndRelativeHeight: new Cartesian2(1.0, 0.0),
 
       dayTextures: [],
       dayTextureTranslationAndScale: [],
@@ -2174,9 +2174,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   const encoding = mesh.encoding;
   const tileBoundingRegion = surfaceTile.tileBoundingRegion;
 
-  const exaggeration = frameState.terrainExaggeration;
+  const exaggeration = frameState.verticalExaggeration;
   const exaggerationRelativeHeight =
-    frameState.terrainExaggerationRelativeHeight;
+    frameState.verticalExaggerationRelativeHeight;
   const hasExaggeration = exaggeration !== 1.0;
   const hasGeodeticSurfaceNormals = encoding.hasGeodeticSurfaceNormals;
 
@@ -2431,8 +2431,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       );
     }
 
-    uniformMapProperties.terrainExaggerationAndRelativeHeight.x = exaggeration;
-    uniformMapProperties.terrainExaggerationAndRelativeHeight.y = exaggerationRelativeHeight;
+    uniformMapProperties.verticalExaggerationAndRelativeHeight.x = exaggeration;
+    uniformMapProperties.verticalExaggerationAndRelativeHeight.y = exaggerationRelativeHeight;
 
     uniformMapProperties.center3D = mesh.center;
     Cartesian3.clone(rtc, uniformMapProperties.rtc);
@@ -2502,7 +2502,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.localizedTranslucencyRectangle
     );
 
-    // For performance, use fog in the shader only when the tile is in fog.
+    // For performance, render fog only when fog is enabled and the effect of
+    // fog would be non-negligible. This prevents the shader from running when
+    // the camera is in space, for example.
     const applyFog =
       enableFog &&
       CesiumMath.fog(tile._distance, frameState.fog.density) >

@@ -35,6 +35,7 @@ describe(
         _surface: {},
         imageryLayersUpdatedEvent: new Event(),
         terrainProviderChanged: new Event(),
+        tileLoadProgressEvent: new Event(),
       };
 
       scene.globe.getHeight = function () {

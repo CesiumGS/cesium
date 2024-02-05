@@ -197,7 +197,7 @@ function Camera(scene) {
   this.defaultZoomAmount = 100000.0;
   /**
    * If set, the camera will not be able to rotate past this axis in either direction.
-   * @type {Cartesian3}
+   * @type {Cartesian3 | undefined}
    * @default undefined
    */
   this.constrainedAxis = undefined;

@@ -28,6 +28,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import deprecationWarning from "../Core/deprecationWarning.js";
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -340,25 +341,9 @@ function Globe(ellipsoid) {
    */
   this.atmosphereBrightnessShift = 0.0;
 
-  /**
-   * A scalar used to exaggerate the terrain. Defaults to <code>1.0</code> (no exaggeration).
-   * A value of <code>2.0</code> scales the terrain by 2x.
-   * A value of <code>0.0</code> makes the terrain completely flat.
-   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-   * @type {number}
-   * @default 1.0
-   */
-  this.terrainExaggeration = 1.0;
-
-  /**
-   * The height from which terrain is exaggerated. Defaults to <code>0.0</code> (scaled relative to ellipsoid surface).
-   * Terrain that is above this height will scale upwards and terrain that is below this height will scale downwards.
-   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-   * If {@link Globe#terrainExaggeration} is <code>1.0</code> this value will have no effect.
-   * @type {number}
-   * @default 0.0
-   */
-  this.terrainExaggerationRelativeHeight = 0.0;
+  this._terrainExaggerationChanged = false;
+  this._terrainExaggeration = 1.0;
+  this._terrainExaggerationRelativeHeight = 0.0;
 
   /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
@@ -539,6 +524,68 @@ Object.defineProperties(Globe.prototype, {
     },
   },
   /**
+   * A scalar used to exaggerate the terrain. Defaults to <code>1.0</code> (no exaggeration).
+   * A value of <code>2.0</code> scales the terrain by 2x.
+   * A value of <code>0.0</code> makes the terrain completely flat.
+   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+   *
+   * @memberof Globe.prototype
+   * @type {number}
+   * @default 1.0
+   *
+   * @deprecated
+   */
+  terrainExaggeration: {
+    get: function () {
+      deprecationWarning(
+        "Globe.terrainExaggeration",
+        "Globe.terrainExaggeration was deprecated in CesiumJS 1.113.  It will be removed in CesiumJS 1.116. Use Scene.verticalExaggeration instead."
+      );
+      return this._terrainExaggeration;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "Globe.terrainExaggeration",
+        "Globe.terrainExaggeration was deprecated in CesiumJS 1.113.  It will be removed in CesiumJS 1.116. Use Scene.verticalExaggeration instead."
+      );
+      if (value !== this._terrainExaggeration) {
+        this._terrainExaggeration = value;
+        this._terrainExaggerationChanged = true;
+      }
+    },
+  },
+  /**
+   * The height from which terrain is exaggerated. Defaults to <code>0.0</code> (scaled relative to ellipsoid surface).
+   * Terrain that is above this height will scale upwards and terrain that is below this height will scale downwards.
+   * Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+   * If {@link Globe#terrainExaggeration} is <code>1.0</code> this value will have no effect.
+   *
+   * @memberof Globe.prototype
+   * @type {number}
+   * @default 0.0
+   *
+   * @deprecated
+   */
+  terrainExaggerationRelativeHeight: {
+    get: function () {
+      deprecationWarning(
+        "Globe.terrainExaggerationRelativeHeight",
+        "Globe.terrainExaggerationRelativeHeight was deprecated in CesiumJS 1.113.  It will be removed in CesiumJS 1.116. Use Scene.verticalExaggerationRelativeHeight instead."
+      );
+      return this._terrainExaggerationRelativeHeight;
+    },
+    set: function (value) {
+      deprecationWarning(
+        "Globe.terrainExaggerationRelativeHeight",
+        "Globe.terrainExaggerationRelativeHeight was deprecated in CesiumJS 1.113.  It will be removed in CesiumJS 1.116. Use Scene.verticalExaggerationRelativeHeight instead."
+      );
+      if (value !== this._terrainExaggerationRelativeHeight) {
+        this._terrainExaggerationRelativeHeight = value;
+        this._terrainExaggerationChanged = true;
+      }
+    },
+  },
+  /**
    * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
    * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
    *
@@ -644,8 +691,8 @@ function makeShadersDirty(globe) {
 
   const requireNormals =
     defined(globe._material) &&
-    (globe._material.shaderSource.match(/slope/) ||
-      globe._material.shaderSource.match("normalEC"));
+    (defined(globe._material.shaderSource.match(/slope/)) ||
+      defined(globe._material.shaderSource.match("normalEC")));
 
   const fragmentSources = [AtmosphereCommon, GroundAtmosphere];
   if (
@@ -1059,6 +1106,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.undergroundColor = this._undergroundColor;
     tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     tileProvider.lambertDiffuseMultiplier = this.lambertDiffuseMultiplier;
+
     surface.beginFrame(frameState);
   }
 };

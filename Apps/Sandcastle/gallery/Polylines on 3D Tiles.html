@@ -59,7 +59,9 @@
         let powerPlant;
         let powerPlantShow = true;
         try {
-          powerPlant = await Cesium.Cesium3DTileset.fromIonAssetId(1240402);
+          powerPlant = await Cesium.Cesium3DTileset.fromIonAssetId(1240402, {
+            disableCollision: true,
+          });
           powerPlant.show = powerPlantShow;
           scene.primitives.add(powerPlant);
           powerPlant.tileLoad.addEventListener(function (tile) {

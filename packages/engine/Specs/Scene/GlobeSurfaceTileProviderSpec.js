@@ -1441,6 +1441,64 @@ describe(
         });
       });
     });
+
+    it("Detects change in vertical exaggeration", function () {
+      switchViewMode(
+        SceneMode.SCENE3D,
+        new GeographicProjection(Ellipsoid.WGS84)
+      );
+      scene.camera.flyHome(0.0);
+
+      scene.verticalExaggeration = 1.0;
+      scene.verticalExaggerationRelativeHeight = 0.0;
+
+      return updateUntilDone(scene.globe).then(function () {
+        forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+          tile
+        ) {
+          const surfaceTile = tile.data;
+          const encoding = surfaceTile.mesh.encoding;
+          const boundingSphere = surfaceTile.tileBoundingRegion.boundingSphere;
+          expect(encoding.exaggeration).toEqual(1.0);
+          expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
+          expect(boundingSphere.radius).toBeLessThan(7000000.0);
+        });
+
+        scene.verticalExaggeration = 2.0;
+        scene.verticalExaggerationRelativeHeight = -1000000.0;
+
+        return updateUntilDone(scene.globe).then(function () {
+          forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+            tile
+          ) {
+            const surfaceTile = tile.data;
+            const encoding = surfaceTile.mesh.encoding;
+            const boundingSphere =
+              surfaceTile.tileBoundingRegion.boundingSphere;
+            expect(encoding.exaggeration).toEqual(2.0);
+            expect(encoding.hasGeodeticSurfaceNormals).toEqual(true);
+            expect(boundingSphere.radius).toBeGreaterThan(7000000.0);
+          });
+
+          scene.verticalExaggeration = 1.0;
+          scene.verticalExaggerationRelativeHeight = 0.0;
+
+          return updateUntilDone(scene.globe).then(function () {
+            forEachRenderedTile(scene.globe._surface, 1, undefined, function (
+              tile
+            ) {
+              const surfaceTile = tile.data;
+              const encoding = surfaceTile.mesh.encoding;
+              const boundingSphere =
+                surfaceTile.tileBoundingRegion.boundingSphere;
+              expect(encoding.exaggeration).toEqual(1.0);
+              expect(encoding.hasGeodeticSurfaceNormals).toEqual(false);
+              expect(boundingSphere.radius).toBeLessThan(7000000.0);
+            });
+          });
+        });
+      });
+    });
   },
   "WebGL"
 );

@@ -9,9 +9,9 @@
     />
     <meta
       name="description"
-      content="Load a 3D Tile Next tileset converted from CDB."
+      content="Load a 3D Tiles 1.1 tileset converted from CDB."
     />
-    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -383,13 +383,13 @@
         }
 
         try {
-          // 3D Tiles Next converted from CDB of Aden, Yemen (CDB provided by Presagis)
+          // 3D Tiles 1.1 converted from CDB of Aden, Yemen (CDB provided by Presagis)
           const terrainTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            667809
+            2389063
           );
           viewer.scene.primitives.add(terrainTileset);
           const buildingsTileset = await Cesium.Cesium3DTileset.fromIonAssetId(
-            666747,
+            2389064,
             {
               maximumScreenSpaceError: 12,
             }

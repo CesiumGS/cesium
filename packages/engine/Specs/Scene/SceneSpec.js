@@ -1,4 +1,5 @@
 import {
+  Atmosphere,
   BoundingSphere,
   Cartesian2,
   Cartesian3,
@@ -162,10 +163,10 @@ describe(
     it("constructor sets options", function () {
       const webglOptions = {
         alpha: true,
-        depth: true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
+        depth: false,
         stencil: true,
         antialias: false,
-        premultipliedAlpha: true, // Workaround IE 11.0.8, which does not honor false.
+        premultipliedAlpha: false,
         preserveDrawingBuffer: true,
       };
       const mapProjection = new WebMercatorProjection();
@@ -523,6 +524,19 @@ describe(
       scene.destroyForSpecs();
     });
 
+    it("sets verticalExaggeration and verticalExaggerationRelativeHeight", function () {
+      const scene = createScene();
+
+      expect(scene.verticalExaggeration).toEqual(1.0);
+      expect(scene.verticalExaggerationRelativeHeight).toEqual(0.0);
+
+      scene.verticalExaggeration = 2.0;
+      scene.verticalExaggerationRelativeHeight = 100000.0;
+
+      expect(scene.verticalExaggeration).toEqual(2.0);
+      expect(scene.verticalExaggerationRelativeHeight).toEqual(100000.0);
+    });
+
     it("destroys primitive on set globe", function () {
       const scene = createScene();
       const globe = new Globe(Ellipsoid.UNIT_SPHERE);
@@ -564,7 +578,7 @@ describe(
         });
       });
 
-      it("renders sky atmopshere without a globe", function () {
+      it("renders sky atmosphere without a globe", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.globe.show = false;
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
@@ -1174,7 +1188,7 @@ describe(
       s.destroyForSpecs();
     });
 
-    it("alwayas raises preUpdate event prior to updating", function () {
+    it("always raises preUpdate event prior to updating", function () {
       const s = createScene();
 
       const spyListener = jasmine.createSpy("listener");
@@ -1194,11 +1208,11 @@ describe(
       s.destroyForSpecs();
     });
 
-    it("always raises preUpdate event after updating", function () {
+    it("always raises postUpdate event after updating", function () {
       const s = createScene();
 
       const spyListener = jasmine.createSpy("listener");
-      s.preUpdate.addEventListener(spyListener);
+      s.postUpdate.addEventListener(spyListener);
 
       s.render();
 
@@ -2197,6 +2211,7 @@ describe(
       scene.morphToColumbusView(0.0);
 
       return updateGlobeUntilDone(scene).then(function () {
+        scene.renderForSpecs();
         expect(scene.cameraUnderground).toBe(true);
         scene.destroyForSpecs();
       });
@@ -2247,6 +2262,7 @@ describe(
           return updateGlobeUntilDone(scene);
         })
         .then(function () {
+          scene.renderForSpecs();
           expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
           scene.destroyForSpecs();
         });
@@ -2457,6 +2473,26 @@ describe(
         expect(scene).toPickPrimitive(primitive);
         scene.destroyForSpecs();
       });
+    });
+
+    it("updates frameState.atmosphere", function () {
+      const scene = createScene();
+      const frameState = scene.frameState;
+
+      // Before the first render, the atmosphere has not yet been set
+      expect(frameState.atmosphere).toBeUndefined();
+
+      // On the first render, the atmosphere settings are propagated to the
+      // frame state
+      const originalAtmosphere = scene.atmosphere;
+      scene.renderForSpecs();
+      expect(frameState.atmosphere).toBe(originalAtmosphere);
+
+      // If we change the atmosphere to a new object
+      const anotherAtmosphere = new Atmosphere();
+      scene.atmosphere = anotherAtmosphere;
+      scene.renderForSpecs();
+      expect(frameState.atmosphere).toBe(anotherAtmosphere);
     });
   },
 

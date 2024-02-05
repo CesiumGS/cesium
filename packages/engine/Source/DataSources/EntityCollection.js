@@ -5,7 +5,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import Iso8601 from "../Core/Iso8601.js";
 import JulianDate from "../Core/JulianDate.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import TimeInterval from "../Core/TimeInterval.js";
 import Entity from "./Entity.js";
 
@@ -281,7 +280,7 @@ EntityCollection.prototype.add = function (entity) {
   const id = entity.id;
   const entities = this._entities;
   if (entities.contains(id)) {
-    throw new RuntimeError(
+    throw new DeveloperError(
       `An entity with id ${id} already exists in this collection.`
     );
   }

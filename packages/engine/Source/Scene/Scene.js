@@ -18,6 +18,7 @@ import Event from "../Core/Event.js";
 import GeographicProjection from "../Core/GeographicProjection.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
+import HeightReference from "./HeightReference.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
@@ -37,6 +38,7 @@ import Context from "../Renderer/Context.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
+import Atmosphere from "./Atmosphere.js";
 import BrdfLutGenerator from "./BrdfLutGenerator.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -46,6 +48,7 @@ import DebugCameraPrimitive from "./DebugCameraPrimitive.js";
 import DepthPlane from "./DepthPlane.js";
 import DerivedCommand from "./DerivedCommand.js";
 import DeviceOrientationCameraController from "./DeviceOrientationCameraController.js";
+import DynamicAtmosphereLightingType from "./DynamicAtmosphereLightingType.js";
 import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
 import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
@@ -164,6 +167,7 @@ function Scene(options) {
   this._groundPrimitives = new PrimitiveCollection();
 
   this._globeHeight = undefined;
+  this._globeHeightDirty = undefined;
   this._cameraUnderground = false;
 
   this._logDepthBuffer = context.fragmentDepth;
@@ -357,6 +361,24 @@ function Scene(options) {
   this.nearToFarDistance2D = 1.75e6;
 
   /**
+   * The vertical exaggeration of the scene.
+   * When set to 1.0, no exaggeration is applied.
+   *
+   * @type {number}
+   * @default 1.0
+   */
+  this.verticalExaggeration = 1.0;
+
+  /**
+   * The reference height for vertical exaggeration of the scene.
+   * When set to 0.0, the exaggeration is applied relative to the ellipsoid surface.
+   *
+   * @type {number}
+   * @default 0.0
+   */
+  this.verticalExaggerationRelativeHeight = 0.0;
+
+  /**
    * This property is for debugging only; it is not for production use.
    * <p>
    * A function that determines what commands are executed.  As shown in the examples below,
@@ -493,6 +515,14 @@ function Scene(options) {
    * @private
    */
   this.cameraEventWaitTime = 500.0;
+
+  /**
+   * Settings for atmosphere lighting effects affecting 3D Tiles and model rendering. This is not to be confused with
+   * {@link Scene#skyAtmosphere} which is responsible for rendering the sky.
+   *
+   * @type {Atmosphere}
+   */
+  this.atmosphere = new Atmosphere();
 
   /**
    * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
@@ -719,6 +749,11 @@ function updateGlobeListeners(scene, globe) {
       globe.terrainProviderChanged.addEventListener(
         requestRenderAfterFrame(scene)
       )
+    );
+    removeGlobeCallbacks.push(
+      globe.tileLoadProgressEvent.addEventListener(() => {
+        scene._globeHeightDirty = true;
+      })
     );
   }
   scene._removeGlobeCallbacks = removeGlobeCallbacks;
@@ -1880,10 +1915,17 @@ Scene.prototype.updateFrameState = function () {
   frameState.cameraUnderground = this._cameraUnderground;
   frameState.globeTranslucencyState = this._globeTranslucencyState;
 
-  if (defined(this.globe)) {
-    frameState.terrainExaggeration = this.globe.terrainExaggeration;
-    frameState.terrainExaggerationRelativeHeight = this.globe.terrainExaggerationRelativeHeight;
+  const { globe } = this;
+  if (defined(globe) && globe._terrainExaggerationChanged) {
+    // Honor a user-set value for the old deprecated globe.terrainExaggeration.
+    // This can be removed when Globe.terrainExaggeration is removed.
+    this.verticalExaggeration = globe._terrainExaggeration;
+    this.verticalExaggerationRelativeHeight =
+      globe._terrainExaggerationRelativeHeight;
+    globe._terrainExaggerationChanged = false;
   }
+  frameState.verticalExaggeration = this.verticalExaggeration;
+  frameState.verticalExaggerationRelativeHeight = this.verticalExaggerationRelativeHeight;
 
   if (
     defined(this._specularEnvironmentMapAtlas) &&
@@ -3142,6 +3184,7 @@ Scene.prototype.updateEnvironment = function () {
   const environmentState = this._environmentState;
   const renderPass = frameState.passes.render;
   const offscreenPass = frameState.passes.offscreen;
+  const atmosphere = this.atmosphere;
   const skyAtmosphere = this.skyAtmosphere;
   const globe = this.globe;
   const globeTranslucencyState = this._globeTranslucencyState;
@@ -3160,17 +3203,19 @@ Scene.prototype.updateEnvironment = function () {
   } else {
     if (defined(skyAtmosphere)) {
       if (defined(globe)) {
-        skyAtmosphere.setDynamicAtmosphereColor(
-          globe.enableLighting && globe.dynamicAtmosphereLighting,
-          globe.dynamicAtmosphereLightingFromSun
+        skyAtmosphere.setDynamicLighting(
+          DynamicAtmosphereLightingType.fromGlobeFlags(globe)
         );
         environmentState.isReadyForAtmosphere =
           environmentState.isReadyForAtmosphere ||
           !globe.show ||
           globe._surface._tilesToRender.length > 0;
       } else {
+        const dynamicLighting = atmosphere.dynamicLighting;
+        skyAtmosphere.setDynamicLighting(dynamicLighting);
         environmentState.isReadyForAtmosphere = true;
       }
+
       environmentState.skyAtmosphereCommand = skyAtmosphere.update(
         frameState,
         globe
@@ -3576,19 +3621,178 @@ function callAfterRenderFunctions(scene) {
 }
 
 function getGlobeHeight(scene) {
-  const globe = scene._globe;
+  if (scene.mode === SceneMode.MORPHING) {
+    return;
+  }
+
   const camera = scene.camera;
   const cartographic = camera.positionCartographic;
-  if (defined(globe) && globe.show && defined(cartographic)) {
-    return globe.getHeight(cartographic);
-  }
-  return undefined;
+  return scene.getHeight(cartographic);
 }
+
+/**
+ * Gets the height of the loaded surface at the cartographic position.
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
+ * @private
+ */
+Scene.prototype.getHeight = function (cartographic, heightReference) {
+  if (!defined(cartographic)) {
+    return undefined;
+  }
+
+  const ignore3dTiles =
+    heightReference === HeightReference.CLAMP_TO_TERRAIN ||
+    heightReference === HeightReference.RELATIVE_TO_TERRAIN;
+
+  const ignoreTerrain =
+    heightReference === HeightReference.CLAMP_TO_3D_TILE ||
+    heightReference === HeightReference.RELATIVE_TO_3D_TILE;
+
+  if (!defined(cartographic)) {
+    return;
+  }
+
+  let maxHeight = Number.NEGATIVE_INFINITY;
+
+  if (!ignore3dTiles) {
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      if (
+        !primitive.isCesium3DTileset ||
+        !primitive.show ||
+        primitive.disableCollision
+      ) {
+        continue;
+      }
+
+      const result = primitive.getHeight(cartographic, this);
+      if (defined(result) && result > maxHeight) {
+        maxHeight = result;
+      }
+    }
+  }
+
+  const globe = this._globe;
+  if (!ignoreTerrain && defined(globe) && globe.show) {
+    const result = globe.getHeight(cartographic);
+    if (result > maxHeight) {
+      maxHeight = result;
+    }
+  }
+
+  if (maxHeight > Number.NEGATIVE_INFINITY) {
+    return maxHeight;
+  }
+
+  return undefined;
+};
+
+const updateHeightScratchCartographic = new Cartographic();
+/**
+ * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+ * is the cartesian position on the tile.
+ *
+ * @private
+ *
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {Function} callback The function to be called when a new tile is loaded containing the updated cartographic.
+ * @param {HeightReference} [heightReference=CLAMP_TO_GROUND] Based on the height reference value, determines whether to ignore heights from 3D Tiles or terrain.
+ * @returns {Function} The function to remove this callback from the quadtree.
+ */
+Scene.prototype.updateHeight = function (
+  cartographic,
+  callback,
+  heightReference
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.func("callback", callback);
+  //>>includeEnd('debug');
+
+  const callbackWrapper = () => {
+    Cartographic.clone(cartographic, updateHeightScratchCartographic);
+
+    const height = this.getHeight(cartographic, heightReference);
+    if (defined(height)) {
+      updateHeightScratchCartographic.height = height;
+      callback(updateHeightScratchCartographic);
+    }
+  };
+
+  const ignore3dTiles =
+    heightReference === HeightReference.CLAMP_TO_TERRAIN ||
+    heightReference === HeightReference.RELATIVE_TO_TERRAIN;
+
+  const ignoreTerrain =
+    heightReference === HeightReference.CLAMP_TO_3D_TILE ||
+    heightReference === HeightReference.RELATIVE_TO_3D_TILE;
+
+  let terrainRemoveCallback;
+  if (!ignoreTerrain && defined(this.globe)) {
+    terrainRemoveCallback = this.globe._surface.updateHeight(
+      cartographic,
+      callbackWrapper
+    );
+  }
+
+  let tilesetRemoveCallbacks = {};
+  const ellipsoid = this.globe?.ellipsoid;
+  const createPrimitiveEventListener = (primitive) => {
+    if (
+      ignore3dTiles ||
+      !primitive.isCesium3DTileset ||
+      primitive.disableCollision
+    ) {
+      return;
+    }
+
+    const tilesetRemoveCallback = primitive.updateHeight(
+      cartographic,
+      callbackWrapper,
+      ellipsoid
+    );
+    tilesetRemoveCallbacks[primitive.id] = tilesetRemoveCallback;
+  };
+
+  if (!ignore3dTiles) {
+    const length = this.primitives.length;
+    for (let i = 0; i < length; ++i) {
+      const primitive = this.primitives.get(i);
+      createPrimitiveEventListener(primitive);
+    }
+  }
+
+  const removeAddedListener = this.primitives.primitiveAdded.addEventListener(
+    createPrimitiveEventListener
+  );
+  const removeRemovedListener = this.primitives.primitiveRemoved.addEventListener(
+    (primitive) => {
+      if (!primitive.isCesium3DTileset) {
+        return;
+      }
+
+      tilesetRemoveCallbacks[primitive.id]();
+      delete tilesetRemoveCallbacks[primitive.id];
+    }
+  );
+
+  const removeCallback = () => {
+    terrainRemoveCallback = terrainRemoveCallback && terrainRemoveCallback();
+    Object.values(tilesetRemoveCallbacks).forEach((tilesetRemoveCallback) =>
+      tilesetRemoveCallback()
+    );
+    tilesetRemoveCallbacks = {};
+    removeAddedListener();
+    removeRemovedListener();
+  };
+
+  return removeCallback;
+};
 
 function isCameraUnderground(scene) {
   const camera = scene.camera;
   const mode = scene._mode;
-  const globe = scene.globe;
   const cameraController = scene._screenSpaceCameraController;
   const cartographic = camera.positionCartographic;
 
@@ -3602,12 +3806,7 @@ function isCameraUnderground(scene) {
     return true;
   }
 
-  if (
-    !defined(globe) ||
-    !globe.show ||
-    mode === SceneMode.SCENE2D ||
-    mode === SceneMode.MORPHING
-  ) {
+  if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
     return false;
   }
 
@@ -3628,7 +3827,10 @@ Scene.prototype.initializeFrame = function () {
 
   this._tweens.update();
 
-  this._globeHeight = getGlobeHeight(this);
+  if (this._globeHeightDirty) {
+    this._globeHeight = getGlobeHeight(this);
+    this._globeHeightDirty = false;
+  }
   this._cameraUnderground = isCameraUnderground(this);
   this._globeTranslucencyState.update(this);
 
@@ -3715,6 +3917,7 @@ function render(scene) {
   }
   frameState.backgroundColor = backgroundColor;
 
+  frameState.atmosphere = scene.atmosphere;
   scene.fog.update(frameState);
 
   us.update(frameState);
@@ -3803,8 +4006,12 @@ Scene.prototype.render = function (time) {
     time = JulianDate.now();
   }
 
-  // Determine if shouldRender
   const cameraChanged = this._view.checkForCameraUpdates(this);
+  if (cameraChanged) {
+    this._globeHeightDirty = true;
+  }
+
+  // Determine if should render a new frame in request render mode
   let shouldRender =
     !this.requestRenderMode ||
     this._renderRequested ||

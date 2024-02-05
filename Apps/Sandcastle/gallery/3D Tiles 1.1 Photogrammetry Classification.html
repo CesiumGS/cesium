@@ -11,7 +11,7 @@
       name="description"
       content="Load a photogrammetry dataset with feature ID textures from EXT_mesh_features."
     />
-    <meta name="cesium-sandcastle-labels" content="3D Tiles Next" />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -65,7 +65,7 @@
 
         let tileset;
         try {
-          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(775877);
+          tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2333904);
 
           const translation = new Cesium.Cartesian3(
             -1.398521324920626,
@@ -120,10 +120,10 @@
       const int PILLARS = 9;
       const int STREET_LIGHT = 10;
       const int TRAFFIC_LIGHT = 11;
-      
+
       void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         int featureId = fsInput.featureIds.featureId_0;
-      
+
         if (featureId == CLOCK) {
           // Shiny brass
           material.specular = vec3(0.98, 0.90, 0.59);
@@ -169,7 +169,7 @@
       const int NOTHING_SELECTED = 12;
       void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         int featureId = fsInput.featureIds.featureId_0;
-      
+
         if (u_selectedFeature < NOTHING_SELECTED && featureId == u_selectedFeature) {
           material.specular = vec3(1.00, 0.85, 0.57);
           material.roughness = 0.1;
@@ -193,16 +193,16 @@
       const vec3 PURPLE = vec3(0.5, 0.0, 1.0);
       const vec3 YELLOW = vec3(1.0, 1.0, 0.0);
       const vec3 NO_TINT = vec3(1.0);
-      
+
       void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
         int featureId0 = fsInput.featureIds.featureId_0; // fine features
         int featureId1 = fsInput.featureIds.featureId_1; // coarse features
-      
+
         // use both feature ID sets to determine where the features are
         float isWindow = float(featureId0 == IDS0_WINDOW);
         float isFacade = float(featureId1 == IDS1_FACADE);
         float isRoof = float(featureId1 == IDS1_ROOF);
-      
+
         // Tint the roof windows yellow and facade windows purple
         vec3 tint = NO_TINT;
         tint = mix(tint, YELLOW, isWindow * isRoof);
