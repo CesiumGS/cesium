@@ -3,63 +3,46 @@ import { google } from "googleapis";
 import Handlebars from "handlebars";
 import fs from "fs-extra";
 
-const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || "mockOwner/mockRepo";
-
-// TODO: remove hardcoded id; `id: process.env.PR_NUMBER`
 const PULL_REQUST_INFO = {
-  id: process.env.PR_NUMBER || 11781,
-  owner: GITHUB_REPOSITORY.split("/")[0],
-  repoName: GITHUB_REPOSITORY.split("/")[1],
+  id: process.env.PULL_REQUEST_ID,
+  owner: process.env.GITHUB_REPOSITORY.split("/")[0],
+  repoName: process.env.GITHUB_REPOSITORY.split("/")[1],
   username: process.env.GITHUB_ACTOR,
   gitHubToken: process.env.GITHUB_TOKEN,
 };
 
-/* TODO: 1. Replace with actual Cesium CLA spreadsheet Ids, 2. Retrieve Ids from GitHub Secrets, not expose */
 const GOOGLE_SHEETS_INFO = {
-  individualCLASheetId: "abcd",
-  corporateCLASheetId: "efgh",
+  APIKeys: process.env.GOOGLE_KEYS,
+  individualCLASheetId: process.env.INDIVIDUAL_CLA_SHEET_ID,
+  corporateCLASheetId: process.env.CORPORATE_CLA_SHEET_ID,
 };
 
-/* TODO: Change to actual link */
-const LINKS = {
-  contributorsListURL: "https://google.com",
-};
+const CONTRIBUTORS_URL =
+  "https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md";
 
 const main = async () => {
-  console.log("main()");
-  console.log(
-    PULL_REQUST_INFO.repoName,
-    PULL_REQUST_INFO.owner,
-    PULL_REQUST_INFO.username
-  );
-
   let hasSignedCLA;
   let errorFoundOnCLACheck;
 
   try {
     hasSignedCLA = await checkIfUserHasSignedAnyCLA();
   } catch (error) {
-    console.log("ERROR2 ", error);
     errorFoundOnCLACheck = error.toString();
   }
 
-  console.log("pre-comment...");
   const response = await postCommentOnPullRequest(
     hasSignedCLA,
     errorFoundOnCLACheck
   );
-  console.log("post-comment, response: ", response);
 };
 
 const checkIfUserHasSignedAnyCLA = async () => {
   let foundIndividualCLA = await checkIfIndividualCLAFound();
-  console.log("CLA #1 ", foundIndividualCLA);
   if (foundIndividualCLA) {
     return true;
   }
 
   let foundCorporateCLA = await checkIfCorporateCLAFound();
-  console.log("CLA #2 ", foundCorporateCLA);
   return foundCorporateCLA;
 };
 
@@ -102,8 +85,7 @@ const checkIfCorporateCLAFound = async () => {
     const words = rowScheduleA.split(" ");
 
     for (let j = 0; j < words.length; j++) {
-      // Checking for substrings because many input their
-      // GitHub username as "github.com/username".
+      // Checking for substrings cause many GitHub usernames added as "github.com/username".
       if (words[j].includes(PULL_REQUST_INFO.username.toLowerCase())) {
         return true;
       }
@@ -123,9 +105,11 @@ const getValuesFromGoogleSheet = async (sheetId, cellRanges) => {
 };
 
 const getGoogleSheetsApiClient = async () => {
+  const googleConfigFilePath = "GoogleConfig.json";
+  fs.writeFileSync(googleConfigFilePath, GOOGLE_SHEETS_INFO.APIKeys);
+
   const auth = new google.auth.GoogleAuth({
-    // TODO: 1. Get similar config file for Cesium Google account, 2. Retrive file from secrets and remove from source control
-    keyFile: "TempGoogleConfig.json",
+    keyFile: googleConfigFilePath,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
   const googleAuthClient = await auth.getClient();
@@ -134,9 +118,8 @@ const getGoogleSheetsApiClient = async () => {
 };
 
 const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
-  console.log("adding comment...");
-
   const octokit = new Octokit();
+
   return octokit.request(
     `POST /repos/${PULL_REQUST_INFO.owner}/${PULL_REQUST_INFO.repoName}/issues/${PULL_REQUST_INFO.id}/comments`,
     {
@@ -154,18 +137,17 @@ const postCommentOnPullRequest = async (hasSignedCLA, errorFoundOnCLACheck) => {
 };
 
 const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
-  console.log("getting comment template...");
-
   const commentTemplate = fs.readFileSync(
     "./.github/actions/check-for-CLA/templates/pullRequestComment.hbs",
     "utf-8"
   );
-  const getTemplate = Handlebars.compile(commentTemplate);
-  const commentBody = getTemplate({
+
+  const getCommentFromTemplate = Handlebars.compile(commentTemplate);
+  const commentBody = getCommentFromTemplate({
     errorCla: errorFoundOnCLACheck,
     hasCla: hasSignedCLA,
     username: PULL_REQUST_INFO.username,
-    contributorsUrl: LINKS.contributorsListURL,
+    contributorsUrl: CONTRIBUTORS_URL,
   });
 
   return commentBody;
