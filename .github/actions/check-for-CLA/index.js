@@ -3,27 +3,26 @@ import { google } from "googleapis";
 import Handlebars from "handlebars";
 import fs from "fs-extra";
 
-const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || "mockOwner/mockRepo";
-
-// TODO: remove hardcoded id; `id: process.env.PR_NUMBER`
 const PULL_REQUST_INFO = {
-  id: process.env.PR_NUMBER || 11781,
-  owner: GITHUB_REPOSITORY.split("/")[0],
-  repoName: GITHUB_REPOSITORY.split("/")[1],
+  id: 11781 || process.env.PULL_REQUEST_ID,
+  owner: process.env.GITHUB_REPOSITORY.split("/")[0],
+  repoName: process.env.GITHUB_REPOSITORY.split("/")[1],
   username: process.env.GITHUB_ACTOR,
   gitHubToken: process.env.GITHUB_TOKEN,
 };
 
-/* TODO: 1. Replace with actual Cesium CLA spreadsheet Ids, 2. Retrieve Ids from GitHub Secrets, not expose */
 const GOOGLE_SHEETS_INFO = {
-  individualCLASheetId: "abcd",
-  corporateCLASheetId: "efgh",
+  APIKeys: process.env.GOOGLE_KEYS,
+  individualCLASheetId:
+    "1Iyaj2bct-BLJmfyJFVufQgB02fhuevZQlDWN19c8WzI" ||
+    process.env.INDIVIDUAL_CLA_SHEET_ID,
+  corporateCLASheetId:
+    "1J9scmTeH-zdC4mrZofg_rGWljCHxlqSzt4jCFYrtgCU" ||
+    process.env.CORPORATE_CLA_SHEET_ID,
 };
 
-/* TODO: Change to actual link */
-const LINKS = {
-  contributorsListURL: "https://google.com",
-};
+const CONTRIBUTORS_URL =
+  "https://github.com/CesiumGS/cesium/blob/main/CONTRIBUTORS.md";
 
 const main = async () => {
   console.log("main()");
@@ -122,10 +121,31 @@ const getValuesFromGoogleSheet = async (sheetId, cellRanges) => {
   });
 };
 
+const TEMP_KEY_OBJECT = {
+  type: "service_account",
+  project_id: "nifty-inn-314413",
+  private_key_id: "c0bb98a93e6c80ee2ec082c0914d96fe37217b72",
+  private_key:
+    "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC/O3h3ned28/Dl\nKxDCYPqAuzeFENwI4swmK7zO/lTUh8BK8zg63ItyWaHCljvMJB7+MG3Fi9//LVnL\n8xKY35DdArG7UtQh1dTFkLMP4s+EkjKeadZNWMx+6XYm+Ye40Pc7B6jz2JUVz52y\nQjagtpned2I8TqlhHqEiwuJXhxAwvpDWDuDYiWcUI4Xlq8XWsv6Eu8iXk0JlE5NB\nj43GYGDo1XAVXASdj+f1RaQZRhHpUpFDkX6hCw6aaMfiTSj5cj2bPGHpYSqbun8R\nsmOiZEG/sG5ax0jBn3ho1fFddonPnYGMejniOzPSW+qr/GmB8XjFW63G6lvtYWrf\n/qH1/zPTAgMBAAECggEAHEtPpF3SqiunEDadANrvIC490AxnN1Fcj1FCsFsPxhpd\nKI8ar2rY9GRaphCAbHtJB/xhDCzenuzg2meZRXvep99cLgaFUzRGNQJshq8yW7/I\niYkd/M0PWhUaNuNjYhmuWtI5UfWmVAHR/Vav/9DErMEmjHG/EfBBkIPGkC4bBnsJ\nvFfPIo3AfyhonLFeSxB9PWjacMo2sxh4VdAr8baNKMl8zCd0vT4vjXBvNn8Li7k/\n3QTqV5gUBfkSCRQOlbhItb2FWnfSs558PVBUGWDKTkPsD5Ll40ZNnfhemU06or8k\nocnFbZmPVURwnzsiBGouE1zWYs90MIou3eBKdL5qAQKBgQD51lpuKvWY4aY3FD9J\npTNi8cfckunGcuL5e6EktAHNvudJvzeGL+em1gjiIs2cltBl/zCLvz6il9kbLhfc\nm+bgBIYNY7H3TmNGtadAeVyWQlK95ne/Cc64fTXYnfzevJNJNEvgrAF3xGL/44i0\n3MbEeVPJ9L7+xarjBFyap1xZUwKBgQDD8wtkD1w2eVxQG+jpn0Uhck0koYk8X53l\nw85LvBQVemaH5+LR+jDZTmg7Pb73CSDd0U2oZpDjrL9NLowT8aXOz/pzW9EadwFM\nSeZiorbbQ9Lh+l3KgEfYv2DBPyd5sBhwrUThWeAxjTZzmcykuodXM8DO1TNvCZaw\nenuHAc3rgQKBgBHA0qI7eUJI3pfRX4HrNFCWn74jzmrkpQ5XY6cJB4vIQgUyik6F\nvu9TDESNdpDnAp4M2TVE/L1vDuVojBeIGIrYp3HyIKZTMqjGpcDmHtcqlVibNO0l\nVEQ12YqwB1UIj2rHRZEMh/orwWEvmPpJKfKyMGsMcjoGb9M77xyqQdyzAoGBAL5n\nMtBd5JrCPqNRG3e33fLsIG3R0Yqq1sFnDNSmw1VDhNHWz5594G2oNLwr+Z4ObrNc\nKHvUfkHdoF4dNtxCWX2mtpTVyVBQByDcRlPeDJTvSMFxCSY2lJnXDOt6tJ8YMAd9\nNotLTACaWSjnb+U5oz1m+pmArePdi2GdAt9jL3cBAoGAV4k+3RuyQhB9go/JEogL\nNLoeznBHGPr6gjjVOJ7soFHb3MN2husL/6fTWzXbNUiQVQmMo5+hfuqLMEwAY0mi\n7BLszt34c+fu+cD51ywTy4zVIVQkyKY77AxquX+6lnaGT0oNMfHwj12jnUgHtVWk\nGfz0Q0isFwNwTFfX0BbVTws=\n-----END PRIVATE KEY-----\n",
+  client_email: "cla-checking-test@nifty-inn-314413.iam.gserviceaccount.com",
+  client_id: "112198629386958476933",
+  auth_uri: "https://accounts.google.com/o/oauth2/auth",
+  token_uri: "https://oauth2.googleapis.com/token",
+  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+  client_x509_cert_url:
+    "https://www.googleapis.com/robot/v1/metadata/x509/cla-checking-test%40nifty-inn-314413.iam.gserviceaccount.com",
+  universe_domain: "googleapis.com",
+};
+
 const getGoogleSheetsApiClient = async () => {
+  const googleConfigFilePath = "GoogleConfig.json";
+  fs.writeFileSync(
+    googleConfigFilePath,
+    /*GOOGLE_SHEETS_INFO.APIKeys*/ JSON.stringify(TEMP_KEY_OBJECT)
+  );
+
   const auth = new google.auth.GoogleAuth({
-    // TODO: 1. Get similar config file for Cesium Google account, 2. Retrive file from secrets and remove from source control
-    keyFile: "TempGoogleConfig.json",
+    keyFile: googleConfigFilePath,
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
   const googleAuthClient = await auth.getClient();
@@ -165,7 +185,7 @@ const getCommentBody = (hasSignedCLA, errorFoundOnCLACheck) => {
     errorCla: errorFoundOnCLACheck,
     hasCla: hasSignedCLA,
     username: PULL_REQUST_INFO.username,
-    contributorsUrl: LINKS.contributorsListURL,
+    contributorsUrl: CONTRIBUTORS_URL,
   });
 
   return commentBody;
