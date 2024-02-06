@@ -76,6 +76,12 @@ describe(
       });
       simpleRenderState = new RenderState();
 
+      const camera = scene.camera;
+      camera.frustum = new PerspectiveFrustum();
+      camera.frustum.aspectRatio =
+        scene.drawingBufferWidth / scene.drawingBufferHeight;
+      camera.frustum.fov = CesiumMath.toRadians(60.0);
+
       return GroundPrimitive.initializeTerrainHeights();
     });
 
@@ -91,6 +97,21 @@ describe(
       camera.frustum.aspectRatio =
         scene.drawingBufferWidth / scene.drawingBufferHeight;
       camera.frustum.fov = CesiumMath.toRadians(60.0);
+    });
+
+    beforeEach(function () {
+      if (scene.context._gl.isContextLost()) {
+        scene = createScene();
+        simpleShaderProgram = ShaderProgram.fromCache({
+          context: scene.context,
+          vertexShaderSource: new ShaderSource({
+            sources: ["void main() { gl_Position = vec4(1.0); }"],
+          }),
+          fragmentShaderSource: new ShaderSource({
+            sources: ["void main() { out_FragColor = vec4(1.0); }"],
+          }),
+        });
+      }
     });
 
     afterAll(function () {
@@ -687,36 +708,36 @@ describe(
     });
 
     it("renders with multipass OIT if MRT is available", function () {
-      if (scene.context.drawBuffers) {
-        const s = createScene();
-        if (defined(s._oit)) {
-          s._oit._translucentMRTSupport = false;
-          s._oit._translucentMultipassSupport = true;
-
-          const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-
-          const rectanglePrimitive = createRectangle(rectangle, 1000.0);
-          rectanglePrimitive.appearance.material.uniforms.color = new Color(
-            1.0,
-            0.0,
-            0.0,
-            0.5
-          );
-
-          const primitives = s.primitives;
-          primitives.add(rectanglePrimitive);
-
-          s.camera.setView({ destination: rectangle });
-
-          expect(s).toRenderAndCall(function (rgba) {
-            expect(rgba[0]).not.toEqual(0);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toEqual(0);
-          });
-        }
-
-        s.destroyForSpecs();
+      if (!scene.context.drawBuffers) {
+        return;
       }
+      const s = createScene();
+      if (defined(s._oit)) {
+        s._oit._translucentMRTSupport = false;
+        s._oit._translucentMultipassSupport = true;
+
+        const rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        const rectanglePrimitive = createRectangle(rectangle, 1000.0);
+        rectanglePrimitive.appearance.material.uniforms.color = new Color(
+          1.0,
+          0.0,
+          0.0,
+          0.5
+        );
+
+        const primitives = s.primitives;
+        primitives.add(rectanglePrimitive);
+
+        s.camera.setView({ destination: rectangle });
+
+        expect(s).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).not.toEqual(0);
+          expect(rgba[1]).toEqual(0);
+          expect(rgba[2]).toEqual(0);
+        });
+      }
+      s.destroyForSpecs();
     });
 
     it("renders with alpha blending if floating point textures are available", function () {
