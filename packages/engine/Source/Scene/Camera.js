@@ -1233,6 +1233,11 @@ const scratchSetViewMatrix3 = new Matrix3();
 const scratchSetViewCartographic = new Cartographic();
 
 function setView3D(camera, position, hpr) {
+  //>>includeStart('debug', pragmas.debug);
+  if (isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+    throw new DeveloperError("position has a NaN component");
+  }
+  //>>includeEnd('debug');
   const currentTransform = Matrix4.clone(
     camera.transform,
     scratchSetViewTransform1
@@ -1473,6 +1478,11 @@ Camera.prototype.setView = function (options) {
       destination,
       scratchSetViewCartesian
     );
+    //>>includeStart('debug', pragmas.debug);
+    if (isNaN(destination.x) || isNaN(destination.y) || isNaN(destination.z)) {
+      throw new DeveloperError("destination has a NaN component");
+    }
+    //>>includeEnd('debug');
     convert = false;
   }
 
