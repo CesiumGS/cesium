@@ -1,5 +1,13 @@
 # Change Log
 
+### 1.115 - 2024-03-01
+
+#### @cesium/engine
+
+##### Fixes :wrench:
+
+- Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
+
 ### 1.114 - 2024-02-01
 
 #### @cesium/engine
