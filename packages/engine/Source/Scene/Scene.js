@@ -4189,12 +4189,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
   const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
   // Look up the metadata for the picked cell
   const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
-  return new VoxelCell(
-    voxelPrimitive,
-    tileIndex,
-    sampleIndex,
-    keyframeNode.metadata
-  );
+  return new VoxelCell(voxelPrimitive, tileIndex, sampleIndex, keyframeNode);
 };
 
 /**
