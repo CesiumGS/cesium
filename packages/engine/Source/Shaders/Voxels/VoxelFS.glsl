@@ -130,6 +130,8 @@ void main()
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.surfaceNormal = step.xyz;
         fragmentInput.voxel.travelDistance = step.w;
+        fragmentInput.voxel.tileIndex = sampleDatas[0].megatextureIndex;
+        fragmentInput.voxel.sampleIndex = getSampleIndex(sampleDatas[0].tileUv);
 
         // Run the custom shader
         czm_modelMaterial materialOutput;
