@@ -4247,7 +4247,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     voxelPrimitive,
     tileIndex,
     sampleIndex,
-    keyframeNode.metadatas
+    keyframeNode.metadata
   );
 };
 

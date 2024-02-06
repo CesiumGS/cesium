@@ -27,29 +27,29 @@ import MetadataType from "./MetadataType.js";
  *   }
  * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
  */
-function VoxelCell(primitive, tileIndex, sampleIndex, metadatas) {
+function VoxelCell(primitive, tileIndex, sampleIndex, metadata) {
   this._primitive = primitive;
   this._tileIndex = tileIndex;
   this._sampleIndex = sampleIndex;
-  this._metadatas = getMetadatasForSample(primitive, metadatas, sampleIndex);
+  this._metadata = getMetadataForSample(primitive, metadata, sampleIndex);
 }
 
-function getMetadatasForSample(primitive, metadatas, sampleIndex) {
-  if (!defined(metadatas)) {
+function getMetadataForSample(primitive, metadata, sampleIndex) {
+  if (!defined(metadata)) {
     return undefined;
   }
   const { names, types } = primitive.provider;
-  const metadatasMap = {};
+  const metadataMap = {};
   for (let i = 0; i < names.length; i++) {
     const name = names[i];
     const componentCount = MetadataType.getComponentCount(types[i]);
-    const samples = metadatas[i].slice(
+    const samples = metadata[i].slice(
       sampleIndex * componentCount,
       (sampleIndex + 1) * componentCount
     );
-    metadatasMap[name] = samples;
+    metadataMap[name] = samples;
   }
-  return metadatasMap;
+  return metadataMap;
 }
 
 Object.defineProperties(VoxelCell.prototype, {
@@ -63,9 +63,9 @@ Object.defineProperties(VoxelCell.prototype, {
    * @readonly
    * @private
    */
-  metadatas: {
+  metadata: {
     get: function () {
-      return this._metadatas;
+      return this._metadata;
     },
   },
 
@@ -119,13 +119,13 @@ Object.defineProperties(VoxelCell.prototype, {
 });
 
 /**
- * Returns whether the feature contains this property.
+ * Returns <code>true</code> if the feature contains this property.
  *
  * @param {string} name The case-sensitive name of the property.
  * @returns {boolean} Whether the feature contains this property.
  */
 VoxelCell.prototype.hasProperty = function (name) {
-  return defined(this._metadatas[name]);
+  return defined(this._metadata[name]);
 };
 
 /**
@@ -134,7 +134,7 @@ VoxelCell.prototype.hasProperty = function (name) {
  * @returns {string[]} The IDs of the feature's properties.
  */
 VoxelCell.prototype.getNames = function () {
-  return Object.keys(this._metadatas);
+  return Object.keys(this._metadata);
 };
 
 /**
@@ -152,7 +152,7 @@ VoxelCell.prototype.getNames = function () {
  * }
  */
 VoxelCell.prototype.getProperty = function (name) {
-  return this._metadatas[name];
+  return this._metadata[name];
 };
 
 export default VoxelCell;
