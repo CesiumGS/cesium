@@ -1,5 +1,6 @@
 import defined from "../Core/defined.js";
 import MetadataType from "./MetadataType.js";
+import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 
 /**
  * A cell from a {@link VoxelPrimitive}.
@@ -12,6 +13,11 @@ import MetadataType from "./MetadataType.js";
  *
  * @alias VoxelCell
  * @constructor
+ * 
+ * @param {VoxelPrimitive} primitive The voxel primitive containing the cell
+ * @param {number} tileIndex The index of the tile
+ * @param {number} sampleIndex The index of the sample within the tile, containing metadata for this cell
+ * @param {KeyframeNode} keyframeNode The keyframeNode containing information about the tile
  *
  * @example
  * // On left click, display all the properties for a voxel cell in the console log.
@@ -27,13 +33,24 @@ import MetadataType from "./MetadataType.js";
  *   }
  * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
  */
-function VoxelCell(primitive, tileIndex, sampleIndex, metadata) {
+function VoxelCell(primitive, tileIndex, sampleIndex, keyframeNode) {
   this._primitive = primitive;
   this._tileIndex = tileIndex;
   this._sampleIndex = sampleIndex;
+
+  const { spatialNode, metadata } = keyframeNode;
+  this._spatialNode = spatialNode;
   this._metadata = getMetadataForSample(primitive, metadata, sampleIndex);
+  this._tileBoundingBox = getTileBoundingBox(primitive, spatialNode);
 }
 
+/**
+ * @private
+ * @param {VoxelPrimitive} primitive 
+ * @param {object} metadata 
+ * @param {number} sampleIndex 
+ * @returns {object}
+ */
 function getMetadataForSample(primitive, metadata, sampleIndex) {
   if (!defined(metadata)) {
     return undefined;
@@ -50,6 +67,19 @@ function getMetadataForSample(primitive, metadata, sampleIndex) {
     metadataMap[name] = samples;
   }
   return metadataMap;
+}
+
+/**
+ * @private
+ * @param {VoxelPrimitive} primitive 
+ * @param {SpatialNode} spatialNode 
+ * @returns {OrientedBoundingBox}
+ */
+function getTileBoundingBox(primitive, spatialNode) {
+  const { level, x, y, z } = spatialNode;
+  const shape = primitive._shape;
+  const result = new OrientedBoundingBox();
+  return shape.computeOrientedBoundingBoxForTile(level, x, y, z, result);
 }
 
 Object.defineProperties(VoxelCell.prototype, {
