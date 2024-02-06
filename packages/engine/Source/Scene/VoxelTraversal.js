@@ -440,7 +440,7 @@ function requestData(that, keyframeNode) {
         const data = result[i];
         const expectedLength = tileVoxelCount * channelCount;
         if (data.length === expectedLength) {
-          keyframeNode.metadatas[i] = data;
+          keyframeNode.metadata[i] = data;
           // State is received only when all metadata requests have been received
           keyframeNode.state = KeyframeNode.LoadState.RECEIVED;
         } else {
