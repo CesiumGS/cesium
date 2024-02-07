@@ -18,7 +18,6 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  * @param {VoxelPrimitive} primitive The voxel primitive containing the cell
  * @param {number} tileIndex The index of the tile
  * @param {number} sampleIndex The index of the sample within the tile, containing metadata for this cell
- * @param {KeyframeNode} keyframeNode The keyframeNode containing information about the tile
  *
  * @example
  * // On left click, display all the properties for a voxel cell in the console log.
@@ -34,20 +33,42 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  *   }
  * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
  */
-function VoxelCell(primitive, tileIndex, sampleIndex, keyframeNode) {
+function VoxelCell(primitive, tileIndex, sampleIndex) {
   this._primitive = primitive;
   this._tileIndex = tileIndex;
   this._sampleIndex = sampleIndex;
+  this._metadata = {};
+  this._orientedBoundingBox = new OrientedBoundingBox();
+}
 
+/**
+ * Construct a VoxelCell, and update the metadata and bounding box using the properties
+ * of a supplied keyframe node.
+ *
+ * @private
+ * @param {VoxelPrimitive} primitive The voxel primitive containing the cell.
+ * @param {number} tileIndex The index of the tile.
+ * @param {number} sampleIndex The index of the sample within the tile, containing metadata for this cell.
+ * @param {KeyframeNode} keyframeNode The keyframe node containing information about the tile.
+ * @returns {VoxelCell}
+ */
+VoxelCell.fromKeyframeNode = function (
+  primitive,
+  tileIndex,
+  sampleIndex,
+  keyframeNode
+) {
+  const voxelCell = new VoxelCell(primitive, tileIndex, sampleIndex);
   const { spatialNode, metadata } = keyframeNode;
-  this._spatialNode = spatialNode;
-  this._metadata = getMetadataForSample(primitive, metadata, sampleIndex);
-  this._orientedBoundingBox = getOrientedBoundingBox(
+  voxelCell._metadata = getMetadataForSample(primitive, metadata, sampleIndex);
+  voxelCell._orientedBoundingBox = getOrientedBoundingBox(
     primitive,
     spatialNode,
-    sampleIndex
+    sampleIndex,
+    voxelCell._orientedBoundingBox
   );
-}
+  return voxelCell;
+};
 
 /**
  * @private
@@ -81,9 +102,10 @@ const tileUvScratch = new Cartesian3();
  * @private
  * @param {VoxelPrimitive} primitive
  * @param {SpatialNode} spatialNode
+ * @param {OrientedBoundingBox} result
  * @returns {OrientedBoundingBox}
  */
-function getOrientedBoundingBox(primitive, spatialNode, sampleIndex) {
+function getOrientedBoundingBox(primitive, spatialNode, sampleIndex, result) {
   // Convert the sample index into a 3D tile coordinate
   // Note: dimensions from the spatialNode include padding
   const paddedDimensions = spatialNode.dimensions;
@@ -112,7 +134,6 @@ function getOrientedBoundingBox(primitive, spatialNode, sampleIndex) {
   );
 
   const shape = primitive._shape;
-  const result = new OrientedBoundingBox();
   return shape.computeOrientedBoundingBoxForSample(
     spatialNode,
     primitive.dimensions,
