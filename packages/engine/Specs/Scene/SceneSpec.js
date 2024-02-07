@@ -11,7 +11,6 @@ import {
   GeometryInstance,
   HeadingPitchRoll,
   JulianDate,
-  PerspectiveFrustum,
   PixelFormat,
   Rectangle,
   RectangleGeometry,
@@ -60,12 +59,21 @@ describe(
   "Scene/Scene",
   function () {
     let scene;
-    let simpleShaderProgram;
-    let simpleRenderState;
 
     beforeAll(function () {
+      return GroundPrimitive.initializeTerrainHeights();
+    });
+
+    beforeEach(function () {
       scene = createScene();
-      simpleShaderProgram = ShaderProgram.fromCache({
+    });
+
+    afterEach(function () {
+      scene.destroyForSpecs();
+    });
+
+    function getSimpleShaderProgram() {
+      return ShaderProgram.fromCache({
         context: scene.context,
         vertexShaderSource: new ShaderSource({
           sources: ["void main() { gl_Position = vec4(1.0); }"],
@@ -74,49 +82,7 @@ describe(
           sources: ["void main() { out_FragColor = vec4(1.0); }"],
         }),
       });
-      simpleRenderState = new RenderState();
-
-      const camera = scene.camera;
-      camera.frustum = new PerspectiveFrustum();
-      camera.frustum.aspectRatio =
-        scene.drawingBufferWidth / scene.drawingBufferHeight;
-      camera.frustum.fov = CesiumMath.toRadians(60.0);
-
-      return GroundPrimitive.initializeTerrainHeights();
-    });
-
-    afterEach(function () {
-      scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
-      scene.debugCommandFilter = undefined;
-      scene.postProcessStages.fxaa.enabled = false;
-      scene.primitives.removeAll();
-      scene.morphTo3D(0.0);
-
-      const camera = scene.camera;
-      camera.frustum = new PerspectiveFrustum();
-      camera.frustum.aspectRatio =
-        scene.drawingBufferWidth / scene.drawingBufferHeight;
-      camera.frustum.fov = CesiumMath.toRadians(60.0);
-    });
-
-    beforeEach(function () {
-      if (scene.context._gl.isContextLost()) {
-        scene = createScene();
-        simpleShaderProgram = ShaderProgram.fromCache({
-          context: scene.context,
-          vertexShaderSource: new ShaderSource({
-            sources: ["void main() { gl_Position = vec4(1.0); }"],
-          }),
-          fragmentShaderSource: new ShaderSource({
-            sources: ["void main() { out_FragColor = vec4(1.0); }"],
-          }),
-        });
-      }
-    });
-
-    afterAll(function () {
-      scene.destroyForSpecs();
-    });
+    }
 
     function returnTileJson(path) {
       Resource._Implementations.loadWithXhr = function (
@@ -260,8 +226,8 @@ describe(
 
     it("debugCommandFilter filters commands", function () {
       const c = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
       });
       c.execute = function () {};
@@ -282,8 +248,8 @@ describe(
       scene.logarithmicDepthBuffer = false;
 
       const c = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
       });
       c.execute = function () {};
@@ -310,8 +276,8 @@ describe(
       );
 
       const c = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
         debugShowBoundingVolume: true,
         boundingVolume: new BoundingSphere(center, radius),
@@ -333,8 +299,8 @@ describe(
       scene.logarithmicDepthBuffer = false;
 
       const c = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
       });
       c.execute = function () {};
@@ -2253,8 +2219,8 @@ describe(
       const radius = 10.0;
 
       const command = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
         boundingVolume: new BoundingSphere(center, radius),
       });
@@ -2304,8 +2270,8 @@ describe(
       const radius = 10.0;
 
       const command = new DrawCommand({
-        shaderProgram: simpleShaderProgram,
-        renderState: simpleRenderState,
+        shaderProgram: getSimpleShaderProgram(),
+        renderState: new RenderState(),
         pass: Pass.OPAQUE,
         boundingVolume: new BoundingSphere(center, radius),
       });
