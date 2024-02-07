@@ -37,8 +37,6 @@ describe("DataSources/StaticGroundGeometryPerMaterialBatch", function () {
     scene.destroyForSpecs();
 
     // Leave ground primitive uninitialized
-    GroundPrimitive._initialized = false;
-    GroundPrimitive._initPromise = undefined;
     ApproximateTerrainHeights._initPromise = undefined;
     ApproximateTerrainHeights._terrainHeights = undefined;
   });

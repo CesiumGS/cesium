@@ -48,9 +48,6 @@ describe(
     afterAll(function () {
       scene.destroyForSpecs();
 
-      GroundPolylinePrimitive._initPromise = undefined;
-      GroundPolylinePrimitive._initialized = false;
-
       ApproximateTerrainHeights._initPromise = undefined;
       ApproximateTerrainHeights._terrainHeights = undefined;
     });
