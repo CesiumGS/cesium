@@ -127,6 +127,9 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
       if (!defined(origin)) {
         throw new DeveloperError("origin is required.");
       }
+      if (isNaN(origin.x) || isNaN(origin.y) || isNaN(origin.z)) {
+        throw new DeveloperError("origin has a NaN component");
+      }
       //>>includeEnd('debug');
       if (!defined(result)) {
         result = new Matrix4();
