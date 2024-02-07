@@ -92,7 +92,7 @@ function getWebGLStub(canvas, options) {
   stub.getVertexAttribOffset = getStubWarning;
   stub.hint = noop;
   stub.isBuffer = getStubWarning;
-  stub.isContextLost = getStubWarning;
+  stub.isContextLost = noop;
   stub.isEnabled = getStubWarning;
   stub.isFramebuffer = getStubWarning;
   stub.isProgram = getStubWarning;
