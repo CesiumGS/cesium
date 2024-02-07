@@ -379,3 +379,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Anne Gropler](https://github.com/anne-gropler)
 - [Harsh Lakhara](https://github.com/harshlakhara)
 - [Pavlo Skakun](https://github.com/p-skakun)
+- [s3xysteak](https://github.com/s3xysteak)

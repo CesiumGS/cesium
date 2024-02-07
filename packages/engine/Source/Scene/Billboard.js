@@ -23,6 +23,33 @@ import SceneTransforms from "./SceneTransforms.js";
 import VerticalOrigin from "./VerticalOrigin.js";
 
 /**
+ * @typedef {object} Billboard.ConstructorOptions
+ *
+ * Initialization options for the first param of Billboard constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the billboard.
+ * @property {Property | string | HTMLCanvasElement} [image] A Property specifying the Image, URI, or Canvas to use for the billboard.
+ * @property {Property | number} [scale=1.0] A numeric Property specifying the scale to apply to the image size.
+ * @property {Property | Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+ * @property {Property | Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
+ * @property {Property | HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
+ * @property {Property | VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | Color} [color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
+ * @property {Property | number} [rotation=0] A numeric Property specifying the rotation about the alignedAxis.
+ * @property {Property | Cartesian3} [alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
+ * @property {Property | boolean} [sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
+ * @property {Property | number} [width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
+ * @property {Property | number} [height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
+ * @property {Property | NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
+ * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+ * @property {Property | NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+ * @property {Property | BoundingRectangle} [imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
+ * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ */
+
+/**
  * <div class="notice">
  * A billboard is created and its initial
  * properties are set by calling {@link BillboardCollection#add}. Do not call the constructor directly.
@@ -55,6 +82,9 @@ import VerticalOrigin from "./VerticalOrigin.js";
  *
  * @internalConstructor
  * @class
+ *
+ * @param {Billboard.ConstructorOptions} options Object describing initialization options
+ * @param {BillboardCollection} billboardCollection Instance of BillboardCollection
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */

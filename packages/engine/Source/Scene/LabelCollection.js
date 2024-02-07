@@ -755,6 +755,8 @@ Object.defineProperties(LabelCollection.prototype, {
  *   font : '24px Helvetica',
  * });
  *
+ * @param {Label.ConstructorOptions} options
+ *
  * @see LabelCollection#remove
  * @see LabelCollection#removeAll
  */
