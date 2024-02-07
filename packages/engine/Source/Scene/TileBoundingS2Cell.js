@@ -616,6 +616,8 @@ TileBoundingS2Cell.prototype.intersectPlane = function (plane) {
   return Intersect.INTERSECTING;
 };
 
+// TODO
+
 /**
  * Creates a debug primitive that shows the outline of the tile bounding
  * volume.

@@ -451,6 +451,17 @@ TileBoundingRegion.prototype.intersectPlane = function (plane) {
 };
 
 /**
+ * Computes the nearest intersection along the ray with the bounding volume.
+ *
+ * @param {Ray} ray The ray to test against.
+ * @param {Cartesian3} [result] The nearest intersection along the provided ray with the bounding volume.
+ * @returns {Cartesian3|undefined} The nearest intersection along the provided ray with the bounding volume, or <code>undefined</code> if there is no intersection.
+ */
+TileBoundingRegion.prototype.intersectRay = function (ray, result) {
+  return this._orientedBoundingBox.intersectRay(ray, result);
+};
+
+/**
  * Creates a debug primitive that shows the outline of the tile bounding region.
  *
  * @param {Color} color The desired color of the primitive's mesh

@@ -4,10 +4,13 @@ import Check from "../Core/Check.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import CesiumMath from "../Core/Math.js";
+import IntersectionTests from "../Core/IntersectionTests.js";
 import Matrix4 from "../Core/Matrix4.js";
 import SphereOutlineGeometry from "../Core/SphereOutlineGeometry.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
+import { defined } from "@cesium/engine";
+import Ray from "../Core/Ray.js";
 
 /**
  * A tile bounding volume specified as a sphere.
@@ -116,6 +119,35 @@ TileBoundingSphere.prototype.intersectPlane = function (plane) {
   Check.defined("plane", plane);
   //>>includeEnd('debug');
   return BoundingSphere.intersectPlane(this._boundingSphere, plane);
+};
+
+/**
+ * Computes the nearest intersection along the ray with the bounding volume.
+ *
+ * @param {Ray} ray The ray to test against.
+ * @param {Cartesian3} [result] The nearest intersection along the provided ray with the bounding volume.
+ * @returns {Cartesian3|undefined} The nearest intersection along the provided ray with the bounding volume, or <code>undefined</code> if there is no intersection.
+ */
+TileBoundingSphere.prototype.intersectRay = function (ray, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("ray", ray);
+  //>>includeEnd('debug');
+
+  const interval = IntersectionTests.raySphere(
+    ray,
+    this._boundingSphere,
+    result
+  );
+
+  if (!defined(interval)) {
+    return;
+  }
+
+  if (interval.start > 0.0) {
+    return Ray.getPoint(ray, interval.start, result);
+  }
+
+  return Ray.getPoint(ray, interval.stop, result);
 };
 
 /**
