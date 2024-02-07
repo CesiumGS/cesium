@@ -1479,8 +1479,9 @@ Camera.prototype.setView = function (options) {
       scratchSetViewCartesian
     );
     //>>includeStart('debug', pragmas.debug);
-    if (isNaN(destination.x) || isNaN(destination.y) || isNaN(destination.z)) {
-      throw new DeveloperError("destination has a NaN component");
+    // destination.z may be null in 2D, but .x and .y should be numeric
+    if (isNaN(destination.x) || isNaN(destination.y)) {
+      throw new DeveloperError(`destination has a NaN component`);
     }
     //>>includeEnd('debug');
     convert = false;
