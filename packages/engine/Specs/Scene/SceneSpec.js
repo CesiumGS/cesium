@@ -1970,36 +1970,31 @@ describe(
       });
     }
 
-    it("detects when camera is underground", function () {
+    it("detects when camera is underground", async function () {
       const globe = new Globe();
       scene.globe = globe;
 
       scene.camera.setView({
         destination: new Rectangle(0.0001, 0.0001, 0.003, 0.003),
       });
+      await updateGlobeUntilDone(scene);
+      expect(scene.cameraUnderground).toBe(false);
 
-      return updateGlobeUntilDone(scene)
-        .then(function () {
-          expect(scene.cameraUnderground).toBe(false);
-
-          // Look underground
-          scene.camera.setView({
-            destination: new Cartesian3(
-              -746658.0557573901,
-              -5644191.0002196245,
-              2863585.099969967
-            ),
-            orientation: new HeadingPitchRoll(
-              0.3019699121236403,
-              0.07316306869231592,
-              0.0007089903642230055
-            ),
-          });
-          return updateGlobeUntilDone(scene);
-        })
-        .then(function () {
-          expect(scene.cameraUnderground).toBe(true);
-        });
+      // Look underground
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -746658.0557573901,
+          -5644191.0002196245,
+          2863585.099969967
+        ),
+        orientation: new HeadingPitchRoll(
+          0.3019699121236403,
+          0.07316306869231592,
+          0.0007089903642230055
+        ),
+      });
+      await updateGlobeUntilDone(scene);
+      expect(scene.cameraUnderground).toBe(true);
     });
 
     it("detects that camera is above ground if globe is undefined", function () {
@@ -2021,7 +2016,7 @@ describe(
       expect(scene.cameraUnderground).toBe(false);
     });
 
-    it("detects that camera is underground in Columbus View", function () {
+    it("detects that camera is underground in Columbus View", async function () {
       const globe = new Globe();
       scene.globe = globe;
 
@@ -2040,13 +2035,12 @@ describe(
       });
       scene.morphToColumbusView(0.0);
 
-      return updateGlobeUntilDone(scene).then(function () {
-        scene.renderForSpecs();
-        expect(scene.cameraUnderground).toBe(true);
-      });
+      await updateGlobeUntilDone(scene);
+      scene.renderForSpecs();
+      expect(scene.cameraUnderground).toBe(true);
     });
 
-    it("does not occlude primitives when camera is underground", function () {
+    it("does not occlude primitives when camera is underground", async function () {
       const globe = new Globe();
       scene.globe = globe;
 
@@ -2070,29 +2064,25 @@ describe(
 
       spyOn(DrawCommand.prototype, "execute"); // Don't execute any commands, just watch what gets added to the frustum commands list
 
-      return updateGlobeUntilDone(scene)
-        .then(function () {
-          expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
+      await updateGlobeUntilDone(scene);
+      expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
 
-          // Look underground at the primitive
-          scene.camera.setView({
-            destination: new Cartesian3(
-              -4643042.379120885,
-              4314056.579506199,
-              -451828.8968118975
-            ),
-            orientation: new HeadingPitchRoll(
-              6.283185307179586,
-              -0.7855491933100796,
-              6.283185307179586
-            ),
-          });
-          return updateGlobeUntilDone(scene);
-        })
-        .then(function () {
-          scene.renderForSpecs();
-          expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
-        });
+      // Look underground at the primitive
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -4643042.379120885,
+          4314056.579506199,
+          -451828.8968118975
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179586,
+          -0.7855491933100796,
+          6.283185307179586
+        ),
+      });
+      await updateGlobeUntilDone(scene);
+      scene.renderForSpecs();
+      expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
     });
 
     it("does not occlude primitives when the globe is translucent", function () {
@@ -2129,7 +2119,7 @@ describe(
       expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
     });
 
-    it("does not render environment when camera is underground and translucency is disabled", function () {
+    it("does not render environment when camera is underground and translucency is disabled", async function () {
       const globe = new Globe();
       scene.globe = globe;
       scene.sun = new Sun();
@@ -2148,22 +2138,21 @@ describe(
         ),
       });
 
-      return updateGlobeUntilDone(scene).then(function () {
-        const time = JulianDate.fromIso8601(
-          "2020-04-25T03:07:26.04924034334544558Z"
-        );
-        globe.translucency.enabled = true;
-        globe.translucency.frontFaceAlpha = 0.5;
-        scene.renderForSpecs(time);
+      await updateGlobeUntilDone(scene);
+      const time = JulianDate.fromIso8601(
+        "2020-04-25T03:07:26.04924034334544558Z"
+      );
+      globe.translucency.enabled = true;
+      globe.translucency.frontFaceAlpha = 0.5;
+      scene.renderForSpecs(time);
 
-        expect(scene.environmentState.isSunVisible).toBe(true);
-        globe.translucency.enabled = false;
-        scene.renderForSpecs(time);
-        expect(scene.environmentState.isSunVisible).toBe(false);
-      });
+      expect(scene.environmentState.isSunVisible).toBe(true);
+      globe.translucency.enabled = false;
+      scene.renderForSpecs(time);
+      expect(scene.environmentState.isSunVisible).toBe(false);
     });
 
-    it("renders globe with translucency", function () {
+    it("renders globe with translucency", async function () {
       const globe = new Globe();
       scene.globe = globe;
 
@@ -2180,22 +2169,21 @@ describe(
         ),
       });
 
-      return updateGlobeUntilDone(scene).then(function () {
-        let opaqueColor;
-        expect(scene).toRenderAndCall(function (rgba) {
-          opaqueColor = rgba;
-        });
+      await updateGlobeUntilDone(scene);
+      let opaqueColor;
+      expect(scene).toRenderAndCall(function (rgba) {
+        opaqueColor = rgba;
+      });
 
-        globe.translucency.enabled = true;
-        globe.translucency.frontFaceAlpha = 0.5;
+      globe.translucency.enabled = true;
+      globe.translucency.frontFaceAlpha = 0.5;
 
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba).not.toEqual(opaqueColor);
-        });
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba).not.toEqual(opaqueColor);
       });
     });
 
-    it("renders ground primitive on translucent globe", function () {
+    it("renders ground primitive on translucent globe", async function () {
       const globe = new Globe();
       scene.globe = globe;
       globe.baseColor = Color.BLACK;
@@ -2237,14 +2225,13 @@ describe(
         })
       );
 
-      return updateGlobeUntilDone(scene).then(function () {
-        expect(scene).toRenderAndCall(function (rgba) {
-          expect(rgba[0]).toBeGreaterThan(0);
-        });
+      await updateGlobeUntilDone(scene);
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(0);
       });
     });
 
-    it("picks ground primitive on translucent globe", function () {
+    it("picks ground primitive on translucent globe", async function () {
       const globe = new Globe();
       scene.globe = globe;
       globe.baseColor = Color.BLACK;
@@ -2286,9 +2273,8 @@ describe(
         })
       );
 
-      return updateGlobeUntilDone(scene).then(function () {
-        expect(scene).toPickPrimitive(primitive);
-      });
+      await updateGlobeUntilDone(scene);
+      expect(scene).toPickPrimitive(primitive);
     });
 
     it("updates frameState.atmosphere", function () {
