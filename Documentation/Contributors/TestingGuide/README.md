@@ -456,6 +456,7 @@ CesiumJS adds several custom Jasmine matchers to make the rendering tests more c
 - `toPickPrimitive`
 - `notToPick`
 - `toPickAndCall`
+- `toPickVoxelAndCall`
 - `toDrillPickAndCall`
 - `toReadPixels`
 - `notToReadPixels`
