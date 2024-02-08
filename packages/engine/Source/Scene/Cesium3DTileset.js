@@ -1,4 +1,5 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
+import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
@@ -13,6 +14,8 @@ import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
 import ImageBasedLighting from "./ImageBasedLighting.js";
+import Interval from "../Core/Interval.js";
+import IntersectionTests from "../Core/IntersectionTests.js";
 import IonResource from "../Core/IonResource.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
@@ -56,6 +59,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Cesium3DTilesetMostDetailedTraversal from "./Cesium3DTilesetMostDetailedTraversal.js";
 import Cesium3DTilesetBaseTraversal from "./Cesium3DTilesetBaseTraversal.js";
 import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
+import Ray from "../Core/Ray.js";
 
 /**
  * @typedef {Object} Cesium3DTileset.ConstructorOptions
@@ -108,11 +112,13 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
  * @property {SplitDirection} [splitDirection=SplitDirection.NONE] The {@link SplitDirection} split to apply to this tileset.
- * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has loaded.
+ * @property {boolean} [disableCollision=false] Whether to turn off collisions for camera collisions or picking. While this is <code>true</code> the camera will be allowed to go in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
+ * @property {boolean} [projectTo2D=false] Whether to accurately project the tileset to 2D. If this is true, the tileset will be projected accurately to 2D, but it will use more memory to do so. If this is false, the tileset will use less memory and will still render in 2D / CV mode, but its projected positions may be inaccurate. This cannot be set after the tileset has been created.
+ * @property {boolean} [enablePick=false] Whether to allow collision and CPU picking with <code>pick</code> when using WebGL 1. If using WebGL 2 or above, this option will be ignored. If using WebGL 1 and this is true, the <code>pick</code> operation will work correctly, but it will use more memory to do so. If running with WebGL 1 and this is false, the model will use less memory, but <code>pick</code> will always return <code>undefined</code>. This cannot be set after the tileset has loaded.
  * @property {string} [debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @property {boolean} [debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @property {boolean} [debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
- * @property {boolean} [enableDebugWireframe] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has loaded.
+ * @property {boolean} [enableDebugWireframe=false] For debugging only. This must be true for debugWireframe to work in WebGL1. This cannot be set after the tileset has been created.
  * @property {boolean} [debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
  * @property {boolean} [debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
  * @property {boolean} [debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
@@ -142,6 +148,18 @@ import Cesium3DTilesetSkipTraversal from "./Cesium3DTilesetSkipTraversal.js";
  * try {
  *   const tileset = await Cesium.Cesium3DTileset.fromUrl(
  *      "http://localhost:8002/tilesets/Seattle/tileset.json"
+ *   );
+ *   scene.primitives.add(tileset);
+ * } catch (error) {
+ *   console.error(`Error creating tileset: ${error}`);
+ * }
+ *
+ * @example
+ * // Allow camera to go inside and under 3D tileset
+ * try {
+ *   const tileset = await Cesium.Cesium3DTileset.fromUrl(
+ *      "http://localhost:8002/tilesets/Seattle/tileset.json",
+ *      { disableCollision: true }
  *   );
  *   scene.primitives.add(tileset);
  * } catch (error) {
@@ -248,6 +266,8 @@ function Cesium3DTileset(options) {
   this._modelMatrix = defined(options.modelMatrix)
     ? Matrix4.clone(options.modelMatrix)
     : Matrix4.clone(Matrix4.IDENTITY);
+
+  this._addHeightCallbacks = [];
 
   this._statistics = new Cesium3DTilesetStatistics();
   this._statisticsLast = new Cesium3DTilesetStatistics();
@@ -843,7 +863,16 @@ function Cesium3DTileset(options) {
     SplitDirection.NONE
   );
 
+  /**
+   * Whether to turn off collisions for camera collisions or picking. While this is  <code>true</code> the camera will be allowed to go in or below the tileset surface if {@link ScreenSpaceCameraController#enableCollisionDetection} is true.
+   *
+   * @type {boolean}
+   * @default false
+   */
+  this.disableCollision = defaultValue(options.disableCollision, false);
+
   this._projectTo2D = defaultValue(options.projectTo2D, false);
+  this._enablePick = defaultValue(options.enablePick, false);
 
   /**
    * This property is for debugging only; it is not optimized for production use.
@@ -1930,7 +1959,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
  * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
- * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @see Cesium3DTileset#fromUrl
  *
@@ -1960,7 +1990,8 @@ Cesium3DTileset.fromIonAssetId = async function (assetId, options) {
  * @param {Cesium3DTileset.ConstructorOptions} [options] An object describing initialization options
  * @returns {Promise<Cesium3DTileset>}
  *
- * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @see Cesium3DTileset#fromIonAssetId
  *
@@ -2102,6 +2133,9 @@ Cesium3DTileset.prototype.makeStyleDirty = function () {
 
 /**
  * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
+ *
+ * @exception {RuntimeError} When the tileset asset version is not 0.0, 1.0, or 1.1,
+ * or when the tileset contains a required extension that is not supported.
  *
  * @private
  */
@@ -2601,6 +2635,55 @@ function filterProcessingQueue(tileset) {
   tiles.length -= removeCount;
 }
 
+const scratchUpdateHeightCartographic = new Cartographic();
+const scratchUpdateHeightCartographic2 = new Cartographic();
+const scratchUpdateHeightCartesian = new Cartesian3();
+function processUpdateHeight(tileset, tile, frameState) {
+  const heightCallbackData = tileset._addHeightCallbacks;
+  const boundingSphere = tile.boundingSphere;
+
+  for (const callbackData of heightCallbackData) {
+    // No need to upadate if the tile was already visible last frame
+    if (callbackData.invoked || tile._wasSelectedLastFrame) {
+      continue;
+    }
+
+    const ellipsoid = callbackData.ellipsoid;
+    const positionCartographic = Cartographic.clone(
+      callbackData.positionCartographic,
+      scratchUpdateHeightCartographic
+    );
+    const centerCartographic = Cartographic.fromCartesian(
+      boundingSphere.center,
+      ellipsoid,
+      scratchUpdateHeightCartographic2
+    );
+
+    // This can be undefined when the bounding sphere is at the origin
+    if (defined(centerCartographic)) {
+      positionCartographic.height = centerCartographic.height;
+    }
+
+    const position = Cartographic.toCartesian(
+      positionCartographic,
+      ellipsoid,
+      scratchUpdateHeightCartesian
+    );
+    if (
+      Cartesian3.distance(position, boundingSphere.center) <=
+      boundingSphere.radius
+    ) {
+      frameState.afterRender.push(() => {
+        // Callback can be removed before it actually invoked at the end of the frame
+        if (defined(callbackData.callback)) {
+          callbackData.callback(positionCartographic);
+        }
+        callbackData.invoked = false;
+      });
+    }
+  }
+}
+
 /**
  * Process tiles in the PROCESSING state so they will eventually move to the READY state.
  * @private
@@ -2868,6 +2951,7 @@ function updateTiles(tileset, frameState, passOptions) {
     if (isRender) {
       tileVisible.raiseEvent(tile);
     }
+    processUpdateHeight(tileset, tile, frameState);
     tile.update(tileset, frameState, passOptions);
     statistics.incrementSelectionCounts(tile.content);
     ++statistics.selected;
@@ -3407,6 +3491,171 @@ Cesium3DTileset.checkSupportedExtensions = function (extensionsRequired) {
       throw new RuntimeError(
         `Unsupported 3D Tiles Extension: ${extensionsRequired[i]}`
       );
+    }
+  }
+};
+
+const scratchGetHeightRay = new Ray();
+const scratchIntersection = new Cartesian3();
+const scratchGetHeightCartographic = new Cartographic();
+
+/**
+ * Get the height of the loaded surface at a given cartographic. This function will only take into account meshes for loaded tiles, not neccisarily the most detailed tiles available for a tileset. This function will always return undefined when sampling a point cloud.
+ *
+ * @param {Cartographic} cartographic The cartographic for which to find the height.
+ * @param {Scene} scene The scene where visualization is taking place.
+ * @returns {number|undefined} The height of the cartographic or undefined if it could not be found.
+ *
+ * @example
+ * const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(124624234);
+ * scene.primitives.add(tileset);
+ *
+ * const height = tileset.getHeight(scene.camera.positionCartographic, scene);
+ */
+Cesium3DTileset.prototype.getHeight = function (cartographic, scene) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartographic", cartographic);
+  Check.typeOf.object("scene", scene);
+  //>>includeEnd('debug');
+
+  let ellipsoid = scene.globe?.ellipsoid;
+  if (!defined(ellipsoid)) {
+    ellipsoid = Ellipsoid.WGS84;
+  }
+
+  const ray = scratchGetHeightRay;
+  const position = ellipsoid.cartographicToCartesian(
+    cartographic,
+    ray.direction
+  );
+  Cartesian3.normalize(ray.direction, ray.direction);
+
+  ray.direction = Cartesian3.normalize(position, ray.direction);
+  ray.direction = Cartesian3.negate(position, ray.direction);
+  ray.origin = Cartesian3.multiplyByScalar(
+    ray.direction,
+    -2 * ellipsoid.maximumRadius,
+    ray.origin
+  );
+
+  const intersection = this.pick(ray, scene.frameState, scratchIntersection);
+  if (!defined(intersection)) {
+    return;
+  }
+
+  return ellipsoid.cartesianToCartographic(
+    intersection,
+    scratchGetHeightCartographic
+  )?.height;
+};
+
+/**
+ * Calls the callback when a new tile is rendered that contains the given cartographic. The only parameter
+ * is the cartographic position on the tile.
+ *
+ * @private
+ *
+ * @param {Scene} scene The scene where visualization is taking place.
+ * @param {Cartographic} cartographic The cartographic position.
+ * @param {Function} callback The function to be called when a new tile is loaded.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @returns {Function} The function to remove this callback from the quadtree.
+ */
+Cesium3DTileset.prototype.updateHeight = function (
+  cartographic,
+  callback,
+  ellipsoid
+) {
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+  const object = {
+    positionCartographic: cartographic,
+    ellipsoid: ellipsoid,
+    callback: callback,
+    invoked: false,
+  };
+
+  const removeCallback = () => {
+    const addedCallbacks = this._addHeightCallbacks;
+    const length = addedCallbacks.length;
+    for (let i = 0; i < length; ++i) {
+      if (addedCallbacks[i] === object) {
+        addedCallbacks.splice(i, 1);
+        break;
+      }
+    }
+
+    if (object.callback) {
+      object.callback = undefined;
+    }
+  };
+
+  this._addHeightCallbacks.push(object);
+  return removeCallback;
+};
+
+const scratchSphereIntersection = new Interval();
+const scratchPickIntersection = new Cartesian3();
+
+/**
+ * Find an intersection between a ray and the tileset surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Cesium3DTileset.prototype.pick = function (ray, frameState, result) {
+  if (!frameState.context.webgl2 && !this._enablePick) {
+    return;
+  }
+
+  const selectedTiles = this._selectedTiles;
+  const selectedLength = selectedTiles.length;
+  const candidates = [];
+
+  for (let i = 0; i < selectedLength; ++i) {
+    const tile = selectedTiles[i];
+    const boundsIntersection = IntersectionTests.raySphere(
+      ray,
+      tile.contentBoundingVolume.boundingSphere,
+      scratchSphereIntersection
+    );
+    if (!defined(boundsIntersection) || !defined(tile.content)) {
+      continue;
+    }
+
+    candidates.push(tile);
+  }
+
+  const length = candidates.length;
+  candidates.sort((a, b) => {
+    const aDist = BoundingSphere.distanceSquaredTo(
+      a.contentBoundingVolume.boundingSphere,
+      ray.origin
+    );
+    const bDist = BoundingSphere.distanceSquaredTo(
+      b.contentBoundingVolume.boundingSphere,
+      ray.origin
+    );
+
+    return aDist - bDist;
+  });
+
+  let intersection;
+  for (let i = 0; i < length; ++i) {
+    const tile = candidates[i];
+    const candidate = tile.content.pick(
+      ray,
+      frameState,
+      scratchPickIntersection
+    );
+
+    if (defined(candidate)) {
+      intersection = Cartesian3.clone(candidate, result);
+      return intersection;
     }
   }
 };

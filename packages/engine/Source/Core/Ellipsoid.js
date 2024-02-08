@@ -363,6 +363,12 @@ Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function (
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided, or undefined if a normal cannot be found.
  */
 Ellipsoid.prototype.geodeticSurfaceNormal = function (cartesian, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("cartesian", cartesian);
+  if (isNaN(cartesian.x) || isNaN(cartesian.y) || isNaN(cartesian.z)) {
+    throw new DeveloperError("cartesian has a NaN component");
+  }
+  //>>includeEnd('debug');
   if (
     Cartesian3.equalsEpsilon(cartesian, Cartesian3.ZERO, CesiumMath.EPSILON14)
   ) {

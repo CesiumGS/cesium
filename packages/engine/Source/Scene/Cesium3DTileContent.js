@@ -351,6 +351,20 @@ Cesium3DTileContent.prototype.update = function (tileset, frameState) {
 };
 
 /**
+ * Find an intersection between a ray and the tile content surface that was rendered. The ray must be given in world coordinates.
+ *
+ * @param {Ray} ray The ray to test for intersection.
+ * @param {FrameState} frameState The frame state.
+ * @param {Cartesian3|undefined} [result] The intersection or <code>undefined</code> if none was found.
+ * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
+ *
+ * @private
+ */
+Cesium3DTileContent.prototype.pick = function (ray, frameState, result) {
+  DeveloperError.throwInstantiationError();
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than

@@ -1,3 +1,4 @@
+import Matrix3 from "../../Core/Matrix3.js";
 import defined from "../../Core/defined.js";
 import ShaderDestination from "../../Renderer/ShaderDestination.js";
 import MetadataStageFS from "../../Shaders/Model/MetadataStageFS.js";
@@ -430,7 +431,13 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
   const { shaderBuilder, uniformMap } = renderResources;
   const { metadataVariable, glslType, property } = propertyInfo;
 
-  const { texCoord, channels, index, texture } = property.textureReader;
+  const {
+    texCoord,
+    channels,
+    index,
+    texture,
+    transform,
+  } = property.textureReader;
   const textureUniformName = `u_propertyTexture_${index}`;
 
   // Property texture properties may share the same physical texture, so only
@@ -450,9 +457,30 @@ function addPropertyTexturePropertyMetadata(renderResources, propertyInfo) {
     metadataVariable
   );
 
-  // Get a GLSL expression for the value of the property
+  // Get a GLSL expression for the texture coordinates of the property.
+  // By default, this will be taken directly from the attributes.
   const texCoordVariable = `attributes.texCoord_${texCoord}`;
-  const valueExpression = `texture(${textureUniformName}, ${texCoordVariable}).${channels}`;
+  let texCoordVariableExpression = texCoordVariable;
+
+  // Check if the texture defines a `transform` from a `KHR_texture_transform`
+  if (defined(transform) && !Matrix3.equals(transform, Matrix3.IDENTITY)) {
+    // Add a uniform for the transformation matrix
+    const transformUniformName = `${textureUniformName}Transform`;
+    shaderBuilder.addUniform(
+      "mat3",
+      transformUniformName,
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap[transformUniformName] = function () {
+      return transform;
+    };
+
+    // Update the expression for the texture coordinates
+    // with one that transforms the texture coordinates
+    // with the transform matrix first
+    texCoordVariableExpression = `vec2(${transformUniformName} * vec3(${texCoordVariable}, 1.0))`;
+  }
+  const valueExpression = `texture(${textureUniformName}, ${texCoordVariableExpression}).${channels}`;
 
   // Some types need an unpacking step or two. For example, since texture reads
   // are always normalized, UINT8 (not normalized) properties need to be

@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import Event from "../Core/Event.js";
+import createWorldBathymetryAsync from "../Core/createWorldBathymetryAsync.js";
 import createWorldTerrainAsync from "../Core/createWorldTerrainAsync.js";
 
 /**
@@ -154,6 +155,54 @@ Object.defineProperties(Terrain.prototype, {
  */
 Terrain.fromWorldTerrain = function (options) {
   return new Terrain(createWorldTerrainAsync(options));
+};
+
+/**
+ * Creates a {@link Terrain} instance for {@link https://cesium.com/content/#cesium-world-bathymetry|Cesium World Bathymetry}.
+ *
+ * @function
+ *
+ * @param {Object} [options] Object with the following properties:
+ * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
+ * @returns {Terrain} An asynchronous helper object for a CesiumTerrainProvider
+ *
+ * @see Ion
+ * @see createWorldBathymetryAsync
+ *
+ * @example
+ * // Create Cesium World Bathymetry with default settings
+ * const viewer = new Cesium.Viewer("cesiumContainer", {
+ *   terrain: Cesium.Terrain.fromWorldBathymetry)
+ * });
+ *
+ * @example
+ * // Create Cesium World Terrain with normals.
+ * const viewer1 = new Cesium.Viewer("cesiumContainer", {
+ *   terrain: Cesium.Terrain.fromWorldBathymetry({
+ *      requestVertexNormals: true
+ *    });
+ * });
+ *
+ * @example
+ * // Handle loading events
+ * const bathymetry = Cesium.Terrain.fromWorldBathymetry();
+ *
+ * scene.setTerrain(bathymetry);
+ *
+ * bathymetry.readyEvent.addEventListener(provider => {
+ *   scene.globe.enableLighting = true;
+ *
+ *   bathymetry.provider.errorEvent.addEventListener(error => {
+ *     alert(`Encountered an error while loading bathymetric terrain tiles! ${error}`);
+ *   });
+ * });
+ *
+ * bathymetry.errorEvent.addEventListener(error => {
+ *   alert(`Encountered an error while creating bathymetric terrain! ${error}`);
+ * });
+ */
+Terrain.fromWorldBathymetry = function (options) {
+  return new Terrain(createWorldBathymetryAsync(options));
 };
 
 function handleError(errorEvent, error) {
