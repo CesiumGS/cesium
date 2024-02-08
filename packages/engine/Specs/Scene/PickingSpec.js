@@ -276,11 +276,12 @@ describe(
           const traversal = primitive._traversal;
           return traversal.isRenderable(traversal.rootNode);
         });
-        const voxelCell = scene.pickVoxel(new Cartesian2(0, 0));
-        expect(voxelCell.tileIndex).toBe(0);
-        expect(voxelCell.sampleIndex).toBe(0);
-        expect(voxelCell.hasProperty("a")).toBe(true);
-        expect(voxelCell.getProperty("a")).toEqual(new Float32Array(1));
+        expect(scene).toPickVoxelAndCall(function (voxelCell) {
+          expect(voxelCell.tileIndex).toBe(0);
+          expect(voxelCell.sampleIndex).toBe(0);
+          expect(voxelCell.hasProperty("a")).toBe(true);
+          expect(voxelCell.getProperty("a")).toEqual(new Float32Array(1));
+        });
       });
     });
 
