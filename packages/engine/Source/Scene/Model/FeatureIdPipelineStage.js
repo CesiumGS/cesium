@@ -9,6 +9,7 @@ import FeatureIdStageVS from "../../Shaders/Model/FeatureIdStageVS.js";
 import ModelComponents from "../ModelComponents.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 import ModelUtility from "./ModelUtility.js";
+import Matrix3 from "../../Core/Matrix3.js";
 
 /**
  * The feature ID pipeline stage is responsible for processing feature IDs
@@ -387,10 +388,32 @@ function processTexture(
     ShaderDestination.FRAGMENT
   );
 
+  // Get a GLSL expression for the texture coordinates
+  const texCoord = textureReader.texCoord;
+  const texCoordVariable = `v_texCoord_${texCoord}`;
+  let texCoordVariableExpression = texCoordVariable;
+
+  // Check if the texture defines a `transform` from a `KHR_texture_transform`
+  const transform = textureReader.transform;
+  if (defined(transform) && !Matrix3.equals(transform, Matrix3.IDENTITY)) {
+    // Add a uniform for the transformation matrix
+    const transformUniformName = `${uniformName}Transform`;
+    shaderBuilder.addUniform(
+      "mat3",
+      transformUniformName,
+      ShaderDestination.FRAGMENT
+    );
+    uniformMap[transformUniformName] = function () {
+      return transform;
+    };
+    // Update the expression for the texture coordinates
+    // with one that transforms the texture coordinates
+    // with the transform matrix first
+    texCoordVariableExpression = `vec2(${transformUniformName} * vec3(${texCoordVariable}, 1.0))`;
+  }
   // Read one or more channels from the texture
   // example: texture(u_featureIdTexture_0, v_texCoord_1).rg
-  const texCoord = `v_texCoord_${textureReader.texCoord}`;
-  const textureRead = `texture(${uniformName}, ${texCoord}).${channels}`;
+  const textureRead = `texture(${uniformName}, ${texCoordVariableExpression}).${channels}`;
 
   // Finally, assign to the struct field. Example:
   // featureIds.featureId_0 = unpacked;

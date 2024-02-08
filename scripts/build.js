@@ -162,7 +162,6 @@ export async function bundleCesiumJs(options) {
   buildConfig.entryPoints = ["Source/Cesium.js"];
   buildConfig.minify = options.minify;
   buildConfig.sourcemap = options.sourcemap;
-  buildConfig.external = ["https", "http", "url", "zlib"];
   buildConfig.plugins = options.removePragmas ? [stripPragmaPlugin] : undefined;
   buildConfig.write = options.write;
   buildConfig.banner = {
@@ -361,7 +360,7 @@ export async function bundleWorkers(options) {
   const workers = await globby(["packages/engine/Source/Workers/**"]);
   const workerConfig = defaultESBuildOptions();
   workerConfig.bundle = true;
-  workerConfig.external = ["http", "https", "url", "zlib", "fs", "path"];
+  workerConfig.external = ["fs", "path"];
 
   if (options.iife) {
     let contents = ``;
@@ -816,7 +815,6 @@ export async function bundleCombinedSpecs(options) {
     sourcemap: true,
     outdir: path.join("Build", "Specs"),
     plugins: [externalResolvePlugin],
-    external: [`http`, `https`, `url`, `zlib`],
     write: options.write,
   });
 }
@@ -843,7 +841,7 @@ export async function bundleTestWorkers(options) {
     format: "esm",
     sourcemap: true,
     outdir: path.join("Build", "Specs", "TestWorkers"),
-    external: ["http", "https", "url", "zlib", "fs", "path"],
+    external: ["fs", "path"],
     write: options.write,
   });
 }
@@ -960,7 +958,6 @@ async function bundleSpecs(options) {
     format: "esm",
     outdir: options.outdir,
     sourcemap: true,
-    external: ["https", "http", "zlib", "url"],
     target: "es2020",
     write: write,
   };

@@ -330,7 +330,7 @@ Object.defineProperties(TileBoundingS2Cell.prototype, {
   /**
    * The underlying bounding volume.
    *
-   * @memberof TileOrientedBoundingBox.prototype
+   * @memberof TileBoundingS2Cell.prototype
    *
    * @type {object}
    * @readonly
@@ -343,7 +343,7 @@ Object.defineProperties(TileBoundingS2Cell.prototype, {
   /**
    * The underlying bounding sphere.
    *
-   * @memberof TileOrientedBoundingBox.prototype
+   * @memberof TileBoundingS2Cell.prototype
    *
    * @type {BoundingSphere}
    * @readonly

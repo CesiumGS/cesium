@@ -474,6 +474,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._touchedFrame = 0;
   this._visitedFrame = 0;
   this._selectedFrame = 0;
+  this._wasSelectedLastFrame = false;
   this._requestedFrame = 0;
   this._ancestorWithContent = undefined;
   this._ancestorWithContentAvailable = undefined;

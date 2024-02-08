@@ -127,6 +127,9 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
       if (!defined(origin)) {
         throw new DeveloperError("origin is required.");
       }
+      if (isNaN(origin.x) || isNaN(origin.y) || isNaN(origin.z)) {
+        throw new DeveloperError("origin has a NaN component");
+      }
       //>>includeEnd('debug');
       if (!defined(result)) {
         result = new Matrix4();
@@ -360,7 +363,7 @@ const scratchHPRMatrix4 = new Matrix4();
 
 /**
  * Computes a 4x4 transformation matrix from a reference frame with axes computed from the heading-pitch-roll angles
- * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
+ * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
  *
@@ -415,7 +418,7 @@ const scratchHPRMatrix3 = new Matrix3();
 
 /**
  * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles
- * centered at the provided origin. Heading is the rotation from the local north
+ * centered at the provided origin. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
  *
@@ -465,7 +468,7 @@ const hprTransformScratch = new Matrix4();
 const hprRotationScratch = new Matrix3();
 const hprQuaternionScratch = new Quaternion();
 /**
- * Computes heading-pitch-roll angles from a transform in a particular reference frame. Heading is the rotation from the local north
+ * Computes heading-pitch-roll angles from a transform in a particular reference frame. Heading is the rotation from the local east
  * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
  * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
  *
@@ -1045,21 +1048,30 @@ Transforms.basisTo2D = function (projection, matrix, result) {
   const rtcCenter = Matrix4.getTranslation(matrix, scratchCenter);
   const ellipsoid = projection.ellipsoid;
 
-  // Get the 2D Center
-  const cartographic = ellipsoid.cartesianToCartographic(
-    rtcCenter,
-    scratchCartographic
-  );
-  const projectedPosition = projection.project(
-    cartographic,
-    scratchCartesian3Projection
-  );
-  Cartesian3.fromElements(
-    projectedPosition.z,
-    projectedPosition.x,
-    projectedPosition.y,
-    projectedPosition
-  );
+  let projectedPosition;
+  if (Cartesian3.equals(rtcCenter, Cartesian3.ZERO)) {
+    projectedPosition = Cartesian3.clone(
+      Cartesian3.ZERO,
+      scratchCartesian3Projection
+    );
+  } else {
+    // Get the 2D Center
+    const cartographic = ellipsoid.cartesianToCartographic(
+      rtcCenter,
+      scratchCartographic
+    );
+
+    projectedPosition = projection.project(
+      cartographic,
+      scratchCartesian3Projection
+    );
+    Cartesian3.fromElements(
+      projectedPosition.z,
+      projectedPosition.x,
+      projectedPosition.y,
+      projectedPosition
+    );
+  }
 
   // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
   const fromENU = Transforms.eastNorthUpToFixedFrame(
