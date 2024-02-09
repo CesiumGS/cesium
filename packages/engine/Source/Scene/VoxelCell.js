@@ -1,4 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
+import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import MetadataType from "./MetadataType.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
@@ -58,6 +59,12 @@ VoxelCell.fromKeyframeNode = function (
   sampleIndex,
   keyframeNode
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("primitive", primitive);
+  Check.typeOf.number("sampleIndex", sampleIndex);
+  Check.typeOf.object("keyframeNode", keyframeNode);
+  //>>includeEnd('debug');
+
   const voxelCell = new VoxelCell(primitive, tileIndex, sampleIndex);
   const { spatialNode, metadata } = keyframeNode;
   voxelCell._metadata = getMetadataForSample(primitive, metadata, sampleIndex);
