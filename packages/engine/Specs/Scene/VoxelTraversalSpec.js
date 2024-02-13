@@ -186,7 +186,7 @@ describe(
       expect(keyframeNode).toBeDefined();
       expect(keyframeNode.state).toBe(KeyframeNode.LoadState.LOADED);
       const expectedMetadata = new Float32Array([0, 0, 0, 0, 1, 1, 1, 1]);
-      expect(keyframeNode.metadatas[0]).toEqual(expectedMetadata);
+      expect(keyframeNode.metadata[0]).toEqual(expectedMetadata);
     });
 
     xit("unloads tiles in megatexture", function () {

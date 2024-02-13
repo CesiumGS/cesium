@@ -322,7 +322,7 @@ SpatialNode.prototype.destroyKeyframeNode = function (
 
   keyframeNode.spatialNode = undefined;
   keyframeNode.state = KeyframeNode.LoadState.UNLOADED;
-  keyframeNode.metadatas = {};
+  keyframeNode.metadata = {};
   keyframeNode.megatextureIndex = -1;
   keyframeNode.priority = -Number.MAX_VALUE;
   keyframeNode.highPriorityFrameNumber = -1;
@@ -339,14 +339,14 @@ SpatialNode.prototype.addKeyframeNodeToMegatextures = function (
   if (
     keyframeNode.state !== KeyframeNode.LoadState.RECEIVED ||
     keyframeNode.megatextureIndex !== -1 ||
-    keyframeNode.metadatas.length !== megatextures.length
+    keyframeNode.metadata.length !== megatextures.length
   ) {
     throw new DeveloperError("Keyframe node cannot be added to megatexture");
   }
 
   for (let i = 0; i < megatextures.length; i++) {
     const megatexture = megatextures[i];
-    keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadatas[i]);
+    keyframeNode.megatextureIndex = megatexture.add(keyframeNode.metadata[i]);
   }
 
   keyframeNode.state = KeyframeNode.LoadState.LOADED;

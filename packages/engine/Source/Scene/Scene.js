@@ -73,6 +73,8 @@ import SunPostProcess from "./SunPostProcess.js";
 import TweenCollection from "./TweenCollection.js";
 import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
+import VoxelCell from "./VoxelCell.js";
+import VoxelPrimitive from "./VoxelPrimitive.js";
 
 const requestRenderAfterFrame = function (scene) {
   return function () {
@@ -4150,23 +4152,54 @@ Scene.prototype.pick = function (windowPosition, width, height) {
 };
 
 /**
- * Returns an object with cordinates of the voxel sample rendered at
- * a particular window coordinate. Returns <code>undefined</code> if there is no
- * voxel at that position.
+ * Returns a VoxelCell for the voxel sample rendered at a particular window coordinate,
+ * or undefined if no voxel is rendered at that position.
  *
- * @private
+ * @example
+ * On left click, report the value of the "color" property at that voxel sample.
+ * handler.setInputAction(function(movement) {
+ *   const voxelCell = scene.pickVoxel(movement.position);
+ *   if (defined(voxelCell)) {
+ *     console.log(voxelCell.getProperty("color"));
+ *   }
+ * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
  *
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {object|undefined} Object containing information about the voxel.
+ * @returns {VoxelCell|undefined} Information about the voxel cell rendered at the picked position.
  */
-Scene.prototype._pickVoxelCoordinate = function (
-  windowPosition,
-  width,
-  height
-) {
-  return this._picking.pickVoxel(this, windowPosition, width, height);
+Scene.prototype.pickVoxel = function (windowPosition, width, height) {
+  const pickedObject = this.pick(windowPosition, width, height);
+  if (!defined(pickedObject)) {
+    return;
+  }
+  const voxelPrimitive = pickedObject.primitive;
+  if (!(voxelPrimitive instanceof VoxelPrimitive)) {
+    return;
+  }
+  const voxelCoordinate = this._picking.pickVoxelCoordinate(
+    this,
+    windowPosition,
+    width,
+    height
+  );
+  // Look up the keyframeNode containing this picked cell
+  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
+  if (!defined(keyframeNode)) {
+    // The tile rendered at the pick position has since been discarded by
+    // a traversal update
+    return;
+  }
+  // Look up the metadata for the picked cell
+  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  return VoxelCell.fromKeyframeNode(
+    voxelPrimitive,
+    tileIndex,
+    sampleIndex,
+    keyframeNode
+  );
 };
 
 /**

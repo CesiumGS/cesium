@@ -531,7 +531,7 @@ Object.defineProperties(VoxelPrimitive.prototype, {
    */
   orientedBoundingBox: {
     get: function () {
-      return this.shape.orientedBoundingBox;
+      return this._shape.orientedBoundingBox;
     },
   },
 

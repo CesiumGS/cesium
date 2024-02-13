@@ -323,7 +323,12 @@ Picking.prototype.pick = function (scene, windowPosition, width, height) {
  * @param {number} [height=3] Height of the pick rectangle.
  * @returns {object|undefined} Object containing the picked primitive.
  */
-Picking.prototype.pickVoxel = function (scene, windowPosition, width, height) {
+Picking.prototype.pickVoxelCoordinate = function (
+  scene,
+  windowPosition,
+  width,
+  height
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("windowPosition", windowPosition);
   //>>includeEnd('debug');
