@@ -4187,6 +4187,11 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
   // Look up the keyframeNode containing this picked cell
   const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
   const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
+  if (!defined(keyframeNode)) {
+    // The tile rendered at the pick position has since been discarded by
+    // a traversal update
+    return;
+  }
   // Look up the metadata for the picked cell
   const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
   return VoxelCell.fromKeyframeNode(
