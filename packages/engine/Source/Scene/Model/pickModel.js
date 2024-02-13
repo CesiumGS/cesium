@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import AttributeCompression from "../../Core/AttributeCompression.js";
 import BoundingSphere from "../../Core/BoundingSphere.js";
 import Cartesian3 from "../../Core/Cartesian3.js";
@@ -152,7 +153,7 @@ function computeInstancesTransforms(
   runtimeNodeMatrices,
   usesWebgl2
 ) {
-  const node = runtimeNode;
+  const node = runtimeNode.node;
   const instances = node.instances;
   const computedModelMatrix = runtimeNodeMatrices.computedModelMatrix;
   if (!defined(instances)) {
@@ -283,6 +284,7 @@ function obtainPickedGeometry(primitive, usesWebgl2) {
   if (!defined(vertices)) {
     const verticesBuffer = positionAttribute.buffer;
 
+    // XXX TODO This does not work for interleaved data!!!
     if (defined(verticesBuffer) && usesWebgl2) {
       const elementCount = vertexCount * numComponents;
       vertices = ComponentDatatype.createTypedArray(
@@ -317,6 +319,423 @@ function obtainPickedGeometry(primitive, usesWebgl2) {
     quantization: quantization,
   };
 }
+
+function computeDecodedVertices(
+  pickedGeometry,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid
+) {
+  const vertices = pickedGeometry.vertices;
+  const numComponents = pickedGeometry.numComponents;
+  //const quantization = pickedGeometry.quantization;
+  const decodedVertices = Array(vertices.length);
+  const numVertices = vertices.length / numComponents;
+  for (let i = 0; i < numVertices; i++) {
+    scratchV0.x = vertices[i * numComponents + 0];
+    scratchV0.y = vertices[i * numComponents + 1];
+    scratchV0.z = vertices[i * numComponents + 2];
+    /*
+    const v = getVertexPositionRaw(
+      vertices,
+      i,
+      numComponents,
+      quantization,
+      verticalExaggeration,
+      relativeHeight,
+      ellipsoid,
+      scratchV0
+    );
+    */
+    decodedVertices[i * 3 + 0] = scratchV0.x;
+    decodedVertices[i * 3 + 1] = scratchV0.y;
+    decodedVertices[i * 3 + 2] = scratchV0.z;
+  }
+  return decodedVertices;
+}
+
+function computeClosest(
+  ray,
+  pickedGeometry,
+  transforms,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
+  backfaceCulling
+) {
+  //return computeClosestOriginal(ray, pickedGeometry, transforms, verticalExaggeration, relativeHeight, ellipsoid, backfaceCulling);
+  //return computeClosestTransformA(ray, pickedGeometry, transforms, verticalExaggeration, relativeHeight, ellipsoid, backfaceCulling);
+  return computeClosestTransformB(
+    ray,
+    pickedGeometry,
+    transforms,
+    verticalExaggeration,
+    relativeHeight,
+    ellipsoid,
+    backfaceCulling
+  );
+  //return computeClosestDecoded(ray, pickedGeometry, transforms, verticalExaggeration, relativeHeight, ellipsoid, backfaceCulling);
+}
+
+function computeClosestOriginal(
+  ray,
+  pickedGeometry,
+  transforms,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
+  backfaceCulling
+) {
+  let minT = Number.MAX_VALUE;
+
+  const indices = pickedGeometry.indices;
+  const vertices = pickedGeometry.vertices;
+  const numComponents = pickedGeometry.numComponents;
+  const quantization = pickedGeometry.quantization;
+
+  const indicesLength = indices.length;
+  for (let i = 0; i < indicesLength; i += 3) {
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
+    const i2 = indices[i + 2];
+
+    for (const instanceTransform of transforms) {
+      const v0 = getVertexPosition(
+        vertices,
+        i0,
+        numComponents,
+        quantization,
+        instanceTransform,
+        verticalExaggeration,
+        relativeHeight,
+        ellipsoid,
+        scratchV0
+      );
+      const v1 = getVertexPosition(
+        vertices,
+        i1,
+        numComponents,
+        quantization,
+        instanceTransform,
+        verticalExaggeration,
+        relativeHeight,
+        ellipsoid,
+        scratchV1
+      );
+      const v2 = getVertexPosition(
+        vertices,
+        i2,
+        numComponents,
+        quantization,
+        instanceTransform,
+        verticalExaggeration,
+        relativeHeight,
+        ellipsoid,
+        scratchV2
+      );
+
+      //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${instanceTransform}\nray ${ray.origin} ${ray.direction}`);
+
+      const t = IntersectionTests.rayTriangleParametric(
+        ray,
+        v0,
+        v1,
+        v2,
+        backfaceCulling
+      );
+
+      if (defined(t)) {
+        if (t < minT && t >= 0.0) {
+          minT = t;
+        }
+      }
+    }
+  }
+  return {
+    closestRay: ray,
+    minT: minT,
+  };
+}
+
+function computeClosestTransformA(
+  ray,
+  pickedGeometry,
+  transforms,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
+  backfaceCulling
+) {
+  let minT = Number.MAX_VALUE;
+  let closestRay;
+
+  const indices = pickedGeometry.indices;
+  const vertices = pickedGeometry.vertices;
+  const numComponents = pickedGeometry.numComponents;
+  const quantization = pickedGeometry.quantization;
+
+  const numTransforms = transforms.length;
+  for (let t = 0; t < numTransforms; t++) {
+    const transform = transforms[t];
+    const inverseTransform = Matrix4.inverse(
+      transform,
+      scratchInverseTransform
+    );
+    const transformedRay = new Ray();
+    transformedRay.origin = Matrix4.multiplyByPoint(
+      inverseTransform,
+      ray.origin,
+      transformedRay.origin
+    );
+    transformedRay.direction = Matrix4.multiplyByPointAsVector(
+      inverseTransform,
+      ray.direction,
+      transformedRay.direction
+    );
+
+    const indicesLength = indices.length;
+    for (let i = 0; i < indicesLength; i += 3) {
+      const i0 = indices[i];
+      const i1 = indices[i + 1];
+      const i2 = indices[i + 2];
+
+      const v0 = getVertexPositionRaw(
+        vertices,
+        i0,
+        numComponents,
+        quantization,
+        verticalExaggeration,
+        relativeHeight,
+        ellipsoid,
+        scratchV0
+      );
+      const v1 = getVertexPositionRaw(
+        vertices,
+        i1,
+        numComponents,
+        quantization,
+        verticalExaggeration,
+        relativeHeight,
+        ellipsoid,
+        scratchV1
+      );
+      const v2 = getVertexPositionRaw(
+        vertices,
+        i2,
+        numComponents,
+        quantization,
+        verticalExaggeration,
+        relativeHeight,
+        ellipsoid,
+        scratchV2
+      );
+
+      //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${transform}\nray ${transformedRay.origin} ${transformedRay.direction}`);
+
+      const t = IntersectionTests.rayTriangleParametric(
+        transformedRay,
+        v0,
+        v1,
+        v2,
+        backfaceCulling
+      );
+
+      if (defined(t)) {
+        //console.log(`Got one at index ${i}`);
+        if (t < minT && t >= 0.0) {
+          minT = t;
+          closestRay = transformedRay;
+        }
+      }
+    }
+  }
+  return {
+    closestRay: closestRay,
+    minT: minT,
+  };
+}
+
+function computeClosestTransformB(
+  ray,
+  pickedGeometry,
+  transforms,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
+  backfaceCulling
+) {
+  let minT = Number.MAX_VALUE;
+  let closestRay;
+
+  const indices = pickedGeometry.indices;
+  const vertices = pickedGeometry.vertices;
+  const numComponents = pickedGeometry.numComponents;
+  const quantization = pickedGeometry.quantization;
+
+  const numTransforms = transforms.length;
+  const transformedRays = [];
+  for (let t = 0; t < numTransforms; t++) {
+    const transform = transforms[t];
+    const inverseTransform = Matrix4.inverse(
+      transform,
+      scratchInverseTransform
+    );
+    const transformedRay = new Ray();
+    transformedRay.origin = Matrix4.multiplyByPoint(
+      inverseTransform,
+      ray.origin,
+      transformedRay.origin
+    );
+    transformedRay.direction = Matrix4.multiplyByPointAsVector(
+      inverseTransform,
+      ray.direction,
+      transformedRay.direction
+    );
+    transformedRays.push(transformedRay);
+  }
+
+  const indicesLength = indices.length;
+  for (let i = 0; i < indicesLength; i += 3) {
+    const i0 = indices[i];
+    const i1 = indices[i + 1];
+    const i2 = indices[i + 2];
+
+    const v0 = getVertexPositionRaw(
+      vertices,
+      i0,
+      numComponents,
+      quantization,
+      verticalExaggeration,
+      relativeHeight,
+      ellipsoid,
+      scratchV0
+    );
+    const v1 = getVertexPositionRaw(
+      vertices,
+      i1,
+      numComponents,
+      quantization,
+      verticalExaggeration,
+      relativeHeight,
+      ellipsoid,
+      scratchV1
+    );
+    const v2 = getVertexPositionRaw(
+      vertices,
+      i2,
+      numComponents,
+      quantization,
+      verticalExaggeration,
+      relativeHeight,
+      ellipsoid,
+      scratchV2
+    );
+
+    //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${transform}\nray ${transformedRay.origin} ${transformedRay.direction}`);
+
+    for (let r = 0; r < numTransforms; r++) {
+      const transformedRay = transformedRays[r];
+
+      const t = IntersectionTests.rayTriangleParametric(
+        transformedRay,
+        v0,
+        v1,
+        v2,
+        backfaceCulling
+      );
+
+      if (defined(t)) {
+        //console.log(`Got one at index ${i}`);
+        if (t < minT && t >= 0.0) {
+          minT = t;
+          closestRay = transformedRay;
+        }
+      }
+    }
+  }
+  return {
+    closestRay: closestRay,
+    minT: minT,
+  };
+}
+
+// XXX EXPERIMENT
+/*
+function computeClosestDecoded(
+  ray,
+  pickedGeometry,
+  transforms,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
+  backfaceCulling
+) {
+  let minT = Number.MAX_VALUE;
+
+  const indices = pickedGeometry.indices;
+
+  const decodedVertices = computeDecodedVertices(
+    pickedGeometry,
+    verticalExaggeration,
+    relativeHeight,
+    ellipsoid
+  );
+  const numTransforms = transforms.length;
+  for (let t = 0; t < numTransforms; t++) {
+    const transform = transforms[t];
+    const inverseTransform = Matrix4.inverse(
+      transform,
+      scratchInverseTransform
+    );
+    const transformedRay = new Ray();
+    transformedRay.origin = Matrix4.multiplyByPoint(
+      inverseTransform,
+      ray.origin,
+      transformedRay.origin
+    );
+    transformedRay.direction = Matrix4.multiplyByPointAsVector(
+      inverseTransform,
+      ray.direction,
+      transformedRay.direction
+    );
+
+    const indicesLength = indices.length;
+    for (let i = 0; i < indicesLength; i += 3) {
+      const i0 = indices[i];
+      const i1 = indices[i + 1];
+      const i2 = indices[i + 2];
+
+      scratchV0.x = decodedVertices[i0 * 3 + 0];
+      scratchV0.y = decodedVertices[i0 * 3 + 1];
+      scratchV0.z = decodedVertices[i0 * 3 + 2];
+
+      scratchV1.x = decodedVertices[i1 * 3 + 0];
+      scratchV1.y = decodedVertices[i1 * 3 + 1];
+      scratchV1.z = decodedVertices[i1 * 3 + 2];
+
+      scratchV2.x = decodedVertices[i2 * 3 + 0];
+      scratchV2.y = decodedVertices[i2 * 3 + 1];
+      scratchV2.z = decodedVertices[i2 * 3 + 2];
+
+      const t = IntersectionTests.rayTriangleParametric(
+        transformedRay,
+        scratchV0,
+        scratchV1,
+        scratchV2,
+        backfaceCulling
+      );
+
+      if (defined(t)) {
+        //console.log(`Got one at index ${i}`);
+        if (t < minT && t >= 0.0) {
+          minT = t;
+        }
+      }
+    }
+  }
+  return minT;
+}
+*/
 
 function pickModelImpl(
   model,
@@ -354,6 +773,8 @@ function pickModelImpl(
   relativeHeight = defaultValue(relativeHeight, 0.0);
 
   let minT = Number.MAX_VALUE;
+  let closestRay;
+
   for (let i = 0; i < numRuntimeNodes; i++) {
     const runtimeNode = runtimeNodes[i];
     const primitivesLength = runtimeNode.runtimePrimitives.length;
@@ -404,148 +825,19 @@ function pickModelImpl(
       if (!defined(pickedGeometry)) {
         return;
       }
-      const indices = pickedGeometry.indices;
-      const vertices = pickedGeometry.vertices;
-      const numComponents = pickedGeometry.numComponents;
-      const quantization = pickedGeometry.quantization;
 
-      const TRANSFORM_FIX = true;
-
-      if (TRANSFORM_FIX) {
-        const numTransforms = transforms.length;
-        for (let t = 0; t < numTransforms; t++) {
-          const transform = transforms[t];
-          const inverseTransform = Matrix4.inverse(
-            transform,
-            scratchInverseTransform
-          );
-          const transformedRay = new Ray();
-          transformedRay.origin = Matrix4.multiplyByPoint(
-            inverseTransform,
-            ray.origin,
-            transformedRay.origin
-          );
-          transformedRay.direction = Matrix4.multiplyByPointAsVector(
-            inverseTransform,
-            ray.direction,
-            transformedRay.direction
-          );
-
-          const indicesLength = indices.length;
-          for (let i = 0; i < indicesLength; i += 3) {
-            const i0 = indices[i];
-            const i1 = indices[i + 1];
-            const i2 = indices[i + 2];
-
-            const v0 = getVertexPositionRaw(
-              vertices,
-              i0,
-              numComponents,
-              quantization,
-              verticalExaggeration,
-              relativeHeight,
-              ellipsoid,
-              scratchV0
-            );
-            const v1 = getVertexPositionRaw(
-              vertices,
-              i1,
-              numComponents,
-              quantization,
-              verticalExaggeration,
-              relativeHeight,
-              ellipsoid,
-              scratchV1
-            );
-            const v2 = getVertexPositionRaw(
-              vertices,
-              i2,
-              numComponents,
-              quantization,
-              verticalExaggeration,
-              relativeHeight,
-              ellipsoid,
-              scratchV2
-            );
-
-            //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${transform}\nray ${transformedRay.origin} ${transformedRay.direction}`);
-
-            const t = IntersectionTests.rayTriangleParametric(
-              transformedRay,
-              v0,
-              v1,
-              v2,
-              backfaceCulling
-            );
-
-            if (defined(t)) {
-              //console.log(`Got one at index ${i}`);
-              if (t < minT && t >= 0.0) {
-                minT = t;
-              }
-            }
-          }
-        }
-      } else {
-        const indicesLength = indices.length;
-        for (let i = 0; i < indicesLength; i += 3) {
-          const i0 = indices[i];
-          const i1 = indices[i + 1];
-          const i2 = indices[i + 2];
-
-          for (const instanceTransform of transforms) {
-            const v0 = getVertexPosition(
-              vertices,
-              i0,
-              numComponents,
-              quantization,
-              instanceTransform,
-              verticalExaggeration,
-              relativeHeight,
-              ellipsoid,
-              scratchV0
-            );
-            const v1 = getVertexPosition(
-              vertices,
-              i1,
-              numComponents,
-              quantization,
-              instanceTransform,
-              verticalExaggeration,
-              relativeHeight,
-              ellipsoid,
-              scratchV1
-            );
-            const v2 = getVertexPosition(
-              vertices,
-              i2,
-              numComponents,
-              quantization,
-              instanceTransform,
-              verticalExaggeration,
-              relativeHeight,
-              ellipsoid,
-              scratchV2
-            );
-
-            //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${instanceTransform}\nray ${ray.origin} ${ray.direction}`);
-
-            const t = IntersectionTests.rayTriangleParametric(
-              ray,
-              v0,
-              v1,
-              v2,
-              backfaceCulling
-            );
-
-            if (defined(t)) {
-              //console.log(`Got one at index ${i}`);
-              if (t < minT && t >= 0.0) {
-                minT = t;
-              }
-            }
-          }
-        }
+      const closest = computeClosest(
+        ray,
+        pickedGeometry,
+        transforms,
+        verticalExaggeration,
+        relativeHeight,
+        ellipsoid,
+        backfaceCulling
+      );
+      if (closest.minT < minT && closest.minT >= 0.0) {
+        minT = closest.minT;
+        closestRay = closest.closestRay;
       }
     }
   }
@@ -554,7 +846,7 @@ function pickModelImpl(
     return undefined;
   }
 
-  result = Ray.getPoint(ray, minT, result);
+  result = Ray.getPoint(closestRay, minT, result);
   if (frameState.mode !== SceneMode.SCENE3D) {
     Cartesian3.fromElements(result.y, result.z, result.x, result);
 
