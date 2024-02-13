@@ -65,15 +65,27 @@ export default function pickModel(
   return r;
 }
 
-function computeRuntimeNodeTransforms(model, runtimeNode, frameState) {
+/**
+ * Computes the matrices that are defined by the given runtime node
+ *
+ * - computedModelMatrix
+ * - modelMatrix
+ * - nodeComputedTransform
+ *
+ * @param {Model} model The model
+ * @param {ModelRuntimeNode} runtimeNode The runtime node
+ * @param {FrameState} frameState The frame state
+ * @returns The matrices
+ */
+function computeRuntimeNodeMatrices(model, runtimeNode, frameState) {
   const sceneGraph = model.sceneGraph;
   const node = runtimeNode.node;
 
-  let nodeComputedTransform = Matrix4.clone(
+  const nodeComputedTransform = Matrix4.clone(
     runtimeNode.computedTransform,
     scratchNodeComputedTransform
   );
-  let modelMatrix = Matrix4.clone(
+  const modelMatrix = Matrix4.clone(
     sceneGraph.computedModelMatrix,
     scratchModelMatrix
   );
@@ -82,13 +94,13 @@ function computeRuntimeNodeTransforms(model, runtimeNode, frameState) {
   if (defined(instances)) {
     if (instances.transformInWorldSpace) {
       // Replicate the multiplication order in LegacyInstancingStageVS.
-      modelMatrix = Matrix4.multiplyTransformation(
+      Matrix4.multiplyTransformation(
         model.modelMatrix,
         sceneGraph.components.transform,
         modelMatrix
       );
 
-      nodeComputedTransform = Matrix4.multiplyTransformation(
+      Matrix4.multiplyTransformation(
         sceneGraph.axisCorrectionMatrix,
         runtimeNode.computedTransform,
         nodeComputedTransform
@@ -96,87 +108,213 @@ function computeRuntimeNodeTransforms(model, runtimeNode, frameState) {
     }
   }
 
-  let computedModelMatrix = Matrix4.multiplyTransformation(
+  const computedModelMatrix = Matrix4.multiplyTransformation(
     modelMatrix,
     nodeComputedTransform,
     scratchcomputedModelMatrix
   );
 
   if (frameState.mode !== SceneMode.SCENE3D) {
-    computedModelMatrix = Transforms.basisTo2D(
+    Transforms.basisTo2D(
       frameState.mapProjection,
       computedModelMatrix,
       computedModelMatrix
     );
   }
+  return {
+    computedModelMatrix: computedModelMatrix,
+    modelMatrix: modelMatrix,
+    nodeComputedTransform: nodeComputedTransform,
+  };
+}
+
+/**
+ * Compute the transform matrices for the instances that are defined
+ * by the given runtime node.
+ *
+ * If the node of the given runtime node does not define `instances`
+ * information, then this will an array that only contains the
+ * `computedModelMatrix` from the given runtime node matrices.
+ *
+ * Otherwise, it will be an array that contains one transform
+ * for each instance that is rendered.
+ *
+ * @param {ModelRuntimeNode} runtimeNode The runtime node
+ * @param {object} runtimeNodeMatrices The runtime node matrices,
+ * as computed with computeRuntimeNodeMatrices
+ * @param {boolean} usesWebgl2 Whether the rendering context
+ * uses WebGL 2
+ * @returns The instance transforms
+ */
+function computeInstancesTransforms(
+  runtimeNode,
+  runtimeNodeMatrices,
+  usesWebgl2
+) {
+  const node = runtimeNode;
+  const instances = node.instances;
+  const computedModelMatrix = runtimeNodeMatrices.computedModelMatrix;
+  if (!defined(instances)) {
+    return [computedModelMatrix];
+  }
+
+  const modelMatrix = runtimeNodeMatrices.modelMatrix;
+  const nodeComputedTransform = runtimeNodeMatrices.nodeComputedTransform;
 
   const transforms = [];
-  if (defined(instances)) {
-    const transformsCount = instances.attributes[0].count;
-    const instanceComponentDatatype = instances.attributes[0].componentDatatype;
+  const transformsCount = instances.attributes[0].count;
+  const instanceComponentDatatype = instances.attributes[0].componentDatatype;
 
-    const transformElements = 12;
-    let transformsTypedArray = runtimeNode.transformsTypedArray;
-    if (!defined(transformsTypedArray)) {
-      const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
-      if (defined(instanceTransformsBuffer) && frameState.context.webgl2) {
-        transformsTypedArray = ComponentDatatype.createTypedArray(
-          instanceComponentDatatype,
-          transformsCount * transformElements
-        );
-        instanceTransformsBuffer.getBufferData(transformsTypedArray);
-      }
-    }
-
-    if (defined(transformsTypedArray)) {
-      for (let i = 0; i < transformsCount; i++) {
-        const index = i * transformElements;
-
-        const transform = new Matrix4(
-          transformsTypedArray[index],
-          transformsTypedArray[index + 1],
-          transformsTypedArray[index + 2],
-          transformsTypedArray[index + 3],
-          transformsTypedArray[index + 4],
-          transformsTypedArray[index + 5],
-          transformsTypedArray[index + 6],
-          transformsTypedArray[index + 7],
-          transformsTypedArray[index + 8],
-          transformsTypedArray[index + 9],
-          transformsTypedArray[index + 10],
-          transformsTypedArray[index + 11],
-          0,
-          0,
-          0,
-          1
-        );
-
-        if (instances.transformInWorldSpace) {
-          Matrix4.multiplyTransformation(
-            transform,
-            nodeComputedTransform,
-            transform
-          );
-          Matrix4.multiplyTransformation(modelMatrix, transform, transform);
-        } else {
-          Matrix4.multiplyTransformation(
-            transform,
-            computedModelMatrix,
-            transform
-          );
-        }
-        transforms.push(transform);
-      }
+  const transformElements = 12;
+  let transformsTypedArray = runtimeNode.transformsTypedArray;
+  if (!defined(transformsTypedArray)) {
+    const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
+    if (defined(instanceTransformsBuffer) && usesWebgl2) {
+      transformsTypedArray = ComponentDatatype.createTypedArray(
+        instanceComponentDatatype,
+        transformsCount * transformElements
+      );
+      instanceTransformsBuffer.getBufferData(transformsTypedArray);
     }
   }
 
-  if (transforms.length === 0) {
-    transforms.push(computedModelMatrix);
+  if (defined(transformsTypedArray)) {
+    for (let i = 0; i < transformsCount; i++) {
+      const index = i * transformElements;
+
+      const transform = new Matrix4(
+        transformsTypedArray[index],
+        transformsTypedArray[index + 1],
+        transformsTypedArray[index + 2],
+        transformsTypedArray[index + 3],
+        transformsTypedArray[index + 4],
+        transformsTypedArray[index + 5],
+        transformsTypedArray[index + 6],
+        transformsTypedArray[index + 7],
+        transformsTypedArray[index + 8],
+        transformsTypedArray[index + 9],
+        transformsTypedArray[index + 10],
+        transformsTypedArray[index + 11],
+        0,
+        0,
+        0,
+        1
+      );
+
+      if (instances.transformInWorldSpace) {
+        Matrix4.multiplyTransformation(
+          transform,
+          nodeComputedTransform,
+          transform
+        );
+        Matrix4.multiplyTransformation(modelMatrix, transform, transform);
+      } else {
+        Matrix4.multiplyTransformation(
+          transform,
+          computedModelMatrix,
+          transform
+        );
+      }
+      transforms.push(transform);
+    }
+  }
+  return transforms;
+}
+
+/**
+ * Obtains the geometry from the given primitive that will be used
+ * for the actual picking intersection tests.
+ *
+ * This may return `undefined` if the indices or vertices could
+ * not be obtained
+ *
+ * - indices: An array of indices, with three consecutive indices
+ *   describing one triangle
+ * - vertices: An array of vertices. These might still be quantized
+ * - numComponents: The number of components per element in the
+ *   vertices array. For non-quantized vertices, this will usually
+ *   be 3. For quantized vertices, it might be 2 or so...
+ * - quantization: The `ModelComponents.Quantization` info for
+ *   the vertices
+ *
+ * @param {ModelComponents.Primitive} primitive The primitive
+ * @param {boolean} usesWebgl2 Whether the context uses WebGL2
+ * @returns The picked geometry
+ */
+function obtainPickedGeometry(primitive, usesWebgl2) {
+  const positionAttribute = ModelUtility.getAttributeBySemantic(
+    primitive,
+    VertexAttributeSemantic.POSITION
+  );
+  const vertexCount = positionAttribute.count;
+
+  let indices = primitive.indices.typedArray;
+  if (!defined(indices)) {
+    const indicesBuffer = primitive.indices.buffer;
+    const indicesCount = primitive.indices.count;
+    const indexDatatype = primitive.indices.indexDatatype;
+    if (defined(indicesBuffer) && usesWebgl2) {
+      if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
+        indices = new Uint8Array(indicesCount);
+      } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
+        indices = new Uint16Array(indicesCount);
+      } else if (indexDatatype === IndexDatatype.UNSIGNED_INT) {
+        indices = new Uint32Array(indicesCount);
+      }
+      indicesBuffer.getBufferData(indices);
+    }
+  }
+  if (!indices) {
+    return undefined;
+  }
+
+  let vertices = positionAttribute.typedArray;
+  let componentDatatype = positionAttribute.componentDatatype;
+  let attributeType = positionAttribute.type;
+
+  const quantization = positionAttribute.quantization;
+  if (defined(quantization)) {
+    componentDatatype = positionAttribute.quantization.componentDatatype;
+    attributeType = positionAttribute.quantization.type;
+  }
+
+  const numComponents = AttributeType.getNumberOfComponents(attributeType);
+
+  if (!defined(vertices)) {
+    const verticesBuffer = positionAttribute.buffer;
+
+    if (defined(verticesBuffer) && usesWebgl2) {
+      const elementCount = vertexCount * numComponents;
+      vertices = ComponentDatatype.createTypedArray(
+        componentDatatype,
+        elementCount
+      );
+      verticesBuffer.getBufferData(
+        vertices,
+        positionAttribute.byteOffset,
+        0,
+        elementCount
+      );
+    }
+
+    if (quantization && positionAttribute.normalized) {
+      vertices = AttributeCompression.dequantize(
+        vertices,
+        componentDatatype,
+        attributeType,
+        vertexCount
+      );
+    }
+  }
+  if (!vertices) {
+    return undefined;
   }
 
   return {
-    computedModelMatrix: computedModelMatrix,
-    transforms: transforms,
+    indices: indices,
+    vertices: vertices,
+    numComponents: numComponents,
+    quantization: quantization,
   };
 }
 
@@ -206,31 +344,41 @@ function pickModelImpl(
     return undefined;
   }
 
+  // Fetch the values that are constant throughout this
+  // function, ot assign default values to them
   const backfaceCulling = defaultValue(model.backFaceCulling, true);
+  const usesWebgl2 = frameState.context.webgl2;
+
+  ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+  verticalExaggeration = defaultValue(verticalExaggeration, 1.0);
+  relativeHeight = defaultValue(relativeHeight, 0.0);
 
   let minT = Number.MAX_VALUE;
-  for (let i = 0; i < runtimeNodes.length; i++) {
+  for (let i = 0; i < numRuntimeNodes; i++) {
     const runtimeNode = runtimeNodes[i];
     const primitivesLength = runtimeNode.runtimePrimitives.length;
     if (primitivesLength === 0) {
       continue;
     }
 
-    const runtimeNodeTransforms = computeRuntimeNodeTransforms(
+    const runtimeNodeMatrices = computeRuntimeNodeMatrices(
       model,
       runtimeNode,
       frameState
     );
-    const computedModelMatrix = runtimeNodeTransforms.computedModelMatrix;
-    const transforms = runtimeNodeTransforms.transforms;
+    const transforms = computeInstancesTransforms(
+      runtimeNode,
+      runtimeNodeMatrices,
+      usesWebgl2
+    );
+
+    const computedModelMatrix = runtimeNodeMatrices.computedModelMatrix;
 
     const node = runtimeNode.node;
     const instances = node.instances;
 
     for (let j = 0; j < primitivesLength; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
-      const primitive = runtimePrimitive.primitive;
-
       if (defined(runtimePrimitive.boundingSphere) && !defined(instances)) {
         const boundingSphere = BoundingSphere.transform(
           runtimePrimitive.boundingSphere,
@@ -246,81 +394,20 @@ function pickModelImpl(
         }
       }
 
-      const positionAttribute = ModelUtility.getAttributeBySemantic(
-        primitive,
-        VertexAttributeSemantic.POSITION
-      );
-      const vertexCount = positionAttribute.count;
-
+      const primitive = runtimePrimitive.primitive;
       if (!defined(primitive.indices)) {
         // Point clouds
         continue;
       }
 
-      let indices = primitive.indices.typedArray;
-      if (!defined(indices)) {
-        const indicesBuffer = primitive.indices.buffer;
-        const indicesCount = primitive.indices.count;
-        const indexDatatype = primitive.indices.indexDatatype;
-        if (defined(indicesBuffer) && frameState.context.webgl2) {
-          if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
-            indices = new Uint8Array(indicesCount);
-          } else if (indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
-            indices = new Uint16Array(indicesCount);
-          } else if (indexDatatype === IndexDatatype.UNSIGNED_INT) {
-            indices = new Uint32Array(indicesCount);
-          }
-
-          indicesBuffer.getBufferData(indices);
-        }
-      }
-
-      let vertices = positionAttribute.typedArray;
-      let componentDatatype = positionAttribute.componentDatatype;
-      let attributeType = positionAttribute.type;
-
-      const quantization = positionAttribute.quantization;
-      if (defined(quantization)) {
-        componentDatatype = positionAttribute.quantization.componentDatatype;
-        attributeType = positionAttribute.quantization.type;
-      }
-
-      const numComponents = AttributeType.getNumberOfComponents(attributeType);
-      const elementCount = vertexCount * numComponents;
-
-      if (!defined(vertices)) {
-        const verticesBuffer = positionAttribute.buffer;
-
-        if (defined(verticesBuffer) && frameState.context.webgl2) {
-          vertices = ComponentDatatype.createTypedArray(
-            componentDatatype,
-            elementCount
-          );
-          verticesBuffer.getBufferData(
-            vertices,
-            positionAttribute.byteOffset,
-            0,
-            elementCount
-          );
-        }
-
-        if (quantization && positionAttribute.normalized) {
-          vertices = AttributeCompression.dequantize(
-            vertices,
-            componentDatatype,
-            attributeType,
-            vertexCount
-          );
-        }
-      }
-
-      if (!defined(indices) || !defined(vertices)) {
+      const pickedGeometry = obtainPickedGeometry(primitive, usesWebgl2);
+      if (!defined(pickedGeometry)) {
         return;
       }
-
-      ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-      verticalExaggeration = defaultValue(verticalExaggeration, 1.0);
-      relativeHeight = defaultValue(relativeHeight, 0.0);
+      const indices = pickedGeometry.indices;
+      const vertices = pickedGeometry.vertices;
+      const numComponents = pickedGeometry.numComponents;
+      const quantization = pickedGeometry.quantization;
 
       const indicesLength = indices.length;
       for (let i = 0; i < indicesLength; i += 3) {
@@ -446,11 +533,7 @@ function getVertexPosition(
       );
     }
   }
-
-  //console.log(`Before ${result}`);
   result = Matrix4.multiplyByPoint(instanceTransform, result, result);
-  //console.log(`After ${result}`);
-
   if (verticalExaggeration !== 1.0) {
     VerticalExaggeration.getPosition(
       result,
