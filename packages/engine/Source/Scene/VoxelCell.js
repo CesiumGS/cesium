@@ -61,6 +61,7 @@ VoxelCell.fromKeyframeNode = function (
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("primitive", primitive);
+  Check.typeOf.number("tileIndex", tileIndex);
   Check.typeOf.number("sampleIndex", sampleIndex);
   Check.typeOf.object("keyframeNode", keyframeNode);
   //>>includeEnd('debug');
