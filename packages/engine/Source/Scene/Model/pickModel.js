@@ -26,6 +26,7 @@ const scratchModelMatrix = new Matrix4();
 const scratchcomputedModelMatrix = new Matrix4();
 const scratchPickCartographic = new Cartographic();
 const scratchBoundingSphere = new BoundingSphere();
+const scratchInverseTransform = new Matrix4();
 
 /**
  * Find an intersection between a ray and the model surface that was rendered. The ray must be given in world coordinates.
@@ -232,8 +233,7 @@ function computeInstancesTransforms(
  *   describing one triangle
  * - vertices: An array of vertices. These might still be quantized
  * - numComponents: The number of components per element in the
- *   vertices array. For non-quantized vertices, this will usually
- *   be 3. For quantized vertices, it might be 2 or so...
+ *   vertices array (probably 3 or 4...)
  * - quantization: The `ModelComponents.Quantization` info for
  *   the vertices
  *
@@ -409,61 +409,140 @@ function pickModelImpl(
       const numComponents = pickedGeometry.numComponents;
       const quantization = pickedGeometry.quantization;
 
-      const indicesLength = indices.length;
-      for (let i = 0; i < indicesLength; i += 3) {
-        const i0 = indices[i];
-        const i1 = indices[i + 1];
-        const i2 = indices[i + 2];
+      const TRANSFORM_FIX = true;
 
-        for (const instanceTransform of transforms) {
-          const v0 = getVertexPosition(
-            vertices,
-            i0,
-            numComponents,
-            quantization,
-            instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
-            scratchV0
+      if (TRANSFORM_FIX) {
+        const numTransforms = transforms.length;
+        for (let t = 0; t < numTransforms; t++) {
+          const transform = transforms[t];
+          const inverseTransform = Matrix4.inverse(
+            transform,
+            scratchInverseTransform
           );
-          const v1 = getVertexPosition(
-            vertices,
-            i1,
-            numComponents,
-            quantization,
-            instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
-            scratchV1
+          const transformedRay = new Ray();
+          transformedRay.origin = Matrix4.multiplyByPoint(
+            inverseTransform,
+            ray.origin,
+            transformedRay.origin
           );
-          const v2 = getVertexPosition(
-            vertices,
-            i2,
-            numComponents,
-            quantization,
-            instanceTransform,
-            verticalExaggeration,
-            relativeHeight,
-            ellipsoid,
-            scratchV2
+          transformedRay.direction = Matrix4.multiplyByPointAsVector(
+            inverseTransform,
+            ray.direction,
+            transformedRay.direction
           );
 
-          //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${instanceTransform}\nray ${ray.origin} ${ray.direction}`);
+          const indicesLength = indices.length;
+          for (let i = 0; i < indicesLength; i += 3) {
+            const i0 = indices[i];
+            const i1 = indices[i + 1];
+            const i2 = indices[i + 2];
 
-          const t = IntersectionTests.rayTriangleParametric(
-            ray,
-            v0,
-            v1,
-            v2,
-            backfaceCulling
-          );
+            const v0 = getVertexPositionRaw(
+              vertices,
+              i0,
+              numComponents,
+              quantization,
+              verticalExaggeration,
+              relativeHeight,
+              ellipsoid,
+              scratchV0
+            );
+            const v1 = getVertexPositionRaw(
+              vertices,
+              i1,
+              numComponents,
+              quantization,
+              verticalExaggeration,
+              relativeHeight,
+              ellipsoid,
+              scratchV1
+            );
+            const v2 = getVertexPositionRaw(
+              vertices,
+              i2,
+              numComponents,
+              quantization,
+              verticalExaggeration,
+              relativeHeight,
+              ellipsoid,
+              scratchV2
+            );
 
-          if (defined(t)) {
-            //console.log(`Got one at index ${i}`);
-            if (t < minT && t >= 0.0) {
-              minT = t;
+            //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${transform}\nray ${transformedRay.origin} ${transformedRay.direction}`);
+
+            const t = IntersectionTests.rayTriangleParametric(
+              transformedRay,
+              v0,
+              v1,
+              v2,
+              backfaceCulling
+            );
+
+            if (defined(t)) {
+              //console.log(`Got one at index ${i}`);
+              if (t < minT && t >= 0.0) {
+                minT = t;
+              }
+            }
+          }
+        }
+      } else {
+        const indicesLength = indices.length;
+        for (let i = 0; i < indicesLength; i += 3) {
+          const i0 = indices[i];
+          const i1 = indices[i + 1];
+          const i2 = indices[i + 2];
+
+          for (const instanceTransform of transforms) {
+            const v0 = getVertexPosition(
+              vertices,
+              i0,
+              numComponents,
+              quantization,
+              instanceTransform,
+              verticalExaggeration,
+              relativeHeight,
+              ellipsoid,
+              scratchV0
+            );
+            const v1 = getVertexPosition(
+              vertices,
+              i1,
+              numComponents,
+              quantization,
+              instanceTransform,
+              verticalExaggeration,
+              relativeHeight,
+              ellipsoid,
+              scratchV1
+            );
+            const v2 = getVertexPosition(
+              vertices,
+              i2,
+              numComponents,
+              quantization,
+              instanceTransform,
+              verticalExaggeration,
+              relativeHeight,
+              ellipsoid,
+              scratchV2
+            );
+
+            //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${instanceTransform}\nray ${ray.origin} ${ray.direction}`);
+
+            const t = IntersectionTests.rayTriangleParametric(
+              ray,
+              v0,
+              v1,
+              v2,
+              backfaceCulling
+            );
+
+            if (defined(t)) {
+              //console.log(`Got one at index ${i}`);
+              if (t < minT && t >= 0.0) {
+                minT = t;
+              }
             }
           }
         }
@@ -534,6 +613,62 @@ function getVertexPosition(
     }
   }
   result = Matrix4.multiplyByPoint(instanceTransform, result, result);
+  if (verticalExaggeration !== 1.0) {
+    VerticalExaggeration.getPosition(
+      result,
+      ellipsoid,
+      verticalExaggeration,
+      relativeHeight,
+      result
+    );
+  }
+
+  return result;
+}
+
+function getVertexPositionRaw(
+  vertices,
+  index,
+  numComponents,
+  quantization,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
+  result
+) {
+  const i = index * numComponents;
+  result.x = vertices[i];
+  result.y = vertices[i + 1];
+  result.z = vertices[i + 2];
+
+  if (defined(quantization)) {
+    if (quantization.octEncoded) {
+      result = AttributeCompression.octDecodeInRange(
+        result,
+        quantization.normalizationRange,
+        result
+      );
+
+      if (quantization.octEncodedZXY) {
+        const x = result.x;
+        result.x = result.z;
+        result.z = result.y;
+        result.y = x;
+      }
+    } else {
+      result = Cartesian3.multiplyComponents(
+        result,
+        quantization.quantizedVolumeStepSize,
+        result
+      );
+
+      result = Cartesian3.add(
+        result,
+        quantization.quantizedVolumeOffset,
+        result
+      );
+    }
+  }
   if (verticalExaggeration !== 1.0) {
     VerticalExaggeration.getPosition(
       result,
