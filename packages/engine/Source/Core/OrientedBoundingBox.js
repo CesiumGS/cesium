@@ -734,7 +734,10 @@ OrientedBoundingBox.intersectRay = function (box, ray, result) {
     box.center,
     transformedRay.origin
   );
-  transformedRay.direction = Cartesian3.clone(ray.direction);
+  transformedRay.direction = Cartesian3.clone(
+    ray.direction,
+    transformedRay.direction
+  );
 
   const transform = Matrix4.multiplyByMatrix3(
     Matrix4.IDENTITY,
@@ -754,8 +757,7 @@ OrientedBoundingBox.intersectRay = function (box, ray, result) {
   let normal = Cartesian3.UNIT_X;
   let denominator = Cartesian3.dot(normal, direction);
   if (Math.abs(denominator) < CesiumMath.EPSILON15) {
-    // parallel
-
+    // The ray is paralell to the faces
     if (origin.x > 1.0 || origin.x < -1.0) {
       return;
     }
@@ -772,19 +774,10 @@ OrientedBoundingBox.intersectRay = function (box, ray, result) {
       tx2 = swap;
     }
 
-    if (tx1 > tNear) {
-      tNear = tx1;
-    }
+    tNear = Math.max(tNear, tx1);
+    tFar = Math.min(tFar, tx2);
 
-    if (tx2 < tFar) {
-      tFar = tx2;
-    }
-
-    if (tNear > tFar) {
-      return;
-    }
-
-    if (tFar < 0.0) {
+    if (tNear > tFar || tFar < 0.0) {
       return;
     }
   }
@@ -792,8 +785,7 @@ OrientedBoundingBox.intersectRay = function (box, ray, result) {
   normal = Cartesian3.UNIT_Y;
   denominator = Cartesian3.dot(normal, direction);
   if (Math.abs(denominator) < CesiumMath.EPSILON15) {
-    // parallel
-
+    // The ray is paralell to the faces
     if (origin.y > 1.0 || origin.y < -1.0) {
       return;
     }
@@ -810,19 +802,10 @@ OrientedBoundingBox.intersectRay = function (box, ray, result) {
       ty2 = swap;
     }
 
-    if (ty1 > tNear) {
-      tNear = ty1;
-    }
+    tNear = Math.max(tNear, ty1);
+    tFar = Math.min(tFar, ty2);
 
-    if (ty2 < tFar) {
-      tFar = ty2;
-    }
-
-    if (tNear > tFar) {
-      return;
-    }
-
-    if (tFar < 0.0) {
+    if (tNear > tFar || tFar < 0.0) {
       return;
     }
   }
@@ -830,8 +813,7 @@ OrientedBoundingBox.intersectRay = function (box, ray, result) {
   normal = Cartesian3.UNIT_Z;
   denominator = Cartesian3.dot(normal, direction);
   if (Math.abs(denominator) < CesiumMath.EPSILON15) {
-    // parallel
-
+    // The ray is paralell to the faces
     if (origin.z > 1.0 || origin.z < -1.0) {
       return;
     }
@@ -848,19 +830,10 @@ OrientedBoundingBox.intersectRay = function (box, ray, result) {
       tz2 = swap;
     }
 
-    if (tz1 > tNear) {
-      tNear = tz1;
-    }
+    tNear = Math.max(tNear, tz1);
+    tFar = Math.min(tFar, tz2);
 
-    if (tz2 < tFar) {
-      tFar = tz2;
-    }
-
-    if (tNear > tFar) {
-      return;
-    }
-
-    if (tFar < 0.0) {
+    if (tNear > tFar || tFar < 0.0) {
       return;
     }
   }

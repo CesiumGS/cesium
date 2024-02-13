@@ -98,7 +98,7 @@ Ray.transform = function (ray, transform, result) {
   }
 
   result.origin = Matrix4.multiplyByPoint(transform, ray.origin, result.origin);
-  result.direction = Matrix4.multiplyByPoint(
+  result.direction = Matrix4.multiplyByPointAsVector(
     transform,
     ray.direction,
     result.direction
