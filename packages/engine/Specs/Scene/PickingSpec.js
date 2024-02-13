@@ -169,7 +169,7 @@ describe(
     }
 
     describe("pick", function () {
-      it("does not pick undefined window positions", function () {
+      it("throws when window position is undefined", function () {
         expect(function () {
           scene.pick(undefined);
         }).toThrowDeveloperError();
@@ -237,7 +237,7 @@ describe(
     });
 
     describe("pickVoxelCoordinate", function () {
-      it("does not pick undefined window positions", function () {
+      it("throws when window position is undefined", function () {
         expect(function () {
           scene._picking.pickVoxelCoordinate(undefined);
         }).toThrowDeveloperError();
