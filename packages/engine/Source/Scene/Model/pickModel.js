@@ -50,6 +50,145 @@ export default function pickModel(
   ellipsoid,
   result
 ) {
+  const before = performance.now();
+  const r = pickModelImpl(
+    model,
+    ray,
+    frameState,
+    verticalExaggeration,
+    relativeHeight,
+    ellipsoid,
+    result
+  );
+  const after = performance.now();
+  console.log(`took ${after - before}ms`);
+  return r;
+}
+
+function computeRuntimeNodeTransforms(model, runtimeNode, frameState) {
+  const sceneGraph = model.sceneGraph;
+  const node = runtimeNode.node;
+
+  let nodeComputedTransform = Matrix4.clone(
+    runtimeNode.computedTransform,
+    scratchNodeComputedTransform
+  );
+  let modelMatrix = Matrix4.clone(
+    sceneGraph.computedModelMatrix,
+    scratchModelMatrix
+  );
+
+  const instances = node.instances;
+  if (defined(instances)) {
+    if (instances.transformInWorldSpace) {
+      // Replicate the multiplication order in LegacyInstancingStageVS.
+      modelMatrix = Matrix4.multiplyTransformation(
+        model.modelMatrix,
+        sceneGraph.components.transform,
+        modelMatrix
+      );
+
+      nodeComputedTransform = Matrix4.multiplyTransformation(
+        sceneGraph.axisCorrectionMatrix,
+        runtimeNode.computedTransform,
+        nodeComputedTransform
+      );
+    }
+  }
+
+  let computedModelMatrix = Matrix4.multiplyTransformation(
+    modelMatrix,
+    nodeComputedTransform,
+    scratchcomputedModelMatrix
+  );
+
+  if (frameState.mode !== SceneMode.SCENE3D) {
+    computedModelMatrix = Transforms.basisTo2D(
+      frameState.mapProjection,
+      computedModelMatrix,
+      computedModelMatrix
+    );
+  }
+
+  const transforms = [];
+  if (defined(instances)) {
+    const transformsCount = instances.attributes[0].count;
+    const instanceComponentDatatype = instances.attributes[0].componentDatatype;
+
+    const transformElements = 12;
+    let transformsTypedArray = runtimeNode.transformsTypedArray;
+    if (!defined(transformsTypedArray)) {
+      const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
+      if (defined(instanceTransformsBuffer) && frameState.context.webgl2) {
+        transformsTypedArray = ComponentDatatype.createTypedArray(
+          instanceComponentDatatype,
+          transformsCount * transformElements
+        );
+        instanceTransformsBuffer.getBufferData(transformsTypedArray);
+      }
+    }
+
+    if (defined(transformsTypedArray)) {
+      for (let i = 0; i < transformsCount; i++) {
+        const index = i * transformElements;
+
+        const transform = new Matrix4(
+          transformsTypedArray[index],
+          transformsTypedArray[index + 1],
+          transformsTypedArray[index + 2],
+          transformsTypedArray[index + 3],
+          transformsTypedArray[index + 4],
+          transformsTypedArray[index + 5],
+          transformsTypedArray[index + 6],
+          transformsTypedArray[index + 7],
+          transformsTypedArray[index + 8],
+          transformsTypedArray[index + 9],
+          transformsTypedArray[index + 10],
+          transformsTypedArray[index + 11],
+          0,
+          0,
+          0,
+          1
+        );
+
+        if (instances.transformInWorldSpace) {
+          Matrix4.multiplyTransformation(
+            transform,
+            nodeComputedTransform,
+            transform
+          );
+          Matrix4.multiplyTransformation(modelMatrix, transform, transform);
+        } else {
+          Matrix4.multiplyTransformation(
+            transform,
+            computedModelMatrix,
+            transform
+          );
+        }
+        transforms.push(transform);
+      }
+    }
+  }
+
+  if (transforms.length === 0) {
+    transforms.push(computedModelMatrix);
+  }
+
+  return {
+    computedModelMatrix: computedModelMatrix,
+    transforms: transforms,
+  };
+}
+
+function pickModelImpl(
+  model,
+  ray,
+  frameState,
+  verticalExaggeration,
+  relativeHeight,
+  ellipsoid,
+  result
+) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("model", model);
   Check.typeOf.object("ray", ray);
@@ -60,121 +199,34 @@ export default function pickModel(
     return;
   }
 
-  let minT = Number.MAX_VALUE;
   const sceneGraph = model.sceneGraph;
+  const runtimeNodes = sceneGraph._runtimeNodes;
+  const numRuntimeNodes = runtimeNodes.length;
+  if (numRuntimeNodes === 0) {
+    return undefined;
+  }
 
-  const nodes = sceneGraph._runtimeNodes;
-  for (let i = 0; i < nodes.length; i++) {
-    const runtimeNode = nodes[i];
-    const node = runtimeNode.node;
+  const backfaceCulling = defaultValue(model.backFaceCulling, true);
 
-    let nodeComputedTransform = Matrix4.clone(
-      runtimeNode.computedTransform,
-      scratchNodeComputedTransform
-    );
-    let modelMatrix = Matrix4.clone(
-      sceneGraph.computedModelMatrix,
-      scratchModelMatrix
-    );
-
-    const instances = node.instances;
-    if (defined(instances)) {
-      if (instances.transformInWorldSpace) {
-        // Replicate the multiplication order in LegacyInstancingStageVS.
-        modelMatrix = Matrix4.multiplyTransformation(
-          model.modelMatrix,
-          sceneGraph.components.transform,
-          modelMatrix
-        );
-
-        nodeComputedTransform = Matrix4.multiplyTransformation(
-          sceneGraph.axisCorrectionMatrix,
-          runtimeNode.computedTransform,
-          nodeComputedTransform
-        );
-      }
-    }
-
-    let computedModelMatrix = Matrix4.multiplyTransformation(
-      modelMatrix,
-      nodeComputedTransform,
-      scratchcomputedModelMatrix
-    );
-
-    if (frameState.mode !== SceneMode.SCENE3D) {
-      computedModelMatrix = Transforms.basisTo2D(
-        frameState.mapProjection,
-        computedModelMatrix,
-        computedModelMatrix
-      );
-    }
-
-    const transforms = [];
-    if (defined(instances)) {
-      const transformsCount = instances.attributes[0].count;
-      const instanceComponentDatatype =
-        instances.attributes[0].componentDatatype;
-
-      const transformElements = 12;
-      let transformsTypedArray = runtimeNode.transformsTypedArray;
-      if (!defined(transformsTypedArray)) {
-        const instanceTransformsBuffer = runtimeNode.instancingTransformsBuffer;
-        if (defined(instanceTransformsBuffer) && frameState.context.webgl2) {
-          transformsTypedArray = ComponentDatatype.createTypedArray(
-            instanceComponentDatatype,
-            transformsCount * transformElements
-          );
-          instanceTransformsBuffer.getBufferData(transformsTypedArray);
-        }
-      }
-
-      if (defined(transformsTypedArray)) {
-        for (let i = 0; i < transformsCount; i++) {
-          const index = i * transformElements;
-
-          const transform = new Matrix4(
-            transformsTypedArray[index],
-            transformsTypedArray[index + 1],
-            transformsTypedArray[index + 2],
-            transformsTypedArray[index + 3],
-            transformsTypedArray[index + 4],
-            transformsTypedArray[index + 5],
-            transformsTypedArray[index + 6],
-            transformsTypedArray[index + 7],
-            transformsTypedArray[index + 8],
-            transformsTypedArray[index + 9],
-            transformsTypedArray[index + 10],
-            transformsTypedArray[index + 11],
-            0,
-            0,
-            0,
-            1
-          );
-
-          if (instances.transformInWorldSpace) {
-            Matrix4.multiplyTransformation(
-              transform,
-              nodeComputedTransform,
-              transform
-            );
-            Matrix4.multiplyTransformation(modelMatrix, transform, transform);
-          } else {
-            Matrix4.multiplyTransformation(
-              transform,
-              computedModelMatrix,
-              transform
-            );
-          }
-          transforms.push(transform);
-        }
-      }
-    }
-
-    if (transforms.length === 0) {
-      transforms.push(computedModelMatrix);
-    }
-
+  let minT = Number.MAX_VALUE;
+  for (let i = 0; i < runtimeNodes.length; i++) {
+    const runtimeNode = runtimeNodes[i];
     const primitivesLength = runtimeNode.runtimePrimitives.length;
+    if (primitivesLength === 0) {
+      continue;
+    }
+
+    const runtimeNodeTransforms = computeRuntimeNodeTransforms(
+      model,
+      runtimeNode,
+      frameState
+    );
+    const computedModelMatrix = runtimeNodeTransforms.computedModelMatrix;
+    const transforms = runtimeNodeTransforms.transforms;
+
+    const node = runtimeNode.node;
+    const instances = node.instances;
+
     for (let j = 0; j < primitivesLength; j++) {
       const runtimePrimitive = runtimeNode.runtimePrimitives[j];
       const primitive = runtimePrimitive.primitive;
@@ -311,15 +363,18 @@ export default function pickModel(
             scratchV2
           );
 
+          //console.log(`Got ${v0} ${v1} ${v2} for ${i0} ${i1} ${i2} with transform\n${instanceTransform}\nray ${ray.origin} ${ray.direction}`);
+
           const t = IntersectionTests.rayTriangleParametric(
             ray,
             v0,
             v1,
             v2,
-            defaultValue(model.backFaceCulling, true)
+            backfaceCulling
           );
 
           if (defined(t)) {
+            //console.log(`Got one at index ${i}`);
             if (t < minT && t >= 0.0) {
               minT = t;
             }
@@ -392,7 +447,9 @@ function getVertexPosition(
     }
   }
 
+  //console.log(`Before ${result}`);
   result = Matrix4.multiplyByPoint(instanceTransform, result, result);
+  //console.log(`After ${result}`);
 
   if (verticalExaggeration !== 1.0) {
     VerticalExaggeration.getPosition(
