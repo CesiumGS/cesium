@@ -409,7 +409,9 @@ describe(
       // Setup a position for the model.
       const position = Cartesian3.fromDegrees(149.515332, -34.984799);
 
-      const tileset = new Cesium3DTileset();
+      const tileset = new Cesium3DTileset({
+        enableCollision: true,
+      });
       scene.primitives.add(tileset);
 
       // Initialize the Entity and the ModelGraphics.
@@ -463,7 +465,9 @@ describe(
         heightOffset
       );
 
-      const tileset = new Cesium3DTileset();
+      const tileset = new Cesium3DTileset({
+        enableCollision: true,
+      });
       scene.primitives.add(tileset);
 
       // Initialize the Entity and the ModelGraphics.
@@ -511,7 +515,9 @@ describe(
       // Setup a position for the model.
       const position = Cartesian3.fromDegrees(149.515332, -34.984799);
 
-      const tileset = new Cesium3DTileset();
+      const tileset = new Cesium3DTileset({
+        enableCollision: true,
+      });
       scene.primitives.add(tileset);
 
       // Initialize the Entity and the ModelGraphics.
@@ -565,7 +571,9 @@ describe(
         heightOffset
       );
 
-      const tileset = new Cesium3DTileset();
+      const tileset = new Cesium3DTileset({
+        enableCollision: true,
+      });
       scene.primitives.add(tileset);
 
       // Initialize the Entity and the ModelGraphics.
@@ -613,7 +621,9 @@ describe(
       // Setup a position for the model.
       const position = Cartesian3.fromDegrees(149.515332, -34.984799);
 
-      const tileset = new Cesium3DTileset();
+      const tileset = new Cesium3DTileset({
+        enableCollision: true,
+      });
       scene.primitives.add(tileset);
 
       // Initialize the Entity and the ModelGraphics.
@@ -667,7 +677,9 @@ describe(
         heightOffset
       );
 
-      const tileset = new Cesium3DTileset();
+      const tileset = new Cesium3DTileset({
+        enableCollision: true,
+      });
       scene.primitives.add(tileset);
 
       // Initialize the Entity and the ModelGraphics.
