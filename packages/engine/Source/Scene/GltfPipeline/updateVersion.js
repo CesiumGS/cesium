@@ -1079,6 +1079,26 @@ function convertTechniquesToPbr(gltf, options) {
   removeExtension(gltf, "KHR_blend");
 }
 
+function assignAsBaseColor(material, baseColor) {
+  if (defined(baseColor)) {
+    if (isVec4(baseColor)) {
+      material.pbrMetallicRoughness.baseColorFactor = srgbToLinear(baseColor);
+    } else if (isTexture(baseColor)) {
+      material.pbrMetallicRoughness.baseColorTexture = baseColor;
+    }
+  }
+}
+
+function assignAsEmissive(material, emissive) {
+  if (defined(emissive)) {
+    if (isVec4(emissive)) {
+      material.emissiveFactor = emissive.slice(0, 3);
+    } else if (isTexture(emissive)) {
+      material.emissiveTexture = emissive;
+    }
+  }
+}
+
 function convertMaterialsCommonToPbr(gltf) {
   // Future work: convert KHR_materials_common lights to KHR_lights_punctual
   ForEach.material(gltf, function (material) {
@@ -1086,79 +1106,60 @@ function convertMaterialsCommonToPbr(gltf) {
       material.extensions,
       defaultValue.EMPTY_OBJECT
     ).KHR_materials_common;
+    if (!defined(materialsCommon)) {
+      // Nothing to do
+      return;
+    }
 
-    if (defined(materialsCommon)) {
-      const technique = materialsCommon.technique;
-      if (technique === "CONSTANT") {
-        // Add the KHR_materials_unlit extension
-        addExtensionsUsed(gltf, "KHR_materials_unlit");
-        material.extensions = defined(material.extensions)
-          ? material.extensions
-          : {};
-        material.extensions["KHR_materials_unlit"] = {};
-      }
+    const values = defaultValue(materialsCommon.values, {});
+    const ambient = values.ambient;
+    const diffuse = values.diffuse;
+    const emission = values.emission;
+    const transparency = values.transparency;
 
-      const values = defined(materialsCommon.values)
-        ? materialsCommon.values
+    // These actually exist on the extension object, not the values object despite what's shown in the spec
+    const doubleSided = materialsCommon.doubleSided;
+    const transparent = materialsCommon.transparent;
+
+    // Ignore specular and shininess for now because the conversion to PBR
+    // isn't straightforward and depends on the technique
+    initializePbrMaterial(material);
+
+    const technique = materialsCommon.technique;
+    if (technique === "CONSTANT") {
+      // Add the KHR_materials_unlit extension
+      addExtensionsUsed(gltf, "KHR_materials_unlit");
+      material.extensions = defined(material.extensions)
+        ? material.extensions
         : {};
+      material.extensions["KHR_materials_unlit"] = {};
 
-      const ambient = values.ambient;
-      const diffuse = values.diffuse;
-      const emission = values.emission;
-      const transparency = values.transparency;
+      // The CONSTANT technique does not support 'diffuse', so
+      // assign either the 'emission' or the 'ambient' as the
+      // base color
+      assignAsBaseColor(material, emission);
+      assignAsBaseColor(material, ambient);
+    } else {
+      // Assign the 'diffuse' as the base color, and
+      // the 'ambient' or 'emissive' as the emissive
+      // part if they are present.
+      assignAsBaseColor(material, diffuse);
+      assignAsEmissive(material, ambient);
+      assignAsEmissive(material, emission);
+    }
 
-      // These actually exist on the extension object, not the values object despite what's shown in the spec
-      const doubleSided = materialsCommon.doubleSided;
-      const transparent = materialsCommon.transparent;
-
-      // Ignore specular and shininess for now because the conversion to PBR
-      // isn't straightforward and depends on the technique
-      initializePbrMaterial(material);
-
-      if (defined(ambient)) {
-        if (isVec4(ambient)) {
-          material.emissiveFactor = ambient.slice(0, 3);
-        } else if (isTexture(ambient)) {
-          material.emissiveTexture = ambient;
-        }
+    if (defined(doubleSided)) {
+      material.doubleSided = doubleSided;
+    }
+    if (defined(transparency)) {
+      if (defined(material.pbrMetallicRoughness.baseColorFactor)) {
+        material.pbrMetallicRoughness.baseColorFactor[3] *= transparency;
+      } else {
+        material.pbrMetallicRoughness.baseColorFactor = [1, 1, 1, transparency];
       }
-
-      if (defined(diffuse)) {
-        if (isVec4(diffuse)) {
-          material.pbrMetallicRoughness.baseColorFactor = srgbToLinear(diffuse);
-        } else if (isTexture(diffuse)) {
-          material.pbrMetallicRoughness.baseColorTexture = diffuse;
-        }
-      }
-
-      if (defined(doubleSided)) {
-        material.doubleSided = doubleSided;
-      }
-
-      if (defined(emission)) {
-        if (isVec4(emission)) {
-          material.emissiveFactor = emission.slice(0, 3);
-        } else if (isTexture(emission)) {
-          material.emissiveTexture = emission;
-        }
-      }
-
-      if (defined(transparency)) {
-        if (defined(material.pbrMetallicRoughness.baseColorFactor)) {
-          material.pbrMetallicRoughness.baseColorFactor[3] *= transparency;
-        } else {
-          material.pbrMetallicRoughness.baseColorFactor = [
-            1,
-            1,
-            1,
-            transparency,
-          ];
-        }
-      }
-
-      if (defined(transparent)) {
-        material.alphaMode = transparent ? "BLEND" : "OPAQUE";
-      }
+    }
+    if (defined(transparent)) {
+      material.alphaMode = transparent ? "BLEND" : "OPAQUE";
     }
   });
 
