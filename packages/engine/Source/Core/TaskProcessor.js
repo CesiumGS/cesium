@@ -81,10 +81,11 @@ function urlFromScript(script) {
 function createWorker(url) {
   const uri = new Uri(url);
   const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
+  const absoluteUrl = buildModuleUrl(`Workers/${url}.js`);
 
   const options = {};
   let workerPath;
-  if (isCrossOriginUrl(url)) {
+  if (isCrossOriginUrl(absoluteUrl)) {
     // To load cross-origin, create a shim worker from a blob URL
     const script = `importScripts("${url}");`;
     workerPath = urlFromScript(script);
