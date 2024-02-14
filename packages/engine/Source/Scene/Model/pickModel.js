@@ -394,6 +394,12 @@ function computeInstancesTransforms(
       transforms.push(transform);
     }
   }
+  // TODO Mimic the behavior of the old implementation.
+  // The case that there are no transforms here should probably
+  // never occur, but it does for `EXT_mesh_gpu_instancing`
+  if (transforms.length === 0) {
+    transforms.push(computedModelMatrix);
+  }
   return transforms;
 }
 
