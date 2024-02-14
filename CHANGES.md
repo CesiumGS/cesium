@@ -4,6 +4,10 @@
 
 #### @cesium/engine
 
+##### Breaking Changes :mega:
+
+- Reduce extraneous information in the error stack for model mloading errors.
+
 ##### Fixes :wrench:
 
 - Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)

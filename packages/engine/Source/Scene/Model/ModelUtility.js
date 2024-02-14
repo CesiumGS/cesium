@@ -37,7 +37,7 @@ ModelUtility.getError = function (type, path, error) {
   if (defined(error)) {
     // the original call stack is often more useful than the new error's stack,
     // so add the information here
-    runtimeError.stack = `Original stack:\n${error.stack}\nHandler stack:\n${runtimeError.stack}`;
+    runtimeError.stack = error.stack;
   }
 
   return runtimeError;
