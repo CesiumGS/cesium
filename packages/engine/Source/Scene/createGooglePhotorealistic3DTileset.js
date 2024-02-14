@@ -46,7 +46,7 @@ async function createGooglePhotorealistic3DTileset(key, options) {
     options.maximumCacheOverflowBytes,
     1024 * 1024 * 1024
   );
-  options.enableCollision = true;
+  options.enableCollision = defaultValue(options.enableCollision, true);
 
   key = defaultValue(key, GoogleMaps.defaultApiKey);
   if (!defined(key)) {
