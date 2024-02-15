@@ -96,7 +96,6 @@ describe("Core/TaskProcessor", function () {
   it("when provided a cross-origin URI, loads worker with appropriate shim", async function () {
     const blobSpy = spyOn(window, "Blob");
 
-    // Provide just the module ID, as is prevalent in the codebase
     taskProcessor = new TaskProcessor("http://test.com/Workers/testing.js");
 
     try {
