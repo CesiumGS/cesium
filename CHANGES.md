@@ -9,7 +9,7 @@
 - Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
 - Fixed a bug where legacy B3DM files that contained glTF 1.0 data that used a `CONSTANT` technique in the `KHR_material_common` extension and only defined ambient- or emissive textures (but no diffuse textures) showed up without any texture [#11825](https://github.com/CesiumGS/cesium/pull/11825)
 - Fixed a bug where `TaskProcessor` worker loading would check the worker module ID rather than the absolute URL when determining if it is cross-origin.
-- Fixed a bug where cross-origin workers were loaded using the CommonJS `importScripts` shim instead of an ESM `import`.
+- Fixed a bug where cross-origin workers would error when loaded with the CommonJS `importScripts` shim instead of an ESM `import`.
 
 ### 1.114 - 2024-02-01
 
