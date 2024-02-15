@@ -9,7 +9,6 @@ import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
-import defined from "./defined.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
