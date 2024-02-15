@@ -9,6 +9,7 @@ import FeatureDetection from "./FeatureDetection.js";
 import isCrossOriginUrl from "./isCrossOriginUrl.js";
 import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
+import defined from "./defined.js";
 
 function canTransferArrayBuffer() {
   if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -81,7 +82,7 @@ function urlFromScript(script) {
 function createWorker(url) {
   const uri = new Uri(url);
   const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
-  const absoluteUrl = buildModuleUrl(`Workers/${url}.js`);
+  const absoluteUrl = buildModuleUrl(`${TaskProcessor._workerModulePrefix}/${url}.js`);
 
   const options = {};
   let workerPath;
