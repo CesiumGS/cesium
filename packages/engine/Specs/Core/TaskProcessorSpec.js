@@ -1,4 +1,9 @@
-import { buildModuleUrl, FeatureDetection, RuntimeError, TaskProcessor } from "../../index.js";
+import {
+  buildModuleUrl,
+  FeatureDetection,
+  RuntimeError,
+  TaskProcessor,
+} from "../../index.js";
 
 import absolutize from "../../../../Specs/absolutize.js";
 
@@ -66,11 +71,11 @@ describe("Core/TaskProcessor", function () {
     window.CESIUM_BASE_URL = "http://test.com/source/";
     buildModuleUrl._clearBaseResource();
 
-    const blobSpy = spyOn(window, 'Blob');
+    const blobSpy = spyOn(window, "Blob");
 
     taskProcessor = new TaskProcessor("transferTypedArrayTest");
 
-    try {    
+    try {
       await taskProcessor.scheduleTask();
     } catch {
       // We expect this to throw as we cannot setup a true cross-origin base in tests
