@@ -65,7 +65,7 @@ describe("Core/TaskProcessor", function () {
     );
   });
 
-  it("when workers are cross-origin, loads worker with appropriate shim", async function () {
+  it("when workers loaded via module ID and it is cross-origin, loads worker with appropriate shim", async function () {
     // Setup a cross origin BASE_URL
     const oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
     window.CESIUM_BASE_URL = "http://test.com/source/";
@@ -91,6 +91,25 @@ describe("Core/TaskProcessor", function () {
     // Reset old values for BASE_URL
     window.CESIUM_BASE_URL = oldCESIUM_BASE_URL;
     buildModuleUrl._clearBaseResource();
+  });
+
+  it("when provided a cross-origin URI, loads worker with appropriate shim", async function () {
+    const blobSpy = spyOn(window, "Blob");
+
+    // Provide just the module ID, as is prevalent in the codebase
+    taskProcessor = new TaskProcessor("http://test.com/Workers/testing.js");
+
+    try {
+      await taskProcessor.scheduleTask();
+    } catch {
+      // We expect this to throw as we cannot setup a true cross-origin base in tests
+      // However, it should have attempted to create a blob for the shim before that happens.
+    }
+
+    expect(blobSpy).toHaveBeenCalledWith(
+      [`import "http://test.com/Workers/testing.js";`],
+      { type: "application/javascript" }
+    );
   });
 
   it("can be destroyed", function () {
