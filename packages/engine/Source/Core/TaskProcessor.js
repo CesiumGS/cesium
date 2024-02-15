@@ -81,19 +81,33 @@ function urlFromScript(script) {
 function createWorker(url) {
   const uri = new Uri(url);
   const isUri = uri.scheme().length !== 0 && uri.fragment().length === 0;
-  const absoluteUrl = buildModuleUrl(`${TaskProcessor._workerModulePrefix}/${url}.js`);
+  const moduleID = url.replace(/\.js$/, "");
 
   const options = {};
   let workerPath;
-  if (isCrossOriginUrl(absoluteUrl)) {
+  let crossOriginUrl;
+
+  // If we are provided a fully resolved URL, check it is cross-origin
+  // Or if provided a module ID, check the full absolute URL instead.
+  if (isCrossOriginUrl(url)) {
+    crossOriginUrl = url;
+  } else if (!isUri) {
+    const moduleAbsoluteUrl = buildModuleUrl(
+      `${TaskProcessor._workerModulePrefix}/${moduleID}.js`
+    );
+
+    if (isCrossOriginUrl(moduleAbsoluteUrl)) {
+      crossOriginUrl = moduleAbsoluteUrl;
+    }
+  }
+
+  if (crossOriginUrl) {
     // To load cross-origin, create a shim worker from a blob URL
-    const script = `import "${absoluteUrl}";`;
+    const script = `import "${crossOriginUrl}";`;
     workerPath = urlFromScript(script);
     options.type = "module";
     return new Worker(workerPath, options);
   }
-
-  const moduleID = url.replace(/\.js$/, "");
 
   /* global CESIUM_WORKERS */
   if (!isUri && typeof CESIUM_WORKERS !== "undefined") {

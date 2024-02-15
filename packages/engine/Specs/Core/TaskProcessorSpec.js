@@ -73,6 +73,7 @@ describe("Core/TaskProcessor", function () {
 
     const blobSpy = spyOn(window, "Blob");
 
+    // Provide just the module ID, as is prevalent in the codebase
     taskProcessor = new TaskProcessor("transferTypedArrayTest");
 
     try {
