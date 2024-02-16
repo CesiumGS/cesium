@@ -1,5 +1,5 @@
-// See IntersectionUtils.glsl for the definitions of Ray, setIntersection,
-// setIntersectionPair
+// See IntersectionUtils.glsl for the definitions of Ray, NO_HIT,
+// setIntersection, setIntersectionPair, setShapeIntersection
 // See IntersectLongitude.glsl for the definitions of intersectHalfPlane,
 // intersectFlippedWedge, intersectRegularWedge
 
@@ -13,15 +13,6 @@
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_UNDER_HALF
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF
 #define CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_EQUAL_ZERO
-
-#define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS
-#define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT
-#define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT
-#define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY
-#define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED
 
 #define CYLINDER_INTERSECTION_INDEX_RADIUS_MAX
 #define CYLINDER_INTERSECTION_INDEX_RADIUS_MIN

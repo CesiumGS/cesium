@@ -123,9 +123,7 @@ function VoxelCylinderShape() {
     CYLINDER_HAS_RENDER_BOUNDS_ANGLE_RANGE_OVER_HALF: undefined,
 
     CYLINDER_HAS_SHAPE_BOUNDS_RADIUS: undefined,
-    CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT: undefined,
-    CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_ANGLE: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY: undefined,
     CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY: undefined,
@@ -394,12 +392,6 @@ VoxelCylinderShape.prototype.update = function (
   if (renderMinHeight === renderMaxHeight) {
     shaderDefines["CYLINDER_HAS_RENDER_BOUNDS_HEIGHT_FLAT"] = true;
   }
-  if (shapeMinHeight === shapeMaxHeight) {
-    shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT"] = true;
-  }
-  if (shapeMinRadius === shapeMaxRadius) {
-    shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT"] = true;
-  }
   if (!shapeIsDefaultRadius) {
     shaderDefines["CYLINDER_HAS_SHAPE_BOUNDS_RADIUS"] = true;
 
@@ -409,8 +401,13 @@ VoxelCylinderShape.prototype.update = function (
     // scale = 1.0 / (maxRadius - minRadius)
     // offset = -minRadius / (maxRadius - minRadius)
     // offset = minRadius / (minRadius - maxRadius)
-    const scale = 1.0 / (shapeMaxRadius - shapeMinRadius);
-    const offset = shapeMinRadius / (shapeMinRadius - shapeMaxRadius);
+    const radiusRange = shapeMaxRadius - shapeMinRadius;
+    let scale = 0.0;
+    let offset = 1.0;
+    if (radiusRange !== 0.0) {
+      scale = 1.0 / radiusRange;
+      offset = -shapeMinRadius / radiusRange;
+    }
     shaderUniforms.cylinderUvToShapeUvRadius = Cartesian2.fromElements(
       scale,
       offset,
@@ -432,8 +429,13 @@ VoxelCylinderShape.prototype.update = function (
     // offset = -2.0 * (minHeight * 0.5 + 0.5) / (maxHeight - minHeight)
     // offset = -(minHeight + 1.0) / (maxHeight - minHeight)
     // offset = (minHeight + 1.0) / (minHeight - maxHeight)
-    const scale = 2.0 / (shapeMaxHeight - shapeMinHeight);
-    const offset = (shapeMinHeight + 1.0) / (shapeMinHeight - shapeMaxHeight);
+    const heightRange = shapeMaxHeight - shapeMinHeight;
+    let scale = 0.0;
+    let offset = 1.0;
+    if (heightRange !== 0.0) {
+      scale = 2.0 / heightRange;
+      offset = -(shapeMinHeight + 1.0) / heightRange;
+    }
     shaderUniforms.cylinderUvToShapeUvHeight = Cartesian2.fromElements(
       scale,
       offset,
