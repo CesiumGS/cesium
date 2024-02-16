@@ -4,7 +4,6 @@
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LONGITUDE_MIN_MAX_REVERSED
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE
-#define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN
 #define ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
 #define ELLIPSOID_IS_SPHERE
 */
@@ -22,7 +21,7 @@ uniform vec3 u_ellipsoidRadiiUv; // [0,1]
 #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_LATITUDE)
     uniform vec2 u_ellipsoidUvToShapeUvLatitude; // x = scale, y = offset
 #endif
-#if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN) && !defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
+#if !defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
     uniform float u_ellipsoidInverseHeightDifferenceUv;
     uniform vec2 u_ellipseInnerRadiiUv; // [0,1]
 #endif
@@ -98,21 +97,12 @@ vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
         float height = 1.0;
     #else
         #if defined(ELLIPSOID_IS_SPHERE)
-            #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN)
-                float height = (length(posEllipsoid) - u_ellipseInnerRadiiUv.x) * u_ellipsoidInverseHeightDifferenceUv;
-            #else
-                float height = length(posEllipsoid);
-            #endif
+            float height = (length(posEllipsoid) - u_ellipseInnerRadiiUv.x) * u_ellipsoidInverseHeightDifferenceUv;
         #else
-            #if defined(ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN)
-                // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84).
-                // This is an optimization so that math can be done with ellipses instead of ellipsoids.
-                vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
-                float height = ellipseDistanceIterative(posEllipse, u_ellipseInnerRadiiUv) * u_ellipsoidInverseHeightDifferenceUv;
-            #else
-                // TODO: this is probably not correct
-                float height = length(posEllipsoid);
-            #endif
+            // Convert the 3D position to a 2D position relative to the ellipse (radii.x, radii.z) (assuming radii.x == radii.y which is true for WGS84).
+            // This is an optimization so that math can be done with ellipses instead of ellipsoids.
+            vec2 posEllipse = vec2(length(posEllipsoid.xy), posEllipsoid.z);
+            float height = ellipseDistanceIterative(posEllipse, u_ellipseInnerRadiiUv) * u_ellipsoidInverseHeightDifferenceUv;
         #endif
     #endif
 

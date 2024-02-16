@@ -130,7 +130,6 @@ function VoxelEllipsoidShape() {
     ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MAX: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_MIN: undefined,
     ELLIPSOID_HAS_RENDER_BOUNDS_HEIGHT_FLAT: undefined,
-    ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN: undefined,
     ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT: undefined,
     ELLIPSOID_IS_SPHERE: undefined,
     ELLIPSOID_INTERSECTION_INDEX_LONGITUDE: undefined,
@@ -151,7 +150,6 @@ function VoxelEllipsoidShape() {
 const scratchScale = new Cartesian3();
 const scratchRotationScale = new Matrix3();
 const scratchShapeOuterExtent = new Cartesian3();
-const scratchShapeInnerExtent = new Cartesian3();
 const scratchRenderOuterExtent = new Cartesian3();
 const scratchRenderInnerExtent = new Cartesian3();
 const scratchRenderRectangle = new Rectangle();
@@ -260,17 +258,7 @@ VoxelEllipsoidShape.prototype.update = function (
   const renderMinHeight = Math.max(shapeMinHeight, clipMinHeight);
   const renderMaxHeight = Math.min(shapeMaxHeight, clipMaxHeight);
 
-  // Compute the closest and farthest a point can be from the center of the ellipsoid.
-  const shapeInnerExtent = Cartesian3.add(
-    radii,
-    Cartesian3.fromElements(
-      shapeMinHeight,
-      shapeMinHeight,
-      shapeMinHeight,
-      scratchShapeInnerExtent
-    ),
-    scratchShapeInnerExtent
-  );
+  // Compute the farthest a point can be from the center of the ellipsoid.
   const shapeOuterExtent = Cartesian3.add(
     radii,
     Cartesian3.fromElements(
@@ -465,15 +453,6 @@ VoxelEllipsoidShape.prototype.update = function (
   );
   const renderHasHeight = renderHasMinHeight || renderHasMaxHeight;
   const renderHeightRange = renderMaxHeight - renderMinHeight;
-  const shapeHasMinHeight = !Cartesian3.equals(
-    shapeInnerExtent,
-    Cartesian3.ZERO
-  );
-  const shapeHasMaxHeight = !Cartesian3.equals(
-    shapeOuterExtent,
-    Cartesian3.ZERO
-  );
-  const shapeHasHeight = shapeHasMinHeight || shapeHasMaxHeight;
 
   const { shaderUniforms, shaderDefines } = this;
 
@@ -536,22 +515,16 @@ VoxelEllipsoidShape.prototype.update = function (
     }
   }
 
-  if (shapeHasHeight) {
-    if (shapeHasMinHeight) {
-      shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_MIN"] = true;
-
-      // The percent of space that is between the inner and outer ellipsoid.
-      const thickness = (shapeMaxHeight - shapeMinHeight) / shapeMaxExtent;
-      shaderUniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
-      shaderUniforms.ellipseInnerRadiiUv = Cartesian2.fromElements(
-        shaderUniforms.ellipsoidRadiiUv.x * (1.0 - thickness),
-        shaderUniforms.ellipsoidRadiiUv.z * (1.0 - thickness),
-        shaderUniforms.ellipseInnerRadiiUv
-      );
-    }
-    if (shapeMinHeight === shapeMaxHeight) {
-      shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT"] = true;
-    }
+  // The percent of space that is between the inner and outer ellipsoid.
+  const thickness = (shapeMaxHeight - shapeMinHeight) / shapeMaxExtent;
+  shaderUniforms.ellipsoidInverseHeightDifferenceUv = 1.0 / thickness;
+  shaderUniforms.ellipseInnerRadiiUv = Cartesian2.fromElements(
+    shaderUniforms.ellipsoidRadiiUv.x * (1.0 - thickness),
+    shaderUniforms.ellipsoidRadiiUv.z * (1.0 - thickness),
+    shaderUniforms.ellipseInnerRadiiUv
+  );
+  if (shapeMinHeight === shapeMaxHeight) {
+    shaderDefines["ELLIPSOID_HAS_SHAPE_BOUNDS_HEIGHT_FLAT"] = true;
   }
 
   // Intersects a wedge for the min and max longitude.
