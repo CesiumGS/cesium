@@ -144,7 +144,7 @@ SpatialNode.prototype.computeScreenSpaceError = function (
 ) {
   const obb = this.orientedBoundingBox;
 
-  let distance = Math.sqrt(obb.distanceSquaredTo(cameraPosition));
+  let distance = Cartesian3.distance(obb.center, cameraPosition);
   // Avoid divide-by-zero when viewer is inside the tile.
   distance = Math.max(distance, CesiumMath.EPSILON7);
   const approximateVoxelSize = this.approximateVoxelSize;

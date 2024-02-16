@@ -102,6 +102,7 @@ void main()
         fragmentInput.voxel.viewDirWorld = viewDirWorld;
         fragmentInput.voxel.surfaceNormal = step.xyz;
         fragmentInput.voxel.travelDistance = step.w;
+        fragmentInput.voxel.octreeCoords = vec4(sampleDatas[0].tileCoords);
 
         // Run the custom shader
         czm_modelMaterial materialOutput;

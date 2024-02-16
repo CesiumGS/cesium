@@ -92,6 +92,8 @@ describe("Scene/processVoxelProperties", function () {
       "    vec3 viewDirUv;",
       "    vec3 viewDirWorld;",
       "    float travelDistance;",
+      "    vec3 dimensions;",
+      "    vec4 octreeCoords;",
     ];
     ShaderBuilderTester.expectHasFragmentStruct(
       shaderBuilder,
