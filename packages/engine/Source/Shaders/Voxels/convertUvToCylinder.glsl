@@ -1,8 +1,6 @@
 /* Cylinder defines (set in Scene/VoxelCylinderShape.js)
 #define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS
-#define CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT
 #define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT
-#define CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_DISCONTINUITY
 #define CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MAX_DISCONTINUITY
@@ -28,27 +26,16 @@
 vec3 convertUvToShapeUvSpace(in vec3 positionUv) {
     vec3 positionLocal = positionUv * 2.0 - 1.0; // [-1,+1]
 
-    // Compute radius
-    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS_FLAT)
-        float radius = 1.0;
-    #else
-        float radius = length(positionLocal.xy); // [0,1]
-        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
-            radius = radius * u_cylinderUvToShapeUvRadius.x + u_cylinderUvToShapeUvRadius.y; // x = scale, y = offset
-        #endif
+    float radius = length(positionLocal.xy); // [0,1]
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_RADIUS)
+        radius = radius * u_cylinderUvToShapeUvRadius.x + u_cylinderUvToShapeUvRadius.y; // x = scale, y = offset
     #endif
 
-    // Compute height
-    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT_FLAT)
-        float height = 1.0;
-    #else
-        float height = positionUv.z; // [0,1]
-        #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
-            height = height * u_cylinderUvToShapeUvHeight.x + u_cylinderUvToShapeUvHeight.y; // x = scale, y = offset
-        #endif
+    float height = positionUv.z; // [0,1]
+    #if defined(CYLINDER_HAS_SHAPE_BOUNDS_HEIGHT)
+        height = height * u_cylinderUvToShapeUvHeight.x + u_cylinderUvToShapeUvHeight.y; // x = scale, y = offset
     #endif
 
-    // Compute angle
     float angle = (atan(positionLocal.y, positionLocal.x) + czm_pi) / czm_twoPi; // [0,1]
     #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE)
         #if defined(CYLINDER_HAS_SHAPE_BOUNDS_ANGLE_MIN_MAX_REVERSED)
