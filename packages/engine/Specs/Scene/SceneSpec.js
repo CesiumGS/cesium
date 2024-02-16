@@ -210,6 +210,7 @@ describe(
           frameState.afterRender.push(spyListener);
         },
         destroy: function () {},
+        isDestroyed: () => false,
       };
       scene.primitives.add(primitive);
 
@@ -222,6 +223,9 @@ describe(
         frameState.commandList.push(command);
       };
       this.destroy = function () {};
+      this.isDestroyed = function () {
+        return false;
+      };
     }
 
     it("debugCommandFilter filters commands", function () {
@@ -2294,6 +2298,34 @@ describe(
       scene.atmosphere = anotherAtmosphere;
       scene.renderForSpecs();
       expect(frameState.atmosphere).toBe(anotherAtmosphere);
+    });
+
+    function TilesetMockPrimitive() {
+      this.update = function () {};
+      this.destroy = function () {};
+      this.show = true;
+      this.isDestroyed = function () {
+        return false;
+      };
+      this.isCesium3DTileset = true;
+      this.enableCollision = false;
+      this.getHeight = function () {
+        return undefined;
+      };
+      this.updateHeight = function () {
+        return function () {};
+      };
+    }
+
+    it("subscribes to globe height updates when tileset is added", function () {
+      const mockTileset = new TilesetMockPrimitive();
+      mockTileset.enableCollision = true;
+      spyOn(mockTileset, "updateHeight");
+
+      scene.primitives.add(mockTileset);
+      scene.renderForSpecs();
+
+      expect(mockTileset.updateHeight).toHaveBeenCalled();
     });
   },
 
