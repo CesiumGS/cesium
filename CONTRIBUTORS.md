@@ -379,4 +379,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [rropp5](https://github.com/rropp5)
 - [Harsh Lakhara](https://github.com/harshlakhara)
 - [Pavlo Skakun](https://github.com/p-skakun)
+- [Taylor Huffman](https://github.com/huffmantayler)
 - [Arturo Espinosa Aldama](https://github.com/pupitetris)
