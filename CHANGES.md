@@ -13,6 +13,11 @@
 
 - Fixed a bug affecting voxel shader compilation in WebGL1 contexts. [#11798](https://github.com/CesiumGS/cesium/pull/11798)
 - Fixed a bug where legacy B3DM files that contained glTF 1.0 data that used a `CONSTANT` technique in the `KHR_material_common` extension and only defined ambient- or emissive textures (but no diffuse textures) showed up without any texture [#11825](https://github.com/CesiumGS/cesium/pull/11825)
+- Fixed an error when the `screenSpaceEventHandler` was destroyed before `Viewer` [#10576](https://github.com/CesiumGS/cesium/issues/10576)
+
+##### Additions :tada:
+
+- Added `Scene.pickVoxel` to pick individual cells from a `VoxelPrimitive`, and `VoxelCell` to report information about the picked cell. [#11828](https://github.com/CesiumGS/cesium/pull/11828)
 
 ##### Deprecated :hourglass_flowing_sand:
 
