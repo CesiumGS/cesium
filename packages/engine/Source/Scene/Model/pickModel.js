@@ -238,7 +238,9 @@ export default function pickModel(
       const numComponents = AttributeType.getNumberOfComponents(attributeType);
       const bytes = ComponentDatatype.getSizeInBytes(componentDatatype);
       const isInterleaved =
-        defined(byteStride) && byteStride !== numComponents * bytes;
+        !defined(vertices) &&
+        defined(byteStride) &&
+        byteStride !== numComponents * bytes;
 
       let elementStride = numComponents;
       let offset = 0;
