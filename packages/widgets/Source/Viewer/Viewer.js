@@ -1718,13 +1718,15 @@ Viewer.prototype.isDestroyed = function () {
  */
 Viewer.prototype.destroy = function () {
   let i;
-
-  this.screenSpaceEventHandler.removeInputAction(
+  if(defined(this.screenSpaceEventHandler)){
+    this.screenSpaceEventHandler.removeInputAction(
     ScreenSpaceEventType.LEFT_CLICK
-  );
-  this.screenSpaceEventHandler.removeInputAction(
-    ScreenSpaceEventType.LEFT_DOUBLE_CLICK
-  );
+    );
+    this.screenSpaceEventHandler.removeInputAction(
+      ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+    );
+  }
+
 
   // Unsubscribe from data sources
   const dataSources = this.dataSources;
