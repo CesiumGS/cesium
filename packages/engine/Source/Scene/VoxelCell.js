@@ -33,6 +33,8 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
  *     }
  *   }
  * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 function VoxelCell(primitive, tileIndex, sampleIndex) {
   this._primitive = primitive;
@@ -52,6 +54,8 @@ function VoxelCell(primitive, tileIndex, sampleIndex) {
  * @param {number} sampleIndex The index of the sample within the tile, containing metadata for this cell.
  * @param {KeyframeNode} keyframeNode The keyframe node containing information about the tile.
  * @returns {VoxelCell}
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 VoxelCell.fromKeyframeNode = function (
   primitive,

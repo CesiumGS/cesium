@@ -4206,7 +4206,7 @@ Scene.prototype.pick = function (windowPosition, width, height) {
 };
 
 /**
- * Returns a VoxelCell for the voxel sample rendered at a particular window coordinate,
+ * Returns a {@link VoxelCell} for the voxel sample rendered at a particular window coordinate,
  * or undefined if no voxel is rendered at that position.
  *
  * @example
@@ -4221,7 +4221,9 @@ Scene.prototype.pick = function (windowPosition, width, height) {
  * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
  * @param {number} [width=3] Width of the pick rectangle.
  * @param {number} [height=3] Height of the pick rectangle.
- * @returns {VoxelCell} Information about the voxel cell rendered at the picked position.
+ * @returns {VoxelCell|undefined} Information about the voxel cell rendered at the picked position.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 Scene.prototype.pickVoxel = function (windowPosition, width, height) {
   const pickedObject = this.pick(windowPosition, width, height);
